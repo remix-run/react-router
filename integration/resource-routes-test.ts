@@ -85,12 +85,38 @@ test.describe("loader in an app", async () => {
         `,
         "app/routes/return-response.tsx": js`
           export let loader = () => {
-            return new Response('Partial', { status: 207 });
+            return new Response('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
           }
         `,
         "app/routes/throw-response.tsx": js`
           export let loader = () => {
-            throw new Response('Partial', { status: 207 });
+            throw new Response('Partial', { status: 207, headers: { 'X-Foo': 'Bar' } });
+          }
+        `,
+        "app/routes/return-data.tsx": js`
+          import { data } from "react-router";
+          export let loader = () => {
+            return data('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
+          }
+        `,
+        "app/routes/throw-data.tsx": js`
+          import { data } from "react-router";
+          export let loader = () => {
+            throw data('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
+          }
+        `,
+        "app/routes/return-data-through-middleware.tsx": js`
+          import { data } from "react-router";
+          export const unstable_middleware = [(_, next) => next()]
+          export let loader = () => {
+            return data('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
+          }
+        `,
+        "app/routes/throw-data-through-middleware.tsx": js`
+          import { data } from "react-router";
+          export const unstable_middleware = [(_, next) => next()]
+          export let loader = () => {
+            throw data('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
           }
         `,
         "app/routes/return-object.tsx": js`
@@ -196,6 +222,7 @@ test.describe("loader in an app", async () => {
     let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/return-response");
     expect(res.status()).toBe(207);
+    expect(res.headers()["x-foo"]).toBe("Bar");
     expect(await res.text()).toEqual("Partial");
   });
 
@@ -205,6 +232,45 @@ test.describe("loader in an app", async () => {
     let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/throw-response");
     expect(res.status()).toBe(207);
+    expect(res.headers()["x-foo"]).toBe("Bar");
+    expect(await res.text()).toEqual("Partial");
+  });
+
+  test("should handle data() returned from resource routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/return-data");
+    expect(res.status()).toBe(207);
+    expect(res.headers()["x-foo"]).toBe("Bar");
+    expect(await res.text()).toEqual("Partial");
+  });
+
+  test("should handle data() thrown from resource routes", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/throw-data");
+    expect(res.status()).toBe(207);
+    expect(res.headers()["x-foo"]).toBe("Bar");
+    expect(await res.text()).toEqual("Partial");
+  });
+
+  test("should handle data() returned from resource routes through middleware", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/return-data-through-middleware");
+    expect(res.status()).toBe(207);
+    expect(res.headers()["x-foo"]).toBe("Bar");
+    expect(await res.text()).toEqual("Partial");
+  });
+
+  test("should handle data() thrown from resource routes through middleware", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/throw-data-through-middleware");
+    expect(res.status()).toBe(207);
+    expect(res.headers()["x-foo"]).toBe("Bar");
     expect(await res.text()).toEqual("Partial");
   });
 

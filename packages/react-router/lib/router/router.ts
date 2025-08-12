@@ -4314,10 +4314,19 @@ export function createStaticHandler(
             basename,
           );
         }
-        if (isResponse(result.result) && isRouteRequest) {
-          // For SSR single-route requests, we want to hand Responses back
-          // directly without unwrapping
-          throw result;
+
+        // For SSR single-route requests, we want to hand Responses back
+        // directly, as well as upgrade data() calls to Response instances
+        // (this allows utilities using data() and be shared between normal and
+        // resource routes).
+        if (isRouteRequest) {
+          if (isResponse(result.result)) {
+            throw result;
+          } else if (isDataWithResponseInit(result.result)) {
+            // Upgrade `data()` to `Response` so utilities using `data()` can be
+            // shared between resource and non-resource routes
+            throw dataWithResponseInitToResponse(result.result);
+          }
         }
 
         dataResults[match.route.id] =
