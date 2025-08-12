@@ -236,7 +236,7 @@ test.describe("loader in an app", async () => {
     expect(await res.text()).toEqual("Partial");
   });
 
-  test.only("should handle data() returned from resource routes", async ({
+  test("should handle data() returned from resource routes", async ({
     page,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
@@ -246,9 +246,7 @@ test.describe("loader in an app", async () => {
     expect(await res.text()).toEqual("Partial");
   });
 
-  test.only("should handle data() thrown from resource routes", async ({
-    page,
-  }) => {
+  test("should handle data() thrown from resource routes", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/throw-data");
     expect(res.status()).toBe(207);
@@ -256,7 +254,7 @@ test.describe("loader in an app", async () => {
     expect(await res.text()).toEqual("Partial");
   });
 
-  test.only("should handle data() returned from resource routes through middleware", async ({
+  test("should handle data() returned from resource routes through middleware", async ({
     page,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
@@ -266,7 +264,7 @@ test.describe("loader in an app", async () => {
     expect(await res.text()).toEqual("Partial");
   });
 
-  test.only("should handle data() thrown from resource routes through middleware", async ({
+  test("should handle data() thrown from resource routes through middleware", async ({
     page,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
