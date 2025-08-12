@@ -6,7 +6,7 @@ title: "@react-router/serve"
 
 React Router is designed for you to own your server, but if you don't want to set one up, you can use the React Router App Server instead. It's a production-ready but basic Node.js server built with [Express][express].
 
-By design, we do not provide options to customize the React Router App Server because if you need to customize the underlying `express` server, we'd rather you manage the server completely instead of creating an abstraction to handle all the possible customizations you may require. If you find you want to customize it, you can [migrate to the `@react-router/express` adapter][eject].
+By design, we do not provide options to customize the React Router App Server because if you need to customize the underlying `express` server, we'd rather you manage the server completely instead of creating an abstraction to handle all the possible customizations you may require. If you find you want to customize it, you can [migrate to the `@react-router/express` adapter][migrate-to-express].
 
 You can see the underlying `express` server configuration in [packages/react-router-serve/cli.ts][rr-serve-code]. By default, it uses the following Express middlewares (please refer to their documentation for default behaviors):
 
@@ -85,7 +85,6 @@ In development, `react-router-serve` will ensure the latest code is run by purgi
 In production this doesn't happen. The server boots up, and that's the end of it.
 
 [rr-express]: ./adapter#createrequesthandler
-[singleton]: ../guides/manual-mode#keeping-in-memory-server-state-across-rebuilds
 [express-listen]: https://expressjs.com/en/api.html#app.listen
 [rr-serve-code]: https://github.com/remix-run/react-router/blob/main/packages/react-router-serve/cli.ts
 [compression]: https://expressjs.com/en/resources/middleware/compression.html
@@ -93,4 +92,4 @@ In production this doesn't happen. The server boots up, and that's the end of it
 [serve-static]: https://expressjs.com/en/resources/middleware/serve-static.html
 [morgan]: https://expressjs.com/en/resources/middleware/morgan.html
 [express]: https://expressjs.com/
-[eject]: (./adapter#migrating-from-the-react-router-app-server)
+[migrate-to-express]: ./adapter#migrating-from-the-react-router-app-server
