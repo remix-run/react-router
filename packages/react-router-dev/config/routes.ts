@@ -318,6 +318,14 @@ export { route, index, layout, prefix };
  * splitting route config into multiple files within different directories.
  */
 export function relative(directory: string): typeof helpers {
+  const generateRelativeId = (file: string): string => {
+    const joined = Path.join(directory, file);
+    const relativePath = Path.isAbsolute(joined)
+      ? Path.relative(process.cwd(), joined)
+      : joined;
+    return Path.normalize(stripFileExtension(relativePath));
+  };
+
   return {
     /**
      * Helper function for creating a route config entry, for use within
@@ -326,8 +334,36 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     route: (path, file, ...rest) => {
-      return route(path, Path.resolve(directory, file), ...(rest as any));
+      const absolutePath = Path.resolve(directory, file);
+      const relativeId = generateRelativeId(file);
+
+      if (!rest || (rest as any).length === 0) {
+        return route(path, absolutePath, { id: relativeId });
+      }
+
+      const [first, second] = rest;
+
+      if (Array.isArray(first)) {
+        return route(path, absolutePath, { id: relativeId }, first);
+      }
+
+      const options = first as CreateRouteOptions;
+      const modifiedOptions = options.id
+        ? options
+        : { ...options, id: relativeId };
+
+      if (second !== undefined) {
+        return route(
+          path,
+          absolutePath,
+          modifiedOptions,
+          second as RouteConfigEntry[],
+        );
+      }
+
+      return route(path, absolutePath, modifiedOptions);
     },
+
     /**
      * Helper function for creating a route config entry for an index route, for
      * use within `routes.ts`. Note that this helper has been scoped, meaning
@@ -335,8 +371,20 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     index: (file, ...rest) => {
-      return index(Path.resolve(directory, file), ...(rest as any));
+      const absolutePath = Path.resolve(directory, file);
+      const relativeId = generateRelativeId(file);
+
+      if (!rest || rest.length === 0) {
+        return index(absolutePath, { id: relativeId });
+      }
+
+      const options = rest[0] as CreateIndexOptions;
+      const modifiedOptions = options.id
+        ? options
+        : { ...options, id: relativeId };
+      return index(absolutePath, modifiedOptions);
     },
+
     /**
      * Helper function for creating a route config entry for a layout route, for
      * use within `routes.ts`. Note that this helper has been scoped, meaning
@@ -344,11 +392,35 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     layout: (file, ...rest) => {
-      return layout(Path.resolve(directory, file), ...(rest as any));
+      const absolutePath = Path.resolve(directory, file);
+      const relativeId = generateRelativeId(file);
+
+      if (!rest || (rest as any).length === 0) {
+        return layout(absolutePath, { id: relativeId });
+      }
+
+      const [first, second] = rest;
+
+      if (Array.isArray(first)) {
+        return layout(absolutePath, { id: relativeId }, first);
+      }
+
+      const options = first as CreateLayoutOptions;
+      const modifiedOptions = options.id
+        ? options
+        : { ...options, id: relativeId };
+
+      if (second !== undefined) {
+        return layout(
+          absolutePath,
+          modifiedOptions,
+          second as RouteConfigEntry[],
+        );
+      }
+
+      return layout(absolutePath, modifiedOptions);
     },
 
-    // Passthrough of helper functions that don't need relative scoping so that
-    // a complete API is still provided.
     prefix,
   };
 }
