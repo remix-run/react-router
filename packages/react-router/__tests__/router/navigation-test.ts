@@ -1,6 +1,6 @@
-import { JSDOM } from "jsdom";
 import { createBrowserRouter } from "../../lib/dom/lib";
 import type { HydrationState } from "../../lib/router/router";
+import getWindow from "../utils/getWindow";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
@@ -60,13 +60,6 @@ function initializeTest(init?: {
     },
     ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
-}
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
 }
 
 describe("navigations", () => {
@@ -453,7 +446,7 @@ describe("navigations", () => {
           },
         ],
         {
-          window: getWindowImpl("/"),
+          window: getWindow("/"),
           // This is what enables the partialMatches logic
           patchRoutesOnNavigation: () => {},
         },

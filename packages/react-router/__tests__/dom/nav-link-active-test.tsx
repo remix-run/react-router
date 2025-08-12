@@ -1,6 +1,5 @@
 import { render, fireEvent, waitFor, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
@@ -14,6 +13,7 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
 } from "../../index";
+import getWindow from "../utils/getWindow";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -1061,11 +1061,4 @@ function createDeferred() {
     //@ts-ignore
     reject,
   };
-}
-
-function getWindow(initialUrl: string): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "https://remix.run/" });
-  dom.window.history.replaceState(null, "", initialUrl);
-  return dom.window as unknown as Window;
 }

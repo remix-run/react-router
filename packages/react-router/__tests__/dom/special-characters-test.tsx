@@ -1,6 +1,5 @@
 /* eslint-disable jest/expect-expect */
 
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import {
   cleanup,
@@ -28,6 +27,7 @@ import {
   useNavigate,
   useParams,
 } from "../../index";
+import getWindow from "../utils/getWindow";
 import getHtml from "../utils/getHtml";
 
 /**
@@ -160,12 +160,7 @@ describe("special character tests", () => {
       expectedLocation: Omit<Location, "state" | "key">,
       expectedParams = {},
     ) {
-      // Need to use our own custom DOM in order to get a working history
-      const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-        url: "https://remix.run/",
-      });
-      let testWindow = dom.window as unknown as Window;
-      testWindow.history.replaceState(null, "", navigatePath);
+      let testWindow = getWindow(navigatePath);
 
       function Comp({ heading }) {
         return (
@@ -618,13 +613,7 @@ describe("special character tests", () => {
       expectedLocation: Omit<Location, "state" | "key">,
       expectedParams = {},
     ) {
-      // Need to use our own custom DOM in order to get a working history
-      const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-        url: "https://remix.run/",
-      });
-      let testWindow = dom.window as unknown as Window;
-      testWindow.history.replaceState(null, "", path);
-
+      let testWindow = getWindow(path);
       let renderedUseLocation: Omit<Location, "state" | "key"> | null = null;
       let renderedParams: Params<string> | null = null;
 
@@ -1112,13 +1101,3 @@ describe("special character tests", () => {
     });
   });
 });
-
-function getWindow(initialPath) {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-    url: "https://remix.run/",
-  });
-  let testWindow = dom.window as unknown as Window;
-  testWindow.history.pushState({}, "", initialPath);
-  return testWindow;
-}
