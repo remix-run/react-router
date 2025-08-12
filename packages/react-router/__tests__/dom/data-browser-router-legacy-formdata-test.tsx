@@ -1,4 +1,3 @@
-import { JSDOM } from "jsdom";
 // Drop support for the submitter parameter, as in a legacy browser. This
 // needs to be done before react-router-dom is required, since it does some
 // FormData detection.
@@ -14,13 +13,14 @@ import {
   createHashRouter,
   createRoutesFromElements,
 } from "../../index";
+import getWindow from "../utils/getWindow";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
-  getWindowImpl(url, false),
+  getWindow(url, false),
 );
 
 testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
-  getWindowImpl(url, true),
+  getWindow(url, true),
 );
 
 function testDomRouter(
@@ -119,11 +119,4 @@ function testDomRouter(
       });
     });
   });
-}
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
 }
