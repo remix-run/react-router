@@ -235,7 +235,7 @@ function DataRoutes({
   future: DataRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, future);
+  return useRoutesImpl(routes, undefined, state, undefined, future);
 }
 
 function serializeErrors(
@@ -483,6 +483,9 @@ export function createStaticRouter(
     },
     patchRoutes() {
       throw msg("patchRoutes");
+    },
+    _internalHandleError() {
+      throw msg("_internalHandleError");
     },
     _internalFetchControllers: new Map(),
     _internalSetRoutes() {

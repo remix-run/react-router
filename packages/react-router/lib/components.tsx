@@ -21,6 +21,7 @@ import type {
   RouterState,
   RouterSubscriber,
   RouterInit,
+  unstable_HandleErrorFunction,
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
@@ -177,6 +178,29 @@ export interface MemoryRouterOpts {
    * Lazily define portions of the route tree on navigations.
    */
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+  /**
+   * An error handler function that will be called for any loader/action/render
+   * errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of the `ErrorBoundary` because it's not
+   * subject to re-rendering and will only run one time per error.
+   *
+   * The `errorInfo` parameter is passed along from
+   * [`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
+   * and is only present for render errors.
+   *
+   * ```tsx
+   * let router = createMemoryRouter(routes, {
+   *   unstable_handleError(error, { location, errorInfo }) {
+   *     console.log(
+   *       `Error at location ${location.pathname}`,
+   *       error,
+   *       errorInfo
+   *     );
+   *   }
+   * );
+   * ```
+   */
+  unstable_handleError?: unstable_HandleErrorFunction;
 }
 
 /**
@@ -193,6 +217,7 @@ export interface MemoryRouterOpts {
  * @param {MemoryRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {MemoryRouterOpts.future} opts.future n/a
  * @param {MemoryRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {MemoryRouterOpts.unstable_handleError} opts.unstable_handleError n/a
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
@@ -211,6 +236,7 @@ export function createMemoryRouter(
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,
     }),
+    unstable_handleError: opts?.unstable_handleError,
     hydrationData: opts?.hydrationData,
     routes,
     hydrationRouteProperties,
@@ -532,6 +558,7 @@ export function RouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
+                  unstable_handleError={router._internalHandleError}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -550,12 +577,14 @@ function DataRoutes({
   routes,
   future,
   state,
+  unstable_handleError,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
+  unstable_handleError: unstable_HandleErrorFunction | undefined;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, future);
+  return useRoutesImpl(routes, undefined, state, unstable_handleError, future);
 }
 
 /**

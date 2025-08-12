@@ -1,3 +1,5 @@
+import type * as React from "react";
+
 import type { DataRouteMatch, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
@@ -273,6 +275,14 @@ export interface Router {
    * @private
    * PRIVATE - DO NOT USE
    *
+   * Error handler exposed for wiring up to `ErrorBoundary` `componentDidCatch`
+   */
+  _internalHandleError: unstable_HandleErrorFunction | undefined;
+
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
    * HMR needs to pass in-flight route updates to React Router
    * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
    */
@@ -403,6 +413,7 @@ export interface RouterInit {
   window?: Window;
   dataStrategy?: DataStrategyFunction;
   patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
+  unstable_handleError?: unstable_HandleErrorFunction;
 }
 
 /**
@@ -467,6 +478,20 @@ export interface RouterSubscriber {
       deletedFetchers: string[];
       viewTransitionOpts?: ViewTransitionOpts;
       flushSync: boolean;
+    },
+  ): void;
+}
+
+/**
+ * Function signature for client side error handling for loader/actions errors
+ * and rendering errors via `componentDidCatch`
+ */
+export interface unstable_HandleErrorFunction {
+  (
+    error: unknown,
+    info: {
+      location: Location;
+      errorInfo?: React.ErrorInfo;
     },
   ): void;
 }
@@ -855,6 +880,7 @@ export function createRouter(init: RouterInit): Router {
 
   let hydrationRouteProperties = init.hydrationRouteProperties || [];
   let mapRouteProperties = init.mapRouteProperties || defaultMapRouteProperties;
+  let unstable_handleError = init.unstable_handleError;
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};
@@ -1212,6 +1238,13 @@ export function createRouter(init: RouterInit): Router {
       ...state,
       ...newState,
     };
+
+    // Send loader/action errors through handleError
+    if (newState.errors && unstable_handleError) {
+      Object.values(newState.errors).forEach((error) =>
+        unstable_handleError(error, { location: state.location }),
+      );
+    }
 
     // Cleanup for all fetchers that have returned to idle since we only
     // care about in-flight fetchers
@@ -3449,6 +3482,7 @@ export function createRouter(init: RouterInit): Router {
     getBlocker,
     deleteBlocker,
     patchRoutes,
+    _internalHandleError: unstable_handleError,
     _internalFetchControllers: fetchControllers,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.

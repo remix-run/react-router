@@ -12,6 +12,7 @@ export type {
   StaticHandler,
   GetScrollPositionFunction,
   GetScrollRestorationKeyFunction,
+  unstable_HandleErrorFunction,
   StaticHandlerContext,
   Fetcher,
   Navigation,

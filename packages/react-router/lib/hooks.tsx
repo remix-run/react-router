@@ -30,6 +30,7 @@ import type {
   Router as DataRouter,
   RevalidationState,
   Navigation,
+  unstable_HandleErrorFunction,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
@@ -707,6 +708,7 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
+  unstable_handleError?: unstable_HandleErrorFunction,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -848,6 +850,7 @@ export function useRoutesImpl(
       ),
     parentMatches,
     dataRouterState,
+    unstable_handleError,
     future,
   );
 
@@ -926,6 +929,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
+  unstable_handleError: unstable_HandleErrorFunction | null;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -985,12 +989,18 @@ export class RenderErrorBoundary extends React.Component<
     };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error(
-      "React Router caught the following error during render",
-      error,
-      errorInfo,
-    );
+  componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
+    if (this.props.unstable_handleError) {
+      this.props.unstable_handleError(error, {
+        location: this.props.location,
+        errorInfo,
+      });
+    } else {
+      console.error(
+        "React Router caught the following error during render",
+        error,
+      );
+    }
   }
 
   render() {
@@ -1038,6 +1048,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
+  unstable_handleError: unstable_HandleErrorFunction | null = null,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
@@ -1194,6 +1205,7 @@ export function _renderMatches(
           error={error}
           children={getChildren()}
           routeContext={{ outlet: null, matches, isDataRoute: true }}
+          unstable_handleError={unstable_handleError}
         />
       ) : (
         getChildren()
