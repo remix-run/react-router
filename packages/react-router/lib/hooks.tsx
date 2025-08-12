@@ -51,7 +51,7 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
-import { unstable_ClientHandleErrorFunction } from "./components";
+import type { unstable_ClientHandleErrorFunction } from "./components";
 
 /**
  * Resolves a URL against the current {@link Location}.
