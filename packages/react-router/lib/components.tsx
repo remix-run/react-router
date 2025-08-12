@@ -249,7 +249,7 @@ class Deferred<T> {
  * Function signature for client side error handling for loader/actions errors
  * and rendering errors via `componentDidCatch`
  */
-export interface unstable_HandleErrorFunction {
+export interface unstable_ClientHandleErrorFunction {
   (
     error: unknown,
     info: {
@@ -297,7 +297,7 @@ export interface RouterProviderProps {
    * }} />
    * ```
    */
-  unstable_handleError?: unstable_HandleErrorFunction;
+  unstable_handleError?: unstable_ClientHandleErrorFunction;
 }
 
 /**
@@ -616,7 +616,7 @@ function DataRoutes({
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
-  unstable_handleError: unstable_HandleErrorFunction | undefined;
+  unstable_handleError: unstable_ClientHandleErrorFunction | undefined;
 }): React.ReactElement | null {
   return useRoutesImpl(routes, undefined, state, unstable_handleError, future);
 }
@@ -1421,7 +1421,7 @@ type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
   resolve: TrackedPromise | any;
   location?: Location;
-  unstable_handleError?: unstable_HandleErrorFunction;
+  unstable_handleError?: unstable_ClientHandleErrorFunction;
 }>;
 
 type AwaitErrorBoundaryState = {

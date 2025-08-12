@@ -97,7 +97,7 @@ export type {
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_HandleErrorFunction,
+  unstable_ClientHandleErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,

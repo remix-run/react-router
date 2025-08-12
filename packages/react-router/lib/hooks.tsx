@@ -51,7 +51,7 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
-import { unstable_HandleErrorFunction } from "./components";
+import { unstable_ClientHandleErrorFunction } from "./components";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -708,7 +708,7 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  unstable_handleError?: unstable_HandleErrorFunction,
+  unstable_handleError?: unstable_ClientHandleErrorFunction,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -929,7 +929,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
-  unstable_handleError: unstable_HandleErrorFunction | null;
+  unstable_handleError: unstable_ClientHandleErrorFunction | null;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -1048,7 +1048,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  unstable_handleError: unstable_HandleErrorFunction | null = null,
+  unstable_handleError: unstable_ClientHandleErrorFunction | null = null,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {

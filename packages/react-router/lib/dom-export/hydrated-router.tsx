@@ -6,7 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
-  unstable_HandleErrorFunction,
+  unstable_ClientHandleErrorFunction,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -243,7 +243,7 @@ export interface HydratedRouterProps {
    * }} />
    * ```
    */
-  unstable_handleError?: unstable_HandleErrorFunction;
+  unstable_handleError?: unstable_ClientHandleErrorFunction;
 }
 
 /**
