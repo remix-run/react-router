@@ -175,9 +175,11 @@ test("allows users to pass a handleError function to HydratedRouter", async ({
 
   let appFixture = await createAppFixture(fixture);
   let app = new PlaywrightFixture(appFixture, page);
+
   await app.goto("/", true);
   await page.click('a[href="/page"]');
   await page.waitForSelector("[data-error]");
+
   expect(await app.getHtml()).toContain("Error: Render error");
   expect(logs.length).toBe(2);
   // First one is react logging the error

@@ -1239,13 +1239,6 @@ export function createRouter(init: RouterInit): Router {
       ...newState,
     };
 
-    // Send loader/action errors through handleError
-    if (newState.errors && unstable_handleError) {
-      Object.values(newState.errors).forEach((error) =>
-        unstable_handleError(error, { location: state.location }),
-      );
-    }
-
     // Cleanup for all fetchers that have returned to idle since we only
     // care about in-flight fetchers
     // - If it's been unmounted then we can completely delete it

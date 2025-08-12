@@ -350,7 +350,10 @@ export function HydratedRouter(props: HydratedRouterProps) {
         }}
       >
         <RemixErrorBoundary location={location}>
-          <RouterProvider router={router} />
+          <RouterProvider
+            router={router}
+            unstable_handleError={props.unstable_handleError}
+          />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>
       {/*

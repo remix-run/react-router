@@ -1,12 +1,7 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import * as React from "react";
 
-import {
-  Outlet,
-  RouterProvider,
-  createMemoryRouter,
-  useFetcher,
-} from "../../index";
+import { RouterProvider, createMemoryRouter, useFetcher } from "../../index";
 
 import getHtml from "../utils/getHtml";
 import { createFormData } from "../router/utils/utils";
@@ -24,27 +19,24 @@ describe(`handleError`, () => {
 
   it("handles navigation loader errors", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/page",
-          loader() {
-            throw new Error("loader error!");
-          },
-          Component: () => <h1>Page</h1>,
-          ErrorBoundary: () => <h1>Error</h1>,
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/page",
+        loader() {
+          throw new Error("loader error!");
+        },
+        Component: () => <h1>Page</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() => router.navigate("/page"));
 
@@ -62,27 +54,24 @@ describe(`handleError`, () => {
 
   it("handles navigation action errors", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/page",
-          action() {
-            throw new Error("action error!");
-          },
-          Component: () => <h1>Page</h1>,
-          ErrorBoundary: () => <h1>Error</h1>,
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/page",
+        action() {
+          throw new Error("action error!");
+        },
+        Component: () => <h1>Page</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() =>
       router.navigate("/page", {
@@ -105,25 +94,22 @@ describe(`handleError`, () => {
 
   it("handles fetcher loader errors", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/fetch",
-          loader() {
-            throw new Error("loader error!");
-          },
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/fetch",
+        loader() {
+          throw new Error("loader error!");
+        },
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() => router.fetch("key", "0", "/fetch"));
 
@@ -141,25 +127,22 @@ describe(`handleError`, () => {
 
   it("handles fetcher action errors", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/fetch",
-          action() {
-            throw new Error("action error!");
-          },
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/fetch",
+        action() {
+          throw new Error("action error!");
+        },
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() =>
       router.fetch("key", "0", "/fetch", {
@@ -182,26 +165,23 @@ describe(`handleError`, () => {
 
   it("handles render errors", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/page",
-          Component: () => {
-            throw new Error("render error!");
-          },
-          ErrorBoundary: () => <h1>Error</h1>,
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/page",
+        Component: () => {
+          throw new Error("render error!");
+        },
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() => router.navigate("/page"));
 
@@ -221,42 +201,39 @@ describe(`handleError`, () => {
 
   it("doesn't double report on state updates during an error boundary from a data error", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/page",
-          loader() {
-            throw new Error("loader error!");
-          },
-          Component: () => <h1>Page</h1>,
-          ErrorBoundary() {
-            let fetcher = useFetcher();
-            return (
-              <>
-                <h1>Error</h1>
-                <button onClick={() => fetcher.load("/fetch")}>Fetch</button>
-                <p>{fetcher.data}</p>
-              </>
-            );
-          },
-        },
-        {
-          path: "/fetch",
-          loader() {
-            return "FETCH";
-          },
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/page",
+        loader() {
+          throw new Error("loader error!");
+        },
+        Component: () => <h1>Page</h1>,
+        ErrorBoundary() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <h1>Error</h1>
+              <button onClick={() => fetcher.load("/fetch")}>Fetch</button>
+              <p>{fetcher.data}</p>
+            </>
+          );
+        },
+      },
+      {
+        path: "/fetch",
+        loader() {
+          return "FETCH";
+        },
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() => router.navigate("/page"));
 
@@ -279,41 +256,38 @@ describe(`handleError`, () => {
 
   it("doesn't double report on state updates during an error boundary from a render error", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          Component: () => <h1>Home</h1>,
-        },
-        {
-          path: "/page",
-          Component: () => {
-            throw new Error("render error!");
-          },
-          ErrorBoundary() {
-            let fetcher = useFetcher();
-            return (
-              <>
-                <h1>Error</h1>
-                <button onClick={() => fetcher.load("/fetch")}>Fetch</button>
-                <p>{fetcher.data}</p>
-              </>
-            );
-          },
-        },
-        {
-          path: "/fetch",
-          loader() {
-            return "FETCH";
-          },
-        },
-      ],
+    let router = createMemoryRouter([
       {
-        unstable_handleError: spy,
+        path: "/",
+        Component: () => <h1>Home</h1>,
       },
-    );
+      {
+        path: "/page",
+        Component: () => {
+          throw new Error("render error!");
+        },
+        ErrorBoundary() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <h1>Error</h1>
+              <button onClick={() => fetcher.load("/fetch")}>Fetch</button>
+              <p>{fetcher.data}</p>
+            </>
+          );
+        },
+      },
+      {
+        path: "/fetch",
+        loader() {
+          return "FETCH";
+        },
+      },
+    ]);
 
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
 
     await act(() => router.navigate("/page"));
 

@@ -289,6 +289,27 @@ export interface RouterProviderProps {
    *   `RouterProvider` from `react-router` and ignore this prop
    */
   flushSync?: (fn: () => unknown) => undefined;
+  /**
+   * An error handler function that will be called for any loader/action/render
+   * errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of the `ErrorBoundary` because it's not
+   * subject to re-rendering and will only run one time per error.
+   *
+   * The `errorInfo` parameter is passed along from
+   * [`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
+   * and is only present for render errors.
+   *
+   * ```tsx
+   * <RouterProvider unstable_handleError=(error, { location, errorInfo }) => {
+   *   console.log(
+   *     `Error at location ${location.pathname}`,
+   *     error,
+   *     errorInfo
+   *   );
+   * }} />
+   * ```
+   */
+  unstable_handleError?: unstable_HandleErrorFunction;
 }
 
 /**
@@ -319,11 +340,13 @@ export interface RouterProviderProps {
  * @param props Props
  * @param {RouterProviderProps.flushSync} props.flushSync n/a
  * @param {RouterProviderProps.router} props.router n/a
+ * @param {RouterProviderProps.unstable_handleError} props.unstable_handleError n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
+  unstable_handleError,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
@@ -338,6 +361,22 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let logErrorsAndSetState = React.useCallback(
+    (newState: RouterState) => {
+      setStateImpl((prevState) => {
+        // Send loader/action errors through handleError
+        if (newState.errors && unstable_handleError) {
+          Object.entries(newState.errors).forEach(([routeId, error]) => {
+            if (prevState.errors?.[routeId] !== error) {
+              unstable_handleError(error, { location: newState.location });
+            }
+          });
+        }
+        return newState;
+      });
+    },
+    [unstable_handleError],
+  );
 
   let setState = React.useCallback<RouterSubscriber>(
     (
@@ -377,9 +416,9 @@ export function RouterProvider({
       // just update and be done with it
       if (!viewTransitionOpts || !isViewTransitionAvailable) {
         if (reactDomFlushSyncImpl && flushSync) {
-          reactDomFlushSyncImpl(() => setStateImpl(newState));
+          reactDomFlushSyncImpl(() => logErrorsAndSetState(newState));
         } else {
-          React.startTransition(() => setStateImpl(newState));
+          React.startTransition(() => logErrorsAndSetState(newState));
         }
         return;
       }
@@ -403,7 +442,7 @@ export function RouterProvider({
 
         // Update the DOM
         let t = router.window!.document.startViewTransition(() => {
-          reactDomFlushSyncImpl(() => setStateImpl(newState));
+          reactDomFlushSyncImpl(() => logErrorsAndSetState(newState));
         });
 
         // Clean up after the animation completes
@@ -442,7 +481,13 @@ export function RouterProvider({
         });
       }
     },
-    [router.window, reactDomFlushSyncImpl, transition, renderDfd],
+    [
+      router.window,
+      reactDomFlushSyncImpl,
+      transition,
+      renderDfd,
+      logErrorsAndSetState,
+    ],
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -465,7 +510,7 @@ export function RouterProvider({
       let newState = pendingState;
       let renderPromise = renderDfd.promise;
       let transition = router.window.document.startViewTransition(async () => {
-        React.startTransition(() => setStateImpl(newState));
+        React.startTransition(() => logErrorsAndSetState(newState));
         await renderPromise;
       });
       transition.finished.finally(() => {
@@ -476,7 +521,7 @@ export function RouterProvider({
       });
       setTransition(transition);
     }
-  }, [pendingState, renderDfd, router.window]);
+  }, [pendingState, renderDfd, router.window, logErrorsAndSetState]);
 
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition
@@ -558,7 +603,7 @@ export function RouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
-                  unstable_handleError={router._internalHandleError}
+                  unstable_handleError={unstable_handleError}
                 />
               </Router>
             </ViewTransitionContext.Provider>
