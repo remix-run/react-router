@@ -250,13 +250,7 @@ class Deferred<T> {
  * and rendering errors via `componentDidCatch`
  */
 export interface unstable_ClientHandleErrorFunction {
-  (
-    error: unknown,
-    info: {
-      location: Location;
-      errorInfo?: React.ErrorInfo;
-    },
-  ): void;
+  (error: unknown, errorInfo?: React.ErrorInfo): void;
 }
 
 /**
@@ -288,12 +282,9 @@ export interface RouterProviderProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <RouterProvider unstable_handleError=(error, { location, errorInfo }) => {
-   *   console.log(
-   *     `Error at location ${location.pathname}`,
-   *     error,
-   *     errorInfo
-   *   );
+   * <RouterProvider unstable_handleError=(error, errorInfo) => {
+   *   console.error(error, errorInfo);
+   *   reportToErrorService(error, errorInfo);
    * }} />
    * ```
    */
@@ -356,7 +347,7 @@ export function RouterProvider({
         if (newState.errors && unstable_handleError) {
           Object.entries(newState.errors).forEach(([routeId, error]) => {
             if (prevState.errors?.[routeId] !== error) {
-              unstable_handleError(error, { location: newState.location });
+              unstable_handleError(error);
             }
           });
         }
@@ -1402,14 +1393,10 @@ export function Await<Resolve>({
   resolve,
 }: AwaitProps<Resolve>) {
   let dataRouterContext = React.useContext(DataRouterContext);
-  // Use this instead of useLocation() so that Await can still be used standalone
-  // and not inside of a <Router>
-  let dataRouterStateContext = React.useContext(DataRouterStateContext);
   return (
     <AwaitErrorBoundary
       resolve={resolve}
       errorElement={errorElement}
-      location={dataRouterStateContext?.location}
       unstable_handleError={dataRouterContext?.unstable_handleError}
     >
       <ResolveAwait>{children}</ResolveAwait>
@@ -1420,7 +1407,6 @@ export function Await<Resolve>({
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
   resolve: TrackedPromise | any;
-  location?: Location;
   unstable_handleError?: unstable_ClientHandleErrorFunction;
 }>;
 
@@ -1448,12 +1434,9 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    if (this.props.unstable_handleError && this.props.location) {
+    if (this.props.unstable_handleError) {
       // Log render errors
-      this.props.unstable_handleError(error, {
-        location: this.props.location,
-        errorInfo,
-      });
+      this.props.unstable_handleError(error, errorInfo);
     } else {
       console.error(
         "<Await> caught the following error during render",
@@ -1500,9 +1483,7 @@ class AwaitErrorBoundary extends React.Component<
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) => {
           // Log promise rejections
-          this.props.unstable_handleError?.(error, {
-            location: this.props.location,
-          });
+          this.props.unstable_handleError?.(error);
           Object.defineProperty(resolve, "_error", { get: () => error });
         },
       );

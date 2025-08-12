@@ -52,15 +52,8 @@ describe(`handleError`, () => {
 
     await act(() => router.navigate("/page"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("loader error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: undefined,
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"));
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
 
@@ -92,15 +85,8 @@ describe(`handleError`, () => {
       }),
     );
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("action error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: undefined,
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("action error!"));
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
 
@@ -125,15 +111,8 @@ describe(`handleError`, () => {
 
     await act(() => router.fetch("key", "0", "/fetch"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("loader error!"),
-        {
-          location: expect.objectContaining({ pathname: "/" }),
-          errorInfo: undefined,
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"));
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
 
@@ -163,15 +142,8 @@ describe(`handleError`, () => {
       }),
     );
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("action error!"),
-        {
-          location: expect.objectContaining({ pathname: "/" }),
-          errorInfo: undefined,
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("action error!"));
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
 
@@ -197,17 +169,13 @@ describe(`handleError`, () => {
 
     await act(() => router.navigate("/page"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("render error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: expect.objectContaining({
-            componentStack: expect.any(String),
-          }),
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(
+      new Error("render error!"),
+      expect.objectContaining({
+        componentStack: expect.any(String),
+      }),
+    );
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
 
@@ -245,14 +213,8 @@ describe(`handleError`, () => {
     await act(() => router.navigate("/page"));
     await waitFor(() => screen.getByText("Await Error"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("await error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("await error!"));
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Await Error");
   });
 
@@ -296,17 +258,13 @@ describe(`handleError`, () => {
     await act(() => router.navigate("/page"));
     await waitFor(() => screen.getByText("Await Error"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("await error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: expect.objectContaining({
-            componentStack: expect.any(String),
-          }),
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(
+      new Error("await error!"),
+      expect.objectContaining({
+        componentStack: expect.any(String),
+      }),
+    );
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Await Error");
   });
 
@@ -353,23 +311,14 @@ describe(`handleError`, () => {
     await act(() => router.navigate("/page"));
     await waitFor(() => screen.getByText("Route Error"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("await error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-        },
-      ],
-      [
-        new Error("errorElement error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: expect.objectContaining({
-            componentStack: expect.any(String),
-          }),
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("await error!"));
+    expect(spy).toHaveBeenCalledWith(
+      new Error("errorElement error!"),
+      expect.objectContaining({
+        componentStack: expect.any(String),
+      }),
+    );
+    expect(spy).toHaveBeenCalledTimes(2);
     expect(getHtml(container)).toContain("Route Error");
   });
 
@@ -411,15 +360,8 @@ describe(`handleError`, () => {
 
     await act(() => router.navigate("/page"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("loader error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: undefined,
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"));
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
 
     // Doesn't re-call on a fetcher update from a rendered error boundary
@@ -465,17 +407,13 @@ describe(`handleError`, () => {
 
     await act(() => router.navigate("/page"));
 
-    expect(spy.mock.calls).toEqual([
-      [
-        new Error("render error!"),
-        {
-          location: expect.objectContaining({ pathname: "/page" }),
-          errorInfo: expect.objectContaining({
-            componentStack: expect.any(String),
-          }),
-        },
-      ],
-    ]);
+    expect(spy).toHaveBeenCalledWith(
+      new Error("render error!"),
+      expect.objectContaining({
+        componentStack: expect.any(String),
+      }),
+    );
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
 
     // Doesn't re-call on a fetcher update from a rendered error boundary

@@ -234,12 +234,9 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter unstable_handleError={(error, { location, errorInfo }) => {
-   *   console.log(
-   *     `Error at location ${location.pathname}`,
-   *     error,
-   *     errorInfo
-   *   );
+   * <HydratedRouter unstable_handleError={(error, errorInfo) => {
+   *   console.error(error, errorInfo);
+   *   reportToErrorService(error, errorInfo);
    * }} />
    * ```
    */

@@ -991,10 +991,7 @@ export class RenderErrorBoundary extends React.Component<
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
     if (this.props.unstable_handleError) {
-      this.props.unstable_handleError(error, {
-        location: this.props.location,
-        errorInfo,
-      });
+      this.props.unstable_handleError(error, errorInfo);
     } else {
       console.error(
         "React Router caught the following error during render",
