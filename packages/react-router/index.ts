@@ -12,7 +12,6 @@ export type {
   StaticHandler,
   GetScrollPositionFunction,
   GetScrollRestorationKeyFunction,
-  unstable_HandleErrorFunction,
   StaticHandlerContext,
   Fetcher,
   Navigation,
@@ -98,6 +97,7 @@ export type {
 export type {
   AwaitProps,
   IndexRouteProps,
+  unstable_HandleErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,

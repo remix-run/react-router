@@ -30,7 +30,6 @@ import type {
   Router as DataRouter,
   RevalidationState,
   Navigation,
-  unstable_HandleErrorFunction,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
@@ -52,6 +51,7 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
+import { unstable_HandleErrorFunction } from "./components";
 
 /**
  * Resolves a URL against the current {@link Location}.

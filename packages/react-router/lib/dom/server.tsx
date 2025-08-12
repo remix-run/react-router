@@ -484,9 +484,6 @@ export function createStaticRouter(
     patchRoutes() {
       throw msg("patchRoutes");
     },
-    _internalHandleError() {
-      throw msg("_internalHandleError");
-    },
     _internalFetchControllers: new Map(),
     _internalSetRoutes() {
       throw msg("_internalSetRoutes");

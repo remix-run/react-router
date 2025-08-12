@@ -6,6 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
+  unstable_HandleErrorFunction,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -77,10 +78,8 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   unstable_getContext,
-  unstable_handleError,
 }: {
   unstable_getContext?: RouterInit["unstable_getContext"];
-  unstable_handleError?: RouterInit["unstable_handleError"];
 }): DataRouter {
   initSsrInfo();
 
@@ -171,7 +170,6 @@ function createHydratedRouter({
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
     unstable_getContext,
-    unstable_handleError,
     hydrationData,
     hydrationRouteProperties,
     mapRouteProperties,
@@ -245,7 +243,7 @@ export interface HydratedRouterProps {
    * }} />
    * ```
    */
-  unstable_handleError?: RouterInit["unstable_handleError"];
+  unstable_handleError?: unstable_HandleErrorFunction;
 }
 
 /**
@@ -264,7 +262,6 @@ export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       unstable_getContext: props.unstable_getContext,
-      unstable_handleError: props.unstable_handleError,
     });
   }
 

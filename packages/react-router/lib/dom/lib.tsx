@@ -24,7 +24,6 @@ import type {
   RelativeRoutingType,
   Router as DataRouter,
   RouterInit,
-  unstable_HandleErrorFunction,
 } from "../router/router";
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
@@ -721,29 +720,6 @@ export interface DOMRouterOpts {
    */
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   /**
-   * An error handler function that will be called for any loader/action/render
-   * errors that are encountered in your application.  This is useful for
-   * logging or reporting errors instead of the `ErrorBoundary` because it's not
-   * subject to re-rendering and will only run one time per error.
-   *
-   * The `errorInfo` parameter is passed along from
-   * [`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
-   * and is only present for render errors.
-   *
-   * ```tsx
-   * let router = createBrowserRouter(routes, {
-   *   unstable_handleError(error, { location, errorInfo }) {
-   *     console.log(
-   *       `Error at location ${location.pathname}`,
-   *       error,
-   *       errorInfo
-   *     );
-   *   }
-   * );
-   * ```
-   */
-  unstable_handleError?: unstable_HandleErrorFunction;
-  /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance.
    */
@@ -764,7 +740,6 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
- * @param {DOMRouterOpts.unstable_handleError} opts.unstable_handleError n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
@@ -779,7 +754,6 @@ export function createBrowserRouter(
     unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
-    unstable_handleError: opts?.unstable_handleError,
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
@@ -802,7 +776,6 @@ export function createBrowserRouter(
  * @param {DOMRouterOpts.basename} opts.basename n/a
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
- * @param {DOMRouterOpts.unstable_handleError} opts.unstable_handleError n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
@@ -818,7 +791,6 @@ export function createHashRouter(
     unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
-    unstable_handleError: opts?.unstable_handleError,
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
