@@ -1,10 +1,22 @@
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import * as React from "react";
 
-import { RouterProvider, createMemoryRouter, useFetcher } from "../../index";
+import {
+  Await,
+  RouterProvider,
+  createMemoryRouter,
+  useFetcher,
+  useLoaderData,
+} from "../../index";
 
-import getHtml from "../utils/getHtml";
 import { createFormData } from "../router/utils/utils";
+import getHtml from "../utils/getHtml";
 
 describe(`handleError`, () => {
   let consoleError: jest.SpyInstance;
@@ -199,6 +211,168 @@ describe(`handleError`, () => {
     expect(getHtml(container)).toContain("Error");
   });
 
+  it("handles deferred data rejections from <Await>", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => <h1>Home</h1>,
+      },
+      {
+        path: "/page",
+        loader() {
+          return {
+            promise: new Promise((_, r) =>
+              setTimeout(() => r(new Error("await error!")), 1),
+            ),
+          };
+        },
+        Component() {
+          let data = useLoaderData();
+          return (
+            <Await resolve={data.promise} errorElement={<h1>Await Error</h1>}>
+              {() => <p>Should not see me</p>}
+            </Await>
+          );
+        },
+      },
+    ]);
+
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
+
+    await act(() => router.navigate("/page"));
+    await waitFor(() => screen.getByText("Await Error"));
+
+    expect(spy.mock.calls).toEqual([
+      [
+        new Error("await error!"),
+        {
+          location: expect.objectContaining({ pathname: "/page" }),
+        },
+      ],
+    ]);
+    expect(getHtml(container)).toContain("Await Error");
+  });
+
+  it("handles render errors from Await components", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => <h1>Home</h1>,
+      },
+      {
+        path: "/page",
+        loader() {
+          return {
+            promise: new Promise((r) => setTimeout(() => r("data"), 10)),
+          };
+        },
+        Component() {
+          let data = useLoaderData();
+          return (
+            <React.Suspense fallback={<p>Loading...</p>}>
+              <Await resolve={data.promise} errorElement={<h1>Await Error</h1>}>
+                <RenderAwait />
+              </Await>
+            </React.Suspense>
+          );
+        },
+      },
+    ]);
+
+    function RenderAwait() {
+      throw new Error("await error!");
+      // eslint-disable-next-line no-unreachable
+      return <p>should not see me</p>;
+    }
+
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
+
+    await act(() => router.navigate("/page"));
+    await waitFor(() => screen.getByText("Await Error"));
+
+    expect(spy.mock.calls).toEqual([
+      [
+        new Error("await error!"),
+        {
+          location: expect.objectContaining({ pathname: "/page" }),
+          errorInfo: expect.objectContaining({
+            componentStack: expect.any(String),
+          }),
+        },
+      ],
+    ]);
+    expect(getHtml(container)).toContain("Await Error");
+  });
+
+  it("handles render errors from Await errorElement", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => <h1>Home</h1>,
+      },
+      {
+        path: "/page",
+        loader() {
+          return {
+            promise: new Promise((_, r) =>
+              setTimeout(() => r(new Error("await error!")), 10),
+            ),
+          };
+        },
+        Component() {
+          let data = useLoaderData();
+          return (
+            <React.Suspense fallback={<p>Loading...</p>}>
+              <Await resolve={data.promise} errorElement={<RenderError />}>
+                {() => <p>Should not see me</p>}
+              </Await>
+            </React.Suspense>
+          );
+        },
+        ErrorBoundary: () => <h1>Route Error</h1>,
+      },
+    ]);
+
+    function RenderError() {
+      throw new Error("errorElement error!");
+      // eslint-disable-next-line no-unreachable
+      return <p>should not see me</p>;
+    }
+
+    let { container } = render(
+      <RouterProvider router={router} unstable_handleError={spy} />,
+    );
+
+    await act(() => router.navigate("/page"));
+    await waitFor(() => screen.getByText("Route Error"));
+
+    expect(spy.mock.calls).toEqual([
+      [
+        new Error("await error!"),
+        {
+          location: expect.objectContaining({ pathname: "/page" }),
+        },
+      ],
+      [
+        new Error("errorElement error!"),
+        {
+          location: expect.objectContaining({ pathname: "/page" }),
+          errorInfo: expect.objectContaining({
+            componentStack: expect.any(String),
+          }),
+        },
+      ],
+    ]);
+    expect(getHtml(container)).toContain("Route Error");
+  });
+
   it("doesn't double report on state updates during an error boundary from a data error", async () => {
     let spy = jest.fn();
     let router = createMemoryRouter([
@@ -250,7 +424,7 @@ describe(`handleError`, () => {
 
     // Doesn't re-call on a fetcher update from a rendered error boundary
     await fireEvent.click(container.querySelector("button")!);
-    await waitFor(() => (getHtml(container) as string).includes("FETCH"));
+    await waitFor(() => screen.getByText("FETCH"));
     expect(spy.mock.calls.length).toBe(1);
   });
 
@@ -306,7 +480,7 @@ describe(`handleError`, () => {
 
     // Doesn't re-call on a fetcher update from a rendered error boundary
     await fireEvent.click(container.querySelector("button")!);
-    await waitFor(() => (getHtml(container) as string).includes("FETCH"));
+    await waitFor(() => screen.getByText("FETCH"));
     expect(spy.mock.calls.length).toBe(1);
   });
 });

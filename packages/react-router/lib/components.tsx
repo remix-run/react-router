@@ -565,8 +565,9 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
+      unstable_handleError,
     }),
-    [router, navigator, basename],
+    [router, navigator, basename, unstable_handleError],
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
@@ -1400,8 +1401,17 @@ export function Await<Resolve>({
   errorElement,
   resolve,
 }: AwaitProps<Resolve>) {
+  let dataRouterContext = React.useContext(DataRouterContext);
+  // Use this instead of useLocation() so that Await can still be used standalone
+  // and not inside of a <Router>
+  let dataRouterStateContext = React.useContext(DataRouterStateContext);
   return (
-    <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
+    <AwaitErrorBoundary
+      resolve={resolve}
+      errorElement={errorElement}
+      location={dataRouterStateContext?.location}
+      unstable_handleError={dataRouterContext?.unstable_handleError}
+    >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
   );
@@ -1410,6 +1420,8 @@ export function Await<Resolve>({
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
   resolve: TrackedPromise | any;
+  location?: Location;
+  unstable_handleError?: unstable_HandleErrorFunction;
 }>;
 
 type AwaitErrorBoundaryState = {
@@ -1435,12 +1447,20 @@ class AwaitErrorBoundary extends React.Component<
     return { error };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error(
-      "<Await> caught the following error during render",
-      error,
-      errorInfo,
-    );
+  componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
+    if (this.props.unstable_handleError && this.props.location) {
+      // Log render errors
+      this.props.unstable_handleError(error, {
+        location: this.props.location,
+        errorInfo,
+      });
+    } else {
+      console.error(
+        "<Await> caught the following error during render",
+        error,
+        errorInfo,
+      );
+    }
   }
 
   render() {
@@ -1478,8 +1498,13 @@ class AwaitErrorBoundary extends React.Component<
       promise = resolve.then(
         (data: any) =>
           Object.defineProperty(resolve, "_data", { get: () => data }),
-        (error: any) =>
-          Object.defineProperty(resolve, "_error", { get: () => error }),
+        (error: any) => {
+          // Log promise rejections
+          this.props.unstable_handleError?.(error, {
+            location: this.props.location,
+          });
+          Object.defineProperty(resolve, "_error", { get: () => error });
+        },
       );
     }
 

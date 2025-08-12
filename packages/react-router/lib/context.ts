@@ -1,8 +1,9 @@
 import * as React from "react";
+import type { unstable_HandleErrorFunction } from "./components";
 import type {
   History,
-  Action as NavigationType,
   Location,
+  Action as NavigationType,
   To,
 } from "./router/history";
 import type {
@@ -90,6 +91,7 @@ export interface DataRouterContextObject
   extends Omit<NavigationContextObject, "future"> {
   router: Router;
   staticContext?: StaticHandlerContext;
+  unstable_handleError?: unstable_HandleErrorFunction;
 }
 
 export const DataRouterContext =
