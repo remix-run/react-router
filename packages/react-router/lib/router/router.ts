@@ -1,5 +1,3 @@
-import type * as React from "react";
-
 import type { DataRouteMatch, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {

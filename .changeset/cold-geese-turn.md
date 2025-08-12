@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-[UNSTABLE] Add support for `unstable_handleError` for client side data routers
+[UNSTABLE] Add `<RouterProvider unstable_handleError>` prop for client side error reporting
