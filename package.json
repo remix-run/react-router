@@ -54,7 +54,7 @@
     "@babel/preset-typescript": "^7.27.1",
     "@changesets/cli": "^2.26.2",
     "@manypkg/get-packages": "^1.1.3",
-    "@mdx-js/rollup": "^3.0.0",
+    "@mdx-js/rollup": "^3.1.0",
     "@playwright/test": "^1.49.1",
     "@remix-run/changelog-github": "^0.0.5",
     "@types/jest": "^29.5.4",
@@ -100,7 +100,8 @@
   "pnpm": {
     "patchedDependencies": {
       "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch",
-      "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
+      "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch",
+      "@mdx-js/rollup": "patches/@mdx-js__rollup.patch"
     },
     "overrides": {
       "workerd": "1.20250705.0",

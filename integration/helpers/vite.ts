@@ -78,6 +78,7 @@ type ViteConfigBuildArgs = {
 type ViteConfigBaseArgs = {
   templateName?: TemplateName;
   envDir?: string;
+  mdx?: boolean;
 };
 
 type ViteConfigArgs = (
@@ -138,6 +139,7 @@ export const viteConfig = {
               "const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;",
             ].join("\n")
       }
+      ${args.mdx ? 'import mdx from "@mdx-js/rollup";' : ""}
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -146,6 +148,7 @@ export const viteConfig = {
         ${viteConfig.build(args)}
         envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
+          ${args.mdx ? "mdx()," : ""}
           reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
