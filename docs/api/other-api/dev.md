@@ -122,3 +122,6 @@ react-router typegen
 
 [loaders]: ../../start/framework/data-loading
 [vite]: https://vite.dev
+[entry-server]: ../framework-conventions/entry.server.tsx
+[entry-client]: ../framework-conventions/entry.client.tsx
+[type-safety]: ../../explanation/type-safety
