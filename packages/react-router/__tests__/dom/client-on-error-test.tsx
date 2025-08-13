@@ -47,7 +47,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -75,7 +75,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() =>
@@ -106,7 +106,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.fetch("key", "0", "/fetch"));
@@ -132,7 +132,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() =>
@@ -164,7 +164,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -207,7 +207,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -252,7 +252,7 @@ describe(`handleError`, () => {
     }
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -305,7 +305,7 @@ describe(`handleError`, () => {
     }
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -355,7 +355,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -402,7 +402,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_handleError={spy} />,
+      <RouterProvider router={router} unstable_onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));

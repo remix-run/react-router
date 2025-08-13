@@ -51,7 +51,7 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
-import type { unstable_ClientHandleErrorFunction } from "./components";
+import type { unstable_ClientOnErrorFunction } from "./components";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -708,7 +708,7 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  unstable_handleError?: unstable_ClientHandleErrorFunction,
+  unstable_onError?: unstable_ClientOnErrorFunction,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -850,7 +850,7 @@ export function useRoutesImpl(
       ),
     parentMatches,
     dataRouterState,
-    unstable_handleError,
+    unstable_onError,
     future,
   );
 
@@ -929,7 +929,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
-  unstable_handleError: unstable_ClientHandleErrorFunction | null;
+  unstable_onError: unstable_ClientOnErrorFunction | null;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -990,8 +990,8 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    if (this.props.unstable_handleError) {
-      this.props.unstable_handleError(error, errorInfo);
+    if (this.props.unstable_onError) {
+      this.props.unstable_onError(error, errorInfo);
     } else {
       console.error(
         "React Router caught the following error during render",
@@ -1045,7 +1045,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  unstable_handleError: unstable_ClientHandleErrorFunction | null = null,
+  unstable_onError: unstable_ClientOnErrorFunction | null = null,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
@@ -1202,7 +1202,7 @@ export function _renderMatches(
           error={error}
           children={getChildren()}
           routeContext={{ outlet: null, matches, isDataRoute: true }}
-          unstable_handleError={unstable_handleError}
+          unstable_onError={unstable_onError}
         />
       ) : (
         getChildren()

@@ -249,7 +249,7 @@ class Deferred<T> {
  * Function signature for client side error handling for loader/actions errors
  * and rendering errors via `componentDidCatch`
  */
-export interface unstable_ClientHandleErrorFunction {
+export interface unstable_ClientOnErrorFunction {
   (error: unknown, errorInfo?: React.ErrorInfo): void;
 }
 
@@ -282,13 +282,13 @@ export interface RouterProviderProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <RouterProvider unstable_handleError=(error, errorInfo) => {
+   * <RouterProvider unstable_onError=(error, errorInfo) => {
    *   console.error(error, errorInfo);
    *   reportToErrorService(error, errorInfo);
    * }} />
    * ```
    */
-  unstable_handleError?: unstable_ClientHandleErrorFunction;
+  unstable_onError?: unstable_ClientOnErrorFunction;
 }
 
 /**
@@ -317,15 +317,15 @@ export interface RouterProviderProps {
  * @category Data Routers
  * @mode data
  * @param props Props
- * @param {RouterProviderProps.flushSync} props.flushSync n/a
  * @param {RouterProviderProps.router} props.router n/a
- * @param {RouterProviderProps.unstable_handleError} props.unstable_handleError n/a
+ * @param {RouterProviderProps.flushSync} props.flushSync n/a
+ * @param {RouterProviderProps.unstable_onError} props.unstable_onError n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
-  unstable_handleError,
+  unstable_onError,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
@@ -344,17 +344,17 @@ export function RouterProvider({
     (newState: RouterState) => {
       setStateImpl((prevState) => {
         // Send loader/action errors through handleError
-        if (newState.errors && unstable_handleError) {
+        if (newState.errors && unstable_onError) {
           Object.entries(newState.errors).forEach(([routeId, error]) => {
             if (prevState.errors?.[routeId] !== error) {
-              unstable_handleError(error);
+              unstable_onError(error);
             }
           });
         }
         return newState;
       });
     },
-    [unstable_handleError],
+    [unstable_onError],
   );
 
   let setState = React.useCallback<RouterSubscriber>(
@@ -556,9 +556,9 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
-      unstable_handleError,
+      unstable_onError,
     }),
-    [router, navigator, basename, unstable_handleError],
+    [router, navigator, basename, unstable_onError],
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
@@ -583,7 +583,7 @@ export function RouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
-                  unstable_handleError={unstable_handleError}
+                  unstable_onError={unstable_onError}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -602,14 +602,14 @@ function DataRoutes({
   routes,
   future,
   state,
-  unstable_handleError,
+  unstable_onError,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
-  unstable_handleError: unstable_ClientHandleErrorFunction | undefined;
+  unstable_onError: unstable_ClientOnErrorFunction | undefined;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, unstable_handleError, future);
+  return useRoutesImpl(routes, undefined, state, unstable_onError, future);
 }
 
 /**
@@ -1397,7 +1397,7 @@ export function Await<Resolve>({
     <AwaitErrorBoundary
       resolve={resolve}
       errorElement={errorElement}
-      unstable_handleError={dataRouterContext?.unstable_handleError}
+      unstable_onError={dataRouterContext?.unstable_onError}
     >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
@@ -1407,7 +1407,7 @@ export function Await<Resolve>({
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
   resolve: TrackedPromise | any;
-  unstable_handleError?: unstable_ClientHandleErrorFunction;
+  unstable_onError?: unstable_ClientOnErrorFunction;
 }>;
 
 type AwaitErrorBoundaryState = {
@@ -1434,9 +1434,9 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    if (this.props.unstable_handleError) {
+    if (this.props.unstable_onError) {
       // Log render errors
-      this.props.unstable_handleError(error, errorInfo);
+      this.props.unstable_onError(error, errorInfo);
     } else {
       console.error(
         "<Await> caught the following error during render",
@@ -1483,7 +1483,7 @@ class AwaitErrorBoundary extends React.Component<
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) => {
           // Log promise rejections
-          this.props.unstable_handleError?.(error);
+          this.props.unstable_onError?.(error);
           Object.defineProperty(resolve, "_error", { get: () => error });
         },
       );
