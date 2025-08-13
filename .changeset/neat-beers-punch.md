@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Support for buildDirectory on RSC framework output
+Add support for `buildDirectory` on RSC framework output
