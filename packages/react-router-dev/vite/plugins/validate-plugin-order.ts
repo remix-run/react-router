@@ -16,10 +16,6 @@ export default function validatePluginOrder(): Vite.Plugin {
       ];
       for (let prePlugin of rollupPrePlugins) {
         let prePluginIndex = pluginIndex(prePlugin.pluginName);
-        console.log(
-          prePluginIndex,
-          pluginIndex(["react-router", "react-router/rsc"]),
-        );
         if (
           prePluginIndex >= 0 &&
           prePluginIndex > pluginIndex(["react-router", "react-router/rsc"])
