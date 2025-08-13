@@ -73,7 +73,7 @@ That way your app is _always_ up-to-date with the latest code changes, client-si
 
 React Router handles the entry points of your application by default.
 
-If you want to have control over these entry points, you can run `npx react-router reveal` to generate the `entry.client.tsx` and `entry.server.tsx` files in your `app` directory. When these files are present, React Router will use them instead of the defaults.
+If you want to have control over these entry points, you can run `npx react-router reveal` to generate the [`entry.client.tsx`][entry-client] and [`entry.server.tsx`][entry-server] files in your `app` directory. When these files are present, React Router will use them instead of the defaults.
 
 ```shellscript nonumber
 npx react-router reveal
