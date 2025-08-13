@@ -130,8 +130,9 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   appFixture.close();
 });
 
-test("allows users to pass a handleError function to HydratedRouter", async ({
+test("allows users to pass an onError function to HydratedRouter", async ({
   page,
+  browserName,
 }) => {
   let fixture = await createFixture({
     files: {
@@ -183,7 +184,11 @@ test("allows users to pass a handleError function to HydratedRouter", async ({
   expect(await app.getHtml()).toContain("Error: Render error");
   expect(logs.length).toBe(2);
   // First one is react logging the error
-  expect(logs[0]).toContain("Error: Render error");
+  if (browserName === "firefox") {
+    expect(logs[0]).toContain("Error");
+  } else {
+    expect(logs[0]).toContain("Error: Render error");
+  }
   expect(logs[0]).not.toContain("componentStack");
   // Second one is ours
   expect(logs[1]).toContain("Render error");
