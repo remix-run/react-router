@@ -18,13 +18,13 @@ If you initialized your app with `npx create-react-router@latest` with something
 
 <docs-info>If you're using the built-in React Router App Server, you don't interact with this API</docs-info>
 
-Each adapter has the same API. In the future we may have helpers specific to the platform you're deploying to.
+Each adapter has the same API. In the future, we may have helpers specific to the platform you're deploying to.
 
 ## `@react-router/express`
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_express.html)
 
-Here's an example with express:
+Here's an example with [Express][express]:
 
 ```ts lines=[1-3,11-22]
 const {
@@ -60,7 +60,7 @@ You can refer to the [Express template][express-template] as a reference, but he
 
 **1. Update deps**
 
-```sh
+```shellscript nonumber
 npm uninstall @react-router/serve
 npm install @react-router/express compression express morgan cross-env
 npm install --save-dev @types/express @types/express-serve-static-core @types/morgan
@@ -68,7 +68,7 @@ npm install --save-dev @types/express @types/express-serve-static-core @types/mo
 
 **2. Add a server**
 
-Create your React Router express server in `server/app.ts`:
+Create your React Router Express server in `server/app.ts`:
 
 ```ts filename=server/app.ts
 import "react-router";
@@ -162,6 +162,7 @@ While not a direct "adapter" like the above, this package contains utilities for
 
 React Router officially supports **Active** and **Maintenance** [Node LTS versions][node-releases] at any given point in time. Dropped support for End of Life Node versions is done in a React Router Minor release.
 
+[express]: https://expressjs.com
 [node-releases]: https://nodejs.org/en/about/previous-releases
 [web-fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [rr-serve]: ./serve
