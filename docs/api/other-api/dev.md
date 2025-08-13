@@ -108,7 +108,7 @@ react-router routes --json
 
 ## `react-router typegen`
 
-Generates TypeScript types for your routes. This happens automatically during development, but you can manually run it when needed, e.g. to generate types in CI before running `tsc`.
+Generates TypeScript types for your routes. This happens automatically during development, but you can manually run it when needed, e.g. to generate types in CI before running `tsc`.  See [Type Safety][type-safety] for more information.
 
 ```shellscript nonumber
 react-router typegen
