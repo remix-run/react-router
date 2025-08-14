@@ -1,18 +1,20 @@
+import nodePath from "node:path";
+
 type BlogPost = {
   Component: React.ComponentType;
+  path: string;
   title: string;
   slug: string;
-  path: string;
 };
 
-async function resolvePosts(): Promise<
-  Record<string, () => Promise<BlogPost>>
-> {
+async function resolvePosts(): Promise<{
+  [slug: string]: () => Promise<BlogPost>;
+}> {
   const rawPosts = (await import.meta.glob("./*/*.mdx")) as Record<
     string,
     () => Promise<{
       default: React.ComponentType;
-      frontmatter: { title: string };
+      frontmatter?: unknown;
     }>
   >;
 
@@ -23,31 +25,32 @@ async function resolvePosts(): Promise<
       return [
         slug,
         async (): Promise<BlogPost> => {
-          const pathParts = path.split("/");
-          const directoryName = pathParts[pathParts.length - 2];
-
-          if (directoryName !== slug) {
-            throw new Error(
-              `Invalid post structure: directory name "${directoryName}" does not match slug "${slug}" in path "${path}"`,
-            );
-          }
-
           const post = await loadPost();
 
+          let title: string;
           if (
-            !post?.frontmatter ||
-            typeof post.frontmatter !== "object" ||
-            !("title" in post.frontmatter) ||
-            typeof post.frontmatter.title !== "string"
+            post.frontmatter &&
+            typeof post.frontmatter === "object" &&
+            "title" in post.frontmatter &&
+            typeof post.frontmatter.title === "string"
           ) {
-            throw new Error(`Invalid frontmatter for ${path}`);
+            title = post.frontmatter.title;
+          } else {
+            const prettyPath = nodePath.relative(
+              process.cwd(),
+              nodePath.resolve(import.meta.dirname, path),
+            );
+            console.error(
+              `Invalid frontmatter for ${prettyPath}: Missing title`,
+            );
+            title = "Untitled Post";
           }
 
           return {
             Component: post.default,
-            title: post.frontmatter.title,
-            slug,
             path: `/mdx-glob/${slug}`,
+            title,
+            slug,
           };
         },
       ];
@@ -55,20 +58,14 @@ async function resolvePosts(): Promise<
   );
 }
 
-export async function getPost(slug: string): Promise<BlogPost | undefined> {
+export async function getPost(slug: string): Promise<BlogPost | null> {
   const posts = await resolvePosts();
   const loadPost = posts[slug];
-
-  if (!loadPost) {
-    return undefined;
-  }
-
-  return await loadPost();
+  return loadPost ? await loadPost() : null;
 }
 
 export async function getPosts(): Promise<Record<string, BlogPost>> {
   const posts = await resolvePosts();
-
   return Object.fromEntries(
     await Promise.all(
       Object.entries(posts).map(async ([slug, loadPost]) => {
