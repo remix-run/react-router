@@ -22,7 +22,9 @@ jobs:
       published_packages: ${{ steps.changesets.outputs.publishedPackages }}
       published: ${{ steps.changesets.outputs.published }}
     permissions:
+      contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
+      pull-requests: write # enable opening a PR for the release
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
@@ -99,4 +101,7 @@ jobs:
     name: 📝 Comment on related issues and pull requests
     if: github.repository == 'remix-run/react-router' && github.ref_name != 'release-v6' && needs.find_package_version.outputs.package_version != ''
     needs: [release, find_package_version]
+    permissions:
+      issues: write # enable commenting on released issues
+      pull-requests: write # enable commenting on released pull requests
     uses: ./.github/workflows/release-comments.yml
