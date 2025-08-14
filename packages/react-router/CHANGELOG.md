@@ -1,5 +1,17 @@
 # `react-router`
 
+## 7.8.1-pre.0
+
+### Patch Changes
+
+- Fix usage of optional path segments in nested routes defined using absolute paths ([#14135](https://github.com/remix-run/react-router/pull/14135))
+- Bubble client pre-next middleware error to the shallowest ancestor that needs to load, not strictly the shallowest ancestor with a loader ([#14150](https://github.com/remix-run/react-router/pull/14150))
+- Fix optional static segment matching in `matchPath` ([#11813](https://github.com/remix-run/react-router/pull/11813))
+- Fix prerendering when a `basename` is set with `ssr:false` ([#13791](https://github.com/remix-run/react-router/pull/13791))
+- Provide `isRouteErrorResponse` utility in `react-server` environments ([#14166](https://github.com/remix-run/react-router/pull/14166))
+- Handle `meta` and `links` Route Exports in RSC Data Mode ([#14136](https://github.com/remix-run/react-router/pull/14136))
+- Properly handle data() values returned or thrown from resource routes and return corresponding responses with the data, status, and headers ([#14159](https://github.com/remix-run/react-router/pull/14159))
+
 ## 7.8.0
 
 ### Minor Changes
