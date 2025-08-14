@@ -14,8 +14,8 @@ export async function loader({ params }: Route.LoaderArgs) {
   };
 }
 
-export function meta({ loaderData }: Route.ComponentProps) {
-  return [{ title: loaderData.title }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [{ title: loaderData!.title }];
 }
 
 export function ServerComponent({ loaderData }: Route.ComponentProps) {
