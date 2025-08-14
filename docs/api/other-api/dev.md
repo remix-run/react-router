@@ -51,7 +51,7 @@ HMR handles client-side code updates like when you change the components, markup
 Likewise, HDR handles server-side code updates.
 
 That means any time you make a change to the current page (or any code that your current page depends on), React Router will re-fetch data from your [loaders][loaders].
-That way your app is _always_ up-to-date with the latest code changes, client-side or server-side.
+That way your app is _always_ up to date with the latest code changes, client-side or server-side.
 
 </docs-info>
 
@@ -108,7 +108,7 @@ react-router routes --json
 
 ## `react-router typegen`
 
-Generates TypeScript types for your routes. This happens automatically during development, but you can manually run it when needed, e.g. to generate types in CI before running `tsc`.  See [Type Safety][type-safety] for more information.
+Generates TypeScript types for your routes. This happens automatically during development, but you can manually run it when needed, e.g., to generate types in CI before running `tsc`.  See [Type Safety][type-safety] for more information.
 
 ```shellscript nonumber
 react-router typegen

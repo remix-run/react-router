@@ -40,7 +40,7 @@ PORT=4000 npx react-router-serve build/index.js
 
 Depending on `process.env.NODE_ENV`, the server will boot in development or production mode.
 
-The `server-build-path` needs to point to the `serverBuildPath` defined in `react-router.config.ts`.
+The `server-build-path` needs to point to the `serverBuildPath` defined in [`react-router.config.ts`][rr-config].
 
 Because only the build artifacts (`build/`, `public/build/`) need to be deployed to production, the `react-router.config.ts` is not guaranteed to be available in production, so you need to tell React Router where your server build is with this option.
 
@@ -53,7 +53,9 @@ In development, `react-router-serve` will ensure the latest code is run by purgi
   // cleared and this will be required brand new
   const cache = new Map();
 
-  export async function loader({ params }) {
+  export async function loader({
+    params,
+  }: Route.LoaderArgs) {
     if (cache.has(params.foo)) {
       return cache.get(params.foo);
     }
@@ -62,10 +64,9 @@ In development, `react-router-serve` will ensure the latest code is run by purgi
     cache.set(params.foo, record);
     return record;
   }
-
-  If you need a workaround for preserving cache in development, you can set up a [singleton][singleton] in your server.
-
   ```
+
+  If you need a workaround for preserving cache in development, you can set up a singleton in your server.
 
 - Any **module side effects** will remain in place! This may cause problems but should probably be avoided anyway.
 
@@ -80,16 +81,19 @@ In development, `react-router-serve` will ensure the latest code is run by purgi
   }
   ```
 
-  If you need to write your code in a way that has these types of module side effects, you should set up your own [@react-router/express][rr-express] server and a tool in development like `pm2-dev` or `nodemon` to restart the server on file changes instead.
+  If you need to write your code in a way that has these types of module side effects, you should set up your own [@react-router/express][rr-express] server and a tool in development like [`pm2-dev`][pm2-dev] or [`nodemon`][nodemon] to restart the server on file changes instead.
 
-In production this doesn't happen. The server boots up, and that's the end of it.
+In production, this doesn't happen. The server boots up, and that's the end of it.
 
-[rr-express]: ./adapter#createrequesthandler
+[rr-express]: ./adapter#react-routerexpress
 [express-listen]: https://expressjs.com/en/api.html#app.listen
+[rr-config]: ../framework-conventions/react-router.config.ts
 [rr-serve-code]: https://github.com/remix-run/react-router/blob/main/packages/react-router-serve/cli.ts
 [compression]: https://expressjs.com/en/resources/middleware/compression.html
 [express-static]: https://expressjs.com/en/4x/api.html#express.static
 [serve-static]: https://expressjs.com/en/resources/middleware/serve-static.html
 [morgan]: https://expressjs.com/en/resources/middleware/morgan.html
-[express]: https://expressjs.com/
+[express]: https://expressjs.com
 [migrate-to-express]: ./adapter#migrating-from-the-react-router-app-server
+[pm2-dev]: https://npm.im/pm2-dev
+[nodemon]: https://npm.im/nodemon
