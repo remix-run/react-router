@@ -10,7 +10,7 @@ import type {
   ServerDataFunctionArgs,
 } from "./route-data";
 import type { RouteModule } from "./route-module";
-import type { Pretty } from "./utils";
+import type { Pretty, Func, Expect, Equal } from "./utils";
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -48,6 +48,12 @@ type MetaMatches<T extends Array<MatchInfo>> =
     ? [MetaMatch<F>, ...MetaMatches<R>]
     : Array<MetaMatch<MatchInfo> | undefined>;
 
+type HasErrorBoundary<T extends RouteInfo> = T["module"] extends {
+  ErrorBoundary: Func;
+}
+  ? true
+  : false;
+
 type CreateMetaArgs<T extends RouteInfo> = {
   /** This is the current router `Location` object. This is useful for generating tags for routes at specific paths or query parameters. */
   location: Location;
@@ -58,9 +64,13 @@ type CreateMetaArgs<T extends RouteInfo> = {
    *
    * @deprecated Use `Route.MetaArgs.loaderData` instead
    */
-  data: T["loaderData"] | undefined;
+  data:
+    | T["loaderData"]
+    | (HasErrorBoundary<T> extends true ? undefined : never);
   /** The return value for this route's server loader function */
-  loaderData: T["loaderData"] | undefined;
+  loaderData:
+    | T["loaderData"]
+    | (HasErrorBoundary<T> extends true ? undefined : never);
   /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
   error?: unknown;
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
@@ -215,3 +225,88 @@ export type GetAnnotations<Info extends RouteInfo> = {
   // ErrorBoundary
   ErrorBoundaryProps: CreateErrorBoundaryProps<Info>;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type __tests = [
+  // Test that MetaArgs.loaderData is only potentially undefined when ErrorBoundary is present
+  Expect<
+    Equal<
+      CreateMetaArgs<{
+        params: unknown;
+        loaderData: { test: string };
+        actionData: unknown;
+        module: { loader: () => { test: string } };
+        matches: [];
+      }>["loaderData"],
+      { test: string }
+    >
+  >,
+  Expect<
+    Equal<
+      CreateMetaArgs<{
+        params: unknown;
+        loaderData: { test: string };
+        actionData: unknown;
+        module: { loader: () => { test: string }; ErrorBoundary: Func };
+        matches: [];
+      }>["loaderData"],
+      { test: string } | undefined
+    >
+  >,
+  Expect<
+    Equal<
+      CreateMetaArgs<{
+        params: unknown;
+        loaderData: never;
+        actionData: unknown;
+        module: {};
+        matches: [];
+      }>["loaderData"],
+      never
+    >
+  >,
+  Expect<
+    Equal<
+      CreateMetaArgs<{
+        params: unknown;
+        loaderData: never;
+        actionData: unknown;
+        module: {
+          ErrorBoundary: Func;
+        };
+        matches: [];
+      }>["loaderData"],
+      undefined
+    >
+  >,
+  // Test that MetaArgs.data (deprecated) also follows the same pattern
+  Expect<
+    Equal<
+      CreateMetaArgs<{
+        params: unknown;
+        loaderData: { test: string };
+        actionData: unknown;
+        module: {
+          loader: () => { test: string };
+        };
+        matches: [];
+      }>["data"],
+      { test: string }
+    >
+  >,
+  Expect<
+    Equal<
+      CreateMetaArgs<{
+        params: unknown;
+        loaderData: { test: string };
+        actionData: unknown;
+        module: {
+          loader: () => { test: string };
+          ErrorBoundary: Func;
+        };
+        matches: [];
+      }>["data"],
+      { test: string } | undefined
+    >
+  >,
+];
