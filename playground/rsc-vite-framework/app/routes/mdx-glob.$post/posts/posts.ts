@@ -19,8 +19,8 @@ async function resolvePosts(): Promise<{
   >;
 
   return Object.fromEntries(
-    Object.entries(rawPosts).map(([path, loadPost]) => {
-      const slug = path.split("/").pop()!.replace(".mdx", "");
+    Object.entries(rawPosts).map(([importPath, loadPost]) => {
+      const slug = importPath.split("/").pop()!.replace(".mdx", "");
 
       return [
         slug,
@@ -38,7 +38,7 @@ async function resolvePosts(): Promise<{
           } else {
             const prettyPath = nodePath.relative(
               process.cwd(),
-              nodePath.resolve(import.meta.dirname, path),
+              nodePath.resolve(import.meta.dirname, importPath),
             );
             console.error(
               `Invalid frontmatter for ${prettyPath}: Missing title`,
