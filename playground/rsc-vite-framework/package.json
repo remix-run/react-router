@@ -20,6 +20,8 @@
     "@vitejs/plugin-react": "^4.5.2",
     "@vitejs/plugin-rsc": "0.4.11",
     "cross-env": "^7.0.3",
+    "remark-frontmatter": "^5.0.0",
+    "remark-mdx-frontmatter": "^5.2.0",
     "typescript": "^5.1.6",
     "vite": "^6.2.0"
   },
