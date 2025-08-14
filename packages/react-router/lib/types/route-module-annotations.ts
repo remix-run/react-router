@@ -232,10 +232,12 @@ type __tests = [
   Expect<
     Equal<
       CreateMetaArgs<{
-        params: unknown;
+        module: {
+          loader: () => { test: string };
+        };
         loaderData: { test: string };
+        params: unknown;
         actionData: unknown;
-        module: { loader: () => { test: string } };
         matches: [];
       }>["loaderData"],
       { test: string }
@@ -244,10 +246,13 @@ type __tests = [
   Expect<
     Equal<
       CreateMetaArgs<{
-        params: unknown;
+        module: {
+          loader: () => { test: string };
+          ErrorBoundary: Func;
+        };
         loaderData: { test: string };
+        params: unknown;
         actionData: unknown;
-        module: { loader: () => { test: string }; ErrorBoundary: Func };
         matches: [];
       }>["loaderData"],
       { test: string } | undefined
@@ -256,10 +261,10 @@ type __tests = [
   Expect<
     Equal<
       CreateMetaArgs<{
-        params: unknown;
-        loaderData: never;
-        actionData: unknown;
         module: {};
+        loaderData: never;
+        params: unknown;
+        actionData: unknown;
         matches: [];
       }>["loaderData"],
       never
@@ -268,12 +273,12 @@ type __tests = [
   Expect<
     Equal<
       CreateMetaArgs<{
-        params: unknown;
-        loaderData: never;
-        actionData: unknown;
         module: {
           ErrorBoundary: Func;
         };
+        loaderData: never;
+        params: unknown;
+        actionData: unknown;
         matches: [];
       }>["loaderData"],
       undefined
@@ -283,12 +288,12 @@ type __tests = [
   Expect<
     Equal<
       CreateMetaArgs<{
-        params: unknown;
-        loaderData: { test: string };
-        actionData: unknown;
         module: {
           loader: () => { test: string };
         };
+        loaderData: { test: string };
+        params: unknown;
+        actionData: unknown;
         matches: [];
       }>["data"],
       { test: string }
@@ -297,13 +302,13 @@ type __tests = [
   Expect<
     Equal<
       CreateMetaArgs<{
-        params: unknown;
-        loaderData: { test: string };
-        actionData: unknown;
         module: {
           loader: () => { test: string };
           ErrorBoundary: Func;
         };
+        loaderData: { test: string };
+        params: unknown;
+        actionData: unknown;
         matches: [];
       }>["data"],
       { test: string } | undefined
