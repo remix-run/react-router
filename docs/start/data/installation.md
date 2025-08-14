@@ -31,7 +31,7 @@ Create a router and pass it to `RouterProvider`:
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter } from "react-router";
-import { RouterProvider } from 'react-router/dom';
+import { RouterProvider } from "react-router/dom";
 
 const router = createBrowserRouter([
   {
