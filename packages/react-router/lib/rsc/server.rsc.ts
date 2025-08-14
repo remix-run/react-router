@@ -721,6 +721,7 @@ async function generateRenderResponse(
   });
 
   let actionResult: Promise<unknown> | undefined;
+  let skipRevalidation = false;
   const ctx: ServerContext = {
     runningAction: false,
   };
@@ -728,7 +729,10 @@ async function generateRenderResponse(
     staticHandler.query(request, {
       requestContext,
       skipLoaderErrorBubbling: isDataRequest,
-      skipRevalidation: isSubmission,
+      skipRevalidation: () => {
+        // TODO: This should opt out of loader calls but is not at the moment.
+        return isSubmission || skipRevalidation;
+      },
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
@@ -764,6 +768,7 @@ async function generateRenderResponse(
             );
           }
 
+          skipRevalidation = result?.revalidate === false;
           actionResult = result?.actionResult;
           formState = result?.formState;
           request = result?.revalidationRequest ?? request;
@@ -777,20 +782,6 @@ async function generateRenderResponse(
               generateResponse,
               temporaryReferences,
               undefined,
-            );
-          }
-
-          if (result && result.revalidate === false) {
-            return generateResponse(
-              {
-                headers: new Headers(),
-                statusCode: 200,
-                payload: {
-                  type: "action",
-                  actionResult: Promise.resolve(result.actionResult),
-                },
-              },
-              { temporaryReferences },
             );
           }
         }
@@ -819,6 +810,7 @@ async function generateRenderResponse(
           isSubmission,
           actionResult,
           formState,
+          skipRevalidation,
           staticContext,
           temporaryReferences,
           ctx.redirect?.headers,
@@ -910,6 +902,7 @@ async function generateStaticContextResponse(
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
   formState: unknown | undefined,
+  skipRevalidation: boolean,
   staticContext: StaticHandlerContext,
   temporaryReferences: unknown,
   sideEffectRedirectHeaders: Headers | undefined,
@@ -986,7 +979,7 @@ async function generateStaticContextResponse(
     payload = {
       type: "action",
       actionResult,
-      rerender: renderPayloadPromise(),
+      rerender: skipRevalidation ? undefined : renderPayloadPromise(),
     };
   } else if (isSubmission && isDataRequest) {
     // Short circuit without matches on non server-action submissions since

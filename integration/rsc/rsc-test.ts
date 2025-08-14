@@ -1,4 +1,8 @@
-import { test, expect } from "@playwright/test";
+import {
+  test,
+  expect,
+  type Response as PlaywrightResponse,
+} from "@playwright/test";
 import getPort from "get-port";
 
 import { implementations, js, setupRscTest, validateRSCHtml } from "./utils";
@@ -1074,6 +1078,13 @@ implementations.forEach((implementation) => {
 
             "src/routes/hydrate-fallback-props/home.tsx": js`
               export { default, clientLoader, HydrateFallback } from "./home.client";
+
+              export const unstable_middleware = [
+                async (_, next) => {
+                  const response = await next();
+                  return response.headers.set("x-test", "test");
+                }
+              ];
             `,
             "src/routes/hydrate-fallback-props/home.client.tsx": js`
               "use client";
@@ -1123,6 +1134,10 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/no-revalidate-server-action/home.tsx": js`
               import ClientHomeRoute from "./home.client";
+
+              export function loader() {
+                console.log("loader");
+              }
 
               export default function HomeRoute() {
                 return <ClientHomeRoute identity={{}} />;
@@ -1568,12 +1583,22 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports server actions that disable revalidation", async ({
+        test.only("Supports server actions that disable revalidation", async ({
           page,
         }) => {
           await page.goto(
             `http://localhost:${port}/no-revalidate-server-action`,
             { waitUntil: "networkidle" },
+          );
+
+          const actionResponsePromise = new Promise<PlaywrightResponse>(
+            (resolve) => {
+              page.on("response", async (response) => {
+                if (!!(await response.request().headerValue("rsc-action-id"))) {
+                  resolve(response);
+                }
+              });
+            },
           );
 
           await page.click("[data-submit]");
@@ -1583,6 +1608,9 @@ implementations.forEach((implementation) => {
           expect(await page.locator("[data-state]").textContent()).toBe(
             "no revalidate",
           );
+
+          const actionResponse = await actionResponsePromise;
+          expect(await actionResponse.headerValue("x-test")).toBe("test");
         });
       });
 

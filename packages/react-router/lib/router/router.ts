@@ -432,7 +432,7 @@ export interface StaticHandler {
       requestContext?: unknown;
       filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
       skipLoaderErrorBubbling?: boolean;
-      skipRevalidation?: boolean;
+      skipRevalidation?: boolean | (() => boolean);
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_generateMiddlewareResponse?: (
         query: (r: Request) => Promise<StaticHandlerContext | Response>,
@@ -3631,7 +3631,9 @@ export function createStaticHandler(
                   skipLoaderErrorBubbling === true,
                   null,
                   filterMatchesToLoad || null,
-                  skipRevalidation === true,
+                  skipRevalidation === true ||
+                    (typeof skipRevalidation === "function" &&
+                      skipRevalidation() === true),
                 );
 
                 if (isResponse(result)) {
@@ -3729,7 +3731,8 @@ export function createStaticHandler(
       skipLoaderErrorBubbling === true,
       null,
       filterMatchesToLoad || null,
-      skipRevalidation === true,
+      skipRevalidation === true ||
+        (typeof skipRevalidation === "function" && skipRevalidation() === true),
     );
 
     if (isResponse(result)) {
@@ -3912,7 +3915,7 @@ export function createStaticHandler(
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
-    skipRevalidation: boolean,
+    skipRevalidation: boolean | (() => boolean),
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
@@ -3979,7 +3982,7 @@ export function createStaticHandler(
     skipLoaderErrorBubbling: boolean,
     isRouteRequest: boolean,
     filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
-    skipRevalidation: boolean,
+    skipRevalidation: boolean | (() => boolean),
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
 
@@ -4054,7 +4057,10 @@ export function createStaticHandler(
       };
     }
 
-    if (skipRevalidation) {
+    if (
+      skipRevalidation === true ||
+      (typeof skipRevalidation === "function" && skipRevalidation() === true)
+    ) {
       if (isErrorResult(result)) {
         let boundaryMatch = skipLoaderErrorBubbling
           ? actionMatch
