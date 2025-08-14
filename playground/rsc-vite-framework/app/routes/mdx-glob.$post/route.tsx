@@ -8,7 +8,10 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw new Response("Not Found", { status: 404, statusText: "Not Found" });
   }
 
-  return { title: post.title, postElement: <post.Component /> };
+  return {
+    title: post.title,
+    element: <post.Component />,
+  };
 }
 
 export function meta({ loaderData }: Route.ComponentProps) {
@@ -16,5 +19,5 @@ export function meta({ loaderData }: Route.ComponentProps) {
 }
 
 export function ServerComponent({ loaderData }: Route.ComponentProps) {
-  return loaderData.postElement;
+  return loaderData.element;
 }
