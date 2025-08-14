@@ -1716,7 +1716,7 @@ describe("context/middleware", () => {
           respondWithJson(await q(request)),
       })) as Response;
       expect(res.status).toBe(404);
-      await expect(res.text()).resolves.toEqual("not found");
+      await expect(res.json()).resolves.toEqual("not found");
     });
 
     it("propagates a thrown data() response if next isn't called", async () => {
@@ -1800,7 +1800,7 @@ describe("context/middleware", () => {
           respondWithJson(await q(request)),
       })) as Response;
       expect(res.status).toBe(404);
-      await expect(res.text()).resolves.toEqual("not found");
+      await expect(res.json()).resolves.toEqual("not found");
     });
 
     it("propagates a thrown data() response if next is called", async () => {
@@ -2775,7 +2775,7 @@ describe("context/middleware", () => {
         unstable_generateMiddlewareResponse: (q) => q(request),
       })) as Response;
       expect(res.status).toBe(404);
-      await expect(res.text()).resolves.toEqual("not found");
+      await expect(res.json()).resolves.toEqual("not found");
     });
 
     it("propagates a thrown data() response if next isn't called", async () => {
@@ -2808,7 +2808,7 @@ describe("context/middleware", () => {
         unstable_generateMiddlewareResponse: async (q) => q(request),
       })) as Response;
       expect(res.status).toBe(404);
-      await expect(res.text()).resolves.toEqual("not found");
+      await expect(res.json()).resolves.toEqual("not found");
     });
 
     it("propagates a returned data() response if next is called", async () => {
@@ -2842,7 +2842,7 @@ describe("context/middleware", () => {
         unstable_generateMiddlewareResponse: (q) => q(request),
       })) as Response;
       expect(res.status).toBe(404);
-      await expect(res.text()).resolves.toEqual("not found");
+      await expect(res.json()).resolves.toEqual("not found");
     });
 
     it("propagates a thrown data() response if next is called", async () => {
@@ -2876,7 +2876,7 @@ describe("context/middleware", () => {
         unstable_generateMiddlewareResponse: async (q) => q(request),
       })) as Response;
       expect(res.status).toBe(404);
-      await expect(res.text()).resolves.toEqual("not found");
+      await expect(res.json()).resolves.toEqual("not found");
     });
 
     describe("ordering", () => {
