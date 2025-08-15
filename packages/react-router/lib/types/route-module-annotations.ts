@@ -1,7 +1,10 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { Location } from "../router/history";
 import type { LinkDescriptor } from "../router/links";
-import type { unstable_MiddlewareNextFunction } from "../router/utils";
+import type {
+  DataStrategyResult,
+  unstable_MiddlewareNextFunction,
+} from "../router/utils";
 
 import type {
   ClientDataFunctionArgs,
@@ -92,8 +95,8 @@ type CreateServerMiddlewareFunction<T extends RouteInfo> = (
 
 type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T["params"]>,
-  next: unstable_MiddlewareNextFunction<undefined>,
-) => MaybePromise<void>;
+  next: unstable_MiddlewareNextFunction<Record<string, DataStrategyResult>>,
+) => MaybePromise<Record<string, DataStrategyResult> | void>;
 
 type CreateServerLoaderArgs<T extends RouteInfo> = ServerDataFunctionArgs<
   T["params"]
