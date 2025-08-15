@@ -22,7 +22,7 @@ jobs:
           echo "SHA: ${{ github.event.pull_request.head.sha }}"
 
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
