@@ -2313,7 +2313,7 @@ export function useSearchParams(
           : nextInit,
       );
       hasSetSearchParamsRef.current = true;
-      navigate("?" + newSearchParams, navigateOptions);
+      return navigate("?" + newSearchParams, navigateOptions);
     },
     [navigate, searchParams],
   );
@@ -2354,7 +2354,7 @@ export type SetURLSearchParams = (
     | URLSearchParamsInit
     | ((prev: URLSearchParams) => URLSearchParamsInit),
   navigateOpts?: NavigateOptions,
-) => void;
+) => Promise<void>;
 
 /**
  * Submits a HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)

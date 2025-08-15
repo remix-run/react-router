@@ -195,8 +195,8 @@ export function useMatch<
  * The interface for the `navigate` function returned from {@link useNavigate}.
  */
 export interface NavigateFunction {
-  (to: To, options?: NavigateOptions): void | Promise<void>;
-  (delta: number): void | Promise<void>;
+  (to: To, options?: NavigateOptions): Promise<void>;
+  (delta: number): Promise<void>;
 }
 
 const navigateEffectWarning =
@@ -355,11 +355,11 @@ function useNavigateUnstable(): NavigateFunction {
 
       // Short circuit here since if this happens on first render the navigate
       // is useless because we haven't wired up our history listener yet
-      if (!activeRef.current) return;
+      if (!activeRef.current) return Promise.resolve();
 
       if (typeof to === "number") {
         navigator.go(to);
-        return;
+        return Promise.resolve();
       }
 
       let path = resolveTo(
@@ -387,6 +387,8 @@ function useNavigateUnstable(): NavigateFunction {
         options.state,
         options,
       );
+
+      return Promise.resolve();
     },
     [
       basename,
@@ -1757,9 +1759,9 @@ function useNavigateStable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        router.navigate(to);
+        return router.navigate(to);
       } else {
-        await router.navigate(to, { fromRouteId: id, ...options });
+        return router.navigate(to, { fromRouteId: id, ...options });
       }
     },
     [router, id],

@@ -1490,7 +1490,7 @@ export function createRouter(init: RouterInit): Router {
             location: nextLocation,
           });
           // Send the same navigation through
-          navigate(to, opts);
+          return navigate(to, opts);
         },
         reset() {
           let blockers = new Map(state.blockers);

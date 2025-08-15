@@ -603,10 +603,9 @@ describe("trailing slashes", () => {
 
       function SetSearchParams() {
         let [, setSearchParams] = useSearchParams();
-        React.useEffect(
-          () => setSearchParams({ key: "value" }),
-          [setSearchParams],
-        );
+        React.useEffect(() => {
+          setSearchParams({ key: "value" });
+        }, [setSearchParams]);
         return <h1>👋</h1>;
       }
 
@@ -631,10 +630,9 @@ describe("trailing slashes", () => {
 
       function SetSearchParams() {
         let [, setSearchParams] = useSearchParams();
-        React.useEffect(
-          () => setSearchParams({ key: "value" }),
-          [setSearchParams],
-        );
+        React.useEffect(() => {
+          setSearchParams({ key: "value" });
+        }, [setSearchParams]);
         return <h1>👋</h1>;
       }
 
