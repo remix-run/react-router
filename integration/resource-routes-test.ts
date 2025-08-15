@@ -243,7 +243,7 @@ test.describe("loader in an app", async () => {
     let res = await app.goto("/return-data");
     expect(res.status()).toBe(207);
     expect(res.headers()["x-foo"]).toBe("Bar");
-    expect(await res.text()).toEqual("Partial");
+    expect(await res.json()).toEqual("Partial");
   });
 
   test("should handle data() thrown from resource routes", async ({ page }) => {
@@ -251,7 +251,7 @@ test.describe("loader in an app", async () => {
     let res = await app.goto("/throw-data");
     expect(res.status()).toBe(207);
     expect(res.headers()["x-foo"]).toBe("Bar");
-    expect(await res.text()).toEqual("Partial");
+    expect(await res.json()).toEqual("Partial");
   });
 
   test("should handle data() returned from resource routes through middleware", async ({
@@ -261,7 +261,7 @@ test.describe("loader in an app", async () => {
     let res = await app.goto("/return-data-through-middleware");
     expect(res.status()).toBe(207);
     expect(res.headers()["x-foo"]).toBe("Bar");
-    expect(await res.text()).toEqual("Partial");
+    expect(await res.json()).toEqual("Partial");
   });
 
   test("should handle data() thrown from resource routes through middleware", async ({
@@ -271,7 +271,7 @@ test.describe("loader in an app", async () => {
     let res = await app.goto("/throw-data-through-middleware");
     expect(res.status()).toBe(207);
     expect(res.headers()["x-foo"]).toBe("Bar");
-    expect(await res.text()).toEqual("Partial");
+    expect(await res.json()).toEqual("Partial");
   });
 
   test("should convert strings returned from resource routes to text responses", async ({

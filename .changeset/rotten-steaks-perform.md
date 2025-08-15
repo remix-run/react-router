@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Properly handle data() values returned or thrown from resource routes and return corresponding responses with the data, status, and headers
+Properly convert returned/thrown `data()` values to `Response` instances via `Response.json()` in middleware and resource routes

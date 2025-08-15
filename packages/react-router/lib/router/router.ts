@@ -3651,6 +3651,11 @@ export function createStaticHandler(
               return error;
             }
 
+            if (isDataWithResponseInit(error)) {
+              // Convert thrown data() values to ErrorResponses for the UI
+              error = dataWithResponseInitToErrorResponse(error);
+            }
+
             if (renderedStaticContext) {
               // We rendered an HTML response and caught an error going back up
               // the middleware chain - render again with an updated context
@@ -3850,8 +3855,9 @@ export function createStaticHandler(
           return res;
         },
         (error) => {
-          if (isRouteErrorResponse(error)) {
-            return Promise.resolve(errorResponseToResponse(error));
+          if (isDataWithResponseInit(error)) {
+            // Convert thrown data() values to Responses for resource routes
+            return Promise.resolve(dataWithResponseInitToResponse(error));
           }
           if (isResponse(error)) {
             return Promise.resolve(error);
@@ -5511,11 +5517,7 @@ async function callServerRouteMiddleware(
       nextResult = result;
       return nextResult;
     } catch (e) {
-      nextResult = await errorHandler(
-        // Convert thrown data() values to ErrorResponses
-        isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
-        routeId,
-      );
+      nextResult = await errorHandler(e, routeId);
       return nextResult;
     }
   };
@@ -5550,11 +5552,7 @@ async function callServerRouteMiddleware(
       return nextResult;
     }
   } catch (e) {
-    let response = await errorHandler(
-      // Convert thrown data() values to ErrorResponses
-      isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
-      routeId,
-    );
+    let response = await errorHandler(e, routeId);
     return response;
   }
 }
@@ -6585,10 +6583,7 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
 function dataWithResponseInitToResponse<D>(
   data: DataWithResponseInit<D>,
 ): Response {
-  return new Response(
-    typeof data.data === "string" ? data.data : JSON.stringify(data.data),
-    data.init || undefined,
-  );
+  return Response.json(data.data, data.init ?? undefined);
 }
 
 function dataWithResponseInitToErrorResponse<D>(
@@ -6598,16 +6593,6 @@ function dataWithResponseInitToErrorResponse<D>(
     data.init?.status ?? 500,
     data.init?.statusText ?? "Internal Server Error",
     data.data,
-  );
-}
-
-function errorResponseToResponse(error: ErrorResponse): Response {
-  return new Response(
-    typeof error.data === "string" ? error.data : JSON.stringify(error.data),
-    {
-      status: error.status,
-      statusText: error.statusText,
-    },
   );
 }
 
