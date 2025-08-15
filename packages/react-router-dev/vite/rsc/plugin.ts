@@ -76,9 +76,21 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             jsxDev: viteCommand !== "build",
           },
           environments: {
-            client: { build: { outDir: "build/client" } },
-            rsc: { build: { outDir: "build/server" } },
-            ssr: { build: { outDir: "build/server/__ssr_build" } },
+            client: {
+              build: {
+                outDir: join(config.buildDirectory, "client"),
+              },
+            },
+            rsc: {
+              build: {
+                outDir: join(config.buildDirectory, "server"),
+              },
+            },
+            ssr: {
+              build: {
+                outDir: join(config.buildDirectory, "server/__ssr_build"),
+              },
+            },
           },
           build: {
             rollupOptions: {
