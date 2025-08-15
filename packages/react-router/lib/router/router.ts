@@ -3647,8 +3647,23 @@ export function createStaticHandler(
             return res;
           },
           async (error, routeId) => {
-            if (isResponse(error)) {
+            // Redirects propagate verbatim
+            if (isRedirectResponse(error)) {
               return error;
+            }
+
+            // All other thrown responses during document/data request bubble
+            // to the boundary
+            if (isResponse(error)) {
+              try {
+                error = new ErrorResponseImpl(
+                  error.status,
+                  error.statusText,
+                  await parseResponseBody(error),
+                );
+              } catch (e) {
+                error = e;
+              }
             }
 
             if (isDataWithResponseInit(error)) {
@@ -6031,6 +6046,18 @@ async function callLoaderOrAction({
   return result;
 }
 
+async function parseResponseBody(response: Response) {
+  let contentType = response.headers.get("Content-Type");
+
+  // Check between word boundaries instead of startsWith() due to the last
+  // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
+  if (contentType && /\bapplication\/json\b/.test(contentType)) {
+    return response.body == null ? null : response.json();
+  }
+
+  return response.text();
+}
+
 async function convertDataStrategyResultToDataResult(
   dataStrategyResult: DataStrategyResult,
 ): Promise<DataResult> {
@@ -6040,18 +6067,7 @@ async function convertDataStrategyResultToDataResult(
     let data: any;
 
     try {
-      let contentType = result.headers.get("Content-Type");
-      // Check between word boundaries instead of startsWith() due to the last
-      // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
-      if (contentType && /\bapplication\/json\b/.test(contentType)) {
-        if (result.body == null) {
-          data = null;
-        } else {
-          data = await result.json();
-        }
-      } else {
-        data = await result.text();
-      }
+      data = await parseResponseBody(result);
     } catch (e) {
       return { type: ResultType.error, error: e };
     }
