@@ -276,7 +276,7 @@ const route = {
 };
 ```
 
-However, there may be some cases where you want to do some post-processing based on the result of the loaders/action. In lieu of a `Response`, client middleware bubbles up a `Record<string, DataStrategy>` object because it is implemented as part of the default [`dataStrategy`] internally. This allows you to take conditional action in your middleware based on the outcome of the executed `loader`/`action` functions.
+There may be _some_ cases where you want to do some post-processing based on the result of the loaders/action. In lieu of a `Response`, client middleware bubbles up the value returned from the active [`dataStrategy`](../api/data-routers/createBrowserRouter#optsdatastrategy) (`Record<string, DataStrategyResult>` - keyed by route id). This allows you to take conditional action in your middleware based on the outcome of the executed `loader`/`action` functions.
 
 Here's an example of the [CMS Redirect on 404][cms-redirect] use case implemented as a client side middleware:
 
@@ -284,12 +284,14 @@ Here's an example of the [CMS Redirect on 404][cms-redirect] use case implemente
 async function cmsFallbackMiddleware({ request }, next) {
   const results = await next();
 
-  // Check if we got a 404 from any of our routes
-  let is404 =
-    isRouteErrorResponse(r.result) &&
-    r.result.status === 404;
-  if (Object.values(results).some((r) => is404(r))) {
-    // Check CMS for a redirect
+  // Check if we got a 404 from any of our routes and if so, look for a
+  // redirect in our CMS
+  const found404 = Object.values(results).some(
+    (r) =>
+      isRouteErrorResponse(r.result) &&
+      r.result.status === 404,
+  );
+  if (found404) {
     const cmsRedirect = await checkCMSRedirects(
       request.url,
     );
@@ -297,10 +299,10 @@ async function cmsFallbackMiddleware({ request }, next) {
       throw redirect(cmsRedirect, 302);
     }
   }
-
-  return results;
 }
 ```
+
+<docs-warning>In a server middleware, you shouldn't be messing with the `Response` body and should only be reading status/headers and setting headers. Similarly, this value should be considered read-only in client middleware because it represents the "body" or "data" for the resulting navigation which should be driven by loaders/actions - not middleware. This also means that in client middleware, there's usually no need to return the results even if you needed to capture it from `await next()`;</docs-warning>
 
 ### When Middleware Runs
 
