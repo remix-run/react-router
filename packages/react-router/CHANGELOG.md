@@ -10,9 +10,8 @@
 - Fix prerendering when a `basename` is set with `ssr:false` ([#13791](https://github.com/remix-run/react-router/pull/13791))
 - Provide `isRouteErrorResponse` utility in `react-server` environments ([#14166](https://github.com/remix-run/react-router/pull/14166))
 - Propagate non-redirect Responses thrown from middleware to the error boundary on document/data requests ([#14182](https://github.com/remix-run/react-router/pull/14182))
-- \[REMOVE] Update data -> Response conversion (update changelog with latest from `rotten-steaks-perform.md`) ([#14181](https://github.com/remix-run/react-router/pull/14181))
 - Handle `meta` and `links` Route Exports in RSC Data Mode ([#14136](https://github.com/remix-run/react-router/pull/14136))
-- Properly convert returned/thrown `data()` values to `Response` instances via `Response.json()` in resource routes and middleware ([#14159](https://github.com/remix-run/react-router/pull/14159))
+- Properly convert returned/thrown `data()` values to `Response` instances via `Response.json()` in resource routes and middleware ([#14159](https://github.com/remix-run/react-router/pull/14159), [#14181](https://github.com/remix-run/react-router/pull/14181))
 
 ## 7.8.0
 
@@ -36,7 +35,6 @@
 - Remove dependency on `@types/node` in TypeScript declaration files ([#14059](https://github.com/remix-run/react-router/pull/14059))
 
 - Fix types for `UIMatch` to reflect that the `loaderData`/`data` properties may be `undefined` ([#12206](https://github.com/remix-run/react-router/pull/12206))
-
   - When an `ErrorBoundary` is being rendered, not all active matches will have loader data available, since it may have been their `loader` that threw to trigger the boundary
   - The `UIMatch.data` type was not correctly handing this and would always reflect the presence of data, leading to the unexpected runtime errors when an `ErrorBoundary` was rendered
   - ⚠️ This may cause some type errors to show up in your code for unguarded `match.data` accesses - you should properly guard for `undefined` values in those scenarios.
@@ -70,7 +68,6 @@
 - \[UNSTABLE] When middleware is enabled, make the `context` parameter read-only (via `Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
 
 - \[UNSTABLE] Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
-
   - The API has been renamed to `unstable_generateMiddlewareResponse` for clarity
   - The main functional change is that instead of running the loaders/actions before calling `unstable_respond` and handing you the result, we now pass a `query`/`queryRoute` function as a parameter and you execute the loaders/actions inside your callback, giving you full access to pre-processing and error handling
   - The `query` version of the API now has a signature of `(query: (r: Request) => Promise<StaticHandlerContext | Response>) => Promise<Response>`
@@ -716,7 +713,6 @@
   ```
 
   Similar to server-side requests, a fresh `context` will be created per navigation (or `fetcher` call). If you have initial data you'd like to populate in the context for every request, you can provide an `unstable_getContext` function at the root of your app:
-
   - Library mode - `createBrowserRouter(routes, { unstable_getContext })`
   - Framework mode - `<HydratedRouter unstable_getContext>`
 
@@ -904,7 +900,6 @@ _No changes_
 - Remove `future.v7_normalizeFormMethod` future flag ([#11697](https://github.com/remix-run/react-router/pull/11697))
 
 - For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs. This means that the following APIs are provided from `react-router` rather than platform-specific packages: ([#11837](https://github.com/remix-run/react-router/pull/11837))
-
   - `createCookie`
   - `createCookieSessionStorage`
   - `createMemorySessionStorage`
@@ -913,7 +908,6 @@ _No changes_
   For consumers running older versions of Node, the `installGlobals` function from `@remix-run/node` has been updated to define `globalThis.crypto`, using [Node's `require('node:crypto').webcrypto` implementation.](https://nodejs.org/api/webcrypto.html)
 
   Since platform-specific packages no longer need to implement this API, the following low-level APIs have been removed:
-
   - `createCookieFactory`
   - `createSessionStorageFactory`
   - `createCookieSessionStorageFactory`
@@ -1069,7 +1063,6 @@ _No changes_
   ```
 
   This initial implementation targets type inference for:
-
   - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
@@ -1084,7 +1077,6 @@ _No changes_
   ```
 
   Check out our docs for more:
-
   - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
   - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
