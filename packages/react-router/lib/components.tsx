@@ -317,9 +317,9 @@ export interface RouterProviderProps {
  * @category Data Routers
  * @mode data
  * @param props Props
- * @param {RouterProviderProps.router} props.router n/a
  * @param {RouterProviderProps.flushSync} props.flushSync n/a
  * @param {RouterProviderProps.unstable_onError} props.unstable_onError n/a
+ * @param {RouterProviderProps.router} props.router n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
