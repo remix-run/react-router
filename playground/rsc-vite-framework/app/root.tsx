@@ -1,5 +1,9 @@
-import { Link, Outlet } from "react-router";
+import type { Route } from "./+types/root";
+
+import { Meta, Link, Outlet, isRouteErrorResponse } from "react-router";
 import "./root.css";
+
+export const meta = () => [{ title: "React Router Vite" }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   console.log("Layout");
@@ -8,7 +12,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>React Router Vite</title>
+        <Meta />
       </head>
       <body>
         <header>
@@ -32,6 +36,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   Client loader without server loader
                 </Link>
               </li>
+              <li>
+                <Link to="/mdx">MDX</Link>
+              </li>
+              <li>
+                <Link to="/mdx-glob">MDX glob</Link>
+              </li>
             </ul>
           </nav>
         </header>
@@ -50,6 +60,14 @@ export function ServerComponent() {
   );
 }
 
-export function ErrorBoundary() {
-  return <h1>Oooops</h1>;
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return (
+    <h1>
+      {isRouteErrorResponse(error)
+        ? `${error.status} ${error.statusText}`
+        : error instanceof Error
+          ? error.message
+          : "Unknown Error"}
+    </h1>
+  );
 }

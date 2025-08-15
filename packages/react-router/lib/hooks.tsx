@@ -318,6 +318,44 @@ function useIsomorphicLayoutEffect(
  * middle of a page, and you don't want it to scroll to the top when a tab is
  * clicked.
  *
+ * ### Return Type Augmentation
+ *
+ * Internally, `useNavigate` uses a separate implementation when you are in
+ * Declarative mode versus Data/Framework mode - the primary difference being
+ * that the latter is able to return a stable reference that does not change
+ * identity across navigations. The implementation in Data/Framework mode also
+ * returns a [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+ * that resolves when the navigation is completed. This means the return type of
+ * `useNavigate` is `void | Promise<void>`. This is accurate, but can lead to
+ * some red squigglies based on the union in the return value:
+ *
+ * - If you're using `typescript-eslint`, you may see errors from
+ *   [`@typescript-eslint/no-floating-promises`](https://typescript-eslint.io/rules/no-floating-promises)
+ * - In Framework/Data mode, `React.use(navigate())` will show a false-positive
+ *   `Argument of type 'void | Promise<void>' is not assignable to parameter of
+ *   type 'Usable<void>'` error
+ *
+ * The easiest way to work around these issues is to augment the type based on the
+ * router you're using:
+ *
+ * ```ts
+ * // If using <BrowserRouter>
+ * declare module "react-router" {
+ *   interface NavigateFunction {
+ *     (to: To, options?: NavigateOptions): void;
+ *     (delta: number): void;
+ *   }
+ * }
+ *
+ * // If using <RouterProvider> or Framework mode
+ * declare module "react-router" {
+ *   interface NavigateFunction {
+ *     (to: To, options?: NavigateOptions): Promise<void>;
+ *     (delta: number): Promise<void>;
+ *   }
+ * }
+ * ```
+ *
  * @public
  * @category Hooks
  * @returns A navigate function for programmatic navigation

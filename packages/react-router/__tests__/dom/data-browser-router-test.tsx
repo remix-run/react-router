@@ -5,7 +5,6 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import type {
   RouteObject,
@@ -41,14 +40,15 @@ import {
 } from "../../index";
 
 import getHtml from "../utils/getHtml";
+import getWindow from "../utils/getWindow";
 import { createDeferred, tick } from "../router/utils/utils";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
-  getWindowImpl(url, false),
+  getWindow(url, false),
 );
 
 testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
-  getWindowImpl(url, true),
+  getWindow(url, true),
 );
 
 function testDomRouter(
@@ -8001,11 +8001,4 @@ function testDomRouter(
       });
     }
   });
-}
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
 }

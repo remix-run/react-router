@@ -19,6 +19,7 @@ import {
   parseRouteExports,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
+import validatePluginOrder from "../plugins/validate-plugin-order";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
@@ -29,7 +30,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
   return [
     {
-      name: "react-router/rsc/config",
+      name: "react-router/rsc",
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
         viteCommand = command;
@@ -75,9 +76,21 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             jsxDev: viteCommand !== "build",
           },
           environments: {
-            client: { build: { outDir: "build/client" } },
-            rsc: { build: { outDir: "build/server" } },
-            ssr: { build: { outDir: "build/server/__ssr_build" } },
+            client: {
+              build: {
+                outDir: join(config.buildDirectory, "client"),
+              },
+            },
+            rsc: {
+              build: {
+                outDir: join(config.buildDirectory, "server"),
+              },
+            },
+            ssr: {
+              build: {
+                outDir: join(config.buildDirectory, "server/__ssr_build"),
+              },
+            },
           },
           build: {
             rollupOptions: {
@@ -300,6 +313,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return modules;
       },
     },
+    validatePluginOrder(),
     rsc({ entries: getRscEntries() }),
   ];
 }
