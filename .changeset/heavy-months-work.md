@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Propagte middleware thrown non-redirect Responses to the error boundary
+Propagate non-redirect Responses thrown from middleware to the error boundary on document/data requests
