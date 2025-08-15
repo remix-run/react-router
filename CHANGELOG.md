@@ -370,7 +370,7 @@ Date: 2025-08-15
 - `react-router` - Fix usage of optional path segments in nested routes defined using absolute paths ([#14135](https://github.com/remix-run/react-router/pull/14135))
 - `react-router` - Fix optional static segment matching in `matchPath` ([#11813](https://github.com/remix-run/react-router/pull/11813))
 - `react-router` - Fix pre-rendering when a `basename` is set with `ssr:false` ([#13791](https://github.com/remix-run/react-router/pull/13791))
-- `react-router` - Properly handle `data()` values returned or thrown from resource routes and return corresponding responses with the data, status, and headers ([#14159](https://github.com/remix-run/react-router/pull/14159))
+- `react-router` - Properly convert returned/thrown `data()` values to `Response` instances via `Response.json()` in resource routes and middleware ([#14159](https://github.com/remix-run/react-router/pull/14159), [#14181](https://github.com/remix-run/react-router/pull/14181))
 - `@react-router/dev` - Update generated `Route.MetaArgs` type so `loaderData` is only potentially undefined when an `ErrorBoundary` export is present ([#14173](https://github.com/remix-run/react-router/pull/14173))
 
 ### Unstable Changes
@@ -380,6 +380,7 @@ Date: 2025-08-15
 **Middleware**
 
 - `react-router` - Bubble client pre-`next` middleware errors to the shallowest ancestor that needs to load, not strictly the shallowest ancestor with a loader ([#14150](https://github.com/remix-run/react-router/pull/14150))
+- `react-router` - Propagate non-redirect `Response` values thrown from middleware to the error boundary on document/data requests ([#14182](https://github.com/remix-run/react-router/pull/14182))
 
 **RSC**
 
