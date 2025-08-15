@@ -8,6 +8,7 @@ import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
+import { createRSCRouteModules } from "./route-modules";
 
 // Safe version of React.use() that will not cause compilation errors against
 // React 18 and will result in a runtime error if used (you can't use RSC against
@@ -331,7 +332,7 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
       },
     },
     routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
-    routeModules: {},
+    routeModules: createRSCRouteModules(payload),
   };
 
   return (

@@ -51,8 +51,7 @@ export async function dev(
   if (
     !server.config.plugins.find(
       (plugin) =>
-        plugin.name === "react-router" ||
-        plugin.name === "react-router/rsc/config",
+        plugin.name === "react-router" || plugin.name === "react-router/rsc",
     )
   ) {
     console.error(

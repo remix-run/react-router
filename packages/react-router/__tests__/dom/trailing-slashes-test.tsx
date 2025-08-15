@@ -1,4 +1,3 @@
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { act } from "@testing-library/react";
@@ -13,6 +12,7 @@ import {
   useSearchParams,
   useNavigate,
 } from "../../index";
+import getWindow from "../utils/getWindow";
 
 describe("trailing slashes", () => {
   let node: HTMLDivElement;
@@ -29,7 +29,7 @@ describe("trailing slashes", () => {
   describe("in a <Link> element", () => {
     describe("with a basename that does not contain a trailing slash", () => {
       test("never includes trailing slashes on root links (index route)", () => {
-        let window = getWindowImpl("/app");
+        let window = getWindow("/app");
         act(() => {
           ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app" window={window}>
@@ -63,7 +63,7 @@ describe("trailing slashes", () => {
       });
 
       test('never includes trailing slashes on root links (path="")', () => {
-        let window = getWindowImpl("/app");
+        let window = getWindow("/app");
         act(() => {
           ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app" window={window}>
@@ -97,7 +97,7 @@ describe("trailing slashes", () => {
       });
 
       test("allows non-root links to control trailing slashes", () => {
-        let window = getWindowImpl("/app/parent/child");
+        let window = getWindow("/app/parent/child");
         act(() => {
           ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app" window={window}>
@@ -191,7 +191,7 @@ describe("trailing slashes", () => {
 
     describe("with a basename that contains a trailing slash", () => {
       test("always contains trailing slashes on root links (index route)", () => {
-        let window = getWindowImpl("/app/");
+        let window = getWindow("/app/");
         act(() => {
           ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app/" window={window}>
@@ -225,7 +225,7 @@ describe("trailing slashes", () => {
       });
 
       test('always contains trailing slashes on root links (path="" route)', () => {
-        let window = getWindowImpl("/app/");
+        let window = getWindow("/app/");
         act(() => {
           ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app/" window={window}>
@@ -259,7 +259,7 @@ describe("trailing slashes", () => {
       });
 
       test("allows non-root links to control trailing slashes", () => {
-        let window = getWindowImpl("/app/parent/child");
+        let window = getWindow("/app/parent/child");
         act(() => {
           ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app/" window={window}>
@@ -355,9 +355,9 @@ describe("trailing slashes", () => {
   describe("in a <Navigate> element", () => {
     describe("with a basename that does not contain a trailing slash", () => {
       test("never includes trailing slashes on root links (/)", () => {
-        let window = getWindowImpl("/foo/bar");
+        let window = getWindow("/foo/bar");
         jest.spyOn(window.history, "pushState");
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -369,13 +369,13 @@ describe("trailing slashes", () => {
             </BrowserRouter>,
           );
         });
-        expect(window.location.href).toBe("https://remix.run/foo");
+        expect(window.location.href).toBe("http://localhost/foo");
       });
 
       test("never includes trailing slashes on root links (../)", () => {
-        let window = getWindowImpl("/foo/bar");
+        let window = getWindow("/foo/bar");
         jest.spyOn(window.history, "pushState");
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -387,14 +387,14 @@ describe("trailing slashes", () => {
             </BrowserRouter>,
           );
         });
-        expect(window.location.href).toBe("https://remix.run/foo");
+        expect(window.location.href).toBe("http://localhost/foo");
       });
 
       test("allows non-root links to leave off trailing slashes", () => {
-        let window = getWindowImpl("/foo");
+        let window = getWindow("/foo");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo");
+        expect(window.location.href).toBe("http://localhost/foo");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -407,14 +407,14 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
       });
 
       test("allows non-root links to include trailing slashes", () => {
-        let window = getWindowImpl("/foo");
+        let window = getWindow("/foo");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo");
+        expect(window.location.href).toBe("http://localhost/foo");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -427,15 +427,15 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar/");
+        expect(window.location.href).toBe("http://localhost/foo/bar/");
       });
     });
 
     describe("with a basename that contains a trailing slash", () => {
       test("always includes trailing slashes on root links (/)", () => {
-        let window = getWindowImpl("/foo/bar");
+        let window = getWindow("/foo/bar");
         jest.spyOn(window.history, "pushState");
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -447,13 +447,13 @@ describe("trailing slashes", () => {
             </BrowserRouter>,
           );
         });
-        expect(window.location.href).toBe("https://remix.run/foo/");
+        expect(window.location.href).toBe("http://localhost/foo/");
       });
 
       test("always includes trailing slashes on root links (../)", () => {
-        let window = getWindowImpl("/foo/bar");
+        let window = getWindow("/foo/bar");
         jest.spyOn(window.history, "pushState");
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -465,14 +465,14 @@ describe("trailing slashes", () => {
             </BrowserRouter>,
           );
         });
-        expect(window.location.href).toBe("https://remix.run/foo/");
+        expect(window.location.href).toBe("http://localhost/foo/");
       });
 
       test("allows non-root links to leave off trailing slashes", () => {
-        let window = getWindowImpl("/foo/");
+        let window = getWindow("/foo/");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo/");
+        expect(window.location.href).toBe("http://localhost/foo/");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -485,14 +485,14 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
       });
 
       test("allows non-root links to include trailing slashes", () => {
-        let window = getWindowImpl("/foo/");
+        let window = getWindow("/foo/");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo/");
+        expect(window.location.href).toBe("http://localhost/foo/");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -505,16 +505,16 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar/");
+        expect(window.location.href).toBe("http://localhost/foo/bar/");
       });
     });
 
     describe("empty string paths", () => {
       it("should not add trailing slashes", () => {
-        let window = getWindowImpl("/foo/bar");
+        let window = getWindow("/foo/bar");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -527,14 +527,14 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
       });
 
       it("should preserve trailing slash", () => {
-        let window = getWindowImpl("/foo/bar/");
+        let window = getWindow("/foo/bar/");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar/");
+        expect(window.location.href).toBe("http://localhost/foo/bar/");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -547,16 +547,16 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar/");
+        expect(window.location.href).toBe("http://localhost/foo/bar/");
       });
     });
 
     describe("current location '.' paths", () => {
       it("should not add trailing slash", () => {
-        let window = getWindowImpl("/foo/bar");
+        let window = getWindow("/foo/bar");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -569,14 +569,14 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+        expect(window.location.href).toBe("http://localhost/foo/bar");
       });
 
       it("should preserve trailing slash", () => {
-        let window = getWindowImpl("/foo/bar/");
+        let window = getWindow("/foo/bar/");
         jest.spyOn(window.history, "pushState");
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar/");
+        expect(window.location.href).toBe("http://localhost/foo/bar/");
 
         act(() => {
           ReactDOM.createRoot(node).render(
@@ -589,17 +589,17 @@ describe("trailing slashes", () => {
           );
         });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar/");
+        expect(window.location.href).toBe("http://localhost/foo/bar/");
       });
     });
   });
 
   describe("when using setSearchParams", () => {
     it("should not include trailing slash via useSearchParams", () => {
-      let window = getWindowImpl("/foo");
+      let window = getWindow("/foo");
       jest.spyOn(window.history, "pushState");
 
-      expect(window.location.href).toBe("https://remix.run/foo");
+      expect(window.location.href).toBe("http://localhost/foo");
 
       function SetSearchParams() {
         let [, setSearchParams] = useSearchParams();
@@ -620,14 +620,14 @@ describe("trailing slashes", () => {
         );
       });
 
-      expect(window.location.href).toBe("https://remix.run/foo?key=value");
+      expect(window.location.href).toBe("http://localhost/foo?key=value");
     });
 
     it("should include trailing slash via useSearchParams when basename has one", () => {
-      let window = getWindowImpl("/foo/");
+      let window = getWindow("/foo/");
       jest.spyOn(window.history, "pushState");
 
-      expect(window.location.href).toBe("https://remix.run/foo/");
+      expect(window.location.href).toBe("http://localhost/foo/");
 
       function SetSearchParams() {
         let [, setSearchParams] = useSearchParams();
@@ -648,17 +648,10 @@ describe("trailing slashes", () => {
         );
       });
 
-      expect(window.location.href).toBe("https://remix.run/foo/?key=value");
+      expect(window.location.href).toBe("http://localhost/foo/?key=value");
     });
   });
 });
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "https://remix.run/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
-}
 
 function SingleNavigate({ to }: { to: To }) {
   let navigate = useNavigate();

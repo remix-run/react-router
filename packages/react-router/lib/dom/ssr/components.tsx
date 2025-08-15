@@ -651,6 +651,9 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
  * during client-side updates.
  */
 let isHydrated = false;
+export function setIsHydrated() {
+  isHydrated = true;
+}
 
 /**
  * A couple common attributes:
@@ -746,7 +749,7 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   let matches = getActiveMatches(routerMatches, null, isSpaMode);
 
   React.useEffect(() => {
-    isHydrated = true;
+    setIsHydrated();
   }, []);
 
   let initialScripts = React.useMemo(() => {

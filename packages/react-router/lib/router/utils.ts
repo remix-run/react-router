@@ -981,10 +981,12 @@ function flattenRoutes<
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = "",
+  _hasParentOptionalSegments = false,
 ): RouteBranch<RouteObjectType>[] {
   let flattenRoute = (
     route: RouteObjectType,
     index: number,
+    hasParentOptionalSegments = _hasParentOptionalSegments,
     relativePath?: string,
   ) => {
     let meta: RouteMeta<RouteObjectType> = {
@@ -996,6 +998,17 @@ function flattenRoutes<
     };
 
     if (meta.relativePath.startsWith("/")) {
+      if (
+        !meta.relativePath.startsWith(parentPath) &&
+        hasParentOptionalSegments
+      ) {
+        // If we're inside of a parent route that has optional segments, we don't
+        // want to throw a hard error here because due to the route exploding
+        // approach, some of the routes won't match by design and we can just
+        // discard them instead.
+        // https://github.com/remix-run/react-router/issues/9925#issuecomment-1387252214
+        return;
+      }
       invariant(
         meta.relativePath.startsWith(parentPath),
         `Absolute route path "${meta.relativePath}" nested under path ` +
@@ -1020,7 +1033,13 @@ function flattenRoutes<
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`,
       );
-      flattenRoutes(route.children, branches, routesMeta, path);
+      flattenRoutes(
+        route.children,
+        branches,
+        routesMeta,
+        path,
+        hasParentOptionalSegments,
+      );
     }
 
     // Routes without a path shouldn't ever match by themselves unless they are
@@ -1041,7 +1060,7 @@ function flattenRoutes<
       flattenRoute(route, index);
     } else {
       for (let exploded of explodeOptionalSegments(route.path)) {
-        flattenRoute(route, index, exploded);
+        flattenRoute(route, index, true, exploded);
       }
     }
   });
@@ -1443,7 +1462,8 @@ export function compilePath(
           params.push({ paramName, isOptional: isOptional != null });
           return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
         },
-      );
+      ) // Dynamic segment
+      .replace(/\/([\w-]+)\?(\/|$)/g, "(/$1)?$2"); // Optional static segment
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });

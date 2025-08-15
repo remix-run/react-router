@@ -1,9 +1,9 @@
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 import getHtml from "../utils/getHtml";
+import getWindow from "../utils/getWindow";
 import {
   Link,
   Outlet,
@@ -22,7 +22,7 @@ describe(`ScrollRestoration`, () => {
       .spyOn(console, "warn")
       .mockImplementation(() => {});
 
-    let testWindow = getWindowImpl("/base");
+    let testWindow = getWindow("/base");
     const mockScroll = jest.fn();
     window.scrollTo = mockScroll;
 
@@ -76,7 +76,7 @@ describe(`ScrollRestoration`, () => {
 
   it("removes the basename from the location provided to getKey", () => {
     let getKey = jest.fn(() => "mykey");
-    let testWindow = getWindowImpl("/base");
+    let testWindow = getWindow("/base");
     window.scrollTo = () => {};
 
     let router = createBrowserRouter(
@@ -131,7 +131,7 @@ describe(`ScrollRestoration`, () => {
       .spyOn(console, "warn")
       .mockImplementation(() => {});
 
-    let testWindow = getWindowImpl("/base");
+    let testWindow = getWindow("/base");
     const mockScroll = jest.fn();
     window.scrollTo = mockScroll;
 
@@ -346,10 +346,3 @@ const testPages = [
     },
   },
 ];
-
-function getWindowImpl(initialUrl: string): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", initialUrl);
-  return dom.window as unknown as Window;
-}

@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.8.0",
+  "version": "7.8.1",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -78,7 +78,6 @@
     "@babel/types": "^7.27.7",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
-    "@vitejs/plugin-react": "^4.5.2",
     "@vitejs/plugin-rsc": "0.4.11",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",

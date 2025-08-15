@@ -47,6 +47,7 @@ export { createStaticHandler } from "./lib/router/router";
 export {
   data,
   matchRoutes,
+  isRouteErrorResponse,
   unstable_createContext,
   unstable_RouterContextProvider,
 } from "./lib/router/utils";

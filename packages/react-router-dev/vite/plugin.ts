@@ -79,6 +79,7 @@ import {
   configRouteToBranchRoute,
 } from "../config/config";
 import { decorateComponentExportsWithProps } from "./with-props";
+import validatePluginOrder from "./plugins/validate-plugin-order";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -723,11 +724,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       viteManifestEnabled,
       buildManifest,
     };
-  };
-
-  let pluginIndex = (pluginName: string) => {
-    invariant(viteConfig);
-    return viteConfig.plugins.findIndex((plugin) => plugin.name === pluginName);
   };
 
   let getServerEntry = async ({ routeIds }: { routeIds?: Array<string> }) => {
@@ -1474,25 +1470,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           "Vite config file was unable to be resolved for React Router child compiler",
         );
 
-        // Validate that commonly used Rollup plugins that need to run before
-        // ours are in the correct order. This is because Rollup plugins can't
-        // set `enforce: "pre"` like Vite plugins can. Explicitly validating
-        // this provides a much nicer developer experience.
-        let rollupPrePlugins = [
-          { pluginName: "@mdx-js/rollup", displayName: "@mdx-js/rollup" },
-        ];
-        for (let prePlugin of rollupPrePlugins) {
-          let prePluginIndex = pluginIndex(prePlugin.pluginName);
-          if (
-            prePluginIndex >= 0 &&
-            prePluginIndex > pluginIndex("react-router")
-          ) {
-            throw new Error(
-              `The "${prePlugin.displayName}" plugin should be placed before the React Router plugin in your Vite config file`,
-            );
-          }
-        }
-
         const childCompilerPlugins = await asyncFlatten(
           childCompilerConfigFile.config.plugins ?? [],
         );
@@ -1525,7 +1502,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
                   plugin.name !== "react-router:route-exports" &&
-                  plugin.name !== "react-router:hmr-updates",
+                  plugin.name !== "react-router:hmr-updates" &&
+                  plugin.name !== "react-router:validate-plugin-order",
               )
               // Remove server hooks to avoid conflicts with the main dev server
               .map((plugin) => ({
@@ -2432,6 +2410,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     },
+    validatePluginOrder(),
   ];
 };
 

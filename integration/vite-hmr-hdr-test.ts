@@ -3,14 +3,26 @@ import path from "node:path";
 import type { Page, PlaywrightWorkerOptions } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import type { Files } from "./helpers/vite.js";
+import type { Files, TemplateName } from "./helpers/vite.js";
 import {
   test,
   createEditor,
   EXPRESS_SERVER,
   viteConfig,
   viteMajorTemplates,
+  reactRouterConfig,
 } from "./helpers/vite.js";
+
+const templates = [
+  ...viteMajorTemplates,
+  {
+    templateName: "rsc-vite-framework",
+    templateDisplayName: "RSC Framework Mode",
+  },
+] as const satisfies ReadonlyArray<{
+  templateName: TemplateName;
+  templateDisplayName: string;
+}>;
 
 const indexRoute = `
   // imports
@@ -40,28 +52,36 @@ const indexRoute = `
 `;
 
 test.describe("Vite HMR & HDR", () => {
-  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+  templates.forEach(({ templateName, templateDisplayName }) => {
     test.describe(templateDisplayName, () => {
       test("vite dev", async ({ page, browserName, dev }) => {
         let files: Files = async ({ port }) => ({
-          "vite.config.js": await viteConfig.basic({ port }),
+          "vite.config.js": await viteConfig.basic({ port, templateName }),
+          "react-router.config.ts": reactRouterConfig({
+            viteEnvironmentApi: templateName.includes("rsc"),
+          }),
           "app/routes/_index.tsx": indexRoute,
         });
         let { cwd, port } = await dev(files, templateName);
-        await workflow({ page, browserName, cwd, port });
+        await workflow({ templateName, page, browserName, cwd, port });
       });
 
       test("express", async ({ page, browserName, customDev }) => {
+        test.skip(templateName.includes("rsc"), "RSC is not supported");
         let files: Files = async ({ port }) => ({
-          "vite.config.js": await viteConfig.basic({ port }),
+          "vite.config.js": await viteConfig.basic({ port, templateName }),
+          "react-router.config.ts": reactRouterConfig({
+            viteEnvironmentApi: templateName.includes("rsc"),
+          }),
           "server.mjs": EXPRESS_SERVER({ port }),
           "app/routes/_index.tsx": indexRoute,
         });
         let { cwd, port } = await customDev(files, templateName);
-        await workflow({ page, browserName, cwd, port });
+        await workflow({ templateName, page, browserName, cwd, port });
       });
 
       test("mdx", async ({ page, dev }) => {
+        test.skip(templateName.includes("rsc"), "RSC is not supported");
         let files: Files = async ({ port }) => ({
           "vite.config.ts": `
             import { defineConfig } from "vite";
@@ -120,11 +140,13 @@ test.describe("Vite HMR & HDR", () => {
 });
 
 async function workflow({
+  templateName,
   page,
   browserName,
   cwd,
   port,
 }: {
+  templateName: TemplateName;
   page: Page;
   browserName: PlaywrightWorkerOptions["browserName"];
   cwd: string;
@@ -145,6 +167,7 @@ async function workflow({
 
   // setup: browser state
   let hmrStatus = page.locator("#index [data-hmr]");
+
   await expect(page).toHaveTitle("HMR updated title: 0");
   await expect(hmrStatus).toHaveText("HMR updated: 0");
   let input = page.locator("#index input");
@@ -159,6 +182,7 @@ async function workflow({
       .replace("HMR updated: 0", "HMR updated: 1"),
   );
   await page.waitForLoadState("networkidle");
+
   await expect(page).toHaveTitle("HMR updated title: 1");
   await expect(hmrStatus).toHaveText("HMR updated: 1");
   await expect(input).toHaveValue("stateful");

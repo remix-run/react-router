@@ -7,7 +7,7 @@ import {
   type DataRouteMatch,
   type DataRouteObject,
 } from "../context";
-import { FrameworkContext } from "../dom/ssr/components";
+import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
@@ -39,6 +39,8 @@ import {
   shouldHydrateRouteLoader,
 } from "../dom/ssr/routes";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
+import type { RouteModules } from "../dom/ssr/routeModules";
+import { populateRSCRouteModules } from "./route-modules";
 
 export type BrowserCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
@@ -56,7 +58,7 @@ export type EncodeReplyFunction = (
 
 type WindowWithRouterGlobals = Window &
   typeof globalThis & {
-    __router: DataRouter;
+    __reactRouterDataRouter: DataRouter;
     __routerInitialized: boolean;
     __routerActionID: number;
   };
@@ -139,7 +141,7 @@ export function createCallServer({
         return;
       }
 
-      globalVar.__router.navigate(payload.location, {
+      globalVar.__reactRouterDataRouter.navigate(payload.location, {
         replace: payload.replace,
       });
 
@@ -168,7 +170,7 @@ export function createCallServer({
                 window.location.href = rerender.location;
                 return;
               }
-              globalVar.__router.navigate(rerender.location, {
+              globalVar.__reactRouterDataRouter.navigate(rerender.location, {
                 replace: rerender.replace,
               });
               return;
@@ -176,7 +178,7 @@ export function createCallServer({
 
             let lastMatch: RSCRouteManifest | undefined;
             for (const match of rerender.matches) {
-              globalVar.__router.patchRoutes(
+              globalVar.__reactRouterDataRouter.patchRoutes(
                 lastMatch?.id ?? null,
                 [createRouteFromServerManifest(match)],
                 true,
@@ -185,25 +187,29 @@ export function createCallServer({
             }
             (
               window as WindowWithRouterGlobals
-            ).__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
+            ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
+              {},
+            );
 
             React.startTransition(() => {
               (
                 window as WindowWithRouterGlobals
-              ).__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
-                loaderData: Object.assign(
-                  {},
-                  globalVar.__router.state.loaderData,
-                  rerender.loaderData,
-                ),
-                errors: rerender.errors
-                  ? Object.assign(
-                      {},
-                      globalVar.__router.state.errors,
-                      rerender.errors,
-                    )
-                  : null,
-              });
+              ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
+                {
+                  loaderData: Object.assign(
+                    {},
+                    globalVar.__reactRouterDataRouter.state.loaderData,
+                    rerender.loaderData,
+                  ),
+                  errors: rerender.errors
+                    ? Object.assign(
+                        {},
+                        globalVar.__reactRouterDataRouter.state.errors,
+                        rerender.errors,
+                      )
+                    : null,
+                },
+              );
             });
           }
         },
@@ -224,12 +230,23 @@ function createRouterFromPayload({
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
   unstable_getContext: RouterInit["unstable_getContext"] | undefined;
-}) {
+}): {
+  router: DataRouter;
+  routeModules: RouteModules;
+} {
   const globalVar = window as WindowWithRouterGlobals;
 
-  if (globalVar.__router) return globalVar.__router;
+  if (globalVar.__reactRouterDataRouter && globalVar.__reactRouterRouteModules)
+    return {
+      router: globalVar.__reactRouterDataRouter,
+      routeModules: globalVar.__reactRouterRouteModules,
+    };
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
+
+  globalVar.__reactRouterRouteModules =
+    globalVar.__reactRouterRouteModules ?? {};
+  populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
 
   let patches = new Map<string, RSCRouteManifest[]>();
   payload.patches?.forEach((patch) => {
@@ -256,7 +273,7 @@ function createRouterFromPayload({
     return [route];
   }, [] as DataRouteObject[]);
 
-  globalVar.__router = createRouter({
+  globalVar.__reactRouterDataRouter = createRouter({
     routes,
     unstable_getContext,
     basename: payload.basename,
@@ -294,7 +311,7 @@ function createRouterFromPayload({
     },
     // FIXME: Pass `build.ssr` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
-      () => globalVar.__router,
+      () => globalVar.__reactRouterDataRouter,
       true,
       payload.basename,
       createFromReadableStream,
@@ -304,21 +321,99 @@ function createRouterFromPayload({
 
   // We can call initialize() immediately if the router doesn't have any
   // loaders to run on hydration
-  if (globalVar.__router.state.initialized) {
+  if (globalVar.__reactRouterDataRouter.state.initialized) {
     globalVar.__routerInitialized = true;
-    globalVar.__router.initialize();
+    globalVar.__reactRouterDataRouter.initialize();
   } else {
     globalVar.__routerInitialized = false;
   }
 
   let lastLoaderData: unknown = undefined;
-  globalVar.__router.subscribe(({ loaderData, actionData }) => {
+  globalVar.__reactRouterDataRouter.subscribe(({ loaderData, actionData }) => {
     if (lastLoaderData !== loaderData) {
       globalVar.__routerActionID = (globalVar.__routerActionID ??= 0) + 1;
     }
   });
 
-  return globalVar.__router;
+  // @ts-expect-error
+  globalVar.__reactRouterDataRouter._updateRoutesForHMR = (
+    routeUpdateByRouteId: Map<
+      string,
+      {
+        routeModule: any;
+        hasAction: boolean;
+        hasComponent: boolean;
+        hasErrorBoundary: boolean;
+        hasLoader: boolean;
+      }
+    >,
+  ) => {
+    const oldRoutes = (window as WindowWithRouterGlobals)
+      .__reactRouterDataRouter.routes;
+    const newRoutes: DataRouteObjectWithManifestInfo[] = [];
+
+    function walkRoutes(
+      routes: DataRouteObjectWithManifestInfo[],
+      parentId?: string,
+    ): DataRouteObjectWithManifestInfo[] {
+      return routes.map((route) => {
+        const routeUpdate = routeUpdateByRouteId.get(route.id);
+
+        if (routeUpdate) {
+          const {
+            routeModule,
+            hasAction,
+            hasComponent,
+            hasErrorBoundary,
+            hasLoader,
+          } = routeUpdate;
+          const newRoute = createRouteFromServerManifest({
+            clientAction: routeModule.clientAction,
+            clientLoader: routeModule.clientLoader,
+            element: route.element as React.ReactElement,
+            errorElement: route.errorElement as React.ReactElement,
+            handle: route.handle,
+            hasAction,
+            hasComponent,
+            hasErrorBoundary,
+            hasLoader,
+            hydrateFallbackElement:
+              route.hydrateFallbackElement as React.ReactElement,
+            id: route.id,
+            index: route.index,
+            links: routeModule.links,
+            meta: routeModule.meta,
+            parentId: parentId,
+            path: route.path,
+            shouldRevalidate: routeModule.shouldRevalidate,
+          });
+          if (route.children) {
+            newRoute.children = walkRoutes(route.children, route.id);
+          }
+          return newRoute;
+        }
+
+        const updatedRoute = { ...route };
+        if (route.children) {
+          updatedRoute.children = walkRoutes(route.children, route.id);
+        }
+        return updatedRoute;
+      });
+    }
+
+    newRoutes.push(
+      ...walkRoutes(oldRoutes as DataRouteObjectWithManifestInfo[], undefined),
+    );
+
+    (
+      window as WindowWithRouterGlobals
+    ).__reactRouterDataRouter._internalSetRoutes(newRoutes);
+  };
+
+  return {
+    router: globalVar.__reactRouterDataRouter,
+    routeModules: globalVar.__reactRouterRouteModules,
+  };
 }
 
 const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
@@ -398,7 +493,9 @@ export function getRSCSingleFetchDataStrategy(
         const renderedRoutes = renderedRoutesById.get(match.route.id);
         if (renderedRoutes) {
           for (const rendered of renderedRoutes) {
-            (window as WindowWithRouterGlobals).__router.patchRoutes(
+            (
+              window as WindowWithRouterGlobals
+            ).__reactRouterDataRouter.patchRoutes(
               rendered.parentId ?? null,
               [createRouteFromServerManifest(rendered)],
               true,
@@ -580,7 +677,7 @@ export function RSCHydratedRouter({
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let router = React.useMemo(
+  let { router, routeModules } = React.useMemo(
     () =>
       createRouterFromPayload({
         payload,
@@ -596,13 +693,17 @@ export function RSCHydratedRouter({
     ],
   );
 
+  React.useEffect(() => {
+    setIsHydrated();
+  }, []);
+
   React.useLayoutEffect(() => {
     // If we had to run clientLoaders on hydration, we delay initialization until
     // after we've hydrated to avoid hydration issues from synchronous client loaders
     const globalVar = window as WindowWithRouterGlobals;
     if (!globalVar.__routerInitialized) {
       globalVar.__routerInitialized = true;
-      globalVar.__router.initialize();
+      globalVar.__reactRouterDataRouter.initialize();
     }
   }, []);
 
@@ -698,7 +799,7 @@ export function RSCHydratedRouter({
       unstable_middleware: false,
       unstable_subResourceIntegrity: false,
     },
-    isSpaMode: true,
+    isSpaMode: false,
     ssr: true,
     criticalCss: "",
     manifest: {
@@ -711,7 +812,7 @@ export function RSCHydratedRouter({
       },
     },
     routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
-    routeModules: {},
+    routeModules,
   };
 
   return (
@@ -726,6 +827,7 @@ export function RSCHydratedRouter({
 }
 
 type DataRouteObjectWithManifestInfo = DataRouteObject & {
+  children?: DataRouteObjectWithManifestInfo[];
   hasLoader: boolean;
   hasClientLoader: boolean;
   hasAction: boolean;
@@ -748,6 +850,9 @@ function createRouteFromServerManifest(
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
     (match.hasComponent && !match.element);
+
+  invariant(window.__reactRouterRouteModules);
+  populateRSCRouteModules(window.__reactRouterRouteModules, match);
 
   let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,
@@ -871,7 +976,10 @@ function getManifestUrl(paths: string[]): URL | null {
   }
 
   const globalVar = window as WindowWithRouterGlobals;
-  let basename = (globalVar.__router.basename ?? "").replace(/^\/|\/$/g, "");
+  let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
+    /^\/|\/$/g,
+    "",
+  );
   let url = new URL(`${basename}/.manifest`, window.location.origin);
   paths.sort().forEach((path) => url.searchParams.append("p", path));
 
@@ -915,7 +1023,7 @@ async function fetchAndApplyManifestPatches(
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
   payload.patches.forEach((p) => {
-    (window as WindowWithRouterGlobals).__router.patchRoutes(
+    (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
       p.parentId ?? null,
       [createRouteFromServerManifest(p)],
     );
