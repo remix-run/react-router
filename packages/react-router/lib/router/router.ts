@@ -5421,18 +5421,17 @@ function runServerMiddlewarePipeline(
   return runMiddlewarePipeline(
     args,
     handler,
-    // Upgrade returned data() values to real Responses
-    (result) =>
-      isDataWithResponseInit(result)
-        ? dataWithResponseInitToResponse(result)
-        : result,
+    processResult,
     isResponse,
-    async (error, routeId, nextResult) => {
-      // Convert thrown data() values to ErrorResponses
-      let response = await errorHandler(error, routeId, nextResult);
-      return response;
-    },
+    errorHandler,
   );
+
+  // Upgrade returned data() values to real Responses
+  function processResult(result: any) {
+    return isDataWithResponseInit(result)
+      ? dataWithResponseInitToResponse(result)
+      : result;
+  }
 }
 
 function runClientMiddlewarePipeline(
@@ -5447,35 +5446,42 @@ function runClientMiddlewarePipeline(
     handler,
     (r) => r, // No post-processing needed on the client
     isDataStrategyResults,
-    (error, routeId, nextResult) => {
-      if (nextResult) {
-        return Promise.resolve(
-          Object.assign(nextResult.value, {
-            [routeId]: { type: "error", result: error },
-          }),
-        );
-      } else {
-        // We never even got to the handlers, so we might not have data for new routes.
-        // Find the boundary at or above the source of the middleware error or the
-        // highest route that needs to load - we can't render any UI below that since
-        // we won't have valid loader data.
-        let { matches } = args;
-        let maxBoundaryIdx = Math.min(
-          // Throwing route
-          matches.findIndex((m) => m.route.id === routeId) || 0,
-          // or the shallowest route that needs to load data
-          matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
-        );
-        let boundaryRouteId = findNearestBoundary(
-          matches,
-          matches[maxBoundaryIdx].route.id,
-        ).route.id;
-        return Promise.resolve({
-          [boundaryRouteId]: { type: "error", result: error },
-        });
-      }
-    },
+    errorHandler,
   );
+
+  // Handle error bubbling on the client
+  function errorHandler(
+    error: unknown,
+    routeId: string,
+    nextResult: { value: Record<string, DataStrategyResult> } | undefined,
+  ): Promise<Record<string, DataStrategyResult>> {
+    if (nextResult) {
+      return Promise.resolve(
+        Object.assign(nextResult.value, {
+          [routeId]: { type: "error", result: error },
+        }),
+      );
+    } else {
+      // We never even got to the handlers, so we might not have data for new routes.
+      // Find the boundary at or above the source of the middleware error or the
+      // highest route that needs to load - we can't render any UI below that since
+      // we won't have valid loader data.
+      let { matches } = args;
+      let maxBoundaryIdx = Math.min(
+        // Throwing route
+        matches.findIndex((m) => m.route.id === routeId) || 0,
+        // or the shallowest route that needs to load data
+        matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
+      );
+      let boundaryRouteId = findNearestBoundary(
+        matches,
+        matches[maxBoundaryIdx].route.id,
+      ).route.id;
+      return Promise.resolve({
+        [boundaryRouteId]: { type: "error", result: error },
+      });
+    }
+  }
 }
 
 async function runMiddlewarePipeline<Result>(
@@ -5579,19 +5585,9 @@ async function callRouteMiddleware<Result>(
   };
 
   try {
-    let value = await middleware(
-      {
-        request: args.request,
-        params: args.params,
-        context: args.context,
-      },
-      next,
-    );
+    let value = await middleware(args, next);
+    let result = value != null ? processResult(value) : undefined;
 
-    let result =
-      typeof value === "undefined" ? undefined : processResult(value);
-
-    // Handle calling next() if needed and returning the proper result
     if (isResult(result)) {
       // Use short circuit values of the proper type without having called next()
       return result;
