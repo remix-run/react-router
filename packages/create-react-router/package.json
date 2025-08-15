@@ -36,13 +36,11 @@
     }
   },
   "dependencies": {
-    "@remix-run/web-fetch": "^4.4.2",
     "arg": "^5.0.1",
     "chalk": "^4.1.2",
     "execa": "5.1.1",
     "gunzip-maybe": "^1.4.2",
     "log-update": "^5.0.1",
-    "proxy-agent": "^6.3.0",
     "semver": "^7.3.7",
     "sisteransi": "^1.0.5",
     "sort-package-json": "^1.55.0",
