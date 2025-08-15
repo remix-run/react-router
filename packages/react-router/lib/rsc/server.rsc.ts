@@ -518,6 +518,7 @@ async function processServerAction(
       revalidationRequest: Request;
       actionResult?: Promise<unknown>;
       formState?: unknown;
+      revalidate: boolean;
     }
   | Response
   | undefined
@@ -559,9 +560,30 @@ async function processServerAction(
       // The error is propagated to the client through the result promise in the stream
       onError?.(error);
     }
+
+    // We check both the first and second args to cover both <form action> and useActionState.
+    let formData1 =
+      actionArgs &&
+      typeof actionArgs[0] === "object" &&
+      actionArgs[0] instanceof FormData
+        ? actionArgs[0]
+        : null;
+    let formData2 =
+      actionArgs &&
+      typeof actionArgs[1] === "object" &&
+      actionArgs[1] instanceof FormData
+        ? actionArgs[1]
+        : null;
+    let revalidate =
+      (formData1 && formData1.has("$NO_REVALIDATE")) ||
+      (formData2 && formData2.has("$NO_REVALIDATE"))
+        ? false
+        : true;
+
     return {
       actionResult,
       revalidationRequest: getRevalidationRequest(),
+      revalidate,
     };
   } else if (isFormRequest) {
     const formData = await request.clone().formData();
@@ -591,6 +613,7 @@ async function processServerAction(
       return {
         formState,
         revalidationRequest: getRevalidationRequest(),
+        revalidate: true,
       };
     }
   }
@@ -698,6 +721,7 @@ async function generateRenderResponse(
   });
 
   let actionResult: Promise<unknown> | undefined;
+  let skipRevalidation = false;
   const ctx: ServerContext = {
     runningAction: false,
   };
@@ -705,7 +729,10 @@ async function generateRenderResponse(
     staticHandler.query(request, {
       requestContext,
       skipLoaderErrorBubbling: isDataRequest,
-      skipRevalidation: isSubmission,
+      skipRevalidation: () => {
+        // TODO: This should opt out of loader calls but is not at the moment.
+        return isSubmission || skipRevalidation;
+      },
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
@@ -741,6 +768,7 @@ async function generateRenderResponse(
             );
           }
 
+          skipRevalidation = result?.revalidate === false;
           actionResult = result?.actionResult;
           formState = result?.formState;
           request = result?.revalidationRequest ?? request;
@@ -782,6 +810,7 @@ async function generateRenderResponse(
           isSubmission,
           actionResult,
           formState,
+          skipRevalidation,
           staticContext,
           temporaryReferences,
           ctx.redirect?.headers,
@@ -873,6 +902,7 @@ async function generateStaticContextResponse(
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
   formState: unknown | undefined,
+  skipRevalidation: boolean,
   staticContext: StaticHandlerContext,
   temporaryReferences: unknown,
   sideEffectRedirectHeaders: Headers | undefined,
@@ -949,7 +979,7 @@ async function generateStaticContextResponse(
     payload = {
       type: "action",
       actionResult,
-      rerender: renderPayloadPromise(),
+      rerender: skipRevalidation ? undefined : renderPayloadPromise(),
     };
   } else if (isSubmission && isDataRequest) {
     // Short circuit without matches on non server-action submissions since
