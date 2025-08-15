@@ -445,7 +445,7 @@ const authMiddleware = async ({ request, context }) => {
 
 ### `next()` and Error Handling
 
-React Router contains built-in error handling via the route [`ErrorBoundary`][ErrorBoundary] export. Just like when a `action`/`loader` throws (_mostly_), if a `middleware` throws it will be caught and handled at the appropriate [`ErrorBoundary`] and a [`Response`][Response] will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a [`Response`][Response], so you don't need to worry about wrapping it in a try/catch.
+React Router contains built-in error handling via the route [`ErrorBoundary`][ErrorBoundary] export. Just like when a `action`/`loader` throws, if a `middleware` throws it will be caught and handled at the appropriate [`ErrorBoundary`] and a [`Response`][Response] will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a [`Response`][Response], so you don't need to worry about wrapping it in a try/catch.
 
 This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root `middleware`. If any error from a `middleware` caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
@@ -472,8 +472,6 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
     },
   ];
 ```
-
-<docs-info>We say _"mostly"_ above because there is a small/nuanced difference if you throw a non-redirect [`Response`][Response] in a `action`/`loader` versus throwing a [`Response`][Response] in a `middleware` (redirects behave the same).<br/><br/>Throwing a non-redirect response from a `middleware` will use that response directly and return it up through the parent `next()` call. This differs from the behavior in `action`/`loader` where that response will be converted to an [`ErrorResponse`][ErrorResponse] to be rendered by the [`ErrorBoundary`][ErrorBoundary].<br/><br/>The difference here is because `action`/`loader` are expected to return data which is then provided to components for rendering. But middleware is expected to return a [`Response`][Response] — so if you return or throw one, we will use it directly. If you want to throw an error with a status code to an [`ErrorBoundary`][ErrorBoundary] from middleware, you should use the [`data`][data] utility.</docs-info>
 
 ## Changes to `getLoadContext`/`AppLoadContext`
 
