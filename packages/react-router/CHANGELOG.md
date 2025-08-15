@@ -1,5 +1,12 @@
 # `react-router`
 
+## 7.8.1-pre.1
+
+### Patch Changes
+
+- Propagate non-redirect Responses thrown from middleware to the error boundary on document/data requests ([#14182](https://github.com/remix-run/react-router/pull/14182))
+- [REMOVE] Update data -> Response conversion (update changelog with latest from `rotten-steaks-perform.md`) ([#14181](https://github.com/remix-run/react-router/pull/14181))
+
 ## 7.8.1-pre.0
 
 ### Patch Changes
