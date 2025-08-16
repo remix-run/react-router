@@ -508,6 +508,7 @@ describe("route config", () => {
               },
             ],
             "file": "{{CWD}}/path/to/dirname/nested/parent.tsx",
+            "id": "path/to/dirname/nested/parent",
             "path": "parent",
           }
         `);
@@ -524,6 +525,7 @@ describe("route config", () => {
           [
             {
               "file": "{{CWD}}/path/to/dirname/nested/without-options.tsx",
+              "id": "path/to/dirname/nested/without-options",
               "index": true,
             },
             {
@@ -552,6 +554,7 @@ describe("route config", () => {
               },
             ],
             "file": "{{CWD}}/path/to/dirname/nested/parent.tsx",
+            "id": "path/to/dirname/nested/parent",
           }
         `);
       });
