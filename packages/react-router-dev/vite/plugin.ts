@@ -31,11 +31,10 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
+import { kebabCase } from "scule";
 import { escapePath as escapePathAsGlob } from "tinyglobby";
-import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
-import kebabCase from "lodash/kebabCase";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -44,6 +43,7 @@ import type {
   Manifest as ReactRouterManifest,
 } from "../manifest";
 import invariant from "../invariant";
+import { pick } from "../utils";
 import type { Cache } from "./cache";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";

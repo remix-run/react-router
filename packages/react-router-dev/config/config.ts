@@ -1,5 +1,6 @@
-import fs from "node:fs";
 import { execSync } from "node:child_process";
+import fs from "node:fs";
+import { isDeepStrictEqual } from "node:util";
 import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
@@ -9,11 +10,8 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
 
+import { omit, pick } from "../utils";
 import {
   type RouteManifest,
   type RouteManifestEntry,
@@ -389,7 +387,7 @@ async function resolveConfig({
   }
 
   // Prevent mutations to the user config
-  reactRouterUserConfig = deepFreeze(cloneDeep(reactRouterUserConfig));
+  reactRouterUserConfig = deepFreeze(structuredClone(reactRouterUserConfig));
 
   let presets: ReactRouterConfig[] = (
     await Promise.all(
@@ -404,12 +402,11 @@ async function resolveConfig({
           return null;
         }
 
-        let configPreset: ReactRouterConfig = omit(
+        return omit(
           await preset.reactRouterConfig({ reactRouterUserConfig }),
+          // @ts-expect-error
           excludedConfigPresetKeys,
         );
-
-        return configPreset;
       }),
     )
   ).filter(function isNotNull<T>(value: T | null): value is T {
@@ -775,10 +772,14 @@ export async function createConfigLoader({
 
           let configChanged =
             result.ok &&
-            !isEqual(omitRoutes(currentConfig), omitRoutes(result.value));
+            !isDeepStrictEqual(
+              omitRoutes(currentConfig),
+              omitRoutes(result.value),
+            );
 
           let routeConfigChanged =
-            result.ok && !isEqual(currentConfig?.routes, result.value.routes);
+            result.ok &&
+            !isDeepStrictEqual(currentConfig?.routes, result.value.routes);
 
           for (let handler of changeHandlers) {
             handler({
