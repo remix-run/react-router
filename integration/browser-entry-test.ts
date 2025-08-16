@@ -129,3 +129,70 @@ test("allows users to pass a client side context to HydratedRouter", async ({
 
   appFixture.close();
 });
+
+test("allows users to pass an onError function to HydratedRouter", async ({
+  page,
+  browserName,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                unstable_onError={(error, errorInfo) => {
+                  console.log(error.message, JSON.stringify(errorInfo))
+                }}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+        export default function Index() {
+          return <Link to="/page">Go to Page</Link>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        export default function Page() {
+          throw new Error("Render error");
+        }
+        export function ErrorBoundary({ error }) {
+          return <h1 data-error>Error: {error.message}</h1>
+        }
+      `,
+    },
+  });
+
+  let logs: string[] = [];
+  page.on("console", (msg) => logs.push(msg.text()));
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.goto("/", true);
+  await page.click('a[href="/page"]');
+  await page.waitForSelector("[data-error]");
+
+  expect(await app.getHtml()).toContain("Error: Render error");
+  expect(logs.length).toBe(2);
+  // First one is react logging the error
+  if (browserName === "firefox") {
+    expect(logs[0]).toContain("Error");
+  } else {
+    expect(logs[0]).toContain("Error: Render error");
+  }
+  expect(logs[0]).not.toContain("componentStack");
+  // Second one is ours
+  expect(logs[1]).toContain("Render error");
+  expect(logs[1]).toContain('"componentStack":');
+
+  appFixture.close();
+});
