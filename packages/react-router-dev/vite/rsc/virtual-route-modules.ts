@@ -1,4 +1,4 @@
-import type { ConfigEnv } from "vite";
+import type * as Vite from "vite";
 import * as babel from "../babel";
 import { parse as esModuleLexer } from "es-module-lexer";
 import { removeExports } from "../remove-exports";
@@ -10,6 +10,11 @@ const SERVER_ONLY_ROUTE_EXPORTS = [
   "headers",
   "ServerComponent",
 ] as const;
+type ServerOnlyRouteExport = (typeof SERVER_ONLY_ROUTE_EXPORTS)[number];
+const SERVER_ONLY_ROUTE_EXPORTS_SET = new Set(SERVER_ONLY_ROUTE_EXPORTS);
+function isServerOnlyRouteExport(name: string): name is ServerOnlyRouteExport {
+  return SERVER_ONLY_ROUTE_EXPORTS_SET.has(name as ServerOnlyRouteExport);
+}
 
 const COMPONENT_EXPORTS = [
   "default",
@@ -45,27 +50,49 @@ function isClientRouteExport(name: string): name is ClientRouteExport {
   return CLIENT_ROUTE_EXPORTS_SET.has(name as ClientRouteExport);
 }
 
-type ViteCommand = ConfigEnv["command"];
+const ROUTE_EXPORTS = [
+  ...SERVER_ONLY_ROUTE_EXPORTS,
+  ...CLIENT_ROUTE_EXPORTS,
+] as const;
+type RouteExport = (typeof ROUTE_EXPORTS)[number];
+const ROUTE_EXPORTS_SET = new Set(ROUTE_EXPORTS);
+function isRouteExport(name: string): name is RouteExport {
+  return ROUTE_EXPORTS_SET.has(name as RouteExport);
+}
+function isCustomRouteExport(name: string) {
+  return !isRouteExport(name);
+}
+
+function hasReactServerCondition(viteEnvironment: Vite.Environment) {
+  return viteEnvironment.config.resolve.conditions.includes("react-server");
+}
+
+type ViteCommand = Vite.ConfigEnv["command"];
 
 export function transformVirtualRouteModules({
   id,
   code,
   viteCommand,
+  routeIdByFile,
+  viteEnvironment,
 }: {
   id: string;
   code: string;
   viteCommand: ViteCommand;
+  routeIdByFile: Map<string, string>;
+  viteEnvironment: Vite.Environment;
 }) {
-  if (!id.includes("route-module")) {
-    return;
-  }
-
-  if (isVirtualRouteModuleId(id)) {
-    return createVirtualRouteModuleCode({ id, code, viteCommand });
+  if (isVirtualRouteModuleId(id) || routeIdByFile.has(id)) {
+    return createVirtualRouteModuleCode({
+      id,
+      code,
+      viteCommand,
+      viteEnvironment,
+    });
   }
 
   if (isVirtualServerRouteModuleId(id)) {
-    return createVirtualServerRouteModuleCode({ id, code });
+    return createVirtualServerRouteModuleCode({ id, code, viteEnvironment });
   }
 
   if (isVirtualClientRouteModuleId(id)) {
@@ -77,11 +104,14 @@ async function createVirtualRouteModuleCode({
   id,
   code: routeSource,
   viteCommand,
+  viteEnvironment,
 }: {
   id: string;
   code: string;
   viteCommand: ViteCommand;
+  viteEnvironment: Vite.Environment;
 }) {
+  const isReactServer = hasReactServerCondition(viteEnvironment);
   const { staticExports, isServerFirstRoute, hasClientExports } =
     parseRouteExports(routeSource);
 
@@ -93,10 +123,10 @@ async function createVirtualRouteModuleCode({
     for (const staticExport of staticExports) {
       if (isClientNonComponentExport(staticExport)) {
         code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-      } else if (staticExport === "ServerComponent") {
-        code += `export { ServerComponent as default } from "${serverModuleId}";\n`;
-      } else {
-        code += `export { ${staticExport} } from "${serverModuleId}";\n`;
+      } else if (isReactServer && isRouteExport(staticExport)) {
+        code += `export { ${staticExport}${staticExport === "ServerComponent" ? " as default" : ""} } from "${serverModuleId}";\n`;
+      } else if (isCustomRouteExport(staticExport)) {
+        code += `export { ${staticExport} } from "${isReactServer ? serverModuleId : clientModuleId}";\n`;
       }
     }
     if (viteCommand === "serve" && !hasClientExports) {
@@ -106,8 +136,10 @@ async function createVirtualRouteModuleCode({
     for (const staticExport of staticExports) {
       if (isClientRouteExport(staticExport)) {
         code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-      } else {
+      } else if (isReactServer && isServerOnlyRouteExport(staticExport)) {
         code += `export { ${staticExport} } from "${serverModuleId}";\n`;
+      } else if (isCustomRouteExport(staticExport)) {
+        code += `export { ${staticExport} } from "${isReactServer ? serverModuleId : clientModuleId}";\n`;
       }
     }
   }
@@ -122,10 +154,22 @@ async function createVirtualRouteModuleCode({
 function createVirtualServerRouteModuleCode({
   id,
   code: routeSource,
+  viteEnvironment,
 }: {
   id: string;
   code: string;
+  viteEnvironment: Vite.Environment;
 }) {
+  if (!hasReactServerCondition(viteEnvironment)) {
+    throw new Error(
+      [
+        "Virtual server route module was loaded outside of the RSC environment.",
+        `Environment Name: ${viteEnvironment.name}`,
+        `Module ID: ${id}`,
+      ].join("\n"),
+    );
+  }
+
   const { staticExports, isServerFirstRoute } = parseRouteExports(routeSource);
   const clientModuleId = getVirtualClientModuleId(id);
   const serverRouteModuleAst = babel.parse(routeSource, {
@@ -220,7 +264,7 @@ function isVirtualRouteModuleId(id: string): boolean {
   return /(\?|&)route-module(&|$)/.test(id);
 }
 
-function isVirtualClientRouteModuleId(id: string): boolean {
+export function isVirtualClientRouteModuleId(id: string): boolean {
   return /(\?|&)client-route-module(&|$)/.test(id);
 }
 
