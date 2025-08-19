@@ -89,7 +89,7 @@ export async function action({
 
 If any validation errors are found, they are returned from the `action` to the fetcher. This is our way of signaling to the UI that something needs to be corrected, otherwise the user will be redirected to the dashboard.
 
-Note the `data({ errors }, { status: 400 })` call. Setting a 400 status is the web standard way to signal to the client that there was a validation error (Bad Request). In React Router, only 200 status codes trigger page data revalidation, so sending a 400 status prevents the normal revalidation that would occur after an `action`.
+Note the `data({ errors }, { status: 400 })` call. Setting a 400 status is the web standard way to signal to the client that there was a validation error (Bad Request). In React Router, only 2xx status codes trigger page data revalidation, so sending a 400 status prevents the normal revalidation that would occur after an `action`.
 
 ## 3. Displaying Validation Errors
 
