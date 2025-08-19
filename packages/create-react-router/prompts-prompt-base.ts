@@ -58,7 +58,7 @@ export class Prompt extends EventEmitter {
       this.emit(
         this.aborted ? "abort" : this.exited ? "exit" : "submit",
         // @ts-expect-error
-        this.value
+        this.value,
       );
       this.closed = true;
     };
@@ -98,18 +98,18 @@ export interface PromptOptions {
   stdout?: typeof process.stdout;
   onRender?(render: (...text: unknown[]) => string): void;
   onSubmit?(
-    v: any
+    v: any,
   ): void | undefined | boolean | Promise<void | undefined | boolean>;
   onCancel?(
-    v: any
+    v: any,
   ): void | undefined | boolean | Promise<void | undefined | boolean>;
   onAbort?(
-    v: any
+    v: any,
   ): void | undefined | boolean | Promise<void | undefined | boolean>;
   onExit?(
-    v: any
+    v: any,
   ): void | undefined | boolean | Promise<void | undefined | boolean>;
   onState?(
-    v: any
+    v: any,
   ): void | undefined | boolean | Promise<void | undefined | boolean>;
 }

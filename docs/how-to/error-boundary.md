@@ -4,6 +4,11 @@ title: Error Boundaries
 
 # Error Boundaries
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 To avoid rendering an empty page to users, route modules will automatically catch errors in your code and render the closest `ErrorBoundary`.
 
 Error boundaries are not intended for error reporting or rendering form validation errors. Please see [Form Validation](./form-validation) and [Error Reporting](./error-reporting) instead.

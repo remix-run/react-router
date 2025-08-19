@@ -1,6 +1,6 @@
-import { JSDOM } from "jsdom";
 import { createBrowserRouter } from "../../lib/dom/lib";
 import type { HydrationState } from "../../lib/router/router";
+import getWindow from "../utils/getWindow";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
@@ -62,13 +62,6 @@ function initializeTest(init?: {
   });
 }
 
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
-}
-
 describe("navigations", () => {
   afterEach(() => cleanup());
 
@@ -104,7 +97,7 @@ describe("navigations", () => {
           headers: {
             "Content-Type": "application/json",
           },
-        })
+        }),
       );
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -116,7 +109,7 @@ describe("navigations", () => {
       let t = initializeTest();
       let A = await t.navigate("/foo");
       await A.loaders.foo.resolve(
-        Response.json({ key: "value" }, { status: 200 })
+        Response.json({ key: "value" }, { status: 200 }),
       );
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -133,7 +126,7 @@ describe("navigations", () => {
           headers: {
             "Content-Type": "application/json",
           },
-        })
+        }),
       );
       expect(t.router.state.errors).toBeNull();
       expect(t.router.state.loaderData).toMatchObject({
@@ -176,13 +169,13 @@ describe("navigations", () => {
           headers: {
             "Content-Type": "application/json",
           },
-        })
+        }),
       );
       expect(t.router.state.loaderData).toEqual({});
 
       expect(t.router.state.errors?.foo).toBeInstanceOf(SyntaxError);
       expect(t.router.state.errors?.foo.message).toContain(
-        "Unexpected non-whitespace character after JSON at position 15"
+        "Unexpected non-whitespace character after JSON at position 15",
       );
     });
 
@@ -211,13 +204,13 @@ describe("navigations", () => {
           headers: {
             "Content-Type": "application/json",
           },
-        })
+        }),
       );
       expect(t.router.state.loaderData).toEqual({});
 
       expect(t.router.state.errors?.root).toBeInstanceOf(SyntaxError);
       expect(t.router.state.errors?.root.message).toContain(
-        "Unexpected non-whitespace character after JSON at position 15"
+        "Unexpected non-whitespace character after JSON at position 15",
       );
     });
 
@@ -453,10 +446,10 @@ describe("navigations", () => {
           },
         ],
         {
-          window: getWindowImpl("/"),
+          window: getWindow("/"),
           // This is what enables the partialMatches logic
           patchRoutesOnNavigation: () => {},
-        }
+        },
       );
       expect(router.state.location).toMatchObject({
         pathname: "/",
@@ -1201,7 +1194,7 @@ describe("navigations", () => {
 
       expect(
         // @ts-expect-error
-        new URLSearchParams(navigation.formData).toString()
+        new URLSearchParams(navigation.formData).toString(),
       ).toBe("gosh=dang");
       expect(navigation.formMethod).toBe("POST");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
@@ -1216,7 +1209,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("loading");
       expect(
         // @ts-expect-error
-        new URLSearchParams(navigation.formData).toString()
+        new URLSearchParams(navigation.formData).toString(),
       ).toBe("gosh=dang");
       expect(navigation.formMethod).toBe("POST");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
@@ -1250,7 +1243,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("loading");
       expect(
         // @ts-expect-error
-        new URLSearchParams(navigation.formData).toString()
+        new URLSearchParams(navigation.formData).toString(),
       ).toBe("gosh=dang");
       expect(navigation.formMethod).toBe("POST");
       expect(navigation.location).toMatchObject({

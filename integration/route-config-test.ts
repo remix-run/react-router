@@ -23,19 +23,19 @@ test.describe("route config", () => {
         let buildResult = build({ cwd });
         expect(buildResult.status).toBe(1);
         expect(buildResult.stderr.toString()).toContain(
-          'Route config file not found at "app/routes.ts"'
+          'Route config file not found at "app/routes.ts"',
         );
       });
 
       test("fails the build if route config is invalid", async () => {
         let cwd = await createProject(
           { "app/routes.ts": `export default INVALID(` },
-          templateName
+          templateName,
         );
         let buildResult = build({ cwd });
         expect(buildResult.status).toBe(1);
         expect(buildResult.stderr.toString()).toContain(
-          'Route config in "routes.ts" is invalid.'
+          'Route config in "routes.ts" is invalid.',
         );
       });
 
@@ -53,7 +53,7 @@ test.describe("route config", () => {
           devError = error;
         }
         expect(devError?.toString()).toContain(
-          'Route config in "routes.ts" is invalid.'
+          'Route config in "routes.ts" is invalid.',
         );
       });
 
@@ -83,7 +83,7 @@ test.describe("route config", () => {
           waitUntil: "networkidle",
         });
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route 1"
+          "Test route 1",
         );
 
         let edit = createEditor(cwd);
@@ -93,24 +93,24 @@ test.describe("route config", () => {
 
         // Ensure dev server is still running with old config + HMR
         await edit("app/test-route-1.tsx", (contents) =>
-          contents.replace("Test route 1", "Test route 1 updated")
+          contents.replace("Test route 1", "Test route 1 updated"),
         );
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route 1 updated"
+          "Test route 1 updated",
         );
 
         // Fix config with new route
         await edit("app/routes.ts", (contents) =>
           contents
             .replace("INVALID", "")
-            .replace("test-route-1", "test-route-2")
+            .replace("test-route-1", "test-route-2"),
         );
 
         await expect(async () => {
           // Reload to pick up new route for current path
           await page.reload();
           await expect(page.locator("[data-test-route]")).toHaveText(
-            "Test route 2"
+            "Test route 2",
           );
         }).toPass();
       });
@@ -144,7 +144,7 @@ test.describe("route config", () => {
           waitUntil: "networkidle",
         });
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route 1"
+          "Test route 1",
         );
 
         let edit = createEditor(cwd);
@@ -154,24 +154,24 @@ test.describe("route config", () => {
 
         // Ensure dev server is still running with old config + HMR
         await edit("app/test-route-1.tsx", (contents) =>
-          contents.replace("Test route 1", "Test route 1 updated")
+          contents.replace("Test route 1", "Test route 1 updated"),
         );
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route 1 updated"
+          "Test route 1 updated",
         );
 
         // Fix config with new route
         await edit("app/actual-routes.ts", (contents) =>
           contents
             .replace("INVALID", "")
-            .replace("test-route-1", "test-route-2")
+            .replace("test-route-1", "test-route-2"),
         );
 
         await expect(async () => {
           // Reload to pick up new route for current path
           await page.reload();
           await expect(page.locator("[data-test-route]")).toHaveText(
-            "Test route 2"
+            "Test route 2",
           );
         }).toPass();
       });
@@ -202,7 +202,7 @@ test.describe("route config", () => {
           waitUntil: "networkidle",
         });
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route 1"
+          "Test route 1",
         );
 
         let edit = createEditor(cwd);
@@ -212,33 +212,33 @@ test.describe("route config", () => {
         // Rename config to make it missing
         await fs.rename(
           path.join(cwd, "app/routes.ts"),
-          path.join(cwd, INVALID_FILENAME)
+          path.join(cwd, INVALID_FILENAME),
         );
 
         // Ensure dev server is still running with old config + HMR
         await edit("app/test-route-1.tsx", (contents) =>
-          contents.replace("Test route 1", "Test route 1 updated")
+          contents.replace("Test route 1", "Test route 1 updated"),
         );
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route 1 updated"
+          "Test route 1 updated",
         );
 
         // Add new route
         await edit(INVALID_FILENAME, (contents) =>
-          contents.replace("test-route-1", "test-route-2")
+          contents.replace("test-route-1", "test-route-2"),
         );
 
         // Rename config to bring it back
         await fs.rename(
           path.join(cwd, INVALID_FILENAME),
-          path.join(cwd, "app/routes.ts")
+          path.join(cwd, "app/routes.ts"),
         );
 
         await expect(async () => {
           // Reload to pick up new route for current path
           await page.reload();
           await expect(page.locator("[data-test-route]")).toHaveText(
-            "Test route 2"
+            "Test route 2",
           );
         }).toPass();
       });
@@ -264,7 +264,7 @@ test.describe("route config", () => {
           waitUntil: "networkidle",
         });
         await expect(page.locator("[data-test-route]")).toHaveText(
-          "Test route"
+          "Test route",
         );
       });
     });

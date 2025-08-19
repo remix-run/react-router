@@ -54,7 +54,7 @@ describe("absolute path matching", () => {
             ],
           },
         ],
-        "/users/123"
+        "/users/123",
       );
     }).toThrow("absolute child route path must start");
   });

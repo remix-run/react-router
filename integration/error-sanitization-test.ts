@@ -160,7 +160,7 @@ test.describe("Error Sanitization", () => {
         {
           files: routeFiles,
         },
-        ServerMode.Production
+        ServerMode.Production,
       );
     });
 
@@ -182,7 +182,7 @@ test.describe("Error Sanitization", () => {
       // This is the turbo-stream encoding - the fact that stack goes right
       // into __type means it has no value
       expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"'
+        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
       );
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs.length).toBe(1);
@@ -198,7 +198,7 @@ test.describe("Error Sanitization", () => {
       // This is the turbo-stream encoding - the fact that stack goes right
       // into __type means it has no value
       expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"'
+        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
       );
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs.length).toBe(1);
@@ -212,7 +212,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Defer Route");
       expect(html).toMatch("RESOLVED");
       expect(html).not.toMatch("MESSAGE:");
-      // Defer errors are not not part of the JSON blob but rather rejected
+      // Defer errors are not part of the JSON blob but rather rejected
       // against a pending promise and therefore are inlined JS.
       expect(html).not.toMatch("x.stack=e.stack;");
     });
@@ -232,9 +232,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -244,9 +241,6 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
         },
@@ -293,7 +287,7 @@ test.describe("Error Sanitization", () => {
           error: new ErrorResponseImpl(
             404,
             "Not Found",
-            'Error: No route matches URL "/not-a-route"'
+            'Error: No route matches URL "/not-a-route"',
           ),
         },
       });
@@ -324,7 +318,7 @@ test.describe("Error Sanitization", () => {
         {
           files: routeFiles,
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
     });
     let ogEnv = process.env.NODE_ENV;
@@ -392,9 +386,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -404,9 +395,6 @@ test.describe("Error Sanitization", () => {
     test("does not sanitize loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Loader Error"),
         },
@@ -454,7 +442,7 @@ test.describe("Error Sanitization", () => {
           error: new ErrorResponseImpl(
             404,
             "Not Found",
-            'Error: No route matches URL "/not-a-route"'
+            'Error: No route matches URL "/not-a-route"',
           ),
         },
       });
@@ -469,7 +457,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
       expect(html).toMatch("<p>NAME:ReferenceError");
       expect(html).toMatch(
-        "<p>STACK:ReferenceError: thisisnotathing is not defined"
+        "<p>STACK:ReferenceError: thisisnotathing is not defined",
       );
 
       // Hydration
@@ -480,7 +468,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
       expect(html).toMatch("<p>NAME:ReferenceError");
       expect(html).toMatch(
-        "STACK:ReferenceError: thisisnotathing is not defined"
+        "STACK:ReferenceError: thisisnotathing is not defined",
       );
     });
   });
@@ -564,7 +552,7 @@ test.describe("Error Sanitization", () => {
             ...routeFiles,
           },
         },
-        ServerMode.Production
+        ServerMode.Production,
       );
     });
 
@@ -586,7 +574,7 @@ test.describe("Error Sanitization", () => {
       // This is the turbo-stream encoding - the fact that stack goes right
       // into __type means it has no value
       expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"'
+        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
       );
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
@@ -604,7 +592,7 @@ test.describe("Error Sanitization", () => {
       // This is the turbo-stream encoding - the fact that stack goes right
       // into __type means it has no value
       expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"'
+        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
       );
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
@@ -620,7 +608,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Defer Route");
       expect(html).toMatch("RESOLVED");
       expect(html).not.toMatch("MESSAGE:");
-      // Defer errors are not not part of the JSON blob but rather rejected
+      // Defer errors are not part of the JSON blob but rather rejected
       // against a pending promise and therefore are inlined JS.
       expect(html).not.toMatch("x.stack=e.stack;");
     });
@@ -640,9 +628,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -652,12 +637,13 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: { data: null },
-        "routes/_index": { error: new Error("Unexpected Server Error") },
+        "routes/_index": {
+          error: new Error("Unexpected Server Error"),
+        },
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(
-        "  Request: GET test://test/_root.data?loader"
+        "  Request: GET test://test/_root.data?loader",
       );
       expect(errorLogs[2][0]).toEqual("  Error: Loader Error");
       expect(errorLogs[3][0]).toMatch(" at ");
@@ -692,7 +678,7 @@ test.describe("Error Sanitization", () => {
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(
-        "  Request: GET test://test/resource?loader"
+        "  Request: GET test://test/resource?loader",
       );
       expect(errorLogs[2][0]).toEqual("  Error: Loader Error");
       expect(errorLogs[3][0]).toMatch(" at ");
@@ -706,17 +692,17 @@ test.describe("Error Sanitization", () => {
           error: new ErrorResponseImpl(
             404,
             "Not Found",
-            'Error: No route matches URL "/not-a-route"'
+            'Error: No route matches URL "/not-a-route"',
           ),
         },
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(
-        "  Request: GET test://test/not-a-route.data"
+        "  Request: GET test://test/not-a-route.data",
       );
       expect(errorLogs[2][0]).toEqual("  Status: 404 Not Found");
       expect(errorLogs[3][0]).toEqual(
-        '  Error: No route matches URL "/not-a-route"'
+        '  Error: No route matches URL "/not-a-route"',
       );
       expect(errorLogs[4][0]).toMatch(" at ");
       expect(errorLogs.length).toBe(5);

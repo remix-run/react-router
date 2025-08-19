@@ -34,9 +34,8 @@ import { isRedirect, tick } from "./utils";
 // by our test harness
 export type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle"
+  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
 > & {
-  lazy?: boolean;
   loader?: boolean;
   action?: boolean;
   hasErrorBoundary?: boolean;
@@ -44,9 +43,8 @@ export type TestIndexRouteObject = Pick<
 
 export type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle"
+  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
 > & {
-  lazy?: boolean;
   loader?: boolean;
   action?: boolean;
   hasErrorBoundary?: boolean;
@@ -72,13 +70,13 @@ export type Helpers = InternalHelpers & {
     href: string,
     status?: number,
     headers?: Record<string, string>,
-    shims?: string[]
+    shims?: string[],
   ) => Promise<NavigationHelpers>;
   redirectReturn: (
     href: string,
     status?: number,
     headers?: Record<string, string>,
-    shims?: string[]
+    shims?: string[],
   ) => Promise<NavigationHelpers>;
 };
 
@@ -86,7 +84,6 @@ export type Helpers = InternalHelpers & {
 // control and assertions over the loaders/actions
 export type NavigationHelpers = {
   navigationId: number;
-  lazy: Record<string, Helpers>;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
 };
@@ -142,17 +139,18 @@ type SetupOpts = {
   basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
 // tick() calls to let the router finish updating
-export function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
+export function createDeferred<T = any>() {
+  let resolve: (val: T) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
+  let promise = new Promise<T>((res, rej) => {
+    resolve = async (val: T) => {
       res(val);
       await tick();
       await promise;
@@ -169,6 +167,16 @@ export function createDeferred() {
     //@ts-ignore
     reject,
   };
+}
+
+export function createAsyncStub(): [
+  asyncStub: jest.Mock,
+  deferred: ReturnType<typeof createDeferred>,
+] {
+  let deferred = createDeferred();
+  let asyncStub = jest.fn(() => deferred.promise);
+
+  return [asyncStub, deferred];
 }
 
 export function getFetcherData(router: Router) {
@@ -197,6 +205,7 @@ export function setup({
   basename,
   initialEntries,
   initialIndex,
+  hydrationRouteProperties,
   hydrationData,
   dataStrategy,
 }: SetupOpts) {
@@ -223,38 +232,13 @@ export function setup({
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
       let enhancedRoute: AgnosticDataRouteObject = {
+        unstable_middleware: undefined,
         ...r,
-        lazy: undefined,
         loader: undefined,
         action: undefined,
         children: undefined,
         id: r.id || `route-${guid++}`,
       };
-      if (r.lazy) {
-        // @ts-expect-error
-        enhancedRoute.lazy = (args) => {
-          // This is maybe not ideal, but works for now :).  We don't really know
-          // which key to look for so we resolve the earliest one we find and
-          // remove it such that subsequent calls resolve the later ones.
-          const sortedIds = [
-            activeLoaderNavigationId,
-            activeActionNavigationId,
-            activeLoaderFetchId,
-            activeActionFetchId,
-          ].sort();
-          let helperKey = sortedIds
-            .map((id) => `${id}:lazy:${enhancedRoute.id}`)
-            .find((k) => activeHelpers.has(k));
-          invariant(helperKey != null, `No helperKey found`);
-          let helpers = activeHelpers.get(helperKey);
-          invariant(helpers, `No helpers found for: ${helperKey}`);
-          helpers.stub(args);
-          return helpers.dfd.promise.then((def) => {
-            activeHelpers.delete(helperKey!);
-            return def;
-          });
-        };
-      }
       if (r.loader) {
         enhancedRoute.loader = (...args) => {
           let navigationId =
@@ -307,7 +291,7 @@ export function setup({
                 activeLoaderNavigationId = navigationId;
               }
               return Promise.reject(result);
-            }
+            },
           );
         };
       }
@@ -337,6 +321,7 @@ export function setup({
     basename,
     history,
     routes: enhanceRoutes(routes),
+    hydrationRouteProperties,
     hydrationData,
     window: testWindow,
     dataStrategy: dataStrategy,
@@ -348,7 +333,7 @@ export function setup({
   function getRouteHelpers(
     routeId: string,
     navigationId: number,
-    addHelpers: (routeId: string, helpers: InternalHelpers) => void
+    addHelpers: (routeId: string, helpers: InternalHelpers) => void,
   ): Helpers {
     // Internal methods we need access to from the route loader execution
     let internalHelpers: InternalHelpers = {
@@ -366,7 +351,7 @@ export function setup({
       href: string,
       status = 301,
       headers = {},
-      shims: string[] = []
+      shims: string[] = [],
     ) {
       let redirectNavigationId = ++guid;
       activeLoaderType = "navigation";
@@ -382,7 +367,7 @@ export function setup({
       // these _after_ the redirect, so we allow the caller to pass in loader
       // shims with the redirect
       shims.forEach((routeId) =>
-        shimHelper(helpers.loaders, "navigation", "loader", routeId)
+        shimHelper(helpers.loaders, "navigation", "loader", routeId),
       );
 
       try {
@@ -429,14 +414,14 @@ export function setup({
   function getHelpers(
     matches: AgnosticRouteMatch<string, AgnosticDataRouteObject>[],
     navigationId: number,
-    addHelpers: (routeId: string, helpers: InternalHelpers) => void
+    addHelpers: (routeId: string, helpers: InternalHelpers) => void,
   ): Record<string, Helpers> {
     return matches.reduce(
       (acc, m) =>
         Object.assign(acc, {
           [m.route.id]: getRouteHelpers(m.route.id, navigationId, addHelpers),
         }),
-      {}
+      {},
     );
   }
 
@@ -448,29 +433,22 @@ export function setup({
 
   function getNavigationHelpers(
     href: string,
-    navigationId: number
+    navigationId: number,
   ): NavigationHelpers {
     invariant(
       currentRouter?.routes,
-      "No currentRouter.routes available in getNavigationHelpers"
+      "No currentRouter.routes available in getNavigationHelpers",
     );
     let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
 
-    // Generate helpers for all route matches that contain loaders
-    let lazyHelpers = getHelpers(
-      (matches || []).filter((m) => m.route.lazy),
-      navigationId,
-      (routeId, helpers) =>
-        activeHelpers.set(`${navigationId}:lazy:${routeId}`, helpers)
-    );
     let loaderHelpers = getHelpers(
       (matches || []).filter((m) => m.route.loader),
       navigationId,
       (routeId, helpers) =>
         activeHelpers.set(
           `navigation:${navigationId}:loader:${routeId}`,
-          helpers
-        )
+          helpers,
+        ),
     );
     let actionHelpers = getHelpers(
       (matches || []).filter((m) => m.route.action),
@@ -478,13 +456,12 @@ export function setup({
       (routeId, helpers) =>
         activeHelpers.set(
           `navigation:${navigationId}:action:${routeId}`,
-          helpers
-        )
+          helpers,
+        ),
     );
 
     return {
       navigationId,
-      lazy: lazyHelpers,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };
@@ -494,11 +471,11 @@ export function setup({
     key: string,
     href: string,
     navigationId: number,
-    opts?: RouterNavigateOptions
+    opts?: RouterNavigateOptions,
   ): FetcherHelpers {
     invariant(
       currentRouter?.routes,
-      "No currentRouter.routes available in getFetcherHelpers"
+      "No currentRouter.routes available in getFetcherHelpers",
     );
     let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
     invariant(currentRouter, "No currentRouter available");
@@ -516,7 +493,6 @@ export function setup({
           invariant(currentRouter, "No currentRouter available");
           return currentRouter.getFetcher(key);
         },
-        lazy: {},
         loaders: {},
         actions: {},
       };
@@ -535,7 +511,7 @@ export function setup({
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
           inFlightRoutes || currentRouter.routes,
-          currentRouter.state.navigation.location
+          currentRouter.state.navigation.location,
         );
         invariant(matches, "No matches found for fetcher");
         activeLoaderMatches = matches;
@@ -544,24 +520,17 @@ export function setup({
       }
     }
 
-    // Generate helpers for all route matches that contain loaders
-    let lazyHelpers = getHelpers(
-      match.route.lazy ? [match] : [],
-      navigationId,
-      (routeId, helpers) =>
-        activeHelpers.set(`${navigationId}:lazy:${routeId}`, helpers)
-    );
     let loaderHelpers = getHelpers(
       activeLoaderMatches.filter((m) => m.route.loader),
       navigationId,
       (routeId, helpers) =>
-        activeHelpers.set(`fetch:${navigationId}:loader:${routeId}`, helpers)
+        activeHelpers.set(`fetch:${navigationId}:loader:${routeId}`, helpers),
     );
     let actionHelpers = getHelpers(
       match.route.action ? [match] : [],
       navigationId,
       (routeId, helpers) =>
-        activeHelpers.set(`fetch:${navigationId}:action:${routeId}`, helpers)
+        activeHelpers.set(`fetch:${navigationId}:action:${routeId}`, helpers),
     );
 
     return {
@@ -574,7 +543,6 @@ export function setup({
           data: fetcherData.get(key),
         };
       },
-      lazy: lazyHelpers,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };
@@ -586,12 +554,12 @@ export function setup({
   function navigate(
     href: string,
     opts?: RouterNavigateOptions,
-    shims?: string[]
+    shims?: string[],
   ): Promise<NavigationHelpers>;
   async function navigate(
     href: number | string,
     opts?: RouterNavigateOptions,
-    shims?: string[]
+    shims?: string[],
   ): Promise<NavigationHelpers> {
     let navigationId = ++guid;
     let helpers: NavigationHelpers;
@@ -621,7 +589,7 @@ export function setup({
             popHref = stripBasename(popHref, currentRouter.basename) as string;
             invariant(
               popHref,
-              "href passed to navigate should start with basename"
+              "href passed to navigate should start with basename",
             );
           }
           helpers = getNavigationHelpers(popHref, navigationId);
@@ -637,7 +605,7 @@ export function setup({
 
     helpers = getNavigationHelpers(href, navigationId);
     shims?.forEach((routeId) =>
-      shimHelper(helpers.loaders, "navigation", "loader", routeId)
+      shimHelper(helpers.loaders, "navigation", "loader", routeId),
     );
     currentRouter.navigate(href, opts);
     return helpers;
@@ -647,24 +615,24 @@ export function setup({
   // control/assert loader/actions
   async function fetch(
     href: string,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions,
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions,
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
     routeId: string,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions,
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     keyOrOpts?: string | RouterFetchOptions,
     routeIdOrOpts?: string | RouterFetchOptions,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions,
   ): Promise<FetcherHelpers> {
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
@@ -676,8 +644,8 @@ export function setup({
       typeof keyOrOpts === "object"
         ? keyOrOpts
         : typeof routeIdOrOpts === "object"
-        ? routeIdOrOpts
-        : opts;
+          ? routeIdOrOpts
+          : opts;
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
@@ -698,7 +666,7 @@ export function setup({
   // control/assert loader/actions
   async function revalidate(
     type: "navigation" | "fetch" = "navigation",
-    shimRouteId?: string
+    shimRouteId?: string,
   ): Promise<NavigationHelpers> {
     invariant(currentRouter, "No currentRouter available");
     let navigationId;
@@ -721,7 +689,7 @@ export function setup({
       activeLoaderNavigationId = navigationId;
     }
     let href = currentRouter.createHref(
-      currentRouter.state.navigation.location || currentRouter.state.location
+      currentRouter.state.navigation.location || currentRouter.state.location,
     );
     let helpers = getNavigationHelpers(href, navigationId);
     if (shimRouteId) {
@@ -735,11 +703,11 @@ export function setup({
     navHelpers: Record<string, Helpers>,
     type: "navigation" | "fetch",
     type2: "loader" | "action",
-    routeId: string
+    routeId: string,
   ) {
     invariant(!navHelpers[routeId], "Can't overwrite existing helpers");
     navHelpers[routeId] = getRouteHelpers(routeId, guid, (routeId, helpers) =>
-      activeHelpers.set(`${type}:${guid}:${type2}:${routeId}`, helpers)
+      activeHelpers.set(`${type}:${guid}:${type2}:${routeId}`, helpers),
     );
   }
 

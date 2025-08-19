@@ -1,7 +1,6 @@
-import type { DOMWindow } from "jsdom";
 import type { History } from "../../../lib/router/history";
 
-export default function PushState(history: History, window: DOMWindow) {
+export default function PushState(history: History, window: Window) {
   let err = new DOMException("ERROR", "DataCloneError");
   jest.spyOn(window.history, "pushState").mockImplementation(() => {
     throw err;
@@ -12,7 +11,7 @@ export default function PushState(history: History, window: DOMWindow) {
   });
 
   expect(() =>
-    history.push("/home?the=query#the-hash", { invalid: () => {} })
+    history.push("/home?the=query#the-hash", { invalid: () => {} }),
   ).toThrow(err);
 
   expect(history.location.pathname).toBe("/");

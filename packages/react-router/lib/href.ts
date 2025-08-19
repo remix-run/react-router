@@ -1,23 +1,16 @@
-import type { Register } from "./types/register";
+import type { Pages } from "./types/register";
 import type { Equal } from "./types/utils";
 
-type AnyParams = Record<string, Record<string, string | undefined>>;
-type Params = Register extends {
-  params: infer RegisteredParams extends AnyParams;
-}
-  ? RegisteredParams
-  : AnyParams;
-
-type Args = { [K in keyof Params]: ToArgs<Params[K]> };
+type Args = { [K in keyof Pages]: ToArgs<Pages[K]["params"]> };
 
 // prettier-ignore
-type ToArgs<T> =
+type ToArgs<Params extends Record<string, string | undefined>> =
   // path without params -> no `params` arg
-  Equal<T, {}> extends true ? [] :
+  Equal<Params, {}> extends true ? [] :
   // path with only optional params -> optional `params` arg
-  Partial<T> extends T ? [T] | [] :
+  Partial<Params> extends Params ? [Params] | [] :
   // otherwise, require `params` arg
-  [T];
+  [Params];
 
 /**
   Returns a resolved URL path for the specified route.
@@ -37,6 +30,10 @@ export function href<Path extends keyof Args>(
   return path
     .split("/")
     .map((segment) => {
+      if (segment === "*") {
+        return params ? params["*"] : undefined;
+      }
+
       const match = segment.match(/^:([\w-]+)(\?)?/);
       if (!match) return segment;
       const param = match[1];
@@ -45,7 +42,7 @@ export function href<Path extends keyof Args>(
       const isRequired = match[2] === undefined;
       if (isRequired && value === undefined) {
         throw Error(
-          `Path '${path}' requires param '${param}' but it was not provided`
+          `Path '${path}' requires param '${param}' but it was not provided`,
         );
       }
       return value;

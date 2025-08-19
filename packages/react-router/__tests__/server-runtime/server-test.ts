@@ -2,11 +2,13 @@
  * @jest-environment node
  */
 
-import type { StaticHandlerContext } from "react-router";
+import {
+  unstable_createContext,
+  type StaticHandlerContext,
+} from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
-import type { ServerBuild } from "../../lib/server-runtime/build";
 import { mockServerBuild } from "./utils";
 
 function spyConsole() {
@@ -24,44 +26,25 @@ function spyConsole() {
   return spy;
 }
 
-describe.skip("server", () => {
+describe("server", () => {
   let routeId = "root";
-  let build: ServerBuild = {
-    entry: {
-      module: {
-        default: async (request) => {
-          return new Response(`${request.method}, ${request.url} COMPONENT`);
-        },
-      },
-    },
-    routes: {
+  let build = mockServerBuild(
+    {
       [routeId]: {
-        id: routeId,
         path: "",
-        module: {
-          action: ({ request }) =>
-            new Response(`${request.method} ${request.url} ACTION`),
-          loader: ({ request }) =>
-            new Response(`${request.method} ${request.url} LOADER`),
-          default: () => "COMPONENT",
-        },
+        action: ({ request }) =>
+          new Response(`${request.method} ${request.url} ACTION`),
+        loader: ({ request }) =>
+          new Response(`${request.method} ${request.url} LOADER`),
+        default: () => "COMPONENT",
       },
     },
-    assets: {
-      routes: {
-        [routeId]: {
-          hasAction: true,
-          hasErrorBoundary: false,
-          hasLoader: true,
-          id: routeId,
-          module: routeId,
-          path: "",
-        },
+    {
+      handleDocumentRequest(request) {
+        return new Response(`${request.method}, ${request.url} COMPONENT`);
       },
     },
-    future: {},
-    prerender: [],
-  } as unknown as ServerBuild;
+  );
 
   describe("createRequestHandler", () => {
     let spy = spyConsole();
@@ -71,38 +54,33 @@ describe.skip("server", () => {
     });
 
     let allowThrough = [
-      ["GET", "/"],
-      ["GET", "/?_data=root"],
-      ["POST", "/"],
-      ["POST", "/?_data=root"],
-      ["PUT", "/"],
-      ["PUT", "/?_data=root"],
-      ["DELETE", "/"],
-      ["DELETE", "/?_data=root"],
-      ["PATCH", "/"],
-      ["PATCH", "/?_data=root"],
+      ["GET", "/", "COMPONENT"],
+      ["GET", "/_root.data", "LOADER"],
+      ["POST", "/", "COMPONENT"],
+      ["POST", "/_root.data", "ACTION"],
+      ["PUT", "/", "COMPONENT"],
+      ["PUT", "/_root.data", "ACTION"],
+      ["DELETE", "/", "COMPONENT"],
+      ["DELETE", "/_root.data", "ACTION"],
+      ["PATCH", "/", "COMPONENT"],
+      ["PATCH", "/_root.data", "ACTION"],
     ];
     it.each(allowThrough)(
       `allows through %s request to %s`,
-      async (method, to) => {
+      async (method, to, expected) => {
         let handler = createRequestHandler(build);
         let response = await handler(
           new Request(`http://localhost:3000${to}`, {
             method,
-          })
+          }),
         );
 
         expect(response.status).toBe(200);
         let text = await response.text();
         expect(text).toContain(method);
-        let expected = !to.includes("?_data=root")
-          ? "COMPONENT"
-          : method === "GET"
-          ? "LOADER"
-          : "ACTION";
         expect(text).toContain(expected);
         expect(spy.console).not.toHaveBeenCalled();
-      }
+      },
     );
 
     it("strips body for HEAD requests", async () => {
@@ -110,10 +88,101 @@ describe.skip("server", () => {
       let response = await handler(
         new Request("http://localhost:3000/", {
           method: "HEAD",
-        })
+        }),
       );
 
       expect(await response.text()).toBe("");
+    });
+
+    it("accepts proper values from getLoadContext (without middleware)", async () => {
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: ({ context }) => context.foo,
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        },
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        {
+          foo: "FOO",
+        },
+      );
+
+      expect(await response.text()).toContain("FOO");
+    });
+
+    it("accepts proper values from getLoadContext (with middleware)", async () => {
+      let fooContext = unstable_createContext<string>();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: ({ context }) => context.get(fooContext),
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        },
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        // @ts-expect-error In apps the expected type is handled via the Future interface
+        new Map([[fooContext, "FOO"]]),
+      );
+
+      expect(await response.text()).toContain("FOO");
+    });
+
+    it("errors if an invalid value is returned from getLoadContext (with middleware)", async () => {
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: ({ context }) => context.foo,
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          future: {
+            unstable_middleware: true,
+          },
+          handleError: handleErrorSpy,
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        },
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        {
+          foo: "FOO",
+        },
+      );
+
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain("Unexpected Server Error");
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0].message).toBe(
+        "Invalid `context` value provided to `handleRequest`. When middleware is " +
+          "enabled you must return an instance of `unstable_RouterContextProvider` " +
+          "from your `getLoadContext` function.",
+      );
+      handleErrorSpy.mockRestore();
     });
   });
 });
@@ -245,7 +314,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(await result.text()).toBe(
-        "Unexpected Server Error\n\nError: should be logged when resource loader throws"
+        "Unexpected Server Error\n\nError: should be logged when resource loader throws",
       );
     });
 
@@ -388,7 +457,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(await result.text()).toBe(
-        "Unexpected Server Error\n\nError: should be logged when resource loader throws"
+        "Unexpected Server Error\n\nError: should be logged when resource loader throws",
       );
     });
 
@@ -436,7 +505,7 @@ describe("shared server runtime", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -457,15 +526,15 @@ describe("shared server runtime", () => {
       `);
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
-        true
+        true,
       );
       expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "This operation was aborted"
+        "This operation was aborted",
       );
       expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
       expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
-        "http://test.com/resource"
+        "http://test.com/resource",
       );
     });
   });
@@ -930,7 +999,7 @@ describe("shared server runtime", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -947,19 +1016,19 @@ describe("shared server runtime", () => {
       let error = await result.json();
       expect(error.message).toBe("This operation was aborted");
       expect(
-        error.stack.startsWith("AbortError: This operation was aborted")
+        error.stack.startsWith("AbortError: This operation was aborted"),
       ).toBe(true);
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
-        true
+        true,
       );
       expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "This operation was aborted"
+        "This operation was aborted",
       );
       expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
       expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
-        "http://test.com/?_data=routes/_index"
+        "http://test.com/?_data=routes/_index",
       );
     });
   });
@@ -1143,10 +1212,7 @@ describe("shared server runtime", () => {
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
       expect(context.errors!.root.status).toBe(400);
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/test": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("thrown action responses bubble up for index routes", async () => {
@@ -1190,10 +1256,7 @@ describe("shared server runtime", () => {
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
       expect(context.errors!.root.status).toBe(400);
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/_index": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("thrown action responses catch deep", async () => {
@@ -1239,7 +1302,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/test"].status).toBe(400);
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/test": null,
       });
     });
 
@@ -1286,7 +1348,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/_index"].status).toBe(400);
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/_index": null,
       });
     });
 
@@ -1341,8 +1402,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].data).toBe("action");
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/test": null,
       });
     });
 
@@ -1397,8 +1456,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].data).toBe("action");
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/index": null,
       });
     });
 
@@ -1481,7 +1538,7 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/_index"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/_index"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/_index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
@@ -1532,10 +1589,7 @@ describe("shared server runtime", () => {
       expect(context.errors!.root).toBeInstanceOf(Error);
       expect(context.errors!.root.message).toBe("Unexpected Server Error");
       expect(context.errors!.root.stack).toBeUndefined();
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/test": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("action errors bubble up for index routes", async () => {
@@ -1581,10 +1635,7 @@ describe("shared server runtime", () => {
       expect(context.errors!.root).toBeInstanceOf(Error);
       expect(context.errors!.root.message).toBe("Unexpected Server Error");
       expect(context.errors!.root.stack).toBeUndefined();
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/_index": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("action errors catch deep", async () => {
@@ -1629,12 +1680,11 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/test"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/test"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/test"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/test": null,
       });
     });
 
@@ -1680,12 +1730,11 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/_index"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/_index"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/_index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/_index": null,
       });
     });
 
@@ -1739,13 +1788,11 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/__layout"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/__layout"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/test": null,
       });
     });
 
@@ -1799,13 +1846,11 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/__layout"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/__layout"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/index": null,
       });
     });
 
@@ -1878,7 +1923,7 @@ describe("shared server runtime", () => {
       let ogHandleDocumentRequest = build.entry.module.default;
       build.entry.module.default = function (
         _: Request,
-        responseStatusCode: number
+        responseStatusCode: number,
       ) {
         if (responseStatusCode === 200) {
           throw new Response("Uh oh!", {
@@ -1927,7 +1972,7 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect(await result.text()).toBe(
-        "Unexpected Server Error\n\nError: rofl"
+        "Unexpected Server Error\n\nError: rofl",
       );
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(indexLoader.mock.calls.length).toBe(0);
@@ -1980,7 +2025,7 @@ describe("shared server runtime", () => {
       expect(spy.console.mock.calls).toEqual([
         [
           new Error(
-            "thrown from handleDocumentRequest and expected to be logged in console only once"
+            "thrown from handleDocumentRequest and expected to be logged in console only once",
           ),
         ],
         [new Error("second error thrown from handleDocumentRequest")],
@@ -2010,7 +2055,7 @@ describe("shared server runtime", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -2028,15 +2073,15 @@ describe("shared server runtime", () => {
 
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
-        true
+        true,
       );
       expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "This operation was aborted"
+        "This operation was aborted",
       );
       expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
       expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
-        "http://test.com/"
+        "http://test.com/",
       );
     });
   });
@@ -2048,31 +2093,27 @@ describe("shared server runtime", () => {
     let indexLoader = jest.fn(() => {
       return "index";
     });
-    let build = mockServerBuild({
-      root: {
-        default: {},
-        loader: rootLoader,
-        ErrorBoundary: {},
+    let build = mockServerBuild(
+      {
+        root: {
+          default: {},
+          loader: rootLoader,
+          ErrorBoundary: {},
+        },
+        "routes/_index": {
+          parentId: "root",
+          default: {},
+          loader: indexLoader,
+        },
       },
-      "routes/_index": {
-        parentId: "root",
-        default: {},
-        loader: indexLoader,
+      {
+        handleDocumentRequest(request, responseStatusCode, responseHeaders) {
+          return new Response(JSON.stringify(loadContext), {
+            status: responseStatusCode,
+            headers: responseHeaders,
+          });
+        },
       },
-    });
-
-    build.entry.module.default = jest.fn(
-      async (
-        request,
-        responseStatusCode,
-        responseHeaders,
-        entryContext,
-        loadContext
-      ) =>
-        new Response(JSON.stringify(loadContext), {
-          status: responseStatusCode,
-          headers: responseHeaders,
-        })
     );
 
     let handler = createRequestHandler(build, ServerMode.Development);

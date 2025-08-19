@@ -227,7 +227,7 @@ export interface MemoryHistory extends History {
  * in stateful non-browser environments like tests and React Native.
  */
 export function createMemoryHistory(
-  options: MemoryHistoryOptions = {}
+  options: MemoryHistoryOptions = {},
 ): MemoryHistory {
   let { initialEntries = ["/"], initialIndex, v5Compat = false } = options;
   let entries: Location[]; // Declare so we can access from createMemoryLocation
@@ -235,11 +235,11 @@ export function createMemoryHistory(
     createMemoryLocation(
       entry,
       typeof entry === "string" ? null : entry.state,
-      index === 0 ? "default" : undefined
-    )
+      index === 0 ? "default" : undefined,
+    ),
   );
   let index = clampIndex(
-    initialIndex == null ? entries.length - 1 : initialIndex
+    initialIndex == null ? entries.length - 1 : initialIndex,
   );
   let action = Action.Pop;
   let listener: Listener | null = null;
@@ -253,19 +253,19 @@ export function createMemoryHistory(
   function createMemoryLocation(
     to: To,
     state: any = null,
-    key?: string
+    key?: string,
   ): Location {
     let location = createLocation(
       entries ? getCurrentLocation().pathname : "/",
       to,
       state,
-      key
+      key,
     );
     warning(
       location.pathname.charAt(0) === "/",
       `relative pathnames are not supported in memory history: ${JSON.stringify(
-        to
-      )}`
+        to,
+      )}`,
     );
     return location;
   }
@@ -357,11 +357,11 @@ export type BrowserHistoryOptions = UrlHistoryOptions;
  * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#createbrowserhistory
  */
 export function createBrowserHistory(
-  options: BrowserHistoryOptions = {}
+  options: BrowserHistoryOptions = {},
 ): BrowserHistory {
   function createBrowserLocation(
     window: Window,
-    globalHistory: Window["history"]
+    globalHistory: Window["history"],
   ) {
     let { pathname, search, hash } = window.location;
     return createLocation(
@@ -369,7 +369,7 @@ export function createBrowserHistory(
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
-      (globalHistory.state && globalHistory.state.key) || "default"
+      (globalHistory.state && globalHistory.state.key) || "default",
     );
   }
 
@@ -381,7 +381,7 @@ export function createBrowserHistory(
     createBrowserLocation,
     createBrowserHref,
     null,
-    options
+    options,
   );
 }
 //#endregion
@@ -414,11 +414,11 @@ export type HashHistoryOptions = UrlHistoryOptions;
  * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#createhashhistory
  */
 export function createHashHistory(
-  options: HashHistoryOptions = {}
+  options: HashHistoryOptions = {},
 ): HashHistory {
   function createHashLocation(
     window: Window,
-    globalHistory: Window["history"]
+    globalHistory: Window["history"],
   ) {
     let {
       pathname = "/",
@@ -441,7 +441,7 @@ export function createHashHistory(
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
-      (globalHistory.state && globalHistory.state.key) || "default"
+      (globalHistory.state && globalHistory.state.key) || "default",
     );
   }
 
@@ -462,8 +462,8 @@ export function createHashHistory(
     warning(
       location.pathname.charAt(0) === "/",
       `relative pathnames are not supported in hash history.push(${JSON.stringify(
-        to
-      )})`
+        to,
+      )})`,
     );
   }
 
@@ -471,7 +471,7 @@ export function createHashHistory(
     createHashLocation,
     createHashHref,
     validateHashLocation,
-    options
+    options,
   );
 }
 //#endregion
@@ -486,7 +486,7 @@ export function createHashHistory(
 export function invariant(value: boolean, message?: string): asserts value;
 export function invariant<T>(
   value: T | null | undefined,
-  message?: string
+  message?: string,
 ): asserts value is T;
 export function invariant(value: any, message?: string) {
   if (value === false || value === null || typeof value === "undefined") {
@@ -531,7 +531,7 @@ export function createLocation(
   current: string | Location,
   to: To,
   state: any = null,
-  key?: string
+  key?: string,
 ): Readonly<Location> {
   let location: Readonly<Location> = {
     pathname: typeof current === "string" ? current : current.pathname,
@@ -605,7 +605,7 @@ function getUrlBasedHistory(
   getLocation: (window: Window, globalHistory: Window["history"]) => Location,
   createHref: (window: Window, to: To) => string,
   validateLocation: ((location: Location, to: To) => void) | null,
-  options: UrlHistoryOptions = {}
+  options: UrlHistoryOptions = {},
 ): UrlHistory {
   let { window = document.defaultView!, v5Compat = false } = options;
   let globalHistory = window.history;
@@ -682,24 +682,7 @@ function getUrlBasedHistory(
   }
 
   function createURL(to: To): URL {
-    // window.location.origin is "null" (the literal string value) in Firefox
-    // under certain conditions, notably when serving from a local HTML file
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
-    let base =
-      window.location.origin !== "null"
-        ? window.location.origin
-        : window.location.href;
-
-    let href = typeof to === "string" ? to : createPath(to);
-    // Treating this as a full URL will strip any trailing spaces so we need to
-    // pre-encode them since they might be part of a matching splat param from
-    // an ancestor route
-    href = href.replace(/ $/, "%20");
-    invariant(
-      base,
-      `No window.location.(origin|href) available to create URL for href: ${href}`
-    );
-    return new URL(href, base);
+    return createBrowserURLImpl(to);
   }
 
   let history: History = {
@@ -742,6 +725,40 @@ function getUrlBasedHistory(
   };
 
   return history;
+}
+
+export function createBrowserURLImpl(to: To, isAbsolute = false): URL {
+  let base = "http://localhost";
+  if (typeof window !== "undefined") {
+    // window.location.origin is "null" (the literal string value) in Firefox
+    // under certain conditions, notably when serving from a local HTML file
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
+    base =
+      window.location.origin !== "null"
+        ? window.location.origin
+        : window.location.href;
+  }
+
+  invariant(base, "No window.location.(origin|href) available to create URL");
+
+  let href = typeof to === "string" ? to : createPath(to);
+
+  // Treating this as a full URL will strip any trailing spaces so we need to
+  // pre-encode them since they might be part of a matching splat param from
+  // an ancestor route
+  href = href.replace(/ $/, "%20");
+
+  // If this isn't a usage for absolute URLs (currently only for redirects),
+  // then we need to avoid the URL constructor treating a leading double slash
+  // as a protocol-less URL. By prepending the base, it forces the double slash
+  // to be parsed correctly as part of the pathname.
+  if (!isAbsolute && href.startsWith("//")) {
+    // new URL('//', 'https://localhost') -> error!
+    // new URL('https://localhost//', 'https://localhost') -> no error!
+    href = base + href;
+  }
+
+  return new URL(href, base);
 }
 
 //#endregion

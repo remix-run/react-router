@@ -16,7 +16,7 @@ import type {
   AgnosticPatchRoutesOnNavigationFunction,
   AgnosticPatchRoutesOnNavigationFunctionArgs,
   AgnosticRouteMatch,
-  LazyRouteFunction,
+  LazyRouteDefinition,
   TrackedPromise,
 } from "./router/utils";
 
@@ -26,6 +26,7 @@ export interface IndexRouteObject {
   caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
+  unstable_middleware?: AgnosticIndexRouteObject["unstable_middleware"];
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
@@ -39,13 +40,14 @@ export interface IndexRouteObject {
   Component?: React.ComponentType | null;
   HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  lazy?: LazyRouteDefinition<RouteObject>;
 }
 
 export interface NonIndexRouteObject {
   caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
+  unstable_middleware?: AgnosticNonIndexRouteObject["unstable_middleware"];
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
@@ -59,7 +61,7 @@ export interface NonIndexRouteObject {
   Component?: React.ComponentType | null;
   HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  lazy?: LazyRouteDefinition<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
@@ -71,7 +73,7 @@ export type DataRouteObject = RouteObject & {
 
 export interface RouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends RouteObject = RouteObject,
 > extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
@@ -99,6 +101,12 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
 
+export const RSCRouterContext = React.createContext<boolean>(false);
+
+export function useIsRSCRouterContext(): boolean {
+  return React.useContext(RSCRouterContext);
+}
+
 export type ViewTransitionContextObject =
   | {
       isTransitioning: false;
@@ -120,7 +128,7 @@ ViewTransitionContext.displayName = "ViewTransition";
 export type FetchersContextObject = Map<string, any>;
 
 export const FetchersContext = React.createContext<FetchersContextObject>(
-  new Map()
+  new Map(),
 );
 FetchersContext.displayName = "Fetchers";
 
@@ -170,7 +178,7 @@ interface NavigationContextObject {
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(
-  null!
+  null!,
 );
 NavigationContext.displayName = "Navigation";
 
@@ -180,7 +188,7 @@ interface LocationContextObject {
 }
 
 export const LocationContext = React.createContext<LocationContextObject>(
-  null!
+  null!,
 );
 LocationContext.displayName = "Location";
 
@@ -199,3 +207,7 @@ RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";
+
+// Provided by the build system
+declare const __DEV__: boolean;
+export const ENABLE_DEV_WARNINGS = __DEV__;

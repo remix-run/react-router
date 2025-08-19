@@ -152,19 +152,29 @@ const files = {
   `,
 };
 
-const VITE_CONFIG = async (port: number) => dedent`
+const VITE_CONFIG = async ({
+  port,
+  base,
+  cssCodeSplit,
+}: {
+  port: number;
+  base?: string;
+  cssCodeSplit?: boolean;
+}) => dedent`
   import { reactRouter } from "@react-router/dev/vite";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
-  export default {
+  export default async () => ({
     ${await viteConfig.server({ port })}
+    ${viteConfig.build({ cssCodeSplit })}
+    ${base ? `base: "${base}",` : ""}
     plugins: [
       reactRouter(),
       vanillaExtractPlugin({
         emitCssInSsr: true,
       }),
     ],
-  }
+  });
 `;
 
 test.describe("Vite CSS", () => {
@@ -182,10 +192,10 @@ test.describe("Vite CSS", () => {
               "react-router.config.ts": reactRouterConfig({
                 viteEnvironmentApi: templateName === "vite-6-template",
               }),
-              "vite.config.ts": await VITE_CONFIG(port),
+              "vite.config.ts": await VITE_CONFIG({ port }),
               ...files,
             },
-            templateName
+            templateName,
           );
           stop = await dev({ cwd, port });
         });
@@ -207,6 +217,45 @@ test.describe("Vite CSS", () => {
         });
       });
 
+      test.describe("vite dev with custom base", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
+        let base = "/custom/base/";
+
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject(
+            {
+              "react-router.config.ts": reactRouterConfig({
+                viteEnvironmentApi: templateName === "vite-6-template",
+                basename: base,
+              }),
+              "vite.config.ts": await VITE_CONFIG({ port, base }),
+              ...files,
+            },
+            templateName,
+          );
+          stop = await dev({ cwd, port, basename: base });
+        });
+        test.afterAll(() => stop());
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: false });
+          test("without JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port, base });
+          });
+        });
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: true });
+          test("with JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port, base });
+            await hmrWorkflow({ page, port, cwd, base });
+          });
+        });
+      });
+
       test.describe("express", async () => {
         let port: number;
         let cwd: string;
@@ -214,11 +263,14 @@ test.describe("Vite CSS", () => {
 
         test.beforeAll(async () => {
           port = await getPort();
-          cwd = await createProject({
-            "vite.config.ts": await VITE_CONFIG(port),
-            "server.mjs": EXPRESS_SERVER({ port }),
-            ...files,
-          });
+          cwd = await createProject(
+            {
+              "vite.config.ts": await VITE_CONFIG({ port }),
+              "server.mjs": EXPRESS_SERVER({ port }),
+              ...files,
+            },
+            templateName,
+          );
           stop = await customDev({ cwd, port });
         });
         test.afterAll(() => stop());
@@ -239,24 +291,27 @@ test.describe("Vite CSS", () => {
         });
       });
 
-      test.describe(async () => {
+      test.describe("vite build", async () => {
         let port: number;
         let cwd: string;
         let stop: () => void;
 
         test.beforeAll(async () => {
           port = await getPort();
-          cwd = await createProject({
-            "vite.config.ts": await VITE_CONFIG(port),
-            ...files,
-          });
+          cwd = await createProject(
+            {
+              "vite.config.ts": await VITE_CONFIG({ port }),
+              ...files,
+            },
+            templateName,
+          );
 
           let edit = createEditor(cwd);
           await edit("package.json", (contents) =>
             contents.replace(
               '"sideEffects": false',
-              '"sideEffects": ["*.css.ts"]'
-            )
+              '"sideEffects": ["*.css.ts"]',
+            ),
           );
 
           let { stderr, status } = build({
@@ -274,14 +329,68 @@ test.describe("Vite CSS", () => {
 
         test.describe(() => {
           test.use({ javaScriptEnabled: false });
-          test("vite build / without JS", async ({ page }) => {
+          test("without JS", async ({ page }) => {
             await pageLoadWorkflow({ page, port });
           });
         });
 
         test.describe(() => {
           test.use({ javaScriptEnabled: true });
-          test("vite build / with JS", async ({ page }) => {
+          test("with JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+          });
+        });
+      });
+
+      test.describe("vite build with CSS code splitting disabled", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
+
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject(
+            {
+              "vite.config.ts": await VITE_CONFIG({
+                port,
+                cssCodeSplit: false,
+              }),
+              ...files,
+            },
+            templateName,
+          );
+
+          let edit = createEditor(cwd);
+          await edit("package.json", (contents) =>
+            contents.replace(
+              '"sideEffects": false',
+              '"sideEffects": ["*.css.ts"]',
+            ),
+          );
+
+          let { stderr, status } = build({
+            cwd,
+            env: {
+              // Vanilla Extract uses Vite's CJS build which emits a warning to stderr
+              VITE_CJS_IGNORE_WARNING: "true",
+            },
+          });
+          expect(stderr.toString()).toBeFalsy();
+          expect(status).toBe(0);
+          stop = await reactRouterServe({ cwd, port });
+        });
+        test.afterAll(() => stop());
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: false });
+          test("without JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+          });
+        });
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: true });
+          test("with JS", async ({ page }) => {
             await pageLoadWorkflow({ page, port });
           });
         });
@@ -290,11 +399,19 @@ test.describe("Vite CSS", () => {
   });
 });
 
-async function pageLoadWorkflow({ page, port }: { page: Page; port: number }) {
+async function pageLoadWorkflow({
+  page,
+  port,
+  base,
+}: {
+  page: Page;
+  port: number;
+  base?: string;
+}) {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
 
-  await page.goto(`http://localhost:${port}/`, {
+  await page.goto(`http://localhost:${port}${base ?? "/"}`, {
     waitUntil: "networkidle",
   });
 
@@ -307,8 +424,8 @@ async function pageLoadWorkflow({ page, port }: { page: Page; port: number }) {
       "#css-vanilla-local",
     ].map(
       async (selector) =>
-        await expect(page.locator(selector)).toHaveCSS("padding", PADDING)
-    )
+        await expect(page.locator(selector)).toHaveCSS("padding", PADDING),
+    ),
   );
 }
 
@@ -316,15 +433,17 @@ async function hmrWorkflow({
   page,
   cwd,
   port,
+  base,
 }: {
   page: Page;
   cwd: string;
   port: number;
+  base?: string;
 }) {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
 
-  await page.goto(`http://localhost:${port}/`, {
+  await page.goto(`http://localhost:${port}${base ?? "/"}`, {
     waitUntil: "networkidle",
   });
 
@@ -339,7 +458,7 @@ async function hmrWorkflow({
       .replace(PADDING, NEW_PADDING)
       .replace(
         "PADDING_INJECTED_VIA_POSTCSS",
-        "NEW_PADDING_INJECTED_VIA_POSTCSS"
+        "NEW_PADDING_INJECTED_VIA_POSTCSS",
       );
 
   await Promise.all([
@@ -359,8 +478,8 @@ async function hmrWorkflow({
       "#css-vanilla-local",
     ].map(
       async (selector) =>
-        await expect(page.locator(selector)).toHaveCSS("padding", NEW_PADDING)
-    )
+        await expect(page.locator(selector)).toHaveCSS("padding", NEW_PADDING),
+    ),
   );
 
   // Ensure CSS updates were handled by HMR

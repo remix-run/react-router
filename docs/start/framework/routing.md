@@ -5,6 +5,8 @@ order: 2
 
 # Routing
 
+[MODES: framework]
+
 ## Configuring Routes
 
 Routes are configured in `app/routes.ts`. Each route has two required parts: a URL pattern to match the URL, and a file path to the route module that defines its behavior.
@@ -167,22 +169,10 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-To see `projects/home.tsx` appear in the layout, we'll need an outlet:
+Note that:
 
-```tsx filename=./projects/project-layout.tsx lines=[8]
-import { Outlet } from "react-router";
-
-export default function ProjectLayout() {
-  return (
-    <div>
-      <aside>Example sidebar</aside>
-      <main>
-        <Outlet />
-      </main>
-    </div>
-  );
-}
-```
+- `home.tsx` and `contact.tsx` will be rendered into the `marketing/layout.tsx` outlet without creating any new URL paths
+- `project.tsx` and `edit-project.tsx` will be rendered into the `projects/project-layout.tsx` outlet at `/projects/:pid` and `/projects/:pid/edit` while `projects/home.tsx` will not.
 
 ## Index Routes
 
@@ -277,8 +267,6 @@ async function loader({ params }: LoaderArgs) {
 }
 ```
 
-You should ensure that all dynamic segments in a given path are unique. Otherwise, as the `params` object is populated - latter dynamic segment values will override earlier values.
-
 ## Optional Segments
 
 You can make a route segment optional by adding a `?` to the end of the segment.
@@ -311,6 +299,18 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 
 ```tsx
 const { "*": splat } = params;
+```
+
+You can also use a splat to catch requests that don't match any route:
+
+```ts filename=app/routes.ts
+route("*", "./catchall.tsx"); // catchall route,
+```
+
+```tsx filename=app/catchall.tsx
+export function loader() {
+  throw new Response("Page not found", { status: 404 });
+}
 ```
 
 ## Component Routes

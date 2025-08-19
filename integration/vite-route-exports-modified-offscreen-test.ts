@@ -76,6 +76,8 @@ test.describe(async () => {
       originalContents = contents;
       return contents.replace(/export const loader.*/, "");
     });
+    // Give the server time to pick the manifest change
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // After browser reload, client should be aware that there's no loader on the other route
     if (browserName === "webkit") {
@@ -83,19 +85,22 @@ test.describe(async () => {
       // Otherwise browser doesn't seem to fetch new manifest probably due to caching.
       page = await context.newPage();
     }
-    await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
-    await expect(page.locator("[data-mounted]")).toHaveText("Mounted: yes");
-    await page.getByRole("link", { name: "/other" }).click();
-    await expect(page.locator("[data-loader-data]")).toHaveText(
-      "loaderData = null"
-    );
+    // In case the earlier wait wasn't enough, let the test try again
+    await expect(async () => {
+      await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
+      await expect(page.locator("[data-mounted]")).toHaveText("Mounted: yes");
+      await page.getByRole("link", { name: "/other" }).click();
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        "loaderData = null",
+      );
+    }).toPass();
     expect(pageErrors).toEqual([]);
 
     // Revert route to original state to check HMR works and to ensure the
     // original file contents were valid
     await edit("app/routes/other.tsx", () => originalContents);
     await expect(page.locator("[data-loader-data]")).toHaveText(
-      'loaderData = "hello"'
+      'loaderData = "hello"',
     );
     expect(pageErrors).toEqual([]);
   });

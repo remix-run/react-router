@@ -4,12 +4,12 @@ title: Single Page App (SPA)
 
 # Single Page App (SPA)
 
-There are two ways to ship a single page app with React Router
+[MODES: framework]
 
-- **as a library** - Instead of using React Router's framework features, you can use it as a library in your own SPA architecture. Refer to [React Router as a Library](../start/library/installation) guides.
-- **as a framework** - This guide will focus here
+<br/>
+<br/>
 
-## Overview
+<docs-info>This guide focuses on how to build Single Page Apps with React Router Framework mode. If you're using React Router in declarative or data mode, you can design your own SPA architecture.</docs-info>
 
 When using React Router as a framework, you can enable "SPA Mode" by setting `ssr:false` in your `react-router.config.ts` file. This will disable runtime server rendering and generate an `index.html` at build time that you can serve and hydrate as a SPA.
 
@@ -19,8 +19,6 @@ Typical Single Page apps send a mostly blank `index.html` template with little m
 - Use a root `loader` to load data for your application shell
 - Use React components to generate the initial page users see (root `HydrateFallback`)
 - Re-enable server rendering later without changing anything about your UI
-
-It's important to note that setting `ssr:false` only disables _runtime server rendering_. React Router will still server render your root route at _build time_ to generate the `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.
 
 <docs-info>SPA Mode is a special form of "Pre-Rendering" that allows you to serve all paths in your application from the same HTML file. Please refer to the [Pre-Rendering](./pre-rendering) guide if you want to do more extensive pre-rendering.</docs-info>
 
@@ -62,7 +60,7 @@ export default function App() {
 }
 ```
 
-Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose. This `loader` will be called at build time ans the data will be available via the optional `HydrateFallback` `loaderData` prop.
+Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose. This `loader` will be called at build time and the data will be available via the optional `HydrateFallback` `loaderData` prop.
 
 ```tsx filename=root.tsx lines=[5,10,14]
 import { Route } from "./+types/root";

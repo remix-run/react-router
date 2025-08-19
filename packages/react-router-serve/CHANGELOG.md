@@ -1,5 +1,140 @@
 # `@react-router/serve`
 
+## 7.8.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.1`
+  - `@react-router/node@7.8.1`
+  - `@react-router/express@7.8.1`
+
+## 7.8.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.0`
+  - `@react-router/express@7.8.0`
+  - `@react-router/node@7.8.0`
+
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.1`
+  - `@react-router/node@7.7.1`
+  - `@react-router/express@7.7.1`
+
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+  - `@react-router/node@7.7.0`
+  - `@react-router/express@7.7.0`
+
+## 7.6.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/node@7.6.3`
+  - `react-router@7.6.3`
+  - `@react-router/express@7.6.3`
+
+## 7.6.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+  - `@react-router/node@7.6.2`
+  - `@react-router/express@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+  - `@react-router/node@7.6.1`
+  - `@react-router/express@7.6.1`
+
+## 7.6.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+  - `@react-router/node@7.6.0`
+  - `@react-router/express@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+  - `@react-router/node@7.5.3`
+  - `@react-router/express@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.2`
+  - `@react-router/node@7.5.2`
+  - `@react-router/express@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.1`
+  - `@react-router/node@7.5.1`
+  - `@react-router/express@7.5.1`
+
+## 7.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+  - `@react-router/express@7.5.0`
+
+## 7.4.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.1`
+  - `@react-router/express@7.4.1`
+  - `@react-router/node@7.4.1`
+
+## 7.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
+  - `@react-router/express@7.4.0`
+
+## 7.3.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.3.0`
+  - `@react-router/express@7.3.0`
+  - `@react-router/node@7.3.0`
+
 ## 7.2.0
 
 ### Patch Changes
@@ -85,7 +220,7 @@
 
 ### Major Changes
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
@@ -93,7 +228,6 @@
 ### Patch Changes
 
 - Update `express.static` configurations to support prerendering ([#11547](https://github.com/remix-run/react-router/pull/11547))
-
   - Assets in the `build/client/assets` folder are served as before, with a 1-year immutable `Cache-Control` header
   - Static files outside of assets, such as pre-rendered `.html` and `.data` files are not served with a specific `Cache-Control` header
   - `.data` files are served with `Content-Type: text/x-turbo`
@@ -251,14 +385,12 @@
 ### Major Changes
 
 - `remix-serve` now picks an open port if 3000 is taken ([#7278](https://github.com/remix-run/remix/pull/7278))
-
   - If `PORT` env var is set, `remix-serve` will use that port
   - Otherwise, `remix-serve` picks an open port (3000 unless that is already taken)
 
 - Integrate manual mode in `remix-serve` ([#7231](https://github.com/remix-run/remix/pull/7231))
 
 - Remove undocumented `createApp` Node API ([#7229](https://github.com/remix-run/remix/pull/7229))
-
   - `remix-serve` is a CLI, not a library
 
 - Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
@@ -270,7 +402,6 @@
 - Preserve dynamic imports in `remix-serve` for external bundle ([#7173](https://github.com/remix-run/remix/pull/7173))
 
 - For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install the globals yourself
 
@@ -281,7 +412,6 @@
     ```
 
 - `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
 
@@ -469,12 +599,10 @@
 - Introduces the `defer()` API from `@remix-run/router` with support for server-rendering and HTTP streaming. This utility allows you to defer values returned from `loader` functions by returning promises instead of resolved values. This has been refered to as _"sending a promise over the wire"_. ([#4920](https://github.com/remix-run/remix/pull/4920))
 
   Informational Resources:
-
   - <https://gist.github.com/jacob-ebey/9bde9546c1aafaa6bc8c242054b1be26>
   - <https://github.com/remix-run/remix/blob/main/decisions/0004-streaming-apis.md>
 
   Documentation Resources (better docs specific to Remix are in the works):
-
   - <https://reactrouter.com/en/main/utils/defer>
   - <https://reactrouter.com/en/main/components/await>
   - <https://reactrouter.com/en/main/hooks/use-async-value>

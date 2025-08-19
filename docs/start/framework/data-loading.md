@@ -5,6 +5,10 @@ order: 5
 
 # Data Loading
 
+[MODES: framework]
+
+## Introduction
+
 Data is provided to the route component from `loader` and `clientLoader`.
 
 Loader data is automatically serialized from loaders and deserialized in components. In addition to primitive values like strings and numbers, loaders can return promises, maps, sets, dates and more.
@@ -109,7 +113,7 @@ export default {
   async prerender() {
     let products = await readProductsFromCSVFile();
     return products.map(
-      (product) => `/products/${product.id}`
+      (product) => `/products/${product.id}`,
     );
   },
 } satisfies Config;

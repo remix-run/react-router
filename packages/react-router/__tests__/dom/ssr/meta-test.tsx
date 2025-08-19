@@ -4,8 +4,8 @@ import * as React from "react";
 
 import { Meta, Outlet, createRoutesStub } from "../../../index";
 
-const getHtml = (c: HTMLElement) =>
-  prettyDOM(c, undefined, { highlight: false });
+const getDocumentHtmlForElement = (c: HTMLElement) =>
+  prettyDOM(c.ownerDocument, undefined, { highlight: false });
 
 describe("meta", () => {
   it("no meta export renders meta from nearest route meta in the tree", () => {
@@ -46,22 +46,28 @@ describe("meta", () => {
             },
           },
         }}
-      />
+      />,
     );
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <meta
-          content="This is a meta page"
-          name="description"
-        />
-        <title>
-          Meta Page
-        </title>
-        <div>
-          Parent meta here!
-        </div>
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <meta
+            content="This is a meta page"
+            name="description"
+          />
+          <title>
+            Meta Page
+          </title>
+        </head>
+        <body>
+          <div>
+            <div>
+              Parent meta here!
+            </div>
+          </div>
+        </body>
+      </html>"
     `);
   });
 
@@ -83,12 +89,17 @@ describe("meta", () => {
 
     let { container } = render(<RoutesStub />);
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <p>
-          No meta here!
-        </p>
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head />
+        <body>
+          <div>
+            <p>
+              No meta here!
+            </p>
+          </div>
+        </body>
+      </html>"
     `);
   });
 
@@ -125,18 +136,24 @@ describe("meta", () => {
 
     let { container } = render(<RoutesStub />);
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <meta
-          charset="utf-8"
-        />
-        <title>
-          Child title
-        </title>
-        <p>
-          Matches Meta
-        </p>
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <meta
+            charset="utf-8"
+          />
+          <title>
+            Child title
+          </title>
+        </head>
+        <body>
+          <div>
+            <p>
+              Matches Meta
+            </p>
+          </div>
+        </body>
+      </html>"
     `);
   });
 
@@ -151,12 +168,17 @@ describe("meta", () => {
 
     let { container } = render(<RoutesStub />);
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <meta
-          charset="utf-8"
-        />
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <meta
+            charset="utf-8"
+          />
+        </head>
+        <body>
+          <div />
+        </body>
+      </html>"
     `);
   });
 
@@ -171,12 +193,17 @@ describe("meta", () => {
 
     let { container } = render(<RoutesStub />);
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <title>
-          Document Title
-        </title>
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <title>
+            Document Title
+          </title>
+        </head>
+        <body>
+          <div />
+        </body>
+      </html>"
     `);
   });
 
@@ -193,16 +220,21 @@ describe("meta", () => {
     ]);
 
     let { container } = render(<RoutesStub />);
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <meta
-          content="https://picsum.photos/200/200"
-          property="og:image"
-        />
-        <meta
-          property="og:type"
-        />
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <meta
+            content="https://picsum.photos/200/200"
+            property="og:image"
+          />
+          <meta
+            property="og:type"
+          />
+        </head>
+        <body>
+          <div />
+        </body>
+      </html>"
     `);
   });
 
@@ -259,13 +291,18 @@ describe("meta", () => {
     ]);
 
     let { container } = render(<RoutesStub />);
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <link
-          href="https://website.com/authors/1"
-          rel="canonical"
-        />
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <link
+            href="https://website.com/authors/1"
+            rel="canonical"
+          />
+        </head>
+        <body>
+          <div />
+        </body>
+      </html>"
     `);
   });
 
@@ -301,31 +338,43 @@ describe("meta", () => {
     let { container } = render(<RoutesStub />);
 
     await screen.findByText("Increment 0");
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <button>
-          Increment 0
-        </button>
-        <link
-          href="https://website.com/authors/1"
-          rel="canonical"
-        />
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <link
+            href="https://website.com/authors/1"
+            rel="canonical"
+          />
+        </head>
+        <body>
+          <div>
+            <button>
+              Increment 0
+            </button>
+          </div>
+        </body>
+      </html>"
     `);
 
     user.click(screen.getByRole("button"));
     await screen.findByText("Increment 1");
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <button>
-          Increment 1
-        </button>
-        <link
-          href="https://website.com/authors/1"
-          rel="canonical"
-        />
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <link
+            href="https://website.com/authors/1"
+            rel="canonical"
+          />
+        </head>
+        <body>
+          <div>
+            <button>
+              Increment 1
+            </button>
+          </div>
+        </body>
+      </html>"
     `);
   });
 
@@ -362,17 +411,23 @@ describe("meta", () => {
     ]);
 
     let { container } = render(
-      <RoutesStub hydrationData={{ errors: { index: new Error("Oh no!") } }} />
+      <RoutesStub hydrationData={{ errors: { index: new Error("Oh no!") } }} />,
     );
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <title>
-          Oh no!
-        </title>
-        <h1>
-          Boundary
-        </h1>
-      </div>"
+    expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
+      "<html>
+        <head>
+          <title>
+            Oh no!
+          </title>
+        </head>
+        <body>
+          <div>
+            <h1>
+              Boundary
+            </h1>
+          </div>
+        </body>
+      </html>"
     `);
   });
 });

@@ -1,11 +1,11 @@
+import fs from "node:fs";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import os from "node:os";
-import fs from "node:fs";
 import { type Key as ActionKey } from "node:readline";
 import { erase, cursor } from "sisteransi";
 import chalk from "chalk";
-import recursiveReaddir from "recursive-readdir";
 
 // https://no-color.org/
 const SUPPORTS_COLOR = chalk.supportsColor && !process.env.NO_COLOR;
@@ -73,7 +73,7 @@ export function isInteractive() {
   return Boolean(
     process.stdout.isTTY &&
       process.env.TERM !== "dumb" &&
-      !("CI" in process.env)
+      !("CI" in process.env),
   );
 }
 
@@ -97,7 +97,7 @@ function logBullet(
   colorizeText: <V>(v: V) => V,
   symbol: string,
   prefix: string,
-  text?: string | string[]
+  text?: string | string[],
 ) {
   let textParts = Array.isArray(text) ? text : [text || ""].filter(Boolean);
   let formattedText = textParts
@@ -106,14 +106,14 @@ function logBullet(
 
   if (process.stdout.columns < 80) {
     logger(
-      `${" ".repeat(5)} ${colorizePrefix(symbol)}  ${colorizePrefix(prefix)}`
+      `${" ".repeat(5)} ${colorizePrefix(symbol)}  ${colorizePrefix(prefix)}`,
     );
     logger(`${" ".repeat(9)}${formattedText}`);
   } else {
     logger(
       `${" ".repeat(5)} ${colorizePrefix(symbol)}  ${colorizePrefix(
-        prefix
-      )} ${formattedText}`
+        prefix,
+      )} ${formattedText}`,
     );
   }
 }
@@ -155,7 +155,7 @@ export function toValidProjectName(projectName: string) {
 
 function isValidProjectName(projectName: string) {
   return /^(?:@[a-z\d\-*~][a-z\d\-*._~]*\/)?[a-z\d\-~][a-z\d\-._~]*$/.test(
-    projectName
+    projectName,
   );
 }
 
@@ -292,14 +292,11 @@ export function stripDirectoryFromPath(dir: string, filePath: string) {
 export const IGNORED_TEMPLATE_DIRECTORIES = [".git", "node_modules"];
 
 export async function getDirectoryFilesRecursive(dir: string) {
-  let files = await recursiveReaddir(dir, [
-    (file) => {
-      let strippedFile = stripDirectoryFromPath(dir, file);
-      let parts = strippedFile.split(path.sep);
-      return (
-        parts.length > 1 && IGNORED_TEMPLATE_DIRECTORIES.includes(parts[0])
-      );
-    },
-  ]);
-  return files.map((f) => stripDirectoryFromPath(dir, f));
+  return (await readdir(dir, { recursive: true })).filter((file) => {
+    let parts = file.split(path.sep);
+
+    return (
+      parts.length <= 1 || !IGNORED_TEMPLATE_DIRECTORIES.includes(parts[0])
+    );
+  });
 }

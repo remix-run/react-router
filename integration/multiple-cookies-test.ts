@@ -16,8 +16,7 @@ test.describe("pathless layout routes", () => {
       await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { data, redirect } from "react-router";
-            import { Form, useActionData } from "react-router";
+            import { data, redirect, Form, useActionData } from "react-router";
 
             export let loader = async () => {
               let headers = new Headers();
@@ -47,7 +46,7 @@ test.describe("pathless layout routes", () => {
             };
           `,
         },
-      })
+      }),
     );
   });
 
@@ -69,7 +68,7 @@ test.describe("pathless layout routes", () => {
     await app.goto("/");
     // do this after the first request so that it doesnt appear in our next assertions
     let responses = app.collectResponses(
-      (url) => url.pathname === "/_root.data"
+      (url) => url.pathname === "/_root.data",
     );
     await page.click("button[type=submit]");
     await page.waitForSelector(`[data-testid="action-success"]`);

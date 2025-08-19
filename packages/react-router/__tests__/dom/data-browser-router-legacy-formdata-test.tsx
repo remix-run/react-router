@@ -1,4 +1,3 @@
-import { JSDOM } from "jsdom";
 // Drop support for the submitter parameter, as in a legacy browser. This
 // needs to be done before react-router-dom is required, since it does some
 // FormData detection.
@@ -14,19 +13,20 @@ import {
   createHashRouter,
   createRoutesFromElements,
 } from "../../index";
+import getWindow from "../utils/getWindow";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
-  getWindowImpl(url, false)
+  getWindow(url, false),
 );
 
 testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
-  getWindowImpl(url, true)
+  getWindow(url, true),
 );
 
 function testDomRouter(
   name: string,
   createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
-  getWindow: (initialUrl: string, isHash?: boolean) => Window
+  getWindow: (initialUrl: string, isHash?: boolean) => Window,
 ) {
   describe(`Router: ${name} with a legacy FormData implementation`, () => {
     let consoleWarn: jest.SpyInstance;
@@ -48,17 +48,18 @@ function testDomRouter(
         let actionSpy = jest.fn();
         actionSpy.mockReturnValue({});
         async function getPayload() {
-          let formData = await actionSpy.mock.calls[
-            actionSpy.mock.calls.length - 1
-          ][0].request.formData();
+          let formData =
+            await actionSpy.mock.calls[
+              actionSpy.mock.calls.length - 1
+            ][0].request.formData();
           return new URLSearchParams(formData.entries()).toString();
         }
 
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -87,12 +88,12 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Add Task"));
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=last&tasks="
+          "tasks=first&tasks=second&tasks=last&tasks=",
         );
 
         fireEvent.click(screen.getByText("No Name"));
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=last"
+          "tasks=first&tasks=second&tasks=last",
         );
 
         fireEvent.click(screen.getByAltText("Add Task"), {
@@ -100,7 +101,7 @@ function testDomRouter(
           clientY: 2,
         });
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=last&tasks.x=0&tasks.y=0"
+          "tasks=first&tasks=second&tasks=last&tasks.x=0&tasks.y=0",
         );
 
         fireEvent.click(screen.getByAltText("No Name"), {
@@ -108,21 +109,14 @@ function testDomRouter(
           clientY: 2,
         });
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=last&x=0&y=0"
+          "tasks=first&tasks=second&tasks=last&x=0&y=0",
         );
 
         fireEvent.click(screen.getByText("Outside"));
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=last&tasks=outside"
+          "tasks=first&tasks=second&tasks=last&tasks=outside",
         );
       });
     });
   });
-}
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
 }

@@ -1,5 +1,6 @@
 ---
 title: Framework Adoption from Component Routes
+order: 4
 ---
 
 # Framework Adoption from Component Routes
@@ -15,7 +16,7 @@ The React Router Vite plugin adds framework features to React Router. This guide
 The Vite plugin adds:
 
 - Route loaders, actions, and automatic data revalidation
-- Typesafe Routes Modules
+- Type-safe Routes Modules
 - Automatic route code-splitting
 - Automatic scroll restoration across navigations
 - Optional Static pre-rendering
@@ -169,13 +170,13 @@ import "./index.css";
 import App from "./App";
 
 ReactDOM.createRoot(
-  document.getElementById("root")!
+  document.getElementById("root")!,
 ).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
@@ -191,7 +192,7 @@ ReactDOM.hydrateRoot(
   document,
   <React.StrictMode>
     <HydratedRouter />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
@@ -247,7 +248,7 @@ export default function Component() {
 
 ## 7. Boot the app
 
-At this point you should be able to to boot the app and see the root layout.
+At this point you should be able to boot the app and see the root layout.
 
 **👉 Add `dev` script and run the app**
 
@@ -343,7 +344,7 @@ The first few routes you migrate are the hardest because you often have to acces
 
 ## Enable SSR and/or Pre-rendering
 
-If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying][deploying] for more information.
+If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server.
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
@@ -357,7 +358,6 @@ export default {
 ```
 
 [upgrade-router-provider]: ./router-provider
-[deploying]: ../start/deploying
 [configuring-routes]: ../start/framework/routing
 [route-modules]: ../start/framework/route-module
 [type-safety]: ../how-to/route-module-type-safety

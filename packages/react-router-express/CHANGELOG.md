@@ -1,5 +1,131 @@
 # `@react-router/express`
 
+## 7.8.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.1`
+  - `@react-router/node@7.8.1`
+
+## 7.8.0
+
+### Patch Changes
+
+- \[UNSTABLE] Change `getLoadContext` signature (`type GetLoadContextFunction`) when `future.unstable_middleware` is enabled so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+  - This also removes the `type unstable_InitialContext` export
+  - ⚠️ This is a breaking change if you have adopted middleware and are using a custom server with a `getLoadContext` function
+
+- Updated dependencies:
+  - `react-router@7.8.0`
+  - `@react-router/node@7.8.0`
+
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.1`
+  - `@react-router/node@7.7.1`
+
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+  - `@react-router/node@7.7.0`
+
+## 7.6.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/node@7.6.3`
+  - `react-router@7.6.3`
+
+## 7.6.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+  - `@react-router/node@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+  - `@react-router/node@7.6.1`
+
+## 7.6.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+  - `@react-router/node@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+  - `@react-router/node@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.2`
+  - `@react-router/node@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.1`
+  - `@react-router/node@7.5.1`
+
+## 7.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+
+## 7.4.1
+
+### Patch Changes
+
+- Better validation of `x-forwarded-host` header to preent potential security issues. ([#13309](https://github.com/remix-run/react-router/pull/13309))
+- Updated dependencies:
+  - `react-router@7.4.1`
+  - `@react-router/node@7.4.1`
+
+## 7.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
+
+## 7.3.0
+
+### Patch Changes
+
+- Update `express` `peerDependency` to include v5 (<https://github.com/remix-run/react-router/pull/13064>) ([#12961](https://github.com/remix-run/react-router/pull/12961))
+- Updated dependencies:
+  - `react-router@7.3.0`
+  - `@react-router/node@7.3.0`
+
 ## 7.2.0
 
 ### Patch Changes
@@ -76,12 +202,11 @@
 
 ### Major Changes
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
   - Remove `installGlobals()` as this should no longer be necessary
 
 ### Patch Changes
@@ -134,7 +259,6 @@
 ### Patch Changes
 
 - Use `req.originalUrl` instead of `req.url` so that Remix sees the full URL ([#8145](https://github.com/remix-run/remix/pull/8145))
-
   - Remix relies on the knowing the full URL to ensure that server and client code can function together, and does not support URL rewriting prior to the Remix handler
 
 - Updated dependencies:
@@ -222,7 +346,6 @@
 - Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
 
 - For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install the globals yourself
 
@@ -233,7 +356,6 @@
     ```
 
 - `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
 

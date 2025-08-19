@@ -11,7 +11,7 @@ export async function tick() {
 export function invariant(value: boolean, message?: string): asserts value;
 export function invariant<T>(
   value: T | null | undefined,
-  message?: string
+  message?: string,
 ): asserts value is T;
 export function invariant(value: any, message?: string) {
   if (value === false || value === null || typeof value === "undefined") {
@@ -60,7 +60,7 @@ export function createDeferred<T = unknown>() {
 
 export function findRouteById(
   routes: AgnosticDataRouteObject[],
-  id: string
+  id: string,
 ): AgnosticDataRouteObject {
   let foundRoute: AgnosticDataRouteObject | null = null;
   for (const route of routes) {

@@ -5,6 +5,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
 } from "../../router/utils";
@@ -24,6 +25,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  unstable_clientMiddleware?: unstable_MiddlewareFunction<undefined>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -41,19 +43,20 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
+  unstable_middleware?: unstable_MiddlewareFunction<Response>[];
 }
 
 /**
  * A function that handles data mutations for a route on the client
  */
 export type ClientActionFunction = (
-  args: ClientActionFunctionArgs
+  args: ClientActionFunctionArgs,
 ) => ReturnType<ActionFunction>;
 
 /**
  * Arguments passed to a route `clientAction` function
  */
-export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
+export type ClientActionFunctionArgs = ActionFunctionArgs & {
   serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
@@ -61,7 +64,7 @@ export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
  * A function that loads data for a route on the client
  */
 export type ClientLoaderFunction = ((
-  args: ClientLoaderFunctionArgs
+  args: ClientLoaderFunctionArgs,
 ) => ReturnType<LoaderFunction>) & {
   hydrate?: boolean;
 };
@@ -69,7 +72,7 @@ export type ClientLoaderFunction = ((
 /**
  * Arguments passed to a route `clientLoader` function
  */
-export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
+export type ClientLoaderFunctionArgs = LoaderFunctionArgs & {
   serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
@@ -123,11 +126,15 @@ export interface LinksFunction {
 
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
+  /** @deprecated Use `MetaMatch.loaderData` instead */
   data: Loader extends LoaderFunction | ClientLoaderFunction
+    ? SerializeFrom<Loader>
+    : unknown;
+  loaderData: Loader extends LoaderFunction | ClientLoaderFunction
     ? SerializeFrom<Loader>
     : unknown;
   handle?: RouteHandle;
@@ -140,7 +147,7 @@ export type MetaMatches<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -155,9 +162,15 @@ export interface MetaArgs<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
+  /** @deprecated Use `MetaArgs.loaderData` instead */
   data:
+    | (Loader extends LoaderFunction | ClientLoaderFunction
+        ? SerializeFrom<Loader>
+        : unknown)
+    | undefined;
+  loaderData:
     | (Loader extends LoaderFunction | ClientLoaderFunction
         ? SerializeFrom<Loader>
         : unknown)
@@ -223,7 +236,7 @@ export interface MetaFunction<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }
@@ -259,7 +272,7 @@ export type RouteHandle = unknown;
 
 export async function loadRouteModule(
   route: EntryRoute,
-  routeModulesCache: RouteModules
+  routeModulesCache: RouteModules,
 ): Promise<RouteModule> {
   if (route.id in routeModulesCache) {
     return routeModulesCache[route.id] as RouteModule;
@@ -285,7 +298,7 @@ export async function loadRouteModule(
 
     // Log the error so it can be accessed via the `Preserve Log` setting
     console.error(
-      `Error loading route module \`${route.module}\`, reloading page...`
+      `Error loading route module \`${route.module}\`, reloading page...`,
     );
     console.error(error);
 

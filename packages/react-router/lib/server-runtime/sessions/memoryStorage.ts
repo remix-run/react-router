@@ -23,7 +23,7 @@ interface MemorySessionStorageOptions {
  */
 export function createMemorySessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({ cookie }: MemorySessionStorageOptions = {}): SessionStorage<
   Data,
   FlashData

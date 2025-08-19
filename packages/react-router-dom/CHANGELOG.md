@@ -1,5 +1,110 @@
 # react-router-dom
 
+## 7.8.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.1`
+
+## 7.8.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.0`
+
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.1`
+
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+
+## 7.6.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.3`
+
+## 7.6.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+
+## 7.6.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.1`
+
+## 7.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.0`
+
+## 7.4.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.1`
+
+## 7.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.0`
+
+## 7.3.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.3.0`
+
 ## 7.2.0
 
 ### Patch Changes
@@ -68,7 +173,6 @@
 ### Major Changes
 
 - Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
-
   - `defer`
   - `AbortedDeferredError`
   - `type TypedDeferredData`
@@ -77,7 +181,7 @@
 
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Remove `future.v7_startTransition` flag ([#11696](https://github.com/remix-run/react-router/pull/11696))
 

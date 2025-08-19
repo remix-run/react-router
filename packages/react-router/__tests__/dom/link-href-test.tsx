@@ -23,7 +23,7 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox" element={<Link to="/about" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -38,7 +38,7 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox" element={<Link to="." />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -55,7 +55,7 @@ describe("<Link> href", () => {
                 <Route path="messages" element={<Link to=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -81,12 +81,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
-        ["/about", "/about"]
+        ["/about", "/about"],
       );
     });
 
@@ -103,12 +103,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "https://remix.run"
+        "https://remix.run",
       );
     });
 
@@ -122,7 +122,7 @@ describe("<Link> href", () => {
                 <Route path="messages" element={<Link to="//remix.run" />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -142,12 +142,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "mailto:remix@example.com"
+        "mailto:remix@example.com",
       );
     });
 
@@ -164,12 +164,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "web+remix://somepath"
+        "web+remix://somepath",
       );
     });
 
@@ -186,12 +186,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "http://localhost/inbox"
+        "http://localhost/inbox",
       );
     });
 
@@ -208,12 +208,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages?key=value"
+        "/inbox/messages?key=value",
       );
     });
 
@@ -230,12 +230,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages#hash"
+        "/inbox/messages#hash",
       );
     });
   });
@@ -251,7 +251,7 @@ describe("<Link> href", () => {
                 <Route path="messages/:id" element={<Link to="/about" />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -268,12 +268,12 @@ describe("<Link> href", () => {
                 <Route path="messages/:id" element={<Link to="." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages/abc"
+        "/inbox/messages/abc",
       );
     });
 
@@ -287,7 +287,7 @@ describe("<Link> href", () => {
                 <Route path="messages/:id" element={<Link to=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -307,7 +307,7 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -326,7 +326,7 @@ describe("<Link> href", () => {
                 <Route index element={<Link to="/home" />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -343,7 +343,7 @@ describe("<Link> href", () => {
                 <Route index element={<Link to="." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -360,7 +360,7 @@ describe("<Link> href", () => {
                 <Route index element={<Link to=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -386,12 +386,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
-        ["/about", "/about"]
+        ["/about", "/about"],
       );
     });
   });
@@ -418,7 +418,7 @@ describe("<Link> href", () => {
                 </Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -437,7 +437,7 @@ describe("<Link> href", () => {
                 </Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -456,7 +456,7 @@ describe("<Link> href", () => {
                 </Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -487,12 +487,12 @@ describe("<Link> href", () => {
                 </Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
-        ["/about", "/about"]
+        ["/about", "/about"],
       );
     });
   });
@@ -508,7 +508,7 @@ describe("<Link> href", () => {
                 <Route path="messages/*" element={<Link to="/about" />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -525,12 +525,12 @@ describe("<Link> href", () => {
                 <Route path="messages/*" element={<Link to="." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages/abc"
+        "/inbox/messages/abc",
       );
     });
 
@@ -544,7 +544,7 @@ describe("<Link> href", () => {
                 <Route path="messages/*" element={<Link to=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -564,12 +564,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages/def"
+        "/inbox/messages/def",
       );
     });
 
@@ -592,12 +592,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
-        ["/about", "/about"]
+        ["/about", "/about"],
       );
     });
   });
@@ -611,7 +611,7 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox" element={<Link to="/about" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -626,7 +626,7 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox" element={<Link to="." />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -641,7 +641,7 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox" element={<Link to="../about" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -668,12 +668,12 @@ describe("<Link> href", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/auth/forgot-password"
+        "/auth/forgot-password",
       );
     });
 
@@ -692,7 +692,7 @@ describe("<Link> href", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -714,7 +714,7 @@ describe("<Link> href", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -745,12 +745,12 @@ describe("<Link> href", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
-        ["/about", "/about"]
+        ["/about", "/about"],
       );
     });
   });
@@ -767,7 +767,7 @@ describe("<Link> href", () => {
                 element={<Link to="/about" relative="path" />}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -782,7 +782,7 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox" element={<Link to="." relative="path" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -802,12 +802,12 @@ describe("<Link> href", () => {
                 element={<Link to=".." relative="path" />}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages"
+        "/inbox/messages",
       );
     });
 
@@ -830,12 +830,12 @@ describe("<Link> href", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
-        ["/about", "/about"]
+        ["/about", "/about"],
       );
     });
   });
@@ -849,11 +849,11 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="/" element={<Link to="/path?search=value#hash" />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/path?search=value#hash"
+        "/path?search=value#hash",
       );
     });
 
@@ -869,7 +869,7 @@ describe("<Link> href", () => {
         renderer = TestRenderer.create(<RouterProvider router={router} />);
       });
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/path?search=value#hash"
+        "/path?search=value#hash",
       );
     });
   });
@@ -883,11 +883,11 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="/" element={<Link to="/path?search=value#hash" />} />
             </Routes>
-          </HashRouter>
+          </HashRouter>,
         );
       });
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "#/path?search=value#hash"
+        "#/path?search=value#hash",
       );
     });
 
@@ -903,7 +903,7 @@ describe("<Link> href", () => {
         renderer = TestRenderer.create(<RouterProvider router={router} />);
       });
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "#/path?search=value#hash"
+        "#/path?search=value#hash",
       );
     });
   });
@@ -917,13 +917,13 @@ describe("<Link> href", () => {
           <Routes>
             <Route path="/" element={<Link to="//" />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(renderer.root.findByType("a").props.href).toEqual("//");
     expect(warnSpy).toHaveBeenCalledWith(
-      '<Link to="//"> contains an invalid URL which will probably break when clicked - please update to a valid URL path.'
+      '<Link to="//"> contains an invalid URL which will probably break when clicked - please update to a valid URL path.',
     );
     warnSpy.mockRestore();
   });
@@ -937,7 +937,7 @@ describe("<Link> href", () => {
           <Link to="path" relative="path">
             Path
           </Link>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

@@ -4,7 +4,7 @@ import { getVite } from "./vite";
 
 export const resolveFileUrl = (
   { rootDirectory }: { rootDirectory: string },
-  filePath: string
+  filePath: string,
 ) => {
   let vite = getVite();
   let relativePath = path.relative(rootDirectory, filePath);
@@ -13,7 +13,7 @@ export const resolveFileUrl = (
 
   if (!isWithinRoot) {
     // Vite will prevent serving files outside of the workspace
-    // unless user explictly opts in with `server.fs.allow`
+    // unless user explicitly opts in with `server.fs.allow`
     // https://vitejs.dev/config/server-options.html#server-fs-allow
     return path.posix.join("/@fs", vite.normalizePath(filePath));
   }

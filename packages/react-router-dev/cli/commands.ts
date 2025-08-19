@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
 import colors from "picocolors";
@@ -17,14 +18,18 @@ import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 
 export async function routes(
-  reactRouterRoot?: string,
+  rootDirectory?: string,
   flags: {
     config?: string;
     json?: boolean;
-  } = {}
+    mode?: string;
+  } = {},
 ): Promise<void> {
-  let rootDirectory = reactRouterRoot ?? process.cwd();
-  let configResult = await loadConfig({ rootDirectory });
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
+  let configResult = await loadConfig({
+    rootDirectory,
+    mode: flags.mode ?? "production",
+  });
 
   if (!configResult.ok) {
     console.error(colors.red(configResult.error));
@@ -37,11 +42,9 @@ export async function routes(
 
 export async function build(
   root?: string,
-  options: ViteBuildOptions = {}
+  options: ViteBuildOptions = {},
 ): Promise<void> {
-  if (!root) {
-    root = process.env.REACT_ROUTER_ROOT || process.cwd();
-  }
+  root = resolveRootDirectory(root, options);
 
   let { build } = await import("../vite/build");
   if (options.profile) {
@@ -54,12 +57,14 @@ export async function build(
   }
 }
 
-export async function dev(root: string, options: ViteDevOptions = {}) {
+export async function dev(root?: string, options: ViteDevOptions = {}) {
   let { dev } = await import("../vite/dev");
   if (options.profile) {
     await profiler.start();
   }
   exitHook(() => profiler.stop(console.info));
+
+  root = resolveRootDirectory(root, options);
   await dev(root, options);
 
   // keep `react-router dev` alive by waiting indefinitely
@@ -77,21 +82,25 @@ let conjunctionListFormat = new Intl.ListFormat("en", {
 
 export async function generateEntry(
   entry?: string,
-  reactRouterRoot?: string,
+  rootDirectory?: string,
   flags: {
     typescript?: boolean;
     config?: string;
-  } = {}
+    mode?: string;
+  } = {},
 ) {
   // if no entry passed, attempt to create both
   if (!entry) {
-    await generateEntry("entry.client", reactRouterRoot, flags);
-    await generateEntry("entry.server", reactRouterRoot, flags);
+    await generateEntry("entry.client", rootDirectory, flags);
+    await generateEntry("entry.server", rootDirectory, flags);
     return;
   }
 
-  let rootDirectory = reactRouterRoot ?? process.cwd();
-  let configResult = await loadConfig({ rootDirectory });
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
+  let configResult = await loadConfig({
+    rootDirectory,
+    mode: flags.mode ?? "production",
+  });
 
   if (!configResult.ok) {
     console.error(colors.red(configResult.error));
@@ -105,7 +114,7 @@ export async function generateEntry(
     let list = conjunctionListFormat.format(entriesArray);
 
     console.error(
-      colors.red(`Invalid entry file. Valid entry files are ${list}`)
+      colors.red(`Invalid entry file. Valid entry files are ${list}`),
     );
     return;
   }
@@ -122,13 +131,13 @@ export async function generateEntry(
     path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
-    "defaults"
+    "defaults",
   );
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
 
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    `entry.server.node.tsx`
+    `entry.server.node.tsx`,
   );
 
   let isServerEntry = entry === "entry.server";
@@ -143,33 +152,44 @@ export async function generateEntry(
   let outputFile = path.resolve(appDirectory, outputEntry);
 
   if (!useTypeScript) {
-    let javascript = convertFileToJS(contents, {
+    let javascript = await convertFileToJS(contents, {
       cwd: rootDirectory,
       filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
     });
-    await fse.writeFile(outputFile, javascript, "utf-8");
+    await writeFile(outputFile, javascript, "utf-8");
   } else {
-    await fse.writeFile(outputFile, contents, "utf-8");
+    await writeFile(outputFile, contents, "utf-8");
   }
 
   console.log(
     colors.blue(
       `Entry file ${entry} created at ${path.relative(
         rootDirectory,
-        outputFile
-      )}.`
-    )
+        outputFile,
+      )}.`,
+    ),
+  );
+}
+
+function resolveRootDirectory(root?: string, flags?: { config?: string }) {
+  if (root) {
+    return path.resolve(root);
+  }
+
+  return (
+    process.env.REACT_ROUTER_ROOT ||
+    (flags?.config ? path.dirname(path.resolve(flags.config)) : process.cwd())
   );
 }
 
 async function checkForEntry(
   rootDirectory: string,
   appDirectory: string,
-  entries: string[]
+  entries: string[],
 ) {
   for (let entry of entries) {
     let entryPath = path.resolve(appDirectory, entry);
-    let exists = await fse.pathExists(entryPath);
+    let exists = existsSync(entryPath);
     if (exists) {
       let relative = path.relative(rootDirectory, entryPath);
       console.error(colors.red(`Entry file ${relative} already exists.`));
@@ -181,34 +201,47 @@ async function checkForEntry(
 async function createServerEntry(
   rootDirectory: string,
   appDirectory: string,
-  inputFile: string
+  inputFile: string,
 ) {
   await checkForEntry(rootDirectory, appDirectory, serverEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
+  let contents = await readFile(inputFile, "utf-8");
   return contents;
 }
 
 async function createClientEntry(
   rootDirectory: string,
   appDirectory: string,
-  inputFile: string
+  inputFile: string,
 ) {
   await checkForEntry(rootDirectory, appDirectory, clientEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
+  let contents = await readFile(inputFile, "utf-8");
   return contents;
 }
 
-export async function typegen(root: string, flags: { watch: boolean }) {
-  root ??= process.cwd();
+export async function typegen(
+  root: string,
+  flags: {
+    watch: boolean;
+    mode?: string;
+    config?: string;
+  },
+) {
+  root = resolveRootDirectory(root, flags);
 
   if (flags.watch) {
     await preloadVite();
     const vite = getVite();
     const logger = vite.createLogger("info", { prefix: "[react-router]" });
 
-    await Typegen.watch(root, { logger });
+    await Typegen.watch(root, {
+      mode: flags.mode ?? "development",
+      logger,
+    });
     await new Promise(() => {}); // keep alive
     return;
   }
-  await Typegen.run(root);
+
+  await Typegen.run(root, {
+    mode: flags.mode ?? "production",
+  });
 }

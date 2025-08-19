@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { PassThrough } from "node:stream";
 
 import {
   createAppFixture,
@@ -6,6 +7,7 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import { reactRouterConfig } from "./helpers/vite.js";
 
 function getFiles() {
   return {
@@ -118,6 +120,10 @@ test.describe("Fog of War", () => {
     let res = await fixture.requestDocument("/");
     let html = await res.text();
 
+    expect(html).toContain("window.__reactRouterManifest = {");
+    expect(html).not.toContain(
+      '<link rel="modulepreload" href="/assets/manifest-',
+    );
     expect(html).toContain('"root": {');
     expect(html).toContain('"routes/_index": {');
     expect(html).not.toContain('"routes/a"');
@@ -129,8 +135,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toContain("routes/a");
   });
 
@@ -144,8 +150,8 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
@@ -163,21 +169,21 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
     await page.waitForSelector("#a");
 
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -193,19 +199,19 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -254,19 +260,19 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a"]
+      () => (window as any).__reactRouterManifest.routes["routes/a"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
   });
 
@@ -298,8 +304,8 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
@@ -309,8 +315,8 @@ test.describe("Fog of War", () => {
     // /a/b is not discovered yet even thought it's rendered
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     // /a/b gets discovered on click
@@ -319,8 +325,8 @@ test.describe("Fog of War", () => {
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -367,12 +373,12 @@ test.describe("Fog of War", () => {
 
     await app.goto("/", true);
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a"]
+      () => (window as any).__reactRouterManifest.routes["routes/a"],
     );
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickSubmitButton("/a");
@@ -402,21 +408,21 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
     await page.waitForSelector("form");
 
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -471,8 +477,8 @@ test.describe("Fog of War", () => {
     await app.goto("/deep", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/deep", "routes/_index"]);
 
     // Without pre-loading the index, we'd "match" `/` to just the root route
@@ -565,8 +571,8 @@ test.describe("Fog of War", () => {
     await app.goto("/parent/child/grandchild", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual([
       "root",
       "routes/parent",
@@ -680,8 +686,8 @@ test.describe("Fog of War", () => {
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual([
       "root",
       "routes/parent",
@@ -773,8 +779,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$slug"]);
     expect(manifestRequests).toEqual([
       expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
@@ -795,8 +801,8 @@ test.describe("Fog of War", () => {
     ]);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$slug", "routes/static"]);
   });
 
@@ -860,8 +866,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$"]);
     expect(manifestRequests).toEqual([
       expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
@@ -882,8 +888,8 @@ test.describe("Fog of War", () => {
     ]);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
   });
 
@@ -940,8 +946,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
 
@@ -1028,8 +1034,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
 
@@ -1122,8 +1128,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
 
@@ -1188,8 +1194,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#a")).toMatch("A LOADER");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
   });
 
@@ -1227,7 +1233,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&version=[a-z0-9]{8}/
+        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&version=[a-z0-9]{8}/,
       ),
     ]);
   });
@@ -1269,7 +1275,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&p=%2Fc&p=%2Fd&p=%2Fe&p=%2Ff&p=%2F/
+        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&p=%2Fc&p=%2Fd&p=%2Fe&p=%2Ff&p=%2F/,
       ),
     ]);
   });
@@ -1310,22 +1316,310 @@ test.describe("Fog of War", () => {
     await app.goto("/a", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/a", "routes/_index"]);
 
     // /a/b gets discovered on click
     await app.clickElement("[data-link]");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     expect(await (await page.$("body"))?.textContent()).not.toContain(
-      "Not Found"
+      "Not Found",
     );
     await page.waitForSelector("#b");
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/a", "routes/_index", "routes/a.b"]);
+  });
+
+  test("loads ancestor index routes on navigations", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/root.tsx": js`
+          import * as React from "react";
+          import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            let [showLink, setShowLink] = React.useState(false);
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Link to="/" discover="none">Home</Link><br/>
+                  <Link to="/a" discover="none">/a</Link><br/>
+                  <Link to="/a/b" discover="none">/a/b</Link><br/>
+                  <Link to="/a/b/c" discover="none">/a/b/c</Link><br/>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/a._index.tsx": js`
+          export default function Index() {
+            return <h3 id="a-index">A INDEX</h3>;
+          }
+        `,
+        "app/routes/a.b._index.tsx": js`
+          export default function Index() {
+            return <h3 id="b-index">B INDEX</h3>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
+    ).toEqual(["root", "routes/_index"]);
+
+    await app.clickLink("/a/b/c");
+    await page.waitForSelector("#c");
+
+    // /a/b is not discovered yet even thought it's rendered
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
+    ).toEqual([
+      "root",
+      "routes/_index",
+      "routes/a",
+      "routes/a._index",
+      "routes/a.b",
+      "routes/a.b._index",
+      "routes/a.b.c",
+    ]);
+
+    await app.clickLink("/a/b");
+    await page.waitForSelector("#b-index");
+
+    await app.clickLink("/a");
+    await page.waitForSelector("#a-index");
+  });
+
+  test("allows configuration of the manifest path", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "react-router.config.ts": reactRouterConfig({
+          routeDiscovery: { mode: "lazy", manifestPath: "/custom-manifest" },
+        }),
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let wrongManifestRequests: string[] = [];
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        wrongManifestRequests.push(req.url());
+      }
+      if (req.url().includes("/custom-manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
+    ).toEqual(["root", "routes/_index", "routes/a"]);
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/custom-manifest\?p=%2F&p=%2Fa&version=/),
+    ]);
+    manifestRequests = [];
+
+    await app.clickLink("/a");
+    await page.waitForSelector("#a");
+    expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
+    // Wait for eager discovery to kick off
+    await new Promise((r) => setTimeout(r, 500));
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/custom-manifest\?p=%2Fa%2Fb&version=/),
+    ]);
+
+    expect(wrongManifestRequests).toEqual([]);
+  });
+
+  test.describe("routeDiscovery=initial", () => {
+    test("loads full manifest on initial load", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...getFiles(),
+          "react-router.config.ts": reactRouterConfig({
+            routeDiscovery: { mode: "initial" },
+          }),
+          "app/entry.client.tsx": js`
+            import { HydratedRouter } from "react-router/dom";
+            import { startTransition, StrictMode } from "react";
+            import { hydrateRoot } from "react-dom/client";
+            startTransition(() => {
+              hydrateRoot(
+                document,
+                <StrictMode>
+                  <HydratedRouter discover={"none"} />
+                </StrictMode>
+              );
+            });
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+
+      let manifestRequests: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes("/__manifest")) {
+          manifestRequests.push(req.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+
+      expect(html).not.toContain("window.__reactRouterManifest = {");
+      expect(html).toContain(
+        '<link rel="modulepreload" href="/assets/manifest-',
+      );
+
+      // Linking to A succeeds
+      await app.goto("/", true);
+      expect(
+        await page.evaluate(() =>
+          Object.keys((window as any).__reactRouterManifest.routes),
+        ),
+      ).toEqual([
+        "root",
+        "routes/_index",
+        "routes/a",
+        "routes/a.b",
+        "routes/a.b.c",
+      ]);
+
+      await app.clickLink("/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
+      expect(manifestRequests).toEqual([]);
+    });
+
+    test("defaults to `routeDiscovery=initial` when `ssr:false` is set", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        spaMode: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+          }),
+          "app/root.tsx": js`
+            import * as React from "react";
+            import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+            export default function Root() {
+              let [showLink, setShowLink] = React.useState(false);
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Link to="/">Home</Link><br/>
+                    <Link to="/a">/a</Link><br/>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            export default function Index() {
+              return <h1 id="index">Index</h1>
+            }
+          `,
+
+          "app/routes/a.tsx": js`
+            export function clientLoader({ request }) {
+              return { message: "A LOADER" };
+            }
+            export default function Index({ loaderData }) {
+              return <h1 id="a">A: {loaderData.message}</h1>
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+
+      let manifestRequests: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes("/__manifest")) {
+          manifestRequests.push(req.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+
+      expect(html).toContain('"routeDiscovery":{"mode":"initial"}');
+
+      await app.goto("/", true);
+      await page.waitForSelector("#index");
+      await app.clickLink("/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
+      expect(manifestRequests).toEqual([]);
+    });
+
+    test("Errors if you try to set routeDiscovery=lazy and ssr:false", async () => {
+      let ogConsole = console.error;
+      console.error = () => {};
+      let buildStdio = new PassThrough();
+      let err;
+      try {
+        await createFixture({
+          buildStdio,
+          spaMode: true,
+          files: {
+            ...getFiles(),
+            "react-router.config.ts": reactRouterConfig({
+              ssr: false,
+              routeDiscovery: { mode: "lazy" },
+            }),
+          },
+        });
+      } catch (e) {
+        err = e;
+      }
+
+      let chunks: Buffer[] = [];
+      let buildOutput = await new Promise<string>((resolve, reject) => {
+        buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        buildStdio.on("error", (err) => reject(err));
+        buildStdio.on("end", () =>
+          resolve(Buffer.concat(chunks).toString("utf8")),
+        );
+      });
+
+      expect(err).toEqual(new Error("Build failed, check the output above"));
+      expect(buildOutput).toContain(
+        'Error: The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`',
+      );
+      console.error = ogConsole;
+    });
   });
 });

@@ -13,7 +13,7 @@ function renderStrict(
   element:
     | React.FunctionComponentElement<any>
     | React.FunctionComponentElement<any>[],
-  node: ReactDOM.Container
+  node: ReactDOM.Container,
 ): void {
   ReactDOM.render(<StrictMode>{element}</StrictMode>, node);
 }

@@ -1,9 +1,9 @@
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 import getHtml from "../utils/getHtml";
+import getWindow from "../utils/getWindow";
 import {
   Link,
   Outlet,
@@ -11,10 +11,10 @@ import {
   ScrollRestoration,
   createBrowserRouter,
 } from "../../index";
-import type { FrameworkContextObject } from "../../lib/dom/ssr/entry";
 import { createMemoryRouter, redirect } from "react-router";
 import { FrameworkContext, Scripts } from "../../lib/dom/ssr/components";
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
+import { mockFrameworkContext } from "../utils/framework";
 
 describe(`ScrollRestoration`, () => {
   it("restores the scroll position for a page when re-visited", () => {
@@ -22,7 +22,7 @@ describe(`ScrollRestoration`, () => {
       .spyOn(console, "warn")
       .mockImplementation(() => {});
 
-    let testWindow = getWindowImpl("/base");
+    let testWindow = getWindow("/base");
     const mockScroll = jest.fn();
     window.scrollTo = mockScroll;
 
@@ -43,7 +43,7 @@ describe(`ScrollRestoration`, () => {
           children: testPages,
         },
       ],
-      { basename: "/base", window: testWindow }
+      { basename: "/base", window: testWindow },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -76,7 +76,7 @@ describe(`ScrollRestoration`, () => {
 
   it("removes the basename from the location provided to getKey", () => {
     let getKey = jest.fn(() => "mykey");
-    let testWindow = getWindowImpl("/base");
+    let testWindow = getWindow("/base");
     window.scrollTo = () => {};
 
     let router = createBrowserRouter(
@@ -107,7 +107,7 @@ describe(`ScrollRestoration`, () => {
           ],
         },
       ],
-      { basename: "/base", window: testWindow }
+      { basename: "/base", window: testWindow },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -131,7 +131,7 @@ describe(`ScrollRestoration`, () => {
       .spyOn(console, "warn")
       .mockImplementation(() => {});
 
-    let testWindow = getWindowImpl("/base");
+    let testWindow = getWindow("/base");
     const mockScroll = jest.fn();
     window.scrollTo = mockScroll;
 
@@ -156,7 +156,7 @@ describe(`ScrollRestoration`, () => {
           children: testPages,
         },
       ],
-      { basename: "/base", window: testWindow }
+      { basename: "/base", window: testWindow },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -185,8 +185,8 @@ describe(`ScrollRestoration`, () => {
 
     expect(consoleWarnMock).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Failed to save scroll positions in sessionStorage"
-      )
+        "Failed to save scroll positions in sessionStorage",
+      ),
     );
 
     consoleWarnMock.mockRestore();
@@ -207,23 +207,7 @@ describe(`ScrollRestoration`, () => {
       window.scrollTo = scrollTo;
     });
 
-    let context: FrameworkContextObject = {
-      routeModules: { root: { default: () => null } },
-      manifest: {
-        routes: {
-          root: {
-            hasLoader: false,
-            hasAction: false,
-            hasErrorBoundary: false,
-            id: "root",
-            module: "root.js",
-          },
-        },
-        entry: { imports: [], module: "" },
-        url: "",
-        version: "",
-      },
-    };
+    let context = mockFrameworkContext();
 
     it("should render a <script> tag", () => {
       let router = createMemoryRouter([
@@ -243,7 +227,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
       let script = screen.getByTestId("scroll-script");
       expect(script instanceof HTMLScriptElement).toBe(true);
@@ -270,7 +254,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
       let script = screen.getByTestId("scroll-script");
       expect(script).toHaveAttribute("nonce", "hello");
@@ -296,7 +280,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
 
       expect(scrollToMock).toHaveBeenCalledWith(0, 20);
@@ -320,7 +304,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
       // Always called when using <ScrollRestoration />
       expect(scrollToMock).toHaveBeenCalledWith(0, 0);
@@ -362,10 +346,3 @@ const testPages = [
     },
   },
 ];
-
-function getWindowImpl(initialUrl: string): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", initialUrl);
-  return dom.window as unknown as Window;
-}

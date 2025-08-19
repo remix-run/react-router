@@ -18,6 +18,10 @@ on:
         # but we want to pass an array (browser: "['chromium', 'firefox']"),
         # so we'll need to manually stringify it for now
         type: string
+      timeout:
+        required: false
+        type: number
+        default: 40
 
 env:
   CI: true
@@ -34,7 +38,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
@@ -45,7 +49,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: "pnpm"
 
-      - uses: google/wireit@setup-github-actions-caching/v2
+      # TODO: Track and renable once this has been fixed: https://github.com/google/wireit/issues/1297
+      # - uses: google/wireit@setup-github-actions-caching/v2
 
       - name: Disable GitHub Actions Annotations
         run: |
@@ -61,4 +66,4 @@ jobs:
 
       - name: 👀 Run Integration Tests ${{ matrix.browser }}
         run: "pnpm test:integration --project=${{ matrix.browser }}"
-        timeout-minutes: 40
+        timeout-minutes: ${{inputs.timeout}}

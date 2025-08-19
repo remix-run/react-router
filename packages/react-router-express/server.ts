@@ -3,12 +3,19 @@
 /// <reference lib="DOM.Iterable" />
 
 import type * as express from "express";
-import type { AppLoadContext, ServerBuild } from "react-router";
+import type {
+  AppLoadContext,
+  ServerBuild,
+  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
+  unstable_RouterContextProvider,
+} from "react-router";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import {
   createReadableStreamFromReadable,
   writeReadableStreamToWritable,
 } from "@react-router/node";
+
+type MaybePromise<T> = T | Promise<T>;
 
 /**
  * A function that returns the value to use as `context` in route `loader` and
@@ -20,13 +27,15 @@ import {
  */
 export type GetLoadContextFunction = (
   req: express.Request,
-  res: express.Response
-) => Promise<AppLoadContext> | AppLoadContext;
+  res: express.Response,
+) => MiddlewareEnabled extends true
+  ? MaybePromise<unstable_RouterContextProvider>
+  : MaybePromise<AppLoadContext>;
 
 export type RequestHandler = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => Promise<void>;
 
 /**
@@ -46,7 +55,7 @@ export function createRequestHandler({
   return async (
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     try {
       let request = createRemixRequest(req, res);
@@ -64,7 +73,7 @@ export function createRequestHandler({
 }
 
 export function createRemixHeaders(
-  requestHeaders: express.Request["headers"]
+  requestHeaders: express.Request["headers"],
 ): Headers {
   let headers = new Headers();
 
@@ -85,13 +94,19 @@ export function createRemixHeaders(
 
 export function createRemixRequest(
   req: express.Request,
-  res: express.Response
+  res: express.Response,
 ): Request {
   // req.hostname doesn't include port information so grab that from
   // `X-Forwarded-Host` or `Host`
-  let [, hostnamePort] = req.get("X-Forwarded-Host")?.split(":") ?? [];
-  let [, hostPort] = req.get("host")?.split(":") ?? [];
-  let port = hostnamePort || hostPort;
+  let [, hostnamePortStr] = req.get("X-Forwarded-Host")?.split(":") ?? [];
+  let [, hostPortStr] = req.get("host")?.split(":") ?? [];
+  let hostnamePort = Number.parseInt(hostnamePortStr, 10);
+  let hostPort = Number.parseInt(hostPortStr, 10);
+  let port = Number.isSafeInteger(hostnamePort)
+    ? hostnamePort
+    : Number.isSafeInteger(hostPort)
+      ? hostPort
+      : "";
   // Use req.hostname here as it respects the "trust proxy" setting
   let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
   // Use `req.originalUrl` so Remix is aware of the full path
@@ -122,7 +137,7 @@ export function createRemixRequest(
 
 export async function sendRemixResponse(
   res: express.Response,
-  nodeResponse: Response
+  nodeResponse: Response,
 ): Promise<void> {
   res.statusMessage = nodeResponse.statusText;
   res.status(nodeResponse.status);

@@ -1,12 +1,27 @@
 import { splitCookiesString } from "set-cookie-parser";
 
-import type { ServerBuild } from "./build";
+import type { DataRouteMatch } from "../context";
 import type { StaticHandlerContext } from "../router/router";
+import type { ServerRouteModule } from "../dom/ssr/routeModules";
+import type { ServerBuild } from "./build";
 import invariant from "./invariant";
 
+// Version used by v7 framework mode
 export function getDocumentHeaders(
+  context: StaticHandlerContext,
   build: ServerBuild,
-  context: StaticHandlerContext
+): Headers {
+  return getDocumentHeadersImpl(context, (m) => {
+    let route = build.routes[m.route.id];
+    invariant(route, `Route with id "${m.route.id}" not found in build`);
+    return route.module.headers;
+  });
+}
+
+export function getDocumentHeadersImpl(
+  context: StaticHandlerContext,
+  getRouteHeadersFn: (match: DataRouteMatch) => ServerRouteModule["headers"],
+  _defaultHeaders?: Headers,
 ): Headers {
   let boundaryIdx = context.errors
     ? context.matches.findIndex((m) => context.errors![m.route.id])
@@ -36,11 +51,10 @@ export function getDocumentHeaders(
     });
   }
 
+  const defaultHeaders = new Headers(_defaultHeaders);
+
   return matches.reduce((parentHeaders, match, idx) => {
     let { id } = match.route;
-    let route = build.routes[id];
-    invariant(route, `Route with id "${id}" not found in build`);
-    let routeModule = route.module;
     let loaderHeaders = context.loaderHeaders[id] || new Headers();
     let actionHeaders = context.actionHeaders[id] || new Headers();
 
@@ -56,8 +70,10 @@ export function getDocumentHeaders(
       errorHeaders !== loaderHeaders &&
       errorHeaders !== actionHeaders;
 
+    let headersFn = getRouteHeadersFn(match);
+
     // Use the parent headers for any route without a `headers` export
-    if (routeModule.headers == null) {
+    if (headersFn == null) {
       let headers = new Headers(parentHeaders);
       if (includeErrorCookies) {
         prependCookies(errorHeaders!, headers);
@@ -68,16 +84,14 @@ export function getDocumentHeaders(
     }
 
     let headers = new Headers(
-      routeModule.headers
-        ? typeof routeModule.headers === "function"
-          ? routeModule.headers({
-              loaderHeaders,
-              parentHeaders,
-              actionHeaders,
-              errorHeaders: includeErrorHeaders ? errorHeaders : undefined,
-            })
-          : routeModule.headers
-        : undefined
+      typeof headersFn === "function"
+        ? headersFn({
+            loaderHeaders,
+            parentHeaders,
+            actionHeaders,
+            errorHeaders: includeErrorHeaders ? errorHeaders : undefined,
+          })
+        : headersFn,
     );
 
     // Automatically preserve Set-Cookie headers from bubbled responses,
@@ -90,7 +104,7 @@ export function getDocumentHeaders(
     prependCookies(parentHeaders, headers);
 
     return headers;
-  }, new Headers());
+  }, new Headers(defaultHeaders));
 }
 
 function prependCookies(parentHeaders: Headers, childHeaders: Headers): void {

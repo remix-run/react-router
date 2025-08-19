@@ -13,45 +13,71 @@ import type {
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
-import { convertRoutesToDataRoutes } from "../../router/utils";
+import {
+  convertRoutesToDataRoutes,
+  unstable_RouterContextProvider,
+} from "../../router/utils";
+import type { MiddlewareEnabled } from "../../types/future";
+import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
   FrameworkContextObject,
 } from "./entry";
-import { Outlet, RouterProvider, createMemoryRouter } from "../../components";
+import {
+  type RouteComponentType,
+  type HydrateFallbackType,
+  type ErrorBoundaryType,
+  Outlet,
+  RouterProvider,
+  createMemoryRouter,
+  withComponentProps,
+  withErrorBoundaryProps,
+  withHydrateFallbackProps,
+} from "../../components";
 import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
 
-interface StubIndexRouteObject
-  extends Omit<
-    IndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
+interface StubRouteExtensions {
+  Component?: RouteComponentType;
+  HydrateFallback?: HydrateFallbackType;
+  ErrorBoundary?: ErrorBoundaryType;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
   meta?: MetaFunction;
   links?: LinksFunction;
 }
+
+interface StubIndexRouteObject
+  extends Omit<
+      IndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
 
 interface StubNonIndexRouteObject
   extends Omit<
-    NonIndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
-}
+      NonIndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
-
-interface AppLoadContext {
-  [key: string]: unknown;
-}
 
 export interface RoutesTestStubProps {
   /**
@@ -91,7 +117,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  context: AppLoadContext = {}
+  _context?: AppLoadContext | unstable_RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -100,11 +126,15 @@ export function createRoutesStub(
     future,
   }: RoutesTestStubProps) {
     let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let remixContextRef = React.useRef<FrameworkContextObject>();
+    let frameworkContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
-      remixContextRef.current = {
-        future: {},
+      frameworkContextRef.current = {
+        future: {
+          unstable_subResourceIntegrity:
+            future?.unstable_subResourceIntegrity === true,
+          unstable_middleware: future?.unstable_middleware === true,
+        },
         manifest: {
           routes: {},
           entry: { imports: [], module: "" },
@@ -114,16 +144,22 @@ export function createRoutesStub(
         routeModules: {},
         ssr: false,
         isSpaMode: false,
+        routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
       };
 
       // Update the routes to include context in the loader/action and populate
       // the manifest and routeModules during the walk
       let patched = processRoutes(
-        // @ts-expect-error loader/action context types don't match :/
+        // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
+        // types compared to `AgnosticRouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
-        context,
-        remixContextRef.current.manifest,
-        remixContextRef.current.routeModules
+        _context !== undefined
+          ? _context
+          : future?.unstable_middleware
+            ? new unstable_RouterContextProvider()
+            : {},
+        frameworkContextRef.current.manifest,
+        frameworkContextRef.current.routeModules,
       );
       routerRef.current = createMemoryRouter(patched, {
         initialEntries,
@@ -133,7 +169,7 @@ export function createRoutesStub(
     }
 
     return (
-      <FrameworkContext.Provider value={remixContextRef.current}>
+      <FrameworkContext.Provider value={frameworkContextRef.current}>
         <RouterProvider router={routerRef.current} />
       </FrameworkContext.Provider>
     );
@@ -142,32 +178,36 @@ export function createRoutesStub(
 
 function processRoutes(
   routes: StubRouteObject[],
-  context: AppLoadContext,
+  context: unknown,
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  parentId?: string
+  parentId?: string,
 ): DataRouteObject[] {
   return routes.map((route) => {
     if (!route.id) {
       throw new Error(
-        "Expected a route.id in @remix-run/testing processRoutes() function"
+        "Expected a route.id in react-router processRoutes() function",
       );
     }
 
-    // Patch in the Remix context to loaders/actions
-    let { loader, action } = route;
     let newRoute: DataRouteObject = {
       id: route.id,
       path: route.path,
       index: route.index,
-      Component: route.Component,
-      HydrateFallback: route.HydrateFallback,
-      ErrorBoundary: route.ErrorBoundary,
-      action: action
-        ? (args: ActionFunctionArgs) => action!({ ...args, context })
+      Component: route.Component
+        ? withComponentProps(route.Component)
         : undefined,
-      loader: loader
-        ? (args: LoaderFunctionArgs) => loader!({ ...args, context })
+      HydrateFallback: route.HydrateFallback
+        ? withHydrateFallbackProps(route.HydrateFallback)
+        : undefined,
+      ErrorBoundary: route.ErrorBoundary
+        ? withErrorBoundaryProps(route.ErrorBoundary)
+        : undefined,
+      action: route.action
+        ? (args: ActionFunctionArgs) => route.action!({ ...args, context })
+        : undefined,
+      loader: route.loader
+        ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
         : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,
@@ -181,24 +221,26 @@ function processRoutes(
       parentId,
       hasAction: route.action != null,
       hasLoader: route.loader != null,
-      // When testing routes, you should just be stubbing loader/action, not
-      // trying to re-implement the full loader/clientLoader/SSR/hydration flow.
-      // That is better tested via E2E tests.
+      // When testing routes, you should be stubbing loader/action/middleware,
+      // not trying to re-implement the full loader/clientLoader/SSR/hydration
+      // flow. That is better tested via E2E tests.
       hasClientAction: false,
       hasClientLoader: false,
+      hasClientMiddleware: false,
       hasErrorBoundary: route.ErrorBoundary != null,
       // any need for these?
       module: "build/stub-path-to-module.js",
       clientActionModule: undefined,
       clientLoaderModule: undefined,
+      clientMiddlewareModule: undefined,
       hydrateFallbackModule: undefined,
     };
     manifest.routes[newRoute.id] = entryRoute;
 
     // Add the route to routeModules
     routeModules[route.id] = {
-      default: route.Component || Outlet,
-      ErrorBoundary: route.ErrorBoundary || undefined,
+      default: newRoute.Component || Outlet,
+      ErrorBoundary: newRoute.ErrorBoundary || undefined,
       handle: route.handle,
       links: route.links,
       meta: route.meta,
@@ -211,7 +253,7 @@ function processRoutes(
         context,
         manifest,
         routeModules,
-        newRoute.id
+        newRoute.id,
       );
     }
 

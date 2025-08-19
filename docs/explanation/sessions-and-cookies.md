@@ -4,6 +4,8 @@ title: Sessions and Cookies
 
 # Sessions and Cookies
 
+[MODES: framework, data]
+
 ## Sessions
 
 Sessions are an important part of websites that allow the server to identify requests coming from the same person, especially when it comes to server-side form validation or when JavaScript is not on the page. Sessions are a fundamental building block of many sites that let users "log in", including social, e-commerce, business, and educational websites.
@@ -45,7 +47,7 @@ const { getSession, commitSession, destroySession } =
         secrets: ["s3cret1"],
         secure: true,
       },
-    }
+    },
   );
 
 export { getSession, commitSession, destroySession };
@@ -64,7 +66,7 @@ export async function action({
   request,
 }: ActionFunctionArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   session.get("foo");
   session.has("bar");
@@ -72,7 +74,7 @@ export async function action({
 }
 ```
 
-See the [Session API][session-api] for more all the methods available on the session object.
+See the [Session API][session-api] for all methods available on the session object.
 
 ### Login form example
 
@@ -91,7 +93,7 @@ export async function loader({
   request,
 }: Route.LoaderArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
 
   if (session.has("userId")) {
@@ -105,7 +107,7 @@ export async function loader({
       headers: {
         "Set-Cookie": await commitSession(session),
       },
-    }
+    },
   );
 }
 
@@ -113,7 +115,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   const form = await request.formData();
   const username = form.get("username");
@@ -121,7 +123,7 @@ export async function action({
 
   const userId = await validateCredentials(
     username,
-    password
+    password,
   );
 
   if (userId == null) {
@@ -183,7 +185,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   return redirect("/login", {
     headers: {

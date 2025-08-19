@@ -293,7 +293,7 @@ test.describe("ErrorBoundary", () => {
             `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     appFixture = await createAppFixture(fixture, ServerMode.Development);
@@ -597,7 +597,7 @@ test.describe("Default ErrorBoundary", () => {
     let errorBoundaryCode = !includeRootErrorBoundary
       ? ""
       : rootErrorBoundaryThrows
-      ? js`
+        ? js`
           export function ErrorBoundary() {
             let error = useRouteError();
             return (
@@ -615,7 +615,7 @@ test.describe("Default ErrorBoundary", () => {
             )
           }
         `
-      : js`
+        : js`
         export function ErrorBoundary() {
           let error = useRouteError();
           return (
@@ -703,7 +703,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: false }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
@@ -774,7 +774,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: true }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
@@ -971,7 +971,6 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
         `,
 
       "app/routes/boom.tsx": js`
-          import { json } from "react-router";
           export function loader() { return boom(); }
           export default function() { return <b>my page</b>; }
         `,

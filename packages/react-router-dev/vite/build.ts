@@ -9,7 +9,6 @@ import {
   extractPluginContext,
   cleanBuildDirectory,
   cleanViteManifests,
-  getBuildManifest,
   getEnvironmentOptionsResolvers,
   resolveEnvironmentsOptions,
   getServerEnvironmentKeys,
@@ -36,7 +35,13 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   await preloadVite();
   let vite = getVite();
 
-  let configResult = await loadConfig({ rootDirectory: root });
+  let configResult = await loadConfig({
+    rootDirectory: root,
+    mode: viteBuildOptions.mode ?? "production",
+    // In this scope we only need future flags, so we can skip evaluating
+    // routes.ts until we're within the Vite build context
+    skipRoutes: true,
+  });
 
   if (!configResult.ok) {
     throw new Error(configResult.error);
@@ -48,7 +53,7 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
 
   if (unstable_viteEnvironmentApi && viteMajor === 5) {
     throw new Error(
-      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5"
+      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5",
     );
   }
 
@@ -70,7 +75,7 @@ async function viteAppBuild(
     mode,
     sourcemapClient,
     sourcemapServer,
-  }: ViteBuildOptions
+  }: ViteBuildOptions,
 ) {
   let vite = getVite();
   let builder = await vite.createBuilder({
@@ -106,11 +111,13 @@ async function viteAppBuild(
         },
         configResolved(config) {
           let hasReactRouterPlugin = config.plugins.find(
-            (plugin) => plugin.name === "react-router"
+            (plugin) =>
+              plugin.name === "react-router" ||
+              plugin.name === "react-router/rsc",
           );
           if (!hasReactRouterPlugin) {
             throw new Error(
-              "React Router Vite plugin not found in Vite config"
+              "React Router Vite plugin not found in Vite config",
             );
           }
         },
@@ -133,7 +140,7 @@ async function viteBuild(
     mode,
     sourcemapClient,
     sourcemapServer,
-  }: ViteBuildOptions
+  }: ViteBuildOptions,
 ) {
   let viteUserConfig: Vite.UserConfig = {};
   let viteConfig = await resolveViteConfig({
@@ -149,11 +156,11 @@ async function viteBuild(
       },
     ],
   });
-  let ctx = await extractPluginContext(viteConfig);
+  let ctx = extractPluginContext(viteConfig);
 
   if (!ctx) {
     console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
+      colors.red("React Router Vite plugin not found in Vite config"),
     );
     process.exit(1);
   }
@@ -184,20 +191,23 @@ async function viteBuild(
       optimizeDeps: { force },
       clearScreen,
       logLevel,
-      ...{ __reactRouterEnvironmentBuildContext: environmentBuildContext },
+      ...{
+        __reactRouterPluginContext: ctx,
+        __reactRouterEnvironmentBuildContext: environmentBuildContext,
+      },
     });
   }
 
-  let { reactRouterConfig } = ctx;
-  let buildManifest = await getBuildManifest(ctx);
+  let { reactRouterConfig, buildManifest } = ctx;
+  invariant(buildManifest, "Expected build manifest to be present");
+
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
-    buildManifest,
-    "build"
+    "build",
   );
   let environmentsOptions = resolveEnvironmentsOptions(
     environmentOptionsResolvers,
-    { viteUserConfig }
+    { viteUserConfig },
   );
 
   await cleanBuildDirectory(viteConfig, ctx);
@@ -207,8 +217,8 @@ async function viteBuild(
 
   // Then run Vite SSR builds in parallel
   let serverEnvironmentNames = getServerEnvironmentKeys(
+    ctx,
     environmentOptionsResolvers,
-    buildManifest
   );
 
   await Promise.all(serverEnvironmentNames.map(buildEnvironment));

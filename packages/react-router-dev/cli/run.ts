@@ -92,7 +92,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
   ) {
     console.warn(
       `️⚠️ Oops, Node v${versions.node} detected. react-router requires ` +
-        `a Node version greater than ${MINIMUM_NODE_VERSION}.`
+        `a Node version greater than ${MINIMUM_NODE_VERSION}.`,
     );
   }
 
@@ -140,7 +140,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     },
     {
       argv,
-    }
+    },
   );
 
   let input = args._;

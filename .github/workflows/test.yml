@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
@@ -45,7 +45,8 @@ jobs:
           cache: pnpm
           check-latest: true
 
-      - uses: google/wireit@setup-github-actions-caching/v2
+      # TODO: Track and renable once this has been fixed: https://github.com/google/wireit/issues/1297
+      # - uses: google/wireit@setup-github-actions-caching/v2
 
       - name: Disable GitHub Actions Annotations
         run: |

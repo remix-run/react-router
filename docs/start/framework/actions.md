@@ -5,6 +5,10 @@ order: 6
 
 # Actions
 
+[MODES: framework]
+
+## Introduction
+
 Data mutations are done through Route actions. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it.
 
 Route actions defined with `action` are only called on the server while actions defined with `clientAction` are run in the browser.
@@ -119,7 +123,7 @@ function useQuizTimer() {
   let cb = useCallback(() => {
     submit(
       { quizTimedOut: true },
-      { action: "/end-quiz", method: "post" }
+      { action: "/end-quiz", method: "post" },
     );
   }, []);
 
@@ -157,7 +161,7 @@ They also have the imperative `submit` method.
 ```tsx
 fetcher.submit(
   { title: "New Title" },
-  { action: "/update-task/123", method: "post" }
+  { action: "/update-task/123", method: "post" },
 );
 ```
 

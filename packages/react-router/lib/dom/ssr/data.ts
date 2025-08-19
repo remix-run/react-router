@@ -2,7 +2,7 @@
 import type * as _ from "../global";
 
 export async function createRequestInit(
-  request: Request
+  request: Request,
 ): Promise<RequestInit> {
   let init: RequestInit = { signal: request.signal };
 

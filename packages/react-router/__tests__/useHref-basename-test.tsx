@@ -16,7 +16,7 @@ describe("useHref under a basename", () => {
             <Routes>
               <Route path="admin" element={<ShowHref to="/invoices" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -37,7 +37,7 @@ describe("useHref under a basename", () => {
             <Routes>
               <Route path="admin" element={<ShowHref to="invoices" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -57,7 +57,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to="invoices" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -78,7 +78,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to="invoices/" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -100,7 +100,7 @@ describe("useHref under a basename", () => {
             <Routes>
               <Route path="admin" element={<ShowHref to="../dashboard" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -120,7 +120,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to="../dashboard" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -141,7 +141,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to="../dashboard/" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -163,7 +163,7 @@ describe("useHref under a basename", () => {
             <Routes>
               <Route path="admin" element={<ShowHref to=".." />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -183,7 +183,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to=".." />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -204,7 +204,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to="../" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -229,7 +229,7 @@ describe("useHref under a basename", () => {
                 element={<ShowHref to="../../../dashboard" />}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -253,7 +253,7 @@ describe("useHref under a basename", () => {
               <Routes>
                 <Route path="admin" element={<ShowHref to="../../.." />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -281,7 +281,7 @@ describe("useHref under a basename", () => {
                   element={<ShowHref to="../../../dashboard" />}
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -309,7 +309,7 @@ describe("useHref under a basename", () => {
                   element={<ShowHref to="../../../dashboard/" />}
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 

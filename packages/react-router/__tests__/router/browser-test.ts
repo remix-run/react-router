@@ -1,7 +1,5 @@
 /* eslint-disable jest/expect-expect */
 
-import { JSDOM } from "jsdom";
-
 import {
   type BrowserHistory,
   createBrowserHistory,
@@ -22,18 +20,16 @@ import EncodedReservedCharacters from "./TestSequences/EncodedReservedCharacters
 import GoBack from "./TestSequences/GoBack";
 import GoForward from "./TestSequences/GoForward";
 import ListenPopOnly from "./TestSequences/ListenPopOnly";
+import getWindow from "../utils/getWindow";
 
 describe("a browser history", () => {
   let history: BrowserHistory;
-  let dom: JSDOM;
+  let testWindow: Window;
 
   beforeEach(() => {
     // Need to use our own custom DOM in order to get a working history
-    dom = new JSDOM(`<!DOCTYPE html><p>History Example</p>`, {
-      url: "https://example.org/",
-    });
-    dom.window.history.replaceState(null, "", "/");
-    history = createBrowserHistory({ window: dom.window as unknown as Window });
+    testWindow = getWindow("/");
+    history = createBrowserHistory({ window: testWindow });
   });
 
   it("knows how to create hrefs from location objects", () => {
@@ -97,7 +93,7 @@ describe("a browser history", () => {
     });
 
     it("re-throws when using non-serializable state", () => {
-      PushStateInvalid(history, dom.window);
+      PushStateInvalid(history, testWindow);
     });
   });
 

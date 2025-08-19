@@ -5,6 +5,10 @@ order: 3
 
 # Route Module
 
+[MODES: framework]
+
+## Introduction
+
 The files referenced in `routes.ts` are called Route Modules.
 
 ```tsx filename=app/routes.ts
@@ -49,7 +53,7 @@ When the component is rendered, it is provided the props defined in `Route.Compo
 3. `params`: An object containing the route parameters (if any).
 4. `matches`: An array of all the matches in the current route tree.
 
-You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferrable because they will be automatically typed correctly for the route.
+You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferable because they will be automatically typed correctly for the route.
 
 ### Using props
 
@@ -73,6 +77,95 @@ export default function MyRouteComponent({
   );
 }
 ```
+
+## `unstable_middleware`
+
+Route [middleware][middleware] runs sequentially on the server before and after document and
+data requests. This gives you a singular place to do things like logging,
+authentication, and post-processing of responses. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
+
+Here's an example middleware to log requests on the server:
+
+```tsx filename=root.tsx
+async function loggingMiddleware(
+  { request, context },
+  next,
+) {
+  console.log(
+    `${new Date().toISOString()} ${request.method} ${request.url}`,
+  );
+  const start = performance.now();
+  const response = await next();
+  const duration = performance.now() - start;
+  console.log(
+    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
+  );
+  return response;
+}
+
+export const unstable_middleware = [loggingMiddleware];
+```
+
+Here's an example middleware to check for logged in users and set the user in
+`context` you can then access from loaders:
+
+```tsx filename=routes/_auth.tsx
+async function authMiddleware ({
+  request,
+  context,
+}) => {
+  const session = await getSession(request);
+  const userId = session.get("userId");
+
+  if (!userId) {
+    throw redirect("/login");
+  }
+
+  const user = await getUserById(userId);
+  context.set(userContext, user);
+};
+
+export const unstable_middleware = [authMiddleware];
+```
+
+<docs-warning>Please make sure you understand [when middleware runs][when-middleware-runs] to make sure your application will behave the way you intend when adding middleware to your routes.</docs-warning>
+
+See also:
+
+- [`unstable_middleware` params][middleware-params]
+- [Middleware][middleware]
+
+## `unstable_clientMiddleware`
+
+This is the client-side equivalent of `unstable_middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because they're not wrapping an HTTP request on the server.
+
+Here's an example middleware to log requests on the client:
+
+```tsx filename=root.tsx
+async function loggingMiddleware(
+  { request, context },
+  next,
+) {
+  console.log(
+    `${new Date().toISOString()} ${request.method} ${request.url}`,
+  );
+  const start = performance.now();
+  await next(); // 👈 No Response returned
+  const duration = performance.now() - start;
+  console.log(
+    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
+  );
+  // ✅ No need to return anything
+}
+
+export const unstable_clientMiddleware = [
+  loggingMiddleware,
+];
+```
+
+See also:
+
+- [Middleware][middleware]
 
 ## `loader`
 
@@ -164,6 +257,10 @@ export async function action({ request }) {
 }
 ```
 
+See also:
+
+- [`action` params][action-params]
+
 ## `clientAction`
 
 Like route actions but only called in the browser.
@@ -218,6 +315,11 @@ export function ErrorBoundary() {
 }
 ```
 
+See also:
+
+- [`useRouteError`][use-route-error]
+- [`isRouteErrorResponse`][is-route-error-response]
+
 ## `HydrateFallback`
 
 On initial page load, the route component renders only after the client loader is finished. If exported, a `HydrateFallback` can render immediately in place of the route component.
@@ -239,7 +341,7 @@ export default function Component({ loaderData }) {
 
 ## `headers`
 
-Route headers define HTTP headers to be sent with the response when server rendering.
+The route `headers` function defines the HTTP headers to be sent with the response when server rendering.
 
 ```tsx
 export function headers() {
@@ -250,6 +352,10 @@ export function headers() {
 }
 ```
 
+See also:
+
+- [`Headers`][headers]
+
 ## `handle`
 
 Route handle allows apps to add anything to a route match in `useMatches` to create abstractions (like breadcrumbs, etc.).
@@ -259,6 +365,10 @@ export const handle = {
   its: "all yours",
 };
 ```
+
+See also:
+
+- [`useMatches`][use-matches]
 
 ## `links`
 
@@ -305,9 +415,33 @@ export default function Root() {
 
 ## `meta`
 
-Route meta defines meta tags to be rendered in the `<head>` of the document.
+Route meta defines [meta tags][meta-element] to be rendered in the `<Meta />` component, usually placed in the `<head>`.
+
+<docs-warning>
+
+Since React 19, [using the built-in `<meta>` element](https://react.dev/reference/react-dom/components/meta) is recommended over the use of the route module's `meta` export.
+
+Here is an example of how to use it and the `<title>` element:
 
 ```tsx
+export default function MyRoute() {
+  return (
+    <div>
+      <title>Very cool app</title>
+      <meta property="og:title" content="Very cool app" />
+      <meta
+        name="description"
+        content="This app is the best"
+      />
+      {/* The rest of your route content... */}
+    </div>
+  );
+}
+```
+
+</docs-warning>
+
+```tsx filename=app/product.tsx
 export function meta() {
   return [
     { title: "Very cool app" },
@@ -323,9 +457,7 @@ export function meta() {
 }
 ```
 
-All routes' meta will be aggregated and rendered through the `<Meta />` component, usually rendered in your app root:
-
-```tsx
+```tsx filename=app/root.tsx
 import { Meta } from "react-router";
 
 export default function Root() {
@@ -341,40 +473,47 @@ export default function Root() {
 }
 ```
 
+The meta of the last matching route is used, allowing you to override parent routes' meta. It's important to note that the entire meta descriptor array is replaced, not merged. This gives you the flexibility to build your own meta composition logic across pages at different levels.
+
 **See also**
 
 - [`meta` params][meta-params]
+- [`meta` function return types][meta-function]
 
 ## `shouldRevalidate`
 
-By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
+In framework mode, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode](../data/route-object#shouldrevalidate)). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
+
+Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
 
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
 export function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs
+  arg: ShouldRevalidateFunctionArgs,
 ) {
   return true;
 }
 ```
 
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
+
 ---
 
 Next: [Rendering Strategies](./rendering)
 
-[fetch]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+[middleware-params]: https://api.reactrouter.com/v7/types/react_router.unstable_MiddlewareFunction.html
+[middleware]: ../../how-to/middleware
+[when-middleware-runs]: ../../how-to/middleware#when-middleware-runs
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
 [client-loader-params]: https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunctionArgs
 [action-params]: https://api.reactrouter.com/v7/interfaces/react_router.ActionFunctionArgs
 [client-action-params]: https://api.reactrouter.com/v7/types/react_router.ClientActionFunctionArgs
-[error-boundaries]: https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
-[use-route-error]: https://api.reactrouter.com/v7/functions/react_router.useRouteError
-[is-route-error-response]: https://api.reactrouter.com/v7/functions/react_router.isRouteErrorResponse
-[cache-control-header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-[headers]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[use-matches]: https://api.reactrouter.com/v7/functions/react_router.useMatches
+[use-route-error]: ../../api/hooks/useRouteError
+[is-route-error-response]: ../../api/utils/isRouteErrorResponse
+[headers]: https://developer.mozilla.org/en-US/docs/Web/API/Response/headers
+[use-matches]: ../../api/hooks/useMatches
 [link-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 [meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
-[use-revalidator]: https://api.reactrouter.com/v7/functions/react_router.useRevalidator.html
+[meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html

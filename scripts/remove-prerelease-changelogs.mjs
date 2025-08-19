@@ -53,7 +53,7 @@ async function removePreReleaseChangelogs() {
 
         let fileContents = file.toString();
         await fs.promises.writeFile(changelogPath, fileContents, "utf-8");
-      })()
+      })(),
     );
   }
   return Promise.all(processes);
@@ -99,7 +99,7 @@ function removePreReleaseSectionFromMarkdown() {
         }
 
         return false;
-      }
+      },
     );
   }
   return transformer;
