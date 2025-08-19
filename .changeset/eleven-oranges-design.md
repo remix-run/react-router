@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Properly escape interpolated :param values in generatePath()
+Properly escape interpolated param values in `generatePath()`
