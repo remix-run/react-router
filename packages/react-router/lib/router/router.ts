@@ -1817,7 +1817,7 @@ export function createRouter(init: RouterInit): Router {
         }
 
         let boundaryId = findNearestBoundary(discoverResult.partialMatches)
-          ?.route.id;
+          .route.id;
         return {
           matches: discoverResult.partialMatches,
           pendingActionResult: [
@@ -2021,9 +2021,8 @@ export function createRouter(init: RouterInit): Router {
           };
         }
 
-        let boundaryId =
-          findNearestBoundary(discoverResult.partialMatches)?.route.id ??
-          getShortCircuitMatches(dataRoutes).route.id;
+        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
+          .route.id;
         return {
           matches: discoverResult.partialMatches,
           loaderData: {},
