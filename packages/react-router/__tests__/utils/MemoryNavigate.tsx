@@ -1,7 +1,7 @@
-import type { FormMethod } from "@remix-run/router";
-import { joinPaths } from "@remix-run/router";
+import type { HTMLFormMethod } from "../../lib/router/utils";
+import { joinPaths } from "../../lib/router/utils";
 import * as React from "react";
-import { UNSAFE_DataRouterContext } from "react-router";
+import { UNSAFE_DataRouterContext } from "../../index";
 
 export default function MemoryNavigate({
   to,
@@ -10,7 +10,7 @@ export default function MemoryNavigate({
   children,
 }: {
   to: string;
-  formMethod?: FormMethod;
+  formMethod?: HTMLFormMethod;
   formData?: FormData;
   children: React.ReactNode;
 }) {
@@ -25,7 +25,7 @@ export default function MemoryNavigate({
         dataRouterContext?.router.navigate(to);
       }
     },
-    [dataRouterContext, to, formMethod, formData]
+    [dataRouterContext, to, formMethod, formData],
   );
 
   // Only prepend the basename to the rendered href, send the non-prefixed `to`

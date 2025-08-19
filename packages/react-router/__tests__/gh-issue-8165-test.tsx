@@ -7,7 +7,7 @@ import {
   useParams,
   useNavigate,
   Navigate,
-} from "react-router-dom";
+} from "../index";
 
 describe("GH Issue #8165", () => {
   it("works", () => {
@@ -63,7 +63,7 @@ describe("GH Issue #8165", () => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/en/tab"]}>
           <App />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

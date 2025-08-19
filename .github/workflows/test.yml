@@ -26,24 +26,27 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 16
-          - 18
+          - 20
+          - 22
 
     runs-on: ubuntu-latest
 
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
+          node-version: ${{ matrix.node }}
           cache: pnpm
           check-latest: true
-          node-version: ${{ matrix.node }}
+
+      # TODO: Track and renable once this has been fixed: https://github.com/google/wireit/issues/1297
+      # - uses: google/wireit@setup-github-actions-caching/v2
 
       - name: Disable GitHub Actions Annotations
         run: |
@@ -57,11 +60,11 @@ jobs:
       - name: 🏗 Build
         run: pnpm build
 
+      - name: 🔍 Typecheck
+        run: pnpm typecheck
+
       - name: 🔬 Lint
         run: pnpm lint
 
       - name: 🧪 Run tests
         run: pnpm test
-
-      - name: Check bundle size
-        run: pnpm size

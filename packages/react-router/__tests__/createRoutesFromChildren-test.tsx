@@ -12,19 +12,21 @@ describe("creating routes from JSX", () => {
             <Route index element={<h1>users index</h1>} />
             <Route path=":id" element={<h1>user profile</h1>} />
           </Route>
-        </Route>
-      )
+        </Route>,
+      ),
     ).toMatchInlineSnapshot(`
       [
         {
           "Component": undefined,
           "ErrorBoundary": undefined,
+          "HydrateFallback": undefined,
           "action": undefined,
           "caseSensitive": undefined,
           "children": [
             {
               "Component": undefined,
               "ErrorBoundary": undefined,
+              "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -33,6 +35,7 @@ describe("creating routes from JSX", () => {
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
+              "hydrateFallbackElement": undefined,
               "id": "0-0",
               "index": undefined,
               "lazy": undefined,
@@ -43,6 +46,7 @@ describe("creating routes from JSX", () => {
             {
               "Component": undefined,
               "ErrorBoundary": undefined,
+              "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -51,6 +55,7 @@ describe("creating routes from JSX", () => {
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
+              "hydrateFallbackElement": undefined,
               "id": "0-1",
               "index": undefined,
               "lazy": undefined,
@@ -61,12 +66,14 @@ describe("creating routes from JSX", () => {
             {
               "Component": undefined,
               "ErrorBoundary": undefined,
+              "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "children": [
                 {
                   "Component": undefined,
                   "ErrorBoundary": undefined,
+                  "HydrateFallback": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -75,6 +82,7 @@ describe("creating routes from JSX", () => {
                   "errorElement": undefined,
                   "handle": undefined,
                   "hasErrorBoundary": false,
+                  "hydrateFallbackElement": undefined,
                   "id": "0-2-0",
                   "index": true,
                   "lazy": undefined,
@@ -85,6 +93,7 @@ describe("creating routes from JSX", () => {
                 {
                   "Component": undefined,
                   "ErrorBoundary": undefined,
+                  "HydrateFallback": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -93,6 +102,7 @@ describe("creating routes from JSX", () => {
                   "errorElement": undefined,
                   "handle": undefined,
                   "hasErrorBoundary": false,
+                  "hydrateFallbackElement": undefined,
                   "id": "0-2-1",
                   "index": undefined,
                   "lazy": undefined,
@@ -105,6 +115,7 @@ describe("creating routes from JSX", () => {
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
+              "hydrateFallbackElement": undefined,
               "id": "0-2",
               "index": undefined,
               "lazy": undefined,
@@ -117,6 +128,7 @@ describe("creating routes from JSX", () => {
           "errorElement": undefined,
           "handle": undefined,
           "hasErrorBoundary": false,
+          "hydrateFallbackElement": undefined,
           "id": "0",
           "index": undefined,
           "lazy": undefined,
@@ -146,19 +158,21 @@ describe("creating routes from JSX", () => {
               element={<h1>users index</h1>}
             />
           </Route>
-        </Route>
-      )
+        </Route>,
+      ),
     ).toMatchInlineSnapshot(`
       [
         {
           "Component": undefined,
           "ErrorBoundary": undefined,
+          "HydrateFallback": undefined,
           "action": undefined,
           "caseSensitive": undefined,
           "children": [
             {
               "Component": undefined,
               "ErrorBoundary": undefined,
+              "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -167,6 +181,7 @@ describe("creating routes from JSX", () => {
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
+              "hydrateFallbackElement": undefined,
               "id": "0-0",
               "index": undefined,
               "lazy": undefined,
@@ -177,12 +192,14 @@ describe("creating routes from JSX", () => {
             {
               "Component": undefined,
               "ErrorBoundary": undefined,
+              "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "children": [
                 {
                   "Component": undefined,
                   "ErrorBoundary": undefined,
+                  "HydrateFallback": undefined,
                   "action": [Function],
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -191,6 +208,7 @@ describe("creating routes from JSX", () => {
                   "errorElement": undefined,
                   "handle": undefined,
                   "hasErrorBoundary": false,
+                  "hydrateFallbackElement": undefined,
                   "id": "0-1-0",
                   "index": true,
                   "lazy": undefined,
@@ -203,6 +221,7 @@ describe("creating routes from JSX", () => {
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
+              "hydrateFallbackElement": undefined,
               "id": "0-1",
               "index": undefined,
               "lazy": undefined,
@@ -217,6 +236,7 @@ describe("creating routes from JSX", () => {
           </h1>,
           "handle": undefined,
           "hasErrorBoundary": true,
+          "hydrateFallbackElement": undefined,
           "id": "0",
           "index": undefined,
           "lazy": undefined,
@@ -236,7 +256,7 @@ describe("creating routes from JSX", () => {
           <Route index>
             <Route path="users" />
           </Route>
-        </Route>
+        </Route>,
       );
     }).toThrow("An index route cannot have child routes.");
   });
@@ -255,8 +275,8 @@ describe("creating routes from JSX", () => {
             </Route>
             <Route path="b" />
           </>
-        </Route>
-      )
+        </Route>,
+      ),
     ).toEqual([
       {
         id: "0",

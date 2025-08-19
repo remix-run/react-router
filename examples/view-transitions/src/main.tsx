@@ -134,7 +134,7 @@ const router = createBrowserRouter([
             value,
             critical: "CRITICAL PATH DATA - NO BOUNDARY " + value,
             lazy: new Promise((r) =>
-              setTimeout(() => r("LAZY DATA - NO BOUNDARY " + value), 1000)
+              setTimeout(() => r("LAZY DATA - NO BOUNDARY " + value), 1000),
             ),
           });
         },
@@ -246,14 +246,8 @@ function NavImage({ src, idx }: { src: string; idx: number }) {
 const rootElement = document.getElementById("root") as HTMLElement;
 ReactDOMClient.createRoot(rootElement).render(
   <React.StrictMode>
-    <RouterProvider
-      router={router}
-      future={{
-        // Wrap all state updates in React.startTransition()
-        v7_startTransition: true,
-      }}
-    />
-  </React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>,
 );
 
 function Nav() {
@@ -312,7 +306,7 @@ function Nav() {
                   method: "post",
                   action: "/action",
                   unstable_viewTransition: true,
-                }
+                },
               )
             }
           >

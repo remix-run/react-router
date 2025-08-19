@@ -26,7 +26,7 @@ describe("useResolvedPath", () => {
               element={<ShowResolvedPath path="/home?user=mj#welcome" />}
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -56,7 +56,7 @@ describe("useResolvedPath", () => {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -79,7 +79,7 @@ describe("useResolvedPath", () => {
                 element={<ShowResolvedPath path="/home#welcome?user=mj" />}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -92,9 +92,6 @@ describe("useResolvedPath", () => {
   });
 
   describe("in a splat route", () => {
-    // Note: This test asserts long-standing buggy behavior fixed by enabling
-    // the future.v7_relativeSplatPath flag.  See:
-    // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
     it("resolves . to the route path", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
@@ -105,13 +102,13 @@ describe("useResolvedPath", () => {
                 <Route path="*" element={<ShowResolvedPath path="." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <pre>
-          {"pathname":"/users","search":"","hash":""}
+          {"pathname":"/users/mj","search":"","hash":""}
         </pre>
       `);
     });
@@ -123,10 +120,10 @@ describe("useResolvedPath", () => {
           <MemoryRouter initialEntries={["/users/mj"]}>
             <Routes>
               <Route path="/users">
-                <Route path="*" element={<ShowResolvedPath path="." />} />
+                <Route path="*" element={<ShowResolvedPath path=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -152,7 +149,7 @@ describe("useResolvedPath", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -178,7 +175,7 @@ describe("useResolvedPath", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -201,7 +198,7 @@ describe("useResolvedPath", () => {
                 <Route path=":name" element={<ShowResolvedPath path="." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -222,7 +219,7 @@ describe("useResolvedPath", () => {
                 <Route path=":name" element={<ShowResolvedPath path=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -234,15 +231,33 @@ describe("useResolvedPath", () => {
     });
   });
 
+  function LogResolvedPathInfo({ desc }) {
+    return (
+      <>
+        {`--- Routes: ${desc} ---`}
+        {`useLocation(): ${useLocation().pathname}`}
+        {`useResolvedPath('.'): ${useResolvedPath(".").pathname}`}
+        {`useResolvedPath('..'): ${useResolvedPath("..").pathname}`}
+        {`useResolvedPath('..', { relative: 'path' }): ${
+          useResolvedPath("..", { relative: "path" }).pathname
+        }`}
+        {`useResolvedPath('baz/qux'): ${useResolvedPath("baz/qux").pathname}`}
+        {`useResolvedPath('./baz/qux'): ${
+          useResolvedPath("./baz/qux").pathname
+        }\n`}
+      </>
+    );
+  }
+
   // See: https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
-  describe("future.v7_relativeSplatPath", () => {
+  it("resolves splat route relative paths the same as other routes", async () => {
     function App({ enableFlag }: { enableFlag: boolean }) {
       let routeConfigs = [
         {
           routes: (
             <Route
               path="/foo/bar"
-              element={<Component desc='<Route path="/foo/bar" />' />}
+              element={<LogResolvedPathInfo desc='<Route path="/foo/bar" />' />}
             />
           ),
         },
@@ -250,7 +265,9 @@ describe("useResolvedPath", () => {
           routes: (
             <Route
               path="/foo/:param"
-              element={<Component desc='<Route path="/foo/:param" />' />}
+              element={
+                <LogResolvedPathInfo desc='<Route path="/foo/:param" />' />
+              }
             />
           ),
         },
@@ -260,7 +277,7 @@ describe("useResolvedPath", () => {
               <Route
                 path=":param"
                 element={
-                  <Component desc='<Route path="/foo"><Route path=":param" />' />
+                  <LogResolvedPathInfo desc='<Route path="/foo"><Route path=":param" />' />
                 }
               />
             </Route>
@@ -270,7 +287,7 @@ describe("useResolvedPath", () => {
           routes: (
             <Route
               path="/foo/*"
-              element={<Component desc='<Route path="/foo/*" />' />}
+              element={<LogResolvedPathInfo desc='<Route path="/foo/*" />' />}
             />
           ),
         },
@@ -280,7 +297,7 @@ describe("useResolvedPath", () => {
               <Route
                 path="*"
                 element={
-                  <Component desc='<Route path="/foo"><Route path="*" />' />
+                  <LogResolvedPathInfo desc='<Route path="/foo"><Route path="*" />' />
                 }
               />
             </Route>
@@ -291,11 +308,7 @@ describe("useResolvedPath", () => {
       return (
         <>
           {routeConfigs.map((config, idx) => (
-            <MemoryRouter
-              initialEntries={["/foo/bar"]}
-              key={idx}
-              future={{ v7_relativeSplatPath: enableFlag }}
-            >
+            <MemoryRouter initialEntries={["/foo/bar"]} key={idx}>
               <Routes>{config.routes}</Routes>
             </MemoryRouter>
           ))}
@@ -303,123 +316,87 @@ describe("useResolvedPath", () => {
       );
     }
 
-    function Component({ desc }) {
-      return (
-        <>
-          {`--- Routes: ${desc} ---`}
-          {`useLocation(): ${useLocation().pathname}`}
-          {`useResolvedPath('.'): ${useResolvedPath(".").pathname}`}
-          {`useResolvedPath('..'): ${useResolvedPath("..").pathname}`}
-          {`useResolvedPath('..', { relative: 'path' }): ${
-            useResolvedPath("..", { relative: "path" }).pathname
-          }`}
-          {`useResolvedPath('baz/qux'): ${useResolvedPath("baz/qux").pathname}`}
-          {`useResolvedPath('./baz/qux'): ${
-            useResolvedPath("./baz/qux").pathname
-          }\n`}
-        </>
-      );
-    }
+    let { container } = render(<App enableFlag={true} />);
+    let html = getHtml(container);
+    html = html ? html.replace(/&lt;/g, "<").replace(/&gt;/g, ">") : html;
+    expect(html).toMatchInlineSnapshot(`
+      "<div>
+        --- Routes: <Route path="/foo/bar" /> ---
+        useLocation(): /foo/bar
+        useResolvedPath('.'): /foo/bar
+        useResolvedPath('..'): /
+        useResolvedPath('..', { relative: 'path' }): /foo
+        useResolvedPath('baz/qux'): /foo/bar/baz/qux
+        useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
-    it("when disabled, resolves splat route relative paths differently than other routes", async () => {
-      let { container } = render(<App enableFlag={false} />);
-      let html = getHtml(container);
-      html = html ? html.replace(/&lt;/g, "<").replace(/&gt;/g, ">") : html;
-      expect(html).toMatchInlineSnapshot(`
-        "<div>
-          --- Routes: <Route path="/foo/bar" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
+        --- Routes: <Route path="/foo/:param" /> ---
+        useLocation(): /foo/bar
+        useResolvedPath('.'): /foo/bar
+        useResolvedPath('..'): /
+        useResolvedPath('..', { relative: 'path' }): /foo
+        useResolvedPath('baz/qux'): /foo/bar/baz/qux
+        useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
-          --- Routes: <Route path="/foo/:param" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
+        --- Routes: <Route path="/foo"><Route path=":param" /> ---
+        useLocation(): /foo/bar
+        useResolvedPath('.'): /foo/bar
+        useResolvedPath('..'): /foo
+        useResolvedPath('..', { relative: 'path' }): /foo
+        useResolvedPath('baz/qux'): /foo/bar/baz/qux
+        useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
-          --- Routes: <Route path="/foo"><Route path=":param" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /foo
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
+        --- Routes: <Route path="/foo/*" /> ---
+        useLocation(): /foo/bar
+        useResolvedPath('.'): /foo/bar
+        useResolvedPath('..'): /
+        useResolvedPath('..', { relative: 'path' }): /foo
+        useResolvedPath('baz/qux'): /foo/bar/baz/qux
+        useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
-          --- Routes: <Route path="/foo/*" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo
-          useResolvedPath('..'): /
-          useResolvedPath('..', { relative: 'path' }): /
-          useResolvedPath('baz/qux'): /foo/baz/qux
-          useResolvedPath('./baz/qux'): /foo/baz/qux
+        --- Routes: <Route path="/foo"><Route path="*" /> ---
+        useLocation(): /foo/bar
+        useResolvedPath('.'): /foo/bar
+        useResolvedPath('..'): /foo
+        useResolvedPath('..', { relative: 'path' }): /foo
+        useResolvedPath('baz/qux'): /foo/bar/baz/qux
+        useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
-          --- Routes: <Route path="/foo"><Route path="*" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo
-          useResolvedPath('..'): /foo
-          useResolvedPath('..', { relative: 'path' }): /
-          useResolvedPath('baz/qux'): /foo/baz/qux
-          useResolvedPath('./baz/qux'): /foo/baz/qux
+      </div>"
+    `);
+  });
 
-        </div>"
-      `);
-    });
+  // gh-issue #11629
+  it("'.' resolves to the current path including any splat paths nested in pathless routes", () => {
+    let { container } = render(
+      <MemoryRouter initialEntries={["/foo/bar"]}>
+        <Routes>
+          <Route path="foo">
+            <Route>
+              <Route
+                path="*"
+                element={
+                  <LogResolvedPathInfo desc='<Route path="/foo"><Route><Route path="*" /></Route></Route>' />
+                }
+              />
+            </Route>
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+    let html = getHtml(container);
+    html = html ? html.replace(/&lt;/g, "<").replace(/&gt;/g, ">") : html;
+    expect(html).toMatchInlineSnapshot(`
+      "<div>
+        --- Routes: <Route path="/foo"><Route><Route path="*" /></Route></Route> ---
+        useLocation(): /foo/bar
+        useResolvedPath('.'): /foo/bar
+        useResolvedPath('..'): /foo
+        useResolvedPath('..', { relative: 'path' }): /foo
+        useResolvedPath('baz/qux'): /foo/bar/baz/qux
+        useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
-    it("when enabled, resolves splat route relative paths differently than other routes", async () => {
-      let { container } = render(<App enableFlag={true} />);
-      let html = getHtml(container);
-      html = html ? html.replace(/&lt;/g, "<").replace(/&gt;/g, ">") : html;
-      expect(html).toMatchInlineSnapshot(`
-        "<div>
-          --- Routes: <Route path="/foo/bar" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
-
-          --- Routes: <Route path="/foo/:param" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
-
-          --- Routes: <Route path="/foo"><Route path=":param" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /foo
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
-
-          --- Routes: <Route path="/foo/*" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
-
-          --- Routes: <Route path="/foo"><Route path="*" /> ---
-          useLocation(): /foo/bar
-          useResolvedPath('.'): /foo/bar
-          useResolvedPath('..'): /foo
-          useResolvedPath('..', { relative: 'path' }): /foo
-          useResolvedPath('baz/qux'): /foo/bar/baz/qux
-          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
-
-        </div>"
-      `);
-    });
+      </div>"
+    `);
   });
 });
 

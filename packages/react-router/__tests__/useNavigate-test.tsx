@@ -14,7 +14,7 @@ import {
 } from "react-router";
 
 describe("useNavigate", () => {
-  it("navigates to the new location", () => {
+  it("navigates to the new location", async () => {
     function Home() {
       let navigate = useNavigate();
 
@@ -38,13 +38,13 @@ describe("useNavigate", () => {
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     // @ts-expect-error
     let button = renderer.root.findByType("button");
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -54,7 +54,7 @@ describe("useNavigate", () => {
     `);
   });
 
-  it("navigates to the new location when no pathname is provided", () => {
+  it("navigates to the new location when no pathname is provided", async () => {
     function Home() {
       let location = useLocation();
       let navigate = useNavigate();
@@ -74,7 +74,7 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -94,7 +94,7 @@ describe("useNavigate", () => {
 
     // @ts-expect-error
     let button = renderer.root.findByType("button");
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -111,7 +111,7 @@ describe("useNavigate", () => {
     `);
   });
 
-  it("navigates to the new location when no pathname is provided (with a basename)", () => {
+  it("navigates to the new location when no pathname is provided (with a basename)", async () => {
     function Home() {
       let location = useLocation();
       let navigate = useNavigate();
@@ -131,7 +131,7 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -151,7 +151,7 @@ describe("useNavigate", () => {
 
     // @ts-expect-error
     let button = renderer.root.findByType("button");
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -168,7 +168,7 @@ describe("useNavigate", () => {
     `);
   });
 
-  it("navigates to the new location with empty query string when no query string is provided", () => {
+  it("navigates to the new location with empty query string when no query string is provided", async () => {
     function Home() {
       let location = useLocation();
       let navigate = useNavigate();
@@ -188,7 +188,7 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -208,7 +208,7 @@ describe("useNavigate", () => {
 
     // @ts-expect-error
     let button = renderer.root.findByType("button");
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -264,49 +264,48 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[0].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[1].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[2].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search#hash"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search#hash"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[3].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
   });
 
-  it("allows useNavigate usage in a mixed RouterProvider/<Routes> scenario", () => {
+  it("allows useNavigate usage in a mixed RouterProvider/<Routes> scenario", async () => {
     const router = createMemoryRouter([
       {
         path: "/*",
         Component() {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           let navigate = useNavigate();
           let location = useLocation();
           return (
@@ -379,7 +378,7 @@ describe("useNavigate", () => {
     let button = renderer.root.findByProps({
       children: "Navigate from RouterProvider",
     });
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     expect(router.state.location.pathname).toBe("/page");
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -403,7 +402,7 @@ describe("useNavigate", () => {
     button = renderer.root.findByProps({
       children: "Navigate from RouterProvider",
     });
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     expect(router.state.location.pathname).toBe("/");
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -427,7 +426,7 @@ describe("useNavigate", () => {
     button = renderer.root.findByProps({
       children: "Navigate /page from Routes",
     });
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     expect(router.state.location.pathname).toBe("/page");
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -451,7 +450,7 @@ describe("useNavigate", () => {
     button = renderer.root.findByProps({
       children: "Navigate /home from Routes",
     });
-    TestRenderer.act(() => button.props.onClick());
+    await TestRenderer.act(() => button.props.onClick());
 
     expect(router.state.location.pathname).toBe("/");
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -494,7 +493,7 @@ describe("useNavigate", () => {
                 <Route index element={<Home />} />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -511,7 +510,7 @@ describe("useNavigate", () => {
           </h1>
         `);
         expect(warnSpy).toHaveBeenCalledWith(
-          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered.",
         );
       });
 
@@ -524,13 +523,15 @@ describe("useNavigate", () => {
                 <Route index element={<Home />} />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         function Home() {
           let navigate = useNavigate();
-          React.useEffect(() => navigate("/about"), [navigate]);
+          React.useEffect(() => {
+            navigate("/about");
+          }, [navigate]);
           return <h1>Home</h1>;
         }
 
@@ -552,7 +553,7 @@ describe("useNavigate", () => {
                 <Route path="home" element={<Parent />} />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -560,13 +561,15 @@ describe("useNavigate", () => {
           let navigate = useNavigate();
           let onChildRendered = React.useCallback(
             () => navigate("/about"),
-            [navigate]
+            [navigate],
           );
           return <Child onChildRendered={onChildRendered} />;
         }
 
         function Child({ onChildRendered }) {
-          React.useEffect(() => onChildRendered());
+          React.useEffect(() => {
+            onChildRendered();
+          });
           return null;
         }
 
@@ -607,7 +610,7 @@ describe("useNavigate", () => {
           </h1>
         `);
         expect(warnSpy).toHaveBeenCalledWith(
-          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered.",
         );
       });
 
@@ -617,7 +620,9 @@ describe("useNavigate", () => {
             index: true,
             Component() {
               let navigate = useNavigate();
-              React.useEffect(() => navigate("/about"), [navigate]);
+              React.useEffect(() => {
+                navigate("/about");
+              }, [navigate]);
               return <h1>Home</h1>;
             },
           },
@@ -648,7 +653,7 @@ describe("useNavigate", () => {
               let navigate = useNavigate();
               let onChildRendered = React.useCallback(
                 () => navigate("/about"),
-                [navigate]
+                [navigate],
               );
               return <Child onChildRendered={onChildRendered} />;
             },
@@ -664,7 +669,9 @@ describe("useNavigate", () => {
         });
 
         function Child({ onChildRendered }) {
-          React.useEffect(() => onChildRendered());
+          React.useEffect(() => {
+            onChildRendered();
+          });
           return null;
         }
 
@@ -679,7 +686,7 @@ describe("useNavigate", () => {
   });
 
   describe("with state", () => {
-    it("adds the state to location.state", () => {
+    it("adds the state to location.state", async () => {
       function Home() {
         let navigate = useNavigate();
 
@@ -707,13 +714,13 @@ describe("useNavigate", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<ShowLocationState />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       // @ts-expect-error
       let button = renderer.root.findByType("button");
-      TestRenderer.act(() => button.props.onClick());
+      await TestRenderer.act(() => button.props.onClick());
 
       // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -727,7 +734,7 @@ describe("useNavigate", () => {
 
   describe("when relative navigation is handled via React Context", () => {
     describe("with an absolute href", () => {
-      it("navigates to the correct URL", () => {
+      it("navigates to the correct URL", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -739,13 +746,13 @@ describe("useNavigate", () => {
                 />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -757,7 +764,7 @@ describe("useNavigate", () => {
     });
 
     describe("with a relative href (relative=route)", () => {
-      it("navigates to the correct URL", () => {
+      it("navigates to the correct URL", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -769,13 +776,13 @@ describe("useNavigate", () => {
                 />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -785,7 +792,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from an index routes", () => {
+      it("handles upward navigation from an index routes", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -796,13 +803,13 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -812,7 +819,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside a pathless layout route", () => {
+      it("handles upward navigation from inside a pathless layout route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -826,13 +833,13 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -842,7 +849,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + index route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + index route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -862,13 +869,13 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -878,7 +885,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + path route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + path route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -898,13 +905,13 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -914,7 +921,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles parent navigation from inside multiple pathless layout routes", () => {
+      it("handles parent navigation from inside multiple pathless layout routes", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -947,13 +954,13 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -963,7 +970,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles relative navigation from nested index route", () => {
+      it("handles relative navigation from nested index route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -977,13 +984,13 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -995,7 +1002,7 @@ describe("useNavigate", () => {
     });
 
     describe("with a relative href (relative=path)", () => {
-      it("navigates to the correct URL", () => {
+      it("navigates to the correct URL", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1007,13 +1014,13 @@ describe("useNavigate", () => {
                   element={<UseNavigateButton to=".." relative="path" />}
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1023,7 +1030,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from an index routes", () => {
+      it("handles upward navigation from an index routes", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1037,13 +1044,13 @@ describe("useNavigate", () => {
                   />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1053,7 +1060,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside a pathless layout route", () => {
+      it("handles upward navigation from inside a pathless layout route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1067,13 +1074,13 @@ describe("useNavigate", () => {
                   />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1083,7 +1090,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + index route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + index route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1105,13 +1112,13 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1121,7 +1128,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + path route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + path route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1143,13 +1150,13 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1159,7 +1166,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles relative navigation from nested index route", () => {
+      it("handles relative navigation from nested index route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1176,13 +1183,13 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1192,7 +1199,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("preserves search params and hash", () => {
+      it("preserves search params and hash", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -1206,7 +1213,7 @@ describe("useNavigate", () => {
                   }
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1225,7 +1232,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1261,7 +1268,7 @@ describe("useNavigate", () => {
                 <Route path="about" element={<h1>About</h1>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -1368,15 +1375,15 @@ describe("useNavigate", () => {
 
   describe("when relative navigation is handled via @remix-run/router", () => {
     describe("with an absolute href", () => {
-      it("navigates to the correct URL", () => {
+      it("navigates to the correct URL", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
               <Route path="home" element={<UseNavigateButton to="/about" />} />
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1386,7 +1393,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1398,7 +1405,7 @@ describe("useNavigate", () => {
     });
 
     describe("with a relative href (relative=route)", () => {
-      it("navigates to the correct URL", () => {
+      it("navigates to the correct URL", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1407,9 +1414,9 @@ describe("useNavigate", () => {
                 element={<UseNavigateButton to="../about" />}
               />
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1419,7 +1426,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1429,7 +1436,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from an index routes", () => {
+      it("handles upward navigation from an index routes", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1437,9 +1444,9 @@ describe("useNavigate", () => {
                 <Route index element={<UseNavigateButton to="../about" />} />
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1449,7 +1456,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1459,7 +1466,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside a pathless layout route", () => {
+      it("handles upward navigation from inside a pathless layout route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1470,9 +1477,9 @@ describe("useNavigate", () => {
                 />
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1482,7 +1489,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1492,7 +1499,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + index route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + index route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1509,9 +1516,9 @@ describe("useNavigate", () => {
                 </Route>
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1521,7 +1528,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1531,7 +1538,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + path route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + path route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1548,9 +1555,9 @@ describe("useNavigate", () => {
                 </Route>
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home/page"] }
+          { initialEntries: ["/home/page"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1560,7 +1567,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1570,7 +1577,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles parent navigation from inside multiple pathless layout routes", () => {
+      it("handles parent navigation from inside multiple pathless layout routes", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1600,9 +1607,9 @@ describe("useNavigate", () => {
                 </Route>
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home/page"] }
+          { initialEntries: ["/home/page"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1612,7 +1619,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1622,7 +1629,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles relative navigation from nested index route", () => {
+      it("handles relative navigation from nested index route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1633,9 +1640,9 @@ describe("useNavigate", () => {
                   <Route path="dest" element={<h1>Destination</h1>} />
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/layout/thing"] }
+          { initialEntries: ["/layout/thing"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1645,7 +1652,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1657,7 +1664,7 @@ describe("useNavigate", () => {
     });
 
     describe("with a relative href (relative=path)", () => {
-      it("navigates to the correct URL", () => {
+      it("navigates to the correct URL", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1666,9 +1673,9 @@ describe("useNavigate", () => {
                 path="contacts/:id"
                 element={<UseNavigateButton to=".." relative="path" />}
               />
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1678,7 +1685,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1688,7 +1695,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from an index routes", () => {
+      it("handles upward navigation from an index routes", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1699,9 +1706,9 @@ describe("useNavigate", () => {
                   element={<UseNavigateButton to=".." relative="path" />}
                 />
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1711,7 +1718,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1721,7 +1728,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside a pathless layout route", () => {
+      it("handles upward navigation from inside a pathless layout route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1732,9 +1739,9 @@ describe("useNavigate", () => {
                   element={<UseNavigateButton to=".." relative="path" />}
                 />
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1744,7 +1751,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1754,7 +1761,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + index route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + index route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1771,9 +1778,9 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1783,7 +1790,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1793,7 +1800,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles upward navigation from inside multiple pathless layout routes + path route", () => {
+      it("handles upward navigation from inside multiple pathless layout routes + path route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1810,9 +1817,9 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1822,7 +1829,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1832,7 +1839,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("handles relative navigation from nested index route", () => {
+      it("handles relative navigation from nested index route", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1846,9 +1853,9 @@ describe("useNavigate", () => {
                   <Route path="dest" element={<h1>Destination</h1>} />
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/layout/thing"] }
+          { initialEntries: ["/layout/thing"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1858,7 +1865,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1868,7 +1875,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("preserves search params and hash", () => {
+      it("preserves search params and hash", async () => {
         let router = createMemoryRouter(
           createRoutesFromElements(
             <>
@@ -1879,9 +1886,9 @@ describe("useNavigate", () => {
                   <UseNavigateButton to="..?foo=bar#hash" relative="path" />
                 }
               />
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         function Contacts() {
@@ -1904,7 +1911,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -1944,7 +1951,7 @@ describe("useNavigate", () => {
             ],
           },
         ],
-        { initialEntries: ["/home"] }
+        { initialEntries: ["/home"] },
       );
 
       let renderer: TestRenderer.ReactTestRenderer;
@@ -2055,7 +2062,7 @@ describe("useNavigate", () => {
 
   describe("with a basename", () => {
     describe("in a MemoryRouter", () => {
-      it("in a root route", () => {
+      it("in a root route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -2064,7 +2071,7 @@ describe("useNavigate", () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/path" element={<h1>Path</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -2082,7 +2089,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -2092,7 +2099,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("in a descendant route", () => {
+      it("in a descendant route", async () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
@@ -2108,7 +2115,7 @@ describe("useNavigate", () => {
                 />
                 <Route path="/path" element={<h1>Path</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -2126,7 +2133,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -2138,7 +2145,7 @@ describe("useNavigate", () => {
     });
 
     describe("in a RouterProvider", () => {
-      it("in a root route", () => {
+      it("in a root route", async () => {
         let router = createMemoryRouter(
           [
             {
@@ -2147,7 +2154,7 @@ describe("useNavigate", () => {
             },
             { path: "/path", Component: () => <h1>Path</h1> },
           ],
-          { basename: "/base", initialEntries: ["/base"] }
+          { basename: "/base", initialEntries: ["/base"] },
         );
 
         function Home() {
@@ -2169,7 +2176,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -2179,7 +2186,7 @@ describe("useNavigate", () => {
         `);
       });
 
-      it("in a descendant route", () => {
+      it("in a descendant route", async () => {
         let router = createMemoryRouter(
           [
             {
@@ -2194,7 +2201,7 @@ describe("useNavigate", () => {
             },
             { path: "/path", Component: () => <h1>Path</h1> },
           ],
-          { basename: "/base", initialEntries: ["/base"] }
+          { basename: "/base", initialEntries: ["/base"] },
         );
 
         function Home() {
@@ -2216,7 +2223,7 @@ describe("useNavigate", () => {
 
         // @ts-expect-error
         let button = renderer.root.findByType("button");
-        TestRenderer.act(() => button.props.onClick());
+        await TestRenderer.act(() => button.props.onClick());
 
         // @ts-expect-error
         expect(renderer.toJSON()).toMatchInlineSnapshot(`

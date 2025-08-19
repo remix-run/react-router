@@ -1,7 +1,6 @@
 .DS_Store
 npm-debug.log
 
-/docs/api/
 /website/build/
 node_modules/
 
@@ -9,6 +8,9 @@ node_modules/
 /examples/*/pnpm-lock.yaml
 /examples/*/dist
 /tutorial/dist
+/playground-local/
+/integration/playwright-report
+/integration/test-results
 
 # v5 build files
 /packages/*/cjs/
@@ -20,9 +22,18 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
-# compat module copies
-/packages/react-router-dom-v5-compat/react-router-dom
+# v7 build files
+.react-router
 
+.wireit
 .eslintcache
+.parcel-cache
+.tmp
+tsup.config.bundled_*.mjs
+build.utils.d.ts
+worker-configuration.d.ts
 /.env
 /NOTES.md
+
+# v7 reference docs
+/public

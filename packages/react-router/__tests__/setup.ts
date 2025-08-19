@@ -1,19 +1,51 @@
-import { fetch, Request, Response, Headers } from "@remix-run/web-fetch";
-
 // https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
+  const { TextDecoder, TextEncoder } = require("node:util");
+  globalThis.TextEncoder = TextEncoder;
+  globalThis.TextDecoder = TextDecoder;
+}
+
+if (!globalThis.ReadableStream || !globalThis.WritableStream) {
+  const { ReadableStream, WritableStream } = require("node:stream/web");
+  globalThis.ReadableStream = ReadableStream;
+  globalThis.WritableStream = WritableStream;
+}
+
 if (!globalThis.fetch) {
-  // Built-in lib.dom.d.ts expects `fetch(Request | string, ...)` but the web
-  // fetch API allows a URL so @remix-run/web-fetch defines
-  // `fetch(string | URL | Request, ...)`
-  // @ts-expect-error
+  const { fetch, FormData, Request, Response, Headers } = require("undici");
+
   globalThis.fetch = fetch;
-  // Same as above, lib.dom.d.ts doesn't allow a URL to the Request constructor
-  // @ts-expect-error
   globalThis.Request = Request;
-  // web-std/fetch Response does not currently implement Response.error()
-  // @ts-expect-error
   globalThis.Response = Response;
   globalThis.Headers = Headers;
+
+  globalThis.FormData = globalThis.FormData || FormData;
 }
+
+if (!globalThis.TextEncoderStream) {
+  const { TextEncoderStream } = require("node:stream/web");
+  globalThis.TextEncoderStream = TextEncoderStream;
+}
+
+if (!globalThis.TextDecoderStream) {
+  const { TextDecoderStream } = require("node:stream/web");
+  globalThis.TextDecoderStream = TextDecoderStream;
+}
+
+if (!globalThis.TransformStream) {
+  const { TransformStream } = require("node:stream/web");
+  globalThis.TransformStream = TransformStream;
+}
+
+const consoleError = console.error;
+console.error = (msg, ...args) => {
+  if (
+    typeof msg === "string" &&
+    msg.includes("react-test-renderer is deprecated")
+  ) {
+    return;
+  }
+  consoleError.call(console, msg, ...args);
+};

@@ -12,7 +12,6 @@ export default defineConfig({
     rollupReplace({
       preventAssignment: true,
       values: {
-        __DEV__: JSON.stringify(true),
         "process.env.NODE_ENV": JSON.stringify("development"),
       },
     }),
@@ -21,17 +20,13 @@ export default defineConfig({
   resolve: process.env.USE_SOURCE
     ? {
         alias: {
-          "@remix-run/router": path.resolve(
-            __dirname,
-            "../../packages/router/index.ts"
-          ),
           "react-router": path.resolve(
             __dirname,
-            "../../packages/react-router/index.ts"
+            "../../packages/react-router/index.ts",
           ),
           "react-router-dom": path.resolve(
             __dirname,
-            "../../packages/react-router-dom/index.tsx"
+            "../../packages/react-router-dom/index.tsx",
           ),
         },
       }

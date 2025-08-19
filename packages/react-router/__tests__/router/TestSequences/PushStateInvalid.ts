@@ -1,0 +1,18 @@
+import type { History } from "../../../lib/router/history";
+
+export default function PushState(history: History, window: Window) {
+  let err = new DOMException("ERROR", "DataCloneError");
+  jest.spyOn(window.history, "pushState").mockImplementation(() => {
+    throw err;
+  });
+
+  expect(history.location).toMatchObject({
+    pathname: "/",
+  });
+
+  expect(() =>
+    history.push("/home?the=query#the-hash", { invalid: () => {} }),
+  ).toThrow(err);
+
+  expect(history.location.pathname).toBe("/");
+}

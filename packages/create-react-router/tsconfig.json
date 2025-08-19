@@ -1,0 +1,18 @@
+{
+  "include": ["**/*.ts", "./package.json"],
+  "exclude": ["dist", "**/node_modules/**", "__tests__"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "target": "ES2022",
+    "module": "ES2022",
+    "skipLibCheck": true,
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}

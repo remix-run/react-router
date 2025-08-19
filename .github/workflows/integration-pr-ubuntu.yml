@@ -1,0 +1,35 @@
+name: PR (Base)
+
+# All PRs touching code will run tests on ubuntu/node/chromium
+
+on:
+  pull_request:
+    paths-ignore:
+      - ".changeset/**"
+      - "decisions/**"
+      - "docs/**"
+      - "examples/**"
+      - "jest/**"
+      - "scripts/**"
+      - "tutorial/**"
+      - "contributors.yml"
+      - "**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: "⚙️ Build"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-build.yml
+
+  integration-chromium:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "[22]"
+      browser: '["chromium"]'

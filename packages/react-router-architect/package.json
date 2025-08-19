@@ -1,0 +1,87 @@
+{
+  "name": "@react-router/architect",
+  "version": "7.8.1",
+  "description": "Architect server request handler for React Router",
+  "bugs": {
+    "url": "https://github.com/remix-run/react-router/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/react-router",
+    "directory": "packages/react-router-architect"
+  },
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "node": {
+        "types": "./dist/index.d.ts",
+        "module-sync": "./dist/index.mjs",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "wireit",
+    "typecheck": "tsc"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "sessions/**",
+        "*.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
+  },
+  "dependencies": {
+    "@architect/functions": "^7.0.0",
+    "@types/aws-lambda": "^8.10.82"
+  },
+  "devDependencies": {
+    "@react-router/node": "workspace:*",
+    "@types/lambda-tester": "^3.6.1",
+    "@types/node": "^20.0.0",
+    "lambda-tester": "^4.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "workspace:*",
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
+  },
+  "peerDependencies": {
+    "@react-router/node": "workspace:^",
+    "react-router": "workspace:^",
+    "typescript": "^5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
+}
