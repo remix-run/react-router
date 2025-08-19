@@ -136,7 +136,7 @@ describe("generatePath", () => {
   describe("with a param that contains a /", () => {
     it("properly encodes the slash", () => {
       expect(generatePath("/courses/:id/grades", { id: "a/b" })).toBe(
-        "/courses/a%2Fb/grades"
+        "/courses/a%2Fb/grades",
       );
     });
   });
