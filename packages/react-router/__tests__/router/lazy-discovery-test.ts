@@ -2115,15 +2115,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         async patchRoutesOnNavigation({ patch }) {
           await tick();
           throw new Error("broke!");
-          patch("b", [
-            {
-              id: "b",
-              path: "b",
-              loader() {
-                return "B";
-              },
-            },
-          ]);
         },
       });
 
@@ -2151,15 +2142,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         async patchRoutesOnNavigation({ patch }) {
           await tick();
           throw new Error("broke!");
-          patch("b", [
-            {
-              id: "b",
-              path: "b",
-              action() {
-                return "B";
-              },
-            },
-          ]);
         },
       });
 

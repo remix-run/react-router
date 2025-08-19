@@ -1802,8 +1802,9 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
-          .route.id;
+        let boundaryId =
+          findNearestBoundary(discoverResult.partialMatches)?.route.id ??
+          getShortCircuitMatches(dataRoutes).route.id;
         return {
           matches: discoverResult.partialMatches,
           pendingActionResult: [
@@ -1996,8 +1997,9 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
-          .route.id;
+        let boundaryId =
+          findNearestBoundary(discoverResult.partialMatches)?.route.id ??
+          getShortCircuitMatches(dataRoutes).route.id;
         return {
           matches: discoverResult.partialMatches,
           loaderData: {},
