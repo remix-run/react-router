@@ -112,6 +112,8 @@ export async function routeRSCServerRequest({
     throw new Error("Missing body in server response");
   }
 
+  const detectRedirectResponse = serverResponse.clone();
+
   let serverResponseB: Response | null = null;
   if (hydrate) {
     serverResponseB = serverResponse.clone();
@@ -126,7 +128,12 @@ export async function routeRSCServerRequest({
   };
 
   try {
-    const payload = await getPayload();
+    if (!detectRedirectResponse.body) {
+      throw new Error("Failed to clone server response");
+    }
+    const payload = (await createFromReadableStream(
+      detectRedirectResponse.body,
+    )) as RSCPayload;
     if (
       serverResponse.status === SINGLE_FETCH_REDIRECT_STATUS &&
       payload.type === "redirect"
