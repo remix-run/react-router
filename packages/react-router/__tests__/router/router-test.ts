@@ -237,7 +237,7 @@ describe("a router", () => {
       });
     });
 
-    it("supports a basename prop for route matching and make sure it has a leading /", async () => {
+    it("supports a basename prop for route matching without a leading slash", async () => {
       let history = createMemoryHistory({
         initialEntries: ["/base/name/path"],
       });
