@@ -2120,7 +2120,21 @@ describe("Lazy Route Discovery (Fog of War)", () => {
 
       await router.navigate("/b");
       expect(router.state).toMatchObject({
-        matches: [],
+        // A bit odd but this is a result of our best attempt to display some form
+        // of error UI to the user - follows the same logic we use on 404s
+        matches: [
+          {
+            params: {},
+            pathname: "",
+            pathnameBase: "",
+            route: {
+              children: undefined,
+              hasErrorBoundary: false,
+              id: "a",
+              path: "a",
+            },
+          },
+        ],
         location: { pathname: "/b" },
         actionData: null,
         loaderData: {},
@@ -2150,7 +2164,21 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         formData: createFormData({}),
       });
       expect(router.state).toMatchObject({
-        matches: [],
+        // A bit odd but this is a result of our best attempt to display some form
+        // of error UI to the user - follows the same logic we use on 404s
+        matches: [
+          {
+            params: {},
+            pathname: "",
+            pathnameBase: "",
+            route: {
+              children: undefined,
+              hasErrorBoundary: false,
+              id: "a",
+              path: "a",
+            },
+          },
+        ],
         location: { pathname: "/b" },
         actionData: null,
         loaderData: {},
