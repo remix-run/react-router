@@ -866,7 +866,10 @@ export function createRouter(init: RouterInit): Router {
     manifest,
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
-  let basename = init.basename?.replace(/^\/*/, "/") || "/"; // ensure leading slash
+  let basename = init.basename || "/";
+  if (!basename.startsWith("/")) {
+    basename = `/${basename}`;
+  }
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
 
   // Config driven behavior flags
