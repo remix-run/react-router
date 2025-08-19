@@ -2103,6 +2103,91 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
 
+    it("handles errors thrown from patchRoutesOnNavigation() when there are no partial matches (GET navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "a",
+            path: "a",
+          },
+        ],
+        async patchRoutesOnNavigation({ patch }) {
+          await tick();
+          throw new Error("broke!");
+        },
+      });
+
+      await router.navigate("/b");
+      expect(router.state).toMatchObject({
+        // A bit odd but this is a result of our best attempt to display some form
+        // of error UI to the user - follows the same logic we use on 404s
+        matches: [
+          {
+            params: {},
+            pathname: "",
+            pathnameBase: "",
+            route: {
+              children: undefined,
+              hasErrorBoundary: false,
+              id: "a",
+              path: "a",
+            },
+          },
+        ],
+        location: { pathname: "/b" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          a: new Error("broke!"),
+        },
+      });
+    });
+
+    it("handles errors thrown from patchRoutesOnNavigation() when there are no partial matches (POST navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "a",
+            path: "a",
+          },
+        ],
+        async patchRoutesOnNavigation({ patch }) {
+          await tick();
+          throw new Error("broke!");
+        },
+      });
+
+      await router.navigate("/b", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        // A bit odd but this is a result of our best attempt to display some form
+        // of error UI to the user - follows the same logic we use on 404s
+        matches: [
+          {
+            params: {},
+            pathname: "",
+            pathnameBase: "",
+            route: {
+              children: undefined,
+              hasErrorBoundary: false,
+              id: "a",
+              path: "a",
+            },
+          },
+        ],
+        location: { pathname: "/b" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          a: new Error("broke!"),
+        },
+      });
+    });
+
     it("bubbles errors thrown from patchRoutesOnNavigation() during hydration", async () => {
       router = createRouter({
         history: createMemoryHistory({
