@@ -867,6 +867,9 @@ export function createRouter(init: RouterInit): Router {
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
+  if (!basename.startsWith("/")) {
+    basename = `/${basename}`;
+  }
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
 
   // Config driven behavior flags
@@ -1802,6 +1805,20 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
+        if (discoverResult.partialMatches.length === 0) {
+          let { matches, route } = getShortCircuitMatches(dataRoutes);
+          return {
+            matches,
+            pendingActionResult: [
+              route.id,
+              {
+                type: ResultType.error,
+                error: discoverResult.error,
+              },
+            ],
+          };
+        }
+
         let boundaryId = findNearestBoundary(discoverResult.partialMatches)
           .route.id;
         return {
@@ -1996,6 +2013,17 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
+        if (discoverResult.partialMatches.length === 0) {
+          let { matches, route } = getShortCircuitMatches(dataRoutes);
+          return {
+            matches,
+            loaderData: {},
+            errors: {
+              [route.id]: discoverResult.error,
+            },
+          };
+        }
+
         let boundaryId = findNearestBoundary(discoverResult.partialMatches)
           .route.id;
         return {
