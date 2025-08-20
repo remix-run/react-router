@@ -17,6 +17,7 @@ import { createVirtualRouteConfig } from "./virtual-route-config";
 import {
   transformVirtualRouteModules,
   parseRouteExports,
+  isVirtualClientRouteModuleId,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
 import validatePluginOrder from "../plugins/validate-plugin-order";
@@ -171,7 +172,14 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     {
       name: "react-router/rsc/virtual-route-modules",
       transform(code, id) {
-        return transformVirtualRouteModules({ code, id, viteCommand });
+        if (!routeIdByFile) return;
+        return transformVirtualRouteModules({
+          code,
+          id,
+          viteCommand,
+          routeIdByFile,
+          viteEnvironment: this.environment,
+        });
       },
     },
     {
@@ -240,8 +248,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
 
-        const routeId = routeIdByFile?.get(filepath);
-        if (routeId !== undefined) {
+        if (isVirtualClientRouteModuleId(id)) {
+          const routeId = routeIdByFile?.get(filepath);
           return { code: addRefreshWrapper({ routeId, code, id }) };
         }
 
