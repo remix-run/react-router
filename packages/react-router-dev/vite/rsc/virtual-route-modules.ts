@@ -121,7 +121,7 @@ async function createVirtualRouteModuleCode({
         code += `export { ${staticExport} } from "${clientModuleId}";\n`;
       } else if (
         isServerFirstComponentExport(staticExport) &&
-        // Layout wraps all other exports so doesn't need to have CSS injected
+        // Layout wraps all other component exports so doesn't need CSS injected
         staticExport !== "Layout"
       ) {
         code += `import { ${staticExport} as ${staticExport}WithoutCss } from "${serverModuleId}";\n`;
