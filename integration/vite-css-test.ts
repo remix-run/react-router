@@ -34,6 +34,14 @@ const fixtures = [
   templateDisplayName: string;
 }>;
 
+type RouteBasePath = "css" | "rsc-server-first-css";
+const getRouteBasePaths = (templateName: TemplateName) => {
+  if (templateName.includes("rsc")) {
+    return ["css", "rsc-server-first-css"] as const satisfies RouteBasePath[];
+  }
+  return ["css"] as const satisfies RouteBasePath[];
+};
+
 const files = ({ templateName }: { templateName: TemplateName }) => ({
   "postcss.config.js": js`
     export default ({
@@ -75,6 +83,12 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
             );
           });
         `,
+        "app/entry.client.css": css`
+          .entry-client {
+            background: pink;
+            padding: ${PADDING};
+          }
+        `,
       }
     : {}),
   "app/root.tsx": js`
@@ -95,105 +109,72 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
       );
     }
   `,
-  "app/entry.client.css": css`
-    .entry-client {
-      background: pink;
-      padding: ${PADDING};
-    }
-  `,
-  "app/styles-bundled.css": css`
-    .index_bundled {
-      background: papayawhip;
-      padding: ${PADDING};
-    }
-  `,
-  "app/styles-postcss-linked.css": css`
-    .index_postcss_linked {
-      background: salmon;
-      padding: PADDING_INJECTED_VIA_POSTCSS;
-    }
-  `,
-  "app/styles.module.css": css`
-    .index {
-      background: peachpuff;
-      padding: ${PADDING};
-    }
-  `,
-  "app/styles-vanilla-global.css.ts": js`
-    import { createVar, globalStyle } from "@vanilla-extract/css";
+  ...Object.assign(
+    {},
+    ...getRouteBasePaths(templateName).map((routeBasePath) => {
+      const isServerFirstRoute = routeBasePath === "rsc-server-first-css";
+      const exportName = isServerFirstRoute ? "ServerComponent" : "default";
 
-    globalStyle(".index_vanilla_global", {
-      background: "lightgreen",
-      padding: "${PADDING}",
-    });
-  `,
-  "app/styles-vanilla-local.css.ts": js`
-    import { style } from "@vanilla-extract/css";
+      return {
+        [`app/routes/${routeBasePath}/styles-bundled.css`]: css`
+          .${routeBasePath}-bundled {
+            background: papayawhip;
+            padding: ${PADDING};
+          }
+        `,
+        [`app/routes/${routeBasePath}/styles-postcss-linked.css`]: css`
+          .${routeBasePath}-postcss-linked {
+            background: salmon;
+            padding: PADDING_INJECTED_VIA_POSTCSS;
+          }
+        `,
+        [`app/routes/${routeBasePath}/styles.module.css`]: css`
+          .index {
+            background: peachpuff;
+            padding: ${PADDING};
+          }
+        `,
+        [`app/routes/${routeBasePath}/styles-vanilla-global.css.ts`]: js`
+          import { createVar, globalStyle } from "@vanilla-extract/css";
 
-    export const index = style({
-      background: "lightblue",
-      padding: "${PADDING}",
-    });
-  `,
-  "app/routes/_index.tsx": js`
-    import "../styles-bundled.css";
-    import postcssLinkedStyles from "../styles-postcss-linked.css?url";
-    import cssModulesStyles from "../styles.module.css";
-    import "../styles-vanilla-global.css";
-    import * as stylesVanillaLocal from "../styles-vanilla-local.css";
+          globalStyle(".${routeBasePath}-vanilla-global", {
+            background: "lightgreen",
+            padding: "${PADDING}",
+          });
+        `,
+        [`app/routes/${routeBasePath}/styles-vanilla-local.css.ts`]: js`
+          import { style } from "@vanilla-extract/css";
 
-    // Workaround for "Generated an empty chunk" warnings in RSC Framework Mode
-    export function loader() {
-      return null;
-    }
+          export const index = style({
+            background: "lightblue",
+            padding: "${PADDING}",
+          });
+        `,
+        [`app/routes/${routeBasePath}/route.tsx`]: js`
+          import "./styles-bundled.css";
+          import postcssLinkedStyles from "./styles-postcss-linked.css?url";
+          import cssModulesStyles from "./styles.module.css";
+          import "./styles-vanilla-global.css";
+          import * as stylesVanillaLocal from "./styles-vanilla-local.css";
 
-    export function links() {
-      return [{ rel: "stylesheet", href: postcssLinkedStyles }];
-    }
-
-    export default function IndexRoute() {
-      return (
-        <>
-          <input />
-          <div id="entry-client" className="entry-client">
-            <div id="css-modules" className={cssModulesStyles.index}>
-              <div id="css-postcss-linked" className="index_postcss_linked">
-                <div id="css-bundled" className="index_bundled">
-                  <div id="css-vanilla-global" className="index_vanilla_global">
-                    <div id="css-vanilla-local" className={stylesVanillaLocal.index}>
-                      <h2>CSS test</h2>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      );
-    }
-  `,
-  ...(templateName.includes("rsc")
-    ? {
-        "app/routes/server-component-route.tsx": js`
-          import "../styles-bundled.css";
-          import postcssLinkedStyles from "../styles-postcss-linked.css?url";
-          import cssModulesStyles from "../styles.module.css";
-          import "../styles-vanilla-global.css";
-          import * as stylesVanillaLocal from "../styles-vanilla-local.css";
+          // Workaround for "Generated an empty chunk" warnings in RSC Framework Mode
+          export function loader() {
+            return null;
+          }
 
           export function links() {
             return [{ rel: "stylesheet", href: postcssLinkedStyles }];
           }
 
-          export function ServerComponent() {
+          function TestRoute() {
             return (
               <>
                 <input />
                 <div id="entry-client" className="entry-client">
                   <div id="css-modules" className={cssModulesStyles.index}>
-                    <div id="css-postcss-linked" className="index_postcss_linked">
-                      <div id="css-bundled" className="index_bundled">
-                        <div id="css-vanilla-global" className="index_vanilla_global">
+                    <div id="css-postcss-linked" className="${routeBasePath}-postcss-linked">
+                      <div id="css-bundled" className="${routeBasePath}-bundled">
+                        <div id="css-vanilla-global" className="${routeBasePath}-vanilla-global">
                           <div id="css-vanilla-local" className={stylesVanillaLocal.index}>
                             <h2>CSS test</h2>
                           </div>
@@ -205,9 +186,12 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
               </>
             );
           }
+
+          export ${exportName === "default" ? "default" : `const ${exportName} =`} TestRoute;
         `,
-      }
-    : {}),
+      };
+    }),
+  ),
 });
 
 test.describe("Vite CSS", () => {
@@ -497,16 +481,11 @@ async function pageLoadWorkflow({
   base?: string;
   templateName: TemplateName;
 }) {
-  let pageErrors: Error[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error));
+  for (const routeBase of getRouteBasePaths(templateName)) {
+    let pageErrors: Error[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
 
-  const paths = [""];
-  if (templateName.includes("rsc")) {
-    paths.push("server-component-route");
-  }
-
-  for (const path of paths) {
-    await page.goto(`http://localhost:${port}${base ?? "/"}${path}`, {
+    await page.goto(`http://localhost:${port}${base ?? "/"}${routeBase}`, {
       waitUntil: "networkidle",
     });
 
@@ -543,54 +522,64 @@ async function hmrWorkflow({
     return;
   }
 
-  let pageErrors: Error[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error));
+  for (const routeBase of getRouteBasePaths(templateName)) {
+    let pageErrors: Error[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
 
-  await page.goto(`http://localhost:${port}${base ?? "/"}`, {
-    waitUntil: "networkidle",
-  });
+    await page.goto(`http://localhost:${port}${base ?? "/"}${routeBase}`, {
+      waitUntil: "networkidle",
+    });
 
-  let input = page.locator("input");
-  await expect(input).toBeVisible();
-  await input.type("stateful");
-  await expect(input).toHaveValue("stateful");
+    let input = page.locator("input");
+    await expect(input).toBeVisible();
+    await input.type("stateful");
+    await expect(input).toHaveValue("stateful");
 
-  let edit = createEditor(cwd);
-  let modifyCss = (contents: string) =>
-    contents
-      .replace(PADDING, NEW_PADDING)
-      .replace(
-        "PADDING_INJECTED_VIA_POSTCSS",
-        "NEW_PADDING_INJECTED_VIA_POSTCSS",
+    let edit = createEditor(cwd);
+    let modifyCss = (contents: string) =>
+      contents
+        .replace(PADDING, NEW_PADDING)
+        .replace(
+          "PADDING_INJECTED_VIA_POSTCSS",
+          "NEW_PADDING_INJECTED_VIA_POSTCSS",
+        );
+
+    await Promise.all([
+      edit(`app/routes/${routeBase}/styles-bundled.css`, modifyCss),
+      edit(`app/routes/${routeBase}/styles.module.css`, modifyCss),
+      edit(`app/routes/${routeBase}/styles-vanilla-global.css.ts`, modifyCss),
+      edit(`app/routes/${routeBase}/styles-vanilla-local.css.ts`, modifyCss),
+      edit(`app/routes/${routeBase}/styles-postcss-linked.css`, modifyCss),
+    ]);
+
+    await Promise.all(
+      [
+        "#css-bundled",
+        "#css-postcss-linked",
+        "#css-modules",
+        "#css-vanilla-global",
+        "#css-vanilla-local",
+      ].map(
+        async (selector) =>
+          await expect(page.locator(selector)).toHaveCSS(
+            "padding",
+            NEW_PADDING,
+          ),
+      ),
+    );
+
+    // Ensure CSS updates were handled by HMR
+    await expect(input).toHaveValue("stateful");
+
+    if (routeBase === "css") {
+      // The following change triggers a full page reload, so we check it after all the checks for HMR state preservation
+      await edit("app/entry.client.css", modifyCss);
+      await expect(page.locator("#entry-client")).toHaveCSS(
+        "padding",
+        NEW_PADDING,
       );
+    }
 
-  await Promise.all([
-    edit("app/styles-bundled.css", modifyCss),
-    edit("app/styles.module.css", modifyCss),
-    edit("app/styles-vanilla-global.css.ts", modifyCss),
-    edit("app/styles-vanilla-local.css.ts", modifyCss),
-    edit("app/styles-postcss-linked.css", modifyCss),
-  ]);
-
-  await Promise.all(
-    [
-      "#css-bundled",
-      "#css-postcss-linked",
-      "#css-modules",
-      "#css-vanilla-global",
-      "#css-vanilla-local",
-    ].map(
-      async (selector) =>
-        await expect(page.locator(selector)).toHaveCSS("padding", NEW_PADDING),
-    ),
-  );
-
-  // Ensure CSS updates were handled by HMR
-  await expect(input).toHaveValue("stateful");
-
-  // The following change triggers a full page reload, so we check it after all the checks for HMR state preservation
-  await edit("app/entry.client.css", modifyCss);
-  await expect(page.locator("#entry-client")).toHaveCSS("padding", NEW_PADDING);
-
-  expect(pageErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  }
 }
