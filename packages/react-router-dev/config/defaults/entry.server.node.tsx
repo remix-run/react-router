@@ -14,7 +14,7 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  loadContext: AppLoadContext
+  loadContext: AppLoadContext,
   // If you have middleware enabled:
   // loadContext: unstable_RouterContextProvider
 ) {
@@ -33,7 +33,7 @@ export default function handleRequest(
     // flush down the rejected boundaries
     let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(
       () => abort(),
-      streamTimeout + 1000
+      streamTimeout + 1000,
     );
 
     const { pipe, abort } = renderToPipeableStream(
@@ -59,7 +59,7 @@ export default function handleRequest(
             new Response(stream, {
               headers: responseHeaders,
               status: responseStatusCode,
-            })
+            }),
           );
         },
         onShellError(error: unknown) {
@@ -74,7 +74,7 @@ export default function handleRequest(
             console.error(error);
           }
         },
-      }
+      },
     );
   });
 }
