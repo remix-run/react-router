@@ -96,10 +96,10 @@ async function createVirtualRouteModuleCode({
       } else if (staticExport === "ServerComponent") {
         code += `import React from "react";\n`;
         code += `import { ServerComponent } from "${serverModuleId}";\n`;
-        code += `export default function ServerComponentWithCss() {`;
+        code += `export default function ServerComponentWithCss(props) {`;
         code += `  return React.createElement(React.Fragment, null, [`;
         code += `    import.meta.viteRsc.loadCss(),`;
-        code += `    React.createElement(ServerComponent, null),`;
+        code += `    React.createElement(ServerComponent, props),`;
         code += `  ]);`;
         code += `}`;
       } else {
