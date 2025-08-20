@@ -3555,4 +3555,103 @@ describe("fetchers", () => {
       expect((await request.formData()).get("a")).toBe("1");
     });
   });
+
+  describe("resetFetcher", () => {
+    it("resets fetcher data", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+    });
+
+    it("aborts in-flight fetchers (first call)", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+
+      // no-op
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+      expect(A.loaders.fetch.signal.aborted).toBe(true);
+    });
+
+    it("aborts in-flight fetchers (subsequent call)", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+
+      let B = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: "FETCH",
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+
+      // no-op
+      await B.loaders.fetch.resolve("FETCH*");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+      expect(B.loaders.fetch.signal.aborted).toBe(true);
+    });
+  });
 });

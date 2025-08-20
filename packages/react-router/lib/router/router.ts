@@ -216,6 +216,15 @@ export interface Router {
   getFetcher<TData = any>(key: string): Fetcher<TData>;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Reset the fetcher for a given key
+   * @param key
+   */
+  resetFetcher(key: string, reason?: unknown): void;
+
+  /**
    * @private
    * PRIVATE - DO NOT USE
    *
@@ -3059,6 +3068,11 @@ export function createRouter(init: RouterInit): Router {
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
+  function resetFetcher(key: string, reason?: unknown) {
+    abortFetcher(key, reason);
+    updateFetcherState(key, getDoneFetcher(null));
+  }
+
   function deleteFetcher(key: string): void {
     let fetcher = state.fetchers.get(key);
     // Don't abort the controller if this is a deletion of a fetcher.submit()
@@ -3089,10 +3103,10 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
   }
 
-  function abortFetcher(key: string) {
+  function abortFetcher(key: string, reason?: unknown) {
     let controller = fetchControllers.get(key);
     if (controller) {
-      controller.abort();
+      controller.abort(reason);
       fetchControllers.delete(key);
     }
   }
@@ -3472,6 +3486,7 @@ export function createRouter(init: RouterInit): Router {
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
+    resetFetcher,
     deleteFetcher: queueFetcherForDeletion,
     dispose,
     getBlocker,

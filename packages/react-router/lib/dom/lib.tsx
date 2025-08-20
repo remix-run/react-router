@@ -2711,6 +2711,18 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
       flushSync?: boolean;
     },
   ) => Promise<void>;
+
+  /**
+   * Reset a fetcher back to an empty/idle state.
+   *
+   * If the fetcher is currently in-flight, the
+   * [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
+   * will be aborted with the `reason`, if provided.
+   *
+   * @param reason Optional `reason` to provide to [`AbortController.abort()`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
+   * @returns void
+   */
+  unstable_reset: (reason?: unknown) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -2745,6 +2757,9 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  *     method: "post",
  *     encType: "application/json"
  *   })
+ *
+ *   // reset fetcher
+ *   fetcher.unstable_reset()
  * }
  *
  * @public
@@ -2826,6 +2841,10 @@ export function useFetcher<T = any>({
     [fetcherKey, submitImpl],
   );
 
+  let unstable_reset = React.useCallback<
+    FetcherWithComponents<T>["unstable_reset"]
+  >((reason) => router.resetFetcher(fetcherKey, reason), [router, fetcherKey]);
+
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
       (props, ref) => {
@@ -2846,10 +2865,11 @@ export function useFetcher<T = any>({
       Form: FetcherForm,
       submit,
       load,
+      unstable_reset,
       ...fetcher,
       data,
     }),
-    [FetcherForm, submit, load, fetcher, data],
+    [FetcherForm, submit, load, unstable_reset, fetcher, data],
   );
 
   return fetcherWithComponents;
