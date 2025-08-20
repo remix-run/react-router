@@ -94,7 +94,14 @@ async function createVirtualRouteModuleCode({
       if (isClientNonComponentExport(staticExport)) {
         code += `export { ${staticExport} } from "${clientModuleId}";\n`;
       } else if (staticExport === "ServerComponent") {
-        code += `export { ServerComponent as default } from "${serverModuleId}";\n`;
+        code += `import React from "react";\n`;
+        code += `import { ServerComponent } from "${serverModuleId}";\n`;
+        code += `export default function ServerComponentWithCss() {`;
+        code += `  return React.createElement(React.Fragment, null, [`;
+        code += `    import.meta.viteRsc.loadCss(),`;
+        code += `    React.createElement(ServerComponent, null),`;
+        code += `  ]);`;
+        code += `}`;
       } else {
         code += `export { ${staticExport} } from "${serverModuleId}";\n`;
       }
