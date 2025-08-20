@@ -3,19 +3,42 @@ import * as babel from "../babel";
 import { parse as esModuleLexer } from "es-module-lexer";
 import { removeExports } from "../remove-exports";
 
+const SERVER_ONLY_COMPONENT_EXPORTS = ["ServerComponent"] as const;
+
 const SERVER_ONLY_ROUTE_EXPORTS = [
+  ...SERVER_ONLY_COMPONENT_EXPORTS,
   "loader",
   "action",
   "unstable_middleware",
   "headers",
-  "ServerComponent",
 ] as const;
 
-const COMPONENT_EXPORTS = [
-  "default",
+const COMMON_COMPONENT_EXPORTS = [
   "ErrorBoundary",
   "HydrateFallback",
   "Layout",
+] as const;
+
+const SERVER_FIRST_COMPONENT_EXPORTS = [
+  ...COMMON_COMPONENT_EXPORTS,
+  ...SERVER_ONLY_COMPONENT_EXPORTS,
+] as const;
+type ServerFirstComponentExport =
+  (typeof SERVER_FIRST_COMPONENT_EXPORTS)[number];
+const SERVER_FIRST_COMPONENT_EXPORTS_SET = new Set(
+  SERVER_FIRST_COMPONENT_EXPORTS,
+);
+function isServerFirstComponentExport(
+  name: string,
+): name is ServerFirstComponentExport {
+  return SERVER_FIRST_COMPONENT_EXPORTS_SET.has(
+    name as ServerFirstComponentExport,
+  );
+}
+
+const CLIENT_COMPONENT_EXPORTS = [
+  ...COMMON_COMPONENT_EXPORTS,
+  "default",
 ] as const;
 
 export const CLIENT_NON_COMPONENT_EXPORTS = [
@@ -37,7 +60,7 @@ function isClientNonComponentExport(
 
 const CLIENT_ROUTE_EXPORTS = [
   ...CLIENT_NON_COMPONENT_EXPORTS,
-  ...COMPONENT_EXPORTS,
+  ...CLIENT_COMPONENT_EXPORTS,
 ] as const;
 type ClientRouteExport = (typeof CLIENT_ROUTE_EXPORTS)[number];
 const CLIENT_ROUTE_EXPORTS_SET = new Set(CLIENT_ROUTE_EXPORTS);
@@ -90,18 +113,24 @@ async function createVirtualRouteModuleCode({
 
   let code = "";
   if (isServerFirstRoute) {
+    if (staticExports.some(isServerFirstComponentExport)) {
+      code += `import React from "react";\n`;
+    }
     for (const staticExport of staticExports) {
       if (isClientNonComponentExport(staticExport)) {
         code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-      } else if (staticExport === "ServerComponent") {
-        code += `import React from "react";\n`;
-        code += `import { ServerComponent } from "${serverModuleId}";\n`;
-        code += `export default function ServerComponentWithCss(props) {`;
-        code += `  return React.createElement(React.Fragment, null, [`;
-        code += `    import.meta.viteRsc.loadCss(),`;
-        code += `    React.createElement(ServerComponent, props),`;
-        code += `  ]);`;
-        code += `}`;
+      } else if (
+        isServerFirstComponentExport(staticExport) &&
+        // Layout wraps all other exports so doesn't need to have CSS injected
+        staticExport !== "Layout"
+      ) {
+        code += `import { ${staticExport} as ${staticExport}WithoutCss } from "${serverModuleId}";\n`;
+        code += `export ${staticExport === "ServerComponent" ? "default " : " "}function ${staticExport}(props) {\n`;
+        code += `  return React.createElement(React.Fragment, null,\n`;
+        code += `    import.meta.viteRsc.loadCss(),\n`;
+        code += `    React.createElement(${staticExport}WithoutCss, props),\n`;
+        code += `  );\n`;
+        code += `}\n`;
       } else {
         code += `export { ${staticExport} } from "${serverModuleId}";\n`;
       }
@@ -169,7 +198,7 @@ function createVirtualClientRouteModuleCode({
   const { staticExports, isServerFirstRoute, hasClientExports } =
     parseRouteExports(routeSource);
   const exportsToRemove = isServerFirstRoute
-    ? [...SERVER_ONLY_ROUTE_EXPORTS, ...COMPONENT_EXPORTS]
+    ? [...SERVER_ONLY_ROUTE_EXPORTS, ...CLIENT_COMPONENT_EXPORTS]
     : SERVER_ONLY_ROUTE_EXPORTS;
 
   const clientRouteModuleAst = babel.parse(routeSource, {
