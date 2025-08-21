@@ -3556,7 +3556,7 @@ export function createStaticHandler(
     request: Parameters<StaticHandler["query"]>[0],
     {
       requestContext,
-      filterMatchesToLoad: filterMatchesToLoadBase,
+      filterMatchesToLoad,
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
@@ -3790,7 +3790,7 @@ export function createStaticHandler(
       dataStrategy || null,
       skipLoaderErrorBubbling === true,
       null,
-      filterMatchesToLoadBase || null,
+      filterMatchesToLoad || null,
       skipRevalidation === true,
     );
 
