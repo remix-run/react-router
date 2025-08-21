@@ -222,7 +222,7 @@ export interface Router {
    * Reset the fetcher for a given key
    * @param key
    */
-  resetFetcher(key: string, reason?: unknown): void;
+  resetFetcher(key: string, opts?: { reason?: unknown }): void;
 
   /**
    * @private
@@ -3068,8 +3068,8 @@ export function createRouter(init: RouterInit): Router {
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
-  function resetFetcher(key: string, reason?: unknown) {
-    abortFetcher(key, reason);
+  function resetFetcher(key: string, opts?: { reason?: unknown }) {
+    abortFetcher(key, opts?.reason);
     updateFetcherState(key, getDoneFetcher(null));
   }
 

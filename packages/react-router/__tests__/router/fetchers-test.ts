@@ -3653,5 +3653,18 @@ describe("fetchers", () => {
       });
       expect(B.loaders.fetch.signal.aborted).toBe(true);
     });
+
+    it("passes along the `reason` to the abort controller", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      t.router.resetFetcher("a", { reason: "BECAUSE I SAID SO" });
+      expect(A.loaders.fetch.signal.reason).toBe("BECAUSE I SAID SO");
+    });
   });
 });
