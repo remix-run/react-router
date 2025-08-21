@@ -9,7 +9,7 @@ import {
 import type {
   DataStrategyResult,
   MiddlewareFunction,
-  unstable_RouterContext,
+  RouterContext,
 } from "../../lib/router/utils";
 import {
   createContext,
@@ -26,7 +26,7 @@ let router: Router;
 afterEach(() => cleanup(router));
 
 declare module "../../lib/router/utils" {
-  interface unstable_RouterContext {
+  interface RouterContext {
     count?: { value: number };
     order?: string[];
   }
@@ -222,7 +222,7 @@ describe("context/middleware", () => {
 
   describe("middleware - client side", () => {
     function getOrderMiddleware(
-      orderContext: unstable_RouterContext<string[]>,
+      orderContext: RouterContext<string[]>,
       name: string,
     ): MiddlewareFunction {
       return async ({ context }, next) => {

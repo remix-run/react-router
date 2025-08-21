@@ -118,12 +118,12 @@ export type Submission =
  * {@link RouterContextProvider}. Accepts an optional default
  * value to be returned if no value has been set.
  */
-export interface unstable_RouterContext<T = unknown> {
+export interface RouterContext<T = unknown> {
   defaultValue?: T;
 }
 
 /**
- * Creates a type-safe {@link unstable_RouterContext} object that can be used to
+ * Creates a type-safe {@link RouterContext} object that can be used to
  * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
  * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
@@ -176,11 +176,11 @@ export interface unstable_RouterContext<T = unknown> {
  * @mode data
  * @param defaultValue An optional default value for the context. This value
  * will be returned if no value has been set for this context.
- * @returns A {@link unstable_RouterContext} object that can be used with
+ * @returns A {@link RouterContext} object that can be used with
  * `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
  * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  */
-export function createContext<T>(defaultValue?: T): unstable_RouterContext<T> {
+export function createContext<T>(defaultValue?: T): RouterContext<T> {
   return { defaultValue };
 }
 
@@ -207,13 +207,13 @@ export function createContext<T>(defaultValue?: T): unstable_RouterContext<T> {
  * @mode data
  */
 export class RouterContextProvider {
-  #map = new Map<unstable_RouterContext, unknown>();
+  #map = new Map<RouterContext, unknown>();
 
   /**
    * Create a new `RouterContextProvider` instance
    * @param init An optional initial context map to populate the provider with
    */
-  constructor(init?: Map<unstable_RouterContext, unknown>) {
+  constructor(init?: Map<RouterContext, unknown>) {
     if (init) {
       for (let [context, value] of init) {
         this.set(context, value);
@@ -229,7 +229,7 @@ export class RouterContextProvider {
    * @returns The value for the context, or the context's `defaultValue` if no
    * value was set
    */
-  get<T>(context: unstable_RouterContext<T>): T {
+  get<T>(context: RouterContext<T>): T {
     if (this.#map.has(context)) {
       return this.#map.get(context) as T;
     }
@@ -249,9 +249,9 @@ export class RouterContextProvider {
    * @param value The value to set for the context
    * @returns {void}
    */
-  set<C extends unstable_RouterContext>(
+  set<C extends RouterContext>(
     context: C,
-    value: C extends unstable_RouterContext<infer T> ? T : never,
+    value: C extends RouterContext<infer T> ? T : never,
   ): void {
     this.#map.set(context, value);
   }

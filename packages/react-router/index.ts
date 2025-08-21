@@ -49,7 +49,7 @@ export type {
   PathParam,
   PathPattern,
   RedirectFunction,
-  unstable_RouterContext,
+  RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,

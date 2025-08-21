@@ -64,7 +64,7 @@ export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memory
 export type {
   MiddlewareFunction,
   MiddlewareNextFunction,
-  unstable_RouterContext,
+  RouterContext,
 } from "./lib/router/utils";
 
 export type {
