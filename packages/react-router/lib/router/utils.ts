@@ -115,7 +115,7 @@ export type Submission =
 
 /**
  * A context instance used as the key for the `get`/`set` methods of a
- * {@link unstable_RouterContextProvider}. Accepts an optional default
+ * {@link RouterContextProvider}. Accepts an optional default
  * value to be returned if no value has been set.
  */
 export interface unstable_RouterContext<T = unknown> {
@@ -134,11 +134,11 @@ export interface unstable_RouterContext<T = unknown> {
  * when no value has been set will throw an error.
  *
  * ```tsx filename=app/context.ts
- * import { unstable_createContext } from "react-router";
+ * import { createContext } from "react-router";
  *
  * // Create a context for user data
  * export const userContext =
- *   unstable_createContext<User | null>(null);
+ *   createContext<User | null>(null);
  * ```
  *
  * ```tsx filename=app/middleware/auth.ts
@@ -180,9 +180,7 @@ export interface unstable_RouterContext<T = unknown> {
  * `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
  * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  */
-export function unstable_createContext<T>(
-  defaultValue?: T,
-): unstable_RouterContext<T> {
+export function createContext<T>(defaultValue?: T): unstable_RouterContext<T> {
   return { defaultValue };
 }
 
@@ -192,12 +190,12 @@ export function unstable_createContext<T>(
  *
  * @example
  * import {
- *   unstable_createContext,
- *   unstable_RouterContextProvider
+ *   createContext,
+ *   RouterContextProvider
  * } from "react-router";
  *
- * const userContext = unstable_createContext<User | null>(null);
- * const contextProvider = new unstable_RouterContextProvider();
+ * const userContext = createContext<User | null>(null);
+ * const contextProvider = new RouterContextProvider();
  * contextProvider.set(userContext, getUser());
  * //                               ^ Type-safe
  * const user = contextProvider.get(userContext);
@@ -208,11 +206,11 @@ export function unstable_createContext<T>(
  * @mode framework
  * @mode data
  */
-export class unstable_RouterContextProvider {
+export class RouterContextProvider {
   #map = new Map<unstable_RouterContext, unknown>();
 
   /**
-   * Create a new `unstable_RouterContextProvider` instance
+   * Create a new `RouterContextProvider` instance
    * @param init An optional initial context map to populate the provider with
    */
   constructor(init?: Map<unstable_RouterContext, unknown>) {
@@ -260,7 +258,7 @@ export class unstable_RouterContextProvider {
 }
 
 type DefaultContext = MiddlewareEnabled extends true
-  ? Readonly<unstable_RouterContextProvider>
+  ? Readonly<RouterContextProvider>
   : any;
 
 /**
@@ -309,7 +307,7 @@ export interface MiddlewareNextFunction<Result = unknown> {
  * and then complete middlewares from the bottom-up
  */
 export type MiddlewareFunction<Result = unknown> = (
-  args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
+  args: DataFunctionArgs<Readonly<RouterContextProvider>>,
   next: MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 

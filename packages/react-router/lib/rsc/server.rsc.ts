@@ -24,7 +24,7 @@ import {
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
-  type unstable_RouterContextProvider,
+  type RouterContextProvider,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -307,7 +307,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * errors that occur during the request processing.
  * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  * to match against.
- * @param opts.requestContext An instance of {@link unstable_RouterContextProvider}
+ * @param opts.requestContext An instance of {@link RouterContextProvider}
  * that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
  * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
  * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
@@ -333,7 +333,7 @@ export async function matchRSCServerRequest({
   decodeReply?: DecodeReplyFunction;
   decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
-  requestContext?: unstable_RouterContextProvider;
+  requestContext?: RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
@@ -601,7 +601,7 @@ async function generateResourceResponse(
   routes: RSCRouteConfigEntry[],
   basename: string | undefined,
   routeId: string,
-  requestContext: unstable_RouterContextProvider | undefined,
+  requestContext: RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
   try {
@@ -663,7 +663,7 @@ async function generateRenderResponse(
   basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
-  requestContext: unstable_RouterContextProvider | undefined,
+  requestContext: RouterContextProvider | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,

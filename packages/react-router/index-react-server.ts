@@ -48,8 +48,8 @@ export {
   data,
   matchRoutes,
   isRouteErrorResponse,
-  unstable_createContext,
-  unstable_RouterContextProvider,
+  createContext,
+  RouterContextProvider,
 } from "./lib/router/utils";
 
 export { createCookie, isCookie } from "./lib/server-runtime/cookies";

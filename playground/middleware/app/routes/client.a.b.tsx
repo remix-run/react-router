@@ -1,4 +1,4 @@
-import { Outlet, unstable_createContext } from "react-router";
+import { Outlet, createContext } from "react-router";
 import type { Route } from "./+types/client.a.b";
 import { aContext, bContext, rootContext } from "~/contexts";
 

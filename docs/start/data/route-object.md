@@ -84,7 +84,7 @@ async function loggingMiddleware({ request }, next) {
   console.log(`Navigation completed in ${duration}ms`);
 }
 
-const userContext = unstable_createContext<User>();
+const userContext = createContext<User>();
 
 async function authMiddleware ({ context }) {
   const userId = getUserId();

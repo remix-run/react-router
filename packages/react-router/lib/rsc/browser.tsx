@@ -20,9 +20,9 @@ import type {
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, unstable_createContext } from "../router/utils";
+import { ErrorResponseImpl, createContext } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -416,7 +416,7 @@ function createRouterFromPayload({
   };
 }
 
-const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
+const renderedRoutesContext = createContext<RSCRouteManifest[]>();
 
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
@@ -474,7 +474,7 @@ export function getRSCSingleFetchDataStrategy(
       // This cast should be fine since this is always run client side and
       // `context` is always of this type on the client -- unlike on the server
       // in framework mode when it could be `AppLoadContext`
-      let context = args.context as unstable_RouterContextProvider;
+      let context = args.context as RouterContextProvider;
       context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
@@ -565,7 +565,7 @@ function getFetchAndDecodeViaRSC(
       // this is always run client side and `context` is always of this type on
       // the client -- unlike on the server in framework mode when it could be
       // `AppLoadContext`
-      (context as unstable_RouterContextProvider)
+      (context as RouterContextProvider)
         .get(renderedRoutesContext)
         .push(...payload.matches);
 
@@ -619,7 +619,7 @@ export interface RSCHydratedRouterProps {
    */
   routeDiscovery?: "eager" | "lazy";
   /**
-   * A function that returns an {@link unstable_RouterContextProvider} instance
+   * A function that returns an {@link RouterContextProvider} instance
    * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
    * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
    * This function is called to generate a fresh `context` instance on each

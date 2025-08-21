@@ -4,7 +4,7 @@ import type {
   AppLoadContext,
   ServerBuild,
   UNSAFE_MiddlewareEnabled,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "react-router";
 import { createRequestHandler } from "react-router";
 import type { ClientAddress } from "@mjackson/node-fetch-server";
@@ -18,7 +18,7 @@ export interface RequestListenerOptions {
     request: Request,
     client: ClientAddress,
   ) => UNSAFE_MiddlewareEnabled extends true
-    ? MaybePromise<unstable_RouterContextProvider>
+    ? MaybePromise<RouterContextProvider>
     : MaybePromise<AppLoadContext>;
   mode?: string;
 }

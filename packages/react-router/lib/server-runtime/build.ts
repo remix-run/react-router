@@ -1,7 +1,7 @@
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../router/utils";
 import type {
   AssetsManifest,
@@ -50,7 +50,7 @@ export interface HandleDocumentRequestFunction {
     responseHeaders: Headers,
     context: EntryContext,
     loadContext: MiddlewareEnabled extends true
-      ? unstable_RouterContextProvider
+      ? RouterContextProvider
       : AppLoadContext,
   ): Promise<Response> | Response;
 }

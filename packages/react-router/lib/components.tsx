@@ -144,7 +144,7 @@ export interface MemoryRouterOpts {
    */
   basename?: string;
   /**
-   * A function that returns an {@link unstable_RouterContextProvider} instance
+   * A function that returns an {@link RouterContextProvider} instance
    * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
    * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
    * This function is called to generate a fresh `context` instance on each

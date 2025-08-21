@@ -4,7 +4,7 @@ import type {
 } from "../dom/ssr/routeModules";
 import type {
   DataWithResponseInit,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
 import type { AppLoadContext } from "../server-runtime/data";
@@ -96,11 +96,11 @@ export type ClientDataFunctionArgs<Params> = {
    * When `future.middleware` is not enabled, this is undefined.
    *
    * When `future.middleware` is enabled, this is an instance of
-   * `unstable_RouterContextProvider` and can be used to access context values
+   * `RouterContextProvider` and can be used to access context values
    * from your route middlewares.  You may pass in initial context values in your
    * `<HydratedRouter unstable_getContext>` prop
    */
-  context: Readonly<unstable_RouterContextProvider>;
+  context: Readonly<RouterContextProvider>;
 };
 
 export type ServerDataFunctionArgs<Params> = {
@@ -128,13 +128,13 @@ export type ServerDataFunctionArgs<Params> = {
    * It is only applicable if you are using a custom server adapter.
    *
    * With `future.middleware` enabled, this is an instance of
-   * `unstable_RouterContextProvider` and can be used for type-safe access to
+   * `RouterContextProvider` and can be used for type-safe access to
    * context value set in your route middlewares.  If you are using a custom
    * server adapter, you may provide an initial set of context values from your
    * `getLoadContext` function.
    */
   context: MiddlewareEnabled extends true
-    ? Readonly<unstable_RouterContextProvider>
+    ? Readonly<RouterContextProvider>
     : AppLoadContext;
 };
 

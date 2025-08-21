@@ -113,8 +113,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -204,8 +204,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -292,8 +292,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Form } from 'react-router'
@@ -607,8 +607,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -690,8 +690,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -778,8 +778,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -936,8 +936,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Form } from 'react-router'
@@ -1242,8 +1242,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -1323,8 +1323,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const countContext = unstable_createContext({
+            import { createContext } from 'react-router'
+            export const countContext = createContext({
               parent: 0,
               child: 0,
             });
@@ -1445,8 +1445,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const countContext = unstable_createContext({
+            import { createContext } from 'react-router'
+            export const countContext = createContext({
               parent: 0,
               child: 0,
               index: 0,
@@ -1607,8 +1607,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -1780,8 +1780,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Form } from 'react-router'
@@ -3260,8 +3260,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -3351,8 +3351,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -3430,8 +3430,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
@@ -3509,8 +3509,8 @@ test.describe("Middleware", () => {
             });
           `,
           "app/context.ts": js`
-            import { unstable_createContext } from 'react-router'
-            export const orderContext = unstable_createContext([]);
+            import { createContext } from 'react-router'
+            export const orderContext = createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import * as React from 'react'

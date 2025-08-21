@@ -54,10 +54,7 @@ export type {
   ShouldRevalidateFunctionArgs,
   UIMatch,
 } from "./lib/router/utils";
-export {
-  unstable_createContext,
-  unstable_RouterContextProvider,
-} from "./lib/router/utils";
+export { createContext, RouterContextProvider } from "./lib/router/utils";
 
 export {
   Action as NavigationType,

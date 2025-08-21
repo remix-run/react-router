@@ -1,7 +1,7 @@
 import { encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import { isRedirectStatusCode, isResponse } from "../router/router";
-import type { unstable_RouterContextProvider } from "../router/utils";
+import type { RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
@@ -38,7 +38,7 @@ export async function singleFetchAction(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
@@ -128,7 +128,7 @@ export async function singleFetchLoaders(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   let routesParam = new URL(request.url).searchParams.get("_routes");

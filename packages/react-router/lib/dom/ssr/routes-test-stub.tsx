@@ -15,7 +15,7 @@ import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
 import {
   convertRoutesToDataRoutes,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../../router/utils";
 import type { MiddlewareEnabled } from "../../types/future";
 import type { AppLoadContext } from "../../server-runtime/data";
@@ -117,7 +117,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  _context?: AppLoadContext | unstable_RouterContextProvider,
+  _context?: AppLoadContext | RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -156,7 +156,7 @@ export function createRoutesStub(
         _context !== undefined
           ? _context
           : future?.middleware
-            ? new unstable_RouterContextProvider()
+            ? new RouterContextProvider()
             : {},
         frameworkContextRef.current.manifest,
         frameworkContextRef.current.routeModules,

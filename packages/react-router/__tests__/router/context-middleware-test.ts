@@ -12,9 +12,9 @@ import type {
   unstable_RouterContext,
 } from "../../lib/router/utils";
 import {
-  unstable_createContext,
+  createContext,
   redirect,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
   data,
   ErrorResponseImpl,
 } from "../../lib/router/utils";
@@ -49,17 +49,17 @@ function respondWithJson(staticContext: StaticHandlerContext | Response) {
 
 describe("context/middleware", () => {
   // Simple context for just asserting that middlewares execute
-  let countContext = unstable_createContext(0);
+  let countContext = createContext(0);
 
   // String contexts to ensure children middlewares have access to parent context values
-  let parentContext = unstable_createContext("empty");
-  let childContext = unstable_createContext("empty");
+  let parentContext = createContext("empty");
+  let childContext = createContext("empty");
 
   // Context for tracking the order in which middlewares/handlers run
-  let orderContext = unstable_createContext<string[]>([]);
+  let orderContext = createContext<string[]>([]);
 
   let pushOrderContext = (
-    context: Readonly<unstable_RouterContextProvider>,
+    context: Readonly<RouterContextProvider>,
     value: string,
   ) => context.set(orderContext, [...(context.get(orderContext) || []), value]);
 
@@ -809,7 +809,7 @@ describe("context/middleware", () => {
 
     describe("throwing", () => {
       it("throwing from a middleware bubbles up (going down - loader)", async () => {
-        let context = new unstable_RouterContextProvider();
+        let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
           unstable_getContext: () => context,
@@ -869,7 +869,7 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware bubbles up (going up - loader)", async () => {
-        let context = new unstable_RouterContextProvider();
+        let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
           unstable_getContext: () => context,
@@ -926,7 +926,7 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going down - action w/boundary)", async () => {
-        let context = new unstable_RouterContextProvider();
+        let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
           unstable_getContext: () => context,
@@ -1023,7 +1023,7 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/boundary)", async () => {
-        let context = new unstable_RouterContextProvider();
+        let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
           unstable_getContext: () => context,
@@ -1124,7 +1124,7 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going down - action w/o boundary)", async () => {
-        let context = new unstable_RouterContextProvider();
+        let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
           unstable_getContext: () => context,
@@ -1214,7 +1214,7 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/o boundary)", async () => {
-        let context = new unstable_RouterContextProvider();
+        let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
           unstable_getContext: () => context,
@@ -1889,7 +1889,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         await handler.query(request, {
           requestContext,
@@ -1948,7 +1948,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -2008,7 +2008,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         let res = (await handler.query(request, {
           requestContext,
@@ -2105,7 +2105,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         let res = (await handler.query(request, {
           requestContext,
@@ -2161,7 +2161,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         let res = (await handler.query(request, {
           requestContext,
@@ -2230,7 +2230,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -2302,7 +2302,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -2377,7 +2377,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -2449,7 +2449,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -2932,7 +2932,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         await handler.queryRoute(request, {
           requestContext,
@@ -2991,7 +2991,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -3047,7 +3047,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         let response = (await handler.queryRoute(request, {
           requestContext,
@@ -3126,7 +3126,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         await expect(
           handler.queryRoute(request, {
@@ -3177,7 +3177,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child");
         await expect(
           handler.queryRoute(request, {
@@ -3251,7 +3251,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -3336,7 +3336,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -3418,7 +3418,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),
@@ -3503,7 +3503,7 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let requestContext = new unstable_RouterContextProvider();
+        let requestContext = new RouterContextProvider();
         let request = new Request("http://localhost/parent/child", {
           method: "post",
           body: createFormData({}),

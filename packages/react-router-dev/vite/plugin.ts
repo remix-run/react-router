@@ -25,7 +25,7 @@ import type {
   ServerBuild,
   DataRouteObject,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "react-router";
 import {
   init as initEsModuleLexer,
@@ -610,7 +610,7 @@ let reactRouterDevLoadContext: (
   request: Request,
 ) => MaybePromise<
   MiddlewareEnabled extends true
-    ? MaybePromise<unstable_RouterContextProvider | undefined>
+    ? MaybePromise<RouterContextProvider | undefined>
     : MaybePromise<Record<string, unknown> | undefined>
 > = () => undefined;
 

@@ -485,19 +485,19 @@ implementations.forEach((implementation) => {
             `,
 
             "src/config/request-context.ts": js`
-              import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
+              import { createContext, RouterContextProvider } from "react-router";
 
-              export const testContext = unstable_createContext<string>("default-value");
+              export const testContext = createContext<string>("default-value");
 
-              export const requestContext = new unstable_RouterContextProvider(
+              export const requestContext = new RouterContextProvider(
                 new Map([[testContext, "test-context-value"]])
               );
             `,
             "src/config/unstable-get-context.ts": js`
               // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
-              import { unstable_createContext } from "react-router";
+              import { createContext } from "react-router";
 
-              export const testContext = unstable_createContext<string>("default-value");
+              export const testContext = createContext<string>("default-value");
 
               export function unstable_getContext() {
                 return new Map([[testContext, "client-context-value"]]);
@@ -1200,7 +1200,7 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports request context using the unstable_RouterContextProvider API", async ({
+        test("Supports request context using the RouterContextProvider API", async ({
           page,
         }) => {
           await page.goto(`http://localhost:${port}/request-context`);
@@ -1213,7 +1213,7 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports request context in resource routes using the unstable_RouterContextProvider API", async ({
+        test("Supports request context in resource routes using the RouterContextProvider API", async ({
           page,
           request,
         }) => {
@@ -1247,7 +1247,7 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports request context in middleware using the unstable_RouterContextProvider API", async ({
+        test("Supports request context in middleware using the RouterContextProvider API", async ({
           page,
         }) => {
           await page.goto(
