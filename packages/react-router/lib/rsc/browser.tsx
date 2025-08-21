@@ -791,7 +791,7 @@ export function RSCHydratedRouter({
     future: {
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
-      middleware: false,
+      v8_middleware: false,
       unstable_subResourceIntegrity: false,
     },
     isSpaMode: false,

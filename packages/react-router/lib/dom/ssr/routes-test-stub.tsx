@@ -133,7 +133,7 @@ export function createRoutesStub(
         future: {
           unstable_subResourceIntegrity:
             future?.unstable_subResourceIntegrity === true,
-          middleware: future?.middleware === true,
+          v8_middleware: future?.v8_middleware === true,
         },
         manifest: {
           routes: {},
@@ -155,7 +155,7 @@ export function createRoutesStub(
         convertRoutesToDataRoutes(routes, (r) => r),
         _context !== undefined
           ? _context
-          : future?.middleware
+          : future?.v8_middleware
             ? new RouterContextProvider()
             : {},
         frameworkContextRef.current.manifest,

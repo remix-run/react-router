@@ -574,7 +574,7 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
-    middleware: reactRouterUserConfig.future?.middleware ?? false,
+    v8_middleware: reactRouterUserConfig.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:

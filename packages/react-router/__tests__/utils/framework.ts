@@ -30,7 +30,7 @@ export function mockFrameworkContext(
       version: "",
     },
     future: {
-      middleware: false,
+      v8_middleware: false,
       unstable_subResourceIntegrity: false,
     },
     ssr: true,
