@@ -464,7 +464,7 @@ export function getRSCSingleFetchDataStrategy(
     },
   );
   return async (args) =>
-    args.unstable_runClientMiddleware(async () => {
+    args.runClientMiddleware(async () => {
       // Before we run the dataStrategy, create a place to stick rendered routes
       // from the payload so we can patch them into the router after all loaders
       // have completed.  Need to do this since we may have multiple fetch

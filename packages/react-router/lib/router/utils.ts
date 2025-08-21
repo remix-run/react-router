@@ -488,7 +488,7 @@ export interface DataStrategyFunctionArgs<Context = DefaultContext>
    * Matches for this route extended with Data strategy APIs
    */
   matches: DataStrategyMatch[];
-  unstable_runClientMiddleware: (
+  runClientMiddleware: (
     cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
   /**
