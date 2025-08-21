@@ -298,7 +298,7 @@ interface DataFunctionArgs<Context> {
  * Route middleware `next` function to call downstream handlers and then complete
  * middlewares from the bottom-up
  */
-export interface unstable_MiddlewareNextFunction<Result = unknown> {
+export interface MiddlewareNextFunction<Result = unknown> {
   (): Promise<Result>;
 }
 
@@ -310,7 +310,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  */
 export type MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
-  next: unstable_MiddlewareNextFunction<Result>,
+  next: MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 
 /**

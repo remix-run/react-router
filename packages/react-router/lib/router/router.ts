@@ -39,7 +39,7 @@ import type {
   LoaderFunction,
   ActionFunction,
   MiddlewareFunction,
-  unstable_MiddlewareNextFunction,
+  MiddlewareNextFunction,
   ErrorResponse,
 } from "./utils";
 import {
@@ -5586,7 +5586,7 @@ async function callRouteMiddleware<Result>(
 
   let [routeId, middleware] = tuple;
   let nextResult: { value: Result } | undefined;
-  let next: unstable_MiddlewareNextFunction<Result> = async () => {
+  let next: MiddlewareNextFunction<Result> = async () => {
     if (nextResult) {
       throw new Error("You may only call `next()` once per middleware");
     }

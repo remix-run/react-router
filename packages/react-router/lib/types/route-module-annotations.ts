@@ -3,7 +3,7 @@ import type { Location } from "../router/history";
 import type { LinkDescriptor } from "../router/links";
 import type {
   DataStrategyResult,
-  unstable_MiddlewareNextFunction,
+  MiddlewareNextFunction,
 } from "../router/utils";
 
 import type {
@@ -90,12 +90,12 @@ type HeadersArgs = {
 
 type CreateServerMiddlewareFunction<T extends RouteInfo> = (
   args: ServerDataFunctionArgs<T["params"]>,
-  next: unstable_MiddlewareNextFunction<Response>,
+  next: MiddlewareNextFunction<Response>,
 ) => MaybePromise<Response | void>;
 
 type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T["params"]>,
-  next: unstable_MiddlewareNextFunction<Record<string, DataStrategyResult>>,
+  next: MiddlewareNextFunction<Record<string, DataStrategyResult>>,
 ) => MaybePromise<Record<string, DataStrategyResult> | void>;
 
 type CreateServerLoaderArgs<T extends RouteInfo> = ServerDataFunctionArgs<
