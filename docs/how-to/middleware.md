@@ -1,6 +1,5 @@
 ---
 title: Middleware
-unstable: true
 ---
 
 # Middleware
@@ -10,7 +9,7 @@ unstable: true
 <br/>
 <br/>
 
-<docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.middleware` flag to enable it.</docs-warning>
+<docs-info>In Framework Mode, you must opt-into middleware via the [`future.v8_middleware`][future-flags] flag because it contains a minor [breaking change][getloadcontext] to the `getLoadContext` function and the loader/action `context` parameter.</docs-info>
 
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
@@ -721,6 +720,7 @@ export async function loader({
 }
 ```
 
+[future-flags]: ../upgrading/future
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [common-patterns]: #common-patterns
 [server-client]: #server-vs-client-middleware
