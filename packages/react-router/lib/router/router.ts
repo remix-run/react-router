@@ -435,7 +435,12 @@ export interface StaticHandler {
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_generateMiddlewareResponse?: (
-        query: (r: Request) => Promise<StaticHandlerContext | Response>,
+        query: (
+          r: Request,
+          args?: {
+            filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
+          },
+        ) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
     },
   ): Promise<StaticHandlerContext | Response>;
@@ -3551,7 +3556,7 @@ export function createStaticHandler(
     request: Parameters<StaticHandler["query"]>[0],
     {
       requestContext,
-      filterMatchesToLoad,
+      filterMatchesToLoad: filterMatchesToLoadBase,
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
@@ -3649,7 +3654,16 @@ export function createStaticHandler(
           },
           async () => {
             let res = await generateMiddlewareResponse(
-              async (revalidationRequest: Request) => {
+              async (
+                revalidationRequest: Request,
+                {
+                  filterMatchesToLoad = filterMatchesToLoadBase,
+                }: {
+                  filterMatchesToLoad?:
+                    | ((match: AgnosticDataRouteMatch) => boolean)
+                    | undefined;
+                } = {},
+              ) => {
                 let result = await queryImpl(
                   revalidationRequest,
                   location,
@@ -3776,7 +3790,7 @@ export function createStaticHandler(
       dataStrategy || null,
       skipLoaderErrorBubbling === true,
       null,
-      filterMatchesToLoad || null,
+      filterMatchesToLoadBase || null,
       skipRevalidation === true,
     );
 
