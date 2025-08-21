@@ -563,6 +563,12 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
+      '@vanilla-extract/css':
+        specifier: ^1.17.4
+        version: 1.17.4(babel-plugin-macros@3.1.0)
+      '@vanilla-extract/vite-plugin':
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
