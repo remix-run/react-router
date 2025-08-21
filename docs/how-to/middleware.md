@@ -133,7 +133,7 @@ function getLoadContext(req, res) {
 
 ## Quick Start (Data Mode)
 
-<docs-info>Note there is no future flag in Data Mode because you can simply opt-into middleware by adding it to your routes, no breaking changes exist that require a future flag.</docs-info>
+<docs-info>Note there is no future flag in Data Mode because you can opt-into middleware by adding it to your routes, no breaking changes exist that require a future flag.</docs-info>
 
 ### 1. Create a context
 
