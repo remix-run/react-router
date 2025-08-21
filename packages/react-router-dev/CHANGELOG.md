@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.8.2-pre.0
+
+### Patch Changes
+
+- fix: memory leak in default entry.server ([#14200](https://github.com/remix-run/react-router/pull/14200))
+- Updated dependencies:
+  - `react-router@7.8.2-pre.0`
+  - `@react-router/node@7.8.2-pre.0`
+  - `@react-router/serve@7.8.2-pre.0`
+
 ## 7.8.1
 
 ### Patch Changes

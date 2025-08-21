@@ -37,5 +37,14 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "cold-geese-turn",
+    "eleven-oranges-design",
+    "fresh-pugs-relax",
+    "quiet-cows-build",
+    "real-rules-compare",
+    "rotten-parents-care",
+    "tender-sheep-bake",
+    "violet-dots-collect"
+  ]
 }
