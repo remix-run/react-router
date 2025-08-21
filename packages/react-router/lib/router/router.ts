@@ -3656,9 +3656,7 @@ export function createStaticHandler(
             let res = await generateMiddlewareResponse(
               async (
                 revalidationRequest: Request,
-                {
-                  filterMatchesToLoad = filterMatchesToLoadBase,
-                }: {
+                opts: {
                   filterMatchesToLoad?:
                     | ((match: AgnosticDataRouteMatch) => boolean)
                     | undefined;
@@ -3672,7 +3670,9 @@ export function createStaticHandler(
                   dataStrategy || null,
                   skipLoaderErrorBubbling === true,
                   null,
-                  filterMatchesToLoad || null,
+                  "filterMatchesToLoad" in opts
+                    ? (opts.filterMatchesToLoad ?? null)
+                    : null,
                   skipRevalidation === true,
                 );
 

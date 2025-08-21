@@ -716,19 +716,17 @@ async function generateRenderResponse(
     runningAction: false,
   };
 
-  const queryOptions = routeIdsToLoad
-    ? {
-        filterMatchesToLoad: (m: AgnosticDataRouteMatch) =>
-          routeIdsToLoad!.includes(m.route.id),
-      }
-    : {};
-
   const result = await ServerStorage.run(ctx, () =>
     staticHandler.query(request, {
       requestContext,
       skipLoaderErrorBubbling: isDataRequest,
       skipRevalidation: isSubmission,
-      ...queryOptions,
+      ...(routeIdsToLoad
+        ? {
+            filterMatchesToLoad: (m: AgnosticDataRouteMatch) =>
+              routeIdsToLoad!.includes(m.route.id),
+          }
+        : {}),
       async unstable_generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
@@ -780,11 +778,14 @@ async function generateRenderResponse(
           }
         }
 
-        if (skipRevalidation) {
-          queryOptions.filterMatchesToLoad = () => false;
-        }
-
-        let staticContext = await query(request, queryOptions);
+        let staticContext = await query(
+          request,
+          skipRevalidation
+            ? {
+                filterMatchesToLoad: () => false,
+              }
+            : undefined,
+        );
 
         if (isResponse(staticContext)) {
           return generateRedirectResponse(
