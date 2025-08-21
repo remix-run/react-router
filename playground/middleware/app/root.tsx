@@ -9,7 +9,7 @@ import {
 import type { Route } from "./+types/root";
 import { rootContext } from "./contexts";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
+export const middleware: Route.MiddlewareFunction[] = [
   async ({ context }, next) => {
     console.log("start root middleware");
     context.set(rootContext, "ROOT");

@@ -312,7 +312,7 @@ export function createClientRoutes(
       Object.assign(dataRoute, {
         ...dataRoute,
         ...getRouteComponents(route, routeModule, isSpaMode),
-        unstable_middleware: routeModule.clientMiddleware,
+        middleware: routeModule.clientMiddleware,
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
           dataRoute.path,
@@ -510,7 +510,7 @@ export function createClientRoutes(
                 });
             }
           : undefined,
-        unstable_middleware: route.hasClientMiddleware
+        middleware: route.hasClientMiddleware
           ? async () => {
               let { clientMiddleware } = route.clientMiddlewareModule
                 ? await import(

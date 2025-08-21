@@ -308,7 +308,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  * a `next` function as the second parameter which will call downstream handlers
  * and then complete middlewares from the bottom-up
  */
-export type unstable_MiddlewareFunction<Result = unknown> = (
+export type MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
   next: unstable_MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
@@ -577,7 +577,7 @@ export function isUnsupportedLazyRouteObjectKey(
  */
 type UnsupportedLazyRouteFunctionKey =
   | UnsupportedLazyRouteObjectKey
-  | "unstable_middleware";
+  | "middleware";
 const unsupportedLazyRouteFunctionKeys =
   new Set<UnsupportedLazyRouteFunctionKey>([
     "lazy",
@@ -585,7 +585,7 @@ const unsupportedLazyRouteFunctionKeys =
     "path",
     "id",
     "index",
-    "unstable_middleware",
+    "middleware",
     "children",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
@@ -628,7 +628,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  unstable_middleware?: unstable_MiddlewareFunction[];
+  middleware?: MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;

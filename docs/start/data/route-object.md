@@ -54,7 +54,7 @@ function MyRouteComponent() {
 }
 ```
 
-## `unstable_middleware`
+## `middleware`
 
 Route [middleware][middleware] runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
 
@@ -62,12 +62,12 @@ Route [middleware][middleware] runs sequentially before and after navigations. T
 createBrowserRouter([
   {
     path: "/",
-    unstable_middleware: [loggingMiddleware],
+    middleware: [loggingMiddleware],
     loader: rootLoader,
     Component: Root,
     children: [{
       path: 'auth',
-      unstable_middleware: [authMiddleware],
+      middleware: [authMiddleware],
       loader: authLoader,
       Component: Auth,
       children: [...]

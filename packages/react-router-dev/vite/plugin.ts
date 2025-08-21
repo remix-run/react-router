@@ -121,12 +121,7 @@ export function extractPluginContext(
     | undefined;
 }
 
-const SERVER_ONLY_ROUTE_EXPORTS = [
-  "loader",
-  "action",
-  "unstable_middleware",
-  "headers",
-];
+const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "middleware", "headers"];
 const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",

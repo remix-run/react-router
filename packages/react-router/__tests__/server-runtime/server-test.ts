@@ -158,7 +158,7 @@ describe("server", () => {
         },
         {
           future: {
-            unstable_middleware: true,
+            middleware: true,
           },
           handleError: handleErrorSpy,
           handleDocumentRequest(request) {

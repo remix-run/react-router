@@ -1614,7 +1614,7 @@ test.describe("Middleware", () => {
             import { Link } from 'react-router'
             import { orderContext } from "../context";;
 
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -1638,7 +1638,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/about.tsx": js`
             import { orderContext } from "../context";;
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => {
                 context.set(orderContext, ['c']);
               },
@@ -1700,7 +1700,7 @@ test.describe("Middleware", () => {
           "app/routes/parent.tsx": js`
             import { Link, Outlet } from 'react-router'
 
-            export const unstable_middleware = [
+            export const middleware = [
               ({ request }) => {
                 console.log('Running parent middleware', new URL(request.url).pathname)
               },
@@ -1718,7 +1718,7 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/parent.a.tsx": js`
-            export const unstable_middleware = [
+            export const middleware = [
               ({ request }) => {
                 console.log('Running A middleware', new URL(request.url).pathname)
               },
@@ -1729,7 +1729,7 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/parent.b.tsx": js`
-            export const unstable_middleware = [
+            export const middleware = [
               ({ request }) => {
                 console.log('Running B middleware', new URL(request.url).pathname)
               },
@@ -1787,7 +1787,7 @@ test.describe("Middleware", () => {
             import { Form } from 'react-router'
             import { orderContext } from "../context";;
 
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -1862,7 +1862,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_middleware = [
+            export const middleware = [
               ({ request, context }) => { throw redirect('/target'); }
             ]
             export function loader() {
@@ -1920,7 +1920,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_middleware = [
+            export const middleware = [
               async ({ request, context }, next) => {
                 await next();
                 throw redirect('/target');
@@ -1976,7 +1976,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_middleware = [
+            export const middleware = [
               async ({ request, context }, next) => {
                 let res = await next();
                 // Should still be a normal redirect here, not yet encoded into
@@ -2047,7 +2047,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ request, context }, next) => {
                   throw new Error('broken!');
                 }
@@ -2106,7 +2106,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ request, context }, next) => {
                   throw new Error('broken!');
                 }
@@ -2171,7 +2171,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ request, context }, next) => {
                   await next();
                   throw new Error('broken!');
@@ -2240,7 +2240,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ request, context }, next) => {
                   await next()
                   throw new Error('broken!');
@@ -2314,7 +2314,7 @@ test.describe("Middleware", () => {
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
 
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -2335,7 +2335,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   let res = await next();
                   throw new Error('broken!')
@@ -2399,7 +2399,7 @@ test.describe("Middleware", () => {
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
 
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -2420,7 +2420,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   let res = await next();
                   throw new Error('broken!')
@@ -2515,7 +2515,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.c.d.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [() => { throw new Error("broken!") }]
+              export const middleware = [() => { throw new Error("broken!") }]
               export default function Component() {
                 return <Outlet/>
               }
@@ -2621,7 +2621,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.c.d.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [() => { throw new Error("broken!") }]
+              export const middleware = [() => { throw new Error("broken!") }]
               export const loader = () => null;
               export default function Component() {
                 return <Outlet/>
@@ -2686,7 +2686,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -2702,7 +2702,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               import { Link, Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-b', 'true');
@@ -2714,7 +2714,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              export const unstable_middleware = [(_, next) => {
+              export const middleware = [(_, next) => {
                 throw new Error('C ERROR')
               }];
               // Force middleware to run on client side navs
@@ -2789,7 +2789,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -2814,7 +2814,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               import { Link, Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-b', 'true');
@@ -2826,7 +2826,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              export const unstable_middleware = [async (_, next) => {
+              export const middleware = [async (_, next) => {
                 let res = await next();
                 throw new Error('C ERROR')
               }];
@@ -2910,7 +2910,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -2935,7 +2935,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               import { Link, Outlet } from 'react-router'
-              export const unstable_middleware = [async (_, next) => {
+              export const middleware = [async (_, next) => {
                 let res = await next();
                 throw new Error('B ERROR')
               }];
@@ -2944,7 +2944,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              export const unstable_middleware = [async (_, next) => {
+              export const middleware = [async (_, next) => {
                 let res = await next();
                 throw new Error('C ERROR')
               }];
@@ -3040,7 +3040,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -3061,7 +3061,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               import { Link, Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-b', 'true');
@@ -3074,7 +3074,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.c.tsx": js`
               import { data } from "react-router";
-              export const unstable_middleware = [(_, next) => {
+              export const middleware = [(_, next) => {
                 throw data('C ERROR', { status: 418, statusText: "I'm a teapot" })
               }];
               // Force middleware to run on client side navs
@@ -3149,7 +3149,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.tsx": js`
               import { Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -3174,7 +3174,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               import { Link, Outlet } from 'react-router'
-              export const unstable_middleware = [
+              export const middleware = [
                 async (_, next) => {
                   let res = await next();
                   res.headers.set('x-b', 'true');
@@ -3187,7 +3187,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.c.tsx": js`
               import { data } from "react-router";
-              export const unstable_middleware = [async (_, next) => {
+              export const middleware = [async (_, next) => {
                 let res = await next();
                 throw data('C ERROR', { status: 418, statusText: "I'm a teapot" })
               }];
@@ -3272,7 +3272,7 @@ test.describe("Middleware", () => {
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => { context.set(orderContext, ['a']); },
             ];
 
@@ -3297,7 +3297,7 @@ test.describe("Middleware", () => {
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
               },
@@ -3363,7 +3363,7 @@ test.describe("Middleware", () => {
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => { context.set(orderContext, ['a']); }
             ];
 
@@ -3378,7 +3378,7 @@ test.describe("Middleware", () => {
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
               },
@@ -3442,7 +3442,7 @@ test.describe("Middleware", () => {
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => { context.set(orderContext, ['a']); }
             ];
 
@@ -3457,7 +3457,7 @@ test.describe("Middleware", () => {
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
               },
@@ -3544,7 +3544,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               async ({ context }, next) => {
                 context.set(orderContext, ['a']);
                 let res = await next();
@@ -3555,7 +3555,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             import { orderContext } from '../context';
-            export const unstable_middleware = [
+            export const middleware = [
               async ({ context }, next) => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
                 let res = await next();
@@ -3625,7 +3625,7 @@ test.describe("Middleware", () => {
             `,
             "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/a.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   throw new Error("broken!");
                 },
@@ -3671,7 +3671,7 @@ test.describe("Middleware", () => {
             `,
             "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/a.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   throw new Error("broken!");
                 },
@@ -3717,7 +3717,7 @@ test.describe("Middleware", () => {
             `,
             "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/a.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   let res = await next()
                   throw new Error("broken!");
@@ -3764,7 +3764,7 @@ test.describe("Middleware", () => {
             `,
             "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/a.tsx": js`
-              export const unstable_middleware = [
+              export const middleware = [
                 async ({ context }, next) => {
                   let res = await next();
                   throw new Error("broken!");

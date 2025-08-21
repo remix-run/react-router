@@ -38,7 +38,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   ActionFunction,
-  unstable_MiddlewareFunction,
+  MiddlewareFunction,
   unstable_MiddlewareNextFunction,
   ErrorResponse,
 } from "./utils";
@@ -385,7 +385,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  unstable_middleware: boolean;
+  middleware: boolean;
 }
 
 /**
@@ -874,7 +874,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    unstable_middleware: false,
+    middleware: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -2081,7 +2081,7 @@ export function createRouter(init: RouterInit): Router {
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
-      !dsMatches.some((m) => m.route.unstable_middleware) &&
+      !dsMatches.some((m) => m.route.middleware) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -5388,12 +5388,12 @@ function loadLazyMiddlewareForMatches(
 ): Promise<void[]> | void {
   let promises: Promise<void>[] = matches
     .map(({ route }) => {
-      if (typeof route.lazy !== "object" || !route.lazy.unstable_middleware) {
+      if (typeof route.lazy !== "object" || !route.lazy.middleware) {
         return undefined;
       }
 
       return loadLazyRouteProperty({
-        key: "unstable_middleware",
+        key: "middleware",
         route,
         manifest,
         mapRouteProperties,
@@ -5423,7 +5423,7 @@ async function defaultDataStrategyWithMiddleware(
   args: DataStrategyFunctionArgs<unstable_RouterContextProvider>,
 ): ReturnType<DataStrategyFunction<unknown>> {
   // Short circuit all the middleware logic if we have no middlewares
-  if (!args.matches.some((m) => m.route.unstable_middleware)) {
+  if (!args.matches.some((m) => m.route.middleware)) {
     return defaultDataStrategy(args);
   }
 
@@ -5540,10 +5540,8 @@ async function runMiddlewarePipeline<Result>(
 ): Promise<Result> {
   let { matches, request, params, context } = args;
   let tuples = matches.flatMap((m) =>
-    m.route.unstable_middleware
-      ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
-      : [],
-  ) as [string, unstable_MiddlewareFunction<Result>][];
+    m.route.middleware ? m.route.middleware.map((fn) => [m.route.id, fn]) : [],
+  ) as [string, MiddlewareFunction<Result>][];
 
   let result = await callRouteMiddleware(
     { request, params, context },
@@ -5560,7 +5558,7 @@ async function callRouteMiddleware<Result>(
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
-  middlewares: [string, unstable_MiddlewareFunction<Result>][],
+  middlewares: [string, MiddlewareFunction<Result>][],
   handler: () => Promise<Result>,
   processResult: (r: Result) => Result,
   isResult: (v: unknown) => v is Result,
@@ -5643,7 +5641,7 @@ function getDataStrategyMatchLazyPromises(
   lazyRoutePropertiesToSkip: string[],
 ): DataStrategyMatch["_lazyPromises"] {
   let lazyMiddlewarePromise = loadLazyRouteProperty({
-    key: "unstable_middleware",
+    key: "middleware",
     route: match.route,
     manifest,
     mapRouteProperties,

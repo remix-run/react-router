@@ -202,7 +202,7 @@ export type GetAnnotations<Info extends RouteInfo> = {
   HeadersFunction: (args: HeadersArgs) => Headers | HeadersInit;
 
   // middleware
-  unstable_MiddlewareFunction: CreateServerMiddlewareFunction<Info>;
+  MiddlewareFunction: CreateServerMiddlewareFunction<Info>;
 
   // clientMiddleware
   ClientMiddlewareFunction: CreateClientMiddlewareFunction<Info>;

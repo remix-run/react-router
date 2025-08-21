@@ -42,7 +42,7 @@ export type {
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
-  unstable_MiddlewareFunction,
+  MiddlewareFunction,
   ParamParseKey,
   Params,
   PathMatch,

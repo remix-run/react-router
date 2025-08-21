@@ -630,11 +630,11 @@ implementations.forEach((implementation) => {
             `,
 
             "src/routes/middleware-request-context/root.tsx": js`
-              import type { unstable_MiddlewareFunction } from "react-router";
+              import type { MiddlewareFunction } from "react-router";
               import { Outlet } from "react-router";
               import { testContext } from "../../config/request-context";
 
-              export const unstable_middleware: unstable_MiddlewareFunction<Response>[] = [
+              export const middleware: MiddlewareFunction<Response>[] = [
                 async ({ request, context }, next) => {
                   const contextValue = context.get(testContext);
                   request.headers.set("x-middleware-context", contextValue);

@@ -419,7 +419,7 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        unstable_middleware: false,
+        middleware: false,
         ...opts?.future,
       };
     },

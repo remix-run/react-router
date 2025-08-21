@@ -9,7 +9,7 @@ const SERVER_ONLY_ROUTE_EXPORTS = [
   ...SERVER_ONLY_COMPONENT_EXPORTS,
   "loader",
   "action",
-  "unstable_middleware",
+  "middleware",
   "headers",
 ] as const;
 type ServerOnlyRouteExport = (typeof SERVER_ONLY_ROUTE_EXPORTS)[number];

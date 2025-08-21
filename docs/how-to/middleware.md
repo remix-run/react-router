@@ -10,7 +10,7 @@ unstable: true
 <br/>
 <br/>
 
-<docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.unstable_middleware` flag to enable it.</docs-warning>
+<docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.middleware` flag to enable it.</docs-warning>
 
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
@@ -41,7 +41,7 @@ import type { Config } from "@react-router/dev/config";
 
 export default {
   future: {
-    unstable_middleware: true,
+    middleware: true,
   },
 } satisfies Config;
 ```
@@ -76,8 +76,9 @@ async function authMiddleware({ request, context }) {
   context.set(userContext, user);
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [authMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  authMiddleware,
+];
 
 // Client-side timing middleware
 async function timingMiddleware({ context }, next) {
@@ -138,7 +139,7 @@ function getLoadContext(req, res) {
 ```tsx
 const router = createBrowserRouter(routes, {
   future: {
-    unstable_middleware: true,
+    middleware: true,
   },
 });
 ```
@@ -165,12 +166,12 @@ import { userContext } from "~/context";
 const routes = [
   {
     path: "/",
-    unstable_middleware: [timingMiddleware], // 👈
+    middleware: [timingMiddleware], // 👈
     Component: Root,
     children: [
       {
         path: "profile",
-        unstable_middleware: [authMiddleware], // 👈
+        middleware: [authMiddleware], // 👈
         loader: profileLoader,
         Component: Profile,
       },
@@ -225,7 +226,7 @@ let sessionContext = unstable_createContext();
 
 const router = createBrowserRouter(routes, {
   future: {
-    unstable_middleware: true,
+    middleware: true,
   },
   unstable_getContext() {
     let context = new unstable_RouterContextProvider();
@@ -252,8 +253,9 @@ async function serverMiddleware({ request }, next) {
 }
 
 // Framework mode only
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [serverMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  serverMiddleware,
+];
 ```
 
 Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware differs from server middleware because there's no HTTP Request, so it doesn't have a `Response` to bubble up. In most cases, you can just ignore the return value from `next` and return nothing from your middleware on the client:
@@ -272,7 +274,7 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] =
 // Or, Data mode
 const route = {
   path: "/",
-  unstable_middleware: [clientMiddleware],
+  middleware: [clientMiddleware],
   loader: rootLoader,
   Component: Root,
 };
@@ -337,8 +339,9 @@ async function loggingMiddleware({ request }, next) {
   return response;
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [loggingMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  loggingMiddleware,
+];
 ```
 
 However, there may be cases where you _want_ to run certain server middlewares on _every_ client-navigation - even if no `loader` exists. For example, a form in the authenticated section of your site that doesn't require a `loader` but you'd rather use auth middleware to redirect users away before they fill out the form — rather than when they submit to the `action`. If your middleware meets these criteria, then you can put a `loader` on the route that contains the middleware to force it to always call the server for client-side navigations involving that route.
@@ -350,8 +353,9 @@ function authMiddleware({ request }, next) {
   }
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [authMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  authMiddleware,
+];
 
 // By adding a `loader`, we force the `authMiddleware` to run on every
 // client-side navigation involving this route.
@@ -412,15 +416,14 @@ export function getUser() {
 ```tsx filename=app/root.tsx
 import { provideUser } from "./user-context";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }, next) => {
-      return provideUser(request, async () => {
-        let res = await next();
-        return res;
-      });
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    return provideUser(request, async () => {
+      let res = await next();
+      return res;
+    });
+  },
+];
 ```
 
 ```tsx filename=app/routes/_index.tsx
@@ -477,27 +480,25 @@ React Router contains built-in error handling via the route [`ErrorBoundary`][Er
 This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root `middleware`. If any error from a `middleware` caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
 ```tsx filename=routes/parent.tsx
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async (_, next) => {
-      let res = await next();
-      //  ^ res.status = 500
-      // This response contains the ErrorBoundary
-      return res;
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async (_, next) => {
+    let res = await next();
+    //  ^ res.status = 500
+    // This response contains the ErrorBoundary
+    return res;
+  },
+];
 ```
 
 ```tsx filename=routes/parent.child.tsx
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async (_, next) => {
-      let res = await next();
-      //  ^ res.status = 200
-      // This response contains the successful UI render
-      throw new Error("Uh oh, something went wrong!");
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async (_, next) => {
+    let res = await next();
+    //  ^ res.status = 200
+    // This response contains the successful UI render
+    throw new Error("Uh oh, something went wrong!");
+  },
+];
 ```
 
 ## Changes to `getLoadContext`/`AppLoadContext`
@@ -594,8 +595,9 @@ export const authMiddleware = async ({
 ```tsx filename=app/routes/protected.tsx
 import { authMiddleware } from "~/middleware/auth";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [authMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  authMiddleware,
+];
 
 export async function loader({
   context,
@@ -677,16 +679,15 @@ export const headersMiddleware = async (
 ### Conditional Middleware
 
 ```tsx
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }, next) => {
-      // Only run auth for POST requests
-      if (request.method === "POST") {
-        await ensureAuthenticated(request, context);
-      }
-      return next();
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    // Only run auth for POST requests
+    if (request.method === "POST") {
+      await ensureAuthenticated(request, context);
+    }
+    return next();
+  },
+];
 ```
 
 ### Sharing Context Between `action` and `loader`
@@ -694,19 +695,18 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
 ```tsx
 const sharedDataContext = unstable_createContext<any>();
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }, next) => {
-      if (request.method === "POST") {
-        // Set data during action phase
-        context.set(
-          sharedDataContext,
-          await getExpensiveData(),
-        );
-      }
-      return next();
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    if (request.method === "POST") {
+      // Set data during action phase
+      context.set(
+        sharedDataContext,
+        await getExpensiveData(),
+      );
+    }
+    return next();
+  },
+];
 
 export async function action({
   context,

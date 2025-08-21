@@ -319,10 +319,7 @@ test("can pass context values (w/middleware)", async () => {
   );
 
   render(
-    <RoutesStub
-      future={{ unstable_middleware: true }}
-      initialEntries={["/hello"]}
-    />,
+    <RoutesStub future={{ middleware: true }} initialEntries={["/hello"]} />,
   );
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);

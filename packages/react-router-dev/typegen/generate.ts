@@ -23,7 +23,7 @@ export function generateFuture(ctx: Context): VirtualFile {
 
     declare module "react-router" {
       interface Future {
-        unstable_middleware: ${ctx.config.future.unstable_middleware}
+        middleware: ${ctx.config.future.middleware}
       }
     }
   `;
@@ -290,8 +290,8 @@ function getRouteAnnotations({
         export type HeadersArgs = Annotations["HeadersArgs"];
         export type HeadersFunction = Annotations["HeadersFunction"];
 
-        // unstable_middleware
-        export type unstable_MiddlewareFunction = Annotations["unstable_MiddlewareFunction"];
+        // middleware
+        export type MiddlewareFunction = Annotations["MiddlewareFunction"];
 
         // clientMiddleware
         export type ClientMiddlewareFunction = Annotations["ClientMiddlewareFunction"];

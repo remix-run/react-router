@@ -78,7 +78,7 @@ export default function MyRouteComponent({
 }
 ```
 
-## `unstable_middleware`
+## `middleware`
 
 Route [middleware][middleware] runs sequentially on the server before and after document and
 data requests. This gives you a singular place to do things like logging,
@@ -103,7 +103,7 @@ async function loggingMiddleware(
   return response;
 }
 
-export const unstable_middleware = [loggingMiddleware];
+export const middleware = [loggingMiddleware];
 ```
 
 Here's an example middleware to check for logged in users and set the user in
@@ -125,19 +125,19 @@ async function authMiddleware ({
   context.set(userContext, user);
 };
 
-export const unstable_middleware = [authMiddleware];
+export const middleware = [authMiddleware];
 ```
 
 <docs-warning>Please make sure you understand [when middleware runs][when-middleware-runs] to make sure your application will behave the way you intend when adding middleware to your routes.</docs-warning>
 
 See also:
 
-- [`unstable_middleware` params][middleware-params]
+- [`middleware` params][middleware-params]
 - [Middleware][middleware]
 
 ## `clientMiddleware`
 
-This is the client-side equivalent of `unstable_middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because they're not wrapping an HTTP request on the server.
+This is the client-side equivalent of `middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because they're not wrapping an HTTP request on the server.
 
 Here's an example middleware to log requests on the client:
 
@@ -500,7 +500,7 @@ export function shouldRevalidate(
 
 Next: [Rendering Strategies](./rendering)
 
-[middleware-params]: https://api.reactrouter.com/v7/types/react_router.unstable_MiddlewareFunction.html
+[middleware-params]: https://api.reactrouter.com/v7/types/react_router.MiddlewareFunction.html
 [middleware]: ../../how-to/middleware
 [when-middleware-runs]: ../../how-to/middleware#when-middleware-runs
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
