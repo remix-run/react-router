@@ -155,7 +155,7 @@ describe("server", () => {
         },
         {
           future: {
-            middleware: true,
+            v8_middleware: true,
           },
           handleError: handleErrorSpy,
           handleDocumentRequest(request) {

@@ -53,7 +53,7 @@ export const reactRouterConfig = ({
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
-      middleware: middleware,
+      v8_middleware: middleware,
     },
   };
 

@@ -101,7 +101,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -191,7 +191,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            middleware: true,
+            v8_middleware: true,
             splitRouteModules: true,
           }),
           "vite.config.ts": js`
@@ -280,7 +280,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -356,7 +356,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -409,7 +409,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -466,7 +466,7 @@ test.describe("Middleware", () => {
           files: {
             "react-router.config.ts": reactRouterConfig({
               ssr: false,
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -525,7 +525,7 @@ test.describe("Middleware", () => {
           files: {
             "react-router.config.ts": reactRouterConfig({
               ssr: false,
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -595,7 +595,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -678,7 +678,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -765,7 +765,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
             splitRouteModules: true,
           }),
           "vite.config.ts": js`
@@ -851,7 +851,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -924,7 +924,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -998,7 +998,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1049,7 +1049,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1104,7 +1104,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -1161,7 +1161,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -1230,7 +1230,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1311,7 +1311,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1433,7 +1433,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1595,7 +1595,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1686,7 +1686,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1768,7 +1768,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1842,7 +1842,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1900,7 +1900,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1963,7 +1963,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -2027,7 +2027,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2086,7 +2086,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2160,7 +2160,7 @@ test.describe("Middleware", () => {
               });
             `,
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
@@ -2220,7 +2220,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2293,7 +2293,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2378,7 +2378,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2468,7 +2468,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2559,7 +2559,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2667,7 +2667,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2770,7 +2770,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -2890,7 +2890,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -3021,7 +3021,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -3130,7 +3130,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -3248,7 +3248,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -3339,7 +3339,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -3418,7 +3418,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -3497,7 +3497,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            middleware: true,
+            v8_middleware: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -3612,7 +3612,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -3658,7 +3658,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -3704,7 +3704,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
@@ -3751,7 +3751,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              middleware: true,
+              v8_middleware: true,
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";

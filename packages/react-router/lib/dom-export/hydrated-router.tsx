@@ -174,7 +174,7 @@ function createHydratedRouter({
     hydrationRouteProperties,
     mapRouteProperties,
     future: {
-      middleware: ssrInfo.context.future.middleware,
+      middleware: ssrInfo.context.future.v8_middleware,
     },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,

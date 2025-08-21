@@ -87,7 +87,7 @@ interface FutureConfig {
   /**
    * Enable route middleware
    */
-  middleware: boolean;
+  v8_middleware: boolean;
   unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.

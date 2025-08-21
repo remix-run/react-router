@@ -118,7 +118,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     };
 
-    if (_build.future.middleware) {
+    if (_build.future.v8_middleware) {
       if (
         initialContext &&
         !(initialContext instanceof RouterContextProvider)
@@ -445,7 +445,7 @@ async function handleDocumentRequest(
   try {
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_generateMiddlewareResponse: build.future.middleware
+      unstable_generateMiddlewareResponse: build.future.v8_middleware
         ? async (query) => {
             try {
               let innerResult = await query(request);
@@ -626,7 +626,7 @@ async function handleResourceRequest(
     let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_generateMiddlewareResponse: build.future.middleware
+      unstable_generateMiddlewareResponse: build.future.v8_middleware
         ? async (queryRoute) => {
             try {
               let innerResult = await queryRoute(request);

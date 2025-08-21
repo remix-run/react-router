@@ -41,7 +41,7 @@ import type { Config } from "@react-router/dev/config";
 
 export default {
   future: {
-    middleware: true,
+    v8_middleware: true,
   },
 } satisfies Config;
 ```
@@ -138,7 +138,7 @@ function getLoadContext(req, res) {
 ```tsx
 const router = createBrowserRouter(routes, {
   future: {
-    middleware: true,
+    v8_middleware: true,
   },
 });
 ```
@@ -224,7 +224,7 @@ let sessionContext = createContext();
 
 const router = createBrowserRouter(routes, {
   future: {
-    middleware: true,
+    v8_middleware: true,
   },
   unstable_getContext() {
     let context = new RouterContextProvider();
