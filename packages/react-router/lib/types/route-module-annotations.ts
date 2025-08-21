@@ -205,7 +205,7 @@ export type GetAnnotations<Info extends RouteInfo> = {
   unstable_MiddlewareFunction: CreateServerMiddlewareFunction<Info>;
 
   // clientMiddleware
-  unstable_ClientMiddlewareFunction: CreateClientMiddlewareFunction<Info>;
+  ClientMiddlewareFunction: CreateClientMiddlewareFunction<Info>;
 
   // loader
   LoaderArgs: CreateServerLoaderArgs<Info>;

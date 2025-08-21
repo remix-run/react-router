@@ -130,7 +130,7 @@ const SERVER_ONLY_ROUTE_EXPORTS = [
 const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
-  "unstable_clientMiddleware",
+  "clientMiddleware",
   "handle",
   "meta",
   "links",
@@ -928,9 +928,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[route.id];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
-      let hasClientMiddleware = sourceExports.includes(
-        "unstable_clientMiddleware",
-      );
+      let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
       let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
@@ -949,9 +947,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            unstable_clientMiddleware:
+            clientMiddleware:
               !hasClientMiddleware ||
-              hasRouteChunkByExportName.unstable_clientMiddleware,
+              hasRouteChunkByExportName.clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -991,14 +989,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               getRouteChunkModuleId(routeFile, "clientLoader"),
             )
           : undefined,
-        clientMiddlewareModule:
-          hasRouteChunkByExportName.unstable_clientMiddleware
-            ? getPublicModulePathForEntry(
-                ctx,
-                viteManifest,
-                getRouteChunkModuleId(routeFile, "unstable_clientMiddleware"),
-              )
-            : undefined,
+        clientMiddlewareModule: hasRouteChunkByExportName.clientMiddleware
+          ? getPublicModulePathForEntry(
+              ctx,
+              viteManifest,
+              getRouteChunkModuleId(routeFile, "clientMiddleware"),
+            )
+          : undefined,
         hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
           ? getPublicModulePathForEntry(
               ctx,
@@ -1076,9 +1073,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
-      let hasClientMiddleware = sourceExports.includes(
-        "unstable_clientMiddleware",
-      );
+      let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
       let routeModulePath = combineURLs(
         ctx.publicPath,
@@ -1104,9 +1099,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            unstable_clientMiddleware:
+            clientMiddleware:
               !hasClientMiddleware ||
-              hasRouteChunkByExportName.unstable_clientMiddleware,
+              hasRouteChunkByExportName.clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -2030,9 +2025,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             valid: {
               clientAction: !exportNames.includes("clientAction"),
               clientLoader: !exportNames.includes("clientLoader"),
-              unstable_clientMiddleware: !exportNames.includes(
-                "unstable_clientMiddleware",
-              ),
+              clientMiddleware: !exportNames.includes("clientMiddleware"),
               HydrateFallback: !exportNames.includes("HydrateFallback"),
             },
           });
@@ -2572,8 +2565,8 @@ async function getRouteMetadata(
     clientLoaderModule: hasRouteChunkByExportName.clientLoader
       ? `${getRouteChunkModuleId(moduleUrl, "clientLoader")}`
       : undefined,
-    clientMiddlewareModule: hasRouteChunkByExportName.unstable_clientMiddleware
-      ? `${getRouteChunkModuleId(moduleUrl, "unstable_clientMiddleware")}`
+    clientMiddlewareModule: hasRouteChunkByExportName.clientMiddleware
+      ? `${getRouteChunkModuleId(moduleUrl, "clientMiddleware")}`
       : undefined,
     hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
       ? `${getRouteChunkModuleId(moduleUrl, "HydrateFallback")}`
@@ -2582,7 +2575,7 @@ async function getRouteMetadata(
     hasClientAction: sourceExports.includes("clientAction"),
     hasLoader: sourceExports.includes("loader"),
     hasClientLoader: sourceExports.includes("clientLoader"),
-    hasClientMiddleware: sourceExports.includes("unstable_clientMiddleware"),
+    hasClientMiddleware: sourceExports.includes("clientMiddleware"),
     hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
     imports: [],
   };
@@ -3252,7 +3245,7 @@ async function detectRouteChunksIfEnabled(
       hasRouteChunkByExportName: {
         clientAction: false,
         clientLoader: false,
-        unstable_clientMiddleware: false,
+        clientMiddleware: false,
         HydrateFallback: false,
       },
     };

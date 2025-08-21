@@ -19,15 +19,14 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
   },
 ];
 
-export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[] =
-  [
-    async ({ context }, next) => {
-      console.log("start root middleware");
-      context.set(rootContext, "ROOT");
-      await next();
-      console.log("end root middleware");
-    },
-  ];
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
+  async ({ context }, next) => {
+    console.log("start root middleware");
+    context.set(rootContext, "ROOT");
+    await next();
+    console.log("end root middleware");
+  },
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

@@ -293,8 +293,8 @@ function getRouteAnnotations({
         // unstable_middleware
         export type unstable_MiddlewareFunction = Annotations["unstable_MiddlewareFunction"];
 
-        // unstable_clientMiddleware
-        export type unstable_ClientMiddlewareFunction = Annotations["unstable_ClientMiddlewareFunction"];
+        // clientMiddleware
+        export type ClientMiddlewareFunction = Annotations["ClientMiddlewareFunction"];
 
         // loader
         export type LoaderArgs = Annotations["LoaderArgs"];

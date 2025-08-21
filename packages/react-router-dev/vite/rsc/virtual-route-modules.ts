@@ -49,7 +49,7 @@ const CLIENT_COMPONENT_EXPORTS = [
 export const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
-  "unstable_clientMiddleware",
+  "clientMiddleware",
   "handle",
   "meta",
   "links",

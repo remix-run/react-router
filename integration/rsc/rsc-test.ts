@@ -28,7 +28,7 @@ implementations.forEach((implementation) => {
           files: {
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
-  
+
               export const routes = [
                 {
                   id: "root",
@@ -299,7 +299,7 @@ implementations.forEach((implementation) => {
           files: {
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
-  
+
               export const routes = [
                 {
                   id: "root",
@@ -486,9 +486,9 @@ implementations.forEach((implementation) => {
 
             "src/config/request-context.ts": js`
               import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
-  
+
               export const testContext = unstable_createContext<string>("default-value");
-  
+
               export const requestContext = new unstable_RouterContextProvider(
                 new Map([[testContext, "test-context-value"]])
               );
@@ -496,9 +496,9 @@ implementations.forEach((implementation) => {
             "src/config/unstable-get-context.ts": js`
               // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
               import { unstable_createContext } from "react-router";
-  
+
               export const testContext = unstable_createContext<string>("default-value");
-  
+
               export function unstable_getContext() {
                 return new Map([[testContext, "client-context-value"]]);
               }
@@ -506,11 +506,11 @@ implementations.forEach((implementation) => {
 
             "src/routes/soft-navigation/home.tsx": js`
               import { Link } from "react-router";
-  
+
               export function loader() {
                 return { message: "Home Page Data" };
               }
-  
+
               export default function HomeRoute({ loaderData }) {
                 return (
                   <div>
@@ -525,37 +525,37 @@ implementations.forEach((implementation) => {
               export function loader() {
                 return { count: 1 };
               }
-  
+
               export { default } from "./dashboard.client";
             `,
             "src/routes/soft-navigation/dashboard.client.tsx": js`
               "use client";
-  
+
               import { useState } from "react";
               import { Link } from "react-router";
-  
+
               // Export the entire route as a client component
               export default function DashboardRoute({ loaderData }) {
                 const [count, setCount] = useState(loaderData.count);
-  
+
                 return (
                   <div>
                     <h1 data-page="dashboard">Dashboard</h1>
-  
+
                     {/* Server data rendered in client component */}
                     <p data-server-count>
                       Server count: {loaderData.count}
                     </p>
-  
+
                     {/* Client interactive elements */}
                     <p data-client-count>
                       Client count: {count}
                     </p>
-  
+
                     <button data-increment onClick={() => setCount(count + 1)}>
                       Increment
                     </button>
-  
+
                     <Link to="/soft-navigation">Home</Link>
                   </div>
                 );
@@ -564,11 +564,11 @@ implementations.forEach((implementation) => {
 
             "src/routes/request-context/home.tsx": js`
               import { testContext } from "../../config/request-context";
-  
+
               export function loader({ context }) {
                 return { contextValue: context.get(testContext) };
               }
-  
+
               export default function HomeRoute({ loaderData }) {
                 return (
                   <div>
@@ -580,16 +580,16 @@ implementations.forEach((implementation) => {
 
             "src/routes/resource-request-context/home.client.tsx": js`
               "use client";
-  
+
               import { useFetcher } from "react-router";
-  
+
               export function ResourceFetcher() {
                 const fetcher = useFetcher();
-  
+
                 const loadResource = () => {
                   fetcher.submit({ hello: "world" }, { method: "post", action: "/resource-request-context/resource" });
                 };
-  
+
                 return (
                   <div>
                     <button type="button" onClick={loadResource}>
@@ -606,21 +606,21 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/resource-request-context/home.tsx": js`
               import { ResourceFetcher } from "./home.client";
-              
+
               export default function HomeRoute() {
                 return <ResourceFetcher />;
               }
             `,
             "src/routes/resource-request-context/resource.tsx": js`
               import { testContext } from "../../config/request-context";
-  
+
               export function loader({ context }) {
-                return Response.json({ 
+                return Response.json({
                   message: "Hello from resource route!",
                   contextValue: context.get(testContext)
                 });
               }
-  
+
               export async function action({ context }) {
                 return Response.json({
                   message: "Hello from resource route!",
@@ -633,7 +633,7 @@ implementations.forEach((implementation) => {
               import type { unstable_MiddlewareFunction } from "react-router";
               import { Outlet } from "react-router";
               import { testContext } from "../../config/request-context";
-  
+
               export const unstable_middleware: unstable_MiddlewareFunction<Response>[] = [
                 async ({ request, context }, next) => {
                   const contextValue = context.get(testContext);
@@ -641,7 +641,7 @@ implementations.forEach((implementation) => {
                   return await next();
                 },
               ];
-  
+
               export default function RootRoute() {
                 return (
                   <div>
@@ -656,7 +656,7 @@ implementations.forEach((implementation) => {
                 const contextValue = request.headers.get("x-middleware-context");
                 return { contextValue };
               }
-  
+
               export default function HomeRoute({ loaderData }) {
                 return (
                   <div>
@@ -668,22 +668,22 @@ implementations.forEach((implementation) => {
 
             "src/routes/unstable-get-context/root.tsx": js`
               "use client";
-  
+
               import { Outlet } from "react-router";
-              import type { unstable_ClientMiddlewareFunction } from "react-router";
+              import type { ClientMiddlewareFunction } from "react-router";
               import { testContext } from "../../config/unstable-get-context";
-  
-              export const unstable_clientMiddleware = [
+
+              export const clientMiddleware = [
                 async ({ context }, next) => {
-                  context.set(testContext, "client-context-value");                  
+                  context.set(testContext, "client-context-value");
                   return await next();
                 },
               ];
-  
+
               export function HydrateFallback() {
                 return <div>Loading...</div>;
               }
-  
+
               export default function RootRoute() {
                 return (
                   <div>
@@ -695,17 +695,17 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/unstable-get-context/home.tsx": js`
               "use client";
-  
+
               import { useLoaderData } from "react-router";
               import { testContext } from "../../config/unstable-get-context";
-  
+
               export function clientLoader({ context }) {
                 const contextValue = context.get(testContext);
                 return { contextValue };
               }
-  
+
               clientLoader.hydrate = true;
-  
+
               export default function HomeRoute() {
                 const loaderData = useLoaderData();
                 return (
@@ -720,7 +720,7 @@ implementations.forEach((implementation) => {
               export function loader() {
                 return Response.json({ message: "Hello from resource route!" });
               }
-  
+
               export async function action({ request }) {
                 return {
                   message: "Hello from resource route!",
@@ -730,16 +730,16 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/resource-url-and-fetchers/home.client.tsx": js`
               "use client";
-  
+
               import { useFetcher } from "react-router";
-  
+
               export function ResourceFetcher() {
                 const fetcher = useFetcher();
-  
+
                 const loadResource = () => {
                   fetcher.submit({ hello: "world" }, { method: "post", action: "/resource-url-and-fetchers/resource" });
                 };
-  
+
                 return (
                   <div>
                     <button type="button" onClick={loadResource}>
@@ -756,7 +756,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/resource-url-and-fetchers/home.tsx": js`
               import { ResourceFetcher } from "./home.client";
-              
+
               export default function HomeRoute() {
                 return <ResourceFetcher />;
               }
@@ -961,17 +961,17 @@ implementations.forEach((implementation) => {
               export function loader() {
                 throw new Error("This error should be sanitized");
               }
-  
+
               export default function HomeRoute() {
                 return <h2>This should not be rendered</h2>;
               }
-  
+
               export { ErrorBoundary } from "./home.client";
             `,
             "src/routes/sanitized-errors/home.client.tsx": js`
               "use client"
               import { useRouteError } from "react-router";
-  
+
               export function ErrorBoundary() {
                 let error = useRouteError();
                 return (

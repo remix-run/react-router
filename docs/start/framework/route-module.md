@@ -135,7 +135,7 @@ See also:
 - [`unstable_middleware` params][middleware-params]
 - [Middleware][middleware]
 
-## `unstable_clientMiddleware`
+## `clientMiddleware`
 
 This is the client-side equivalent of `unstable_middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because they're not wrapping an HTTP request on the server.
 
@@ -158,9 +158,7 @@ async function loggingMiddleware(
   // ✅ No need to return anything
 }
 
-export const unstable_clientMiddleware = [
-  loggingMiddleware,
-];
+export const clientMiddleware = [loggingMiddleware];
 ```
 
 See also:

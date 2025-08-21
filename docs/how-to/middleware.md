@@ -87,7 +87,7 @@ async function timingMiddleware({ context }, next) {
   console.log(`Navigation took ${duration}ms`);
 }
 
-export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[] =
+export const clientMiddleware: Route.ClientMiddlewareFunction[] =
   [timingMiddleware];
 
 export async function loader({
@@ -266,7 +266,7 @@ async function clientMiddleware({ request }, next) {
 }
 
 // Framework mode
-export const unstable_clientMiddleware: Route.unstable_MiddlewareFunction[] =
+export const clientMiddleware: Route.ClientMiddlewareFunction[] =
   [clientMiddleware];
 
 // Or, Data mode

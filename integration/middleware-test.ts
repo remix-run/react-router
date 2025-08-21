@@ -120,7 +120,7 @@ test.describe("Middleware", () => {
             import { Link } from 'react-router'
             import { orderContext } from '../context'
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -145,7 +145,7 @@ test.describe("Middleware", () => {
           "app/routes/about.tsx": js`
             import { orderContext } from '../context'
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'c']);
               },
@@ -211,7 +211,7 @@ test.describe("Middleware", () => {
             import { Link } from 'react-router'
             import { orderContext } from '../context'
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -236,7 +236,7 @@ test.describe("Middleware", () => {
           "app/routes/about.tsx": js`
             import { orderContext } from '../context'
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'c']);
               },
@@ -299,7 +299,7 @@ test.describe("Middleware", () => {
             import { Form } from 'react-router'
             import { orderContext } from '../context';
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ request, context }) => {
                 context.set(orderContext, ['a']);
               },
@@ -376,7 +376,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ request, context }) => { throw redirect('/target'); }
             ]
             export default function Component() {
@@ -429,7 +429,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               async ({ request, context }, next) => {
                 await next();
                 throw redirect('/target');
@@ -485,7 +485,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_clientMiddleware = [
+              export const clientMiddleware = [
                 async ({ request, context }, next) => {
                   throw new Error('broken!');
                 }
@@ -544,7 +544,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_clientMiddleware = [
+              export const clientMiddleware = [
                 async ({ request, context }, next) => {
                   await next();
                   throw new Error('broken!');
@@ -619,7 +619,7 @@ test.describe("Middleware", () => {
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -636,7 +636,7 @@ test.describe("Middleware", () => {
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
               }
@@ -697,7 +697,7 @@ test.describe("Middleware", () => {
             import { Link } from 'react-router'
             import { orderContext } from "../context";;
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -721,7 +721,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/about.tsx": js`
             import { orderContext } from "../context";;
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, ['c']); // reset order from hydration
               },
@@ -785,7 +785,7 @@ test.describe("Middleware", () => {
             import { Link } from 'react-router'
             import { orderContext } from "../context";;
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
               },
@@ -809,7 +809,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/about.tsx": js`
             import { orderContext } from "../context";;
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, ['c']); // reset order from hydration
               },
@@ -865,7 +865,7 @@ test.describe("Middleware", () => {
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 console.log('running index middleware')
               },
@@ -882,7 +882,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/about.tsx": js`
             import { Link } from 'react-router'
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 console.log('running about middleware')
               },
@@ -943,7 +943,7 @@ test.describe("Middleware", () => {
             import { Form } from 'react-router'
             import { orderContext } from "../context";;
 
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, ['a']);
               },
@@ -1018,7 +1018,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ request, context }) => { throw redirect('/target'); }
             ]
             export default function Component() {
@@ -1069,7 +1069,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               async ({ request, context }, next) => {
                 await next();
                 throw redirect('/target');
@@ -1123,7 +1123,7 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              export const unstable_clientMiddleware = [
+              export const clientMiddleware = [
                 async ({ request, context }, next) => {
                   throw new Error('broken!')
                 }
@@ -1181,7 +1181,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               import { useRouteError } from 'react-router'
-              export const unstable_clientMiddleware = [
+              export const clientMiddleware = [
                 async ({ request, context }, next) => {
                   await next();
                   throw new Error('broken!')
@@ -1254,7 +1254,7 @@ test.describe("Middleware", () => {
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => { context.set(orderContext, ['a']); }
             ];
 
@@ -1269,7 +1269,7 @@ test.describe("Middleware", () => {
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
               },
@@ -1341,7 +1341,7 @@ test.describe("Middleware", () => {
             export function loader() {
               return 'PARENT'
             }
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => { context.get(countContext).parent++ },
             ];
 
@@ -1366,7 +1366,7 @@ test.describe("Middleware", () => {
             export function loader() {
               return 'CHILD'
             }
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => { context.get(countContext).child++ },
             ];
 
@@ -1464,7 +1464,7 @@ test.describe("Middleware", () => {
             export function loader() {
               return 'PARENT'
             }
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => { context.get(countContext).parent++ },
             ];
             export default function Component({ loaderData }) {
@@ -1485,7 +1485,7 @@ test.describe("Middleware", () => {
             export function loader() {
               return 'CHILD'
             }
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => { context.get(countContext).child++ },
             ];
             export default function Component({ loaderData }) {
@@ -1506,7 +1506,7 @@ test.describe("Middleware", () => {
             export function loader() {
               return 'INDEX'
             }
-            export const unstable_clientMiddleware = [
+            export const clientMiddleware = [
               ({ context }) => { context.get(countContext).index++ },
             ];
             export async function clientLoader({ serverLoader, context }) {
