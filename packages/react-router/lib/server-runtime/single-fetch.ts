@@ -54,7 +54,7 @@ export async function singleFetchAction(
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       skipRevalidation: true,
-      unstable_generateMiddlewareResponse: build.future.v8_middleware
+      generateMiddlewareResponse: build.future.v8_middleware
         ? async (query) => {
             try {
               let innerResult = await query(handlerRequest);
@@ -144,7 +144,7 @@ export async function singleFetchLoaders(
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
-      unstable_generateMiddlewareResponse: build.future.v8_middleware
+      generateMiddlewareResponse: build.future.v8_middleware
         ? async (query) => {
             try {
               let innerResult = await query(handlerRequest);
