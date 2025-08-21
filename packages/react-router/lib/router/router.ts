@@ -384,9 +384,7 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {
-  middleware: boolean;
-}
+export interface FutureConfig {}
 
 /**
  * Initialization options for createRouter
@@ -395,7 +393,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  unstable_getContext?: () => MaybePromise<RouterContextProvider>;
+  getContext?: () => MaybePromise<RouterContextProvider>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -874,7 +872,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    middleware: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -1668,8 +1665,8 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
     );
     // Create a new context per navigation
-    let scopedContext = init.unstable_getContext
-      ? await init.unstable_getContext()
+    let scopedContext = init.getContext
+      ? await init.getContext()
       : new RouterContextProvider();
     let pendingActionResult: PendingActionResult | undefined;
 
@@ -2294,8 +2291,8 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Create a new context per fetch
-    let scopedContext = init.unstable_getContext
-      ? await init.unstable_getContext()
+    let scopedContext = init.getContext
+      ? await init.getContext()
       : new RouterContextProvider();
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 

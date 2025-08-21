@@ -99,7 +99,7 @@ test("allows users to pass a client side context to HydratedRouter", async ({
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_getContext={() => {
+                getContext={() => {
                   return new RouterContextProvider([
                     [myContext, 'bar']
                   ]);

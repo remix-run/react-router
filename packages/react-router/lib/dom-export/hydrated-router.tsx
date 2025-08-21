@@ -77,9 +77,9 @@ function initSsrInfo(): void {
 }
 
 function createHydratedRouter({
-  unstable_getContext,
+  getContext,
 }: {
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
 }): DataRouter {
   initSsrInfo();
 
@@ -169,7 +169,7 @@ function createHydratedRouter({
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    unstable_getContext,
+    getContext,
     hydrationData,
     hydrationRouteProperties,
     mapRouteProperties,
@@ -222,7 +222,7 @@ export interface HydratedRouterProps {
    * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
    * functions
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for
@@ -251,14 +251,14 @@ export interface HydratedRouterProps {
  * @category Framework Routers
  * @mode framework
  * @param props Props
- * @param {dom.HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
  * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
-      unstable_getContext: props.unstable_getContext,
+      getContext: props.getContext,
     });
   }
 

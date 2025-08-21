@@ -150,7 +150,7 @@ export interface MemoryRouterOpts {
    * This function is called to generate a fresh `context` instance on each
    * navigation or fetcher call.
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
   /**
    * Future flags to enable for the router.
    */
@@ -192,7 +192,7 @@ export interface MemoryRouterOpts {
  * @param {MemoryRouterOpts.basename} opts.basename n/a
  * @param {MemoryRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {MemoryRouterOpts.future} opts.future n/a
- * @param {MemoryRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {MemoryRouterOpts.getContext} opts.getContext n/a
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
@@ -205,7 +205,7 @@ export function createMemoryRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
-    unstable_getContext: opts?.unstable_getContext,
+    getContext: opts?.getContext,
     future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,

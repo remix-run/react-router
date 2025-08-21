@@ -223,13 +223,13 @@ export function createCallServer({
 function createRouterFromPayload({
   fetchImplementation,
   createFromReadableStream,
-  unstable_getContext,
+  getContext,
   payload,
 }: {
   payload: RSCPayload;
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
-  unstable_getContext: RouterInit["unstable_getContext"] | undefined;
+  getContext: RouterInit["getContext"] | undefined;
 }): {
   router: DataRouter;
   routeModules: RouteModules;
@@ -275,7 +275,7 @@ function createRouterFromPayload({
 
   globalVar.__reactRouterDataRouter = createRouter({
     routes,
-    unstable_getContext,
+    getContext,
     basename: payload.basename,
     history: createBrowserHistory(),
     hydrationData: getHydrationData(
@@ -625,7 +625,7 @@ export interface RSCHydratedRouterProps {
    * This function is called to generate a fresh `context` instance on each
    * navigation or fetcher call.
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
 }
 
 /**
@@ -662,7 +662,7 @@ export interface RSCHydratedRouterProps {
  * @param props Props
  * @param {unstable_RSCHydratedRouterProps.createFromReadableStream} props.createFromReadableStream n/a
  * @param {unstable_RSCHydratedRouterProps.fetch} props.fetch n/a
- * @param {unstable_RSCHydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @param {unstable_RSCHydratedRouterProps.getContext} props.getContext n/a
  * @param {unstable_RSCHydratedRouterProps.payload} props.payload n/a
  * @param {unstable_RSCHydratedRouterProps.routeDiscovery} props.routeDiscovery n/a
  * @returns A hydrated {@link DataRouter} that can be used to navigate and
@@ -673,7 +673,7 @@ export function RSCHydratedRouter({
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
-  unstable_getContext,
+  getContext,
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
@@ -682,15 +682,10 @@ export function RSCHydratedRouter({
       createRouterFromPayload({
         payload,
         fetchImplementation,
-        unstable_getContext,
+        getContext,
         createFromReadableStream,
       }),
-    [
-      createFromReadableStream,
-      payload,
-      fetchImplementation,
-      unstable_getContext,
-    ],
+    [createFromReadableStream, payload, fetchImplementation, getContext],
   );
 
   React.useEffect(() => {

@@ -812,7 +812,7 @@ describe("context/middleware", () => {
         let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
-          unstable_getContext: () => context,
+          getContext: () => context,
           routes: [
             {
               path: "/",
@@ -872,7 +872,7 @@ describe("context/middleware", () => {
         let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
-          unstable_getContext: () => context,
+          getContext: () => context,
           routes: [
             {
               path: "/",
@@ -929,7 +929,7 @@ describe("context/middleware", () => {
         let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
-          unstable_getContext: () => context,
+          getContext: () => context,
           routes: [
             {
               path: "/",
@@ -1026,7 +1026,7 @@ describe("context/middleware", () => {
         let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
-          unstable_getContext: () => context,
+          getContext: () => context,
           routes: [
             {
               path: "/",
@@ -1127,7 +1127,7 @@ describe("context/middleware", () => {
         let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
-          unstable_getContext: () => context,
+          getContext: () => context,
           routes: [
             {
               path: "/",
@@ -1217,7 +1217,7 @@ describe("context/middleware", () => {
         let context = new RouterContextProvider();
         router = createRouter({
           history: createMemoryHistory(),
-          unstable_getContext: () => context,
+          getContext: () => context,
           routes: [
             {
               path: "/",

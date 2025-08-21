@@ -153,7 +153,7 @@ export interface DOMRouterOpts {
    * const apiClientContext = createContext<APIClient>();
    *
    * function createBrowserRouter(routes, {
-   *   unstable_getContext() {
+   *   getContext() {
    *     let context = new RouterContextProvider();
    *     context.set(apiClientContext, getApiClient());
    *     return context;
@@ -161,7 +161,7 @@ export interface DOMRouterOpts {
    * })
    * ```
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
   /**
    * Future flags to enable for the router.
    */
@@ -739,7 +739,7 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.basename} opts.basename n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.future} opts.future n/a
- * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
@@ -751,7 +751,7 @@ export function createBrowserRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
-    unstable_getContext: opts?.unstable_getContext,
+    getContext: opts?.getContext,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
@@ -775,7 +775,7 @@ export function createBrowserRouter(
  * @param opts Options
  * @param {DOMRouterOpts.basename} opts.basename n/a
  * @param {DOMRouterOpts.future} opts.future n/a
- * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
@@ -788,7 +788,7 @@ export function createHashRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
-    unstable_getContext: opts?.unstable_getContext,
+    getContext: opts?.getContext,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),

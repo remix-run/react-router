@@ -15,7 +15,7 @@ import {
   setServerCallback,
   // @ts-expect-error - no types for this yet
 } from "react-server-dom-parcel/client";
-import { unstable_getContext } from "./config/unstable-get-context";
+import { getContext } from "./config/unstable-get-context";
 
 // Create and set the callServer function to support post-hydration server actions.
 setServerCallback(
@@ -39,7 +39,7 @@ createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
         <RSCHydratedRouter
           payload={payload}
           createFromReadableStream={createFromReadableStream}
-          unstable_getContext={unstable_getContext}
+          getContext={getContext}
         />
       </StrictMode>,
       {

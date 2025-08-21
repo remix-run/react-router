@@ -132,17 +132,9 @@ function getLoadContext(req, res) {
 
 ## Quick Start (Data Mode)
 
-### 1. Enable the middleware flag
+<docs-info>Note there is no future flag in Data Mode because you can opt-into middleware by adding it to your routes, no breaking changes exist that require a future flag.</docs-info>
 
-```tsx
-const router = createBrowserRouter(routes, {
-  future: {
-    v8_middleware: true,
-  },
-});
-```
-
-### 2. Create a context
+### 1. Create a context
 
 Middleware uses a `context` provider instance to provide data down the middleware chain.
 You can create type-safe context objects using [`createContext`][createContext]:
@@ -154,7 +146,7 @@ import type { User } from "~/types";
 export const userContext = createContext<User | null>(null);
 ```
 
-### 3. Add middleware to your routes
+### 2. Add middleware to your routes
 
 ```tsx
 import { redirect } from "react-router";
@@ -214,18 +206,15 @@ export default function Profile() {
 }
 ```
 
-### 4. Add an `unstable_getContext` function (optional)
+### 3. Add an `getContext` function (optional)
 
-If you wish to include a base context on all navigations/fetches, you can add an [`unstable_getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
+If you wish to include a base context on all navigations/fetches, you can add an [`getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
 
 ```tsx
 let sessionContext = createContext();
 
 const router = createBrowserRouter(routes, {
-  future: {
-    v8_middleware: true,
-  },
-  unstable_getContext() {
+  getContext() {
     let context = new RouterContextProvider();
     context.set(sessionContext, getSession());
     return context;
@@ -233,7 +222,7 @@ const router = createBrowserRouter(routes, {
 });
 ```
 
-<docs-info>This API exists to mirror the `getLoadContext` API on the server in Framework Mode, which exists as a way to hand off values from your HTTP server to the React Router handler. This [`unstable_getContext`][getContext] API can be used to hand off global values from the [`window`][window]/[`document`][document] to React Router, but because they're all running in the same context (the browser), you can achieve effectively the same behavior with root route middleware. Therefore, you may not need this API the same way you would on the server - but it's provided for consistency.</docs-warning>
+<docs-info>This API exists to mirror the `getLoadContext` API on the server in Framework Mode, which exists as a way to hand off values from your HTTP server to the React Router handler. This [`getContext`][getContext] API can be used to hand off global values from the [`window`][window]/[`document`][document] to React Router, but because they're all running in the same context (the browser), you can achieve effectively the same behavior with root route middleware. Therefore, you may not need this API the same way you would on the server - but it's provided for consistency.</docs-warning>
 
 ## Core Concepts
 
@@ -562,7 +551,7 @@ This allows you to leave your `action`s/`loader`s untouched during initial adopt
 
 <docs-warning>This approach is only intended to be used as a migration strategy when adopting middleware in React Router v7, allowing you to incrementally migrate to `context.set`/`context.get`. It is not safe to assume this approach will work in the next major version of React Router.</docs-warning>
 
-<docs-warning>The [`RouterContextProvider`][RouterContextProvider] class is also used for the client-side `context` parameter via `<HydratedRouter unstable_getContext>` and `<RouterProvider unstable_getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `unstable_getContext` on the client).</docs-warning>
+<docs-warning>The [`RouterContextProvider`][RouterContextProvider] class is also used for the client-side `context` parameter via `<HydratedRouter getContext>` and `<RouterProvider getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `getContext` on the client).</docs-warning>
 
 ## Common Patterns
 
@@ -732,7 +721,7 @@ export async function loader({
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext
 [RouterContextProvider]: ../api/utils/RouterContextProvider
-[getContext]: ../api/data-routers/createBrowserRouter#optsunstable_getContext
+[getContext]: ../api/data-routers/createBrowserRouter#optsgetContext
 [window]: https://developer.mozilla.org/en-US/docs/Web/API/Window
 [document]: https://developer.mozilla.org/en-US/docs/Web/API/Document
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request

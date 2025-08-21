@@ -499,7 +499,7 @@ implementations.forEach((implementation) => {
 
               export const testContext = createContext<string>("default-value");
 
-              export function unstable_getContext() {
+              export function getContext() {
                 return new Map([[testContext, "client-context-value"]]);
               }
             `,
@@ -1262,9 +1262,7 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports client context using unstable_getContext", async ({
-          page,
-        }) => {
+        test("Supports client context using getContext", async ({ page }) => {
           await page.goto(`http://localhost:${port}/unstable-get-context`);
           await page.waitForSelector("[data-client-context]");
           expect(

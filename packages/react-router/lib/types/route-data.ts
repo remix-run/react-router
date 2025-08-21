@@ -98,7 +98,7 @@ export type ClientDataFunctionArgs<Params> = {
    * When `future.v8_middleware` is enabled, this is an instance of
    * `RouterContextProvider` and can be used to access context values
    * from your route middlewares.  You may pass in initial context values in your
-   * `<HydratedRouter unstable_getContext>` prop
+   * `<HydratedRouter getContext>` prop
    */
   context: Readonly<RouterContextProvider>;
 };
