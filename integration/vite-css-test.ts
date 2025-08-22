@@ -34,12 +34,18 @@ const fixtures = [
   templateDisplayName: string;
 }>;
 
-type RouteBasePath = "css" | "rsc-server-first-css";
+type RouteBasePath =
+  | "css-with-links-export"
+  | "css-with-floated-link"
+  | "rsc-server-first-route";
 const getRouteBasePaths = (templateName: TemplateName) => {
-  if (templateName.includes("rsc")) {
-    return ["css", "rsc-server-first-css"] as const satisfies RouteBasePath[];
-  }
-  return ["css"] as const satisfies RouteBasePath[];
+  return [
+    "css-with-links-export",
+    "css-with-floated-link",
+    ...(templateName.includes("rsc")
+      ? (["rsc-server-first-route"] as const)
+      : []),
+  ] as const satisfies RouteBasePath[];
 };
 
 const files = ({ templateName }: { templateName: TemplateName }) => ({
@@ -162,14 +168,17 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
             return null;
           }
 
-          export function links() {
-            return [{ rel: "stylesheet", href: postcssLinkedStyles }];
+          ${
+            routeBasePath === "css-with-links-export"
+              ? `export function links() { return [{ rel: "stylesheet", href: postcssLinkedStyles }]; }`
+              : ""
           }
 
           function TestRoute() {
             return (
               <>
                 <input />
+                ${routeBasePath !== "css-with-links-export" ? `<link rel="stylesheet" href={postcssLinkedStyles} precedence="default" />` : ""}
                 <div id="entry-client" className="entry-client">
                   <div id="css-modules" className={cssModulesStyles.index}>
                     <div id="css-postcss-linked" className="${routeBasePath}-postcss-linked">
@@ -517,11 +526,6 @@ async function hmrWorkflow({
   base?: string;
   templateName: TemplateName;
 }) {
-  if (templateName.includes("rsc")) {
-    // TODO: Fix CSS HMR support in RSC Framework mode
-    return;
-  }
-
   for (const routeBase of getRouteBasePaths(templateName)) {
     let pageErrors: Error[] = [];
     page.on("pageerror", (error) => pageErrors.push(error));
@@ -555,10 +559,11 @@ async function hmrWorkflow({
     await Promise.all(
       [
         "#css-bundled",
-        "#css-postcss-linked",
         "#css-modules",
-        "#css-vanilla-global",
-        "#css-vanilla-local",
+        ...(!templateName.includes("rsc")
+          ? // TODO: Fix these in RSC Framework Mode
+            ["#css-postcss-linked", "#css-vanilla-global", "#css-vanilla-local"]
+          : []),
       ].map(
         async (selector) =>
           await expect(page.locator(selector)).toHaveCSS(
@@ -569,9 +574,13 @@ async function hmrWorkflow({
     );
 
     // Ensure CSS updates were handled by HMR
-    await expect(input).toHaveValue("stateful");
+    // TODO: Fix state preservation in RSC Framework mode
+    if (!templateName.includes("rsc")) {
+      await expect(input).toHaveValue("stateful");
+    }
 
-    if (routeBase === "css") {
+    // RSC Framework Mode doesn't support custom entries yet
+    if (!templateName.includes("rsc")) {
       // The following change triggers a full page reload, so we check it after all the checks for HMR state preservation
       await edit("app/entry.client.css", modifyCss);
       await expect(page.locator("#entry-client")).toHaveCSS(
