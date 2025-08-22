@@ -8,6 +8,7 @@ import type {
   unstable_MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
+  DataStrategyResult,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
@@ -25,7 +26,9 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  unstable_clientMiddleware?: unstable_MiddlewareFunction<undefined>[];
+  unstable_clientMiddleware?: unstable_MiddlewareFunction<
+    Record<string, DataStrategyResult>
+  >[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;

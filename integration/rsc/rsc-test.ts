@@ -1,15 +1,13 @@
-import { test, expect } from "@playwright/test";
+import {
+  test,
+  expect,
+  type Response as PlaywrightResponse,
+} from "@playwright/test";
 import getPort from "get-port";
 
 import { implementations, js, setupRscTest, validateRSCHtml } from "./utils";
 
 implementations.forEach((implementation) => {
-  let stop: () => void;
-
-  test.afterEach(() => {
-    stop?.();
-  });
-
   test.describe(`RSC (${implementation.name})`, () => {
     test.describe("Development", () => {
       let port: number;
@@ -479,9 +477,46 @@ implementations.forEach((implementation) => {
                       path: "hydrate-fallback-props",
                       lazy: () => import("./routes/hydrate-fallback-props/home"),
                     },
+                    {
+                      id: "no-revalidate-server-action",
+                      path: "no-revalidate-server-action",
+                      lazy: () => import("./routes/no-revalidate-server-action/home"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
+            `,
+
+            "src/routes/root.tsx": js`
+              import { Links, Outlet, ScrollRestoration } from "react-router";
+              
+              export const unstable_middleware = [
+                async (_, next) => {
+                  const response = await next();
+                  return response.headers.set("x-test", "test");
+                }
+              ];
+
+              export function Layout({ children }: { children: React.ReactNode }) {
+                return (
+                  <html lang="en">
+                    <head>
+                      <meta charSet="utf-8" />
+                      <meta name="viewport" content="width=device-width, initial-scale=1" />
+                      <title>Vite (RSC)</title>
+                      <Links />
+                    </head>
+                    <body>
+                      {children}
+                      <ScrollRestoration />
+                    </body>
+                  </html>
+                );
+              }
+
+              export default function RootRoute() {
+                return <Outlet />;
+              }
             `,
 
             "src/config/request-context.ts": js`
@@ -1108,6 +1143,47 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+
+            "src/routes/no-revalidate-server-action/home.actions.ts": js`
+              "use server";
+
+              export async function noRevalidateAction() {
+                return "no revalidate";
+              }
+            `,
+            "src/routes/no-revalidate-server-action/home.tsx": js`
+              import ClientHomeRoute from "./home.client";
+
+              export function loader() {
+                console.log("loader");
+              }
+
+              export default function HomeRoute() {
+                return <ClientHomeRoute identity={{}} />;
+              }
+            `,
+            "src/routes/no-revalidate-server-action/home.client.tsx": js`
+              "use client";
+
+              import { useActionState, useState } from "react";
+              import { noRevalidateAction } from "./home.actions";
+
+              export default function HomeRoute({ identity }) {
+                const [initialIdentity] = useState(identity);
+                const [state, action, pending] = useActionState(noRevalidateAction, null);
+                return (
+                  <div>
+                    <form action={action}>
+                      <input name="$SKIP_REVALIDATION" type="hidden" />
+                      <button type="submit" data-submit>No Revalidate</button>
+                    </form>
+                    {state && <div data-state>{state}</div>}
+                    {pending && <div data-pending>Pending</div>}
+                    {initialIdentity !== identity && <div data-revalidated>Revalidated</div>}
+                  </div>
+                );
+              }
+            `,
           },
         });
       });
@@ -1524,6 +1600,36 @@ implementations.forEach((implementation) => {
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
+        });
+
+        test("Supports server actions that disable revalidation", async ({
+          page,
+        }) => {
+          await page.goto(
+            `http://localhost:${port}/no-revalidate-server-action`,
+            { waitUntil: "networkidle" },
+          );
+
+          const actionResponsePromise = new Promise<PlaywrightResponse>(
+            (resolve) => {
+              page.on("response", async (response) => {
+                if (!!(await response.request().headerValue("rsc-action-id"))) {
+                  resolve(response);
+                }
+              });
+            },
+          );
+
+          await page.click("[data-submit]");
+          await page.waitForSelector("[data-state]");
+          await page.waitForSelector("[data-pending]", { state: "hidden" });
+          await page.waitForSelector("[data-revalidated]", { state: "hidden" });
+          expect(await page.locator("[data-state]").textContent()).toBe(
+            "no revalidate",
+          );
+
+          const actionResponse = await actionResponsePromise;
+          expect(await actionResponse.headerValue("x-test")).toBe("test");
         });
       });
 
