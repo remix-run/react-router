@@ -1,5 +1,16 @@
 # `react-router`
 
+## 7.8.2-pre.1
+
+### Patch Changes
+
+- [UNSTABLE] Remove Data Mode `future.unstable_middleware` flag from `createBrowserRouter` ([#14213](https://github.com/remix-run/react-router/pull/14213))
+  - This is only needed as a Framework Mode flag because of the route modules and the `getLoadContext` type behavior change
+  - In Data Mode, it's an opt-in feature because it's just a new property on a route object, so there's no behavior changes that necessitate a flag
+
+- server action revalidation opt out via $SKIP_REVALIDATION field ([#14154](https://github.com/remix-run/react-router/pull/14154))
+- [REMOVE] Update type as a follow up to https://github.com/remix-run/react-router/pull/14151 ([#14212](https://github.com/remix-run/react-router/pull/14212))
+
 ## 7.8.2-pre.0
 
 ### Patch Changes

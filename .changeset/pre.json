@@ -38,9 +38,12 @@
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
   "changesets": [
+    "brown-ladybugs-yawn",
     "cold-geese-turn",
+    "cuddly-rockets-obey",
     "eleven-oranges-design",
     "fresh-pugs-relax",
+    "old-peas-fetch",
     "quiet-cows-build",
     "real-rules-compare",
     "rotten-parents-care",
