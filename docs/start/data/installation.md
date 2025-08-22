@@ -27,7 +27,7 @@ npm i react-router
 
 Create a router and pass it to `RouterProvider`:
 
-```tsx lines=[3-4,9-14,19]
+```tsx lines=[3-4,6-11,16]
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter } from "react-router";

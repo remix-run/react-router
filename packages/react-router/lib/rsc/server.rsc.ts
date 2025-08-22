@@ -515,6 +515,7 @@ async function processServerAction(
   temporaryReferences: unknown,
 ): Promise<
   | {
+      skipRevalidation: boolean;
       revalidationRequest: Request;
       actionResult?: Promise<unknown>;
       formState?: unknown;
@@ -559,9 +560,21 @@ async function processServerAction(
       // The error is propagated to the client through the result promise in the stream
       onError?.(error);
     }
+
+    let maybeFormData = actionArgs.length === 1 ? actionArgs[0] : actionArgs[1];
+    let formData =
+      maybeFormData &&
+      typeof maybeFormData === "object" &&
+      maybeFormData instanceof FormData
+        ? maybeFormData
+        : null;
+
+    let skipRevalidation = formData?.has("$SKIP_REVALIDATION") ?? false;
+
     return {
       actionResult,
       revalidationRequest: getRevalidationRequest(),
+      skipRevalidation,
     };
   } else if (isFormRequest) {
     const formData = await request.clone().formData();
@@ -591,6 +604,7 @@ async function processServerAction(
       return {
         formState,
         revalidationRequest: getRevalidationRequest(),
+        skipRevalidation: false,
       };
     }
   }
@@ -701,6 +715,7 @@ async function generateRenderResponse(
   const ctx: ServerContext = {
     runningAction: false,
   };
+
   const result = await ServerStorage.run(ctx, () =>
     staticHandler.query(request, {
       requestContext,
@@ -708,13 +723,14 @@ async function generateRenderResponse(
       skipRevalidation: isSubmission,
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
-        : null),
+        : {}),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the
         // POST `request` to `query` and process our action there.
         let formState: unknown;
+        let skipRevalidation = false;
         if (request.method === "POST") {
           ctx.runningAction = true;
           let result = await processServerAction(
@@ -741,6 +757,7 @@ async function generateRenderResponse(
             );
           }
 
+          skipRevalidation = result?.skipRevalidation ?? false;
           actionResult = result?.actionResult;
           formState = result?.formState;
           request = result?.revalidationRequest ?? request;
@@ -758,7 +775,14 @@ async function generateRenderResponse(
           }
         }
 
-        let staticContext = await query(request);
+        let staticContext = await query(
+          request,
+          skipRevalidation
+            ? {
+                filterMatchesToLoad: () => false,
+              }
+            : undefined,
+        );
 
         if (isResponse(staticContext)) {
           return generateRedirectResponse(
@@ -784,6 +808,7 @@ async function generateRenderResponse(
           formState,
           staticContext,
           temporaryReferences,
+          skipRevalidation,
           ctx.redirect?.headers,
         );
       },
@@ -875,6 +900,7 @@ async function generateStaticContextResponse(
   formState: unknown | undefined,
   staticContext: StaticHandlerContext,
   temporaryReferences: unknown,
+  skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
@@ -949,7 +975,7 @@ async function generateStaticContextResponse(
     payload = {
       type: "action",
       actionResult,
-      rerender: renderPayloadPromise(),
+      rerender: skipRevalidation ? undefined : renderPayloadPromise(),
     };
   } else if (isSubmission && isDataRequest) {
     // Short circuit without matches on non server-action submissions since

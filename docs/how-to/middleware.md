@@ -206,7 +206,7 @@ export default function Profile() {
 }
 ```
 
-### 3. Add an `getContext` function (optional)
+### 3. Add a `getContext` function (optional)
 
 If you wish to include a base context on all navigations/fetches, you can add an [`getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
 
@@ -461,7 +461,7 @@ const authMiddleware = async ({ request, context }) => {
 
 ### `next()` and Error Handling
 
-React Router contains built-in error handling via the route [`ErrorBoundary`][ErrorBoundary] export. Just like when a `action`/`loader` throws, if a `middleware` throws it will be caught and handled at the appropriate [`ErrorBoundary`] and a [`Response`][Response] will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a [`Response`][Response], so you don't need to worry about wrapping it in a try/catch.
+React Router contains built-in error handling via the route [`ErrorBoundary`][ErrorBoundary] export. Just like when a `action`/`loader` throws, if a `middleware` throws it will be caught and handled at the appropriate [`ErrorBoundary`][ErrorBoundary] and a [`Response`][Response] will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a [`Response`][Response], so you don't need to worry about wrapping it in a try/catch.
 
 This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root `middleware`. If any error from a `middleware` caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 

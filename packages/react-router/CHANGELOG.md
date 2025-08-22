@@ -1,5 +1,29 @@
 # `react-router`
 
+## 7.8.2
+
+### Patch Changes
+
+- \[UNSTABLE] Remove Data Mode `future.unstable_middleware` flag from `createBrowserRouter` ([#14213](https://github.com/remix-run/react-router/pull/14213))
+  - This is only needed as a Framework Mode flag because of the route modules and the `getLoadContext` type behavior change
+  - In Data Mode, it's an opt-in feature because it's just a new property on a route object, so there's no behavior changes that necessitate a flag
+
+- \[UNSTABLE] Add `<RouterProvider unstable_onError>`/`<HydratedRouter unstable_onError>` prop for client side error reporting ([#14162](https://github.com/remix-run/react-router/pull/14162))
+
+- server action revalidation opt out via $SKIP_REVALIDATION field ([#14154](https://github.com/remix-run/react-router/pull/14154))
+
+- Properly escape interpolated param values in `generatePath()` ([#13530](https://github.com/remix-run/react-router/pull/13530))
+
+- Maintain `ReadonlyMap` and `ReadonlySet` types in server response data. ([#13092](https://github.com/remix-run/react-router/pull/13092))
+
+- \[UNSTABLE] Delay serialization of `.data` redirects to 202 responses until after middleware chain ([#14205](https://github.com/remix-run/react-router/pull/14205))
+
+- Fix `TypeError` if you throw from `patchRoutesOnNavigation` when no partial matches exist ([#14198](https://github.com/remix-run/react-router/pull/14198))
+
+- Fix `basename` usage without a leading slash in data routers ([#11671](https://github.com/remix-run/react-router/pull/11671))
+
+- \[UNSTABLE] Update client middleware so it returns the data strategy results allowing for more advanced post-processing middleware ([#14151](https://github.com/remix-run/react-router/pull/14151))
+
 ## 7.8.1
 
 ### Patch Changes
