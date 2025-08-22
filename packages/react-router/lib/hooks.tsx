@@ -26,10 +26,10 @@ import {
 import type {
   Blocker,
   BlockerFunction,
-  RelativeRoutingType,
   Router as DataRouter,
-  RevalidationState,
   Navigation,
+  RelativeRoutingType,
+  RevalidationState,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
@@ -1394,12 +1394,12 @@ export function useRevalidator(): {
  * @mode data
  * @returns An array of {@link UIMatch | UI matches} for the current route hierarchy
  */
-export function useMatches(): UIMatch[] {
+export function useMatches<Data = unknown, Handle = unknown>(): UIMatch<Data, Handle>[] {
   let { matches, loaderData } = useDataRouterState(
     DataRouterStateHook.UseMatches,
   );
   return React.useMemo(
-    () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
+    () => matches.map((m) => convertRouteMatchToUiMatch<Data, Handle>(m, loaderData)),
     [matches, loaderData],
   );
 }
