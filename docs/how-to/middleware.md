@@ -133,17 +133,9 @@ function getLoadContext(req, res) {
 
 ## Quick Start (Data Mode)
 
-### 1. Enable the middleware flag
+<docs-info>Note there is no future flag in Data Mode because you can opt-into middleware by adding it to your routes, no breaking changes exist that require a future flag.</docs-info>
 
-```tsx
-const router = createBrowserRouter(routes, {
-  future: {
-    unstable_middleware: true,
-  },
-});
-```
-
-### 2. Create a context
+### 1. Create a context
 
 Middleware uses a `context` provider instance to provide data down the middleware chain.
 You can create type-safe context objects using [`unstable_createContext`][createContext]:
@@ -156,7 +148,7 @@ export const userContext =
   unstable_createContext<User | null>(null);
 ```
 
-### 3. Add middleware to your routes
+### 2. Add middleware to your routes
 
 ```tsx
 import { redirect } from "react-router";
@@ -216,7 +208,7 @@ export default function Profile() {
 }
 ```
 
-### 4. Add an `unstable_getContext` function (optional)
+### 3. Add an `unstable_getContext` function (optional)
 
 If you wish to include a base context on all navigations/fetches, you can add an [`unstable_getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
 
@@ -224,9 +216,6 @@ If you wish to include a base context on all navigations/fetches, you can add an
 let sessionContext = unstable_createContext();
 
 const router = createBrowserRouter(routes, {
-  future: {
-    unstable_middleware: true,
-  },
   unstable_getContext() {
     let context = new unstable_RouterContextProvider();
     context.set(sessionContext, getSession());
