@@ -380,9 +380,21 @@ Date: 2025-08-22
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
+**Client-side `onError`**
+
 - `react-router` - Add `<RouterProvider unstable_onError>`/`<HydratedRouter unstable_onError>` prop for client side error reporting ([#14162](https://github.com/remix-run/react-router/pull/14162))
+
+**Middleware**
+
 - `react-router` - Delay serialization of `.data` redirects to 202 responses until after middleware chain ([#14205](https://github.com/remix-run/react-router/pull/14205))
-- `react-router` - Update client middleware so it returns the data strategy results up the chain allowing for more advanced post-processing middleware ([#14151](https://github.com/remix-run/react-router/pull/14151))
+- `react-router` - Update client middleware so it returns the `dataStrategy` results up the chain allowing for more advanced post-processing middleware ([#14151](https://github.com/remix-run/react-router/pull/14151), [#14212](https://github.com/remix-run/react-router/pull/14212))
+- `react-router` - Remove Data Mode `future.unstable_middleware` flag from `createBrowserRouter` ([#14213](https://github.com/remix-run/react-router/pull/14213))
+  - This is only needed as a Framework Mode flag because of the route modules and the `getLoadContext` type behavior change
+  - In Data Mode, it's an opt-in feature because it's just a new property on a route object, so there's no behavior changes that necessitate a flag
+
+**RSC**
+
+- Allow opting out of revalidation on server actions with hidden `$SKIP_REVALIDATION` input ([#14154](https://github.com/remix-run/react-router/pull/14154))
 
 **Full Changelog**: [`v7.8.1...v7.8.2`](https://github.com/remix-run/react-router/compare/react-router@7.8.1...react-router@7.8.2)
 
