@@ -46,11 +46,13 @@ fi
 # If this is set when no tags exist the program exits on the TAGS assignment
 set +e
 
+echo "Pruning tags before looking for tags to delete:"
+git fetch --prune --prune-tags
+
 PATTERN="@7\.\d\+\.\d\+-pre"
 
-# Don't keep around prerelease tags for all packages - only the primary react-router package
+# Don't keep around prerelease tags for all packages - only the `react-router` package
 TAGS=$(git tag | grep -e "${PATTERN}" | grep -ve "^react-router@")
-
 
 if [[ $TAGS == "" ]]; then
   echo "No tags to delete, exiting"
