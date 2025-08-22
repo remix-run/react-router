@@ -118,7 +118,7 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
   ...Object.assign(
     {},
     ...getRouteBasePaths(templateName).map((routeBasePath) => {
-      const isServerFirstRoute = routeBasePath === "rsc-server-first-css";
+      const isServerFirstRoute = routeBasePath === "rsc-server-first-route";
       const exportName = isServerFirstRoute ? "ServerComponent" : "default";
 
       return {
@@ -579,7 +579,7 @@ async function hmrWorkflow({
       await expect(input).toHaveValue("stateful");
     }
 
-    // RSC Framework Mode doesn't support custom entries yet
+    // RSC Framework mode doesn't support custom entries yet
     if (!templateName.includes("rsc")) {
       // The following change triggers a full page reload, so we check it after all the checks for HMR state preservation
       await edit("app/entry.client.css", modifyCss);
