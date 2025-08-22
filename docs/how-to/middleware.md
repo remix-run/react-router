@@ -133,17 +133,9 @@ function getLoadContext(req, res) {
 
 ## Quick Start (Data Mode)
 
-### 1. Enable the middleware flag
+<docs-info>Note there is no future flag in Data Mode because you can opt-into middleware by adding it to your routes, no breaking changes exist that require a future flag.</docs-info>
 
-```tsx
-const router = createBrowserRouter(routes, {
-  future: {
-    unstable_middleware: true,
-  },
-});
-```
-
-### 2. Create a context
+### 1. Create a context
 
 Middleware uses a `context` provider instance to provide data down the middleware chain.
 You can create type-safe context objects using [`unstable_createContext`][createContext]:
@@ -156,7 +148,7 @@ export const userContext =
   unstable_createContext<User | null>(null);
 ```
 
-### 3. Add middleware to your routes
+### 2. Add middleware to your routes
 
 ```tsx
 import { redirect } from "react-router";
@@ -216,7 +208,7 @@ export default function Profile() {
 }
 ```
 
-### 4. Add an `unstable_getContext` function (optional)
+### 3. Add an `unstable_getContext` function (optional)
 
 If you wish to include a base context on all navigations/fetches, you can add an [`unstable_getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
 
@@ -224,9 +216,6 @@ If you wish to include a base context on all navigations/fetches, you can add an
 let sessionContext = unstable_createContext();
 
 const router = createBrowserRouter(routes, {
-  future: {
-    unstable_middleware: true,
-  },
   unstable_getContext() {
     let context = new unstable_RouterContextProvider();
     context.set(sessionContext, getSession());
@@ -256,14 +245,13 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
   [serverMiddleware];
 ```
 
-Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware is different because there's no HTTP [`Request`][request], so it doesn't bubble up anything via the `next` function:
+Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware differs from server middleware because there's no HTTP Request, so it doesn't have a `Response` to bubble up. In most cases, you can just ignore the return value from `next` and return nothing from your middleware on the client:
 
 ```ts
 async function clientMiddleware({ request }, next) {
   console.log(request.method, request.url);
-  await next(); // 👈 No return value
+  await next();
   console.log(response.status, request.method, request.url);
-  // 👈 No need to return anything here
 }
 
 // Framework mode
@@ -278,6 +266,34 @@ const route = {
   Component: Root,
 };
 ```
+
+There may be _some_ cases where you want to do some post-processing based on the result of the loaders/action. In lieu of a `Response`, client middleware bubbles up the value returned from the active [`dataStrategy`][datastrategy] (`Record<string, DataStrategyResult>` - keyed by route id). This allows you to take conditional action in your middleware based on the outcome of the executed `loader`/`action` functions.
+
+Here's an example of the [CMS Redirect on 404][cms-redirect] use case implemented as a client side middleware:
+
+```tsx
+async function cmsFallbackMiddleware({ request }, next) {
+  const results = await next();
+
+  // Check if we got a 404 from any of our routes and if so, look for a
+  // redirect in our CMS
+  const found404 = Object.values(results).some(
+    (r) =>
+      isRouteErrorResponse(r.result) &&
+      r.result.status === 404,
+  );
+  if (found404) {
+    const cmsRedirect = await checkCMSRedirects(
+      request.url,
+    );
+    if (cmsRedirect) {
+      throw redirect(cmsRedirect, 302);
+    }
+  }
+}
+```
+
+<docs-warning>In a server middleware, you shouldn't be messing with the `Response` body and should only be reading status/headers and setting headers. Similarly, this value should be considered read-only in client middleware because it represents the "body" or "data" for the resulting navigation which should be driven by loaders/actions - not middleware. This also means that in client middleware, there's usually no need to return the results even if you needed to capture it from `await next()`;</docs-warning>
 
 ### When Middleware Runs
 
@@ -606,7 +622,7 @@ export const loggingMiddleware = async (
 };
 ```
 
-### 404 to CMS Redirect
+### CMS Redirect on 404
 
 ```tsx filename=app/middleware/cms-fallback.ts
 export const cmsFallbackMiddleware = async (
@@ -703,6 +719,8 @@ export async function loader({
 [framework-action]: ../start/framework/route-module#action
 [framework-loader]: ../start/framework/route-module#loader
 [getloadcontext]: #changes-to-getloadcontextapploadcontext
+[datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
+[cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext
 [RouterContextProvider]: ../api/utils/RouterContextProvider
 [getContext]: ../api/data-routers/createBrowserRouter#optsunstable_getContext
@@ -716,5 +734,3 @@ export async function loader({
 [bun]: https://bun.sh/blog/bun-v0.7.0#asynclocalstorage-support
 [deno]: https://docs.deno.com/api/node/async_hooks/~/AsyncLocalStorage
 [ErrorBoundary]: ../start/framework/route-module#errorboundary
-[ErrorResponse]: https://api.reactrouter.com/v7/types/react_router.ErrorResponse.html
-[data]: ../api/utils/data

@@ -38,3 +38,21 @@ available to
 [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
 functions
 
+### unstable_onError
+
+An error handler function that will be called for any loader/action/render
+errors that are encountered in your application.  This is useful for
+logging or reporting errors instead of the `ErrorBoundary` because it's not
+subject to re-rendering and will only run one time per error.
+
+The `errorInfo` parameter is passed along from
+[`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
+and is only present for render errors.
+
+```tsx
+<HydratedRouter unstable_onError={(error, errorInfo) => {
+  console.error(error, errorInfo);
+  reportToErrorService(error, errorInfo);
+}} />
+```
+

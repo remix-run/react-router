@@ -17,6 +17,7 @@ import { createVirtualRouteConfig } from "./virtual-route-config";
 import {
   transformVirtualRouteModules,
   parseRouteExports,
+  isVirtualClientRouteModuleId,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
 import validatePluginOrder from "../plugins/validate-plugin-order";
@@ -76,9 +77,21 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             jsxDev: viteCommand !== "build",
           },
           environments: {
-            client: { build: { outDir: "build/client" } },
-            rsc: { build: { outDir: "build/server" } },
-            ssr: { build: { outDir: "build/server/__ssr_build" } },
+            client: {
+              build: {
+                outDir: join(config.buildDirectory, "client"),
+              },
+            },
+            rsc: {
+              build: {
+                outDir: join(config.buildDirectory, "server"),
+              },
+            },
+            ssr: {
+              build: {
+                outDir: join(config.buildDirectory, "server/__ssr_build"),
+              },
+            },
           },
           build: {
             rollupOptions: {
@@ -159,7 +172,14 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     {
       name: "react-router/rsc/virtual-route-modules",
       transform(code, id) {
-        return transformVirtualRouteModules({ code, id, viteCommand });
+        if (!routeIdByFile) return;
+        return transformVirtualRouteModules({
+          code,
+          id,
+          viteCommand,
+          routeIdByFile,
+          viteEnvironment: this.environment,
+        });
       },
     },
     {
@@ -228,8 +248,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
 
-        const routeId = routeIdByFile?.get(filepath);
-        if (routeId !== undefined) {
+        if (isVirtualClientRouteModuleId(id)) {
+          const routeId = routeIdByFile?.get(filepath);
           return { code: addRefreshWrapper({ routeId, code, id }) };
         }
 
