@@ -394,7 +394,7 @@ Date: 2025-08-22
 
 **RSC**
 
-- Allow opting out of revalidation on server actions with hidden `$SKIP_REVALIDATION` input ([#14154](https://github.com/remix-run/react-router/pull/14154))
+- `react-router` - Allow opting out of revalidation on server actions with hidden `$SKIP_REVALIDATION` input ([#14154](https://github.com/remix-run/react-router/pull/14154))
 
 **Full Changelog**: [`v7.8.1...v7.8.2`](https://github.com/remix-run/react-router/compare/react-router@7.8.1...react-router@7.8.2)
 
