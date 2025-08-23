@@ -489,8 +489,8 @@ implementations.forEach((implementation) => {
 
             "src/routes/root.tsx": js`
               import { Links, Outlet, ScrollRestoration } from "react-router";
-              
-              export const unstable_middleware = [
+
+              export const middleware = [
                 async (_, next) => {
                   const response = await next();
                   return response.headers.set("x-test", "test");
