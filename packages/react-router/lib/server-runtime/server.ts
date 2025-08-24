@@ -27,21 +27,13 @@ import { createServerHandoffString } from "./serverHandoff";
 import { getBuildTimeHeader, getDevServerHooks } from "./dev";
 import {
   encodeViaTurboStream,
-  getSingleFetchRedirect,
   singleFetchAction,
   singleFetchLoaders,
   SERVER_NO_BODY_STATUS_CODES,
+  generateSingleFetchRedirectResponse,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
-import type {
-  SingleFetchResult,
-  SingleFetchResults,
-} from "../dom/ssr/single-fetch";
-import {
-  SINGLE_FETCH_REDIRECT_STATUS,
-  SingleFetchRedirectSymbol,
-} from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
 import { getManifestPath } from "../dom/ssr/fog-of-war";
 
@@ -269,6 +261,15 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         handleError,
       );
 
+      if (isRedirectResponse(response)) {
+        response = generateSingleFetchRedirectResponse(
+          response,
+          request,
+          _build,
+          serverMode,
+        );
+      }
+
       if (_build.entry.module.handleDataRequest) {
         response = await _build.entry.module.handleDataRequest(response, {
           context: loadContext,
@@ -277,32 +278,11 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         });
 
         if (isRedirectResponse(response)) {
-          let result: SingleFetchResult | SingleFetchResults =
-            getSingleFetchRedirect(
-              response.status,
-              response.headers,
-              _build.basename,
-            );
-
-          if (request.method === "GET") {
-            result = {
-              [SingleFetchRedirectSymbol]: result,
-            };
-          }
-          let headers = new Headers(response.headers);
-          headers.set("Content-Type", "text/x-script");
-
-          return new Response(
-            encodeViaTurboStream(
-              result,
-              request.signal,
-              _build.entry.module.streamTimeout,
-              serverMode,
-            ),
-            {
-              status: SINGLE_FETCH_REDIRECT_STATUS,
-              headers,
-            },
+          response = generateSingleFetchRedirectResponse(
+            response,
+            request,
+            _build,
+            serverMode,
           );
         }
       }

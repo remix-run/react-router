@@ -3,7 +3,11 @@ import type {
   Response as PlaywrightResponse,
 } from "@playwright/test";
 import { test, expect } from "@playwright/test";
-import { UNSAFE_ErrorResponseImpl, UNSAFE_ServerMode } from "react-router";
+import {
+  UNSAFE_ErrorResponseImpl,
+  UNSAFE_ServerMode,
+  UNSAFE_SingleFetchRedirectSymbol,
+} from "react-router";
 
 import {
   createAppFixture,
@@ -1876,8 +1880,12 @@ test.describe("Middleware", () => {
         },
       });
 
-      let appFixture = await createAppFixture(fixture);
+      let res = await fixture.requestDocument("/redirect");
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).toBe("/target");
+      expect(res.body).toBeNull();
 
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector('a:has-text("Link")');
@@ -1933,8 +1941,12 @@ test.describe("Middleware", () => {
         },
       });
 
-      let appFixture = await createAppFixture(fixture);
+      let res = await fixture.requestDocument("/redirect");
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).toBe("/target");
+      expect(res.body).toBeNull();
 
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector('a:has-text("Link")');
@@ -1943,6 +1955,66 @@ test.describe("Middleware", () => {
       await page.waitForSelector('h1:has-text("Target")');
 
       appFixture.close();
+    });
+
+    test("doesn't serialize single fetch redirects until after the middleware chain", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            middleware: true,
+          }),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/redirect.tsx": js`
+            import { Link, redirect } from 'react-router'
+            export const unstable_middleware = [
+              async ({ request, context }, next) => {
+                let res = await next();
+                // Should still be a normal redirect here, not yet encoded into
+                // a single fetch redirect
+                res.headers.set("X-Status", res.status);
+                res.headers.set("X-Location", res.headers.get('Location'));
+                return res;
+              }
+            ]
+            export function loader() {
+              throw redirect('/target');
+            }
+            export default function Component() {
+              return <h1>Redirect</h1>
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1>Target</h1>
+            }
+          `,
+        },
+      });
+
+      let res = await fixture.requestSingleFetchData("/redirect.data");
+      expect(res.status).toBe(202);
+      expect(res.headers.get("location")).toBe(null);
+      expect(res.headers.get("x-status")).toBe("302");
+      expect(res.headers.get("x-location")).toBe("/target");
+      expect(res.data).toEqual({
+        [UNSAFE_SingleFetchRedirectSymbol]: {
+          redirect: "/target",
+          reload: false,
+          replace: false,
+          revalidate: false,
+          status: 302,
+        },
+      });
     });
 
     test("handles errors thrown on the way down (document)", async ({

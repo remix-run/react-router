@@ -48,6 +48,7 @@ implementation. You _almost always_ want to use the version from
 function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
+  unstable_onError,
 }: RouterProviderProps): React.ReactElement
 ```
 
@@ -62,6 +63,24 @@ You usually don't have to worry about this:
 - The `RouterProvider` exported from `react-router/dom` handles this internally for you
 - If you are rendering in a non-DOM environment, you can import
   `RouterProvider` from `react-router` and ignore this prop
+
+### unstable_onError
+
+An error handler function that will be called for any loader/action/render
+errors that are encountered in your application.  This is useful for
+logging or reporting errors instead of the `ErrorBoundary` because it's not
+subject to re-rendering and will only run one time per error.
+
+The `errorInfo` parameter is passed along from
+[`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
+and is only present for render errors.
+
+```tsx
+<RouterProvider unstable_onError=(error, errorInfo) => {
+  console.error(error, errorInfo);
+  reportToErrorService(error, errorInfo);
+}} />
+```
 
 ### router
 

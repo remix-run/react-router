@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-379a083b-20250813(eslint@8.57.0)
+        version: 6.1.0-canary-03fda05d-20250820(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -563,6 +563,12 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
+      '@vanilla-extract/css':
+        specifier: ^1.17.4
+        version: 1.17.4(babel-plugin-macros@3.1.0)
+      '@vanilla-extract/vite-plugin':
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -6370,8 +6376,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-379a083b-20250813:
-    resolution: {integrity: sha512-flz3K360hSFusL7K3SrdBe2UQVhU6Wd25w4f6vpit9ENIg5OAbX5uRMrpurHBn8OIZLFXsD3YYDzAM5DTj9hEg==}
+  eslint-plugin-react-hooks@6.1.0-canary-03fda05d-20250820:
+    resolution: {integrity: sha512-Bj5mfwgwS1bDuNrDrGd7K6MvYFvjF91b4BckC/HPWPRqf2HSmD7hJWR9q7hGckXGcd8Leb6UfafRpKinx7jIDw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -15222,7 +15228,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-379a083b-20250813(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-03fda05d-20250820(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7

@@ -77,8 +77,10 @@ type ViteConfigBuildArgs = {
 
 type ViteConfigBaseArgs = {
   templateName?: TemplateName;
+  base?: string;
   envDir?: string;
   mdx?: boolean;
+  vanillaExtract?: boolean;
 };
 
 type ViteConfigArgs = (
@@ -140,15 +142,18 @@ export const viteConfig = {
             ].join("\n")
       }
       ${args.mdx ? 'import mdx from "@mdx-js/rollup";' : ""}
+      ${args.vanillaExtract ? 'import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";' : ""}
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
       export default async () => ({
         ${args.port ? await viteConfig.server(args) : ""}
         ${viteConfig.build(args)}
+        ${args.base ? `base: "${args.base}",` : ""}
         envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           ${args.mdx ? "mdx()," : ""}
+          ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
           reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
@@ -329,6 +334,25 @@ export const reactRouterServe = async ({
   );
   await waitForServer(serveProc, { port, basename });
   return () => serveProc.kill();
+};
+
+export const runStartScript = async ({
+  cwd,
+  port,
+  basename,
+}: {
+  cwd: string;
+  port: number;
+  basename?: string;
+}) => {
+  let nodeBin = process.argv[0];
+  let proc = spawn(nodeBin, ["start.js"], {
+    cwd,
+    stdio: "pipe",
+    env: { NODE_ENV: "production", PORT: port.toFixed(0) },
+  });
+  await waitForServer(proc, { port, basename });
+  return () => proc.kill();
 };
 
 export const wranglerPagesDev = async ({

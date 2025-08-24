@@ -45,10 +45,8 @@ describe("generatePath", () => {
       ).toBe("/courses/foo*");
     });
     it("handles a 0 parameter", () => {
-      // @ts-expect-error
       // incorrect usage but worked in 6.3.0 so keep it to avoid the regression
       expect(generatePath("/courses/:id", { id: 0 })).toBe("/courses/0");
-      // @ts-expect-error
       // incorrect usage but worked in 6.3.0 so keep it to avoid the regression
       expect(generatePath("/courses/*", { "*": 0 })).toBe("/courses/0");
     });
@@ -132,6 +130,14 @@ describe("generatePath", () => {
           "*": "splat/and/then/some",
         }),
       ).toBe("/one/dos/three/cuatro/splat/and/then/some");
+    });
+  });
+
+  describe("with a param that contains a /", () => {
+    it("properly encodes the slash", () => {
+      expect(generatePath("/courses/:id/grades", { id: "a/b" })).toBe(
+        "/courses/a%2Fb/grades",
+      );
     });
   });
 

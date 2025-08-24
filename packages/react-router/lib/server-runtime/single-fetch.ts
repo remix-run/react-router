@@ -1,10 +1,6 @@
 import { encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import {
-  isRedirectResponse,
-  isRedirectStatusCode,
-  isResponse,
-} from "../router/router";
+import { isRedirectStatusCode, isResponse } from "../router/router";
 import type { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
@@ -78,25 +74,7 @@ export async function singleFetchAction(
   function handleQueryResult(
     result: Awaited<ReturnType<StaticHandler["query"]>>,
   ) {
-    if (!isResponse(result)) {
-      result = staticContextToResponse(result);
-    }
-
-    // Unlike `handleDataRequest`, when singleFetch is enabled, query does
-    // let non-Response return values through
-    if (isRedirectResponse(result)) {
-      return generateSingleFetchResponse(request, build, serverMode, {
-        result: getSingleFetchRedirect(
-          result.status,
-          result.headers,
-          build.basename,
-        ),
-        headers: result.headers,
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-      });
-    }
-
-    return result;
+    return isResponse(result) ? result : staticContextToResponse(result);
   }
 
   function handleQueryError(error: unknown) {
@@ -113,15 +91,7 @@ export async function singleFetchAction(
     let headers = getDocumentHeaders(context, build);
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
-      return generateSingleFetchResponse(request, build, serverMode, {
-        result: getSingleFetchRedirect(
-          context.statusCode,
-          headers,
-          build.basename,
-        ),
-        headers,
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-      });
+      return new Response(null, { status: context.statusCode, headers });
     }
 
     // Sanitize errors outside of development environments
@@ -194,24 +164,7 @@ export async function singleFetchLoaders(
   // Handle the query() result - either inside stream() with middleware enabled
   // or after query() without
   function handleQueryResult(result: StaticHandlerContext | Response) {
-    let response = isResponse(result)
-      ? result
-      : staticContextToResponse(result);
-    if (isRedirectResponse(response)) {
-      return generateSingleFetchResponse(request, build, serverMode, {
-        result: {
-          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
-            response.status,
-            response.headers,
-            build.basename,
-          ),
-        },
-        headers: response.headers,
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-      });
-    }
-
-    return response;
+    return isResponse(result) ? result : staticContextToResponse(result);
   }
 
   // Handle any thrown errors from query() result - either inside stream() with
@@ -230,17 +183,7 @@ export async function singleFetchLoaders(
     let headers = getDocumentHeaders(context, build);
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
-      return generateSingleFetchResponse(request, build, serverMode, {
-        result: {
-          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
-            context.statusCode,
-            headers,
-            build.basename,
-          ),
-        },
-        headers,
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-      });
+      return new Response(null, { status: context.statusCode, headers });
     }
 
     // Sanitize errors outside of development environments
@@ -332,6 +275,32 @@ function generateSingleFetchResponse(
       headers: resultHeaders,
     },
   );
+}
+
+export function generateSingleFetchRedirectResponse(
+  redirectResponse: Response,
+  request: Request,
+  build: ServerBuild,
+  serverMode: ServerMode,
+) {
+  let redirect = getSingleFetchRedirect(
+    redirectResponse.status,
+    redirectResponse.headers,
+    build.basename,
+  );
+
+  let headers = new Headers(redirectResponse.headers);
+  headers.delete("Location");
+  headers.set("Content-Type", "text/x-script");
+
+  return generateSingleFetchResponse(request, build, serverMode, {
+    result:
+      request.method === "GET"
+        ? { [SingleFetchRedirectSymbol]: redirect }
+        : redirect,
+    headers,
+    status: SINGLE_FETCH_REDIRECT_STATUS,
+  });
 }
 
 export function getSingleFetchRedirect(
