@@ -12,7 +12,7 @@ import {
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
 import type { unstable_RSCPayload as RSCPayload } from "react-router";
-import { getContext } from "./config/unstable-get-context";
+import { getContext } from "./config/get-context";
 
 setServerCallback(
   createCallServer({

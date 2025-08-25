@@ -15,7 +15,7 @@ import {
   setServerCallback,
   // @ts-expect-error - no types for this yet
 } from "react-server-dom-parcel/client";
-import { getContext } from "./config/unstable-get-context";
+import { getContext } from "./config/get-context";
 
 // Create and set the callServer function to support post-hydration server actions.
 setServerCallback(

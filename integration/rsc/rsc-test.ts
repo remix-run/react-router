@@ -354,14 +354,14 @@ implementations.forEach((implementation) => {
                       ]
                     },
                     {
-                      id: "unstable-get-context",
-                      path: "unstable-get-context",
-                      lazy: () => import("./routes/unstable-get-context/root"),
+                      id: "get-context",
+                      path: "get-context",
+                      lazy: () => import("./routes/get-context/root"),
                       children: [
                         {
-                          id: "unstable-get-context.home",
+                          id: "get-context.home",
                           index: true,
-                          lazy: () => import("./routes/unstable-get-context/home"),
+                          lazy: () => import("./routes/get-context/home"),
                         },
                       ]
                     },
@@ -528,7 +528,7 @@ implementations.forEach((implementation) => {
                 new Map([[testContext, "test-context-value"]])
               );
             `,
-            "src/config/unstable-get-context.ts": js`
+            "src/config/get-context.ts": js`
               // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
               import { createContext } from "react-router";
 
@@ -701,12 +701,12 @@ implementations.forEach((implementation) => {
               }
             `,
 
-            "src/routes/unstable-get-context/root.tsx": js`
+            "src/routes/get-context/root.tsx": js`
               "use client";
 
               import { Outlet } from "react-router";
               import type { ClientMiddlewareFunction } from "react-router";
-              import { testContext } from "../../config/unstable-get-context";
+              import { testContext } from "../../config/get-context";
 
               export const clientMiddleware = [
                 async ({ context }, next) => {
@@ -728,11 +728,11 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
-            "src/routes/unstable-get-context/home.tsx": js`
+            "src/routes/get-context/home.tsx": js`
               "use client";
 
               import { useLoaderData } from "react-router";
-              import { testContext } from "../../config/unstable-get-context";
+              import { testContext } from "../../config/get-context";
 
               export function clientLoader({ context }) {
                 const contextValue = context.get(testContext);
@@ -1339,7 +1339,7 @@ implementations.forEach((implementation) => {
         });
 
         test("Supports client context using getContext", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/unstable-get-context`);
+          await page.goto(`http://localhost:${port}/get-context`);
           await page.waitForSelector("[data-client-context]");
           expect(
             await page.locator("[data-client-context]").textContent(),
