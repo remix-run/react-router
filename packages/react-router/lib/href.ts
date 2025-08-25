@@ -27,26 +27,28 @@ export function href<Path extends keyof Args>(
   ...args: Args[Path]
 ): string {
   let params = args[0];
-  return path
-    .split("/")
-    .map((segment) => {
-      if (segment === "*") {
-        return params ? params["*"] : undefined;
-      }
+  let result = path
+    .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+    .replace(
+      /\/:([\w-]+)(\?)?/g, // same regex as in .\router\utils.ts: compilePath().
+      (_: string, param: string, isOptional) => {
+        const value = params ? params[param] : undefined;
+        if (isOptional == null && value == null) {
+          throw new Error(
+            `Path '${path}' requires param '${param}' but it was not provided`,
+          );
+        }
+        return value == null ? "" : "/" + value;
+      },
+    );
 
-      const match = segment.match(/^:([\w-]+)(\?)?/);
-      if (!match) return segment;
-      const param = match[1];
-      const value = params ? params[param] : undefined;
+  if (path.endsWith("*")) {
+    // treat trailing splat the same way as compilePath, and force it to be as if it were `/*`.
+    // `react-router typegen` will not generate the params for a malformed splat, causing a type error, but we can still do the correct thing here.
+    if (params && params["*"] != null) {
+      result += "/" + params["*"];
+    }
+  }
 
-      const isRequired = match[2] === undefined;
-      if (isRequired && value === undefined) {
-        throw Error(
-          `Path '${path}' requires param '${param}' but it was not provided`,
-        );
-      }
-      return value;
-    })
-    .filter((segment) => segment !== undefined)
-    .join("/");
+  return result || "/";
 }
