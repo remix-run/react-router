@@ -10,6 +10,8 @@ import {
 } from "react-router";
 
 import {
+  type AppFixture,
+  type Fixture,
   createAppFixture,
   createFixture,
   js,
@@ -85,7 +87,6 @@ export default function handleRequest(
 
 test.describe("Middleware", () => {
   let originalConsoleError = console.error;
-
   test.beforeEach(() => {
     console.error = () => {};
   });
@@ -95,10 +96,14 @@ test.describe("Middleware", () => {
   });
 
   test.describe("SPA Mode", () => {
-    test("calls clientMiddleware before/after loaders", async ({ page }) => {
-      let fixture = await createFixture({
+    let fixture: Fixture;
+    let appFixture: AppFixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
         spaMode: true,
         files: {
+          // ...existing code...
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
             v8_middleware: true,
@@ -106,20 +111,15 @@ test.describe("Middleware", () => {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              build: { manifest: true, minify: false },
-              plugins: [reactRouter()],
-            });
+            export default defineConfig({ build: { manifest: true, minify: false }, plugins: [reactRouter()] });
           `,
           "app/context.ts": js`
             import { createContext } from 'react-router'
             export const orderContext = createContext([]);
           `,
-          "app/routes/_index.tsx": js`
+          "app/routes/a._index.tsx": js`
             import { Link } from 'react-router'
             import { orderContext } from '../context'
-
             export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'a']);
@@ -128,23 +128,20 @@ test.describe("Middleware", () => {
                 context.set(orderContext, [...context.get(orderContext), 'b']);
               },
             ];
-
             export async function clientLoader({ request, context }) {
               return context.get(orderContext).join(',');
             }
-
             export default function Component({ loaderData }) {
               return (
                 <>
                   <h2 data-route>Index: {loaderData}</h2>
-                  <Link to="/about">Go to about</Link>
+                  <Link to="/a/about">Go to about</Link>
                 </>
                );
             }
           `,
-          "app/routes/about.tsx": js`
+          "app/routes/a.about.tsx": js`
             import { orderContext } from '../context'
-
             export const clientMiddleware = [
               ({ context }) => {
                 context.set(orderContext, [...context.get(orderContext), 'c']);
@@ -153,40 +150,283 @@ test.describe("Middleware", () => {
                 context.set(orderContext, [...context.get(orderContext), 'd']);
               },
             ];
-
             export async function clientLoader({ context }) {
               return context.get(orderContext).join(',');
             }
-
             export default function Component({ loaderData }) {
               return <h2 data-route>About: {loaderData}</h2>;
             }
           `,
+          "app/routes/b._index.tsx": js`
+            import { Form } from 'react-router'
+            import { orderContext } from '../context';
+            export const clientMiddleware = [
+              ({ request, context }) => {
+                context.set(orderContext, ['a']);
+              },
+              ({ request, context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
+            ];
+            export async function clientAction({ request, context }) {
+              return context.get(orderContext).join(',');
+            }
+            export async function clientLoader({ request, context }) {
+              return context.get(orderContext).join(',');
+            }
+            export default function Component({ loaderData, actionData }) {
+              return (
+                <>
+                  <h2 data-route>Index: {loaderData} - {actionData || 'empty'}</h2>
+                  <Form method="post">
+                    <input name="name" />
+                    <button type="submit">Submit</button>
+                  </Form>
+                </>
+               );
+            }
+          `,
+          "app/routes/c._index.tsx": js`
+            import { Link } from 'react-router'
+            export default function Component({ loaderData, actionData }) {
+              return <Link to="/c/redirect">Link</Link>;
+            }
+          `,
+          "app/routes/c.redirect.tsx": js`
+            import { Link, redirect } from 'react-router'
+            export const clientMiddleware = [
+              ({ request, context }) => { throw redirect('/c/target'); }
+            ]
+            export default function Component() {
+              return <h1>Redirect</h1>
+            }
+          `,
+          "app/routes/c.target.tsx": js`
+            export default function Component() {
+              return <h1>Target</h1>
+            }
+          `,
+          "app/routes/d._index.tsx": js`
+            import { Link } from 'react-router';
+
+            export default function Component() {
+              return <Link to="/d/redirect">Link</Link>;
+            }
+          `,
+          "app/routes/d.redirect.tsx": js`
+            import { Link, redirect } from 'react-router';
+
+            export const clientMiddleware = [
+              async ({ request, context }, next) => {
+                await next();
+                throw redirect('/d/target');
+              }
+            ];
+
+            export default function Component() {
+              return <h1>Redirect</h1>;
+            }
+          `,
+          "app/routes/d.target.tsx": js`
+            export default function Component() {
+              return <h1>Target</h1>;
+            }
+          `,
+          "app/routes/e._index.tsx": js`
+            import { Link } from 'react-router';
+
+            export default function Component() {
+              return <Link to="/e/broken">Link</Link>;
+            }
+          `,
+          "app/routes/e.broken.tsx": js`
+            export const clientMiddleware = [
+              async ({ request, context }, next) => {
+                throw new Error('broken!');
+              }
+            ];
+
+            export default function Component() {
+              return <h1>Should not see me</h1>;
+            }
+
+            export function ErrorBoundary({ error }) {
+              return <h1 data-error>{error.message}</h1>;
+            }
+          `,
+          "app/routes/f._index.tsx": js`
+            import { Link } from 'react-router';
+
+            export default function Component() {
+              return <Link to="/f/broken">Link</Link>;
+            }
+          `,
+          "app/routes/f.broken.tsx": js`
+            export const clientMiddleware = [
+              async ({ request, context }, next) => {
+                await next();
+                throw new Error('broken!');
+              }
+            ];
+
+            export function clientLoader() {
+              return "nope";
+            }
+
+            export default function Component() {
+              return <h1>Should not see me</h1>;
+            }
+
+            export function ErrorBoundary({ loaderData, error }) {
+              return (
+                <>
+                  <h1 data-error>{error.message}</h1>
+                  <pre>{loaderData ?? 'empty'}</pre>
+                </>
+              );
+            }
+          `,
+          "app/routes/g._index.tsx": js`
+            import { Link } from 'react-router'
+            export default function Component({ loaderData }) {
+              return <Link to="/g/a/b/c">Link</Link>;
+            }
+          `,
+          "app/routes/g.a.tsx": js`
+            import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
+            export const clientMiddleware = [
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'a']);
+              },
+            ];
+
+            export function clientLoader({ context }) {
+              return context.get(orderContext).join(',');
+            }
+
+            export default function Component({ loaderData }) {
+              return <><h2>A: {loaderData}</h2><Outlet /></>;
+            }
+          `,
+          "app/routes/g.a.b.tsx": js`
+            import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
+            export const clientMiddleware = [
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              }
+            ];
+
+            export default function Component() {
+              return <><h3>B</h3><Outlet /></>;
+            }
+          `,
+          "app/routes/g.a.b.c.tsx": js`
+            import { orderContext } from '../context';
+            export function clientLoader({ context }) {
+              return context.get(orderContext).join(',');
+            }
+
+            export default function Component({ loaderData }) {
+              return <h4>C: {loaderData}</h4>;
+            }
+          `,
         },
       });
+      appFixture = await createAppFixture(fixture);
+    });
 
-      let appFixture = await createAppFixture(fixture);
+    test.afterAll(() => {
+      appFixture.close();
+    });
 
+    test("calls clientMiddleware before/after loaders", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
+      await app.goto("/a");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "Index: a,b",
       );
 
-      (await page.$('a[href="/about"]'))?.click();
+      (await page.$('a[href="/a/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "About: c,d",
       );
-
-      appFixture.close();
     });
 
-    test("calls clientMiddleware before/after loaders with split route modules", async ({
+    test("calls clientMiddleware before/after actions", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/b/");
+      await page.waitForSelector('[data-route]:has-text("Index")');
+      expect(await page.locator("[data-route]").textContent()).toBe(
+        "Index: a,b - empty",
+      );
+
+      (await page.getByRole("button"))?.click();
+      await new Promise((r) => setTimeout(r, 1000));
+      await page.waitForSelector('[data-route]:has-text("- a,b")');
+      expect(await page.locator("[data-route]").textContent()).toBe(
+        "Index: a,b - a,b",
+      );
+    });
+
+    test("handles redirects thrown on the way down", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/c");
+      await page.waitForSelector('a:has-text("Link")');
+
+      (await page.getByRole("link"))?.click();
+      await page.waitForSelector('h1:has-text("Target")');
+    });
+
+    test("handles redirects thrown on the way up", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/d");
+      await page.waitForSelector('a:has-text("Link")');
+      (await page.getByRole("link"))?.click();
+      await page.waitForSelector('h1:has-text("Target")');
+    });
+
+    test("handles errors thrown on the way down", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/e");
+      await page.waitForSelector('a:has-text("Link")');
+      (await page.getByRole("link"))?.click();
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
+    });
+
+    test("handles errors thrown on the way up", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/f");
+      await page.waitForSelector('a:has-text("Link")');
+      (await page.getByRole("link"))?.click();
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
+      expect(await page.innerText("pre")).toBe("empty");
+    });
+
+    test("calls clientMiddleware for routes even without a loader", async ({
       page,
     }) => {
-      let fixture = await createFixture({
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/g", true);
+      (await page.$('a[href="/g/a/b/c"]'))?.click();
+      await page.waitForSelector("h4");
+      expect(await page.innerText("h2")).toBe("A: a,b");
+      expect(await page.innerText("h3")).toBe("B");
+      expect(await page.innerText("h4")).toBe("C: a,b");
+    });
+  });
+
+  test.describe("SPA Mode + Split Route Modules", () => {
+    let fixture: Fixture;
+    let appFixture: AppFixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
         spaMode: true,
         files: {
           "react-router.config.ts": reactRouterConfig({
@@ -256,8 +496,16 @@ test.describe("Middleware", () => {
         },
       });
 
-      let appFixture = await createAppFixture(fixture);
+      appFixture = await createAppFixture(fixture);
+    });
 
+    test.afterAll(() => {
+      appFixture.close();
+    });
+
+    test("calls clientMiddleware before/after loaders with split route modules", async ({
+      page,
+    }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
@@ -270,406 +518,6 @@ test.describe("Middleware", () => {
       expect(await page.locator("[data-route]").textContent()).toBe(
         "About: c,d",
       );
-
-      appFixture.close();
-    });
-
-    test("calls clientMiddleware before/after actions", async ({ page }) => {
-      let fixture = await createFixture({
-        spaMode: true,
-        files: {
-          "react-router.config.ts": reactRouterConfig({
-            ssr: false,
-            v8_middleware: true,
-          }),
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              build: { manifest: true },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/context.ts": js`
-            import { createContext } from 'react-router'
-            export const orderContext = createContext([]);
-          `,
-          "app/routes/_index.tsx": js`
-            import { Form } from 'react-router'
-            import { orderContext } from '../context';
-
-            export const clientMiddleware = [
-              ({ request, context }) => {
-                context.set(orderContext, ['a']);
-              },
-              ({ request, context }) => {
-                context.set(orderContext, [...context.get(orderContext), 'b']);
-              },
-            ];
-
-            export async function clientAction({ request, context }) {
-              return context.get(orderContext).join(',');
-            }
-
-            export async function clientLoader({ request, context }) {
-              return context.get(orderContext).join(',');
-            }
-
-            export default function Component({ loaderData, actionData }) {
-              return (
-                <>
-                  <h2 data-route>Index: {loaderData} - {actionData || 'empty'}</h2>
-                  <Form method="post">
-                    <input name="name" />
-                    <button type="submit">Submit</button>
-                  </Form>
-                </>
-               );
-            }
-          `,
-        },
-      });
-
-      let appFixture = await createAppFixture(fixture);
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await page.waitForSelector('[data-route]:has-text("Index")');
-      expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty",
-      );
-
-      (await page.getByRole("button"))?.click();
-      await new Promise((r) => setTimeout(r, 1000));
-      await page.waitForSelector('[data-route]:has-text("- a,b")');
-      expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b",
-      );
-
-      appFixture.close();
-    });
-
-    test("handles redirects thrown on the way down", async ({ page }) => {
-      let fixture = await createFixture({
-        spaMode: true,
-        files: {
-          "react-router.config.ts": reactRouterConfig({
-            ssr: false,
-            v8_middleware: true,
-          }),
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              build: { manifest: true },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router'
-
-            export default function Component({ loaderData, actionData }) {
-              return <Link to="/redirect">Link</Link>;
-            }
-          `,
-          "app/routes/redirect.tsx": js`
-            import { Link, redirect } from 'react-router'
-            export const clientMiddleware = [
-              ({ request, context }) => { throw redirect('/target'); }
-            ]
-            export default function Component() {
-              return <h1>Redirect</h1>
-            }
-          `,
-          "app/routes/target.tsx": js`
-            export default function Component() {
-              return <h1>Target</h1>
-            }
-          `,
-        },
-      });
-
-      let appFixture = await createAppFixture(fixture);
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await page.waitForSelector('a:has-text("Link")');
-
-      (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("Target")');
-
-      appFixture.close();
-    });
-
-    test("handles redirects thrown on the way up", async ({ page }) => {
-      let fixture = await createFixture({
-        spaMode: true,
-        files: {
-          "react-router.config.ts": reactRouterConfig({
-            ssr: false,
-            v8_middleware: true,
-          }),
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              build: { manifest: true },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router'
-
-            export default function Component({ loaderData, actionData }) {
-              return <Link to="/redirect">Link</Link>;
-            }
-          `,
-          "app/routes/redirect.tsx": js`
-            import { Link, redirect } from 'react-router'
-            export const clientMiddleware = [
-              async ({ request, context }, next) => {
-                await next();
-                throw redirect('/target');
-              }
-            ]
-            export default function Component() {
-              return <h1>Redirect</h1>
-            }
-          `,
-          "app/routes/target.tsx": js`
-            export default function Component() {
-              return <h1>Target</h1>
-            }
-          `,
-        },
-      });
-
-      let appFixture = await createAppFixture(fixture);
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await page.waitForSelector('a:has-text("Link")');
-
-      (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("Target")');
-
-      appFixture.close();
-    });
-
-    test("handles errors thrown on the way down", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          spaMode: true,
-          files: {
-            "react-router.config.ts": reactRouterConfig({
-              ssr: false,
-              v8_middleware: true,
-            }),
-            "vite.config.ts": js`
-              import { defineConfig } from "vite";
-              import { reactRouter } from "@react-router/dev/vite";
-
-              export default defineConfig({
-                build: { manifest: true },
-                plugins: [reactRouter()],
-              });
-            `,
-            "app/routes/_index.tsx": js`
-              import { Link } from 'react-router'
-
-              export default function Component() {
-                return <Link to="/broken">Link</Link>;
-              }
-            `,
-            "app/routes/broken.tsx": js`
-              export const clientMiddleware = [
-                async ({ request, context }, next) => {
-                  throw new Error('broken!');
-                }
-              ]
-              export default function Component() {
-                return <h1>Should not see me</h1>
-              }
-              export function ErrorBoundary({ error }) {
-                return <h1 data-error>{error.message}</h1>
-              }
-            `,
-          },
-        },
-        UNSAFE_ServerMode.Development,
-      );
-
-      let appFixture = await createAppFixture(
-        fixture,
-        UNSAFE_ServerMode.Development,
-      );
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await page.waitForSelector('a:has-text("Link")');
-
-      (await page.getByRole("link"))?.click();
-      await page.waitForSelector("[data-error]");
-      expect(await page.innerText("[data-error]")).toBe("broken!");
-
-      appFixture.close();
-    });
-
-    test("handles errors thrown on the way up", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          spaMode: true,
-          files: {
-            "react-router.config.ts": reactRouterConfig({
-              ssr: false,
-              v8_middleware: true,
-            }),
-            "vite.config.ts": js`
-              import { defineConfig } from "vite";
-              import { reactRouter } from "@react-router/dev/vite";
-
-              export default defineConfig({
-                build: { manifest: true },
-                plugins: [reactRouter()],
-              });
-            `,
-            "app/routes/_index.tsx": js`
-              import { Link } from 'react-router'
-
-              export default function Component() {
-                return <Link to="/broken">Link</Link>;
-              }
-            `,
-            "app/routes/broken.tsx": js`
-              export const clientMiddleware = [
-                async ({ request, context }, next) => {
-                  await next();
-                  throw new Error('broken!');
-                }
-              ]
-              export function clientLoader() {
-                return "nope"
-              }
-              export default function Component() {
-                return <h1>Should not see me</h1>
-              }
-              export function ErrorBoundary({ loaderData, error }) {
-                return (
-                  <>
-                    <h1 data-error>{error.message}</h1>
-                    <pre>{loaderData ?? 'empty'}</pre>
-                  </>
-                );
-              }
-            `,
-          },
-        },
-        UNSAFE_ServerMode.Development,
-      );
-
-      let appFixture = await createAppFixture(
-        fixture,
-        UNSAFE_ServerMode.Development,
-      );
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await page.waitForSelector('a:has-text("Link")');
-
-      (await page.getByRole("link"))?.click();
-      await page.waitForSelector("[data-error]");
-      expect(await page.innerText("[data-error]")).toBe("broken!");
-      expect(await page.innerText("pre")).toBe("empty");
-
-      appFixture.close();
-    });
-
-    test("calls clientMiddleware for routes even without a loader", async ({
-      page,
-    }) => {
-      let fixture = await createFixture({
-        spaMode: true,
-        files: {
-          "react-router.config.ts": reactRouterConfig({
-            ssr: false,
-            v8_middleware: true,
-          }),
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              build: { manifest: true, minify: false },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/context.ts": js`
-            import { createContext } from 'react-router'
-            export const orderContext = createContext([]);
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router'
-            export default function Component({ loaderData }) {
-              return <Link to="/a/b/c">Link</Link>;
-            }
-          `,
-          "app/routes/a.tsx": js`
-            import { Outlet } from 'react-router'
-            import { orderContext } from '../context';
-            export const clientMiddleware = [
-              ({ context }) => {
-                context.set(orderContext, [...context.get(orderContext), 'a']);
-              },
-            ];
-
-            export function clientLoader({ context }) {
-              return context.get(orderContext).join(',');
-            }
-
-            export default function Component({ loaderData }) {
-              return <><h2>A: {loaderData}</h2><Outlet /></>;
-            }
-          `,
-          "app/routes/a.b.tsx": js`
-            import { Outlet } from 'react-router'
-            import { orderContext } from '../context';
-            export const clientMiddleware = [
-              ({ context }) => {
-                context.set(orderContext, [...context.get(orderContext), 'b']);
-              }
-            ];
-
-            export default function Component() {
-              return <><h3>B</h3><Outlet /></>;
-            }
-          `,
-          "app/routes/a.b.c.tsx": js`
-            import { orderContext } from '../context';
-            export function clientLoader({ context }) {
-              return context.get(orderContext).join(',');
-            }
-
-            export default function Component({ loaderData }) {
-              return <h4>C: {loaderData}</h4>;
-            }
-          `,
-        },
-      });
-
-      let appFixture = await createAppFixture(fixture);
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/", true);
-      (await page.$('a[href="/a/b/c"]'))?.click();
-      await page.waitForSelector("h4");
-      expect(await page.innerText("h2")).toBe("A: a,b");
-      expect(await page.innerText("h3")).toBe("B");
-      expect(await page.innerText("h4")).toBe("C: a,b");
-
-      appFixture.close();
     });
   });
 
