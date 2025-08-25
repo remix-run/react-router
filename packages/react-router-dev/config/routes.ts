@@ -319,11 +319,9 @@ export { route, index, layout, prefix };
  */
 export function relative(directory: string): typeof helpers {
   const generateRelativeId = (file: string): string => {
-    const joined = Path.join(directory, file);
-    const relativePath = Path.isAbsolute(joined)
-      ? Path.relative(process.cwd(), joined)
-      : joined;
-    return Path.normalize(stripFileExtension(relativePath));
+    const absolutePath = Path.resolve(directory, file);
+    const relativePath = Path.relative(process.cwd(), absolutePath);
+    return createRouteId(relativePath);
   };
 
   return {
