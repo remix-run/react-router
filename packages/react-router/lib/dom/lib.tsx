@@ -2633,6 +2633,44 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   >;
 
   /**
+   * Loads data from a route. Useful for loading data imperatively inside user
+   * events outside a normal button or form, like a combobox or search input.
+   *
+   * ```tsx
+   * let fetcher = useFetcher()
+   *
+   * <input onChange={e => {
+   *   fetcher.load(`/search?q=${e.target.value}`)
+   * }} />
+   * ```
+   */
+  load: (
+    href: string,
+    opts?: {
+      /**
+       * Wraps the initial state update for this `fetcher.load` in a
+       * [`ReactDOM.flushSync`](https://react.dev/reference/react-dom/flushSync)
+       * call instead of the default [`React.startTransition`](https://react.dev/reference/react/startTransition).
+       * This allows you to perform synchronous DOM actions immediately after the
+       * update is flushed to the DOM.
+       */
+      flushSync?: boolean;
+    },
+  ) => Promise<void>;
+
+  /**
+   * Reset a fetcher back to an empty/idle state.
+   *
+   * If the fetcher is currently in-flight, the
+   * [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
+   * will be aborted with the `reason`, if provided.
+   *
+   * @param reason Optional `reason` to provide to [`AbortController.abort()`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
+   * @returns void
+   */
+  unstable_reset: (opts?: { reason?: unknown }) => void;
+
+  /**
    *  Submits form data to a route. While multiple nested routes can match a URL, only the leaf route will be called.
    *
    *  The `formData` can be multiple types:
@@ -2685,32 +2723,6 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
    *  ```
    */
   submit: FetcherSubmitFunction;
-
-  /**
-   * Loads data from a route. Useful for loading data imperatively inside user
-   * events outside a normal button or form, like a combobox or search input.
-   *
-   * ```tsx
-   * let fetcher = useFetcher()
-   *
-   * <input onChange={e => {
-   *   fetcher.load(`/search?q=${e.target.value}`)
-   * }} />
-   * ```
-   */
-  load: (
-    href: string,
-    opts?: {
-      /**
-       * Wraps the initial state update for this `fetcher.load` in a
-       * [`ReactDOM.flushSync`](https://react.dev/reference/react-dom/flushSync)
-       * call instead of the default [`React.startTransition`](https://react.dev/reference/react/startTransition).
-       * This allows you to perform synchronous DOM actions immediately after the
-       * update is flushed to the DOM.
-       */
-      flushSync?: boolean;
-    },
-  ) => Promise<void>;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -2745,6 +2757,9 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  *     method: "post",
  *     encType: "application/json"
  *   })
+ *
+ *   // reset fetcher
+ *   fetcher.unstable_reset()
  * }
  *
  * @public
@@ -2826,6 +2841,10 @@ export function useFetcher<T = any>({
     [fetcherKey, submitImpl],
   );
 
+  let unstable_reset = React.useCallback<
+    FetcherWithComponents<T>["unstable_reset"]
+  >((opts) => router.resetFetcher(fetcherKey, opts), [router, fetcherKey]);
+
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
       (props, ref) => {
@@ -2846,10 +2865,11 @@ export function useFetcher<T = any>({
       Form: FetcherForm,
       submit,
       load,
+      unstable_reset,
       ...fetcher,
       data,
     }),
-    [FetcherForm, submit, load, fetcher, data],
+    [FetcherForm, submit, load, unstable_reset, fetcher, data],
   );
 
   return fetcherWithComponents;

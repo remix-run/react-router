@@ -5487,6 +5487,76 @@ function testDomRouter(
         expect(html).toContain("fetcher count:1");
       });
 
+      it("resets a fetcher", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                let fetcher = useFetcher();
+                return (
+                  <>
+                    <p id="output">{`${fetcher.state}-${fetcher.data}`}</p>
+                    <button onClick={() => fetcher.load("/")}>load</button>
+                    <button onClick={() => fetcher.unstable_reset()}>
+                      reset
+                    </button>
+                  </>
+                );
+              },
+              async loader() {
+                return "FETCH";
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle-undefined
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            loading-undefined
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle-FETCH
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("reset"));
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle-null
+          </p>"
+        `);
+      });
+
       describe("useFetcher({ key })", () => {
         it("generates unique keys for fetchers by default", async () => {
           let dfd1 = createDeferred();

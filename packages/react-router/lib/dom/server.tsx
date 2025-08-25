@@ -472,6 +472,9 @@ export function createStaticRouter(
     deleteFetcher() {
       throw msg("deleteFetcher");
     },
+    resetFetcher() {
+      throw msg("resetFetcher");
+    },
     dispose() {
       throw msg("dispose");
     },
