@@ -117,7 +117,7 @@ test.describe("Middleware", () => {
             import { createContext } from 'react-router'
             export const orderContext = createContext([]);
           `,
-          "app/routes/a._index.tsx": js`
+          "app/routes/loaders._index.tsx": js`
             import { Link } from 'react-router'
             import { orderContext } from '../context'
             export const clientMiddleware = [
@@ -135,12 +135,12 @@ test.describe("Middleware", () => {
               return (
                 <>
                   <h2 data-route>Index: {loaderData}</h2>
-                  <Link to="/a/about">Go to about</Link>
+                  <Link to="/loaders/about">Go to about</Link>
                 </>
                );
             }
           `,
-          "app/routes/a.about.tsx": js`
+          "app/routes/loaders.about.tsx": js`
             import { orderContext } from '../context'
             export const clientMiddleware = [
               ({ context }) => {
@@ -157,7 +157,7 @@ test.describe("Middleware", () => {
               return <h2 data-route>About: {loaderData}</h2>;
             }
           `,
-          "app/routes/b._index.tsx": js`
+          "app/routes/actions._index.tsx": js`
             import { Form } from 'react-router'
             import { orderContext } from '../context';
             export const clientMiddleware = [
@@ -186,40 +186,40 @@ test.describe("Middleware", () => {
                );
             }
           `,
-          "app/routes/c._index.tsx": js`
+          "app/routes/redirect-down._index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData, actionData }) {
-              return <Link to="/c/redirect">Link</Link>;
+              return <Link to="/redirect-down/redirect">Link</Link>;
             }
           `,
-          "app/routes/c.redirect.tsx": js`
+          "app/routes/redirect-down.redirect.tsx": js`
             import { Link, redirect } from 'react-router'
             export const clientMiddleware = [
-              ({ request, context }) => { throw redirect('/c/target'); }
+              ({ request, context }) => { throw redirect('/redirect-down/target'); }
             ]
             export default function Component() {
               return <h1>Redirect</h1>
             }
           `,
-          "app/routes/c.target.tsx": js`
+          "app/routes/redirect-down.target.tsx": js`
             export default function Component() {
               return <h1>Target</h1>
             }
           `,
-          "app/routes/d._index.tsx": js`
+          "app/routes/redirect-up._index.tsx": js`
             import { Link } from 'react-router';
 
             export default function Component() {
-              return <Link to="/d/redirect">Link</Link>;
+              return <Link to="/redirect-up/redirect">Link</Link>;
             }
           `,
-          "app/routes/d.redirect.tsx": js`
+          "app/routes/redirect-up.redirect.tsx": js`
             import { Link, redirect } from 'react-router';
 
             export const clientMiddleware = [
               async ({ request, context }, next) => {
                 await next();
-                throw redirect('/d/target');
+                throw redirect('/redirect-up/target');
               }
             ];
 
@@ -227,19 +227,19 @@ test.describe("Middleware", () => {
               return <h1>Redirect</h1>;
             }
           `,
-          "app/routes/d.target.tsx": js`
+          "app/routes/redirect-up.target.tsx": js`
             export default function Component() {
               return <h1>Target</h1>;
             }
           `,
-          "app/routes/e._index.tsx": js`
+          "app/routes/error-down._index.tsx": js`
             import { Link } from 'react-router';
 
             export default function Component() {
-              return <Link to="/e/broken">Link</Link>;
+              return <Link to="/error-down/broken">Link</Link>;
             }
           `,
-          "app/routes/e.broken.tsx": js`
+          "app/routes/error-down.broken.tsx": js`
             export const clientMiddleware = [
               async ({ request, context }, next) => {
                 throw new Error('broken!');
@@ -254,14 +254,14 @@ test.describe("Middleware", () => {
               return <h1 data-error>{error.message}</h1>;
             }
           `,
-          "app/routes/f._index.tsx": js`
+          "app/routes/error-up._index.tsx": js`
             import { Link } from 'react-router';
 
             export default function Component() {
-              return <Link to="/f/broken">Link</Link>;
+              return <Link to="/error-up/broken">Link</Link>;
             }
           `,
-          "app/routes/f.broken.tsx": js`
+          "app/routes/error-up.broken.tsx": js`
             export const clientMiddleware = [
               async ({ request, context }, next) => {
                 await next();
@@ -286,13 +286,13 @@ test.describe("Middleware", () => {
               );
             }
           `,
-          "app/routes/g._index.tsx": js`
+          "app/routes/middleware-chain._index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
-              return <Link to="/g/a/b/c">Link</Link>;
+              return <Link to="/middleware-chain/a/b/c">Link</Link>;
             }
           `,
-          "app/routes/g.a.tsx": js`
+          "app/routes/middleware-chain.a.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
             export const clientMiddleware = [
@@ -309,7 +309,7 @@ test.describe("Middleware", () => {
               return <><h2>A: {loaderData}</h2><Outlet /></>;
             }
           `,
-          "app/routes/g.a.b.tsx": js`
+          "app/routes/middleware-chain.a.b.tsx": js`
             import { Outlet } from 'react-router'
             import { orderContext } from '../context';
             export const clientMiddleware = [
@@ -322,7 +322,7 @@ test.describe("Middleware", () => {
               return <><h3>B</h3><Outlet /></>;
             }
           `,
-          "app/routes/g.a.b.c.tsx": js`
+          "app/routes/middleware-chain.a.b.c.tsx": js`
             import { orderContext } from '../context';
             export function clientLoader({ context }) {
               return context.get(orderContext).join(',');
@@ -343,13 +343,13 @@ test.describe("Middleware", () => {
 
     test("calls clientMiddleware before/after loaders", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/a");
+      await app.goto("/loaders");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "Index: a,b",
       );
 
-      (await page.$('a[href="/a/about"]'))?.click();
+      (await page.$('a[href="/loaders/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "About: c,d",
@@ -358,7 +358,7 @@ test.describe("Middleware", () => {
 
     test("calls clientMiddleware before/after actions", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/b/");
+      await app.goto("/actions");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "Index: a,b - empty",
@@ -374,7 +374,7 @@ test.describe("Middleware", () => {
 
     test("handles redirects thrown on the way down", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/c");
+      await app.goto("/redirect-down");
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
@@ -383,7 +383,7 @@ test.describe("Middleware", () => {
 
     test("handles redirects thrown on the way up", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/d");
+      await app.goto("/redirect-up");
       await page.waitForSelector('a:has-text("Link")');
       (await page.getByRole("link"))?.click();
       await page.waitForSelector('h1:has-text("Target")');
@@ -391,7 +391,7 @@ test.describe("Middleware", () => {
 
     test("handles errors thrown on the way down", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/e");
+      await app.goto("/error-down");
       await page.waitForSelector('a:has-text("Link")');
       (await page.getByRole("link"))?.click();
       await page.waitForSelector("[data-error]");
@@ -400,7 +400,7 @@ test.describe("Middleware", () => {
 
     test("handles errors thrown on the way up", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/f");
+      await app.goto("/error-up");
       await page.waitForSelector('a:has-text("Link")');
       (await page.getByRole("link"))?.click();
       await page.waitForSelector("[data-error]");
@@ -412,8 +412,8 @@ test.describe("Middleware", () => {
       page,
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/g", true);
-      (await page.$('a[href="/g/a/b/c"]'))?.click();
+      await app.goto("/middleware-chain", true);
+      (await page.$('a[href="/middleware-chain/a/b/c"]'))?.click();
       await page.waitForSelector("h4");
       expect(await page.innerText("h2")).toBe("A: a,b");
       expect(await page.innerText("h3")).toBe("B");
@@ -447,7 +447,7 @@ test.describe("Middleware", () => {
             import { createContext } from 'react-router'
             export const orderContext = createContext([]);
           `,
-          "app/routes/_index.tsx": js`
+          "app/routes/loaders._index.tsx": js`
             import { Link } from 'react-router'
             import { orderContext } from '../context'
 
@@ -468,12 +468,12 @@ test.describe("Middleware", () => {
               return (
                 <>
                   <h2 data-route>Index: {loaderData}</h2>
-                  <Link to="/about">Go to about</Link>
+                  <Link to="/loaders/about">Go to about</Link>
                 </>
                );
             }
           `,
-          "app/routes/about.tsx": js`
+          "app/routes/loaders.about.tsx": js`
             import { orderContext } from '../context'
 
             export const clientMiddleware = [
@@ -507,13 +507,13 @@ test.describe("Middleware", () => {
       page,
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
+      await app.goto("/loaders");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "Index: a,b",
       );
 
-      (await page.$('a[href="/about"]'))?.click();
+      (await page.$('a[href="/loaders/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
         "About: c,d",
