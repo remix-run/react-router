@@ -15,6 +15,7 @@ import {
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
+import { sendResponse } from "@remix-run/node-fetch-server";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
@@ -47,7 +48,7 @@ import invariant from "../invariant";
 import type { Cache } from "./cache";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
-import { fromNodeRequest, toNodeRequest } from "./node-adapter";
+import { fromNodeRequest } from "./node-adapter";
 import {
   getCssStringFromViteDevModuleCode,
   getStylesForPathname,
@@ -1656,7 +1657,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     req,
                     await reactRouterDevLoadContext(req),
                   );
-                  await toNodeRequest(res, nodeRes);
+                  await sendResponse(nodeRes, res);
                 };
                 await nodeHandler(req, res);
               } catch (error) {

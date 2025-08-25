@@ -1126,6 +1126,9 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../react-router-node
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       '@vitejs/plugin-rsc':
         specifier: 0.4.11
         version: 0.4.11(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -1171,9 +1174,6 @@ importers:
       semver:
         specifier: ^7.3.7
         version: 7.7.2
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
@@ -1217,9 +1217,6 @@ importers:
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
-      '@types/set-cookie-parser':
-        specifier: ^2.4.1
-        version: 2.4.7
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
@@ -4412,6 +4409,9 @@ packages:
 
   '@remix-run/changelog-github@0.0.5':
     resolution: {integrity: sha512-43tqwUqWqirbv6D9uzo55ASPsCJ61Ein1k/M8qn+Qpros0MmbmuzjLVPmtaxfxfe2ANX0LefLvCD0pAgr1tp4g==}
+
+  '@remix-run/node-fetch-server@0.8.0':
+    resolution: {integrity: sha512-8/sKegb4HrM6IdcQeU0KPhj9VOHm5SUqswJDHuMCS3mwbr/NRx078QDbySmn0xslahvvZoOENd7EnK40kWKxkg==}
 
   '@remix-run/web-blob@3.1.0':
     resolution: {integrity: sha512-owGzFLbqPH9PlKb8KvpNJ0NO74HWE2euAn61eEiyCXX/oteoVzTVSN8mpLgDjaxBf2btj5/nUllSUgpyd6IH6g==}
@@ -12827,6 +12827,8 @@ snapshots:
       dotenv: 8.6.0
     transitivePeerDependencies:
       - encoding
+
+  '@remix-run/node-fetch-server@0.8.0': {}
 
   '@remix-run/web-blob@3.1.0':
     dependencies:
