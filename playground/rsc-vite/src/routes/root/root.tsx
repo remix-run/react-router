@@ -1,5 +1,5 @@
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
-import { type unstable_MiddlewareFunction } from "react-router";
+import { type MiddlewareFunction } from "react-router";
 
 import { Counter } from "../../counter";
 import { ErrorReporter, NavigationState } from "./root.client";
@@ -11,7 +11,7 @@ export function headers() {
   return new Headers({ "x-root": "yes" });
 }
 
-export const unstable_middleware: unstable_MiddlewareFunction<Response>[] = [
+export const middleware: MiddlewareFunction<Response>[] = [
   async ({ request }, next) => {
     console.log(">>> RSC middleware", request.url);
     let res = await next();

@@ -87,7 +87,7 @@ interface FutureConfig {
   /**
    * Enable route middleware
    */
-  unstable_middleware: boolean;
+  v8_middleware: boolean;
   unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
@@ -574,8 +574,7 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
-    unstable_middleware:
-      reactRouterUserConfig.future?.unstable_middleware ?? false,
+    v8_middleware: reactRouterUserConfig.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:

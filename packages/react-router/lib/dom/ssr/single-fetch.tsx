@@ -197,7 +197,7 @@ export function getTurboStreamSingleFetchDataStrategy(
     ssr,
     basename,
   );
-  return async (args) => args.unstable_runClientMiddleware(dataStrategy);
+  return async (args) => args.runClientMiddleware(dataStrategy);
 }
 
 export function getSingleFetchDataStrategyImpl(

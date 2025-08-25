@@ -5,7 +5,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
-  unstable_MiddlewareFunction,
+  MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
   DataStrategyResult,
@@ -26,9 +26,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  unstable_clientMiddleware?: unstable_MiddlewareFunction<
-    Record<string, DataStrategyResult>
-  >[];
+  clientMiddleware?: MiddlewareFunction<Record<string, DataStrategyResult>>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -46,7 +44,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
-  unstable_middleware?: unstable_MiddlewareFunction<Response>[];
+  middleware?: MiddlewareFunction<Response>[];
 }
 
 /**

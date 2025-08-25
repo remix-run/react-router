@@ -27,7 +27,7 @@ export interface IndexRouteObject {
   caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
-  unstable_middleware?: AgnosticIndexRouteObject["unstable_middleware"];
+  middleware?: AgnosticIndexRouteObject["middleware"];
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
@@ -48,7 +48,7 @@ export interface NonIndexRouteObject {
   caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
-  unstable_middleware?: AgnosticNonIndexRouteObject["unstable_middleware"];
+  middleware?: AgnosticNonIndexRouteObject["middleware"];
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];

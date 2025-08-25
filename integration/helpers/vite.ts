@@ -30,7 +30,7 @@ export const reactRouterConfig = ({
   appDirectory,
   splitRouteModules,
   viteEnvironmentApi,
-  middleware,
+  v8_middleware,
   routeDiscovery,
 }: {
   ssr?: boolean;
@@ -41,7 +41,7 @@ export const reactRouterConfig = ({
     Config["future"]
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
-  middleware?: boolean;
+  v8_middleware?: boolean;
   routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
@@ -53,7 +53,7 @@ export const reactRouterConfig = ({
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
-      unstable_middleware: middleware,
+      v8_middleware,
     },
   };
 

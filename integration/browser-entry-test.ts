@@ -87,20 +87,20 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   let fixture = await createFixture({
     files: {
       "app/entry.client.tsx": js`
-        import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
+        import { createContext, RouterContextProvider } from "react-router";
         import { HydratedRouter } from "react-router/dom";
         import { startTransition, StrictMode } from "react";
         import { hydrateRoot } from "react-dom/client";
 
-        export const myContext = new unstable_createContext('foo');
+        export const myContext = new createContext('foo');
 
         startTransition(() => {
           hydrateRoot(
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_getContext={() => {
-                  return new unstable_RouterContextProvider([
+                getContext={() => {
+                  return new RouterContextProvider([
                     [myContext, 'bar']
                   ]);
                 }}

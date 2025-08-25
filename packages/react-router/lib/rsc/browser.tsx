@@ -20,9 +20,9 @@ import type {
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, unstable_createContext } from "../router/utils";
+import { ErrorResponseImpl, createContext } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -223,13 +223,13 @@ export function createCallServer({
 function createRouterFromPayload({
   fetchImplementation,
   createFromReadableStream,
-  unstable_getContext,
+  getContext,
   payload,
 }: {
   payload: RSCPayload;
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
-  unstable_getContext: RouterInit["unstable_getContext"] | undefined;
+  getContext: RouterInit["getContext"] | undefined;
 }): {
   router: DataRouter;
   routeModules: RouteModules;
@@ -275,7 +275,7 @@ function createRouterFromPayload({
 
   globalVar.__reactRouterDataRouter = createRouter({
     routes,
-    unstable_getContext,
+    getContext,
     basename: payload.basename,
     history: createBrowserHistory(),
     hydrationData: getHydrationData(
@@ -416,7 +416,7 @@ function createRouterFromPayload({
   };
 }
 
-const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
+const renderedRoutesContext = createContext<RSCRouteManifest[]>();
 
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
@@ -464,7 +464,7 @@ export function getRSCSingleFetchDataStrategy(
     },
   );
   return async (args) =>
-    args.unstable_runClientMiddleware(async () => {
+    args.runClientMiddleware(async () => {
       // Before we run the dataStrategy, create a place to stick rendered routes
       // from the payload so we can patch them into the router after all loaders
       // have completed.  Need to do this since we may have multiple fetch
@@ -474,7 +474,7 @@ export function getRSCSingleFetchDataStrategy(
       // This cast should be fine since this is always run client side and
       // `context` is always of this type on the client -- unlike on the server
       // in framework mode when it could be `AppLoadContext`
-      let context = args.context as unstable_RouterContextProvider;
+      let context = args.context as RouterContextProvider;
       context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
@@ -565,7 +565,7 @@ function getFetchAndDecodeViaRSC(
       // this is always run client side and `context` is always of this type on
       // the client -- unlike on the server in framework mode when it could be
       // `AppLoadContext`
-      (context as unstable_RouterContextProvider)
+      (context as RouterContextProvider)
         .get(renderedRoutesContext)
         .push(...payload.matches);
 
@@ -619,13 +619,13 @@ export interface RSCHydratedRouterProps {
    */
   routeDiscovery?: "eager" | "lazy";
   /**
-   * A function that returns an {@link unstable_RouterContextProvider} instance
+   * A function that returns an {@link RouterContextProvider} instance
    * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
    * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
    * This function is called to generate a fresh `context` instance on each
    * navigation or fetcher call.
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
 }
 
 /**
@@ -662,7 +662,7 @@ export interface RSCHydratedRouterProps {
  * @param props Props
  * @param {unstable_RSCHydratedRouterProps.createFromReadableStream} props.createFromReadableStream n/a
  * @param {unstable_RSCHydratedRouterProps.fetch} props.fetch n/a
- * @param {unstable_RSCHydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @param {unstable_RSCHydratedRouterProps.getContext} props.getContext n/a
  * @param {unstable_RSCHydratedRouterProps.payload} props.payload n/a
  * @param {unstable_RSCHydratedRouterProps.routeDiscovery} props.routeDiscovery n/a
  * @returns A hydrated {@link DataRouter} that can be used to navigate and
@@ -673,7 +673,7 @@ export function RSCHydratedRouter({
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
-  unstable_getContext,
+  getContext,
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
@@ -682,15 +682,10 @@ export function RSCHydratedRouter({
       createRouterFromPayload({
         payload,
         fetchImplementation,
-        unstable_getContext,
+        getContext,
         createFromReadableStream,
       }),
-    [
-      createFromReadableStream,
-      payload,
-      fetchImplementation,
-      unstable_getContext,
-    ],
+    [createFromReadableStream, payload, fetchImplementation, getContext],
   );
 
   React.useEffect(() => {
@@ -796,7 +791,7 @@ export function RSCHydratedRouter({
     future: {
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
-      unstable_middleware: false,
+      v8_middleware: false,
       unstable_subResourceIntegrity: false,
     },
     isSpaMode: false,

@@ -45,7 +45,7 @@ export interface EntryContext extends FrameworkContextObject {
 
 export interface FutureConfig {
   unstable_subResourceIntegrity: boolean;
-  unstable_middleware: boolean;
+  v8_middleware: boolean;
 }
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };

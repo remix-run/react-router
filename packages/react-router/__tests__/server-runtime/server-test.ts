@@ -2,10 +2,7 @@
  * @jest-environment node
  */
 
-import {
-  unstable_createContext,
-  type StaticHandlerContext,
-} from "react-router";
+import { createContext, type StaticHandlerContext } from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
@@ -121,7 +118,7 @@ describe("server", () => {
     });
 
     it("accepts proper values from getLoadContext (with middleware)", async () => {
-      let fooContext = unstable_createContext<string>();
+      let fooContext = createContext<string>();
       let build = mockServerBuild(
         {
           root: {
@@ -158,7 +155,7 @@ describe("server", () => {
         },
         {
           future: {
-            unstable_middleware: true,
+            v8_middleware: true,
           },
           handleError: handleErrorSpy,
           handleDocumentRequest(request) {
@@ -179,7 +176,7 @@ describe("server", () => {
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
         "Invalid `context` value provided to `handleRequest`. When middleware is " +
-          "enabled you must return an instance of `unstable_RouterContextProvider` " +
+          "enabled you must return an instance of `RouterContextProvider` " +
           "from your `getLoadContext` function.",
       );
       handleErrorSpy.mockRestore();

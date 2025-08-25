@@ -232,7 +232,7 @@ export function setup({
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
       let enhancedRoute: AgnosticDataRouteObject = {
-        unstable_middleware: undefined,
+        middleware: undefined,
         ...r,
         loader: undefined,
         action: undefined,

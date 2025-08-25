@@ -48,8 +48,8 @@ export {
   data,
   matchRoutes,
   isRouteErrorResponse,
-  unstable_createContext,
-  unstable_RouterContextProvider,
+  createContext,
+  RouterContextProvider,
 } from "./lib/router/utils";
 
 export { createCookie, isCookie } from "./lib/server-runtime/cookies";
@@ -62,9 +62,9 @@ export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookie
 export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
 
 export type {
-  unstable_MiddlewareFunction,
-  unstable_MiddlewareNextFunction,
-  unstable_RouterContext,
+  MiddlewareFunction,
+  MiddlewareNextFunction,
+  RouterContext,
 } from "./lib/router/utils";
 
 export type {
