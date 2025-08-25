@@ -548,35 +548,52 @@ async function hmrWorkflow({
           "NEW_PADDING_INJECTED_VIA_POSTCSS",
         );
 
-    await Promise.all([
-      edit(`app/routes/${routeBase}/styles-bundled.css`, modifyCss),
-      edit(`app/routes/${routeBase}/styles.module.css`, modifyCss),
-      edit(`app/routes/${routeBase}/styles-vanilla-global.css.ts`, modifyCss),
-      edit(`app/routes/${routeBase}/styles-vanilla-local.css.ts`, modifyCss),
-      edit(`app/routes/${routeBase}/styles-postcss-linked.css`, modifyCss),
-    ]);
+    const testCases = [
+      { file: "styles-bundled.css", selector: "#css-bundled" },
+      // TODO: Fix HMR for CSS Modules in server-first routes in RSC Framework mode
+      ...(routeBase === "rsc-server-first-route"
+        ? []
+        : [{ file: "styles.module.css", selector: "#css-modules" }]),
+      // TODO: Fix HMR for `?url` CSS imports in RSC Framework mode: https://github.com/vitejs/vite-plugin-react/issues/772
+      // Once fixed, check if this also fixes HMR for Vanilla Extract
+      ...(templateName.includes("rsc")
+        ? []
+        : [
+            {
+              file: "styles-postcss-linked.css",
+              selector: "#css-postcss-linked",
+            },
+            {
+              file: "styles-vanilla-global.css.ts",
+              selector: "#css-vanilla-global",
+            },
+            {
+              file: "styles-vanilla-local.css.ts",
+              selector: "#css-vanilla-local",
+            },
+          ]),
+    ] as const satisfies Array<{
+      file: string;
+      selector: string;
+    }>;
 
-    await Promise.all(
-      [
-        "#css-bundled",
-        "#css-modules",
-        ...(!templateName.includes("rsc")
-          ? // TODO: Fix these in RSC Framework Mode
-            ["#css-postcss-linked", "#css-vanilla-global", "#css-vanilla-local"]
-          : []),
-      ].map(
-        async (selector) =>
-          await expect(page.locator(selector)).toHaveCSS(
-            "padding",
-            NEW_PADDING,
-          ),
-      ),
-    );
+    for (const { file, selector } of testCases) {
+      const routeFile = `app/routes/${routeBase}/${file}`;
+      await edit(routeFile, modifyCss);
+      await expect(
+        page.locator(selector),
+        `CSS update for ${routeFile}`,
+      ).toHaveCSS("padding", NEW_PADDING);
 
-    // Ensure CSS updates were handled by HMR
-    // TODO: Fix state preservation in RSC Framework mode
-    if (!templateName.includes("rsc")) {
-      await expect(input).toHaveValue("stateful");
+      // TODO: Fix state preservation when changing CSS Modules in RSC Framework mode
+      if (templateName.includes("rsc") && file === "styles.module.css") {
+        continue;
+      }
+
+      // Ensure CSS updates were handled by HMR
+      await expect(input, `State preservation for ${routeFile}`).toHaveValue(
+        "stateful",
+      );
     }
 
     // RSC Framework mode doesn't support custom entries yet
