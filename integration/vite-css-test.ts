@@ -536,8 +536,6 @@ async function hmrWorkflow({
 
     let input = page.locator("input");
     await expect(input).toBeVisible();
-    await input.type("stateful");
-    await expect(input).toHaveValue("stateful");
 
     let edit = createEditor(cwd);
     let modifyCss = (contents: string) =>
@@ -579,6 +577,7 @@ async function hmrWorkflow({
 
     for (const { file, selector } of testCases) {
       const routeFile = `app/routes/${routeBase}/${file}`;
+      await input.fill(routeFile);
       await edit(routeFile, modifyCss);
       await expect(
         page.locator(selector),
@@ -592,7 +591,7 @@ async function hmrWorkflow({
 
       // Ensure CSS updates were handled by HMR
       await expect(input, `State preservation for ${routeFile}`).toHaveValue(
-        "stateful",
+        routeFile,
       );
     }
 
