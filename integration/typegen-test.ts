@@ -743,4 +743,36 @@ test.describe("typegen", () => {
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
   });
+
+  test("md/mdx route", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": tsx`
+        import mdx from "@mdx-js/rollup";
+        import { reactRouter } from "@react-router/dev/vite";
+
+        export default {
+          plugins: [mdx(), reactRouter()],
+        };
+      `,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("home", "routes/home.md"),
+          route("changelog", "routes/changelog.mdx"),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/home.md": tsx`
+        # Lorem ipsum
+      `,
+      "app/routes/changelog.mdx": tsx`
+        # Lorem ipsum
+      `,
+    });
+
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
 });
