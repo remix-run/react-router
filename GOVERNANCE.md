@@ -44,6 +44,8 @@ The SC will initially consist of the Remix team developers:
 - Mark Dalgleish ([`@markdalgleish`](https://github.com/markdalgleish))
 - Jacob Ebey ([`@jacob-ebey`](https://github.com/jacob-ebey))
 - Brooks Lybrand ([`@brookslybrand`](https://github.com/brookslybrand))
+- Sergio Xalambrí ([`@sergiodxa`](https://github.com/sergiodxa))
+- Bryan Ross ([`@rossipedia`](https://github.com/rossipedia))
 
 In the future, we may add a limited number of heavily involved community members to the SC as well.
 
