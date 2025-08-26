@@ -12,7 +12,7 @@ React Router is a multi-strategy router for React bridging the gap from React 18
 There are three primary ways, or "modes", to use it in your app, so there are three guides to get you started.
 
 - [Declarative](./start/declarative/installation)
-- [Data](.start/data/installation)
+- [Data](./start/data/installation)
 - [Framework](./start/framework/installation)
 
 Learn which mode is right for you in [Picking a Mode](./start/modes).
