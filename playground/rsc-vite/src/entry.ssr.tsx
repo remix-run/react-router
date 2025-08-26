@@ -1,5 +1,4 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
-// @ts-expect-error
 import * as ReactDomServer from "react-dom/server.edge";
 import {
   unstable_RSCStaticRouter as RSCStaticRouter,

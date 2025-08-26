@@ -1,5 +1,4 @@
 import * as React from "react";
-// @ts-expect-error - no types
 import { renderToReadableStream } from "react-dom/server.edge" assert { env: "react-client" };
 import {
   unstable_routeRSCServerRequest,

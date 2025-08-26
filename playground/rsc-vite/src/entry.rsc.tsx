@@ -16,7 +16,6 @@ export async function fetchServer(request: Request) {
     decodeAction,
     loadServerAction,
     request,
-    // @ts-expect-error
     routes,
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {

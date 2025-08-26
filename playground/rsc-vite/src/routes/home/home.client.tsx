@@ -31,8 +31,7 @@ export default function Home() {
 }
 
 export function HomeForm({ fn }: { fn: () => unknown }) {
-  // @ts-expect-error React types for the repo are set to v18
-  const [state, formAction, isPending] = React.useActionState(fn, null);
+  const [state, formAction, isPending] = React.useActionState<any>(fn, null);
 
   return (
     <form action={formAction} className="client-box">
@@ -45,8 +44,7 @@ export function HomeForm({ fn }: { fn: () => unknown }) {
 }
 
 export function RedirectForm({ fn }: { fn: () => unknown }) {
-  // @ts-expect-error React types for the repo are set to v18
-  const [state, formAction, isPending] = React.useActionState(fn, null);
+  const [state, formAction, isPending] = React.useActionState<any>(fn, null);
 
   return (
     <form action={formAction}>

@@ -1,4 +1,3 @@
-// @ts-expect-error - no types for this yet
 import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge";
 import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
@@ -29,6 +28,7 @@ export async function prerender(
         <RSCStaticRouter getPayload={getPayload} />,
         {
           bootstrapScriptContent,
+          // @ts-expect-error - no types for this yet
           formState,
         },
       );
