@@ -411,67 +411,6 @@ importers:
         specifier: ^0.11.0
         version: 0.11.4
 
-  integration/helpers/rsc-parcel-framework:
-    dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
-      '@parcel/runtime-rsc':
-        specifier: 2.15.0
-        version: 2.15.0(@parcel/core@2.15.0)
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
-      express:
-        specifier: ^4.21.2
-        version: 4.21.2
-      react:
-        specifier: ^19.0.0
-        version: 19.1.0
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.1.0(react@19.1.0)
-      react-router:
-        specifier: workspace:*
-        version: link:../../../packages/react-router
-      react-server-dom-parcel:
-        specifier: ^19.0.0
-        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      remix-utils:
-        specifier: ^8.7.0
-        version: 8.7.0(react-router@packages+react-router)(react@19.1.0)(zod@3.24.2)
-    devDependencies:
-      '@react-router/dev':
-        specifier: workspace:*
-        version: link:../../../packages/react-router-dev
-      '@react-router/fs-routes':
-        specifier: workspace:*
-        version: link:../../../packages/react-router-fs-routes
-      '@types/express':
-        specifier: ^5.0.0
-        version: 5.0.1
-      '@types/node':
-        specifier: ^22.13.1
-        version: 22.14.0
-      '@types/parcel-env':
-        specifier: 0.0.8
-        version: 0.0.8
-      '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
-      '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
-      parcel:
-        specifier: 2.15.0
-        version: 2.15.0
-      parcel-config-react-router-experimental:
-        specifier: 1.0.25
-        version: 1.0.25(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
-      typescript:
-        specifier: ^5.1.6
-        version: 5.4.5
-
   integration/helpers/rsc-vite:
     dependencies:
       '@mjackson/node-fetch-server':

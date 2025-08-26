@@ -205,15 +205,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
         "Expected a default request handler function export in Vite RSC Framework Mode server build",
       );
     }
-  } else if (templateName === "rsc-parcel-framework") {
-    let serverBuild = await import(buildPath);
-    handler = (serverBuild?.requestHandler ??
-      serverBuild?.default?.requestHandler) as RequestHandler;
-    if (typeof handler !== "function") {
-      throw new Error(
-        "Expected a 'requestHandler' function export in Parcel RSC Framework server build",
-      );
-    }
   } else {
     build = (await import(buildPath)) as ServerBuild;
     handler = createRequestHandler(build, mode || ServerMode.Production);
