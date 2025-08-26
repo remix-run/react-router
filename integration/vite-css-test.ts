@@ -547,29 +547,39 @@ async function hmrWorkflow({
         );
 
     const testCases = [
-      { file: "styles-bundled.css", selector: "#css-bundled" },
+      {
+        file: "styles-bundled.css",
+        selector: "#css-bundled",
+      },
       // TODO: Fix HMR for CSS Modules in server-first routes in RSC Framework mode
       ...(routeBase === "rsc-server-first-route"
         ? []
-        : [{ file: "styles.module.css", selector: "#css-modules" }]),
-      // TODO: Fix HMR for `?url` CSS imports in RSC Framework mode: https://github.com/vitejs/vite-plugin-react/issues/772
-      // Once fixed, check if this also fixes HMR for Vanilla Extract
+        : ([
+            {
+              file: "styles.module.css",
+              selector: "#css-modules",
+            },
+          ] as const)),
+      {
+        file: "styles-postcss-linked.css",
+        selector: "#css-postcss-linked",
+      },
+      {
+        file: "styles-vanilla-global.css.ts",
+        selector: "#css-vanilla-global",
+      },
+      // TODO: Fix HMR for locally scoped Vanilla Extract styles in RSC
+      // Framework mode. May require changes to the RSC plugin, or Vanilla
+      // Extract. Userland workaround for now:
+      // https://github.com/pawelblaszczyk5/vite-rsc-experiments/blob/643649f2e6562c859d9612126bfc3a183e03c7b5/apps/vanilla-extract/vite.config.ts
       ...(templateName.includes("rsc")
         ? []
-        : [
-            {
-              file: "styles-postcss-linked.css",
-              selector: "#css-postcss-linked",
-            },
-            {
-              file: "styles-vanilla-global.css.ts",
-              selector: "#css-vanilla-global",
-            },
+        : ([
             {
               file: "styles-vanilla-local.css.ts",
               selector: "#css-vanilla-local",
             },
-          ]),
+          ] as const)),
     ] as const satisfies Array<{
       file: string;
       selector: string;
@@ -584,8 +594,15 @@ async function hmrWorkflow({
         `CSS update for ${routeFile}`,
       ).toHaveCSS("padding", NEW_PADDING);
 
-      // TODO: Fix state preservation when changing CSS Modules in RSC Framework mode
-      if (templateName.includes("rsc") && file === "styles.module.css") {
+      // TODO: Fix state preservation when changing these styles in RSC
+      // Framework mode. This appears to be a deeper HMR issue with
+      // changing non-React modules imported by the route.
+      if (
+        templateName.includes("rsc") &&
+        (file === "styles.module.css" ||
+          file === "styles-postcss-linked.css" ||
+          file === "styles-vanilla-global.css.ts")
+      ) {
         continue;
       }
 
