@@ -25,7 +25,11 @@ setServerCallback(
 );
 
 createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
-  React.startTransition(() => {
+  // @ts-expect-error - on 18 types, requires 19.
+  React.startTransition(async () => {
+    const formState =
+      payload.type === "render" ? await payload.formState : undefined;
+
     hydrateRoot(
       document,
       React.createElement(
@@ -36,6 +40,10 @@ createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
           payload,
         }),
       ),
+      {
+        // @ts-expect-error - no types for this yet
+        formState,
+      },
     );
   });
 });
