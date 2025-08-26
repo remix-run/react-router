@@ -3,6 +3,7 @@
 import {
   createTemporaryReferenceSet,
   decodeAction,
+  decodeFormState,
   decodeReply,
   loadServerAction,
   renderToReadableStream,
@@ -18,6 +19,7 @@ export function fetchServer(request: Request) {
   return matchRSCServerRequest({
     createTemporaryReferenceSet,
     decodeAction,
+    decodeFormState,
     decodeReply,
     loadServerAction,
     request,

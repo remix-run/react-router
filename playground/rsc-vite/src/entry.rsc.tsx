@@ -2,6 +2,7 @@ import {
   createTemporaryReferenceSet,
   decodeAction,
   decodeReply,
+  decodeFormState,
   loadServerAction,
   renderToReadableStream,
 } from "@vitejs/plugin-rsc/rsc";
@@ -14,6 +15,7 @@ export async function fetchServer(request: Request) {
     createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
+    decodeFormState,
     loadServerAction,
     request,
     // @ts-expect-error

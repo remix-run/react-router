@@ -1,6 +1,7 @@
 import {
   createTemporaryReferenceSet,
   decodeAction,
+  decodeFormState,
   decodeReply,
   loadServerAction,
   renderToReadableStream,
@@ -14,6 +15,7 @@ export async function fetchServer(request: Request) {
     createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
+    decodeFormState,
     loadServerAction,
     request,
     routes,

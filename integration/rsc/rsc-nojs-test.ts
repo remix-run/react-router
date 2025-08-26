@@ -34,6 +34,10 @@ implementations.forEach((implementation) => {
               redirect("/?redirected=true", { headers: { "x-test": "test" } });
               return "redirected";
             }
+
+            export async function incrementAction(prev) {
+              return prev + 1;
+            }
           `,
           "src/routes/home.client.tsx": js`
             "use client";
@@ -47,7 +51,7 @@ implementations.forEach((implementation) => {
           "src/routes/home.tsx": js`
             "use client";
             import {useActionState} from "react";
-            import { redirectAction } from "./home.actions";
+            import { redirectAction, incrementAction } from "./home.actions";
             import { Counter } from "./home.client";
 
             export default function HomeRoute(props) {
@@ -61,7 +65,20 @@ implementations.forEach((implementation) => {
                   </form>
                   {state && <div data-testid="state">{state}</div>}
                   <Counter />
+                  <TestActionState />
                 </div>
+              );
+            }
+
+            function TestActionState() {
+              const [state, action] = useActionState(incrementAction, 0);
+              return (
+                <form action={action}>
+                  <button type="submit" data-action-state-increment-submit>
+                    action-state-increment
+                  </button>
+                  <div data-action-state-increment-result>{state}</div>
+                </form>
               );
             }
           `,
@@ -69,6 +86,14 @@ implementations.forEach((implementation) => {
       });
 
       await page.goto(`http://localhost:${port}/`);
+
+      await expect(
+        page.locator("[data-action-state-increment-result]"),
+      ).toHaveText("0");
+      await page.click("[data-action-state-increment-submit]");
+      await expect(
+        page.locator("[data-action-state-increment-result]"),
+      ).toHaveText("1");
 
       const responseHeadersPromise = new Promise<Record<string, string>>(
         (resolve) => {

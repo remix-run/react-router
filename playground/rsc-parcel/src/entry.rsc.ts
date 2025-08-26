@@ -4,6 +4,7 @@ import {
   createTemporaryReferenceSet,
   decodeAction,
   decodeReply,
+  decodeFormState,
   loadServerAction,
   renderToReadableStream,
   // @ts-expect-error
@@ -19,6 +20,7 @@ export function fetchServer(request: Request) {
     createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
+    decodeFormState,
     loadServerAction,
     request,
     routes,
