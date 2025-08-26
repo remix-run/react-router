@@ -120,11 +120,38 @@ export async function routeRSCServerRequest({
   }
 
   const body = serverResponse.body;
-  let payloadPromise: Promise<RSCPayload>;
+
+  let buffer: Uint8Array[] | undefined;
+  let streamControllers: ReadableStreamDefaultController<Uint8Array>[] = [];
+
+  const createStream = () => {
+    if (!buffer) {
+      buffer = [];
+      return body.pipeThrough(
+        new TransformStream({
+          transform(chunk, controller) {
+            buffer!.push(chunk);
+            controller.enqueue(chunk);
+            streamControllers.forEach((c) => c.enqueue(chunk));
+          },
+          flush() {
+            streamControllers.forEach((c) => c.close());
+            streamControllers = [];
+          },
+        }),
+      );
+    }
+
+    return new ReadableStream({
+      start(controller) {
+        buffer!.forEach((chunk) => controller.enqueue(chunk));
+        streamControllers.push(controller);
+      },
+    });
+  };
+
   const getPayload = async () => {
-    if (payloadPromise) return payloadPromise;
-    payloadPromise = createFromReadableStream(body) as Promise<RSCPayload>;
-    return payloadPromise;
+    return createFromReadableStream(createStream()) as Promise<RSCPayload>;
   };
 
   try {

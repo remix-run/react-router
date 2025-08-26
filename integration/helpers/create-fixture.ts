@@ -480,7 +480,12 @@ export async function createFixtureProject(
   if (templateName.includes("parcel")) {
     parcelBuild(projectDir, init.buildStdio, mode);
   } else {
-    reactRouterBuild(projectDir, init.buildStdio, mode);
+    reactRouterBuild(
+      projectDir,
+      init.buildStdio,
+      mode,
+      templateName.includes("rsc"),
+    );
   }
 
   return projectDir;
@@ -526,6 +531,7 @@ function reactRouterBuild(
   projectDir: string,
   buildStdio?: Writable,
   mode?: ServerMode,
+  isRsc?: boolean,
 ) {
   // We have a "require" instead of a dynamic import in readConfig gated
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
@@ -535,8 +541,9 @@ function reactRouterBuild(
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
 
   let reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+  let viteBin = "node_modules/vite/dist/node/cli.js";
 
-  let buildArgs: string[] = [reactRouterBin, "build"];
+  let buildArgs: string[] = [isRsc ? viteBin : reactRouterBin, "build"];
 
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,
