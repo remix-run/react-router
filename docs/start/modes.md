@@ -146,7 +146,7 @@ This is mostly for the LLMs, but knock yourself out:
 | Scripts                        | ✅        |      |             |
 | ScrollRestoration              | ✅        | ✅   |             |
 | ServerRouter                   | ✅        |      |             |
-| usePrompt                      | ✅        | ✅   | ✅          |
+| usePrompt                      | ✅        | ✅   |             |
 | useActionData                  | ✅        | ✅   |             |
 | useAsyncError                  | ✅        | ✅   |             |
 | useAsyncValue                  | ✅        | ✅   |             |
