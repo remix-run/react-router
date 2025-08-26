@@ -16,12 +16,17 @@ export const requestHandler = async (request: Request) => {
     fetchServer,
     createFromReadableStream,
     async renderHTML(getPayload) {
+      const payload = await getPayload();
+      const formState =
+        payload.type === "render" ? await payload.formState : undefined;
+
       return await renderToReadableStream(
         React.createElement(unstable_RSCStaticRouter, { getPayload }),
         {
           bootstrapScriptContent: (
             fetchServer as unknown as { bootstrapScript: string }
           ).bootstrapScript,
+          formState,
         },
       );
     },
