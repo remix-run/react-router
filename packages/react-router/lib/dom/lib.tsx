@@ -904,7 +904,7 @@ export function BrowserRouter({
   children,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  let historyRef = React.useRef<BrowserHistory>(undefined);
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
@@ -969,7 +969,7 @@ export interface HashRouterProps {
  * for client-side routing.
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  let historyRef = React.useRef<HashHistory>(undefined);
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }

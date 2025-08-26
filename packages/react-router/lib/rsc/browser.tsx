@@ -154,7 +154,7 @@ export function createCallServer({
 
     if (payload.rerender) {
       React.startTransition(
-        // @ts-expect-error - We have old react types that don't know this can be async
+        //
         async () => {
           const rerender = await payload.rerender;
           if (!rerender) return;

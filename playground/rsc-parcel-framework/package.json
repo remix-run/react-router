@@ -25,8 +25,8 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/parcel-env": "0.0.8",
-    "@types/react-dom": "^19.0.3",
-    "@types/react": "^19.0.8",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.8",
     "parcel": "2.15.0",
     "parcel-config-react-router-experimental": "1.0.25"
   },

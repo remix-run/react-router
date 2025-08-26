@@ -5,8 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@types/react': ^18.2.18
-  '@types/react-dom': ^18.2.7
   '@types/react-test-renderer': ^18.3.1
   jsdom: 22.1.0
   workerd: 1.20250705.0
@@ -61,11 +59,11 @@ importers:
         specifier: ^21.1.1
         version: 21.1.1
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       '@types/react-test-renderer':
         specifier: ^18.3.1
         version: 18.3.1
@@ -320,11 +318,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -378,11 +376,11 @@ importers:
         specifier: 0.0.8
         version: 0.0.8
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       browserify-zlib:
         specifier: ^0.2.0
         version: 0.2.0
@@ -457,11 +455,11 @@ importers:
         specifier: 0.0.8
         version: 0.0.8
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       parcel:
         specifier: 2.15.0
         version: 2.15.0
@@ -503,11 +501,11 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -558,11 +556,11 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       '@vanilla-extract/css':
         specifier: ^1.17.4
         version: 1.17.4(babel-plugin-macros@3.1.0)
@@ -637,11 +635,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       eslint:
         specifier: ^8.38.0
         version: 8.57.0
@@ -704,11 +702,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       eslint:
         specifier: ^8.38.0
         version: 8.57.0
@@ -771,11 +769,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       eslint:
         specifier: ^8.38.0
         version: 8.57.0
@@ -826,11 +824,11 @@ importers:
         specifier: ^20.0.0
         version: 20.11.30
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       eslint:
         specifier: ^8.38.0
         version: 8.57.0
@@ -893,11 +891,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1004,7 +1002,7 @@ importers:
         version: 6.6.3
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.8(@types/react@19.1.11))(@types/react@19.1.11)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.0)
@@ -1437,11 +1435,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1495,11 +1493,11 @@ importers:
         specifier: ^1.9.9
         version: 1.9.9
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1541,11 +1539,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1578,11 +1576,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1618,11 +1616,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1658,11 +1656,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1728,11 +1726,11 @@ importers:
         specifier: ^20.0.0
         version: 20.11.30
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
@@ -1789,11 +1787,11 @@ importers:
         specifier: 0.0.8
         version: 0.0.8
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       browserify-zlib:
         specifier: ^0.2.0
         version: 0.2.0
@@ -1862,11 +1860,11 @@ importers:
         specifier: 0.0.8
         version: 0.0.8
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       parcel:
         specifier: 2.15.0
         version: 2.15.0
@@ -1902,11 +1900,11 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -1963,11 +1961,11 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -2015,11 +2013,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -2052,11 +2050,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -2101,11 +2099,11 @@ importers:
         specifier: ^20.0.0
         version: 20.11.30
       '@types/react':
-        specifier: ^18.2.18
-        version: 18.2.18
+        specifier: ^19.1.11
+        version: 19.1.11
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       eslint:
         specifier: ^8.38.0
         version: 8.57.0
@@ -4797,8 +4795,8 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@testing-library/dom': ^10.0.0
-      '@types/react': ^18.2.18
-      '@types/react-dom': ^18.2.7
+      '@types/react': ^18.0.0 || ^19.0.0
+      '@types/react-dom': ^18.0.0 || ^19.0.0
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
@@ -5003,14 +5001,19 @@ packages:
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
-  '@types/react-dom@18.2.7':
-    resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
+  '@types/react-dom@19.1.8':
+    resolution: {integrity: sha512-xG7xaBMJCpcK0RpN8jDbAACQo54ycO6h4dSSmgv8+fu6ZIAdANkx/WsawASUjVXYfy+J9AbUpRMNNEsXCDfDBQ==}
+    peerDependencies:
+      '@types/react': ^19.0.0
 
   '@types/react-test-renderer@18.3.1':
     resolution: {integrity: sha512-vAhnk0tG2eGa37lkU9+s5SoroCsRI08xnsWFiAXOuPH2jqzMbcXvKExXViPi1P5fIklDeCvXqyrdmipFaSkZrA==}
 
   '@types/react@18.2.18':
     resolution: {integrity: sha512-da4NTSeBv/P34xoZPhtcLkmZuJ+oYaCxHmyHzwaDQo9RQPBeXV+06gEk2FpqEcsX9XrnNLvRpVh6bdavDSjtiQ==}
+
+  '@types/react@19.1.11':
+    resolution: {integrity: sha512-lr3jdBw/BGj49Eps7EvqlUaoeA0xpj3pc0RoJkHpYaCHkVK7i28dKyImLQb3JVlqs3aYSXf7qYuWOW/fgZnTXQ==}
 
   '@types/recursive-readdir@2.2.4':
     resolution: {integrity: sha512-84REEGT3lcgopvpkmGApzmU5UEG0valme5rQS/KGiguTkJ70/Au8UYZTyrzoZnY9svuX9351+1uvrRPzWDD/uw==}
@@ -13126,15 +13129,15 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.8(@types/react@19.1.11))(@types/react@19.1.11)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@babel/runtime': 7.24.1
       '@testing-library/dom': 10.4.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
     optionalDependencies:
-      '@types/react': 18.2.18
-      '@types/react-dom': 18.2.7
+      '@types/react': 19.1.11
+      '@types/react-dom': 19.1.8(@types/react@19.1.11)
 
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.0)':
     dependencies:
@@ -13357,9 +13360,9 @@ snapshots:
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@18.2.7':
+  '@types/react-dom@19.1.8(@types/react@19.1.11)':
     dependencies:
-      '@types/react': 18.2.18
+      '@types/react': 19.1.11
 
   '@types/react-test-renderer@18.3.1':
     dependencies:
@@ -13369,6 +13372,10 @@ snapshots:
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
+      csstype: 3.1.1
+
+  '@types/react@19.1.11':
+    dependencies:
       csstype: 3.1.1
 
   '@types/recursive-readdir@2.2.4':

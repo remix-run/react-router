@@ -3557,7 +3557,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      generateMiddlewareResponse: generateMiddlewareResponse,
+      generateMiddlewareResponse,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3831,7 +3831,7 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      generateMiddlewareResponse: generateMiddlewareResponse,
+      generateMiddlewareResponse,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);

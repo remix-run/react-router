@@ -270,7 +270,7 @@ export interface RouterProviderProps {
    * - If you are rendering in a non-DOM environment, you can import
    *   `RouterProvider` from `react-router` and ignore this prop
    */
-  flushSync?: (fn: () => unknown) => undefined;
+  flushSync?: <R>(fn: () => R) => R;
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for
@@ -654,7 +654,7 @@ export function MemoryRouter({
   initialEntries,
   initialIndex,
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
+  let historyRef = React.useRef<MemoryHistory>(undefined);
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({
       initialEntries,
@@ -1541,8 +1541,8 @@ export function createRoutesFromChildren(
 ): RouteObject[] {
   let routes: RouteObject[] = [];
 
-  React.Children.forEach(children, (element, index) => {
-    if (!React.isValidElement(element)) {
+  React.Children.forEach<any>(children, (element, index) => {
+    if (!React.isValidElement<any>(element)) {
       // Ignore non-elements. This allows people to more easily inline
       // conditionals in their route config.
       return;
