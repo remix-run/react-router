@@ -97,11 +97,12 @@ export const createCookie = (
     },
     async parse(cookieHeader, parseOptions) {
       if (!cookieHeader) return null;
-      let cookies = parse(cookieHeader, { ...options, ...parseOptions });
+      let { decode: decodeFn = decodeData } = { ...options, ...parseOptions };
+      let cookies = parse(cookieHeader);
       if (name in cookies) {
         let value = cookies[name];
         if (typeof value === "string" && value !== "") {
-          let decoded = await decodeCookieValue(value, secrets);
+          let decoded = await decodeCookieValue(decodeFn, value, secrets);
           return decoded;
         } else {
           return "";
@@ -110,14 +111,15 @@ export const createCookie = (
         return null;
       }
     },
-    async serialize(value, serializeOptions) {
+    async serialize(value, _serializeOptions) {
+      const { encode: encodeFn = encodeData, ...serializeOptions } = {
+        ...options,
+        ..._serializeOptions,
+      };
       return serialize(
         name,
-        value === "" ? "" : await encodeCookieValue(value, secrets),
-        {
-          ...options,
-          ...serializeOptions,
-        },
+        value === "" ? "" : await encodeCookieValue(encodeFn, value, secrets),
+        serializeOptions,
       );
     },
   };
@@ -141,10 +143,11 @@ export const isCookie: IsCookieFunction = (object): object is Cookie => {
 };
 
 async function encodeCookieValue(
+  encodeFn: (value: string) => string,
   value: any,
   secrets: string[],
 ): Promise<string> {
-  let encoded = encodeData(value);
+  let encoded = encodeFn(value);
 
   if (secrets.length > 0) {
     encoded = await sign(encoded, secrets[0]);
@@ -154,6 +157,7 @@ async function encodeCookieValue(
 }
 
 async function decodeCookieValue(
+  decodeFn: (value: string) => any,
   value: string,
   secrets: string[],
 ): Promise<any> {
@@ -161,14 +165,14 @@ async function decodeCookieValue(
     for (let secret of secrets) {
       let unsignedValue = await unsign(value, secret);
       if (unsignedValue !== false) {
-        return decodeData(unsignedValue);
+        return decodeFn(unsignedValue);
       }
     }
 
     return null;
   }
 
-  return decodeData(value);
+  return decodeFn(value);
 }
 
 function encodeData(value: any): string {

@@ -196,6 +196,76 @@ describe("cookies", () => {
       );
     });
   });
+
+  describe("encode", () => {
+    it("encodes the cookie using default encoding when no encode function is provided", async () => {
+      let rawCookieValue = "cookie";
+      let cookie = createCookie("my-cookie");
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(setCookie).not.toContain("my-cookie=cookie");
+    });
+
+    it("encodes the cookie using the provided encode function at initialization", async () => {
+      let rawCookieValue = "cookie";
+      let encodeFn = (str: string) => {
+        // Check that the value is not encoded before calling encodeFn
+        expect(str).toBe(rawCookieValue);
+        return str;
+      };
+      let cookie = createCookie("my-cookie", { encode: encodeFn });
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(setCookie).toContain("my-cookie=cookie");
+    });
+
+    it("encodes the cookie using the provided encode function when specified during serialization", async () => {
+      let rawCookieValue = "cookie";
+      let encodeFn = (str: string) => {
+        // Check that the value is not encoded before calling encodeFn
+        expect(str).toBe(rawCookieValue);
+        return str;
+      };
+      let cookie = createCookie("my-cookie");
+      let setCookie = await cookie.serialize(rawCookieValue, {
+        encode: encodeFn,
+      });
+      expect(setCookie).toContain("my-cookie=cookie");
+    });
+  });
+
+  describe("decode", () => {
+    it("decodes cookie using default decode function", async () => {
+      let rawCookieValue = "cookie";
+      let cookie = createCookie("my-cookie");
+      let setCookie = await cookie.serialize(rawCookieValue);
+      let value = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(value).toBe(rawCookieValue);
+    });
+
+    it("decodes cookie using provided encode and decode functions during initialization", async () => {
+      let rawCookieValue = "cookie";
+      let encodeFn = (str: string) => str;
+      let decodeFn = (str: string) => str;
+      let cookie = createCookie("my-cookie", {
+        encode: encodeFn,
+        decode: decodeFn,
+      });
+      let setCookie = await cookie.serialize(rawCookieValue);
+      let value = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(value).toBe(rawCookieValue);
+    });
+
+    it("decodes cookie using provided decode function during parsing", async () => {
+      let rawCookieValue = "cookie";
+      let encodeFn = (str: string) => str;
+      let decodeFn = (str: string) => str;
+      let cookie = createCookie("my-cookie", { encode: encodeFn });
+      let setCookie = await cookie.serialize(rawCookieValue);
+      let value = await cookie.parse(getCookieFromSetCookie(setCookie), {
+        decode: decodeFn,
+      });
+      expect(value).toBe(rawCookieValue);
+    });
+  });
 });
 
 function spyConsole() {
