@@ -217,9 +217,7 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
 
-type FrameworkModeRscTemplateName =
-  | "rsc-parcel-framework"
-  | "rsc-vite-framework";
+type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
 type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
