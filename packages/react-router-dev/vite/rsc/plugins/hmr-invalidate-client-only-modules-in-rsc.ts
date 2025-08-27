@@ -3,7 +3,7 @@ import type * as Vite from "vite";
 export function hmrInvalidateClientOnlyModulesInRsc(): Vite.Plugin {
   return {
     name: "react-router/rsc/hmr/invalidate-client-only-modules-in-rsc",
-    async hotUpdate(ctx) {
+    hotUpdate(ctx) {
       // We only want to invalidate ancestors of client-only modules in the RSC
       // graph, so bail out if we're not in the RSC environment
       if (this.environment.name !== "rsc") {
