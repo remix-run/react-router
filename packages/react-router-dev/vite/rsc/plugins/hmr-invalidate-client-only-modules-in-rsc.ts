@@ -20,42 +20,44 @@ export function hmrInvalidateClientOnlyModulesInRsc(): Vite.Plugin {
         return;
       }
 
-      // Find the corresponding client module for this file so we can walk the
-      // module graph
-      const updatedClientModule =
-        ctx.server.environments.client.moduleGraph.getModuleById(ctx.file);
-
-      // If this file is not in the client graph, it's not a client-only module
-      // and we don't need to invalidate anything, so bail out
-      if (!updatedClientModule) {
+      // Find the corresponding client modules for this file so we can walk the
+      // module graph looking for ancestors in the RSC graph
+      const updatedClientModules =
+        ctx.server.environments.client.moduleGraph.getModulesByFile(ctx.file);
+      if (!updatedClientModules) {
         return;
       }
 
-      const visited = new Set<Vite.EnvironmentModuleNode>();
-      const walk = (module: Vite.EnvironmentModuleNode) => {
-        if (!module || visited.has(module) || !module.id) {
-          return;
-        }
-
-        visited.add(module);
-
-        // If this module is in the RSC graph, invalidate it and stop walking
-        const serverModule = this.environment.moduleGraph.getModuleById(
-          module.id,
-        );
-        if (serverModule) {
-          this.environment.moduleGraph.invalidateModule(serverModule);
-          return;
-        }
-
-        if (module.importers) {
-          for (const importer of module.importers) {
-            walk(importer);
+      for (const updatedClientModule of updatedClientModules) {
+        const visited = new Set<Vite.EnvironmentModuleNode>();
+        const walk = (module: Vite.EnvironmentModuleNode) => {
+          if (visited.has(module) || !module.id) {
+            return;
           }
-        }
-      };
 
-      walk(updatedClientModule);
+          visited.add(module);
+
+          // Try to find this module in the RSC graph
+          const serverModule = this.environment.moduleGraph.getModuleById(
+            module.id,
+          );
+
+          // If this module is in the RSC graph, invalidate it and stop walking
+          if (serverModule) {
+            this.environment.moduleGraph.invalidateModule(serverModule);
+            return;
+          }
+
+          // If we haven't found a corresponding RSC module, walk importers
+          if (module.importers) {
+            for (const importer of module.importers) {
+              walk(importer);
+            }
+          }
+        };
+
+        walk(updatedClientModule);
+      }
     },
   };
 }
