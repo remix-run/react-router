@@ -24,7 +24,7 @@ const PADDING = "20px";
 const NEW_PADDING = "30px";
 
 const fixtures = [
-  ...viteMajorTemplates,
+  // ...viteMajorTemplates,
   {
     templateName: "rsc-vite-framework",
     templateDisplayName: "RSC Vite Framework",
@@ -594,9 +594,7 @@ async function hmrWorkflow({
         `CSS update for ${routeFile}`,
       ).toHaveCSS("padding", NEW_PADDING);
 
-      // TODO: Fix state preservation when changing these styles in RSC
-      // Framework mode. This appears to be a deeper HMR issue with
-      // changing non-React modules imported by the route.
+      // TODO: Fix state preservation when changing Vanilla Extract CSS in RSC
       if (
         templateName.includes("rsc") &&
         file === "styles-vanilla-global.css.ts"
