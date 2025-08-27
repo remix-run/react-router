@@ -24,7 +24,7 @@ const PADDING = "20px";
 const NEW_PADDING = "30px";
 
 const fixtures = [
-  // ...viteMajorTemplates,
+  ...viteMajorTemplates,
   {
     templateName: "rsc-vite-framework",
     templateDisplayName: "RSC Vite Framework",
