@@ -599,8 +599,7 @@ async function hmrWorkflow({
       // changing non-React modules imported by the route.
       if (
         templateName.includes("rsc") &&
-        (file === "styles.module.css" ||
-          file === "styles-postcss-linked.css" ||
+        (file === "styles-postcss-linked.css" ||
           file === "styles-vanilla-global.css.ts")
       ) {
         continue;

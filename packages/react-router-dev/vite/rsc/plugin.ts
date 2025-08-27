@@ -20,6 +20,7 @@ import {
   isVirtualClientRouteModuleId,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
+import { hmrInvalidateClientOnlyModulesInRsc } from "./plugins/hmr-invalidate-client-only-modules-in-rsc";
 import validatePluginOrder from "../plugins/validate-plugin-order";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
@@ -321,6 +322,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return modules;
       },
     },
+    hmrInvalidateClientOnlyModulesInRsc(),
     validatePluginOrder(),
     rsc({ entries: getRscEntries() }),
   ];
