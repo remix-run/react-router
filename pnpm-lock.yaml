@@ -451,8 +451,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
-        specifier: 0.4.24
-        version: 0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        specifier: https://pkg.pr.new/@vitejs/plugin-rsc@788
+        version: https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -512,8 +512,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
-        specifier: 0.4.24
-        version: 0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        specifier: https://pkg.pr.new/@vitejs/plugin-rsc@788
+        version: https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1066,8 +1066,8 @@ importers:
         specifier: workspace:*
         version: link:../react-router-node
       '@vitejs/plugin-rsc':
-        specifier: 0.4.24
-        version: 0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        specifier: https://pkg.pr.new/@vitejs/plugin-rsc@788
+        version: https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -1795,8 +1795,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
-        specifier: 0.4.24
-        version: 0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        specifier: https://pkg.pr.new/@vitejs/plugin-rsc@788
+        version: https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1856,8 +1856,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
-        specifier: 0.4.24
-        version: 0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        specifier: https://pkg.pr.new/@vitejs/plugin-rsc@788
+        version: https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -5114,8 +5114,9 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
 
-  '@vitejs/plugin-rsc@0.4.24':
-    resolution: {integrity: sha512-luTrqS5qGup7r1IrzMkFPWxD2778j+jNOjfJ8ZPuk/m9HiDHkSs5oZbRizbdnc9d0HPMLRRmPWXyuAWHudeX4g==}
+  '@vitejs/plugin-rsc@https://pkg.pr.new/@vitejs/plugin-rsc@788':
+    resolution: {tarball: https://pkg.pr.new/@vitejs/plugin-rsc@788}
+    version: 0.4.24
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -13641,7 +13642,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-rsc@0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
+  '@vitejs/plugin-rsc@https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@remix-run/node-fetch-server': 0.8.0
       es-module-lexer: 1.7.0
@@ -13654,7 +13655,7 @@ snapshots:
       vite: 6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
 
-  '@vitejs/plugin-rsc@0.4.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
+  '@vitejs/plugin-rsc@https://pkg.pr.new/@vitejs/plugin-rsc@788(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@remix-run/node-fetch-server': 0.8.0
       es-module-lexer: 1.7.0

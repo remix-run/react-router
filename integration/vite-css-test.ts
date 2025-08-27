@@ -594,14 +594,10 @@ async function hmrWorkflow({
         `CSS update for ${routeFile}`,
       ).toHaveCSS("padding", NEW_PADDING);
 
-      // TODO: Fix state preservation when changing these styles in RSC
-      // Framework mode. This appears to be a deeper HMR issue with
-      // changing non-React modules imported by the route.
+      // TODO: Fix state preservation for Vanilla Extract HMR
       if (
         templateName.includes("rsc") &&
-        (file === "styles.module.css" ||
-          file === "styles-postcss-linked.css" ||
-          file === "styles-vanilla-global.css.ts")
+        file === "styles-vanilla-global.css.ts"
       ) {
         continue;
       }

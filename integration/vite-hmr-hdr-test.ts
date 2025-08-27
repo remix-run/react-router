@@ -352,9 +352,6 @@ async function workflow({
   await expect(hdrStatus).toHaveText(
     "HDR updated: route & direct 2 & indirect 2",
   );
-  // TODO: Investigate why this is flaky in CI for RSC Framework Mode
-  if (!templateName.includes("rsc")) {
-    await expect(input).toHaveValue("stateful");
-  }
+  await expect(input).toHaveValue("stateful");
   expect(page.errors).toEqual([]);
 }
