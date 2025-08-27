@@ -10,13 +10,12 @@ export function hmrInvalidateClientOnlyModulesInRsc(): Vite.Plugin {
         return;
       }
 
-      const updatedServerModule = this.environment.moduleGraph.getModuleById(
-        ctx.file,
-      );
+      const updatedServerModules =
+        this.environment.moduleGraph.getModulesByFile(ctx.file);
 
       // If this file is in the RSC graph, it's not a client-only module and
       // changes will already be picked up, so bail out
-      if (updatedServerModule) {
+      if (updatedServerModules && updatedServerModules.size > 0) {
         return;
       }
 
