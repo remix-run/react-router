@@ -205,15 +205,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
         "Expected a default request handler function export in Vite RSC Framework Mode server build",
       );
     }
-  } else if (templateName === "rsc-parcel-framework") {
-    let serverBuild = await import(buildPath);
-    handler = (serverBuild?.requestHandler ??
-      serverBuild?.default?.requestHandler) as RequestHandler;
-    if (typeof handler !== "function") {
-      throw new Error(
-        "Expected a 'requestHandler' function export in Parcel RSC Framework server build",
-      );
-    }
   } else {
     build = (await import(buildPath)) as ServerBuild;
     handler = createRequestHandler(build, mode || ServerMode.Production);
@@ -489,7 +480,12 @@ export async function createFixtureProject(
   if (templateName.includes("parcel")) {
     parcelBuild(projectDir, init.buildStdio, mode);
   } else {
-    reactRouterBuild(projectDir, init.buildStdio, mode);
+    reactRouterBuild(
+      projectDir,
+      init.buildStdio,
+      mode,
+      templateName.includes("rsc"),
+    );
   }
 
   return projectDir;
@@ -535,6 +531,7 @@ function reactRouterBuild(
   projectDir: string,
   buildStdio?: Writable,
   mode?: ServerMode,
+  isRsc?: boolean,
 ) {
   // We have a "require" instead of a dynamic import in readConfig gated
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
@@ -544,8 +541,9 @@ function reactRouterBuild(
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
 
   let reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+  let viteBin = "node_modules/vite/dist/node/cli.js";
 
-  let buildArgs: string[] = [reactRouterBin, "build"];
+  let buildArgs: string[] = [isRsc ? viteBin : reactRouterBin, "build"];
 
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,

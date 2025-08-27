@@ -6,22 +6,16 @@ import { implementations, js, setupRscTest, validateRSCHtml } from "./utils";
 test.use({ javaScriptEnabled: false });
 
 implementations.forEach((implementation) => {
-  let stop: () => void;
-
-  test.afterEach(() => {
-    stop?.();
-  });
-
   test.describe(`RSC nojs (${implementation.name})`, () => {
-    test("Supports React Server Functions side-effect redirect headers for document requests", async ({
-      page,
-    }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+    let port: number;
+    let stop: () => void;
 
-      let port = await getPort();
+    test.afterAll(() => {
+      stop?.();
+    });
+
+    test.beforeAll(async () => {
+      port = await getPort();
       stop = await setupRscTest({
         implementation,
         port,
@@ -33,6 +27,10 @@ implementations.forEach((implementation) => {
             export async function redirectAction() {
               redirect("/?redirected=true", { headers: { "x-test": "test" } });
               return "redirected";
+            }
+
+            export async function incrementAction(prev) {
+              return prev + 1;
             }
           `,
           "src/routes/home.client.tsx": js`
@@ -47,7 +45,7 @@ implementations.forEach((implementation) => {
           "src/routes/home.tsx": js`
             "use client";
             import {useActionState} from "react";
-            import { redirectAction } from "./home.actions";
+            import { redirectAction, incrementAction } from "./home.actions";
             import { Counter } from "./home.client";
 
             export default function HomeRoute(props) {
@@ -61,12 +59,34 @@ implementations.forEach((implementation) => {
                   </form>
                   {state && <div data-testid="state">{state}</div>}
                   <Counter />
+                  <TestActionState />
                 </div>
+              );
+            }
+
+            function TestActionState() {
+              const [state, action] = useActionState(incrementAction, 0);
+              return (
+                <form action={action}>
+                  <button type="submit" data-action-state-increment-submit>
+                    action-state-increment
+                  </button>
+                  <div data-action-state-increment-result>{state}</div>
+                </form>
               );
             }
           `,
         },
       });
+    });
+
+    test("Supports React Server Functions side-effect redirect headers for document requests", async ({
+      page,
+    }, { project }) => {
+      test.skip(
+        implementation.name === "parcel" || project.name !== "chromium",
+        "TODO: figure out why parcel isn't working here",
+      );
 
       await page.goto(`http://localhost:${port}/`);
 
@@ -85,6 +105,26 @@ implementations.forEach((implementation) => {
       await page.waitForURL(`http://localhost:${port}/?redirected=true`);
 
       expect((await responseHeadersPromise)["x-test"]).toBe("test");
+
+      // Ensure this is using RSC
+      validateRSCHtml(await page.content());
+    });
+
+    test("Supports form state without JS", async ({ page }, { project }) => {
+      test.skip(
+        implementation.name === "parcel" || project.name !== "chromium",
+        "TODO: figure out why parcel isn't working here",
+      );
+
+      await page.goto(`http://localhost:${port}/`);
+
+      await expect(
+        page.locator("[data-action-state-increment-result]"),
+      ).toHaveText("0");
+      await page.click("[data-action-state-increment-submit]");
+      await expect(
+        page.locator("[data-action-state-increment-result]"),
+      ).toHaveText("1");
 
       // Ensure this is using RSC
       validateRSCHtml(await page.content());

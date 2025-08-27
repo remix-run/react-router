@@ -23,7 +23,11 @@ setServerCallback(
 );
 
 createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
-  startTransition(() => {
+  // @ts-expect-error - on 18 types, requires 19.
+  startTransition(async () => {
+    const formState =
+      payload.type === "render" ? await payload.formState : undefined;
+
     hydrateRoot(
       document,
       <StrictMode>
@@ -33,6 +37,10 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
           getContext={getContext}
         />
       </StrictMode>,
+      {
+        // @ts-expect-error - no types for this yet
+        formState,
+      },
     );
   });
 });

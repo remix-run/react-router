@@ -1,6 +1,7 @@
 import {
   createTemporaryReferenceSet,
   decodeAction,
+  decodeFormState,
   decodeReply,
   loadServerAction,
   renderToReadableStream,
@@ -12,8 +13,9 @@ import routes from "virtual:react-router/unstable_rsc/routes";
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
     createTemporaryReferenceSet,
-    decodeReply,
     decodeAction,
+    decodeFormState,
+    decodeReply,
     loadServerAction,
     request,
     routes,
