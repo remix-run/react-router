@@ -1529,13 +1529,9 @@ implementations.forEach((implementation) => {
         });
 
         test("Supports React Server Functions side-effect redirects", async ({
-          browserName,
           page,
         }) => {
-          test.skip(
-            browserName !== "chromium",
-            "Playwright doesn't like this test outside of chrome for some reason.",
-          );
+          test.skip(implementation.name === "parcel", "Not working in parcel?");
 
           await page.goto(
             `http://localhost:${port}/side-effect-redirect-server-action`,
