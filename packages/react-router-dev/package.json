@@ -78,7 +78,7 @@
     "@babel/types": "^7.27.7",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
-    "@vitejs/plugin-rsc": "0.4.24",
+    "@vitejs/plugin-rsc": "0.4.25",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
     "chokidar": "^4.0.0",
