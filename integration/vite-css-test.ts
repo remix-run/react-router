@@ -551,15 +551,6 @@ async function hmrWorkflow({
         file: "styles-bundled.css",
         selector: "#css-bundled",
       },
-      // TODO: Fix HMR for CSS Modules in server-first routes in RSC Framework mode
-      ...(routeBase === "rsc-server-first-route"
-        ? []
-        : ([
-            {
-              file: "styles.module.css",
-              selector: "#css-modules",
-            },
-          ] as const)),
       {
         file: "styles-postcss-linked.css",
         selector: "#css-postcss-linked",
@@ -568,13 +559,15 @@ async function hmrWorkflow({
         file: "styles-vanilla-global.css.ts",
         selector: "#css-vanilla-global",
       },
-      // TODO: Fix HMR for locally scoped Vanilla Extract styles in RSC
-      // Framework mode. May require changes to the RSC plugin, or Vanilla
-      // Extract. Userland workaround for now:
-      // https://github.com/pawelblaszczyk5/vite-rsc-experiments/blob/643649f2e6562c859d9612126bfc3a183e03c7b5/apps/vanilla-extract/vite.config.ts
-      ...(templateName.includes("rsc")
+      // TODO: Fix HMR for CSS Modules and locally scoped Vanilla Extract in
+      // server-first routes in RSC Framework mode
+      ...(routeBase === "rsc-server-first-route"
         ? []
         : ([
+            {
+              file: "styles.module.css",
+              selector: "#css-modules",
+            },
             {
               file: "styles-vanilla-local.css.ts",
               selector: "#css-vanilla-local",
@@ -593,14 +586,6 @@ async function hmrWorkflow({
         page.locator(selector),
         `CSS update for ${routeFile}`,
       ).toHaveCSS("padding", NEW_PADDING);
-
-      // TODO: Fix state preservation for Vanilla Extract HMR
-      if (
-        templateName.includes("rsc") &&
-        file === "styles-vanilla-global.css.ts"
-      ) {
-        continue;
-      }
 
       // Ensure CSS updates were handled by HMR
       await expect(input, `State preservation for ${routeFile}`).toHaveValue(
