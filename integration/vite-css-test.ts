@@ -563,8 +563,7 @@ async function hmrWorkflow({
         file: "styles-vanilla-global.css.ts",
         selector: "#css-vanilla-global",
       },
-      // TODO: Fix HMR for CSS Modules and locally scoped Vanilla Extract in
-      // server-first routes in RSC Framework mode
+      // Vanilla Extract's HMR isn't working for RSC server-first routes
       ...(routeBase === "rsc-server-first-route"
         ? []
         : ([
