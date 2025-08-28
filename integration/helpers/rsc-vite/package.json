@@ -10,7 +10,7 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@vitejs/plugin-rsc": "https://pkg.pr.new/@vitejs/plugin-rsc@788",
+    "@vitejs/plugin-rsc": "0.4.25",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
