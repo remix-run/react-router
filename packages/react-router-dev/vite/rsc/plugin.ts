@@ -280,9 +280,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       async hotUpdate(this, { server, file, modules }) {
         if (this.environment.name !== "rsc") return;
 
+        const clientModules =
+          server.environments.client.moduleGraph.getModulesByFile(file);
+
+        const vite = await import("vite");
         const isServerOnlyChange =
-          (server.environments.client.moduleGraph.getModulesByFile(file)
-            ?.size ?? 0) === 0;
+          !clientModules ||
+          clientModules.size === 0 ||
+          // Handle CSS injected from server-first routes (with ?direct query
+          // string) since the client graph has a reference to the CSS
+          (vite.isCSSRequest(file) &&
+            Array.from(clientModules).some((mod) =>
+              mod.id?.includes("?direct"),
+            ));
 
         for (const mod of getModulesWithImporters(modules)) {
           if (!mod.file) continue;

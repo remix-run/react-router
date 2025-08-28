@@ -552,6 +552,10 @@ async function hmrWorkflow({
         selector: "#css-bundled",
       },
       {
+        file: "styles.module.css",
+        selector: "#css-modules",
+      },
+      {
         file: "styles-postcss-linked.css",
         selector: "#css-postcss-linked",
       },
@@ -564,10 +568,6 @@ async function hmrWorkflow({
       ...(routeBase === "rsc-server-first-route"
         ? []
         : ([
-            {
-              file: "styles.module.css",
-              selector: "#css-modules",
-            },
             {
               file: "styles-vanilla-local.css.ts",
               selector: "#css-vanilla-local",
