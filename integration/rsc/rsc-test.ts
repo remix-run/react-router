@@ -924,7 +924,6 @@ implementations.forEach((implementation) => {
               import { Counter } from "./home.client";
 
               export default function HomeRoute(props) {
-                console.log({props});
                 return (
                   <div>
                     <form action={redirectAction}>
@@ -1176,7 +1175,7 @@ implementations.forEach((implementation) => {
               import ClientHomeRoute from "./home.client";
 
               export function loader() {
-                console.log("loader");
+                console.log("THIS SHOULD NOT BE LOGGED!!!");
               }
 
               export default function HomeRoute() {
@@ -1219,13 +1218,28 @@ implementations.forEach((implementation) => {
                 return Response.json(event);
               }
             `,
+            "src/routes/await-component/client.tsx": js`
+              "use client";
+              import { useAsyncError, useAsyncValue } from "react-router";
+
+              export function ClientValue() {
+                const value = useAsyncValue();
+                return <div data-resolved>{value}</div>;
+              }
+
+              export function ClientError() {
+                const error = useAsyncError();
+                return <div data-rejected>{error.message}</div>;
+              }
+            `,
             "src/routes/await-component/home.tsx": js`
               import { Suspense } from "react";
               import { Await } from "react-router";
 
+              import { ClientValue } from "./client";
               import { events } from "./events";
 
-              export default function AwaitTest() {
+              export default function AwaitResolveTest() {
                 const promise = new Promise(resolve => {
                   events.on("resolve", () => {
                     resolve("Async Data");
@@ -1236,7 +1250,7 @@ implementations.forEach((implementation) => {
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
                       <Await resolve={promise}>
-                        {(data) => (<p data-resolved>{data}</p>)}
+                        <ClientValue />
                       </Await>
                     </Suspense>
                     {Array.from({ length: 100 }, (_, i) => (
@@ -1250,9 +1264,10 @@ implementations.forEach((implementation) => {
               import { Suspense } from "react";
               import { Await } from "react-router";
 
+              import { ClientError } from "./client";
               import { events } from "./events";
 
-              export default function AwaitTest() {
+              export default function AwaitRejectTest() {
                 const promise = new Promise((_, reject) => {
                   events.on("reject", () => {
                     reject(new Error("Async Error"));
@@ -1262,7 +1277,7 @@ implementations.forEach((implementation) => {
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise} errorElement={<p data-rejected>Oops...</p>}>
+                      <Await resolve={promise} errorElement={<ClientError />}>
                         {(data) => (<p data-resolved>{data}</p>)}
                       </Await>
                     </Suspense>
@@ -1532,7 +1547,8 @@ implementations.forEach((implementation) => {
             headers: { "Content-Type": "text/plain" },
             body: "resolve",
           });
-          await page.waitForSelector("[data-resolved]");
+          const resolved = await page.waitForSelector("[data-resolved]");
+          expect(await resolved.innerText()).toContain("Async Data");
         });
 
         test("Supports Await component rejection", async ({ page }) => {
@@ -1545,7 +1561,10 @@ implementations.forEach((implementation) => {
             headers: { "Content-Type": "text/plain" },
             body: "reject",
           });
-          await page.waitForSelector("[data-rejected]");
+          const rejected = await page.waitForSelector("[data-rejected]");
+          expect(await rejected.innerText()).toContain(
+            "An error occurred in the Server Components render.",
+          );
         });
       });
 

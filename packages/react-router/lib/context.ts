@@ -137,6 +137,10 @@ FetchersContext.displayName = "Fetchers";
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 AwaitContext.displayName = "Await";
 
+export const AwaitContextProvider = (
+  props: React.ComponentProps<typeof AwaitContext.Provider>,
+) => React.createElement(AwaitContext.Provider, props);
+
 export interface NavigateOptions {
   /** Replace the current entry in the history stack instead of pushing a new one */
   replace?: boolean;

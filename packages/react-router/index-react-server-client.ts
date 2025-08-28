@@ -1,5 +1,6 @@
 "use client";
 
+export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/context";
 export {
   MemoryRouter,
   Navigate,

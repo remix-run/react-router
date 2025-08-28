@@ -25,6 +25,7 @@ import {
   type Params,
   type ShouldRevalidateFunction,
   type RouterContextProvider,
+  type TrackedPromise,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -41,6 +42,7 @@ import invariant from "../server-runtime/invariant";
 
 import {
   Outlet as UNTYPED_Outlet,
+  UNSAFE_AwaitContextProvider,
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
@@ -119,29 +121,32 @@ const cachedResolvePromise: <T>(
     return Promise.allSettled([resolve]).then((r) => r[0]);
   });
 
-export const Await: typeof AwaitType = ({
+export const Await: typeof AwaitType = (async ({
   children,
   resolve,
   errorElement,
-}) => {
-  // @ts-expect-error - on 18 types, requires 19.
-  let resolved: PromiseSettledResult<Awaited<T>> = React.use(
-    cachedResolvePromise(resolve),
-  );
+}: React.ComponentProps<typeof AwaitType>) => {
+  let promise = cachedResolvePromise(resolve);
+  let resolved: Awaited<typeof promise> = await promise;
 
   if (resolved.status === "rejected" && !errorElement) {
     throw resolved.reason;
   }
   if (resolved.status === "rejected") {
-    return React.createElement(React.Fragment, null, errorElement);
+    return React.createElement(UNSAFE_AwaitContextProvider, {
+      children: React.createElement(React.Fragment, null, errorElement),
+      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+    });
   }
 
-  return React.createElement(
-    React.Fragment,
-    null,
-    typeof children === "function" ? children(resolved.value) : children,
-  );
-};
+  const toRender =
+    typeof children === "function" ? children(resolved.value) : children;
+
+  return React.createElement(UNSAFE_AwaitContextProvider, {
+    children: toRender,
+    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+  });
+}) as any;
 
 type RSCRouteConfigEntryBase = {
   action?: ActionFunction;
