@@ -91,6 +91,7 @@ export type {
   RouteMatch,
   RouteObject,
 } from "./lib/context";
+export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/context";
 export type {
   AwaitProps,
   IndexRouteProps,

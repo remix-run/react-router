@@ -482,6 +482,27 @@ implementations.forEach((implementation) => {
                       path: "no-revalidate-server-action",
                       lazy: () => import("./routes/no-revalidate-server-action/home"),
                     },
+                    {
+                      id: "await-component",
+                      path: "await-component",
+                      children: [
+                        {
+                          id: "await-component.home",
+                          index: true,
+                          lazy: () => import("./routes/await-component/home"),
+                        },
+                        {
+                          id: "await-component.reject",
+                          path: "reject",
+                          lazy: () => import("./routes/await-component/reject"),
+                        },
+                        {
+                          id: "await-component.api",
+                          path: "api",
+                          lazy: () => import("./routes/await-component/api"),
+                        }
+                      ]
+                    }
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -903,7 +924,6 @@ implementations.forEach((implementation) => {
               import { Counter } from "./home.client";
 
               export default function HomeRoute(props) {
-                console.log({props});
                 return (
                   <div>
                     <form action={redirectAction}>
@@ -1155,7 +1175,7 @@ implementations.forEach((implementation) => {
               import ClientHomeRoute from "./home.client";
 
               export function loader() {
-                console.log("loader");
+                console.log("THIS SHOULD NOT BE LOGGED!!!");
               }
 
               export default function HomeRoute() {
@@ -1181,6 +1201,90 @@ implementations.forEach((implementation) => {
                     {pending && <div data-pending>Pending</div>}
                     {initialIdentity !== identity && <div data-revalidated>Revalidated</div>}
                   </div>
+                );
+              }
+            `,
+
+            "src/routes/await-component/events.ts": js`
+              import EventEmitter from 'node:events'
+
+              export const events = new EventEmitter();
+            `,
+            "src/routes/await-component/api.ts": js`
+              import { events } from "./events";
+              export async function action({ request }) {
+                const event = await request.text()
+                events.emit(event);
+                return Response.json(event);
+              }
+            `,
+            "src/routes/await-component/client.tsx": js`
+              "use client";
+              import { useAsyncError, useAsyncValue } from "react-router";
+
+              export function ClientValue() {
+                const value = useAsyncValue();
+                return <div data-resolved>{value}</div>;
+              }
+
+              export function ClientError() {
+                const error = useAsyncError();
+                return <div data-rejected>{error.message}</div>;
+              }
+            `,
+            "src/routes/await-component/home.tsx": js`
+              import { Suspense } from "react";
+              import { Await } from "react-router";
+
+              import { ClientValue } from "./client";
+              import { events } from "./events";
+
+              export default function AwaitResolveTest() {
+                const promise = new Promise(resolve => {
+                  events.on("resolve", () => {
+                    resolve("Async Data");
+                  });
+                });
+
+                return (
+                  <>
+                    <Suspense fallback={<p data-fallback>Loading...</p>}>
+                      <Await resolve={promise}>
+                        <ClientValue />
+                      </Await>
+                    </Suspense>
+                    {Array.from({ length: 100 }, (_, i) => (
+                      <p key={i}>Item {i}</p>
+                    ))}
+                  </>
+                );
+              }
+            `,
+            "src/routes/await-component/reject.tsx": js`
+              import { Suspense } from "react";
+              import { Await } from "react-router";
+
+              import { ClientError } from "./client";
+              import { events } from "./events";
+
+              export default function AwaitRejectTest() {
+                const promise = new Promise((_, reject) => {
+                  events.on("reject", () => {
+                    reject(new Error("Async Error"));
+                  });
+                });
+
+                return (
+                  <>
+                    <Suspense fallback={<p data-fallback>Loading...</p>}>
+                      <Await resolve={promise} errorElement={<ClientError />}>
+                        {(data) => (<p data-resolved>{data}</p>)}
+                      </Await>
+                    </Suspense>
+                    {Array.from({ length: 100 }, (_, i) => (
+                      <p key={i}>Item {i}</p>
+                    ))}
+                  </>
                 );
               }
             `,
@@ -1431,6 +1535,36 @@ implementations.forEach((implementation) => {
           // Ensure this is using RSC
           await page.goto(`http://localhost:${port}/resource-error-handling/`);
           validateRSCHtml(await page.content());
+        });
+
+        test("Supports Await component resolve", async ({ page }) => {
+          await page.goto(`http://localhost:${port}/await-component`, {
+            waitUntil: "commit",
+          });
+          await page.waitForSelector("[data-fallback]");
+          await fetch(`http://localhost:${port}/await-component/api`, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: "resolve",
+          });
+          const resolved = await page.waitForSelector("[data-resolved]");
+          expect(await resolved.innerText()).toContain("Async Data");
+        });
+
+        test("Supports Await component rejection", async ({ page }) => {
+          await page.goto(`http://localhost:${port}/await-component/reject`, {
+            waitUntil: "commit",
+          });
+          await page.waitForSelector("[data-fallback]");
+          await fetch(`http://localhost:${port}/await-component/api`, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: "reject",
+          });
+          const rejected = await page.waitForSelector("[data-rejected]");
+          expect(await rejected.innerText()).toContain(
+            "An error occurred in the Server Components render.",
+          );
         });
       });
 

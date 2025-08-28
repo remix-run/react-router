@@ -1,13 +1,11 @@
 import { parseArgs } from "node:util";
 import { createRequestListener } from "@mjackson/node-fetch-server";
-import compression from "compression";
 import express from "express";
 
 import rscRequestHandler from "./dist/rsc/index.js";
 
 const app = express();
 
-app.use(compression());
 app.use(express.static("dist/client"));
 
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (req, res) => {

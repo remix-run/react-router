@@ -25,6 +25,7 @@ import {
   type Params,
   type ShouldRevalidateFunction,
   type RouterContextProvider,
+  type TrackedPromise,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -41,6 +42,7 @@ import invariant from "../server-runtime/invariant";
 
 import {
   Outlet as UNTYPED_Outlet,
+  UNSAFE_AwaitContextProvider,
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
@@ -49,6 +51,7 @@ import {
   // TSConfig, it breaks the Parcel build within this repo.
 } from "react-router/internal/react-server-client";
 import type {
+  Await as AwaitType,
   Outlet as OutletType,
   WithComponentProps as WithComponentPropsType,
   WithErrorBoundaryProps as WithErrorBoundaryPropsType,
@@ -109,6 +112,41 @@ export const replace: typeof baseReplace = (...args) => {
 
   return response;
 };
+
+const cachedResolvePromise: <T>(
+  resolve: T,
+) => Promise<PromiseSettledResult<Awaited<T>>> =
+  // @ts-expect-error - on 18 types, requires 19.
+  React.cache(async <T>(resolve: T) => {
+    return Promise.allSettled([resolve]).then((r) => r[0]);
+  });
+
+export const Await: typeof AwaitType = (async ({
+  children,
+  resolve,
+  errorElement,
+}: React.ComponentProps<typeof AwaitType>) => {
+  let promise = cachedResolvePromise(resolve);
+  let resolved: Awaited<typeof promise> = await promise;
+
+  if (resolved.status === "rejected" && !errorElement) {
+    throw resolved.reason;
+  }
+  if (resolved.status === "rejected") {
+    return React.createElement(UNSAFE_AwaitContextProvider, {
+      children: React.createElement(React.Fragment, null, errorElement),
+      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+    });
+  }
+
+  const toRender =
+    typeof children === "function" ? children(resolved.value) : children;
+
+  return React.createElement(UNSAFE_AwaitContextProvider, {
+    children: toRender,
+    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+  });
+}) as any;
 
 type RSCRouteConfigEntryBase = {
   action?: ActionFunction;

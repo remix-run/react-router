@@ -17,11 +17,15 @@ export type {
 } from "./lib/rsc/server.rsc";
 
 // RSC implementation of agnostic APIs
-export { redirect, redirectDocument, replace } from "./lib/rsc/server.rsc";
+export {
+  Await,
+  redirect,
+  redirectDocument,
+  replace,
+} from "./lib/rsc/server.rsc";
 
 // Client references
 export {
-  Await,
   BrowserRouter,
   Form,
   HashRouter,
