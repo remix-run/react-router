@@ -49,6 +49,7 @@ import {
   // TSConfig, it breaks the Parcel build within this repo.
 } from "react-router/internal/react-server-client";
 import type {
+  Await as AwaitType,
   Outlet as OutletType,
   WithComponentProps as WithComponentPropsType,
   WithErrorBoundaryProps as WithErrorBoundaryPropsType,
@@ -108,6 +109,38 @@ export const replace: typeof baseReplace = (...args) => {
   }
 
   return response;
+};
+
+const cachedResolvePromise: <T>(
+  resolve: T,
+) => Promise<PromiseSettledResult<Awaited<T>>> =
+  // @ts-expect-error - on 18 types, requires 19.
+  React.cache(async <T>(resolve: T) => {
+    return Promise.allSettled([resolve]).then((r) => r[0]);
+  });
+
+export const Await: typeof AwaitType = ({
+  children,
+  resolve,
+  errorElement,
+}) => {
+  // @ts-expect-error - on 18 types, requires 19.
+  let resolved: PromiseSettledResult<Awaited<T>> = React.use(
+    cachedResolvePromise(resolve),
+  );
+
+  if (resolved.status === "rejected" && !errorElement) {
+    throw resolved.reason;
+  }
+  if (resolved.status === "rejected") {
+    return React.createElement(React.Fragment, null, errorElement);
+  }
+
+  return React.createElement(
+    React.Fragment,
+    null,
+    typeof children === "function" ? children(resolved.value) : children,
+  );
 };
 
 type RSCRouteConfigEntryBase = {

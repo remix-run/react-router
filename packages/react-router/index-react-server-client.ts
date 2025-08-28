@@ -1,7 +1,6 @@
 "use client";
 
 export {
-  Await,
   MemoryRouter,
   Navigate,
   Outlet,
