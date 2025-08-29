@@ -44,6 +44,20 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         if (!configResult.ok) throw new Error(configResult.error);
         config = configResult.value;
 
+        if (
+          viteUserConfig.base &&
+          config.basename !== "/" &&
+          viteCommand === "serve" &&
+          !viteUserConfig.server?.middlewareMode &&
+          !config.basename.startsWith(viteUserConfig.base)
+        ) {
+          throw new Error(
+            "When using the React Router `basename` and the Vite `base` config, " +
+              "the `basename` config must begin with `base` for the default " +
+              "Vite dev server.",
+          );
+        }
+
         return {
           resolve: {
             dedupe: [
@@ -180,6 +194,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           routeIdByFile,
           viteEnvironment: this.environment,
         });
+      },
+    },
+    {
+      name: "react-router/rsc/virtual-basename",
+      resolveId(id) {
+        if (id === virtual.basename.id) {
+          return virtual.basename.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.basename.resolvedId) {
+          return `export default ${JSON.stringify(config.basename)};`;
+        }
       },
     },
     {
@@ -340,6 +367,7 @@ const virtual = {
   routeConfig: create("unstable_rsc/routes"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
+  basename: create("unstable_rsc/basename"),
 };
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {

@@ -9,6 +9,7 @@ import {
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 import routes from "virtual:react-router/unstable_rsc/routes";
+import basename from "virtual:react-router/unstable_rsc/basename";
 
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
@@ -19,6 +20,7 @@ export async function fetchServer(request: Request) {
     loadServerAction,
     request,
     routes,
+    basename,
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {
         status: match.statusCode,

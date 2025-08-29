@@ -248,10 +248,6 @@ test.describe("Vite CSS", () => {
       });
 
       test.describe("vite dev with custom base", async () => {
-        test.fixme(
-          templateName.includes("rsc"),
-          "RSC Framework mode doesn't support basename yet",
-        );
         let port: number;
         let cwd: string;
         let stop: () => void;
@@ -262,7 +258,7 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                viteEnvironmentApi: templateName === "vite-6-template",
+                viteEnvironmentApi: templateName !== "vite-5-template",
                 basename: base,
               }),
               "vite.config.ts": await viteConfig.basic({
