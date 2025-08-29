@@ -55,6 +55,7 @@ export {
   createContext,
   RouterContextProvider,
 } from "./lib/router/utils";
+export { href } from "./lib/href";
 
 export { createCookie, isCookie } from "./lib/server-runtime/cookies";
 export {
