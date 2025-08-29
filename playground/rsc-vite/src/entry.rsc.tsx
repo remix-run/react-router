@@ -35,3 +35,7 @@ export default async function handler(request: Request) {
   >("ssr", "index");
   return ssr.default(request, fetchServer);
 }
+
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
