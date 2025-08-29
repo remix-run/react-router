@@ -312,7 +312,7 @@ export function createClientRoutes(
       Object.assign(dataRoute, {
         ...dataRoute,
         ...getRouteComponents(route, routeModule, isSpaMode),
-        unstable_middleware: routeModule.unstable_clientMiddleware,
+        middleware: routeModule.clientMiddleware,
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
           dataRoute.path,
@@ -510,20 +510,17 @@ export function createClientRoutes(
                 });
             }
           : undefined,
-        unstable_middleware: route.hasClientMiddleware
+        middleware: route.hasClientMiddleware
           ? async () => {
-              let { unstable_clientMiddleware } = route.clientMiddlewareModule
+              let { clientMiddleware } = route.clientMiddlewareModule
                 ? await import(
                     /* @vite-ignore */
                     /* webpackIgnore: true */
                     route.clientMiddlewareModule
                   )
                 : await getLazyRoute();
-              invariant(
-                unstable_clientMiddleware,
-                "No `unstable_clientMiddleware` export found",
-              );
-              return unstable_clientMiddleware;
+              invariant(clientMiddleware, "No `clientMiddleware` export found");
+              return clientMiddleware;
             }
           : undefined,
         shouldRevalidate: async () => {
@@ -656,7 +653,7 @@ async function loadRouteModuleWithBlockingLinks(
   return {
     Component: getRouteModuleComponent(routeModule),
     ErrorBoundary: routeModule.ErrorBoundary,
-    unstable_clientMiddleware: routeModule.unstable_clientMiddleware,
+    clientMiddleware: routeModule.clientMiddleware,
     clientAction: routeModule.clientAction,
     clientLoader: routeModule.clientLoader,
     handle: routeModule.handle,

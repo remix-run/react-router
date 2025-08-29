@@ -21,12 +21,16 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 
 createFromReadableStream(getRSCStream(), { assets: "manifest" }).then(
   (payload: RSCPayload) => {
-    React.startTransition(() => {
+    // @ts-expect-error - on 18 types, requires 19.
+    startTransition(async () => {
+      const formState =
+        payload.type === "render" ? await payload.formState : undefined;
+
       hydrateRoot(
         document,
         <React.StrictMode>
@@ -35,8 +39,12 @@ createFromReadableStream(getRSCStream(), { assets: "manifest" }).then(
             routeDiscovery="eager"
             createFromReadableStream={createFromReadableStream}
           />
-        </React.StrictMode>
+        </React.StrictMode>,
+        {
+          // @ts-expect-error - no types for this yet
+          formState,
+        },
       );
     });
-  }
+  },
 );

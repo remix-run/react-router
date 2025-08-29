@@ -107,14 +107,14 @@ test.describe("loader in an app", async () => {
         `,
         "app/routes/return-data-through-middleware.tsx": js`
           import { data } from "react-router";
-          export const unstable_middleware = [(_, next) => next()]
+          export const middleware = [(_, next) => next()]
           export let loader = () => {
             return data('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
           }
         `,
         "app/routes/throw-data-through-middleware.tsx": js`
           import { data } from "react-router";
-          export const unstable_middleware = [(_, next) => next()]
+          export const middleware = [(_, next) => next()]
           export let loader = () => {
             throw data('Partial', { status: 207, headers: { 'X-Foo': 'Bar'} });
           }

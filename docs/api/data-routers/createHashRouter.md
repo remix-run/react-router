@@ -48,9 +48,9 @@ Basename path for the application.
 
 Future flags to enable for the router.
 
-### opts.unstable_getContext
+### opts.getContext
 
-A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+A function that returns an [`RouterContextProvider`](../utils/RouterContextProvider) instance
 which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
 [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
 This function is called to generate a fresh `context` instance on each
@@ -58,15 +58,15 @@ navigation or fetcher call.
 
 ```tsx
 import {
-  unstable_createContext,
-  unstable_RouterContextProvider,
+  createContext,
+  RouterContextProvider,
 } from "react-router";
 
-const apiClientContext = unstable_createContext<APIClient>();
+const apiClientContext = createContext<APIClient>();
 
 function createBrowserRouter(routes, {
-  unstable_getContext() {
-    let context = new unstable_RouterContextProvider();
+  getContext() {
+    let context = new RouterContextProvider();
     context.set(apiClientContext, getApiClient());
     return context;
   }

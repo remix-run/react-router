@@ -44,6 +44,20 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         if (!configResult.ok) throw new Error(configResult.error);
         config = configResult.value;
 
+        if (
+          viteUserConfig.base &&
+          config.basename !== "/" &&
+          viteCommand === "serve" &&
+          !viteUserConfig.server?.middlewareMode &&
+          !config.basename.startsWith(viteUserConfig.base)
+        ) {
+          throw new Error(
+            "When using the React Router `basename` and the Vite `base` config, " +
+              "the `basename` config must begin with `base` for the default " +
+              "Vite dev server.",
+          );
+        }
+
         return {
           resolve: {
             dedupe: [
@@ -183,6 +197,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     {
+      name: "react-router/rsc/virtual-basename",
+      resolveId(id) {
+        if (id === virtual.basename.id) {
+          return virtual.basename.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.basename.resolvedId) {
+          return `export default ${JSON.stringify(config.basename)};`;
+        }
+      },
+    },
+    {
       name: "react-router/rsc/hmr/inject-runtime",
       enforce: "pre",
       resolveId(id) {
@@ -280,9 +307,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       async hotUpdate(this, { server, file, modules }) {
         if (this.environment.name !== "rsc") return;
 
+        const clientModules =
+          server.environments.client.moduleGraph.getModulesByFile(file);
+
+        const vite = await import("vite");
         const isServerOnlyChange =
-          (server.environments.client.moduleGraph.getModulesByFile(file)
-            ?.size ?? 0) === 0;
+          !clientModules ||
+          clientModules.size === 0 ||
+          // Handle CSS injected from server-first routes (with ?direct query
+          // string) since the client graph has a reference to the CSS
+          (vite.isCSSRequest(file) &&
+            Array.from(clientModules).some((mod) =>
+              mod.id?.includes("?direct"),
+            ));
 
         for (const mod of getModulesWithImporters(modules)) {
           if (!mod.file) continue;
@@ -330,6 +367,7 @@ const virtual = {
   routeConfig: create("unstable_rsc/routes"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
+  basename: create("unstable_rsc/basename"),
 };
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {

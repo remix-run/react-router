@@ -24,7 +24,8 @@ import {
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
-  type unstable_RouterContextProvider,
+  type RouterContextProvider,
+  type TrackedPromise,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -41,6 +42,7 @@ import invariant from "../server-runtime/invariant";
 
 import {
   Outlet as UNTYPED_Outlet,
+  UNSAFE_AwaitContextProvider,
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
@@ -49,6 +51,7 @@ import {
   // TSConfig, it breaks the Parcel build within this repo.
 } from "react-router/internal/react-server-client";
 import type {
+  Await as AwaitType,
   Outlet as OutletType,
   WithComponentProps as WithComponentPropsType,
   WithErrorBoundaryProps as WithErrorBoundaryPropsType,
@@ -109,6 +112,41 @@ export const replace: typeof baseReplace = (...args) => {
 
   return response;
 };
+
+const cachedResolvePromise: <T>(
+  resolve: T,
+) => Promise<PromiseSettledResult<Awaited<T>>> =
+  // @ts-expect-error - on 18 types, requires 19.
+  React.cache(async <T>(resolve: T) => {
+    return Promise.allSettled([resolve]).then((r) => r[0]);
+  });
+
+export const Await: typeof AwaitType = (async ({
+  children,
+  resolve,
+  errorElement,
+}: React.ComponentProps<typeof AwaitType>) => {
+  let promise = cachedResolvePromise(resolve);
+  let resolved: Awaited<typeof promise> = await promise;
+
+  if (resolved.status === "rejected" && !errorElement) {
+    throw resolved.reason;
+  }
+  if (resolved.status === "rejected") {
+    return React.createElement(UNSAFE_AwaitContextProvider, {
+      children: React.createElement(React.Fragment, null, errorElement),
+      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+    });
+  }
+
+  const toRender =
+    typeof children === "function" ? children(resolved.value) : children;
+
+  return React.createElement(UNSAFE_AwaitContextProvider, {
+    children: toRender,
+    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+  });
+}) as any;
 
 type RSCRouteConfigEntryBase = {
   action?: ActionFunction;
@@ -307,7 +345,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * errors that occur during the request processing.
  * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  * to match against.
- * @param opts.requestContext An instance of {@link unstable_RouterContextProvider}
+ * @param opts.requestContext An instance of {@link RouterContextProvider}
  * that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
  * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
  * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
@@ -333,7 +371,7 @@ export async function matchRSCServerRequest({
   decodeReply?: DecodeReplyFunction;
   decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
-  requestContext?: unstable_RouterContextProvider;
+  requestContext?: RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
@@ -615,7 +653,7 @@ async function generateResourceResponse(
   routes: RSCRouteConfigEntry[],
   basename: string | undefined,
   routeId: string,
-  requestContext: unstable_RouterContextProvider | undefined,
+  requestContext: RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
   try {
@@ -626,7 +664,7 @@ async function generateResourceResponse(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext,
-      async unstable_generateMiddlewareResponse(queryRoute) {
+      async generateMiddlewareResponse(queryRoute) {
         try {
           let response = await queryRoute(request);
           return generateResourceResponse(response);
@@ -677,7 +715,7 @@ async function generateRenderResponse(
   basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
-  requestContext: unstable_RouterContextProvider | undefined,
+  requestContext: RouterContextProvider | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
@@ -722,12 +760,9 @@ async function generateRenderResponse(
       skipLoaderErrorBubbling: isDataRequest,
       skipRevalidation: isSubmission,
       ...(routeIdsToLoad
-        ? {
-            filterMatchesToLoad: (m: AgnosticDataRouteMatch) =>
-              routeIdsToLoad!.includes(m.route.id),
-          }
+        ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
-      async unstable_generateMiddlewareResponse(query) {
+      async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the

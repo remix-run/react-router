@@ -83,8 +83,7 @@ const CATEGORIES = [
 
 const warn = (...args: any[]) => console.warn("⚠️ Warning:", ...args);
 
-const isClassApi = (c: SimplifiedComment) =>
-  c.name === "unstable_RouterContextProvider";
+const isClassApi = (c: SimplifiedComment) => c.name === "RouterContextProvider";
 
 const isComponentApi = (c: SimplifiedComment) =>
   c.category === "Components" ||

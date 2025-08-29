@@ -1,6 +1,6 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
-import { unstable_RouterContextProvider } from "../router/utils";
+import { RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
@@ -40,7 +40,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
-    ? unstable_RouterContextProvider
+    ? RouterContextProvider
     : AppLoadContext,
 ) => Promise<Response>;
 
@@ -104,7 +104,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let params: RouteMatch<ServerRoute>["params"] = {};
-    let loadContext: AppLoadContext | unstable_RouterContextProvider;
+    let loadContext: AppLoadContext | RouterContextProvider;
 
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -118,20 +118,20 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     };
 
-    if (_build.future.unstable_middleware) {
+    if (_build.future.v8_middleware) {
       if (
         initialContext &&
-        !(initialContext instanceof unstable_RouterContextProvider)
+        !(initialContext instanceof RouterContextProvider)
       ) {
         let error = new Error(
           "Invalid `context` value provided to `handleRequest`. When middleware " +
-            "is enabled you must return an instance of `unstable_RouterContextProvider` " +
+            "is enabled you must return an instance of `RouterContextProvider` " +
             "from your `getLoadContext` function.",
         );
         handleError(error);
         return returnLastResortErrorResponse(error, serverMode);
       }
-      loadContext = initialContext || new unstable_RouterContextProvider();
+      loadContext = initialContext || new RouterContextProvider();
     } else {
       loadContext = initialContext || {};
     }
@@ -405,7 +405,7 @@ async function handleSingleFetchRequest(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   let response =
@@ -437,7 +437,7 @@ async function handleDocumentRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
   isSpaMode: boolean,
   criticalCss?: CriticalCss,
@@ -445,7 +445,7 @@ async function handleDocumentRequest(
   try {
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_generateMiddlewareResponse: build.future.unstable_middleware
+      generateMiddlewareResponse: build.future.v8_middleware
         ? async (query) => {
             try {
               let innerResult = await query(request);
@@ -535,7 +535,7 @@ async function handleDocumentRequest(
         headers,
         entryContext,
         loadContext as MiddlewareEnabled extends true
-          ? unstable_RouterContextProvider
+          ? RouterContextProvider
           : AppLoadContext,
       );
     } catch (error: unknown) {
@@ -599,7 +599,7 @@ async function handleDocumentRequest(
           headers,
           entryContext,
           loadContext as MiddlewareEnabled extends true
-            ? unstable_RouterContextProvider
+            ? RouterContextProvider
             : AppLoadContext,
         );
       } catch (error: any) {
@@ -616,7 +616,7 @@ async function handleResourceRequest(
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ) {
   try {
@@ -626,7 +626,7 @@ async function handleResourceRequest(
     let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_generateMiddlewareResponse: build.future.unstable_middleware
+      generateMiddlewareResponse: build.future.v8_middleware
         ? async (queryRoute) => {
             try {
               let innerResult = await queryRoute(request);

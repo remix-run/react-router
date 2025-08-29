@@ -1,6 +1,5 @@
 ---
 title: Middleware
-unstable: true
 ---
 
 # Middleware
@@ -10,7 +9,7 @@ unstable: true
 <br/>
 <br/>
 
-<docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.unstable_middleware` flag to enable it.</docs-warning>
+<docs-info>In Framework Mode, you must opt-into middleware via the [`future.v8_middleware`][future-flags] flag because it contains a minor [breaking change][getloadcontext] to the `getLoadContext` function and the loader/action `context` parameter.</docs-info>
 
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
@@ -41,7 +40,7 @@ import type { Config } from "@react-router/dev/config";
 
 export default {
   future: {
-    unstable_middleware: true,
+    v8_middleware: true,
   },
 } satisfies Config;
 ```
@@ -51,14 +50,13 @@ export default {
 ### 2. Create a context
 
 Middleware uses a `context` provider instance to provide data down the middleware chain.
-You can create type-safe context objects using [`unstable_createContext`][createContext]:
+You can create type-safe context objects using [`createContext`][createContext]:
 
 ```ts filename=app/context.ts
-import { unstable_createContext } from "react-router";
+import { createContext } from "react-router";
 import type { User } from "~/types";
 
-export const userContext =
-  unstable_createContext<User | null>(null);
+export const userContext = createContext<User | null>(null);
 ```
 
 ### 3. Export middleware from your routes
@@ -76,8 +74,9 @@ async function authMiddleware({ request, context }) {
   context.set(userContext, user);
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [authMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  authMiddleware,
+];
 
 // Client-side timing middleware
 async function timingMiddleware({ context }, next) {
@@ -87,7 +86,7 @@ async function timingMiddleware({ context }, next) {
   console.log(`Navigation took ${duration}ms`);
 }
 
-export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[] =
+export const clientMiddleware: Route.ClientMiddlewareFunction[] =
   [timingMiddleware];
 
 export async function loader({
@@ -112,20 +111,20 @@ export default function Dashboard({
 
 ### 4. Update your `getLoadContext` function (if applicable)
 
-If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of [`unstable_RouterContextProvider`][RouterContextProvider], instead of a JavaScript object:
+If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of [`RouterContextProvider`][RouterContextProvider], instead of a JavaScript object:
 
 ```diff
 +import {
-+  unstable_createContext,
-+  unstable_RouterContextProvider,
++  createContext,
++  RouterContextProvider,
 +} from "react-router";
 import { createDb } from "./db";
 
-+const dbContext = unstable_createContext<Database>();
++const dbContext = createContext<Database>();
 
 function getLoadContext(req, res) {
 -  return { db: createDb() };
-+  const context = new unstable_RouterContextProvider();
++  const context = new RouterContextProvider();
 +  context.set(dbContext, createDb());
 +  return context;
 }
@@ -138,14 +137,13 @@ function getLoadContext(req, res) {
 ### 1. Create a context
 
 Middleware uses a `context` provider instance to provide data down the middleware chain.
-You can create type-safe context objects using [`unstable_createContext`][createContext]:
+You can create type-safe context objects using [`createContext`][createContext]:
 
 ```ts
-import { unstable_createContext } from "react-router";
+import { createContext } from "react-router";
 import type { User } from "~/types";
 
-export const userContext =
-  unstable_createContext<User | null>(null);
+export const userContext = createContext<User | null>(null);
 ```
 
 ### 2. Add middleware to your routes
@@ -157,12 +155,12 @@ import { userContext } from "~/context";
 const routes = [
   {
     path: "/",
-    unstable_middleware: [timingMiddleware], // 👈
+    middleware: [timingMiddleware], // 👈
     Component: Root,
     children: [
       {
         path: "profile",
-        unstable_middleware: [authMiddleware], // 👈
+        middleware: [authMiddleware], // 👈
         loader: profileLoader,
         Component: Profile,
       },
@@ -208,23 +206,23 @@ export default function Profile() {
 }
 ```
 
-### 3. Add an `unstable_getContext` function (optional)
+### 3. Add a `getContext` function (optional)
 
-If you wish to include a base context on all navigations/fetches, you can add an [`unstable_getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
+If you wish to include a base context on all navigations/fetches, you can add an [`getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
 
 ```tsx
-let sessionContext = unstable_createContext();
+let sessionContext = createContext();
 
 const router = createBrowserRouter(routes, {
-  unstable_getContext() {
-    let context = new unstable_RouterContextProvider();
+  getContext() {
+    let context = new RouterContextProvider();
     context.set(sessionContext, getSession());
     return context;
   },
 });
 ```
 
-<docs-info>This API exists to mirror the `getLoadContext` API on the server in Framework Mode, which exists as a way to hand off values from your HTTP server to the React Router handler. This [`unstable_getContext`][getContext] API can be used to hand off global values from the [`window`][window]/[`document`][document] to React Router, but because they're all running in the same context (the browser), you can achieve effectively the same behavior with root route middleware. Therefore, you may not need this API the same way you would on the server - but it's provided for consistency.</docs-warning>
+<docs-info>This API exists to mirror the `getLoadContext` API on the server in Framework Mode, which exists as a way to hand off values from your HTTP server to the React Router handler. This [`getContext`][getContext] API can be used to hand off global values from the [`window`][window]/[`document`][document] to React Router, but because they're all running in the same context (the browser), you can achieve effectively the same behavior with root route middleware. Therefore, you may not need this API the same way you would on the server - but it's provided for consistency.</docs-warning>
 
 ## Core Concepts
 
@@ -241,8 +239,9 @@ async function serverMiddleware({ request }, next) {
 }
 
 // Framework mode only
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [serverMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  serverMiddleware,
+];
 ```
 
 Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware differs from server middleware because there's no HTTP Request, so it doesn't have a `Response` to bubble up. In most cases, you can just ignore the return value from `next` and return nothing from your middleware on the client:
@@ -255,13 +254,13 @@ async function clientMiddleware({ request }, next) {
 }
 
 // Framework mode
-export const unstable_clientMiddleware: Route.unstable_MiddlewareFunction[] =
+export const clientMiddleware: Route.ClientMiddlewareFunction[] =
   [clientMiddleware];
 
 // Or, Data mode
 const route = {
   path: "/",
-  unstable_middleware: [clientMiddleware],
+  middleware: [clientMiddleware],
   loader: rootLoader,
   Component: Root,
 };
@@ -326,8 +325,9 @@ async function loggingMiddleware({ request }, next) {
   return response;
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [loggingMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  loggingMiddleware,
+];
 ```
 
 However, there may be cases where you _want_ to run certain server middlewares on _every_ client-navigation - even if no `loader` exists. For example, a form in the authenticated section of your site that doesn't require a `loader` but you'd rather use auth middleware to redirect users away before they fill out the form — rather than when they submit to the `action`. If your middleware meets these criteria, then you can put a `loader` on the route that contains the middleware to force it to always call the server for client-side navigations involving that route.
@@ -339,8 +339,9 @@ function authMiddleware({ request }, next) {
   }
 }
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [authMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  authMiddleware,
+];
 
 // By adding a `loader`, we force the `authMiddleware` to run on every
 // client-side navigation involving this route.
@@ -359,8 +360,8 @@ The new context system provides type safety and prevents naming conflicts and al
 
 ```ts
 // ✅ Type-safe
-import { unstable_createContext } from "react-router";
-const userContext = unstable_createContext<User>();
+import { createContext } from "react-router";
+const userContext = createContext<User>();
 
 // Later in middleware/`loader`s
 context.set(userContext, user); // Must be `User` type
@@ -401,15 +402,14 @@ export function getUser() {
 ```tsx filename=app/root.tsx
 import { provideUser } from "./user-context";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }, next) => {
-      return provideUser(request, async () => {
-        let res = await next();
-        return res;
-      });
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    return provideUser(request, async () => {
+      let res = await next();
+      return res;
+    });
+  },
+];
 ```
 
 ```tsx filename=app/routes/_index.tsx
@@ -466,27 +466,25 @@ React Router contains built-in error handling via the route [`ErrorBoundary`][Er
 This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root `middleware`. If any error from a `middleware` caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
 ```tsx filename=routes/parent.tsx
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async (_, next) => {
-      let res = await next();
-      //  ^ res.status = 500
-      // This response contains the ErrorBoundary
-      return res;
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async (_, next) => {
+    let res = await next();
+    //  ^ res.status = 500
+    // This response contains the ErrorBoundary
+    return res;
+  },
+];
 ```
 
 ```tsx filename=routes/parent.child.tsx
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async (_, next) => {
-      let res = await next();
-      //  ^ res.status = 200
-      // This response contains the successful UI render
-      throw new Error("Uh oh, something went wrong!");
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async (_, next) => {
+    let res = await next();
+    //  ^ res.status = 200
+    // This response contains the successful UI render
+    throw new Error("Uh oh, something went wrong!");
+  },
+];
 ```
 
 ## Changes to `getLoadContext`/`AppLoadContext`
@@ -497,31 +495,31 @@ Middleware introduces a breaking change to the `context` parameter generated by 
 
 Middleware needs an equivalent `context` on the client for `clientMiddleware`, but we didn't want to duplicate this pattern from the server that we already weren't thrilled with, so we decided to introduce a new API where we could tackle type-safety.
 
-When opting into middleware, the `context` parameter changes to an instance of [`unstable_RouterContextProvider`][RouterContextProvider]:
+When opting into middleware, the `context` parameter changes to an instance of [`RouterContextProvider`][RouterContextProvider]:
 
 ```ts
-let dbContext = unstable_createContext<Database>();
-let context = new unstable_RouterContextProvider();
+let dbContext = createContext<Database>();
+let context = new RouterContextProvider();
 context.set(dbContext, getDb());
 //                     ^ type-safe
 let db = context.get(dbContext);
 //  ^ Database
 ```
 
-If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of [`unstable_RouterContextProvider`][RouterContextProvider], instead of a plain JavaScript object:
+If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of [`RouterContextProvider`][RouterContextProvider], instead of a plain JavaScript object:
 
 ```diff
 +import {
-+  unstable_createContext,
-+  unstable_RouterContextProvider,
++  createContext,
++  RouterContextProvider,
 +} from "react-router";
 import { createDb } from "./db";
 
-+const dbContext = unstable_createContext<Database>();
++const dbContext = createContext<Database>();
 
 function getLoadContext(req, res) {
 -  return { db: createDb() };
-+  const context = new unstable_RouterContextProvider();
++  const context = new RouterContextProvider();
 +  context.set(dbContext, createDb());
 +  return context;
 }
@@ -529,12 +527,12 @@ function getLoadContext(req, res) {
 
 ### Migration from `AppLoadContext`
 
-If you're currently using `AppLoadContext`, you can migrate incrementally by using your existing module augmentation to augment [`unstable_RouterContextProvider`][RouterContextProvider] instead of `AppLoadContext`. Then, update your `getLoadContext` function to return an instance of [`unstable_RouterContextProvider`][RouterContextProvider]:
+If you're currently using `AppLoadContext`, you can migrate incrementally by using your existing module augmentation to augment [`RouterContextProvider`][RouterContextProvider] instead of `AppLoadContext`. Then, update your `getLoadContext` function to return an instance of [`RouterContextProvider`][RouterContextProvider]:
 
 ```diff
 declare module "react-router" {
 -  interface AppLoadContext {
-+  interface unstable_RouterContextProvider {
++  interface RouterContextProvider {
     db: Database;
     user: User;
   }
@@ -543,7 +541,7 @@ declare module "react-router" {
 function getLoadContext() {
   const loadContext = {...};
 -  return loadContext;
-+  let context = new unstable_RouterContextProvider();
++  let context = new RouterContextProvider();
 +  Object.assign(context, loadContext);
 +  return context;
 }
@@ -553,7 +551,7 @@ This allows you to leave your `action`s/`loader`s untouched during initial adopt
 
 <docs-warning>This approach is only intended to be used as a migration strategy when adopting middleware in React Router v7, allowing you to incrementally migrate to `context.set`/`context.get`. It is not safe to assume this approach will work in the next major version of React Router.</docs-warning>
 
-<docs-warning>The [`unstable_RouterContextProvider`][RouterContextProvider] class is also used for the client-side `context` parameter via `<HydratedRouter unstable_getContext>` and `<RouterProvider unstable_getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `unstable_getContext` on the client).</docs-warning>
+<docs-warning>The [`RouterContextProvider`][RouterContextProvider] class is also used for the client-side `context` parameter via `<HydratedRouter getContext>` and `<RouterProvider getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `getContext` on the client).</docs-warning>
 
 ## Common Patterns
 
@@ -583,8 +581,9 @@ export const authMiddleware = async ({
 ```tsx filename=app/routes/protected.tsx
 import { authMiddleware } from "~/middleware/auth";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [authMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [
+  authMiddleware,
+];
 
 export async function loader({
   context,
@@ -666,36 +665,34 @@ export const headersMiddleware = async (
 ### Conditional Middleware
 
 ```tsx
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }, next) => {
-      // Only run auth for POST requests
-      if (request.method === "POST") {
-        await ensureAuthenticated(request, context);
-      }
-      return next();
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    // Only run auth for POST requests
+    if (request.method === "POST") {
+      await ensureAuthenticated(request, context);
+    }
+    return next();
+  },
+];
 ```
 
 ### Sharing Context Between `action` and `loader`
 
 ```tsx
-const sharedDataContext = unstable_createContext<any>();
+const sharedDataContext = createContext<any>();
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }, next) => {
-      if (request.method === "POST") {
-        // Set data during action phase
-        context.set(
-          sharedDataContext,
-          await getExpensiveData(),
-        );
-      }
-      return next();
-    },
-  ];
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    if (request.method === "POST") {
+      // Set data during action phase
+      context.set(
+        sharedDataContext,
+        await getExpensiveData(),
+      );
+    }
+    return next();
+  },
+];
 
 export async function action({
   context,
@@ -712,6 +709,7 @@ export async function loader({
 }
 ```
 
+[future-flags]: ../upgrading/future
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [common-patterns]: #common-patterns
 [server-client]: #server-vs-client-middleware
@@ -723,7 +721,7 @@ export async function loader({
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext
 [RouterContextProvider]: ../api/utils/RouterContextProvider
-[getContext]: ../api/data-routers/createBrowserRouter#optsunstable_getContext
+[getContext]: ../api/data-routers/createBrowserRouter#optsgetContext
 [window]: https://developer.mozilla.org/en-US/docs/Web/API/Window
 [document]: https://developer.mozilla.org/en-US/docs/Web/API/Document
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request

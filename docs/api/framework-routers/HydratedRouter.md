@@ -31,7 +31,7 @@ function HydratedRouter(props: HydratedRouterProps)
 
 ## Props
 
-### unstable_getContext
+### getContext
 
 Context object to be passed through to [`createBrowserRouter`](../data-routers/createBrowserRouter) and made
 available to

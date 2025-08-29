@@ -11,7 +11,7 @@ import type { TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
   "vite-5-template",
-  "rsc-parcel-framework",
+  "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
 test.describe("redirects", () => {

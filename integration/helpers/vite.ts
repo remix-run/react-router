@@ -30,7 +30,7 @@ export const reactRouterConfig = ({
   appDirectory,
   splitRouteModules,
   viteEnvironmentApi,
-  middleware,
+  v8_middleware,
   routeDiscovery,
 }: {
   ssr?: boolean;
@@ -41,7 +41,7 @@ export const reactRouterConfig = ({
     Config["future"]
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
-  middleware?: boolean;
+  v8_middleware?: boolean;
   routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
@@ -53,7 +53,7 @@ export const reactRouterConfig = ({
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
-      unstable_middleware: middleware,
+      v8_middleware,
     },
   };
 
@@ -217,9 +217,7 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
 
-type FrameworkModeRscTemplateName =
-  | "rsc-parcel-framework"
-  | "rsc-vite-framework";
+type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
 type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
@@ -339,17 +337,23 @@ export const reactRouterServe = async ({
 export const runStartScript = async ({
   cwd,
   port,
+  viteBase,
   basename,
 }: {
   cwd: string;
   port: number;
+  viteBase?: string;
   basename?: string;
 }) => {
   let nodeBin = process.argv[0];
   let proc = spawn(nodeBin, ["start.js"], {
     cwd,
     stdio: "pipe",
-    env: { NODE_ENV: "production", PORT: port.toFixed(0) },
+    env: {
+      NODE_ENV: "production",
+      PORT: port.toFixed(0),
+      VITE_BASE: viteBase,
+    },
   });
   await waitForServer(proc, { port, basename });
   return () => proc.kill();
