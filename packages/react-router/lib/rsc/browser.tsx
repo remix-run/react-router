@@ -278,14 +278,14 @@ function createRouterFromPayload({
     getContext,
     basename: payload.basename,
     history: createBrowserHistory(),
-    hydrationData: getHydrationData(
-      {
+    hydrationData: getHydrationData({
+      state: {
         loaderData: payload.loaderData,
         actionData: payload.actionData,
         errors: payload.errors,
       },
       routes,
-      (routeId) => {
+      getRouteInfo: (routeId) => {
         let match = payload.matches.find((m) => m.id === routeId);
         invariant(match, "Route not found in payload");
         return {
@@ -294,10 +294,10 @@ function createRouterFromPayload({
           hasHydrateFallback: match.hydrateFallbackElement != null,
         };
       },
-      payload.location,
-      undefined,
-      false,
-    ),
+      location: payload.location,
+      basename: payload.basename,
+      isSpaMode: false,
+    }),
     async patchRoutesOnNavigation({ path, signal }) {
       if (discoveredPaths.has(path)) {
         return;

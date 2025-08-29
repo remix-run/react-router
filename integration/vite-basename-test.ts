@@ -203,10 +203,6 @@ test.describe("Vite base + React Router basename", () => {
         test("works with child routes using client loaders", async ({
           page,
         }) => {
-          test.fixme(
-            templateName.includes("rsc"),
-            "RSC Framework Mode is getting a hydration mismatch",
-          );
           let basename = "/mybase/";
           await setup({
             base: basename,
@@ -242,7 +238,7 @@ test.describe("Vite base + React Router basename", () => {
                   useEffect(() => setMounted(true), []);
                   return (
                     <>
-                      <p id="child">{data}</p>;
+                      <p id="child">{data}</p>
                       <p data-mounted>Mounted: {mounted ? "yes" : "no"}</p>
                     </>
                   );
