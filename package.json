@@ -104,7 +104,6 @@
       "@mdx-js/rollup": "patches/@mdx-js__rollup.patch"
     },
     "overrides": {
-      "@vitejs/plugin-rsc": "https://pkg.pr.new/@vitejs/plugin-rsc@797",
       "workerd": "1.20250705.0",
       "react-is": "19.1.0"
     }
