@@ -142,19 +142,19 @@ function createHydratedRouter({
       };
     }
   } else {
-    hydrationData = getHydrationData(
-      ssrInfo.context.state,
+    hydrationData = getHydrationData({
+      state: ssrInfo.context.state,
       routes,
-      (routeId) => ({
+      getRouteInfo: (routeId) => ({
         clientLoader: ssrInfo!.routeModules[routeId]?.clientLoader,
         hasLoader: ssrInfo!.manifest.routes[routeId]?.hasLoader === true,
         hasHydrateFallback:
           ssrInfo!.routeModules[routeId]?.HydrateFallback != null,
       }),
-      window.location,
-      window.__reactRouterContext?.basename,
-      ssrInfo.context.isSpaMode,
-    );
+      location: window.location,
+      basename: window.__reactRouterContext?.basename,
+      isSpaMode: ssrInfo.context.isSpaMode,
+    });
 
     if (hydrationData && hydrationData.errors) {
       // TODO: De-dup this or remove entirely in v7 where single fetch is the

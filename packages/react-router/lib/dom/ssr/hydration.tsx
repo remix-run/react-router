@@ -5,22 +5,29 @@ import { matchRoutes } from "../../router/utils";
 import type { ClientLoaderFunction } from "./routeModules";
 import { shouldHydrateRouteLoader } from "./routes";
 
-export function getHydrationData(
+export function getHydrationData({
+  state,
+  routes,
+  getRouteInfo,
+  location,
+  basename,
+  isSpaMode,
+}: {
   state: {
     loaderData?: DataRouter["state"]["loaderData"];
     actionData?: DataRouter["state"]["actionData"];
     errors?: DataRouter["state"]["errors"];
-  },
-  routes: DataRouteObject[],
+  };
+  routes: DataRouteObject[];
   getRouteInfo: (routeId: string) => {
     clientLoader: ClientLoaderFunction | undefined;
     hasLoader: boolean;
     hasHydrateFallback: boolean;
-  },
-  location: Path,
-  basename: string | undefined,
-  isSpaMode: boolean,
-): HydrationState {
+  };
+  location: Path;
+  basename: string | undefined;
+  isSpaMode: boolean;
+}): HydrationState {
   // Create a shallow clone of `loaderData` we can mutate for partial hydration.
   // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
   // render the fallback so we need the client to do the same for hydration.

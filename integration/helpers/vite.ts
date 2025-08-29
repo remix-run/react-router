@@ -337,17 +337,23 @@ export const reactRouterServe = async ({
 export const runStartScript = async ({
   cwd,
   port,
+  viteBase,
   basename,
 }: {
   cwd: string;
   port: number;
+  viteBase?: string;
   basename?: string;
 }) => {
   let nodeBin = process.argv[0];
   let proc = spawn(nodeBin, ["start.js"], {
     cwd,
     stdio: "pipe",
-    env: { NODE_ENV: "production", PORT: port.toFixed(0) },
+    env: {
+      NODE_ENV: "production",
+      PORT: port.toFixed(0),
+      VITE_BASE: viteBase,
+    },
   });
   await waitForServer(proc, { port, basename });
   return () => proc.kill();

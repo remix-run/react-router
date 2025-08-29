@@ -4,7 +4,7 @@ import reactRouterRequestHandler from "./build/server/index.js";
 
 const app = express();
 
-app.use(express.static("build/client"));
+app.use(process.env.VITE_BASE || "/", express.static("build/client"));
 
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (_, res) => {
   res.status(404);
