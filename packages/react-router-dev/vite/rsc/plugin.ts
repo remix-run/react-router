@@ -1,5 +1,4 @@
 import type * as Vite from "vite";
-import rsc, { type RscPluginOptions } from "@vitejs/plugin-rsc";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as babel from "@babel/core";
 
@@ -58,6 +57,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           );
         }
 
+        const rscEntries = getRscEntries();
+
         return {
           resolve: {
             dedupe: [
@@ -93,16 +94,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           environments: {
             client: {
               build: {
+                rollupOptions: { input: { index: rscEntries.client } },
                 outDir: join(config.buildDirectory, "client"),
               },
             },
             rsc: {
               build: {
+                rollupOptions: { input: { index: rscEntries.rsc } },
                 outDir: join(config.buildDirectory, "server"),
               },
             },
             ssr: {
               build: {
+                rollupOptions: { input: { index: rscEntries.ssr } },
                 outDir: join(config.buildDirectory, "server/__ssr_build"),
               },
             },
@@ -359,7 +363,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     validatePluginOrder(),
-    rsc({ entries: getRscEntries() }),
   ];
 }
 
@@ -374,7 +377,11 @@ function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 }
 
-function getRscEntries(): NonNullable<RscPluginOptions["entries"]> {
+function getRscEntries(): {
+  client: string;
+  rsc: string;
+  ssr: string;
+} {
   const entriesDir = join(
     getDevPackageRoot(),
     "dist",
