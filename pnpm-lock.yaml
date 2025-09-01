@@ -1101,12 +1101,6 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      react:
-        specifier: '>=18'
-        version: 19.1.0
-      react-dom:
-        specifier: '>=18'
-        version: 19.1.0(react@19.1.0)
       react-refresh:
         specifier: ^0.14.0
         version: 0.14.2
