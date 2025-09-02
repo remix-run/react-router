@@ -12,6 +12,7 @@ import {
   type ResolvedReactRouterConfig,
   createConfigLoader,
 } from "../../config/config";
+import { hasDependency } from "../has-dependency";
 import { createVirtualRouteConfig } from "./virtual-route-config";
 import {
   transformVirtualRouteModules,
@@ -69,7 +70,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               // You must render this element inside a <Remix> element`.
               "react-router",
               "react-router/dom",
-              "react-router-dom",
+              ...(hasDependency({ name: "react-router-dom", rootDirectory })
+                ? ["react-router-dom"]
+                : []),
             ],
           },
           optimizeDeps: {
@@ -85,6 +88,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react/jsx-dev-runtime",
               "react-dom",
               "react-dom/client",
+              "react-router/internal/react-server-client",
             ],
           },
           esbuild: {

@@ -58,6 +58,7 @@ import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
+import { hasDependency } from "./has-dependency";
 import {
   type RouteChunkName,
   type RouteChunkExportName,
@@ -819,14 +820,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     return JSON.parse(manifestContents) as Vite.Manifest;
   };
 
-  let hasDependency = (name: string) => {
-    try {
-      return Boolean(require.resolve(name, { paths: [ctx.rootDirectory] }));
-    } catch (err) {
-      return false;
-    }
-  };
-
   let getViteManifestAssetPaths = (
     viteManifest: Vite.Manifest,
   ): Set<string> => {
@@ -1293,7 +1286,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router",
               "react-router/dom",
               // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
-              ...(hasDependency("react-router-dom")
+              ...(hasDependency({
+                name: "react-router-dom",
+                rootDirectory: ctx.rootDirectory,
+              })
                 ? ["react-router-dom"]
                 : []),
             ],
