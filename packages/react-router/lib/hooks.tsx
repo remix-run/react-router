@@ -140,7 +140,7 @@ export function useInRouterContext(): boolean {
  * @category Hooks
  * @returns The current {@link Location} object
  */
-export function useLocation(): Location {
+export function useLocation<StateType = unknown>(): Location<Partial<StateType>> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
