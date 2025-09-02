@@ -67,13 +67,12 @@ test.describe("Vite HMR & HDR", () => {
       });
 
       test("express", async ({ page, browserName, customDev }) => {
-        test.skip(templateName.includes("rsc"), "RSC is not supported");
         let files: Files = async ({ port }) => ({
           "vite.config.js": await viteConfig.basic({ port, templateName }),
           "react-router.config.ts": reactRouterConfig({
             viteEnvironmentApi: templateName.includes("rsc"),
           }),
-          "server.mjs": EXPRESS_SERVER({ port }),
+          "server.mjs": EXPRESS_SERVER({ port, templateName }),
           "app/routes/_index.tsx": indexRoute,
         });
         let { cwd, port } = await customDev(files, templateName);

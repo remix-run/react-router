@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
+    "dev:vite-middleware": "node start-vite-middleware.js",
     "build": "react-router build",
     "start": "cross-env NODE_ENV=production node start.js",
     "typecheck": "react-router typegen && tsc"

@@ -91,47 +91,89 @@ const customServerFile = ({
   port,
   base,
   basename,
+  templateName,
 }: {
   port: number;
   base?: string;
   basename?: string;
+  templateName: TemplateName;
 }) => {
   base = base ?? "/mybase/";
   basename = basename ?? base;
 
-  return js`
-    import { createRequestHandler } from "@react-router/express";
-    import express from "express";
+  if (templateName.includes("rsc")) {
+    return js`
+      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import express from "express";
 
-    const viteDevServer =
-      process.env.NODE_ENV === "production"
-        ? undefined
-        : await import("vite").then(({ createServer }) =>
-            createServer({
-              server: {
-                middlewareMode: true,
-              },
-            })
-          );
+      const viteDevServer =
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : await import("vite").then(({ createServer }) =>
+              createServer({
+                server: {
+                  middlewareMode: true,
+                },
+              })
+            );
 
-    const app = express();
-    app.use("${base}", viteDevServer?.middlewares || express.static("build/client"));
-    app.all(
-      "${basename}*",
-      createRequestHandler({
-        build: viteDevServer
-          ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-          : await import("./build/server/index.js"),
-      })
-    );
-    app.get("*", (_req, res) => {
-      res.setHeader("content-type", "text/html")
-      res.end('React Router app is at <a href="${basename}">${basename}</a>');
-    });
+      const requestListener = viteDevServer
+        ? async (req, res) => {
+            // In dev mode, ensure we load a fresh request handler every request
+            const rscEntry = await viteDevServer.environments.rsc.runner.import(
+              "virtual:react-router/unstable_rsc/rsc-entry",
+            );
+            return createRequestListener(rscEntry.default)(req, res);
+          }
+        // In production, get the static request handler from the build output
+        : createRequestListener((await import("./build/server/index.js")).default);
 
-    const port = ${port};
-    app.listen(port, () => console.log('http://localhost:' + port));
-  `;
+      const app = express();
+      app.use("${base}", viteDevServer?.middlewares || express.static("build/client"));
+      app.all("${basename}*", requestListener);
+      app.get("*", (_req, res) => {
+        res.setHeader("content-type", "text/html")
+        res.end('React Router app is at <a href="${basename}">${basename}</a>');
+      });
+
+      const port = ${port};
+      app.listen(port, () => console.log('http://localhost:' + port));
+    `;
+  } else {
+    return js`
+      import { createRequestHandler } from "@react-router/express";
+      import express from "express";
+
+      const viteDevServer =
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : await import("vite").then(({ createServer }) =>
+              createServer({
+                server: {
+                  middlewareMode: true,
+                },
+              })
+            );
+
+      const app = express();
+      app.use("${base}", viteDevServer?.middlewares || express.static("build/client"));
+      app.all(
+        "${basename}*",
+        createRequestHandler({
+          build: viteDevServer
+            ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
+            : await import("./build/server/index.js"),
+        })
+      );
+      app.get("*", (_req, res) => {
+        res.setHeader("content-type", "text/html")
+        res.end('React Router app is at <a href="${basename}">${basename}</a>');
+      });
+
+      const port = ${port};
+      app.listen(port, () => console.log('http://localhost:' + port));
+    `;
+  }
 };
 
 test.describe("Vite base + React Router basename", () => {
@@ -280,11 +322,6 @@ test.describe("Vite base + React Router basename", () => {
       });
 
       test.describe("express dev", async () => {
-        test.skip(
-          templateName.includes("rsc"),
-          "RSC Framework Mode doesn't support Vite middleware mode yet",
-        );
-
         let port: number;
         let cwd: string;
         let stop: () => void;
@@ -302,7 +339,7 @@ test.describe("Vite base + React Router basename", () => {
           cwd = await createProject(
             {
               ...(await configFiles({ port, base, basename, templateName })),
-              "server.mjs": customServerFile({ port, basename }),
+              "server.mjs": customServerFile({ port, basename, templateName }),
               ...sharedFiles,
             },
             templateName,
@@ -409,11 +446,6 @@ test.describe("Vite base + React Router basename", () => {
       });
 
       test.describe("express build", async () => {
-        test.skip(
-          templateName.includes("rsc"),
-          "Vite build test is already using Express",
-        );
-
         let port: number;
         let cwd: string;
         let stop: () => void;
@@ -435,6 +467,7 @@ test.describe("Vite base + React Router basename", () => {
                 port,
                 base,
                 basename,
+                templateName,
               }),
               ...sharedFiles,
             },
@@ -480,29 +513,46 @@ test.describe("Vite base + React Router basename", () => {
           page,
         }) => {
           port = await getPort();
-          cwd = await createProject({
-            ...(await configFiles({
-              templateName,
-              port,
-              base: "https://cdn.example.com/assets/",
-              basename: "/app/",
-            })),
-            // Slim server that only serves basename (route) requests from the React Router handler
-            "server.mjs": String.raw`
-              import { createRequestHandler } from "@react-router/express";
-              import express from "express";
-      
-              const app = express();
-              app.all(
-                "/app/*",
-                createRequestHandler({ build: await import("./build/server/index.js") })
-              );
-      
-              const port = ${port};
-              app.listen(port, () => console.log('http://localhost:' + port));
-            `,
-            ...sharedFiles,
-          });
+          cwd = await createProject(
+            {
+              ...(await configFiles({
+                templateName,
+                port,
+                base: "https://cdn.example.com/assets/",
+                basename: "/app/",
+              })),
+              // Slim server that only serves basename (route) requests from the React Router handler
+              "server.mjs": templateName.includes("rsc")
+                ? String.raw`
+                  import { createRequestListener } from "@mjackson/node-fetch-server";
+                  import express from "express";
+          
+                  const app = express();
+                  app.all(
+                    "/app/*",
+                    createRequestListener((await import("./build/server/index.js")).default)
+                  );
+          
+                  const port = ${port};
+                  app.listen(port, () => console.log('http://localhost:' + port));
+                `
+                : String.raw`
+                  import { createRequestHandler } from "@react-router/express";
+                  import express from "express";
+          
+                  const app = express();
+                  app.all(
+                    "/app/*",
+                    createRequestHandler({ build: await import("./build/server/index.js") })
+                  );
+          
+                  const port = ${port};
+                  app.listen(port, () => console.log('http://localhost:' + port));
+                `,
+              ...sharedFiles,
+            },
+            templateName,
+          );
 
           build({ cwd });
           stop = await customDev({
