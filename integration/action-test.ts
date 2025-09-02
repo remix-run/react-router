@@ -7,7 +7,7 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture, selectHtml } from "./helpers/playwright-fixture.js";
-import { type TemplateName, reactRouterConfig } from "./helpers/vite.js";
+import { type TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
   "vite-5-template",
@@ -31,9 +31,6 @@ test.describe("actions", () => {
         fixture = await createFixture({
           templateName,
           files: {
-            "react-router.config.ts": reactRouterConfig({
-              viteEnvironmentApi: templateName.includes("rsc"),
-            }),
             "app/routes/urlencoded.tsx": js`
               import { Form, useActionData } from "react-router";
 

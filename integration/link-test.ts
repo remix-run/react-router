@@ -7,7 +7,7 @@ import {
   createAppFixture,
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
-import { reactRouterConfig, type TemplateName } from "./helpers/vite.js";
+import { type TemplateName } from "./helpers/vite.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 const templateNames = [
@@ -42,10 +42,6 @@ test.describe("route module link export", () => {
         fixture = await createFixture({
           templateName,
           files: {
-            "react-router.config.ts": reactRouterConfig({
-              viteEnvironmentApi: templateName.includes("rsc"),
-            }),
-
             "app/favicon.ico": js``,
 
             "app/guitar.jpg": js``,
