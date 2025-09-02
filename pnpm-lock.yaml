@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-aad7c664-20250829(eslint@8.57.0)
+        version: 6.1.0-canary-b1b0955f-20250901(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -1065,9 +1065,6 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../react-router-node
-      '@vitejs/plugin-rsc':
-        specifier: 0.4.26
-        version: 0.4.26(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -1159,6 +1156,9 @@ importers:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
         version: 2.4.7
+      '@vitejs/plugin-rsc':
+        specifier: 0.4.26
+        version: 0.4.26(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
@@ -1852,9 +1852,6 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
-      '@vitejs/plugin-react':
-        specifier: ^4.5.2
-        version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 0.4.26
         version: 0.4.26(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -6246,8 +6243,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-aad7c664-20250829:
-    resolution: {integrity: sha512-IUUw1oMDx/yeieEZTzFfqkAHe40wC+lbSP0gXU2Hx2PF56k3utgYz3+qrqcwqhPfNyYXUdNhcCpAOYrBqoCVLg==}
+  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901:
+    resolution: {integrity: sha512-T6+EUTSU6FeRntFJ0tGyFWuHnkAWgBlTFPzPMu8B+ny6zUEWrApVfMdtBjCjszAN775OzBM1jCKr29Z/SbwGRg==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -15064,7 +15061,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-aad7c664-20250829(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
