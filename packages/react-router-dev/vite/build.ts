@@ -241,7 +241,7 @@ async function hasReactRouterRscPlugin({
 }: {
   root: string;
   viteBuildOptions: ViteBuildOptions;
-}) {
+}): Promise<boolean> {
   const vite = await import("vite");
   const viteConfig = await vite.resolveConfig(
     {
@@ -254,7 +254,7 @@ async function hasReactRouterRscPlugin({
     "production", // default mode
     "production", // default NODE_ENV
   );
-  return viteConfig.plugins?.find(
+  return viteConfig.plugins.some(
     (plugin) => plugin?.name === "react-router/rsc",
   );
 }
