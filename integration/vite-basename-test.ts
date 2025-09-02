@@ -76,7 +76,6 @@ async function configFiles({
 }) {
   return {
     "react-router.config.ts": reactRouterConfig({
-      viteEnvironmentApi: templateName.includes("rsc"),
       basename: basename !== "/" ? basename : undefined,
     }),
     "vite.config.ts": await viteConfig.basic({

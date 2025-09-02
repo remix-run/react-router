@@ -1,6 +1,7 @@
 import type * as Vite from "vite";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as babel from "@babel/core";
+import colors from "picocolors";
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
@@ -28,6 +29,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
   let routeIdByFile: Map<string, string> | undefined;
+  let logger: Vite.Logger;
 
   const defaultEntries = getDefaultEntries();
 
@@ -36,6 +38,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       name: "react-router/rsc",
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
+
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
@@ -59,6 +62,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "Vite dev server.",
           );
         }
+
+        const vite = await import("vite");
+        logger = vite.createLogger(viteUserConfig.logLevel, {
+          prefix: "[react-router]",
+        });
 
         return {
           resolve: {
@@ -146,6 +154,46 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             },
           },
         };
+      },
+      async configureServer(viteDevServer) {
+        configLoader.onChange(
+          async ({
+            result,
+            configCodeChanged,
+            routeConfigCodeChanged,
+            configChanged,
+            routeConfigChanged,
+          }) => {
+            if (!result.ok) {
+              invalidateVirtualModules(viteDevServer);
+              logger.error(result.error, {
+                clear: true,
+                timestamp: true,
+              });
+              return;
+            }
+
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
+
+            logger.info(colors.green(message), {
+              clear: true,
+              timestamp: true,
+            });
+
+            // Update shared plugin config reference
+            config = result.value;
+
+            if (configChanged || routeConfigChanged) {
+              invalidateVirtualModules(viteDevServer);
+            }
+          },
+        );
       },
       async buildEnd() {
         await configLoader.close();
@@ -388,6 +436,17 @@ const virtual = {
   ssrEntry: create("unstable_rsc/ssr-entry"),
   clientEntry: create("unstable_rsc/client-entry"),
 };
+
+function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {
+  for (const vmod of Object.values(virtual)) {
+    for (const env of Object.values(viteDevServer.environments)) {
+      const mod = env.moduleGraph.getModuleById(vmod.resolvedId);
+      if (mod) {
+        env.moduleGraph.invalidateModule(mod);
+      }
+    }
+  }
+}
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();

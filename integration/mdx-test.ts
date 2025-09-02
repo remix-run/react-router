@@ -7,11 +7,7 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import {
-  type TemplateName,
-  reactRouterConfig,
-  viteConfig,
-} from "./helpers/vite.js";
+import { type TemplateName, viteConfig } from "./helpers/vite.js";
 
 const templateNames = [
   "vite-5-template",
@@ -31,9 +27,6 @@ test.describe("MDX", () => {
             "vite.config.js": await viteConfig.basic({
               templateName,
               mdx: true,
-            }),
-            "react-router.config.ts": reactRouterConfig({
-              viteEnvironmentApi: templateName.includes("rsc"),
             }),
             "app/root.tsx": js`
               import { Outlet, Scripts } from "react-router"

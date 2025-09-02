@@ -48,16 +48,19 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   }
 
   let config = configResult.value;
-  let unstable_viteEnvironmentApi = config.future.unstable_viteEnvironmentApi;
-  let viteMajor = parseInt(vite.version.split(".")[0], 10);
 
-  if (unstable_viteEnvironmentApi && viteMajor === 5) {
+  let viteMajor = parseInt(vite.version.split(".")[0], 10);
+  if (config.future.unstable_viteEnvironmentApi && viteMajor === 5) {
     throw new Error(
       "The future.unstable_viteEnvironmentApi option is not supported in Vite 5",
     );
   }
 
-  return await (unstable_viteEnvironmentApi
+  const useViteEnvironmentApi =
+    config.future.unstable_viteEnvironmentApi ||
+    (await hasReactRouterRscPlugin({ root, viteBuildOptions }));
+
+  return await (useViteEnvironmentApi
     ? viteAppBuild(root, viteBuildOptions)
     : viteBuild(root, viteBuildOptions));
 }
@@ -230,4 +233,28 @@ async function viteBuild(
     reactRouterConfig,
     viteConfig,
   });
+}
+
+async function hasReactRouterRscPlugin({
+  root,
+  viteBuildOptions: { config, logLevel, mode },
+}: {
+  root: string;
+  viteBuildOptions: ViteBuildOptions;
+}): Promise<boolean> {
+  const vite = await import("vite");
+  const viteConfig = await vite.resolveConfig(
+    {
+      configFile: config,
+      logLevel,
+      mode: mode ?? "production",
+      root,
+    },
+    "build", // command
+    "production", // default mode
+    "production", // default NODE_ENV
+  );
+  return viteConfig.plugins.some(
+    (plugin) => plugin?.name === "react-router/rsc",
+  );
 }
