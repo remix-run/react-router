@@ -1,7 +1,10 @@
 import { encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import { isRedirectStatusCode, isResponse } from "../router/router";
-import type { RouterContextProvider } from "../router/utils";
+import type {
+  AgnosticDataRouteMatch,
+  RouterContextProvider,
+} from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
@@ -140,14 +143,19 @@ export async function singleFetchLoaders(
       signal: request.signal,
     });
 
+    let filterMatchesToLoad = (m: AgnosticDataRouteMatch) =>
+      !loadRouteIds || loadRouteIds.has(m.route.id);
+
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
-      filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
+      filterMatchesToLoad,
       skipLoaderErrorBubbling: true,
       generateMiddlewareResponse: build.future.v8_middleware
         ? async (query) => {
             try {
-              let innerResult = await query(handlerRequest);
+              let innerResult = await query(handlerRequest, {
+                filterMatchesToLoad,
+              });
               return handleQueryResult(innerResult);
             } catch (error) {
               return handleQueryError(error);
