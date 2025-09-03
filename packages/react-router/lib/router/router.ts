@@ -437,6 +437,7 @@ export interface StaticHandler {
           r: Request,
           args?: {
             filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
+            skipRevalidation?: boolean;
           },
         ) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
@@ -3557,7 +3558,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      generateMiddlewareResponse: generateMiddlewareResponse,
+      generateMiddlewareResponse,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3625,6 +3626,7 @@ export function createStaticHandler(
     //    redirects from loaders after a server action, etc.
     //    - If we decide this isn't warranted than the stream implementation
     //      can simplify and potentially even collapse back into respond()
+
     if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof RouterContextProvider,
@@ -3655,6 +3657,7 @@ export function createStaticHandler(
                   filterMatchesToLoad?:
                     | ((match: AgnosticDataRouteMatch) => boolean)
                     | undefined;
+                  skipRevalidation?: boolean;
                 } = {},
               ) => {
                 let result = await queryImpl(
@@ -3668,7 +3671,7 @@ export function createStaticHandler(
                   "filterMatchesToLoad" in opts
                     ? (opts.filterMatchesToLoad ?? null)
                     : null,
-                  skipRevalidation === true,
+                  opts?.skipRevalidation ?? skipRevalidation === true,
                 );
 
                 if (isResponse(result)) {
@@ -3831,7 +3834,7 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      generateMiddlewareResponse: generateMiddlewareResponse,
+      generateMiddlewareResponse,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);

@@ -144,10 +144,15 @@ export async function singleFetchLoaders(
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
+      skipRevalidation: true,
       generateMiddlewareResponse: build.future.v8_middleware
         ? async (query) => {
             try {
-              let innerResult = await query(handlerRequest);
+              let innerResult = await query(handlerRequest, {
+                filterMatchesToLoad: (m) =>
+                  !loadRouteIds || loadRouteIds.has(m.route.id),
+                skipRevalidation: true,
+              });
               return handleQueryResult(innerResult);
             } catch (error) {
               return handleQueryError(error);
