@@ -190,6 +190,8 @@ export const EXPRESS_SERVER = (args: {
             );
       const app = express();      
 
+      ${args?.customLogic || ""}
+
       if (viteDevServer) {
         app.use(viteDevServer.middlewares);
       } else {
@@ -199,10 +201,6 @@ export const EXPRESS_SERVER = (args: {
         );
         app.all("*", createRequestListener((await import("./build/server/index.js")).default));
       }
-
-      ${args?.customLogic || ""}
-
-      app.all("*", requestListener);
 
       const port = ${args.port};
       app.listen(port, () => console.log('http://localhost:' + port));
