@@ -117,9 +117,14 @@ const customServerFile = ({
             );
 
       const app = express();
-      app.use("${base}", viteDevServer?.middlewares || express.static("build/client"));
-      if (!viteDevServer) {
-        app.all("${basename}*", createRequestListener((await import("./build/server/index.js")).default));
+      if (viteDevServer) {
+        app.use(viteDevServer.middlewares);
+      } else {
+        app.use("${base}", express.static("build/client"));
+        app.all(
+          "${basename}*",
+          createRequestListener((await import("./build/server/index.js")).default),
+        );
       }
       app.get("*", (_req, res) => {
         res.setHeader("content-type", "text/html")
