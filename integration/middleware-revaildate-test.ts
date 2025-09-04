@@ -132,6 +132,16 @@ const files = {
 };
 
 test.describe("shouldRevalidate with middleware", () => {
+  let originalConsoleLog: typeof console.log;
+
+  test.beforeEach(() => {
+    originalConsoleLog = console.log;
+  });
+
+  test.afterEach(() => {
+    console.log = originalConsoleLog;
+  });
+
   test("v8_middleware false - parent loader called once", async ({ page }) => {
     let fixture = await createFixture({
       files,
@@ -139,27 +149,26 @@ test.describe("shouldRevalidate with middleware", () => {
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
 
+    const parentLoaderRegex = /\[PARENT_LOADER\] Called: (\d+) times/;
+    let maxParentLoaderCount = 0;
+
+    console.log = (...args) => {
+      const message = args.join(" ");
+      const match = message.match(parentLoaderRegex);
+      if (match) {
+        maxParentLoaderCount = Math.max(
+          maxParentLoaderCount,
+          parseInt(match[1]),
+        );
+      }
+    };
+
     await app.goto("/parent/1");
     await app.clickLink("/parent/2");
     await app.clickLink("/parent/3");
     await app.clickLink("/parent/4");
 
-    const initialParentCount = await page
-      .locator("#parent-loader-count")
-      .getAttribute("data-count");
-    expect(initialParentCount).toBe("1");
-
-    const secondParentCount = await page
-      .locator("#parent-loader-count")
-      .getAttribute("data-count");
-
-    expect(secondParentCount).toBe("1");
-
-    const thirdParentCount = await page
-      .locator("#parent-loader-count")
-      .getAttribute("data-count");
-
-    expect(thirdParentCount).toBe("1");
+    expect(maxParentLoaderCount).toBe(1);
   });
 
   test("v8_middleware true - server execution tracking", async ({ page }) => {
@@ -180,7 +189,6 @@ test.describe("shouldRevalidate with middleware", () => {
     const parentLoaderRegex = /\[PARENT_LOADER\] Called: (\d+) times/;
     let maxParentLoaderCount = 0;
 
-    const originalLog = console.log;
     console.log = (...args) => {
       const message = args.join(" ");
       const match = message.match(parentLoaderRegex);
@@ -190,7 +198,6 @@ test.describe("shouldRevalidate with middleware", () => {
           parseInt(match[1]),
         );
       }
-      originalLog(...args);
     };
 
     await app.goto("/parent/1");
