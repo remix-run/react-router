@@ -116,20 +116,11 @@ const customServerFile = ({
               })
             );
 
-      const requestListener = viteDevServer
-        ? async (req, res) => {
-            // In dev mode, ensure we load a fresh request handler every request
-            const rscEntry = await viteDevServer.environments.rsc.runner.import(
-              "virtual:react-router/unstable_rsc/rsc-entry",
-            );
-            return createRequestListener(rscEntry.default)(req, res);
-          }
-        // In production, get the static request handler from the build output
-        : createRequestListener((await import("./build/server/index.js")).default);
-
       const app = express();
       app.use("${base}", viteDevServer?.middlewares || express.static("build/client"));
-      app.all("${basename}*", requestListener);
+      if (!viteDevServer) {
+        app.all("${basename}*", createRequestListener((await import("./build/server/index.js")).default));
+      }
       app.get("*", (_req, res) => {
         res.setHeader("content-type", "text/html")
         res.end('React Router app is at <a href="${basename}">${basename}</a>');

@@ -188,19 +188,6 @@ export const EXPRESS_SERVER = (args: {
                 },
               })
             );
-      
-      const requestListener =
-        viteDevServer
-          ? async (req, res) => {
-              // In dev mode, ensure we load a fresh request handler every request
-              const rscEntry = await viteDevServer.environments.rsc.runner.import(
-                "virtual:react-router/unstable_rsc/rsc-entry",
-              );
-              return createRequestListener(rscEntry.default)(req, res);
-            }
-          // In production, get the static request handler from the build output
-          : createRequestListener((await import("./build/server/index.js")).default);
-
       const app = express();      
 
       if (viteDevServer) {
@@ -210,6 +197,7 @@ export const EXPRESS_SERVER = (args: {
           "/assets",
           express.static("build/client/assets", { immutable: true, maxAge: "1y" })
         );
+        app.all("*", createRequestListener((await import("./build/server/index.js")).default));
       }
 
       ${args?.customLogic || ""}
