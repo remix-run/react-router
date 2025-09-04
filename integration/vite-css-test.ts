@@ -292,11 +292,6 @@ test.describe("Vite CSS", () => {
       });
 
       test.describe("express", async () => {
-        test.fixme(
-          templateName.includes("rsc"),
-          "RSC Framework mode doesn't support Vite middleware mode yet",
-        );
-
         let port: number;
         let cwd: string;
         let stop: () => void;
@@ -313,7 +308,7 @@ test.describe("Vite CSS", () => {
                 templateName,
                 vanillaExtract: true,
               }),
-              "server.mjs": EXPRESS_SERVER({ port }),
+              "server.mjs": EXPRESS_SERVER({ port, templateName }),
               ...files({ templateName }),
             },
             templateName,

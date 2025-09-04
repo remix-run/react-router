@@ -31,6 +31,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let routeIdByFile: Map<string, string> | undefined;
   let logger: Vite.Logger;
 
+  const defaultEntries = getDefaultEntries();
+
   return [
     {
       name: "react-router/rsc",
@@ -65,8 +67,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
         });
-
-        const rscEntries = getRscEntries();
 
         return {
           resolve: {
@@ -106,19 +106,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           environments: {
             client: {
               build: {
-                rollupOptions: { input: { index: rscEntries.client } },
+                rollupOptions: { input: { index: virtual.clientEntry.id } },
                 outDir: join(config.buildDirectory, "client"),
               },
             },
             rsc: {
               build: {
-                rollupOptions: { input: { index: rscEntries.rsc } },
+                rollupOptions: { input: { index: virtual.rscEntry.id } },
                 outDir: join(config.buildDirectory, "server"),
               },
             },
             ssr: {
               build: {
-                rollupOptions: { input: { index: rscEntries.ssr } },
+                rollupOptions: { input: { index: virtual.ssrEntry.id } },
                 outDir: join(config.buildDirectory, "server/__ssr_build"),
               },
             },
@@ -219,6 +219,15 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
       async buildEnd() {
         (await typegenWatcherPromise)?.close();
+      },
+    },
+
+    {
+      name: "react-router/rsc/virtual-entries",
+      resolveId(id) {
+        if (id === virtual.rscEntry.id) return defaultEntries.rsc;
+        if (id === virtual.ssrEntry.id) return defaultEntries.ssr;
+        if (id === virtual.clientEntry.id) return defaultEntries.client;
       },
     },
     {
@@ -423,6 +432,9 @@ const virtual = {
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
+  rscEntry: create("unstable_rsc/rsc-entry"),
+  ssrEntry: create("unstable_rsc/ssr-entry"),
+  clientEntry: create("unstable_rsc/client-entry"),
 };
 
 function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {
@@ -440,24 +452,6 @@ function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 }
 
-function getRscEntries(): {
-  client: string;
-  rsc: string;
-  ssr: string;
-} {
-  const entriesDir = join(
-    getDevPackageRoot(),
-    "dist",
-    "config",
-    "default-rsc-entries",
-  );
-  return {
-    client: join(entriesDir, "entry.client.tsx"),
-    rsc: join(entriesDir, "entry.rsc.tsx"),
-    ssr: join(entriesDir, "entry.ssr.tsx"),
-  };
-}
-
 function getDevPackageRoot(): string {
   const currentDir = dirname(__dirname);
   let dir = currentDir;
@@ -471,6 +465,20 @@ function getDevPackageRoot(): string {
     }
   }
   throw new Error("Could not find package.json");
+}
+
+function getDefaultEntries() {
+  const defaultEntriesDir = join(
+    getDevPackageRoot(),
+    "dist",
+    "config",
+    "default-rsc-entries",
+  );
+  return {
+    rsc: join(defaultEntriesDir, "entry.rsc.tsx"),
+    ssr: join(defaultEntriesDir, "entry.ssr.tsx"),
+    client: join(defaultEntriesDir, "entry.client.tsx"),
+  };
 }
 
 function getModulesWithImporters(
