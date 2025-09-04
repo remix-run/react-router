@@ -171,8 +171,43 @@ export const EXPRESS_SERVER = (args: {
   base?: string;
   loadContext?: Record<string, unknown>;
   customLogic?: string;
-}) =>
-  String.raw`
+  templateName?: TemplateName;
+}) => {
+  if (args.templateName?.includes("rsc")) {
+    return String.raw`
+      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import express from "express";
+
+      const viteDevServer =
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : await import("vite").then(({ createServer }) =>
+              createServer({
+                server: {
+                  middlewareMode: true,
+                },
+              })
+            );
+      const app = express();      
+
+      ${args?.customLogic || ""}
+
+      if (viteDevServer) {
+        app.use(viteDevServer.middlewares);
+      } else {
+        app.use(
+          "/assets",
+          express.static("build/client/assets", { immutable: true, maxAge: "1y" })
+        );
+        app.all("*", createRequestListener((await import("./build/server/index.js")).default));
+      }
+
+      const port = ${args.port};
+      app.listen(port, () => console.log('http://localhost:' + port));
+    `;
+  }
+
+  return String.raw`
     import { createRequestHandler } from "@react-router/express";
     import express from "express";
 
@@ -212,6 +247,7 @@ export const EXPRESS_SERVER = (args: {
     const port = ${args.port};
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
+};
 
 type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
