@@ -55,6 +55,7 @@ import {
 } from "./styles";
 import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
+import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
@@ -79,6 +80,7 @@ import {
   resolveEntryFiles,
   configRouteToBranchRoute,
 } from "../config/config";
+import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
 import validatePluginOrder from "./plugins/validate-plugin-order";
 
@@ -261,17 +263,6 @@ const normalizeRelativeFilePath = (
   let relativePath = path.relative(reactRouterConfig.appDirectory, fullPath);
 
   return vite.normalizePath(relativePath).split("?")[0];
-};
-
-const resolveRelativeRouteFilePath = (
-  route: RouteManifestEntry,
-  reactRouterConfig: ResolvedReactRouterConfig,
-) => {
-  let vite = getVite();
-  let file = route.file;
-  let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
-
-  return vite.normalizePath(fullPath);
 };
 
 let virtual = {
@@ -1177,7 +1168,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         // Ensure sync import of Vite works after async preload
         let vite = getVite();
-        let viteMajorVersion = parseInt(vite.version.split(".")[0], 10);
 
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
@@ -1259,18 +1249,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             resolve: serverEnvironment.resolve,
           },
           optimizeDeps: {
-            entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
-              ? [
-                  vite.normalizePath(ctx.entryClientFilePath),
-                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
-                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
-                  ),
-                ].map((entry) =>
-                  // In Vite 7, the `optimizeDeps.entries` option only accepts glob patterns.
-                  // In prior versions, absolute file paths were treated differently.
-                  viteMajorVersion >= 7 ? escapePathAsGlob(entry) : entry,
-                )
-              : [],
+            entries: getOptimizeDepsEntries({
+              entryClientFilePath: ctx.entryClientFilePath,
+              reactRouterConfig: ctx.reactRouterConfig,
+            }),
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
               // even if React dependencies are not direct dependencies.
