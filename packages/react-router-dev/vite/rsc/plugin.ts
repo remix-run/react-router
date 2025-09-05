@@ -46,7 +46,31 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
 
-        configLoader = await createConfigLoader({ rootDirectory, mode, watch });
+        configLoader = await createConfigLoader({
+          rootDirectory,
+          mode,
+          watch,
+          validateConfig: (userConfig) => {
+            let errors: string[] = [];
+            if (userConfig.buildEnd) errors.push("buildEnd");
+            if (userConfig.prerender) errors.push("prerender");
+            if (userConfig.presets?.length) errors.push("presets");
+            if (userConfig.routeDiscovery) errors.push("routeDiscovery");
+            if (userConfig.serverBundles) errors.push("serverBundles");
+            if (userConfig.ssr === false) errors.push("ssr: false");
+            if (userConfig.future?.unstable_splitRouteModules)
+              errors.push("future.unstable_splitRouteModules");
+            if (userConfig.future?.unstable_viteEnvironmentApi === false)
+              errors.push("future.unstable_viteEnvironmentApi: false");
+            if (userConfig.future?.v8_middleware === false)
+              errors.push("future.v8_middleware: false");
+            if (userConfig.future?.unstable_subResourceIntegrity)
+              errors.push("future.unstable_subResourceIntegrity");
+            if (errors.length) {
+              return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
+            }
+          },
+        });
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
