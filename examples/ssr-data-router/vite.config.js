@@ -1,7 +1,7 @@
-import * as path from "path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import rollupReplace from "@rollup/plugin-replace";
+import * as path from 'path';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import rollupReplace from '@rollup/plugin-replace';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,7 +12,7 @@ export default defineConfig({
     rollupReplace({
       preventAssignment: true,
       values: {
-        "process.env.NODE_ENV": JSON.stringify("development"),
+        'process.env.NODE_ENV': JSON.stringify('development'),
       },
     }),
     react(),
@@ -20,13 +20,9 @@ export default defineConfig({
   resolve: process.env.USE_SOURCE
     ? {
         alias: {
-          "react-router": path.resolve(
+          'react-router': path.resolve(
             __dirname,
-            "../../packages/react-router/index.ts",
-          ),
-          "react-router-dom": path.resolve(
-            __dirname,
-            "../../packages/react-router-dom/index.tsx",
+            '../../packages/react-router/index.ts'
           ),
         },
       }

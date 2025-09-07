@@ -4,7 +4,7 @@ import {
   createBrowserRouter,
   matchRoutes,
   RouterProvider,
-} from "react-router-dom";
+} from "react-router";
 
 import { routes } from "./App";
 

@@ -5,7 +5,7 @@ import {
   createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
-} from "react-router-dom/server";
+} from "react-router";
 import { routes } from "./App";
 
 export async function render(
