@@ -197,73 +197,78 @@ describe("cookies", () => {
     });
   });
 
-  describe("encode", () => {
-    it("encodes the cookie using default encoding when no encode function is provided", async () => {
-      let rawCookieValue = "cookie";
+  describe("custom encoding/decoding", () => {
+    it("uses default base64 encoding when no functions are provided", async () => {
+      let rawCookieValue = "hello world";
       let cookie = createCookie("my-cookie");
       let setCookie = await cookie.serialize(rawCookieValue);
-      expect(setCookie).not.toContain("my-cookie=cookie");
+      expect(setCookie).toContain("my-cookie=ImhlbGxvIHdvcmxkIg%3D%3D;");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(parsed).toBe(rawCookieValue);
     });
 
-    it("encodes the cookie using the provided encode function at initialization", async () => {
-      let rawCookieValue = "cookie";
-      let encodeFn = (str: string) => {
-        // Check that the value is not encoded before calling encodeFn
-        expect(str).toBe(rawCookieValue);
-        return str;
-      };
-      let cookie = createCookie("my-cookie", { encode: encodeFn });
+    it("uses custom implementations when provided at initialization", async () => {
+      let rawCookieValue = "hello world";
+      let cookie = createCookie("my-cookie", {
+        encode(str: string) {
+          expect(str).toBe(rawCookieValue); // not encoded yet
+          return encodeURIComponent(str.toUpperCase());
+        },
+        decode(str: string) {
+          expect(str).toBe("HELLO%20WORLD");
+          return decodeURIComponent(str.toLowerCase());
+        },
+      });
       let setCookie = await cookie.serialize(rawCookieValue);
-      expect(setCookie).toContain("my-cookie=cookie");
+      expect(setCookie).toContain("my-cookie=HELLO%20WORLD;");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(parsed).toBe(rawCookieValue);
     });
 
-    it("encodes the cookie using the provided encode function when specified during serialization", async () => {
-      let rawCookieValue = "cookie";
-      let encodeFn = (str: string) => {
-        // Check that the value is not encoded before calling encodeFn
-        expect(str).toBe(rawCookieValue);
-        return str;
-      };
+    it("uses custom implementations when provided at usage time", async () => {
+      let rawCookieValue = "hello world";
       let cookie = createCookie("my-cookie");
       let setCookie = await cookie.serialize(rawCookieValue, {
-        encode: encodeFn,
+        encode(str: string) {
+          expect(str).toBe(rawCookieValue); // not encoded yet
+          return encodeURIComponent(str.toUpperCase());
+        },
       });
-      expect(setCookie).toContain("my-cookie=cookie");
-    });
-  });
-
-  describe("decode", () => {
-    it("decodes cookie using default decode function", async () => {
-      let rawCookieValue = "cookie";
-      let cookie = createCookie("my-cookie");
-      let setCookie = await cookie.serialize(rawCookieValue);
-      let value = await cookie.parse(getCookieFromSetCookie(setCookie));
-      expect(value).toBe(rawCookieValue);
+      expect(setCookie).toContain("my-cookie=HELLO%20WORLD;");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie), {
+        decode(str: string) {
+          expect(str).toBe("HELLO%20WORLD");
+          return decodeURIComponent(str.toLowerCase());
+        },
+      });
+      expect(parsed).toBe(rawCookieValue);
     });
 
-    it("decodes cookie using provided encode and decode functions during initialization", async () => {
-      let rawCookieValue = "cookie";
-      let encodeFn = (str: string) => str;
-      let decodeFn = (str: string) => str;
+    it("uses custom implementations when using signed cookies", async () => {
+      let rawCookieValue = "hello world";
       let cookie = createCookie("my-cookie", {
-        encode: encodeFn,
-        decode: decodeFn,
+        secrets: ["s3cr3t"],
+        encode(str: string) {
+          expect(str).toBe(rawCookieValue); // not encoded yet
+          return encodeURIComponent(str.toUpperCase());
+        },
+        decode(str: string) {
+          expect(str).toBe("HELLO%20WORLD");
+          return decodeURIComponent(str.toLowerCase());
+        },
       });
       let setCookie = await cookie.serialize(rawCookieValue);
-      let value = await cookie.parse(getCookieFromSetCookie(setCookie));
-      expect(value).toBe(rawCookieValue);
-    });
+      expect(setCookie).toContain(
+        "my-cookie=HELLO%20WORLD.4bKWgOIqYxcP3KMCHWBmoKEQth3NPQ9yrTRurGMgS40;",
+      );
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(parsed).toBe(rawCookieValue);
 
-    it("decodes cookie using provided decode function during parsing", async () => {
-      let rawCookieValue = "cookie";
-      let encodeFn = (str: string) => str;
-      let decodeFn = (str: string) => str;
-      let cookie = createCookie("my-cookie", { encode: encodeFn });
-      let setCookie = await cookie.serialize(rawCookieValue);
-      let value = await cookie.parse(getCookieFromSetCookie(setCookie), {
-        decode: decodeFn,
-      });
-      expect(value).toBe(rawCookieValue);
+      // Fails if the cookie value is tampered with
+      parsed = await cookie.parse(
+        "my-cookie=HELLO%20MARS.4bKWgOIqYxcP3KMCHWBmoKEQth3NPQ9yrTRurGMgS40",
+      );
+      expect(parsed).toBe(null);
     });
   });
 });

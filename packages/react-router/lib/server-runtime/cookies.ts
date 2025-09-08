@@ -97,12 +97,17 @@ export const createCookie = (
     },
     async parse(cookieHeader, parseOptions) {
       if (!cookieHeader) return null;
-      let { decode: decodeFn = decodeData } = { ...options, ...parseOptions };
-      let cookies = parse(cookieHeader);
+      let opts = { ...options, ...parseOptions };
+      let cookies = parse(cookieHeader, {
+        ...opts,
+        // If they provided a custom decode function, skip internal decoding by
+        // passing an identity function here
+        decode: opts.decode ? (v) => v : undefined,
+      });
       if (name in cookies) {
         let value = cookies[name];
         if (typeof value === "string" && value !== "") {
-          let decoded = await decodeCookieValue(decodeFn, value, secrets);
+          let decoded = await decodeCookieValue(value, secrets, opts.decode);
           return decoded;
         } else {
           return "";
@@ -111,16 +116,18 @@ export const createCookie = (
         return null;
       }
     },
-    async serialize(value, _serializeOptions) {
-      const { encode: encodeFn = encodeData, ...serializeOptions } = {
-        ...options,
-        ..._serializeOptions,
-      };
-      return serialize(
-        name,
-        value === "" ? "" : await encodeCookieValue(encodeFn, value, secrets),
-        serializeOptions,
-      );
+    async serialize(value, serializeOptions) {
+      let opts = { ...options, ...serializeOptions };
+      let encoded =
+        value === ""
+          ? ""
+          : await encodeCookieValue(value, secrets, opts.encode);
+      return serialize(name, encoded, {
+        ...opts,
+        // If they provided a custom encode function, skip internal encoding by
+        // passing an identity function here
+        encode: opts.encode ? (v) => v : undefined,
+      });
     },
   };
 };
@@ -143,10 +150,11 @@ export const isCookie: IsCookieFunction = (object): object is Cookie => {
 };
 
 async function encodeCookieValue(
-  encodeFn: (value: string) => string,
   value: any,
   secrets: string[],
+  encode: ((value: string) => string) | undefined,
 ): Promise<string> {
+  let encodeFn = encode || encodeData;
   let encoded = encodeFn(value);
 
   if (secrets.length > 0) {
@@ -157,10 +165,11 @@ async function encodeCookieValue(
 }
 
 async function decodeCookieValue(
-  decodeFn: (value: string) => any,
   value: string,
   secrets: string[],
+  decode: ((value: string) => any) | undefined,
 ): Promise<any> {
+  let decodeFn = decode ?? decodeData;
   if (secrets.length > 0) {
     for (let secret of secrets) {
       let unsignedValue = await unsign(value, secret);
