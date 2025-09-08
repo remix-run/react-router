@@ -13,7 +13,9 @@ import {
   type ResolvedReactRouterConfig,
   createConfigLoader,
 } from "../../config/config";
+import { preloadVite } from "../vite";
 import { hasDependency } from "../has-dependency";
+import { getOptimizeDepsEntries } from "../optimize-deps-entries";
 import { createVirtualRouteConfig } from "./virtual-route-config";
 import {
   transformVirtualRouteModules,
@@ -38,12 +40,37 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       name: "react-router/rsc",
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
+        await preloadVite();
 
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
 
-        configLoader = await createConfigLoader({ rootDirectory, mode, watch });
+        configLoader = await createConfigLoader({
+          rootDirectory,
+          mode,
+          watch,
+          validateConfig: (userConfig) => {
+            let errors: string[] = [];
+            if (userConfig.buildEnd) errors.push("buildEnd");
+            if (userConfig.prerender) errors.push("prerender");
+            if (userConfig.presets?.length) errors.push("presets");
+            if (userConfig.routeDiscovery) errors.push("routeDiscovery");
+            if (userConfig.serverBundles) errors.push("serverBundles");
+            if (userConfig.ssr === false) errors.push("ssr: false");
+            if (userConfig.future?.unstable_splitRouteModules)
+              errors.push("future.unstable_splitRouteModules");
+            if (userConfig.future?.unstable_viteEnvironmentApi === false)
+              errors.push("future.unstable_viteEnvironmentApi: false");
+            if (userConfig.future?.v8_middleware === false)
+              errors.push("future.v8_middleware: false");
+            if (userConfig.future?.unstable_subResourceIntegrity)
+              errors.push("future.unstable_subResourceIntegrity");
+            if (errors.length) {
+              return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
+            }
+          },
+        });
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
@@ -84,6 +111,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             ],
           },
           optimizeDeps: {
+            entries: getOptimizeDepsEntries({
+              entryClientFilePath: defaultEntries.client,
+              reactRouterConfig: config,
+            }),
             esbuildOptions: {
               jsx: "automatic",
             },
@@ -106,19 +137,46 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           environments: {
             client: {
               build: {
-                rollupOptions: { input: { index: virtual.clientEntry.id } },
+                rollupOptions: {
+                  input: {
+                    index: defaultEntries.client,
+                  },
+                },
                 outDir: join(config.buildDirectory, "client"),
               },
             },
             rsc: {
               build: {
-                rollupOptions: { input: { index: virtual.rscEntry.id } },
+                rollupOptions: {
+                  input: {
+                    // We use a virtual entry here so that consumers can import
+                    // it as `virtual:react-router/unstable_rsc/rsc-entry`
+                    // without needing to know the actual file path, which is
+                    // important when using the default entries.
+                    index: defaultEntries.rsc,
+                  },
+                  output: {
+                    entryFileNames: config.serverBuildFile,
+                    format: config.serverModuleFormat,
+                  },
+                },
                 outDir: join(config.buildDirectory, "server"),
               },
             },
             ssr: {
               build: {
-                rollupOptions: { input: { index: virtual.ssrEntry.id } },
+                rollupOptions: {
+                  input: {
+                    index: defaultEntries.ssr,
+                  },
+                  output: {
+                    // Note: We don't set `entryFileNames` here because it's
+                    // considered private to the RSC environment build, and
+                    // @vitejs/plugin-rsc currently breaks if it's set to
+                    // something other than `index.js`.
+                    format: config.serverModuleFormat,
+                  },
+                },
                 outDir: join(config.buildDirectory, "server/__ssr_build"),
               },
             },
@@ -223,11 +281,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
 
     {
-      name: "react-router/rsc/virtual-entries",
+      name: "react-router/rsc/virtual-rsc-entry",
       resolveId(id) {
         if (id === virtual.rscEntry.id) return defaultEntries.rsc;
-        if (id === virtual.ssrEntry.id) return defaultEntries.ssr;
-        if (id === virtual.clientEntry.id) return defaultEntries.client;
       },
     },
     {
@@ -433,8 +489,6 @@ const virtual = {
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
   rscEntry: create("unstable_rsc/rsc-entry"),
-  ssrEntry: create("unstable_rsc/ssr-entry"),
-  clientEntry: create("unstable_rsc/client-entry"),
 };
 
 function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {
