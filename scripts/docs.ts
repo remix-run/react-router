@@ -268,6 +268,18 @@ function processTypedocModule(
                   ? "variables"
                   : undefined;
 
+    // Assigning an arrow function to a variable will be a "variable" here but
+    // typedoc will classify it as a "function".  We can identify these if they
+    // define `@params` or `@returns` tags in their JSDoc.
+    if (
+      type === "variables" &&
+      subChild.comment?.blockTags?.some(
+        (tag) => tag.tag === "@param" || tag.tag === "@returns",
+      )
+    ) {
+      type = "functions";
+    }
+
     if (!type) {
       warn(
         `Skipping ${apiName} because it is not a function, class, enum, interface, or type`,
