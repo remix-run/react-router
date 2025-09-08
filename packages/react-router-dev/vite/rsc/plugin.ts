@@ -23,7 +23,8 @@ import {
   isVirtualClientRouteModuleId,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
-import validatePluginOrder from "../plugins/validate-plugin-order";
+import { validatePluginOrder } from "../plugins/validate-plugin-order";
+import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
@@ -480,6 +481,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     validatePluginOrder(),
+    warnOnClientSourceMaps(),
   ];
 }
 
