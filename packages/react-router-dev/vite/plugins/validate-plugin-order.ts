@@ -1,6 +1,6 @@
 import type * as Vite from "vite";
 
-export default function validatePluginOrder(): Vite.Plugin {
+export function validatePluginOrder(): Vite.Plugin {
   return {
     name: "react-router:validate-plugin-order",
     configResolved(viteConfig) {

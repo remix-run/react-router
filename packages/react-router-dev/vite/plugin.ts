@@ -31,7 +31,6 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
-import { escapePath as escapePathAsGlob } from "tinyglobby";
 import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
@@ -82,7 +81,8 @@ import {
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
-import validatePluginOrder from "./plugins/validate-plugin-order";
+import { validatePluginOrder } from "./plugins/validate-plugin-order";
+import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -1488,34 +1488,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           cssModulesManifest[id] = code;
         }
       },
-      buildStart() {
-        invariant(viteConfig);
-
-        if (
-          viteCommand === "build" &&
-          viteConfig.mode === "production" &&
-          !viteConfig.build.ssr &&
-          viteConfig.build.sourcemap
-        ) {
-          viteConfig.logger.warn(
-            colors.yellow(
-              "\n" +
-                colors.bold("  ⚠️  Source maps are enabled in production\n") +
-                [
-                  "This makes your server code publicly",
-                  "visible in the browser. This is highly",
-                  "discouraged! If you insist, ensure that",
-                  "you are using environment variables for",
-                  "secrets and not hard-coding them in",
-                  "your source code.",
-                ]
-                  .map((line) => "     " + line)
-                  .join("\n") +
-                "\n",
-            ),
-          );
-        }
-      },
       async configureServer(viteDevServer) {
         setDevServerHooks({
           // Give the request handler access to the critical CSS in dev to avoid a
@@ -2377,6 +2349,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     validatePluginOrder(),
+    warnOnClientSourceMaps(),
   ];
 };
 
