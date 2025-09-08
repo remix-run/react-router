@@ -251,6 +251,7 @@ describe("meta", () => {
         postalCode: "92107",
       },
       email: ["sonnyday@fancymail.com", "surfergal@veryprofessional.org"],
+      bio: "A <b>surfer</b> & <em>coder</em>.",
     };
 
     let RoutesStub = createRoutesStub([
@@ -273,6 +274,9 @@ describe("meta", () => {
       container.querySelector('script[type="application/ld+json"]')
         ?.innerHTML || "{}";
     expect(JSON.parse(scriptTagContents)).toEqual(jsonLd);
+    expect(scriptTagContents).toContain(
+      "A \\u003cb\\u003esurfer\\u003c/b\\u003e \\u0026 \\u003cem\\u003ecoder\\u003c/em\\u003e.",
+    );
   });
 
   it("{ tagName: 'link' } adds a <link />", () => {
