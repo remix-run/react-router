@@ -44,6 +44,8 @@ The SC will initially consist of the Remix team developers:
 - Mark Dalgleish ([`@markdalgleish`](https://github.com/markdalgleish))
 - Jacob Ebey ([`@jacob-ebey`](https://github.com/jacob-ebey))
 - Brooks Lybrand ([`@brookslybrand`](https://github.com/brookslybrand))
+- Sergio Xalambrí ([`@sergiodxa`](https://github.com/sergiodxa))
+- Bryan Ross ([`@rossipedia`](https://github.com/rossipedia))
 
 In the future, we may add a limited number of heavily involved community members to the SC as well.
 
@@ -130,7 +132,7 @@ This table gives a high-level overview of the stages, but please see the individ
 ### Stage 3 — Beta
 
 - A proposal enters **Stage 3 — Beta** once it receives **Stage 2 — Alpha** PR approvals from 2 SC members and is merged to `dev`
-  - An SC member authoring the PR counts an an implicit approval, so in those cases explicit approval is required from 1 additional SC member
+  - An SC member authoring the `unstable_` PR counts as an implicit approval, so in those cases explicit approval is required from 1 additional SC member
 - This will include the feature in `nightly` releases and the next normal SemVer release for broader beta testing under the `unstable_` flag
 
 ### Stage 4 — Stabilization
@@ -146,4 +148,5 @@ This table gives a high-level overview of the stages, but please see the individ
 ### Stage 5 — Stable
 
 - A proposal enters **Stage 5 — Stable** once it receives **Stage 4 — Stabilization** PR approvals from at least 50% of the SC members and is merged to `dev`
+  - An SC member authoring the stabilization PR counts as an implicit approval
 - This will include the stable feature in `nightly` releases and the next normal SemVer release
