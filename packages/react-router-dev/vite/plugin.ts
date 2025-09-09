@@ -1197,6 +1197,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (viteCommand === "serve") {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
             mode,
+            rsc: false,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });

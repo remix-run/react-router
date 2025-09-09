@@ -274,7 +274,7 @@ function getRouteAnnotations({
     Babel.generate(matchesType).code +
     "\n\n" +
     ts`
-      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;
+      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, ${ctx.rsc}>;
 
       export namespace Route {
         // links

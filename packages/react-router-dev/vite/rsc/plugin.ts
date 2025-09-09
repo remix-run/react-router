@@ -266,6 +266,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             getRootDirectory(viteUserConfig),
             {
               mode,
+              rsc: true,
               // ignore `info` logs from typegen since they are
               // redundant when Vite plugin logs are active
               logger: vite.createLogger("warn", {

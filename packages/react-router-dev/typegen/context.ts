@@ -8,16 +8,19 @@ export type Context = {
   rootDirectory: string;
   configLoader: ConfigLoader;
   config: ResolvedReactRouterConfig;
+  rsc: boolean;
 };
 
 export async function createContext({
   rootDirectory,
   watch,
   mode,
+  rsc,
 }: {
   rootDirectory: string;
   watch: boolean;
   mode: string;
+  rsc: boolean;
 }): Promise<Context> {
   const configLoader = await createConfigLoader({ rootDirectory, mode, watch });
   const configResult = await configLoader.getConfig();
@@ -32,5 +35,6 @@ export async function createContext({
     configLoader,
     rootDirectory,
     config,
+    rsc,
   };
 }
