@@ -167,9 +167,8 @@ This section captures the notes from the React Router Steering Committee meeting
 <details>
   <summary>2025-09-08 Meeting Notes</summary>
 
-First meeting with the new SC members Sergio and Brian!
+**Summary**
 
-**Summary:**
 Matt Brophy, Bryan Ross (rossipedia), Mark Dalgleish, and Pedro Cattori discussed the progress of various features, including middleware, context, the `onError` feature, and RSC framework mode, with most nearing completion or already released. Matt Brophy and Bryan Ross (rossipedia) also explored the integration of observability and OpenTelemetry with Sentry and React Router, considering OpenTelemetry as a potential standard for JavaScript monitoring. The team decided to focus on current in-progress items instead of reviewing and accepting additional proposals because there are already 10+ proposals in-progress.
 
 **Details**
