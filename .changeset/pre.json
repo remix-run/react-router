@@ -36,5 +36,12 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "cool-readers-attack",
+    "flat-shoes-own",
+    "khaki-dogs-rescue",
+    "shiny-hotels-guess",
+    "shy-lemons-boil",
+    "slow-readers-thank"
+  ]
 }
