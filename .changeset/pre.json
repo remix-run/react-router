@@ -37,6 +37,7 @@
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
   "changesets": [
+    "angry-planets-admire",
     "cool-readers-attack",
     "flat-shoes-own",
     "khaki-dogs-rescue",

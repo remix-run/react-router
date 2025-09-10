@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.9.0-pre.1
+
+### Patch Changes
+
+- Escape HTML in `meta()` JSON-LD content ([#14316](https://github.com/remix-run/react-router/pull/14316))
+
 ## 7.9.0-pre.0
 
 ### Minor Changes

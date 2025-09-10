@@ -1,5 +1,12 @@
 # react-router-dom
 
+## 7.9.0-pre.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.0-pre.1`
+
 ## 7.9.0-pre.0
 
 ### Patch Changes
