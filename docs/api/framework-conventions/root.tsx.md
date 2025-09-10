@@ -191,7 +191,7 @@ export function Layout({
 }
 ```
 
-[route-module]: ../start/framework/route-module
+[route-module]: ../../start/framework/route-module
 [react-link]: https://react.dev/reference/react-dom/components/link
 [react-meta]: https://react.dev/reference/react-dom/components/meta
 [react-title]: https://react.dev/reference/react-dom/components/title
