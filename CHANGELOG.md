@@ -395,6 +395,7 @@ Please see the [Middleware Docs](https://reactrouter.com/how-to/middleware), the
 ### Patch Changes
 
 - `react-router` - Update `href()` to correctly process routes that have an extension after the parameter or are a single optional parameter ([#13797](https://github.com/remix-run/react-router/pull/13797))
+- `react-router` - Escape HTML in `meta()` JSON-LD content ([#14316](https://github.com/remix-run/react-router/pull/14316))
 
 ### Unstable Changes
 
