@@ -109,28 +109,40 @@ export function transformVirtualRouteModules({
     return createVirtualRouteModuleCode({
       id,
       code,
+      routeIdByFile,
       viteCommand,
       viteEnvironment,
     });
   }
 
   if (isVirtualServerRouteModuleId(id)) {
-    return createVirtualServerRouteModuleCode({ id, code, viteEnvironment });
+    return createVirtualServerRouteModuleCode({
+      id,
+      code,
+      viteEnvironment,
+    });
   }
 
   if (isVirtualClientRouteModuleId(id)) {
-    return createVirtualClientRouteModuleCode({ id, code, viteCommand });
+    return createVirtualClientRouteModuleCode({
+      id,
+      code,
+      routeIdByFile,
+      viteCommand,
+    });
   }
 }
 
 async function createVirtualRouteModuleCode({
   id,
   code: routeSource,
+  routeIdByFile,
   viteCommand,
   viteEnvironment,
 }: {
   id: string;
   code: string;
+  routeIdByFile: Map<string, string>;
   viteCommand: ViteCommand;
   viteEnvironment: Vite.Environment;
 }) {
@@ -183,7 +195,10 @@ async function createVirtualRouteModuleCode({
     }
   }
 
-  if (id === "root" && !staticExports.includes("ErrorBoundary")) {
+  if (
+    isRootRouteId({ id, routeIdByFile }) &&
+    !staticExports.includes("ErrorBoundary")
+  ) {
     code += `export { ErrorBoundary } from "${clientModuleId}";\n`;
   }
 
@@ -236,10 +251,12 @@ function createVirtualServerRouteModuleCode({
 function createVirtualClientRouteModuleCode({
   id,
   code: routeSource,
+  routeIdByFile,
   viteCommand,
 }: {
   id: string;
   code: string;
+  routeIdByFile: Map<string, string>;
   viteCommand: ViteCommand;
 }) {
   const { staticExports, isServerFirstRoute, hasClientExports } =
@@ -256,7 +273,10 @@ function createVirtualClientRouteModuleCode({
   const generatorResult = babel.generate(clientRouteModuleAst);
   generatorResult.code = '"use client";' + generatorResult.code;
 
-  if (id === "root" && !staticExports.includes("ErrorBoundary")) {
+  if (
+    isRootRouteId({ id, routeIdByFile }) &&
+    !staticExports.includes("ErrorBoundary")
+  ) {
     const hasRootLayout = staticExports.includes("Layout");
     generatorResult.code += `\nimport { createElement as __rr_createElement } from "react";\n`;
     generatorResult.code += `import { UNSAFE_RSCDefaultRootErrorBoundary } from "react-router";\n`;
@@ -305,4 +325,14 @@ export function isVirtualClientRouteModuleId(id: string): boolean {
 
 function isVirtualServerRouteModuleId(id: string): boolean {
   return /(\?|&)server-route-module(&|$)/.test(id);
+}
+
+function isRootRouteId({
+  id,
+  routeIdByFile,
+}: {
+  id: string;
+  routeIdByFile: Map<string, string>;
+}) {
+  return routeIdByFile.has(id.split("?")[0]);
 }
