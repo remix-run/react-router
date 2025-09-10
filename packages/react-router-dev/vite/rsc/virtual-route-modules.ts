@@ -183,7 +183,7 @@ async function createVirtualRouteModuleCode({
     }
   }
 
-  if (isRootRouteId(id) && !staticExports.includes("ErrorBoundary")) {
+  if (id === "root" && !staticExports.includes("ErrorBoundary")) {
     code += `export { ErrorBoundary } from "${clientModuleId}";\n`;
   }
 
@@ -256,7 +256,7 @@ function createVirtualClientRouteModuleCode({
   const generatorResult = babel.generate(clientRouteModuleAst);
   generatorResult.code = '"use client";' + generatorResult.code;
 
-  if (isRootRouteId(id) && !staticExports.includes("ErrorBoundary")) {
+  if (id === "root" && !staticExports.includes("ErrorBoundary")) {
     const hasRootLayout = staticExports.includes("Layout");
     generatorResult.code += `\nimport { createElement as __rr_createElement } from "react";\n`;
     generatorResult.code += `import { UNSAFE_RSCDefaultRootErrorBoundary } from "react-router";\n`;
@@ -288,15 +288,11 @@ export function parseRouteExports(code: string) {
 }
 
 function getVirtualClientModuleId(id: string): string {
-  return `${id.split("?")[0]}?client-route-module${isRootRouteId(id) ? "&root-route=true" : ""}`;
+  return `${id.split("?")[0]}?client-route-module`;
 }
 
 function getVirtualServerModuleId(id: string): string {
-  return `${id.split("?")[0]}?server-route-module${isRootRouteId(id) ? "&root-route=true" : ""}`;
-}
-
-function isRootRouteId(id: string): boolean {
-  return /(\?|&)root-route=true(&|$)/.test(id);
+  return `${id.split("?")[0]}?server-route-module`;
 }
 
 function isVirtualRouteModuleId(id: string): boolean {
