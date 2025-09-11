@@ -96,20 +96,20 @@ export function transformVirtualRouteModules({
   id,
   code,
   viteCommand,
-  routeIdByFile,
+  rootRouteFile,
   viteEnvironment,
 }: {
   id: string;
   code: string;
   viteCommand: ViteCommand;
-  routeIdByFile: Map<string, string>;
+  rootRouteFile: string;
   viteEnvironment: Vite.Environment;
 }) {
-  if (isVirtualRouteModuleId(id) || routeIdByFile.has(id)) {
+  if (isVirtualRouteModuleId(id)) {
     return createVirtualRouteModuleCode({
       id,
       code,
-      routeIdByFile,
+      rootRouteFile,
       viteCommand,
       viteEnvironment,
     });
@@ -127,7 +127,7 @@ export function transformVirtualRouteModules({
     return createVirtualClientRouteModuleCode({
       id,
       code,
-      routeIdByFile,
+      rootRouteFile,
       viteCommand,
     });
   }
@@ -136,13 +136,13 @@ export function transformVirtualRouteModules({
 async function createVirtualRouteModuleCode({
   id,
   code: routeSource,
-  routeIdByFile,
+  rootRouteFile,
   viteCommand,
   viteEnvironment,
 }: {
   id: string;
   code: string;
-  routeIdByFile: Map<string, string>;
+  rootRouteFile: string;
   viteCommand: ViteCommand;
   viteEnvironment: Vite.Environment;
 }) {
@@ -196,7 +196,7 @@ async function createVirtualRouteModuleCode({
   }
 
   if (
-    isRootRouteId({ id, routeIdByFile }) &&
+    isRootRouteFile({ id, rootRouteFile }) &&
     !staticExports.includes("ErrorBoundary")
   ) {
     code += `export { ErrorBoundary } from "${clientModuleId}";\n`;
@@ -251,12 +251,12 @@ function createVirtualServerRouteModuleCode({
 function createVirtualClientRouteModuleCode({
   id,
   code: routeSource,
-  routeIdByFile,
+  rootRouteFile,
   viteCommand,
 }: {
   id: string;
   code: string;
-  routeIdByFile: Map<string, string>;
+  rootRouteFile: string;
   viteCommand: ViteCommand;
 }) {
   const { staticExports, isServerFirstRoute, hasClientExports } =
@@ -274,7 +274,7 @@ function createVirtualClientRouteModuleCode({
   generatorResult.code = '"use client";' + generatorResult.code;
 
   if (
-    isRootRouteId({ id, routeIdByFile }) &&
+    isRootRouteFile({ id, rootRouteFile }) &&
     !staticExports.includes("ErrorBoundary")
   ) {
     const hasRootLayout = staticExports.includes("Layout");
@@ -327,12 +327,13 @@ function isVirtualServerRouteModuleId(id: string): boolean {
   return /(\?|&)server-route-module(&|$)/.test(id);
 }
 
-function isRootRouteId({
+function isRootRouteFile({
   id,
-  routeIdByFile,
+  rootRouteFile,
 }: {
   id: string;
-  routeIdByFile: Map<string, string>;
-}) {
-  return routeIdByFile.has(id.split("?")[0]);
+  rootRouteFile: string;
+}): boolean {
+  const filePath = id.split("?")[0];
+  return filePath === rootRouteFile;
 }
