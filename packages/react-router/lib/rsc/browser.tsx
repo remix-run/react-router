@@ -976,7 +976,7 @@ function getManifestUrl(paths: string[]): URL | null {
     "",
   );
   let url = new URL(`${basename}/.manifest`, window.location.origin);
-  paths.sort().forEach((path) => url.searchParams.append("p", path));
+  url.searchParams.set("p", paths.sort().join(","));
 
   return url;
 }

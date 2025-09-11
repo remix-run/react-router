@@ -472,9 +472,9 @@ async function generateManifestResponse(
   temporaryReferences: unknown,
 ) {
   let url = new URL(request.url);
-  let pathnameParams = url.searchParams.getAll("p");
-  let pathnames = pathnameParams.length
-    ? pathnameParams
+  let pathParam = url.searchParams.get("p");
+  let pathnames = pathParam
+    ? pathParam.split(",").filter(Boolean)
     : [url.pathname.replace(/\.manifest$/, "")];
   let routeIds = new Set<string>();
   let matchedRoutes = pathnames

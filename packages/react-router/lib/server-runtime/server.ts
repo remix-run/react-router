@@ -365,7 +365,9 @@ async function handleManifestRequest(
     // for client side matching if the user routes back up to `/parent`.
     // This is the same thing we do on initial load in <Scripts> via
     // `getPartialManifest()`
-    url.searchParams.getAll("p").forEach((path) => {
+    let pathParam = url.searchParams.get("p") || "";
+    let requestedPaths = pathParam.split(",").filter(Boolean);
+    requestedPaths.forEach((path) => {
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }

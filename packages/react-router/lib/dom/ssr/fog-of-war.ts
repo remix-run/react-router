@@ -222,7 +222,7 @@ export async function fetchAndApplyManifestPatches(
   // https://issues.chromium.org/issues/331406951
   // https://github.com/nodejs/node/issues/51518
   const searchParams = new URLSearchParams();
-  paths.sort().forEach((path) => searchParams.append("p", path));
+  searchParams.set("p", paths.sort().join(","));
   searchParams.set("version", manifest.version);
   let url = new URL(
     getManifestPath(manifestPath, basename),

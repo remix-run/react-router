@@ -1233,7 +1233,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&version=[a-z0-9]{8}/,
+        /\/__manifest\?p=%2F%2C%2Fa%2C%2Fb&version=[a-z0-9]{8}/,
       ),
     ]);
   });
@@ -1275,7 +1275,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&p=%2Fc&p=%2Fd&p=%2Fe&p=%2Ff&p=%2F/,
+        /\/__manifest\?p=%2F%2C%2Fa%2C%2Fb%2C%2Fc%2C%2Fd%2C%2Fe%2C%2Ff/,
       ),
     ]);
   });
@@ -1439,7 +1439,7 @@ test.describe("Fog of War", () => {
       ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/custom-manifest\?p=%2F&p=%2Fa&version=/),
+      expect.stringMatching(/\/custom-manifest\?p=%2F%2C%2Fa&version=/),
     ]);
     manifestRequests = [];
 
