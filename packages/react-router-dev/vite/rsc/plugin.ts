@@ -1,5 +1,6 @@
 import type * as Vite from "vite";
 import { init as initEsModuleLexer } from "es-module-lexer";
+import * as Path from "pathe";
 import * as babel from "@babel/core";
 import colors from "picocolors";
 
@@ -28,13 +29,22 @@ import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
-  let config: ResolvedReactRouterConfig;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
   let routeIdByFile: Map<string, string> | undefined;
   let logger: Vite.Logger;
 
   const defaultEntries = getDefaultEntries();
+
+  let config: ResolvedReactRouterConfig;
+  let rootRouteFile: string;
+  function updateConfig(newConfig: ResolvedReactRouterConfig) {
+    config = newConfig;
+    rootRouteFile = Path.resolve(
+      newConfig.appDirectory,
+      newConfig.routes.root.file,
+    );
+  }
 
   return [
     {
@@ -75,7 +85,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
-        config = configResult.value;
+        updateConfig(configResult.value);
 
         if (
           viteUserConfig.base &&
@@ -246,7 +256,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             });
 
             // Update shared plugin config reference
-            config = result.value;
+            updateConfig(result.value);
 
             if (configChanged || routeConfigChanged) {
               invalidateVirtualModules(viteDevServer);
@@ -315,7 +325,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           id,
           viteCommand,
           routeIdByFile,
-          rootRouteFile: config.routes.root.file,
+          rootRouteFile,
           viteEnvironment: this.environment,
         });
       },
