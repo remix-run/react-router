@@ -28,7 +28,7 @@ export function createVirtualRouteConfig({
     const routeId = route.id || createRouteId(route.file, appDirectory);
     routeIdByFile.set(routeFile, routeId);
     code += `lazy: () => import(${JSON.stringify(
-      `${routeFile}?route-module${routeId === "root" ? "&root-route=true" : ""}`,
+      `${routeFile}?route-module`,
     )}),`;
 
     code += `id: ${JSON.stringify(routeId)},`;
