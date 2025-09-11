@@ -309,10 +309,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     {
       name: "react-router/rsc/virtual-route-modules",
       transform(code, id) {
+        if (!routeIdByFile) return;
         return transformVirtualRouteModules({
           code,
           id,
           viteCommand,
+          routeIdByFile,
           rootRouteFile: config.unstable_rootRouteFile,
           viteEnvironment: this.environment,
         });

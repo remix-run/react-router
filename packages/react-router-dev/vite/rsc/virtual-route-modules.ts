@@ -96,16 +96,18 @@ export function transformVirtualRouteModules({
   id,
   code,
   viteCommand,
+  routeIdByFile,
   rootRouteFile,
   viteEnvironment,
 }: {
   id: string;
   code: string;
   viteCommand: ViteCommand;
+  routeIdByFile: Map<string, string>;
   rootRouteFile: string;
   viteEnvironment: Vite.Environment;
 }) {
-  if (isVirtualRouteModuleId(id)) {
+  if (isVirtualRouteModuleId(id) || routeIdByFile.has(id)) {
     return createVirtualRouteModuleCode({
       id,
       code,
