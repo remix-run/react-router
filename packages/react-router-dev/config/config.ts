@@ -265,10 +265,6 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   ssr: boolean;
   /**
-   * The absolute path to the root route file.
-   */
-  unstable_rootRouteFile: string;
-  /**
    * The resolved array of route config entries exported from `routes.ts`
    */
   unstable_routeConfig: RouteConfigEntry[];
@@ -615,7 +611,6 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
-    unstable_rootRouteFile: rootRouteFile,
     unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);
 

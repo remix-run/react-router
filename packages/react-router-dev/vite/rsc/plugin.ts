@@ -315,7 +315,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           id,
           viteCommand,
           routeIdByFile,
-          rootRouteFile: config.unstable_rootRouteFile,
+          rootRouteFile: config.routes.root.file,
           viteEnvironment: this.environment,
         });
       },
