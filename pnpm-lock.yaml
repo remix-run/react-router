@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-b1b0955f-20250901(eslint@8.57.0)
+        version: 6.1.0-canary-f3a80361-20250911(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -1065,6 +1065,9 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../react-router-node
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.1
+        version: 0.8.1
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -1107,9 +1110,6 @@ importers:
       semver:
         specifier: ^7.3.7
         version: 7.7.2
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
@@ -1153,9 +1153,6 @@ importers:
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
-      '@types/set-cookie-parser':
-        specifier: ^2.4.1
-        version: 2.4.7
       '@vitejs/plugin-rsc':
         specifier: 0.4.26
         version: 0.4.26(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -4289,8 +4286,8 @@ packages:
   '@remix-run/changelog-github@0.0.5':
     resolution: {integrity: sha512-43tqwUqWqirbv6D9uzo55ASPsCJ61Ein1k/M8qn+Qpros0MmbmuzjLVPmtaxfxfe2ANX0LefLvCD0pAgr1tp4g==}
 
-  '@remix-run/node-fetch-server@0.8.0':
-    resolution: {integrity: sha512-8/sKegb4HrM6IdcQeU0KPhj9VOHm5SUqswJDHuMCS3mwbr/NRx078QDbySmn0xslahvvZoOENd7EnK40kWKxkg==}
+  '@remix-run/node-fetch-server@0.8.1':
+    resolution: {integrity: sha512-J1dev372wtJqmqn9U/qbpbZxbJSQrogNN2+Qv1lKlpATpe/WQ9aCZfl/xSb9d2Rgh1IyLSvNxZAXPZxruO6Xig==}
 
   '@remix-run/web-blob@3.1.0':
     resolution: {integrity: sha512-owGzFLbqPH9PlKb8KvpNJ0NO74HWE2euAn61eEiyCXX/oteoVzTVSN8mpLgDjaxBf2btj5/nUllSUgpyd6IH6g==}
@@ -6243,8 +6240,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901:
-    resolution: {integrity: sha512-T6+EUTSU6FeRntFJ0tGyFWuHnkAWgBlTFPzPMu8B+ny6zUEWrApVfMdtBjCjszAN775OzBM1jCKr29Z/SbwGRg==}
+  eslint-plugin-react-hooks@6.1.0-canary-f3a80361-20250911:
+    resolution: {integrity: sha512-QctnrvG6O5Ha5qfm4nq0pAsaJrv58OHArsY9IpmtPdLg0R/yZpFs0arRnHfoLtpYef3yt/o7lOhESEPxhgLipg==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -12682,7 +12679,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@remix-run/node-fetch-server@0.8.0': {}
+  '@remix-run/node-fetch-server@0.8.1': {}
 
   '@remix-run/web-blob@3.1.0':
     dependencies:
@@ -13640,7 +13637,7 @@ snapshots:
 
   '@vitejs/plugin-rsc@0.4.26(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
-      '@remix-run/node-fetch-server': 0.8.0
+      '@remix-run/node-fetch-server': 0.8.1
       es-module-lexer: 1.7.0
       estree-walker: 3.0.3
       magic-string: 0.30.18
@@ -13653,7 +13650,7 @@ snapshots:
 
   '@vitejs/plugin-rsc@0.4.26(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
-      '@remix-run/node-fetch-server': 0.8.0
+      '@remix-run/node-fetch-server': 0.8.1
       es-module-lexer: 1.7.0
       estree-walker: 3.0.3
       magic-string: 0.30.18
@@ -15061,7 +15058,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-f3a80361-20250911(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
