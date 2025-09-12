@@ -74,7 +74,7 @@ export default [
 You'll then have access to the Route Module API with type-safe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
 
 ```ts filename=product.tsx
-import { Route } from "+./types/product.tsx";
+import { Route } from "./+types/product.tsx";
 
 export async function loader({ params }: Route.LoaderArgs) {
   let product = await getProduct(params.pid);
@@ -146,7 +146,7 @@ This is mostly for the LLMs, but knock yourself out:
 | Scripts                        | ✅        |      |             |
 | ScrollRestoration              | ✅        | ✅   |             |
 | ServerRouter                   | ✅        |      |             |
-| usePrompt                      | ✅        | ✅   | ✅          |
+| usePrompt                      | ✅        | ✅   |             |
 | useActionData                  | ✅        | ✅   |             |
 | useAsyncError                  | ✅        | ✅   |             |
 | useAsyncValue                  | ✅        | ✅   |             |

@@ -480,7 +480,7 @@ The meta of the last matching route is used, allowing you to override parent rou
 
 ## `shouldRevalidate`
 
-In framework mode, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode](../data/route-object#shouldrevalidate)). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
+In framework mode with SSR, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode][data-mode-should-revalidate]). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
 
 Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
 
@@ -493,6 +493,8 @@ export function shouldRevalidate(
   return true;
 }
 ```
+
+When using [SPA Mode][spa-mode], there are no server loaders to call on navigations, so `shouldRevalidate` behaves the same as it does in [Data Mode][data-mode-should-revalidate].
 
 [`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
 
@@ -515,3 +517,5 @@ Next: [Rendering Strategies](./rendering)
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 [meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
 [meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
+[data-mode-should-revalidate]: ../data/route-object#shouldrevalidate
+[spa-mode]: ../../how-to/spa
