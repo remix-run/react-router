@@ -603,6 +603,164 @@ describe("special character tests", () => {
         );
       }
     });
+
+    it("handles encoded question marks in ancestor splat route segments", async () => {
+      let ctx = render(
+        <BrowserRouter window={getWindow("/parent/child/question-%3F-mark")}>
+          <App />
+        </BrowserRouter>,
+      );
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/question-%3F-mark/grandchild"
+          >
+            Link to grandchild
+          </a>
+        </div>"
+      `);
+
+      await fireEvent.click(screen.getByText("Link to grandchild"));
+      await waitFor(() => screen.getByText("Grandchild"));
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/question-%3F-mark/grandchild"
+          >
+            Link to grandchild
+          </a>
+          <h1>
+            Grandchild
+          </h1>
+          <pre>
+            {"*":"grandchild","param":"question-?-mark"}
+          </pre>
+        </div>"
+      `);
+
+      function App() {
+        return (
+          <Routes>
+            <Route path="/parent/*" element={<Parent />} />
+          </Routes>
+        );
+      }
+
+      function Parent() {
+        return (
+          <Routes>
+            <Route path="child/:param/*" element={<Child />} />
+          </Routes>
+        );
+      }
+
+      function Child() {
+        let location = useLocation();
+        let to = location.pathname.endsWith("grandchild")
+          ? "."
+          : "./grandchild";
+        return (
+          <>
+            <Link to={to}>Link to grandchild</Link>
+            <Routes>
+              <Route path="grandchild" element={<Grandchild />} />
+            </Routes>
+          </>
+        );
+      }
+
+      function Grandchild() {
+        return (
+          <>
+            <h1>Grandchild</h1>
+            <pre>{JSON.stringify(useParams())}</pre>
+          </>
+        );
+      }
+    });
+
+    it("handles encoded hashes in ancestor splat route segments", async () => {
+      let ctx = render(
+        <BrowserRouter window={getWindow("/parent/child/hash-%23-char")}>
+          <App />
+        </BrowserRouter>,
+      );
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/hash-%23-char/grandchild"
+          >
+            Link to grandchild
+          </a>
+        </div>"
+      `);
+
+      await fireEvent.click(screen.getByText("Link to grandchild"));
+      await waitFor(() => screen.getByText("Grandchild"));
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/hash-%23-char/grandchild"
+          >
+            Link to grandchild
+          </a>
+          <h1>
+            Grandchild
+          </h1>
+          <pre>
+            {"*":"grandchild","param":"hash-#-char"}
+          </pre>
+        </div>"
+      `);
+
+      function App() {
+        return (
+          <Routes>
+            <Route path="/parent/*" element={<Parent />} />
+          </Routes>
+        );
+      }
+
+      function Parent() {
+        return (
+          <Routes>
+            <Route path="child/:param/*" element={<Child />} />
+          </Routes>
+        );
+      }
+
+      function Child() {
+        let location = useLocation();
+        let to = location.pathname.endsWith("grandchild")
+          ? "."
+          : "./grandchild";
+        return (
+          <>
+            <Link to={to}>Link to grandchild</Link>
+            <Routes>
+              <Route path="grandchild" element={<Grandchild />} />
+            </Routes>
+          </>
+        );
+      }
+
+      function Grandchild() {
+        return (
+          <>
+            <h1>Grandchild</h1>
+            <pre>{JSON.stringify(useParams())}</pre>
+          </>
+        );
+      }
+    });
   });
 
   describe("when matching as part of the defined route path", () => {
