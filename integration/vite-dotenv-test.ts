@@ -2,18 +2,32 @@ import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
 import {
+  type TemplateName,
   createProject,
   customDev,
   EXPRESS_SERVER,
   viteConfig,
 } from "./helpers/vite.js";
 
-let getFiles = async ({ envDir, port }: { envDir?: string; port: number }) => {
+const templateNames = [
+  "vite-5-template",
+  "rsc-vite-framework",
+] as const satisfies TemplateName[];
+
+let getFiles = async ({
+  templateName,
+  envDir,
+  port,
+}: {
+  templateName: TemplateName;
+  envDir?: string;
+  port: number;
+}) => {
   let envPath = `${envDir ? `${envDir}/` : ""}.env`;
 
   return {
-    "vite.config.js": await viteConfig.basic({ port, envDir }),
-    "server.mjs": EXPRESS_SERVER({ port }),
+    "vite.config.js": await viteConfig.basic({ templateName, port, envDir }),
+    "server.mjs": EXPRESS_SERVER({ port, templateName }),
     [envPath]: `
       ENV_VAR_FROM_DOTENV_FILE=Content from ${envPath} file
     `,
@@ -49,72 +63,90 @@ let getFiles = async ({ envDir, port }: { envDir?: string; port: number }) => {
 };
 
 test.describe("Vite .env", () => {
-  test.describe("defaults", async () => {
-    let port: number;
-    let cwd: string;
-    let stop: () => void;
+  for (const templateName of templateNames) {
+    test.describe(`template: ${templateName}`, () => {
+      test.describe("defaults", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
 
-    test.beforeAll(async () => {
-      port = await getPort();
-      cwd = await createProject(await getFiles({ port }));
-      stop = await customDev({ cwd, port });
-    });
-    test.afterAll(() => stop());
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject(
+            await getFiles({ port, templateName }),
+            templateName,
+          );
+          stop = await customDev({ cwd, port });
+        });
+        test.afterAll(() => stop());
 
-    test("express", async ({ page }) => {
-      let pageErrors: unknown[] = [];
-      page.on("pageerror", (error) => pageErrors.push(error));
+        test("express", async ({ page }) => {
+          let pageErrors: unknown[] = [];
+          page.on("pageerror", (error) => pageErrors.push(error));
 
-      await page.goto(`http://localhost:${port}/dotenv`, {
-        waitUntil: "networkidle",
+          await page.goto(`http://localhost:${port}/dotenv`, {
+            waitUntil: "networkidle",
+          });
+          expect(pageErrors).toEqual([]);
+
+          let loaderContent = page.locator(
+            "[data-dotenv-route-loader-content]",
+          );
+          await expect(loaderContent).toHaveText("Content from .env file");
+
+          let clientContent = page.locator(
+            "[data-dotenv-route-client-content]",
+          );
+          await expect(clientContent).toHaveText(
+            "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
+          );
+
+          expect(pageErrors).toEqual([]);
+        });
       });
-      expect(pageErrors).toEqual([]);
 
-      let loaderContent = page.locator("[data-dotenv-route-loader-content]");
-      await expect(loaderContent).toHaveText("Content from .env file");
+      test.describe("custom env dir", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
 
-      let clientContent = page.locator("[data-dotenv-route-client-content]");
-      await expect(clientContent).toHaveText(
-        "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
-      );
+        test.beforeAll(async () => {
+          const envDir = "custom-env-dir";
+          port = await getPort();
+          cwd = await createProject(
+            await getFiles({ envDir, port, templateName }),
+            templateName,
+          );
+          stop = await customDev({ cwd, port });
+        });
+        test.afterAll(() => stop());
 
-      expect(pageErrors).toEqual([]);
-    });
-  });
+        test("express", async ({ page }) => {
+          let pageErrors: unknown[] = [];
+          page.on("pageerror", (error) => pageErrors.push(error));
 
-  test.describe("custom env dir", async () => {
-    let port: number;
-    let cwd: string;
-    let stop: () => void;
+          await page.goto(`http://localhost:${port}/dotenv`, {
+            waitUntil: "networkidle",
+          });
+          expect(pageErrors).toEqual([]);
 
-    test.beforeAll(async () => {
-      const envDir = "custom-env-dir";
-      port = await getPort();
-      cwd = await createProject(await getFiles({ envDir, port }));
-      stop = await customDev({ cwd, port });
-    });
-    test.afterAll(() => stop());
+          let loaderContent = page.locator(
+            "[data-dotenv-route-loader-content]",
+          );
+          await expect(loaderContent).toHaveText(
+            "Content from custom-env-dir/.env file",
+          );
 
-    test("express", async ({ page }) => {
-      let pageErrors: unknown[] = [];
-      page.on("pageerror", (error) => pageErrors.push(error));
+          let clientContent = page.locator(
+            "[data-dotenv-route-client-content]",
+          );
+          await expect(clientContent).toHaveText(
+            "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
+          );
 
-      await page.goto(`http://localhost:${port}/dotenv`, {
-        waitUntil: "networkidle",
+          expect(pageErrors).toEqual([]);
+        });
       });
-      expect(pageErrors).toEqual([]);
-
-      let loaderContent = page.locator("[data-dotenv-route-loader-content]");
-      await expect(loaderContent).toHaveText(
-        "Content from custom-env-dir/.env file",
-      );
-
-      let clientContent = page.locator("[data-dotenv-route-client-content]");
-      await expect(clientContent).toHaveText(
-        "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
-      );
-
-      expect(pageErrors).toEqual([]);
     });
-  });
+  }
 });
