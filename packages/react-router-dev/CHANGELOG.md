@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.9.1-pre.0
+
+### Patch Changes
+
+- Fix internal `Future` interface naming from `middleware` -> `v8_middleware` ([#14327](https://github.com/remix-run/react-router/pull/14327))
+- Updated dependencies:
+  - `react-router@7.9.1-pre.0`
+  - `@react-router/node@7.9.1-pre.0`
+  - `@react-router/serve@7.9.1-pre.0`
+
 ## 7.9.0
 
 ### Minor Changes
