@@ -9,6 +9,7 @@ import * as Typegen from "../../typegen";
 import { readFileSync } from "fs";
 import { readFile } from "fs/promises";
 import path, { join, dirname } from "pathe";
+import invariant from "../../invariant";
 import {
   type ConfigLoader,
   type ResolvedReactRouterConfig,
@@ -31,6 +32,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
+  let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
   let logger: Vite.Logger;
 
@@ -223,6 +225,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             },
           },
         };
+      },
+      configResolved(viteConfig) {
+        resolvedViteConfig = viteConfig;
       },
       async configureServer(viteDevServer) {
         configLoader.onChange(
@@ -492,6 +497,34 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return modules;
       },
     },
+    {
+      name: "react-router/rsc/virtual-react-router-serve-config",
+      resolveId(id) {
+        if (id === virtual.reactRouterServeConfig.id) {
+          return virtual.reactRouterServeConfig.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.reactRouterServeConfig.resolvedId) {
+          const rscOutDir = resolvedViteConfig.environments.rsc?.build?.outDir;
+          invariant(rscOutDir, "RSC build directory config not found");
+          const clientOutDir =
+            resolvedViteConfig.environments.client?.build?.outDir;
+          invariant(clientOutDir, "Client build directory config not found");
+          const relativeAssetsBuildDirectory = Path.relative(
+            rscOutDir,
+            clientOutDir,
+          );
+
+          let code = "";
+          code += `export default {`;
+          code += `  publicPath: ${JSON.stringify(resolvedViteConfig.base ?? "/")},`;
+          code += `  assetsBuildDirectory: ${JSON.stringify(relativeAssetsBuildDirectory)},`;
+          code += `};`;
+          return code;
+        }
+      },
+    },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
   ];
@@ -503,6 +536,7 @@ const virtual = {
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
   rscEntry: create("unstable_rsc/rsc-entry"),
+  reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
 
 function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {

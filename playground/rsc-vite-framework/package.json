@@ -8,12 +8,14 @@
     "dev:vite-middleware": "node start-vite-middleware.js",
     "build": "react-router build",
     "start": "cross-env NODE_ENV=production node start.js",
+    "start:serve": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.0",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
+    "@react-router/serve": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",

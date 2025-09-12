@@ -7,7 +7,6 @@ import {
   createEditor,
   dev,
   build,
-  runStartScript,
   reactRouterServe,
   customDev,
   EXPRESS_SERVER,
@@ -380,9 +379,7 @@ test.describe("Vite CSS", () => {
           }
           expect(stderrString).toBeFalsy();
           expect(status).toBe(0);
-          stop = templateName.includes("rsc")
-            ? await runStartScript({ cwd, port })
-            : await reactRouterServe({ cwd, port });
+          stop = await reactRouterServe({ cwd, port });
         });
         test.afterAll(() => stop());
 
@@ -446,9 +443,7 @@ test.describe("Vite CSS", () => {
           });
           expect(stderr.toString()).toBeFalsy();
           expect(status).toBe(0);
-          stop = templateName.includes("rsc")
-            ? await runStartScript({ cwd, port })
-            : await reactRouterServe({ cwd, port });
+          stop = await reactRouterServe({ cwd, port });
         });
         test.afterAll(() => stop());
 
