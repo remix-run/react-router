@@ -24,6 +24,7 @@ import {
   isVirtualClientRouteModuleId,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
+import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 
@@ -100,6 +101,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "Vite dev server.",
           );
         }
+
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
 
         const vite = await import("vite");
         logger = vite.createLogger(viteUserConfig.logLevel, {
