@@ -12,6 +12,7 @@
   - [Stage 3 — Beta](#stage-3--beta)
   - [Stage 4 — Stabilization](#stage-4--stabilization)
   - [Stage 5 — Stable](#stage-5--stable)
+- [Meeting Notes](#meeting-notes)
 
 ## Overview
 
@@ -150,3 +151,51 @@ This table gives a high-level overview of the stages, but please see the individ
 - A proposal enters **Stage 5 — Stable** once it receives **Stage 4 — Stabilization** PR approvals from at least 50% of the SC members and is merged to `dev`
   - An SC member authoring the stabilization PR counts as an implicit approval
 - This will include the stable feature in `nightly` releases and the next normal SemVer release
+
+## Meeting Notes
+
+This section captures the notes from the React Router Steering Committee meetings:
+
+<!-- TEMPLATE
+<details>
+  <summary>YYYY-MM-DD Meeting Notes</summary>
+
+  ...
+</details>
+-->
+
+<details>
+  <summary>2025-09-08 Meeting Notes</summary>
+
+**Summary**
+
+Matt Brophy, Bryan Ross (rossipedia), Mark Dalgleish, and Pedro Cattori discussed the progress of various features, including middleware, context, the `onError` feature, and RSC framework mode, with most nearing completion or already released. Matt Brophy and Bryan Ross (rossipedia) also explored the integration of observability and OpenTelemetry with Sentry and React Router, considering OpenTelemetry as a potential standard for JavaScript monitoring. The team decided to focus on current in-progress items instead of reviewing and accepting additional proposals because there are already 10+ proposals in-progress.
+
+**Details**
+
+- Roadmap Review and Release Progress
+  - Matt Brophy initiated the meeting by reviewing the public roadmap, starting with [middleware](https://github.com/remix-run/react-router/issues/12695) and [context](https://github.com/remix-run/react-router/issues/14055), which are merged to dev and awaiting a pre-release for version 7.9.0
+  - Bryan Ross (rossipedia) confirmed that the [`onError`](https://github.com/remix-run/react-router/issues/12958) feature, released in 7.8.2, is working as expected and providing anticipated data
+  - Mark Dalgleish noted that the RSC framework mode initial release will not be feature complete but is nearing completion, with the main remaining task being error handling during rendering ([RFC](https://github.com/remix-run/react-router/issues/11566))
+- Upcoming Features and API Discussions
+  - Pedro Cattori discussed the `useRouterState` hook, noting that Ryan's attention is elsewhere, but they are interested in revisiting it for type safety and potentially replacing the `useRouteLoaderData` hook
+  - Brooks Lybrand and Pedro Cattori agreed that the `use matches` API is problematic, especially concerning type safety, and suggested finding a solution that does not rely on it
+  - We may be able to keep the distinction that hooks for use in data mode are less type-safe than the typegen equivalents in framework mode, so it might be ok for `useRouterState().matches` to be less type-safe than `Route.ComponentProps["matches"]`
+  - [RFC](https://github.com/remix-run/react-router/issues/13073)
+- Observability and OpenTelemetry Integration
+  - Matt Brophy and Bryan Ross (rossipedia) discussed the [observability](https://github.com/remix-run/react-router/discussions/13749) feature, which aims to improve Sentry's integration with React Router Apps
+  - Bryan Ross (rossipedia) explained that a strict event-based system would not support OpenTelemetry because OpenTelemetry requires bounding code execution within a span, unlike events which are instantaneous
+  - They are considering whether React Router should fully embrace OpenTelemetry as it appears to be becoming a de facto standard for JavaScript monitoring, which could potentially replace the need for a separate event system
+- Meeting Wrap-up and Next Steps
+  - Matt Brophy announced that the pre-release for version 7.9.0 would be shipped shortly, with the full release expected by the end of the week
+  - Bryan Ross (rossipedia) confirmed that the duplicate loader issue fix will be included in this release
+  - The team decided not to overload themselves with additional tasks, focusing on the current in-progress items
+
+**Action Items**
+
+- Mark Dalgleish will work on stabilizing the split route modules and Vite environment API flags
+- Matt Brophy will read through the SvelteKit blog post to understand their approach to OpenTelemetry integration
+- Matt Brophy will merge the unstable [`fetcher.reset()`](https://github.com/remix-run/react-router/issues/14207) work after 7.9.0 is released ()
+- Matt Brophy will try to pick up the [`<Link onPrefetch>`](https://github.com/remix-run/react-router/discussions/12375) task soon
+- Matt Brophy and Pedro Cattori will sync up offline to figure out what parts of the consolidated hook can be done better with typegen and decide on the requirements ([RFC](https://github.com/remix-run/react-router/issues/13073))
+</details>
