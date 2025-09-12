@@ -81,6 +81,7 @@ import {
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
+import { loadDotenv } from "./load-dotenv";
 import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 
@@ -1197,6 +1198,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (viteCommand === "serve") {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
             mode,
+            rsc: false,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1210,17 +1212,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         await updatePluginContext();
 
-        Object.assign(
-          process.env,
-          vite.loadEnv(
-            viteConfigEnv.mode,
-            viteUserConfig.envDir ?? ctx.rootDirectory,
-            // We override the default prefix of "VITE_" with a blank string since
-            // we're targeting the server, so we want to load all environment
-            // variables, not just those explicitly marked for the client
-            "",
-          ),
-        );
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
 
         let environments = await getEnvironmentsOptions(ctx, viteCommand, {
           viteUserConfig,

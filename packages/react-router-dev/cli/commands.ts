@@ -247,6 +247,14 @@ export async function typegen(
 ) {
   root = resolveRootDirectory(root, flags);
 
+  const rsc = await hasReactRouterRscPlugin({
+    root,
+    viteBuildOptions: {
+      config: flags.config,
+      mode: flags.mode,
+    },
+  });
+
   if (flags.watch) {
     await preloadVite();
     const vite = getVite();
@@ -254,6 +262,7 @@ export async function typegen(
 
     await Typegen.watch(root, {
       mode: flags.mode ?? "development",
+      rsc,
       logger,
     });
     await new Promise(() => {}); // keep alive
@@ -262,5 +271,6 @@ export async function typegen(
 
   await Typegen.run(root, {
     mode: flags.mode ?? "production",
+    rsc,
   });
 }

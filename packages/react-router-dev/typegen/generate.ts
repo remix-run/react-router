@@ -23,7 +23,7 @@ export function generateFuture(ctx: Context): VirtualFile {
 
     declare module "react-router" {
       interface Future {
-        middleware: ${ctx.config.future.v8_middleware}
+        v8_middleware: ${ctx.config.future.v8_middleware}
       }
     }
   `;
@@ -274,7 +274,7 @@ function getRouteAnnotations({
     Babel.generate(matchesType).code +
     "\n\n" +
     ts`
-      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;
+      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, ${ctx.rsc}>;
 
       export namespace Route {
         // links

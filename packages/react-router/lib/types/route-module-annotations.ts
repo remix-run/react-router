@@ -120,11 +120,33 @@ type CreateClientActionArgs<T extends RouteInfo> = ClientDataFunctionArgs<
   serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
 };
 
-type CreateHydrateFallbackProps<T extends RouteInfo> = {
+type IsServerFirstRoute<
+  T extends RouteInfo,
+  RSCEnabled extends boolean,
+> = RSCEnabled extends true
+  ? T["module"] extends { ServerComponent: Func }
+    ? true
+    : false
+  : false;
+
+type CreateHydrateFallbackProps<
+  T extends RouteInfo,
+  RSCEnabled extends boolean,
+> = {
   params: T["params"];
-  loaderData?: T["loaderData"];
-  actionData?: T["actionData"];
-};
+} & (IsServerFirstRoute<T, RSCEnabled> extends true
+  ? {
+      /** The data returned from the `loader` */
+      loaderData?: ServerDataFrom<T["module"]["loader"]>;
+      /** The data returned from the `action` following an action submission. */
+      actionData?: ServerDataFrom<T["module"]["action"]>;
+    }
+  : {
+      /** The data returned from the `loader` or `clientLoader` */
+      loaderData?: T["loaderData"];
+      /** The data returned from the `action` or `clientAction` following an action submission. */
+      actionData?: T["actionData"];
+    });
 
 type Match<T extends MatchInfo> = Pretty<{
   id: T["id"];
@@ -142,7 +164,7 @@ type Matches<T extends Array<MatchInfo>> =
     ? [Match<F>, ...Matches<R>]
     : Array<Match<MatchInfo> | undefined>;
 
-type CreateComponentProps<T extends RouteInfo> = {
+type CreateComponentProps<T extends RouteInfo, RSCEnabled extends boolean> = {
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -158,15 +180,26 @@ type CreateComponentProps<T extends RouteInfo> = {
    * }
    **/
   params: T["params"];
-  /** The data returned from the `loader` or `clientLoader` */
-  loaderData: T["loaderData"];
-  /** The data returned from the `action` or `clientAction` following an action submission. */
-  actionData?: T["actionData"];
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
   matches: Matches<T["matches"]>;
-};
+} & (IsServerFirstRoute<T, RSCEnabled> extends true
+  ? {
+      /** The data returned from the `loader` */
+      loaderData: ServerDataFrom<T["module"]["loader"]>;
+      /** The data returned from the `action` following an action submission. */
+      actionData?: ServerDataFrom<T["module"]["action"]>;
+    }
+  : {
+      /** The data returned from the `loader` or `clientLoader` */
+      loaderData: T["loaderData"];
+      /** The data returned from the `action` or `clientAction` following an action submission. */
+      actionData?: T["actionData"];
+    });
 
-type CreateErrorBoundaryProps<T extends RouteInfo> = {
+type CreateErrorBoundaryProps<
+  T extends RouteInfo,
+  RSCEnabled extends boolean,
+> = {
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -183,11 +216,24 @@ type CreateErrorBoundaryProps<T extends RouteInfo> = {
    **/
   params: T["params"];
   error: unknown;
-  loaderData?: T["loaderData"];
-  actionData?: T["actionData"];
-};
+} & (IsServerFirstRoute<T, RSCEnabled> extends true
+  ? {
+      /** The data returned from the `loader` */
+      loaderData?: ServerDataFrom<T["module"]["loader"]>;
+      /** The data returned from the `action` following an action submission. */
+      actionData?: ServerDataFrom<T["module"]["action"]>;
+    }
+  : {
+      /** The data returned from the `loader` or `clientLoader` */
+      loaderData?: T["loaderData"];
+      /** The data returned from the `action` or `clientAction` following an action submission. */
+      actionData?: T["actionData"];
+    });
 
-export type GetAnnotations<Info extends RouteInfo> = {
+export type GetAnnotations<
+  Info extends RouteInfo,
+  RSCEnabled extends boolean,
+> = {
   // links
   LinkDescriptors: LinkDescriptor[];
   LinksFunction: () => LinkDescriptor[];
@@ -220,13 +266,13 @@ export type GetAnnotations<Info extends RouteInfo> = {
   ClientActionArgs: CreateClientActionArgs<Info>;
 
   // HydrateFallback
-  HydrateFallbackProps: CreateHydrateFallbackProps<Info>;
+  HydrateFallbackProps: CreateHydrateFallbackProps<Info, RSCEnabled>;
 
   // default (Component)
-  ComponentProps: CreateComponentProps<Info>;
+  ComponentProps: CreateComponentProps<Info, RSCEnabled>;
 
   // ErrorBoundary
-  ErrorBoundaryProps: CreateErrorBoundaryProps<Info>;
+  ErrorBoundaryProps: CreateErrorBoundaryProps<Info, RSCEnabled>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

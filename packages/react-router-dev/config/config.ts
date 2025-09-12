@@ -345,6 +345,8 @@ type Result<T> =
       error: string;
     };
 
+type ConfigResult = Result<ResolvedReactRouterConfig>;
+
 function ok<T>(value: T): Result<T> {
   return { ok: true, value };
 }
@@ -365,7 +367,7 @@ async function resolveConfig({
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
-}): Promise<Result<ResolvedReactRouterConfig>> {
+}): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
   if (reactRouterConfigFile) {
@@ -506,7 +508,7 @@ async function resolveConfig({
   let appDirectory = Path.resolve(root, userAppDirectory || "app");
   let buildDirectory = Path.resolve(root, userBuildDirectory);
 
-  let rootRouteFile = findEntry(appDirectory, "root");
+  let rootRouteFile = findEntry(appDirectory, "root", { absolute: true });
   if (!rootRouteFile) {
     let rootRouteDisplayPath = Path.relative(
       root,
@@ -556,7 +558,7 @@ async function resolveConfig({
         {
           id: "root",
           path: "",
-          file: rootRouteFile,
+          file: Path.relative(appDirectory, rootRouteFile),
           children: result.routeConfig,
         },
       ];
@@ -622,7 +624,7 @@ async function resolveConfig({
 type ChokidarEventName = ChokidarEmitArgs[0];
 
 type ChangeHandler = (args: {
-  result: Result<ResolvedReactRouterConfig>;
+  result: ConfigResult;
   configCodeChanged: boolean;
   routeConfigCodeChanged: boolean;
   configChanged: boolean;
@@ -632,7 +634,7 @@ type ChangeHandler = (args: {
 }) => void;
 
 export type ConfigLoader = {
-  getConfig: () => Promise<Result<ResolvedReactRouterConfig>>;
+  getConfig: () => Promise<ConfigResult>;
   onChange: (handler: ChangeHandler) => () => void;
   close: () => Promise<void>;
 };
