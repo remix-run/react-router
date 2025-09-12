@@ -12,7 +12,7 @@ import {
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
 import type { unstable_RSCPayload as RSCPayload } from "react-router";
-import { unstable_getContext } from "./config/unstable-get-context";
+import { getContext } from "./config/get-context";
 
 setServerCallback(
   createCallServer({
@@ -23,16 +23,24 @@ setServerCallback(
 );
 
 createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
-  startTransition(() => {
+  // @ts-expect-error - on 18 types, requires 19.
+  startTransition(async () => {
+    const formState =
+      payload.type === "render" ? await payload.formState : undefined;
+
     hydrateRoot(
       document,
       <StrictMode>
         <RSCHydratedRouter
           payload={payload}
           createFromReadableStream={createFromReadableStream}
-          unstable_getContext={unstable_getContext}
+          getContext={getContext}
         />
       </StrictMode>,
+      {
+        // @ts-expect-error - no types for this yet
+        formState,
+      },
     );
   });
 });

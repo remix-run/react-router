@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.8.2",
+  "version": "7.9.0",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -78,7 +78,6 @@
     "@babel/types": "^7.27.7",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
-    "@vitejs/plugin-rsc": "0.4.11",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
     "chokidar": "^4.0.0",
@@ -110,6 +109,7 @@
     "@types/npmcli__package-json": "^4.0.0",
     "@types/set-cookie-parser": "^2.4.1",
     "@types/semver": "^7.7.0",
+    "@vitejs/plugin-rsc": "0.4.26",
     "esbuild-register": "^3.6.0",
     "execa": "5.1.1",
     "express": "^4.19.2",
@@ -123,12 +123,16 @@
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",
+    "@vitejs/plugin-rsc": "*",
     "react-router": "workspace:^",
     "typescript": "^5.1.0",
     "vite": "^5.1.0 || ^6.0.0 || ^7.0.0",
     "wrangler": "^3.28.2 || ^4.0.0"
   },
   "peerDependenciesMeta": {
+    "@vitejs/plugin-rsc": {
+      "optional": true
+    },
     "@react-router/serve": {
       "optional": true
     },

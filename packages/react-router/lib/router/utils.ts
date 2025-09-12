@@ -115,15 +115,15 @@ export type Submission =
 
 /**
  * A context instance used as the key for the `get`/`set` methods of a
- * {@link unstable_RouterContextProvider}. Accepts an optional default
+ * {@link RouterContextProvider}. Accepts an optional default
  * value to be returned if no value has been set.
  */
-export interface unstable_RouterContext<T = unknown> {
+export interface RouterContext<T = unknown> {
   defaultValue?: T;
 }
 
 /**
- * Creates a type-safe {@link unstable_RouterContext} object that can be used to
+ * Creates a type-safe {@link RouterContext} object that can be used to
  * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
  * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
@@ -134,11 +134,11 @@ export interface unstable_RouterContext<T = unknown> {
  * when no value has been set will throw an error.
  *
  * ```tsx filename=app/context.ts
- * import { unstable_createContext } from "react-router";
+ * import { createContext } from "react-router";
  *
  * // Create a context for user data
  * export const userContext =
- *   unstable_createContext<User | null>(null);
+ *   createContext<User | null>(null);
  * ```
  *
  * ```tsx filename=app/middleware/auth.ts
@@ -176,13 +176,11 @@ export interface unstable_RouterContext<T = unknown> {
  * @mode data
  * @param defaultValue An optional default value for the context. This value
  * will be returned if no value has been set for this context.
- * @returns A {@link unstable_RouterContext} object that can be used with
+ * @returns A {@link RouterContext} object that can be used with
  * `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
  * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  */
-export function unstable_createContext<T>(
-  defaultValue?: T,
-): unstable_RouterContext<T> {
+export function createContext<T>(defaultValue?: T): RouterContext<T> {
   return { defaultValue };
 }
 
@@ -192,12 +190,12 @@ export function unstable_createContext<T>(
  *
  * @example
  * import {
- *   unstable_createContext,
- *   unstable_RouterContextProvider
+ *   createContext,
+ *   RouterContextProvider
  * } from "react-router";
  *
- * const userContext = unstable_createContext<User | null>(null);
- * const contextProvider = new unstable_RouterContextProvider();
+ * const userContext = createContext<User | null>(null);
+ * const contextProvider = new RouterContextProvider();
  * contextProvider.set(userContext, getUser());
  * //                               ^ Type-safe
  * const user = contextProvider.get(userContext);
@@ -208,14 +206,14 @@ export function unstable_createContext<T>(
  * @mode framework
  * @mode data
  */
-export class unstable_RouterContextProvider {
-  #map = new Map<unstable_RouterContext, unknown>();
+export class RouterContextProvider {
+  #map = new Map<RouterContext, unknown>();
 
   /**
-   * Create a new `unstable_RouterContextProvider` instance
+   * Create a new `RouterContextProvider` instance
    * @param init An optional initial context map to populate the provider with
    */
-  constructor(init?: Map<unstable_RouterContext, unknown>) {
+  constructor(init?: Map<RouterContext, unknown>) {
     if (init) {
       for (let [context, value] of init) {
         this.set(context, value);
@@ -231,7 +229,7 @@ export class unstable_RouterContextProvider {
    * @returns The value for the context, or the context's `defaultValue` if no
    * value was set
    */
-  get<T>(context: unstable_RouterContext<T>): T {
+  get<T>(context: RouterContext<T>): T {
     if (this.#map.has(context)) {
       return this.#map.get(context) as T;
     }
@@ -251,16 +249,16 @@ export class unstable_RouterContextProvider {
    * @param value The value to set for the context
    * @returns {void}
    */
-  set<C extends unstable_RouterContext>(
+  set<C extends RouterContext>(
     context: C,
-    value: C extends unstable_RouterContext<infer T> ? T : never,
+    value: C extends RouterContext<infer T> ? T : never,
   ): void {
     this.#map.set(context, value);
   }
 }
 
 type DefaultContext = MiddlewareEnabled extends true
-  ? Readonly<unstable_RouterContextProvider>
+  ? Readonly<RouterContextProvider>
   : any;
 
 /**
@@ -298,7 +296,7 @@ interface DataFunctionArgs<Context> {
  * Route middleware `next` function to call downstream handlers and then complete
  * middlewares from the bottom-up
  */
-export interface unstable_MiddlewareNextFunction<Result = unknown> {
+export interface MiddlewareNextFunction<Result = unknown> {
   (): Promise<Result>;
 }
 
@@ -308,9 +306,9 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  * a `next` function as the second parameter which will call downstream handlers
  * and then complete middlewares from the bottom-up
  */
-export type unstable_MiddlewareFunction<Result = unknown> = (
-  args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
-  next: unstable_MiddlewareNextFunction<Result>,
+export type MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<Readonly<RouterContextProvider>>,
+  next: MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 
 /**
@@ -490,7 +488,7 @@ export interface DataStrategyFunctionArgs<Context = DefaultContext>
    * Matches for this route extended with Data strategy APIs
    */
   matches: DataStrategyMatch[];
-  unstable_runClientMiddleware: (
+  runClientMiddleware: (
     cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
   /**
@@ -577,7 +575,7 @@ export function isUnsupportedLazyRouteObjectKey(
  */
 type UnsupportedLazyRouteFunctionKey =
   | UnsupportedLazyRouteObjectKey
-  | "unstable_middleware";
+  | "middleware";
 const unsupportedLazyRouteFunctionKeys =
   new Set<UnsupportedLazyRouteFunctionKey>([
     "lazy",
@@ -585,7 +583,7 @@ const unsupportedLazyRouteFunctionKeys =
     "path",
     "id",
     "index",
-    "unstable_middleware",
+    "middleware",
     "children",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
@@ -628,7 +626,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  unstable_middleware?: unstable_MiddlewareFunction[];
+  middleware?: MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;

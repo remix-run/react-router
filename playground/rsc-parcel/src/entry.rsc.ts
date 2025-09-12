@@ -3,6 +3,7 @@
 import {
   createTemporaryReferenceSet,
   decodeAction,
+  decodeFormState,
   decodeReply,
   loadServerAction,
   renderToReadableStream,
@@ -17,8 +18,9 @@ import "./entry.browser.tsx";
 export function fetchServer(request: Request) {
   return matchRSCServerRequest({
     createTemporaryReferenceSet,
-    decodeReply,
     decodeAction,
+    decodeFormState,
+    decodeReply,
     loadServerAction,
     request,
     routes,

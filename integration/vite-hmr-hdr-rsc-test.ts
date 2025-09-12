@@ -3,12 +3,7 @@ import path from "node:path";
 import { expect } from "@playwright/test";
 
 import type { Files, TemplateName } from "./helpers/vite.js";
-import {
-  test,
-  createEditor,
-  viteConfig,
-  reactRouterConfig,
-} from "./helpers/vite.js";
+import { test, createEditor, viteConfig } from "./helpers/vite.js";
 
 const templateName = "rsc-vite-framework" as const satisfies TemplateName;
 
@@ -16,9 +11,6 @@ test.describe("Vite HMR & HDR (RSC)", () => {
   test("vite dev", async ({ page, dev }) => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port, templateName }),
-      "react-router.config.ts": reactRouterConfig({
-        viteEnvironmentApi: templateName.includes("rsc"),
-      }),
       "app/routes/hmr/route.tsx": `
         // imports
         import { Mounted } from "./route.client";

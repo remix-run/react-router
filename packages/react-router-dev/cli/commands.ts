@@ -16,6 +16,7 @@ import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
+import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
 
 export async function routes(
   rootDirectory?: string,
@@ -89,6 +90,25 @@ export async function generateEntry(
     mode?: string;
   } = {},
 ) {
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
+
+  if (
+    await hasReactRouterRscPlugin({
+      root: rootDirectory,
+      viteBuildOptions: {
+        config: flags.config,
+        mode: flags.mode,
+      },
+    })
+  ) {
+    console.error(
+      colors.red(
+        `The reveal command is currently not supported in RSC Framework Mode.`,
+      ),
+    );
+    process.exit(1);
+  }
+
   // if no entry passed, attempt to create both
   if (!entry) {
     await generateEntry("entry.client", rootDirectory, flags);
@@ -96,7 +116,6 @@ export async function generateEntry(
     return;
   }
 
-  rootDirectory = resolveRootDirectory(rootDirectory, flags);
   let configResult = await loadConfig({
     rootDirectory,
     mode: flags.mode ?? "production",

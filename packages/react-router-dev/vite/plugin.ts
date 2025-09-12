@@ -25,13 +25,12 @@ import type {
   ServerBuild,
   DataRouteObject,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "react-router";
 import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
-import { escapePath as escapePathAsGlob } from "tinyglobby";
 import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
@@ -55,9 +54,11 @@ import {
 } from "./styles";
 import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
+import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
+import { hasDependency } from "./has-dependency";
 import {
   type RouteChunkName,
   type RouteChunkExportName,
@@ -78,8 +79,10 @@ import {
   resolveEntryFiles,
   configRouteToBranchRoute,
 } from "../config/config";
+import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
-import validatePluginOrder from "./plugins/validate-plugin-order";
+import { validatePluginOrder } from "./plugins/validate-plugin-order";
+import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -121,16 +124,11 @@ export function extractPluginContext(
     | undefined;
 }
 
-const SERVER_ONLY_ROUTE_EXPORTS = [
-  "loader",
-  "action",
-  "unstable_middleware",
-  "headers",
-];
+const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "middleware", "headers"];
 const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
-  "unstable_clientMiddleware",
+  "clientMiddleware",
   "handle",
   "meta",
   "links",
@@ -265,17 +263,6 @@ const normalizeRelativeFilePath = (
   let relativePath = path.relative(reactRouterConfig.appDirectory, fullPath);
 
   return vite.normalizePath(relativePath).split("?")[0];
-};
-
-const resolveRelativeRouteFilePath = (
-  route: RouteManifestEntry,
-  reactRouterConfig: ResolvedReactRouterConfig,
-) => {
-  let vite = getVite();
-  let file = route.file;
-  let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
-
-  return vite.normalizePath(fullPath);
 };
 
 let virtual = {
@@ -615,7 +602,7 @@ let reactRouterDevLoadContext: (
   request: Request,
 ) => MaybePromise<
   MiddlewareEnabled extends true
-    ? MaybePromise<unstable_RouterContextProvider | undefined>
+    ? MaybePromise<RouterContextProvider | undefined>
     : MaybePromise<Record<string, unknown> | undefined>
 > = () => undefined;
 
@@ -824,14 +811,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     return JSON.parse(manifestContents) as Vite.Manifest;
   };
 
-  let hasDependency = (name: string) => {
-    try {
-      return Boolean(require.resolve(name, { paths: [ctx.rootDirectory] }));
-    } catch (err) {
-      return false;
-    }
-  };
-
   let getViteManifestAssetPaths = (
     viteManifest: Vite.Manifest,
   ): Set<string> => {
@@ -928,9 +907,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[route.id];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
-      let hasClientMiddleware = sourceExports.includes(
-        "unstable_clientMiddleware",
-      );
+      let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
       let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
@@ -949,9 +926,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            unstable_clientMiddleware:
+            clientMiddleware:
               !hasClientMiddleware ||
-              hasRouteChunkByExportName.unstable_clientMiddleware,
+              hasRouteChunkByExportName.clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -991,14 +968,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               getRouteChunkModuleId(routeFile, "clientLoader"),
             )
           : undefined,
-        clientMiddlewareModule:
-          hasRouteChunkByExportName.unstable_clientMiddleware
-            ? getPublicModulePathForEntry(
-                ctx,
-                viteManifest,
-                getRouteChunkModuleId(routeFile, "unstable_clientMiddleware"),
-              )
-            : undefined,
+        clientMiddlewareModule: hasRouteChunkByExportName.clientMiddleware
+          ? getPublicModulePathForEntry(
+              ctx,
+              viteManifest,
+              getRouteChunkModuleId(routeFile, "clientMiddleware"),
+            )
+          : undefined,
         hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
           ? getPublicModulePathForEntry(
               ctx,
@@ -1076,9 +1052,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
-      let hasClientMiddleware = sourceExports.includes(
-        "unstable_clientMiddleware",
-      );
+      let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
       let routeModulePath = combineURLs(
         ctx.publicPath,
@@ -1104,9 +1078,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            unstable_clientMiddleware:
+            clientMiddleware:
               !hasClientMiddleware ||
-              hasRouteChunkByExportName.unstable_clientMiddleware,
+              hasRouteChunkByExportName.clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -1194,7 +1168,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         // Ensure sync import of Vite works after async preload
         let vite = getVite();
-        let viteMajorVersion = parseInt(vite.version.split(".")[0], 10);
 
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
@@ -1276,18 +1249,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             resolve: serverEnvironment.resolve,
           },
           optimizeDeps: {
-            entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
-              ? [
-                  vite.normalizePath(ctx.entryClientFilePath),
-                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
-                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
-                  ),
-                ].map((entry) =>
-                  // In Vite 7, the `optimizeDeps.entries` option only accepts glob patterns.
-                  // In prior versions, absolute file paths were treated differently.
-                  viteMajorVersion >= 7 ? escapePathAsGlob(entry) : entry,
-                )
-              : [],
+            entries: getOptimizeDepsEntries({
+              entryClientFilePath: ctx.entryClientFilePath,
+              reactRouterConfig: ctx.reactRouterConfig,
+            }),
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
               // even if React dependencies are not direct dependencies.
@@ -1303,7 +1268,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router",
               "react-router/dom",
               // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
-              ...(hasDependency("react-router-dom")
+              ...(hasDependency({
+                name: "react-router-dom",
+                rootDirectory: ctx.rootDirectory,
+              })
                 ? ["react-router-dom"]
                 : []),
             ],
@@ -1518,34 +1486,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async transform(code, id) {
         if (isCssModulesFile(id)) {
           cssModulesManifest[id] = code;
-        }
-      },
-      buildStart() {
-        invariant(viteConfig);
-
-        if (
-          viteCommand === "build" &&
-          viteConfig.mode === "production" &&
-          !viteConfig.build.ssr &&
-          viteConfig.build.sourcemap
-        ) {
-          viteConfig.logger.warn(
-            colors.yellow(
-              "\n" +
-                colors.bold("  ⚠️  Source maps are enabled in production\n") +
-                [
-                  "This makes your server code publicly",
-                  "visible in the browser. This is highly",
-                  "discouraged! If you insist, ensure that",
-                  "you are using environment variables for",
-                  "secrets and not hard-coding them in",
-                  "your source code.",
-                ]
-                  .map((line) => "     " + line)
-                  .join("\n") +
-                "\n",
-            ),
-          );
         }
       },
       async configureServer(viteDevServer) {
@@ -2030,9 +1970,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             valid: {
               clientAction: !exportNames.includes("clientAction"),
               clientLoader: !exportNames.includes("clientLoader"),
-              unstable_clientMiddleware: !exportNames.includes(
-                "unstable_clientMiddleware",
-              ),
+              clientMiddleware: !exportNames.includes("clientMiddleware"),
               HydrateFallback: !exportNames.includes("HydrateFallback"),
             },
           });
@@ -2411,6 +2349,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     validatePluginOrder(),
+    warnOnClientSourceMaps(),
   ];
 };
 
@@ -2572,8 +2511,8 @@ async function getRouteMetadata(
     clientLoaderModule: hasRouteChunkByExportName.clientLoader
       ? `${getRouteChunkModuleId(moduleUrl, "clientLoader")}`
       : undefined,
-    clientMiddlewareModule: hasRouteChunkByExportName.unstable_clientMiddleware
-      ? `${getRouteChunkModuleId(moduleUrl, "unstable_clientMiddleware")}`
+    clientMiddlewareModule: hasRouteChunkByExportName.clientMiddleware
+      ? `${getRouteChunkModuleId(moduleUrl, "clientMiddleware")}`
       : undefined,
     hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
       ? `${getRouteChunkModuleId(moduleUrl, "HydrateFallback")}`
@@ -2582,7 +2521,7 @@ async function getRouteMetadata(
     hasClientAction: sourceExports.includes("clientAction"),
     hasLoader: sourceExports.includes("loader"),
     hasClientLoader: sourceExports.includes("clientLoader"),
-    hasClientMiddleware: sourceExports.includes("unstable_clientMiddleware"),
+    hasClientMiddleware: sourceExports.includes("clientMiddleware"),
     hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
     imports: [],
   };
@@ -3252,7 +3191,7 @@ async function detectRouteChunksIfEnabled(
       hasRouteChunkByExportName: {
         clientAction: false,
         clientLoader: false,
-        unstable_clientMiddleware: false,
+        clientMiddleware: false,
         HydrateFallback: false,
       },
     };

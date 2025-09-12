@@ -3,7 +3,7 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
-  unstable_MiddlewareFunction,
+  MiddlewareFunction,
 } from "../router/utils";
 import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
@@ -78,8 +78,8 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
-      unstable_middleware: route.module.unstable_middleware as unknown as
-        | unstable_MiddlewareFunction[]
+      middleware: route.module.middleware as unknown as
+        | MiddlewareFunction[]
         | undefined,
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix

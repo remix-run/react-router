@@ -3,7 +3,7 @@ import compression from "compression";
 import express from "express";
 import morgan from "morgan";
 import "react-router";
-import { unstable_RouterContextProvider } from "react-router";
+import { RouterContextProvider } from "react-router";
 import { expressContext } from "~/contexts";
 
 export const app = express();
@@ -23,7 +23,7 @@ app.use(
   createRequestHandler({
     build: () => import("virtual:react-router/server-build"),
     getLoadContext() {
-      return new unstable_RouterContextProvider(
+      return new RouterContextProvider(
         new Map([[expressContext, "Hello from Express"]]),
       );
     },

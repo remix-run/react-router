@@ -1,6 +1,6 @@
 import vm from "vm";
 
-import { escapeHtml } from "../../lib/server-runtime/markup";
+import { escapeHtml } from "../../lib/dom/ssr/markup";
 
 describe("escapeHtml", () => {
   // These tests are based on https://github.com/zertosh/htmlescape/blob/3e6cf0614dd0f778fd0131e69070b77282150c15/test/htmlescape-test.js

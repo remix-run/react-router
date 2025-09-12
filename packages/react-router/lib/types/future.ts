@@ -6,4 +6,4 @@ export interface Future {}
 
 // prettier-ignore
 export type MiddlewareEnabled =
-  Future extends { unstable_middleware: infer T extends boolean; } ? T : false
+  Future extends { middleware: infer T extends boolean; } ? T : false

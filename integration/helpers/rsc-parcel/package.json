@@ -29,7 +29,7 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^5.5.0||^6.0.0",
     "events": "^3.1.0",
-    "parcel": "2.15.0",
+    "parcel": "2.15.4",
     "path-browserify": "^1.0.0",
     "querystring-es3": "^0.2.1",
     "stream-http": "^3.1.0",

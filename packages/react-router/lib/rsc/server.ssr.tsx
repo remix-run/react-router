@@ -112,21 +112,55 @@ export async function routeRSCServerRequest({
     throw new Error("Missing body in server response");
   }
 
+  const detectRedirectResponse = serverResponse.clone();
+
   let serverResponseB: Response | null = null;
   if (hydrate) {
     serverResponseB = serverResponse.clone();
   }
 
   const body = serverResponse.body;
-  let payloadPromise: Promise<RSCPayload>;
+
+  let buffer: Uint8Array[] | undefined;
+  let streamControllers: ReadableStreamDefaultController<Uint8Array>[] = [];
+
+  const createStream = () => {
+    if (!buffer) {
+      buffer = [];
+      return body.pipeThrough(
+        new TransformStream({
+          transform(chunk, controller) {
+            buffer!.push(chunk);
+            controller.enqueue(chunk);
+            streamControllers.forEach((c) => c.enqueue(chunk));
+          },
+          flush() {
+            streamControllers.forEach((c) => c.close());
+            streamControllers = [];
+          },
+        }),
+      );
+    }
+
+    return new ReadableStream({
+      start(controller) {
+        buffer!.forEach((chunk) => controller.enqueue(chunk));
+        streamControllers.push(controller);
+      },
+    });
+  };
+
   const getPayload = async () => {
-    if (payloadPromise) return payloadPromise;
-    payloadPromise = createFromReadableStream(body) as Promise<RSCPayload>;
-    return payloadPromise;
+    return createFromReadableStream(createStream()) as Promise<RSCPayload>;
   };
 
   try {
-    const payload = await getPayload();
+    if (!detectRedirectResponse.body) {
+      throw new Error("Failed to clone server response");
+    }
+    const payload = (await createFromReadableStream(
+      detectRedirectResponse.body,
+    )) as RSCPayload;
     if (
       serverResponse.status === SINGLE_FETCH_REDIRECT_STATUS &&
       payload.type === "redirect"
@@ -316,7 +350,7 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
     future: {
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
-      unstable_middleware: false,
+      v8_middleware: false,
       unstable_subResourceIntegrity: false,
     },
     isSpaMode: false,

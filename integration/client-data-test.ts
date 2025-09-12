@@ -150,7 +150,6 @@ test.describe("Client Data", () => {
                   files: {
                     "react-router.config.ts": reactRouterConfig({
                       splitRouteModules,
-                      viteEnvironmentApi: templateName.includes("rsc"),
                     }),
                     "app/root.tsx": js`
                       import { Form, Outlet, Scripts } from "react-router"

@@ -65,7 +65,7 @@ function RSCHydratedRouter({
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
-  unstable_getContext,
+  getContext,
 }: RSCHydratedRouterProps)
 ```
 
@@ -80,9 +80,9 @@ used to decode payloads from the server.
 
 Optional fetch implementation. Defaults to global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
 
-### unstable_getContext
+### getContext
 
-A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+A function that returns an [`RouterContextProvider`](../utils/RouterContextProvider) instance
 which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
 [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
 This function is called to generate a fresh `context` instance on each

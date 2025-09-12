@@ -7,11 +7,10 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig, type TemplateName } from "./helpers/vite.js";
+import { type TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
   "vite-5-template",
-  "rsc-parcel-framework",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -49,9 +48,6 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         fixture = await createFixture({
           templateName,
           files: {
-            "react-router.config.ts": reactRouterConfig({
-              viteEnvironmentApi: templateName.includes("rsc"),
-            }),
             "app/root.tsx": js`
               import {
                 Links,

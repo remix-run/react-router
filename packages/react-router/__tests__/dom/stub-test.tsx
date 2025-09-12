@@ -12,10 +12,7 @@ import {
   type LoaderFunctionArgs,
   useRouteError,
 } from "../../index";
-import {
-  unstable_RouterContextProvider,
-  unstable_createContext,
-} from "../../lib/router/utils";
+import { RouterContextProvider, createContext } from "../../lib/router/utils";
 
 test("renders a route", () => {
   let RoutesStub = createRoutesStub([
@@ -283,7 +280,7 @@ test("can pass context values (w/o middleware)", async () => {
 });
 
 test("can pass context values (w/middleware)", async () => {
-  let helloContext = unstable_createContext();
+  let helloContext = createContext();
   let RoutesStub = createRoutesStub(
     [
       {
@@ -315,14 +312,11 @@ test("can pass context values (w/middleware)", async () => {
         ],
       },
     ],
-    new unstable_RouterContextProvider(new Map([[helloContext, "hello"]])),
+    new RouterContextProvider(new Map([[helloContext, "hello"]])),
   );
 
   render(
-    <RoutesStub
-      future={{ unstable_middleware: true }}
-      initialEntries={["/hello"]}
-    />,
+    <RoutesStub future={{ v8_middleware: true }} initialEntries={["/hello"]} />,
   );
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);

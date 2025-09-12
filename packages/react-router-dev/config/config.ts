@@ -83,11 +83,13 @@ type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
+type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
+
 interface FutureConfig {
   /**
    * Enable route middleware
    */
-  unstable_middleware: boolean;
+  v8_middleware: boolean;
   unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
@@ -356,11 +358,13 @@ async function resolveConfig({
   viteNodeContext,
   reactRouterConfigFile,
   skipRoutes,
+  validateConfig,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
+  validateConfig?: ValidateConfigFunction;
 }): Promise<Result<ResolvedReactRouterConfig>> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -383,6 +387,13 @@ async function resolveConfig({
       }
 
       reactRouterUserConfig = configModule.default;
+
+      if (validateConfig) {
+        const error = validateConfig(reactRouterUserConfig);
+        if (error) {
+          return err(error);
+        }
+      }
     } catch (error) {
       return err(`Error loading ${reactRouterConfigFile}: ${error}`);
     }
@@ -574,8 +585,7 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
-    unstable_middleware:
-      reactRouterUserConfig.future?.unstable_middleware ?? false,
+    v8_middleware: reactRouterUserConfig.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:
@@ -632,11 +642,13 @@ export async function createConfigLoader({
   watch,
   mode,
   skipRoutes,
+  validateConfig,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
+  validateConfig?: ValidateConfigFunction;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -661,7 +673,13 @@ export async function createConfigLoader({
   updateReactRouterConfigFile();
 
   let getConfig = () =>
-    resolveConfig({ root, viteNodeContext, reactRouterConfigFile, skipRoutes });
+    resolveConfig({
+      root,
+      viteNodeContext,
+      reactRouterConfigFile,
+      skipRoutes,
+      validateConfig,
+    });
 
   let appDirectory: string;
 

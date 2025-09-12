@@ -34,12 +34,18 @@ const fixtures = [
   templateDisplayName: string;
 }>;
 
-type RouteBasePath = "css" | "rsc-server-first-css";
+type RouteBasePath =
+  | "css-with-links-export"
+  | "css-with-floated-link"
+  | "rsc-server-first-route";
 const getRouteBasePaths = (templateName: TemplateName) => {
-  if (templateName.includes("rsc")) {
-    return ["css", "rsc-server-first-css"] as const satisfies RouteBasePath[];
-  }
-  return ["css"] as const satisfies RouteBasePath[];
+  return [
+    "css-with-links-export",
+    "css-with-floated-link",
+    ...(templateName.includes("rsc")
+      ? (["rsc-server-first-route"] as const)
+      : []),
+  ] as const satisfies RouteBasePath[];
 };
 
 const files = ({ templateName }: { templateName: TemplateName }) => ({
@@ -112,7 +118,7 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
   ...Object.assign(
     {},
     ...getRouteBasePaths(templateName).map((routeBasePath) => {
-      const isServerFirstRoute = routeBasePath === "rsc-server-first-css";
+      const isServerFirstRoute = routeBasePath === "rsc-server-first-route";
       const exportName = isServerFirstRoute ? "ServerComponent" : "default";
 
       return {
@@ -162,14 +168,17 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
             return null;
           }
 
-          export function links() {
-            return [{ rel: "stylesheet", href: postcssLinkedStyles }];
+          ${
+            routeBasePath === "css-with-links-export"
+              ? `export function links() { return [{ rel: "stylesheet", href: postcssLinkedStyles }]; }`
+              : ""
           }
 
           function TestRoute() {
             return (
               <>
                 <input />
+                ${routeBasePath !== "css-with-links-export" ? `<link rel="stylesheet" href={postcssLinkedStyles} precedence="default" />` : ""}
                 <div id="entry-client" className="entry-client">
                   <div id="css-modules" className={cssModulesStyles.index}>
                     <div id="css-postcss-linked" className="${routeBasePath}-postcss-linked">
@@ -239,10 +248,6 @@ test.describe("Vite CSS", () => {
       });
 
       test.describe("vite dev with custom base", async () => {
-        test.fixme(
-          templateName.includes("rsc"),
-          "RSC Framework mode doesn't support basename yet",
-        );
         let port: number;
         let cwd: string;
         let stop: () => void;
@@ -253,7 +258,7 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                viteEnvironmentApi: templateName === "vite-6-template",
+                viteEnvironmentApi: templateName !== "vite-5-template",
                 basename: base,
               }),
               "vite.config.ts": await viteConfig.basic({
@@ -287,11 +292,6 @@ test.describe("Vite CSS", () => {
       });
 
       test.describe("express", async () => {
-        test.fixme(
-          templateName.includes("rsc"),
-          "RSC Framework mode doesn't support Vite middleware mode yet",
-        );
-
         let port: number;
         let cwd: string;
         let stop: () => void;
@@ -308,7 +308,7 @@ test.describe("Vite CSS", () => {
                 templateName,
                 vanillaExtract: true,
               }),
-              "server.mjs": EXPRESS_SERVER({ port }),
+              "server.mjs": EXPRESS_SERVER({ port, templateName }),
               ...files({ templateName }),
             },
             templateName,
@@ -517,11 +517,6 @@ async function hmrWorkflow({
   base?: string;
   templateName: TemplateName;
 }) {
-  if (templateName.includes("rsc")) {
-    // TODO: Fix CSS HMR support in RSC Framework mode
-    return;
-  }
-
   for (const routeBase of getRouteBasePaths(templateName)) {
     let pageErrors: Error[] = [];
     page.on("pageerror", (error) => pageErrors.push(error));
@@ -532,8 +527,6 @@ async function hmrWorkflow({
 
     let input = page.locator("input");
     await expect(input).toBeVisible();
-    await input.type("stateful");
-    await expect(input).toHaveValue("stateful");
 
     let edit = createEditor(cwd);
     let modifyCss = (contents: string) =>
@@ -544,34 +537,54 @@ async function hmrWorkflow({
           "NEW_PADDING_INJECTED_VIA_POSTCSS",
         );
 
-    await Promise.all([
-      edit(`app/routes/${routeBase}/styles-bundled.css`, modifyCss),
-      edit(`app/routes/${routeBase}/styles.module.css`, modifyCss),
-      edit(`app/routes/${routeBase}/styles-vanilla-global.css.ts`, modifyCss),
-      edit(`app/routes/${routeBase}/styles-vanilla-local.css.ts`, modifyCss),
-      edit(`app/routes/${routeBase}/styles-postcss-linked.css`, modifyCss),
-    ]);
+    const testCases = [
+      {
+        file: "styles-bundled.css",
+        selector: "#css-bundled",
+      },
+      {
+        file: "styles.module.css",
+        selector: "#css-modules",
+      },
+      {
+        file: "styles-postcss-linked.css",
+        selector: "#css-postcss-linked",
+      },
+      {
+        file: "styles-vanilla-global.css.ts",
+        selector: "#css-vanilla-global",
+      },
+      // Vanilla Extract's HMR isn't working for RSC server-first routes
+      ...(routeBase === "rsc-server-first-route"
+        ? []
+        : ([
+            {
+              file: "styles-vanilla-local.css.ts",
+              selector: "#css-vanilla-local",
+            },
+          ] as const)),
+    ] as const satisfies Array<{
+      file: string;
+      selector: string;
+    }>;
 
-    await Promise.all(
-      [
-        "#css-bundled",
-        "#css-postcss-linked",
-        "#css-modules",
-        "#css-vanilla-global",
-        "#css-vanilla-local",
-      ].map(
-        async (selector) =>
-          await expect(page.locator(selector)).toHaveCSS(
-            "padding",
-            NEW_PADDING,
-          ),
-      ),
-    );
+    for (const { file, selector } of testCases) {
+      const routeFile = `app/routes/${routeBase}/${file}`;
+      await input.fill(routeFile);
+      await edit(routeFile, modifyCss);
+      await expect(
+        page.locator(selector),
+        `CSS update for ${routeFile}`,
+      ).toHaveCSS("padding", NEW_PADDING);
 
-    // Ensure CSS updates were handled by HMR
-    await expect(input).toHaveValue("stateful");
+      // Ensure CSS updates were handled by HMR
+      await expect(input, `State preservation for ${routeFile}`).toHaveValue(
+        routeFile,
+      );
+    }
 
-    if (routeBase === "css") {
+    // RSC Framework mode doesn't support custom entries yet
+    if (!templateName.includes("rsc")) {
       // The following change triggers a full page reload, so we check it after all the checks for HMR state preservation
       await edit("app/entry.client.css", modifyCss);
       await expect(page.locator("#entry-client")).toHaveCSS(

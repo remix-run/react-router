@@ -30,7 +30,7 @@ export const reactRouterConfig = ({
   appDirectory,
   splitRouteModules,
   viteEnvironmentApi,
-  middleware,
+  v8_middleware,
   routeDiscovery,
 }: {
   ssr?: boolean;
@@ -41,7 +41,7 @@ export const reactRouterConfig = ({
     Config["future"]
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
-  middleware?: boolean;
+  v8_middleware?: boolean;
   routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
@@ -53,7 +53,7 @@ export const reactRouterConfig = ({
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
-      unstable_middleware: middleware,
+      v8_middleware,
     },
   };
 
@@ -132,12 +132,14 @@ export const viteConfig = {
     `;
   },
   basic: async (args: ViteConfigArgs) => {
+    const isRsc = args.templateName?.includes("rsc");
     return dedent`
       ${
-        !args.templateName?.includes("rsc")
+        !isRsc
           ? "import { reactRouter } from '@react-router/dev/vite';"
           : [
               "import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from '@react-router/dev/internal';",
+              "import rsc from '@vitejs/plugin-rsc';",
               "const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;",
             ].join("\n")
       }
@@ -155,6 +157,7 @@ export const viteConfig = {
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
           reactRouter(),
+          ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
           tsconfigPaths()
         ],
@@ -168,8 +171,43 @@ export const EXPRESS_SERVER = (args: {
   base?: string;
   loadContext?: Record<string, unknown>;
   customLogic?: string;
-}) =>
-  String.raw`
+  templateName?: TemplateName;
+}) => {
+  if (args.templateName?.includes("rsc")) {
+    return String.raw`
+      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import express from "express";
+
+      const viteDevServer =
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : await import("vite").then(({ createServer }) =>
+              createServer({
+                server: {
+                  middlewareMode: true,
+                },
+              })
+            );
+      const app = express();      
+
+      ${args?.customLogic || ""}
+
+      if (viteDevServer) {
+        app.use(viteDevServer.middlewares);
+      } else {
+        app.use(
+          "/assets",
+          express.static("build/client/assets", { immutable: true, maxAge: "1y" })
+        );
+        app.all("*", createRequestListener((await import("./build/server/index.js")).default));
+      }
+
+      const port = ${args.port};
+      app.listen(port, () => console.log('http://localhost:' + port));
+    `;
+  }
+
+  return String.raw`
     import { createRequestHandler } from "@react-router/express";
     import express from "express";
 
@@ -209,6 +247,7 @@ export const EXPRESS_SERVER = (args: {
     const port = ${args.port};
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
+};
 
 type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
@@ -217,9 +256,7 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
 
-type FrameworkModeRscTemplateName =
-  | "rsc-parcel-framework"
-  | "rsc-vite-framework";
+type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
 type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
@@ -339,17 +376,23 @@ export const reactRouterServe = async ({
 export const runStartScript = async ({
   cwd,
   port,
+  viteBase,
   basename,
 }: {
   cwd: string;
   port: number;
+  viteBase?: string;
   basename?: string;
 }) => {
   let nodeBin = process.argv[0];
   let proc = spawn(nodeBin, ["start.js"], {
     cwd,
     stdio: "pipe",
-    env: { NODE_ENV: "production", PORT: port.toFixed(0) },
+    env: {
+      NODE_ENV: "production",
+      PORT: port.toFixed(0),
+      VITE_BASE: viteBase,
+    },
   });
   await waitForServer(proc, { port, basename });
   return () => proc.kill();

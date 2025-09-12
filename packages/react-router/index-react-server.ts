@@ -17,11 +17,15 @@ export type {
 } from "./lib/rsc/server.rsc";
 
 // RSC implementation of agnostic APIs
-export { redirect, redirectDocument, replace } from "./lib/rsc/server.rsc";
+export {
+  Await,
+  redirect,
+  redirectDocument,
+  replace,
+} from "./lib/rsc/server.rsc";
 
 // Client references
 export {
-  Await,
   BrowserRouter,
   Form,
   HashRouter,
@@ -48,9 +52,10 @@ export {
   data,
   matchRoutes,
   isRouteErrorResponse,
-  unstable_createContext,
-  unstable_RouterContextProvider,
+  createContext,
+  RouterContextProvider,
 } from "./lib/router/utils";
+export { href } from "./lib/href";
 
 export { createCookie, isCookie } from "./lib/server-runtime/cookies";
 export {
@@ -62,9 +67,9 @@ export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookie
 export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
 
 export type {
-  unstable_MiddlewareFunction,
-  unstable_MiddlewareNextFunction,
-  unstable_RouterContext,
+  MiddlewareFunction,
+  MiddlewareNextFunction,
+  RouterContext,
 } from "./lib/router/utils";
 
 export type {

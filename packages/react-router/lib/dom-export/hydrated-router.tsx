@@ -77,9 +77,9 @@ function initSsrInfo(): void {
 }
 
 function createHydratedRouter({
-  unstable_getContext,
+  getContext,
 }: {
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
 }): DataRouter {
   initSsrInfo();
 
@@ -142,19 +142,19 @@ function createHydratedRouter({
       };
     }
   } else {
-    hydrationData = getHydrationData(
-      ssrInfo.context.state,
+    hydrationData = getHydrationData({
+      state: ssrInfo.context.state,
       routes,
-      (routeId) => ({
+      getRouteInfo: (routeId) => ({
         clientLoader: ssrInfo!.routeModules[routeId]?.clientLoader,
         hasLoader: ssrInfo!.manifest.routes[routeId]?.hasLoader === true,
         hasHydrateFallback:
           ssrInfo!.routeModules[routeId]?.HydrateFallback != null,
       }),
-      window.location,
-      window.__reactRouterContext?.basename,
-      ssrInfo.context.isSpaMode,
-    );
+      location: window.location,
+      basename: window.__reactRouterContext?.basename,
+      isSpaMode: ssrInfo.context.isSpaMode,
+    });
 
     if (hydrationData && hydrationData.errors) {
       // TODO: De-dup this or remove entirely in v7 where single fetch is the
@@ -169,12 +169,12 @@ function createHydratedRouter({
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    unstable_getContext,
+    getContext,
     hydrationData,
     hydrationRouteProperties,
     mapRouteProperties,
     future: {
-      unstable_middleware: ssrInfo.context.future.unstable_middleware,
+      middleware: ssrInfo.context.future.v8_middleware,
     },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
@@ -222,7 +222,7 @@ export interface HydratedRouterProps {
    * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
    * functions
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for
@@ -251,14 +251,14 @@ export interface HydratedRouterProps {
  * @category Framework Routers
  * @mode framework
  * @param props Props
- * @param {dom.HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
  * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
-      unstable_getContext: props.unstable_getContext,
+      getContext: props.getContext,
     });
   }
 
