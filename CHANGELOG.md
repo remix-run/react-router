@@ -19,7 +19,6 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
-    - [Changes by Package](#changes-by-package)
   - [v7.8.2](#v782)
     - [Patch Changes](#patch-changes-1)
     - [Unstable Changes](#unstable-changes-1)
@@ -33,7 +32,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes-1)
     - [Patch Changes](#patch-changes-3)
     - [Unstable Changes](#unstable-changes-3)
-    - [Changes by Package](#changes-by-package-1)
+    - [Changes by Package](#changes-by-package)
   - [v7.7.1](#v771)
     - [Patch Changes](#patch-changes-4)
     - [Unstable Changes](#unstable-changes-4)
@@ -43,7 +42,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes-2)
     - [Patch Changes](#patch-changes-5)
     - [Unstable Changes](#unstable-changes-5)
-    - [Changes by Package](#changes-by-package-2)
+    - [Changes by Package](#changes-by-package-1)
   - [v7.6.3](#v763)
     - [Patch Changes](#patch-changes-6)
   - [v7.6.2](#v762)
@@ -58,7 +57,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes-3)
     - [Patch Changes](#patch-changes-9)
     - [Unstable Changes](#unstable-changes-7)
-    - [Changes by Package](#changes-by-package-3)
+    - [Changes by Package](#changes-by-package-2)
   - [v7.5.3](#v753)
     - [Patch Changes](#patch-changes-10)
   - [v7.5.2](#v752)
@@ -73,7 +72,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes-4)
     - [Patch Changes](#patch-changes-13)
     - [Unstable Changes](#unstable-changes-9)
-    - [Changes by Package](#changes-by-package-4)
+    - [Changes by Package](#changes-by-package-3)
   - [v7.4.1](#v741)
     - [Security Notice](#security-notice-1)
     - [Patch Changes](#patch-changes-14)
@@ -82,7 +81,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes-5)
     - [Patch Changes](#patch-changes-15)
     - [Unstable Changes](#unstable-changes-11)
-    - [Changes by Package](#changes-by-package-5)
+    - [Changes by Package](#changes-by-package-4)
   - [v7.3.0](#v730)
     - [Minor Changes](#minor-changes-6)
     - [Patch Changes](#patch-changes-16)
@@ -91,7 +90,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
       - [Middleware (unstable)](#middleware-unstable)
         - [Middleware `context` parameter](#middleware-context-parameter)
       - [`unstable_SerializesTo`](#unstable_serializesto)
-    - [Changes by Package](#changes-by-package-6)
+    - [Changes by Package](#changes-by-package-5)
   - [v7.2.0](#v720)
     - [What's Changed](#whats-changed-5)
       - [Type-safe `href` utility](#type-safe-href-utility)
@@ -101,7 +100,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-17)
     - [Unstable Changes](#unstable-changes-13)
       - [Split Route Modules (unstable)](#split-route-modules-unstable)
-    - [Changes by Package](#changes-by-package-7)
+    - [Changes by Package](#changes-by-package-6)
   - [v7.1.5](#v715)
     - [Patch Changes](#patch-changes-18)
   - [v7.1.4](#v714)
@@ -115,7 +114,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.1.0](#v710)
     - [Minor Changes](#minor-changes-8)
     - [Patch Changes](#patch-changes-23)
-    - [Changes by Package](#changes-by-package-8)
+    - [Changes by Package](#changes-by-package-7)
   - [v7.0.2](#v702)
     - [Patch Changes](#patch-changes-24)
   - [v7.0.1](#v701)
@@ -137,7 +136,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Major Changes (`@react-router/*`)](#major-changes-react-router-1)
     - [Minor Changes](#minor-changes-9)
     - [Patch Changes](#patch-changes-26)
-    - [Changes by Package](#changes-by-package-9)
+    - [Changes by Package](#changes-by-package-8)
 - [React Router v6 Releases](#react-router-v6-releases)
   - [v6.30.1](#v6301)
     - [Patch Changes](#patch-changes-27)
@@ -355,25 +354,12 @@ Date: YYYY-MM-DD
 
 ⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-### Changes by Package
-
-- [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/create-react-router/CHANGELOG.md#7XY)
-- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router/CHANGELOG.md#7XY)
-- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-architect/CHANGELOG.md#7XY)
-- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-cloudflare/CHANGELOG.md#7XY)
-- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-dev/CHANGELOG.md#7XY)
-- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-express/CHANGELOG.md#7XY)
-- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-fs-routes/CHANGELOG.md#7XY)
-- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-node/CHANGELOG.md#7XY)
-- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#7XY)
-- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-serve/CHANGELOG.md#7XY)
-
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
 
 ## v7.9.0
 
-Date: 2025-09-11
+Date: 2025-09-12
 
 ### What's Changed
 
@@ -405,19 +391,6 @@ Please see the [Middleware Docs](https://reactrouter.com/how-to/middleware), the
 - `react-router` - RSC: Fix hydration errors for routes that only have client loaders when using RSC in Data Mode along with a custom basename ([#14264](https://github.com/remix-run/react-router/pull/14264))
 - `react-router` - RSC: Make `href` function available in a `react-server` context ([#14262](https://github.com/remix-run/react-router/pull/14262))
 - `react-router` - RSC: Decode each time `getPayload()` is called to allow for "in-context" decoding and hoisting of contextual assets ([#14248](https://github.com/remix-run/react-router/pull/14248))
-
-### Changes by Package
-
-- [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/create-react-router/CHANGELOG.md#790)
-- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router/CHANGELOG.md#790)
-- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-architect/CHANGELOG.md#790)
-- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-cloudflare/CHANGELOG.md#790)
-- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-dev/CHANGELOG.md#790)
-- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-express/CHANGELOG.md#790)
-- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-fs-routes/CHANGELOG.md#790)
-- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-node/CHANGELOG.md#790)
-- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#790)
-- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.9.0/packages/react-router-serve/CHANGELOG.md#790)
 
 **Full Changelog**: [`v7.8.2...v7.9.0`](https://github.com/remix-run/react-router/compare/react-router@7.8.2...react-router@7.9.0)
 
