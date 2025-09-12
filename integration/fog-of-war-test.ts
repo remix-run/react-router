@@ -715,7 +715,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#parent")).toMatch(`Parent`);
     expect(await app.getHtml("#child2")).toMatch(`Child 2`);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fparent%2Fchild2&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fparent%2Fchild2&version=/),
     ]);
   });
 
@@ -783,7 +783,7 @@ test.describe("Fog of War", () => {
       ),
     ).toEqual(["root", "routes/_index", "routes/$slug"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -797,7 +797,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#static");
     expect(await app.getHtml("#static")).toMatch("Static");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fstatic&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fstatic&version=/),
     ]);
     expect(
       await page.evaluate(() =>
@@ -870,7 +870,7 @@ test.describe("Fog of War", () => {
       ),
     ).toEqual(["root", "routes/_index", "routes/$"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -884,7 +884,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#static");
     expect(await app.getHtml("#static")).toMatch("Static");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fstatic&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fstatic&version=/),
     ]);
     expect(
       await page.evaluate(() =>
@@ -956,7 +956,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#slug");
     expect(await app.getHtml("#slug")).toMatch("Slug: a");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fa&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fa&version=/),
     ]);
     manifestRequests = [];
 
@@ -977,7 +977,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#slug");
     expect(await app.getHtml("#slug")).toMatch("Slug: b");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fb&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fb&version=/),
     ]);
   });
 
@@ -1044,7 +1044,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#splat");
     expect(await app.getHtml("#splat")).toMatch("Splat: a");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fa&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fa&version=/),
     ]);
     manifestRequests = [];
 
@@ -1065,7 +1065,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#splat");
     expect(await app.getHtml("#splat")).toMatch("Splat: b/c");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fb%2Fc&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fb%2Fc&version=/),
     ]);
   });
 
@@ -1137,7 +1137,7 @@ test.describe("Fog of War", () => {
     await app.clickLink("/not/a/path");
     await page.waitForSelector("#error");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fnot%2Fa%2Fpath&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fnot%2Fa%2Fpath&version=/),
     ]);
     manifestRequests = [];
 
@@ -1145,7 +1145,7 @@ test.describe("Fog of War", () => {
     await app.clickLink("/something");
     await page.waitForSelector("#slug");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -1233,7 +1233,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F%2C%2Fa%2C%2Fb&version=[a-z0-9]{8}/,
+        /\/__manifest\?paths=%2F%2C%2Fa%2C%2Fb&version=[a-z0-9]{8}/,
       ),
     ]);
   });
@@ -1275,7 +1275,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F%2C%2Fa%2C%2Fb%2C%2Fc%2C%2Fd%2C%2Fe%2C%2Ff/,
+        /\/__manifest\?paths=%2F%2C%2Fa%2C%2Fb%2C%2Fc%2C%2Fd%2C%2Fe%2C%2Ff%2C%2Fg/,
       ),
     ]);
   });
@@ -1439,7 +1439,7 @@ test.describe("Fog of War", () => {
       ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/custom-manifest\?p=%2F%2C%2Fa&version=/),
+      expect.stringMatching(/\/custom-manifest\?paths=%2F%2C%2Fa&version=/),
     ]);
     manifestRequests = [];
 
@@ -1449,7 +1449,7 @@ test.describe("Fog of War", () => {
     // Wait for eager discovery to kick off
     await new Promise((r) => setTimeout(r, 500));
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/custom-manifest\?p=%2Fa%2Fb&version=/),
+      expect.stringMatching(/\/custom-manifest\?paths=%2Fa%2Fb&version=/),
     ]);
 
     expect(wrongManifestRequests).toEqual([]);
