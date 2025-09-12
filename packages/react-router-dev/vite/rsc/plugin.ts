@@ -505,6 +505,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         }
       },
       load(id) {
+        // react-router-serve is not used in dev mode
+        if (viteCommand !== "build") {
+          return `export default {};`;
+        }
+
         if (id === virtual.reactRouterServeConfig.resolvedId) {
           const rscOutDir = resolvedViteConfig.environments.rsc?.build?.outDir;
           invariant(rscOutDir, "RSC build directory config not found");
