@@ -10,7 +10,6 @@ import {
   viteConfig,
   dev,
   viteDevCmd,
-  runStartScript,
   reactRouterServe,
   reactRouterConfig,
   type TemplateName,
@@ -399,9 +398,7 @@ test.describe("Vite base + React Router basename", () => {
           );
           build({ cwd });
           if (startServer !== false) {
-            stop = templateName.includes("rsc")
-              ? await runStartScript({ cwd, port, viteBase: base, basename })
-              : await reactRouterServe({ cwd, port, basename });
+            stop = await reactRouterServe({ cwd, port, basename });
           }
         }
 

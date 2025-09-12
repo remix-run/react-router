@@ -10,6 +10,7 @@ import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-r
 
 import routes from "virtual:react-router/unstable_rsc/routes";
 import basename from "virtual:react-router/unstable_rsc/basename";
+import unstable_reactRouterServeConfig from "virtual:react-router/unstable_rsc/react-router-serve-config";
 
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
@@ -29,6 +30,8 @@ export async function fetchServer(request: Request) {
     },
   });
 }
+
+export { unstable_reactRouterServeConfig };
 
 export default async function handler(request: Request) {
   const ssr = await import.meta.viteRsc.loadModule<
