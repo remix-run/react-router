@@ -4,6 +4,11 @@ title: Form Validation
 
 # Form Validation
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 This guide walks through a simple signup form implementation. You will likely want to pair these concepts with third-party validation libraries and error components, but this guide only focuses on the moving pieces for React Router.
 
 ## 1. Setting Up
@@ -84,7 +89,7 @@ export async function action({
 
 If any validation errors are found, they are returned from the `action` to the fetcher. This is our way of signaling to the UI that something needs to be corrected, otherwise the user will be redirected to the dashboard.
 
-Note the `data({ errors }, { status: 400 })` call. Setting a 400 status is the web standard way to signal to the client that there was a validation error (Bad Request). In React Router, only 200 status codes trigger page data revalidation so a 400 prevent that.
+Note the `data({ errors }, { status: 400 })` call. Setting a 400 status is the web standard way to signal to the client that there was a validation error (Bad Request). In React Router, only 2xx status codes trigger page data revalidation, so sending a 400 status prevents the normal revalidation that would occur after an `action`.
 
 ## 3. Displaying Validation Errors
 

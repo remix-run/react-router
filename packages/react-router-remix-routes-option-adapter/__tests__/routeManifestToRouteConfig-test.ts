@@ -11,7 +11,7 @@ const cleanIds = (obj: any) =>
   JSON.parse(
     JSON.stringify(obj, function replacer(key, value) {
       return key === "id" ? undefined : value;
-    })
+    }),
   );
 
 describe("routeManifestToRouteConfig", () => {
@@ -25,7 +25,7 @@ describe("routeManifestToRouteConfig", () => {
             caseSensitive: true,
           });
         });
-      })
+      }),
     );
     let routeConfig = [
       route("/", "routes/home.js"),
@@ -73,7 +73,7 @@ describe("routeManifestToRouteConfig", () => {
     let configRoutes = routeManifestToRouteConfig(
       defineRoutes((route) => {
         route("/", "routes/home.js", { id: "home" });
-      })
+      }),
     );
 
     expect(configRoutes[0].id).toEqual("home");

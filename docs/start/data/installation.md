@@ -27,14 +27,11 @@ npm i react-router
 
 Create a router and pass it to `RouterProvider`:
 
-```tsx lines=[1-4,9-14,19]
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router";
-
+```tsx lines=[3-4,6-11,16]
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { createBrowserRouter } from "react-router";
+import { RouterProvider } from "react-router/dom";
 
 const router = createBrowserRouter([
   {
@@ -46,7 +43,7 @@ const router = createBrowserRouter([
 const root = document.getElementById("root");
 
 ReactDOM.createRoot(root).render(
-  <RouterProvider router={router} />
+  <RouterProvider router={router} />,
 );
 ```
 

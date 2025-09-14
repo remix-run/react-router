@@ -10,12 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: 📝 Comment on related issues and pull requests
-        uses: remix-run/release-comment-action@v0.4.1
+        uses: remix-run/release-comment-action@v0.4.2
         with:
           DIRECTORY_TO_CHECK: "./packages"
           PACKAGE_NAME: "react-router"
+          ISSUE_LABELS_TO_REMOVE: "awaiting release"

@@ -7,12 +7,7 @@ import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
-
-declare global {
-  interface Navigator {
-    connection?: { saveData: boolean };
-  }
-}
+import type { ServerBuild } from "../../server-runtime/build";
 
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
@@ -26,13 +21,16 @@ const discoveredPaths = new Set<string>();
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
-export function isFogOfWarEnabled(ssr: boolean) {
-  return ssr === true;
+export function isFogOfWarEnabled(
+  routeDiscovery: ServerBuild["routeDiscovery"],
+  ssr: boolean,
+) {
+  return routeDiscovery.mode === "lazy" && ssr === true;
 }
 
 export function getPartialManifest(
   { sri, ...manifest }: AssetsManifest,
-  router: DataRouter
+  router: DataRouter,
 ) {
   // Start with our matches for this pathname
   let routeIds = new Set(router.state.matches.map((m) => m.route.id));
@@ -59,7 +57,7 @@ export function getPartialManifest(
 
   let initialRoutes = [...routeIds].reduce(
     (acc, id) => Object.assign(acc, { [id]: manifest.routes[id] }),
-    {}
+    {},
   );
   return {
     ...manifest,
@@ -72,10 +70,11 @@ export function getPatchRoutesOnNavigationFunction(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
+  routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
-  basename: string | undefined
+  basename: string | undefined,
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (!isFogOfWarEnabled(ssr)) {
+  if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
   }
 
@@ -91,8 +90,9 @@ export function getPatchRoutesOnNavigationFunction(
       ssr,
       isSpaMode,
       basename,
+      routeDiscovery.manifestPath,
       patch,
-      signal
+      signal,
     );
   };
 }
@@ -102,11 +102,16 @@ export function useFogOFWarDiscovery(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
-  isSpaMode: boolean
+  routeDiscovery: ServerBuild["routeDiscovery"],
+  isSpaMode: boolean,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
-    if (!isFogOfWarEnabled(ssr) || navigator.connection?.saveData === true) {
+    if (
+      !isFogOfWarEnabled(routeDiscovery, ssr) ||
+      // @ts-expect-error - TS doesn't know about this yet
+      window.navigator?.connection?.saveData === true
+    ) {
       return;
     }
 
@@ -157,7 +162,8 @@ export function useFogOFWarDiscovery(
           ssr,
           isSpaMode,
           router.basename,
-          router.patchRoutes
+          routeDiscovery.manifestPath,
+          router.patchRoutes,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -181,7 +187,20 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [ssr, isSpaMode, manifest, routeModules, router]);
+  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
+}
+
+export function getManifestPath(
+  _manifestPath: string | undefined,
+  basename: string | undefined,
+) {
+  let manifestPath = _manifestPath || "/__manifest";
+
+  if (basename == null) {
+    return manifestPath;
+  }
+
+  return `${basename}${manifestPath}`.replace(/\/+/g, "/");
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
@@ -194,16 +213,22 @@ export async function fetchAndApplyManifestPatches(
   ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined,
+  manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<void> {
-  let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
-    /\/+/g,
-    "/"
+  // NOTE: Intentionally using a standalone `URLSearchParams` instance
+  // instead of mutating `url.searchParams`, which is *significantly* slower:
+  // https://issues.chromium.org/issues/331406951
+  // https://github.com/nodejs/node/issues/51518
+  const searchParams = new URLSearchParams();
+  paths.sort().forEach((path) => searchParams.append("p", path));
+  searchParams.set("version", manifest.version);
+  let url = new URL(
+    getManifestPath(manifestPath, basename),
+    window.location.origin,
   );
-  let url = new URL(manifestPath, window.location.origin);
-  paths.sort().forEach((path) => url.searchParams.append("p", path));
-  url.searchParams.set("version", manifest.version);
+  url.search = searchParams.toString();
 
   // If the URL is nearing the ~8k limit on GET requests, skip this optimization
   // step and just let discovery happen on link click.  We also wipe out the
@@ -233,7 +258,7 @@ export async function fetchAndApplyManifestPatches(
         console.warn(
           "Detected a manifest version mismatch during eager route discovery. " +
             "The next navigation/fetch to an undiscovered route will result in " +
-            "a new document navigation to sync up with the latest manifest."
+            "a new document navigation to sync up with the latest manifest.",
         );
         return;
       }
@@ -247,14 +272,20 @@ export async function fetchAndApplyManifestPatches(
         // We've already tried fixing for this version, don' try again to
         // avoid loops - just let this navigation/fetch 404
         console.error(
-          "Unable to discover routes due to manifest version mismatch."
+          "Unable to discover routes due to manifest version mismatch.",
         );
         return;
       }
 
       sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
       window.location.href = errorReloadPath;
-      throw new Error("Detected manifest version mismatch, reloading...");
+      console.warn("Detected manifest version mismatch, reloading...");
+
+      // Stall here and let the browser reload and avoid triggering a flash of
+      // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
+      await new Promise(() => {
+        // check out of this hook cause the DJs never gonna re[s]olve this
+      });
     } else if (res.status >= 400) {
       throw new Error(await res.text());
     }
@@ -291,8 +322,8 @@ export async function fetchAndApplyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId)
-    )
+      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+    ),
   );
 }
 

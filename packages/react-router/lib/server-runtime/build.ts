@@ -1,7 +1,7 @@
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../router/utils";
 import type {
   AssetsManifest,
@@ -37,6 +37,10 @@ export interface ServerBuild {
    */
   isSpaMode: boolean;
   prerender: string[];
+  routeDiscovery: {
+    mode: "lazy" | "initial";
+    manifestPath: string;
+  };
 }
 
 export interface HandleDocumentRequestFunction {
@@ -46,15 +50,16 @@ export interface HandleDocumentRequestFunction {
     responseHeaders: Headers,
     context: EntryContext,
     loadContext: MiddlewareEnabled extends true
-      ? unstable_RouterContextProvider
-      : AppLoadContext
+      ? RouterContextProvider
+      : AppLoadContext,
   ): Promise<Response> | Response;
 }
 
 export interface HandleDataRequestFunction {
-  (response: Response, args: LoaderFunctionArgs | ActionFunctionArgs):
-    | Promise<Response>
-    | Response;
+  (
+    response: Response,
+    args: LoaderFunctionArgs | ActionFunctionArgs,
+  ): Promise<Response> | Response;
 }
 
 export interface HandleErrorFunction {

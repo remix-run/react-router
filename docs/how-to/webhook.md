@@ -21,14 +21,14 @@ export const action = async ({
       { message: "Method not allowed" },
       {
         status: 405,
-      }
+      },
     );
   }
   const payload = await request.json();
 
   /* Validate the webhook */
   const signature = request.headers.get(
-    "X-Hub-Signature-256"
+    "X-Hub-Signature-256",
   );
   const generatedSignature = `sha256=${crypto
     .createHmac("sha256", process.env.GITHUB_WEBHOOK_SECRET)
@@ -39,7 +39,7 @@ export const action = async ({
       { message: "Signature mismatch" },
       {
         status: 401,
-      }
+      },
     );
   }
 

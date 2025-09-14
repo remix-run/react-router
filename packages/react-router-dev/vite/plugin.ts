@@ -1,11 +1,19 @@
 // We can only import types from Vite at the top level since we're in a CJS
-// context but want to use Vite's ESM build to avoid deprecation warnings
+// context but want to use Vite's ESM build since Vite 7+ is ESM only
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
-import * as fs from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import {
+  cp,
+  mkdir,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
-import * as fse from "fs-extra";
 import * as babel from "@babel/core";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
@@ -17,7 +25,7 @@ import type {
   ServerBuild,
   DataRouteObject,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  unstable_InitialContext,
+  RouterContextProvider,
 } from "react-router";
 import {
   init as initEsModuleLexer,
@@ -39,12 +47,18 @@ import type { Cache } from "./cache";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
-import { getStylesForPathname, isCssModulesFile } from "./styles";
+import {
+  getCssStringFromViteDevModuleCode,
+  getStylesForPathname,
+  isCssModulesFile,
+} from "./styles";
 import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
+import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
+import { hasDependency } from "./has-dependency";
 import {
   type RouteChunkName,
   type RouteChunkExportName,
@@ -65,11 +79,15 @@ import {
   resolveEntryFiles,
   configRouteToBranchRoute,
 } from "../config/config";
-import * as WithProps from "./with-props";
+import { getOptimizeDepsEntries } from "./optimize-deps-entries";
+import { decorateComponentExportsWithProps } from "./with-props";
+import { loadDotenv } from "./load-dotenv";
+import { validatePluginOrder } from "./plugins/validate-plugin-order";
+import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
-  mod: Vite.ModuleNode
+  mod: Vite.ModuleNode,
 ) => Promise<string>;
 
 export async function resolveViteConfig({
@@ -89,7 +107,7 @@ export async function resolveViteConfig({
     { mode, configFile, root, plugins },
     "build", // command
     "production", // default mode
-    "production" // default NODE_ENV
+    "production", // default NODE_ENV
   );
 
   if (typeof viteConfig.build.manifest === "string") {
@@ -100,23 +118,18 @@ export async function resolveViteConfig({
 }
 
 export function extractPluginContext(
-  viteConfig: Vite.ResolvedConfig | Vite.UserConfig
+  viteConfig: Vite.ResolvedConfig | Vite.UserConfig,
 ) {
   return viteConfig["__reactRouterPluginContext" as keyof typeof viteConfig] as
     | ReactRouterPluginContext
     | undefined;
 }
 
-const SERVER_ONLY_ROUTE_EXPORTS = [
-  "loader",
-  "action",
-  "unstable_middleware",
-  "headers",
-];
+const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "middleware", "headers"];
 const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
-  "unstable_clientMiddleware",
+  "clientMiddleware",
   "handle",
   "meta",
   "links",
@@ -132,34 +145,21 @@ const CLIENT_ROUTE_EXPORTS = [
 
 /** This is used to manage a build optimization to remove unused route exports
 from the client build output. This is important in cases where custom route
-exports are only ever used on the server. Without this optimization we can't
+exports are only ever used on the server. Without this optimization, we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName =
-  | "client"
-  | SsrEnvironmentName
-  | CssDevHelperEnvironmentName;
+export type EnvironmentName = "client" | SsrEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrBundleEnvironmentName = `${typeof SSR_BUNDLE_PREFIX}${string}`;
 type SsrEnvironmentName = "ssr" | SsrBundleEnvironmentName;
 
 function isSsrBundleEnvironmentName(
-  name: string
+  name: string,
 ): name is SsrBundleEnvironmentName {
   return name.startsWith(SSR_BUNDLE_PREFIX);
 }
-
-// We use a separate environment for loading the critical CSS during
-// development. This is because "ssrLoadModule" isn't available if the "ssr"
-// environment has been defined by another plugin (e.g.
-// vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
-// Vite.RunnableDevEnvironment:
-// https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
-const CSS_DEV_HELPER_ENVIRONMENT_NAME =
-  "__react_router_css_dev_helper__" as const;
-type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
 
 type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
@@ -178,25 +178,25 @@ export type EnvironmentBuildContext = {
 
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
-  record: Record<string, T>
+  record: Record<string, T>,
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
     ctx.buildManifest?.serverBundles
       ? isSsrBundleEnvironmentName(name)
-      : name === "ssr"
+      : name === "ssr",
   ) as [SsrEnvironmentName, T][];
 }
 
 export function getServerEnvironmentKeys(
   ctx: ReactRouterPluginContext,
-  record: Record<string, unknown>
+  record: Record<string, unknown>,
 ): SsrEnvironmentName[] {
   return getServerEnvironmentEntries(ctx, record).map(([key]) => key);
 }
 
 export function getServerEnvironmentValues<T>(
   ctx: ReactRouterPluginContext,
-  record: Record<string, T>
+  record: Record<string, T>,
 ): T[] {
   return getServerEnvironmentEntries(ctx, record).map(([, value]) => value);
 }
@@ -215,17 +215,17 @@ const isServerBuildVirtualModuleId = (id: string): boolean => {
 
 const getServerBuildFile = (viteManifest: Vite.Manifest): string => {
   let serverBuildIds = Object.keys(viteManifest).filter(
-    isServerBuildVirtualModuleId
+    isServerBuildVirtualModuleId,
   );
 
   invariant(
     serverBuildIds.length <= 1,
-    "Multiple server build files found in manifest"
+    "Multiple server build files found in manifest",
   );
 
   invariant(
     serverBuildIds.length === 1,
-    "Server build file not found in manifest"
+    "Server build file not found in manifest",
   );
 
   return viteManifest[serverBuildIds[0]].file;
@@ -257,24 +257,13 @@ let virtualInjectHmrRuntime = VirtualModule.create("inject-hmr-runtime");
 
 const normalizeRelativeFilePath = (
   file: string,
-  reactRouterConfig: ResolvedReactRouterConfig
+  reactRouterConfig: ResolvedReactRouterConfig,
 ) => {
   let vite = getVite();
   let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
   let relativePath = path.relative(reactRouterConfig.appDirectory, fullPath);
 
   return vite.normalizePath(relativePath).split("?")[0];
-};
-
-const resolveRelativeRouteFilePath = (
-  route: RouteManifestEntry,
-  reactRouterConfig: ResolvedReactRouterConfig
-) => {
-  let vite = getVite();
-  let file = route.file;
-  let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
-
-  return vite.normalizePath(fullPath);
 };
 
 let virtual = {
@@ -300,11 +289,11 @@ const getHash = (source: BinaryLike, maxLength?: number): string => {
 const resolveChunk = (
   ctx: ReactRouterPluginContext,
   viteManifest: Vite.Manifest,
-  absoluteFilePath: string
+  absoluteFilePath: string,
 ) => {
   let vite = getVite();
   let rootRelativeFilePath = vite.normalizePath(
-    path.relative(ctx.rootDirectory, absoluteFilePath)
+    path.relative(ctx.rootDirectory, absoluteFilePath),
   );
   let entryChunk = viteManifest[rootRelativeFilePath];
 
@@ -318,43 +307,75 @@ const resolveChunk = (
 const getPublicModulePathForEntry = (
   ctx: ReactRouterPluginContext,
   viteManifest: Vite.Manifest,
-  entryFilePath: string
+  entryFilePath: string,
 ): string | undefined => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
   return entryChunk ? `${ctx.publicPath}${entryChunk.file}` : undefined;
 };
 
-const getReactRouterManifestBuildAssets = (
+const getCssCodeSplitDisabledFile = (
+  ctx: ReactRouterPluginContext,
+  viteConfig: Vite.ResolvedConfig,
+  viteManifest: Vite.Manifest,
+) => {
+  if (viteConfig.build.cssCodeSplit) {
+    return null;
+  }
+
+  let cssFile = viteManifest["style.css"]?.file;
+  invariant(
+    cssFile,
+    "Expected `style.css` to be present in Vite manifest when `build.cssCodeSplit` is disabled",
+  );
+
+  return `${ctx.publicPath}${cssFile}`;
+};
+
+const getClientEntryChunk = (
   ctx: ReactRouterPluginContext,
   viteManifest: Vite.Manifest,
+) => {
+  let filePath = ctx.entryClientFilePath;
+  let chunk = resolveChunk(ctx, viteManifest, filePath);
+  invariant(chunk, `Chunk not found: ${filePath}`);
+  return chunk;
+};
+
+const getReactRouterManifestBuildAssets = (
+  ctx: ReactRouterPluginContext,
+  viteConfig: Vite.ResolvedConfig,
+  viteManifest: Vite.Manifest,
   entryFilePath: string,
-  prependedAssetFilePaths: string[] = []
+  route: RouteManifestEntry | null,
 ): ReactRouterManifest["entry"] & { css: string[] } => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
-  invariant(entryChunk, "Chunk not found");
+  invariant(entryChunk, `Chunk not found: ${entryFilePath}`);
 
-  // This is here to support prepending client entry assets to the root route
-  let prependedAssetChunks = prependedAssetFilePaths.map((filePath) => {
-    let chunk = resolveChunk(ctx, viteManifest, filePath);
-    invariant(chunk, "Chunk not found");
-    return chunk;
-  });
+  let isRootRoute = Boolean(route && route.parentId === undefined);
 
   let routeModuleChunks = routeChunkNames
     .map((routeChunkName) =>
       resolveChunk(
         ctx,
         viteManifest,
-        getRouteChunkModuleId(entryFilePath.split("?")[0], routeChunkName)
-      )
+        getRouteChunkModuleId(entryFilePath.split("?")[0], routeChunkName),
+      ),
     )
     .filter(isNonNullable);
 
-  let chunks = resolveDependantChunks(viteManifest, [
-    ...prependedAssetChunks,
-    entryChunk,
-    ...routeModuleChunks,
-  ]);
+  let chunks = resolveDependantChunks(
+    viteManifest,
+    [
+      // If this is the root route, we also need to include assets from the
+      // client entry file as this is a common way for consumers to import
+      // global reset styles, etc.
+      isRootRoute ? getClientEntryChunk(ctx, viteManifest) : null,
+      entryChunk,
+      routeModuleChunks,
+    ]
+      .flat(1)
+      .filter(isNonNullable),
+  );
 
   return {
     module: `${ctx.publicPath}${entryChunk.file}`,
@@ -362,16 +383,27 @@ const getReactRouterManifestBuildAssets = (
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
         return `${ctx.publicPath}${viteManifest[imported].file}`;
       }) ?? [],
-    css:
-      dedupe(chunks.flatMap((e) => e.css ?? [])).map((href) => {
-        return `${ctx.publicPath}${href}`;
-      }) ?? [],
+    css: dedupe(
+      [
+        // If CSS code splitting is disabled, Vite includes a singular 'style.css' asset
+        // in the manifest that isn't tied to any route file. If we want to render these
+        // styles correctly, we need to include them in the root route.
+        isRootRoute
+          ? getCssCodeSplitDisabledFile(ctx, viteConfig, viteManifest)
+          : null,
+        chunks
+          .flatMap((e) => e.css ?? [])
+          .map((href) => `${ctx.publicPath}${href}`),
+      ]
+        .flat(1)
+        .filter(isNonNullable),
+    ),
   };
 };
 
 function resolveDependantChunks(
   viteManifest: Vite.Manifest,
-  entryChunks: Vite.ManifestChunk[]
+  entryChunks: Vite.ManifestChunk[],
 ): Vite.ManifestChunk[] {
   let chunks = new Set<Vite.ManifestChunk>();
 
@@ -401,8 +433,8 @@ function dedupe<T>(array: T[]): T[] {
 }
 
 const writeFileSafe = async (file: string, contents: string): Promise<void> => {
-  await fse.ensureDir(path.dirname(file));
-  await fse.writeFile(file, contents);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, contents);
 };
 
 const getExportNames = (code: string): string[] => {
@@ -412,17 +444,17 @@ const getExportNames = (code: string): string[] => {
 
 const getRouteManifestModuleExports = async (
   viteChildCompiler: Vite.ViteDevServer | null,
-  ctx: ReactRouterPluginContext
+  ctx: ReactRouterPluginContext,
 ): Promise<Record<string, string[]>> => {
   let entries = await Promise.all(
     Object.entries(ctx.reactRouterConfig.routes).map(async ([key, route]) => {
       let sourceExports = await getRouteModuleExports(
         viteChildCompiler,
         ctx,
-        route.file
+        route.file,
       );
       return [key, sourceExports] as const;
-    })
+    }),
   );
   return Object.fromEntries(entries);
 };
@@ -431,7 +463,7 @@ const compileRouteFile = async (
   viteChildCompiler: Vite.ViteDevServer | null,
   ctx: ReactRouterPluginContext,
   routeFile: string,
-  readRouteFile?: () => string | Promise<string>
+  readRouteFile?: () => string | Promise<string>,
 ): Promise<string> => {
   if (!viteChildCompiler) {
     throw new Error("Vite child compiler not found");
@@ -456,7 +488,7 @@ const compileRouteFile = async (
 
   let [id, code] = await Promise.all([
     resolveId(),
-    readRouteFile?.() ?? fse.readFile(routePath, "utf-8"),
+    readRouteFile?.() ?? readFile(routePath, "utf-8"),
     // pluginContainer.transform(...) fails if we don't do this first:
     moduleGraph.ensureEntryFromUrl(url, ssr),
   ]);
@@ -469,7 +501,7 @@ const getRouteModuleExports = async (
   viteChildCompiler: Vite.ViteDevServer | null,
   ctx: ReactRouterPluginContext,
   routeFile: string,
-  readRouteFile?: () => string | Promise<string>
+  readRouteFile?: () => string | Promise<string>,
 ): Promise<string[]> => {
   if (!viteChildCompiler) {
     throw new Error("Vite child compiler not found");
@@ -479,7 +511,7 @@ const getRouteModuleExports = async (
     viteChildCompiler,
     ctx,
     routeFile,
-    readRouteFile
+    readRouteFile,
   );
 
   return getExportNames(code);
@@ -512,12 +544,12 @@ const resolveEnvironmentBuildContext = ({
 
 let getServerBuildDirectory = (
   reactRouterConfig: ResolvedReactRouterConfig,
-  { serverBundleId }: { serverBundleId?: string } = {}
+  { serverBundleId }: { serverBundleId?: string } = {},
 ) =>
   path.join(
     reactRouterConfig.buildDirectory,
     "server",
-    ...(serverBundleId ? [serverBundleId] : [])
+    ...(serverBundleId ? [serverBundleId] : []),
   );
 
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
@@ -525,7 +557,7 @@ let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
 
 let getServerBundleRouteIds = (
   vitePluginContext: Vite.Rollup.PluginContext,
-  ctx: ReactRouterPluginContext
+  ctx: ReactRouterPluginContext,
 ): string[] | undefined => {
   if (!ctx.buildManifest) {
     return undefined;
@@ -545,7 +577,7 @@ let getServerBundleRouteIds = (
 
   invariant(
     serverBundleRoutes,
-    `Routes not found for server bundle "${serverBundleId}"`
+    `Routes not found for server bundle "${serverBundleId}"`,
   );
 
   return Object.keys(serverBundleRoutes);
@@ -558,25 +590,25 @@ let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
   "dist",
   "config",
-  "defaults"
+  "defaults",
 );
-let defaultEntries = fse
-  .readdirSync(defaultEntriesDir)
-  .map((filename) => path.join(defaultEntriesDir, filename));
+let defaultEntries = readdirSync(defaultEntriesDir).map((filename) =>
+  path.join(defaultEntriesDir, filename),
+);
 invariant(defaultEntries.length > 0, "No default entries found");
 
 type MaybePromise<T> = T | Promise<T>;
 
 let reactRouterDevLoadContext: (
-  request: Request
+  request: Request,
 ) => MaybePromise<
   MiddlewareEnabled extends true
-    ? MaybePromise<unstable_InitialContext | undefined>
+    ? MaybePromise<RouterContextProvider | undefined>
     : MaybePromise<Record<string, unknown> | undefined>
 > = () => undefined;
 
 export let setReactRouterDevLoadContext = (
-  loadContext: (request: Request) => MaybePromise<Record<string, unknown>>
+  loadContext: (request: Request) => MaybePromise<Record<string, unknown>>,
 ) => {
   reactRouterDevLoadContext = loadContext;
 };
@@ -606,7 +638,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   // change or route file addition/removal.
   let ctx: ReactRouterPluginContext;
 
-  /** Mutates `ctx` as a side-effect */
+  /** Mutates `ctx` as a side effect */
   let updatePluginContext = async (): Promise<void> => {
     let reactRouterConfig: ResolvedReactRouterConfig;
     let reactRouterConfigResult = await reactRouterConfigLoader.getConfig();
@@ -623,7 +655,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     // This `injectedPluginContext` logic is so we can support injecting an
     // already-resolved plugin context into the build in case we want to re-use
-    // any resolved values. Currently this is used so that we can re-use the
+    // any resolved values. Currently, this is used so that we can re-use the
     // `buildManifest` object across multiple builds without having to
     // re-execute the `serverBundles` function.
     let injectedPluginContext =
@@ -649,8 +681,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         colors.red(
           "When using the React Router `basename` and the Vite `base` config, " +
             "the `basename` config must begin with `base` for the default " +
-            "Vite dev server."
-        )
+            "Vite dev server.",
+        ),
       );
       process.exit(1);
     }
@@ -659,8 +691,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let buildManifest =
       viteCommand === "build"
-        ? injectedPluginContext?.buildManifest ??
-          (await getBuildManifest({ reactRouterConfig, rootDirectory }))
+        ? (injectedPluginContext?.buildManifest ??
+          (await getBuildManifest({ reactRouterConfig, rootDirectory })))
         : null;
 
     let environmentBuildContext: ResolvedEnvironmentBuildContext | null =
@@ -682,11 +714,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     };
   };
 
-  let pluginIndex = (pluginName: string) => {
-    invariant(viteConfig);
-    return viteConfig.plugins.findIndex((plugin) => plugin.name === pluginName);
-  };
-
   let getServerEntry = async ({ routeIds }: { routeIds?: Array<string> }) => {
     invariant(viteConfig, "viteconfig required to generate the server entry");
 
@@ -700,14 +727,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let prerenderPaths = await getPrerenderPaths(
       ctx.reactRouterConfig.prerender,
       ctx.reactRouterConfig.ssr,
-      routes
+      routes,
     );
 
     let isSpaMode = isSpaModeEnabled(ctx.reactRouterConfig);
 
     return `
     import * as entryServer from ${JSON.stringify(
-      resolveFileUrl(ctx, ctx.entryServerFilePath)
+      resolveFileUrl(ctx, ctx.entryServerFilePath),
     )};
     ${Object.keys(routes)
       .map((key, index) => {
@@ -722,26 +749,29 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return `import * as route${index} from ${JSON.stringify(
             resolveFileUrl(
               ctx,
-              resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-            )
+              resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+            ),
           )};`;
         }
       })
       .join("\n")}
       export { default as assets } from ${JSON.stringify(
-        virtual.serverManifest.id
+        virtual.serverManifest.id,
       )};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
           ctx.rootDirectory,
-          getClientBuildDirectory(ctx.reactRouterConfig)
-        )
+          getClientBuildDirectory(ctx.reactRouterConfig),
+        ),
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
       export const ssr = ${ctx.reactRouterConfig.ssr};
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
+      export const routeDiscovery = ${JSON.stringify(
+        ctx.reactRouterConfig.routeDiscovery,
+      )};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -775,23 +805,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   let loadViteManifest = async (directory: string) => {
-    let manifestContents = await fse.readFile(
+    let manifestContents = await readFile(
       path.resolve(directory, ".vite", "manifest.json"),
-      "utf-8"
+      "utf-8",
     );
     return JSON.parse(manifestContents) as Vite.Manifest;
   };
 
-  let hasDependency = (name: string) => {
-    try {
-      return Boolean(require.resolve(name, { paths: [ctx.rootDirectory] }));
-    } catch (err) {
-      return false;
-    }
-  };
-
   let getViteManifestAssetPaths = (
-    viteManifest: Vite.Manifest
+    viteManifest: Vite.Manifest,
   ): Set<string> => {
     // Get .css?url imports and CSS entry points
     let cssUrlPaths = Object.values(viteManifest)
@@ -800,7 +822,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     // Get bundled CSS files and generic asset types
     let chunkAssetPaths = Object.values(viteManifest).flatMap(
-      (chunk) => chunk.assets ?? []
+      (chunk) => chunk.assets ?? [],
     );
 
     return new Set([...cssUrlPaths, ...chunkAssetPaths]);
@@ -809,18 +831,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let generateSriManifest = async (ctx: ReactRouterPluginContext) => {
     let clientBuildDirectory = getClientBuildDirectory(ctx.reactRouterConfig);
     // walk the client build directory and generate SRI hashes for all .js files
-    let entries = fs.readdirSync(clientBuildDirectory, {
+    let entries = readdirSync(clientBuildDirectory, {
       withFileTypes: true,
       recursive: true,
     });
     let sriManifest: ReactRouterManifest["sri"] = {};
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".js")) {
+        const entryNormalizedPath =
+          "parentPath" in entry && typeof entry.parentPath === "string"
+            ? entry.parentPath
+            : entry.path;
+
         let contents;
         try {
-          contents = await fse.readFile(
-            path.join(entry.path, entry.name),
-            "utf-8"
+          contents = await readFile(
+            path.join(entryNormalizedPath, entry.name),
+            "utf-8",
           );
         } catch (e) {
           logger.error(`Failed to read file for SRI generation: ${entry.name}`);
@@ -831,7 +858,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .digest()
           .toString("base64");
         let filepath = getVite().normalizePath(
-          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+          path.relative(
+            clientBuildDirectory,
+            path.join(entryNormalizedPath, entry.name),
+          ),
         );
         sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
       }
@@ -840,8 +870,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   let generateReactRouterManifestsForBuild = async ({
+    viteConfig,
     routeIds,
   }: {
+    viteConfig: Vite.ResolvedConfig;
     routeIds?: Array<string>;
   }): Promise<{
     reactRouterBrowserManifest: ReactRouterManifest;
@@ -850,13 +882,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     invariant(viteConfig);
 
     let viteManifest = await loadViteManifest(
-      getClientBuildDirectory(ctx.reactRouterConfig)
+      getClientBuildDirectory(ctx.reactRouterConfig),
     );
 
     let entry = getReactRouterManifestBuildAssets(
       ctx,
+      viteConfig,
       viteManifest,
-      ctx.entryClientFilePath
+      ctx.entryClientFilePath,
+      null,
     );
 
     let browserRoutes: ReactRouterManifest["routes"] = {};
@@ -864,7 +898,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let routeManifestExports = await getRouteManifestModuleExports(
       viteChildCompiler,
-      ctx
+      ctx,
     );
 
     let enforceSplitRouteModules =
@@ -872,19 +906,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
-      let isRootRoute = route.parentId === undefined;
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
-      let hasClientMiddleware = sourceExports.includes(
-        "unstable_clientMiddleware"
-      );
+      let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
       let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
         cache,
         ctx,
         routeFile,
-        { routeFile, viteChildCompiler }
+        { routeFile, viteChildCompiler },
       );
 
       if (enforceSplitRouteModules) {
@@ -896,9 +927,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            unstable_clientMiddleware:
+            clientMiddleware:
               !hasClientMiddleware ||
-              hasRouteChunkByExportName.unstable_clientMiddleware,
+              hasRouteChunkByExportName.clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -919,40 +950,37 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         ...getReactRouterManifestBuildAssets(
           ctx,
+          viteConfig,
           viteManifest,
           `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-          // If this is the root route, we also need to include assets from the
-          // client entry file as this is a common way for consumers to import
-          // global reset styles, etc.
-          isRootRoute ? [ctx.entryClientFilePath] : []
+          route,
         ),
         clientActionModule: hasRouteChunkByExportName.clientAction
           ? getPublicModulePathForEntry(
               ctx,
               viteManifest,
-              getRouteChunkModuleId(routeFile, "clientAction")
+              getRouteChunkModuleId(routeFile, "clientAction"),
             )
           : undefined,
         clientLoaderModule: hasRouteChunkByExportName.clientLoader
           ? getPublicModulePathForEntry(
               ctx,
               viteManifest,
-              getRouteChunkModuleId(routeFile, "clientLoader")
+              getRouteChunkModuleId(routeFile, "clientLoader"),
             )
           : undefined,
-        clientMiddlewareModule:
-          hasRouteChunkByExportName.unstable_clientMiddleware
-            ? getPublicModulePathForEntry(
-                ctx,
-                viteManifest,
-                getRouteChunkModuleId(routeFile, "unstable_clientMiddleware")
-              )
-            : undefined,
+        clientMiddlewareModule: hasRouteChunkByExportName.clientMiddleware
+          ? getPublicModulePathForEntry(
+              ctx,
+              viteManifest,
+              getRouteChunkModuleId(routeFile, "clientMiddleware"),
+            )
+          : undefined,
         hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
           ? getPublicModulePathForEntry(
               ctx,
               viteManifest,
-              getRouteChunkModuleId(routeFile, "HydrateFallback")
+              getRouteChunkModuleId(routeFile, "HydrateFallback"),
             )
           : undefined,
       };
@@ -968,7 +996,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let version = getHash(JSON.stringify(fingerprintedValues), 8);
     let manifestPath = path.posix.join(
       viteConfig.build.assetsDir,
-      `manifest-${version}.js`
+      `manifest-${version}.js`,
     );
     let url = `${ctx.publicPath}${manifestPath}`;
     let nonFingerprintedValues = { url, version };
@@ -983,8 +1011,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     await writeFileSafe(
       path.join(getClientBuildDirectory(ctx.reactRouterConfig), manifestPath),
       `window.__reactRouterManifest=${JSON.stringify(
-        reactRouterBrowserManifest
-      )};`
+        reactRouterBrowserManifest,
+      )};`,
     );
 
     let sri: ReactRouterManifest["sri"] = undefined;
@@ -1014,7 +1042,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let routeManifestExports = await getRouteManifestModuleExports(
       viteChildCompiler,
-      ctx
+      ctx,
     );
 
     let enforceSplitRouteModules =
@@ -1025,16 +1053,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
-      let hasClientMiddleware = sourceExports.includes(
-        "unstable_clientMiddleware"
-      );
+      let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
       let routeModulePath = combineURLs(
         ctx.publicPath,
         `${resolveFileUrl(
           ctx,
-          resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-        )}`
+          resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+        )}`,
       );
 
       if (enforceSplitRouteModules) {
@@ -1042,7 +1068,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           cache,
           ctx,
           routeFile,
-          { routeFile, viteChildCompiler }
+          { routeFile, viteChildCompiler },
         );
 
         validateRouteChunks({
@@ -1053,9 +1079,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            unstable_clientMiddleware:
+            clientMiddleware:
               !hasClientMiddleware ||
-              hasRouteChunkByExportName.unstable_clientMiddleware,
+              hasRouteChunkByExportName.clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -1095,7 +1121,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       entry: {
         module: combineURLs(
           ctx.publicPath,
-          resolveFileUrl(ctx, ctx.entryClientFilePath)
+          resolveFileUrl(ctx, ctx.entryClientFilePath),
         ),
         imports: [],
       },
@@ -1111,47 +1137,27 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   const loadCssContents: LoadCssContents = async (viteDevServer, dep) => {
     invariant(
       viteCommand === "serve",
-      "loadCssContents is only available in dev mode"
+      "loadCssContents is only available in dev mode",
     );
 
     if (dep.file && isCssModulesFile(dep.file)) {
       return cssModulesManifest[dep.file];
     }
 
-    const vite = getVite();
-    const viteMajor = parseInt(vite.version.split(".")[0], 10);
-
-    const url =
-      viteMajor >= 6
-        ? // We need the ?inline query in Vite v6 when loading CSS in SSR
-          // since it does not expose the default export for CSS in a
-          // server environment. This is to align with non-SSR
-          // environments. For backwards compatibility with v5 we keep
-          // using the URL without ?inline query because the HMR code was
-          // relying on the implicit SSR-client module graph relationship.
-          injectQuery(dep.url, "inline")
-        : dep.url;
-
-    let cssMod: unknown;
-    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
-      const cssDevHelperEnvironment =
-        viteDevServer.environments[CSS_DEV_HELPER_ENVIRONMENT_NAME];
-      invariant(cssDevHelperEnvironment, "Missing CSS dev helper environment");
-      invariant(vite.isRunnableDevEnvironment(cssDevHelperEnvironment));
-      cssMod = await cssDevHelperEnvironment.runner.import(url);
-    } else {
-      cssMod = await viteDevServer.ssrLoadModule(url);
-    }
-
+    let transformedCssCode = (await viteDevServer.transformRequest(dep.url))
+      ?.code;
     invariant(
-      typeof cssMod === "object" &&
-        cssMod !== null &&
-        "default" in cssMod &&
-        typeof cssMod.default === "string",
-      `Failed to load CSS for ${dep.file ?? dep.url}`
+      transformedCssCode,
+      `Failed to load CSS for ${dep.file ?? dep.url}`,
     );
 
-    return cssMod.default;
+    let cssString = getCssStringFromViteDevModuleCode(transformedCssCode);
+    invariant(
+      typeof cssString === "string",
+      `Failed to extract CSS for ${dep.file ?? dep.url}`,
+    );
+
+    return cssString;
   };
 
   return [
@@ -1187,8 +1193,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         rootDirectory =
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
+        let mode = viteConfigEnv.mode;
+
         if (viteCommand === "serve") {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
+            mode,
+            rsc: false,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1196,22 +1206,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
+          mode,
           watch: viteCommand === "serve",
         });
 
         await updatePluginContext();
 
-        Object.assign(
-          process.env,
-          vite.loadEnv(
-            viteConfigEnv.mode,
-            viteUserConfig.envDir ?? ctx.rootDirectory,
-            // We override default prefix of "VITE_" with a blank string since
-            // we're targeting the server, so we want to load all environment
-            // variables, not just those explicitly marked for the client
-            ""
-          )
-        );
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
 
         let environments = await getEnvironmentsOptions(ctx, viteCommand, {
           viteUserConfig,
@@ -1219,7 +1224,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let serverEnvironment = getServerEnvironmentValues(
           ctx,
-          environments
+          environments,
         )[0];
         invariant(serverEnvironment);
 
@@ -1240,14 +1245,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             resolve: serverEnvironment.resolve,
           },
           optimizeDeps: {
-            entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
-              ? [
-                  vite.normalizePath(ctx.entryClientFilePath),
-                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
-                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-                  ),
-                ]
-              : [],
+            entries: getOptimizeDepsEntries({
+              entryClientFilePath: ctx.entryClientFilePath,
+              reactRouterConfig: ctx.reactRouterConfig,
+            }),
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
               // even if React dependencies are not direct dependencies.
@@ -1263,7 +1264,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router",
               "react-router/dom",
               // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
-              ...(hasDependency("react-router-dom")
+              ...(hasDependency({
+                name: "react-router-dom",
+                rootDirectory: ctx.rootDirectory,
+              })
                 ? ["react-router-dom"]
                 : []),
             ],
@@ -1290,7 +1294,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
           base: viteUserConfig.base,
 
-          // When consumer provides an allow list for files that can be read by
+          // When consumer provides an allowlist for files that can be read by
           // the server, ensure that the default entry files are included.
           // If we don't do this and a default entry file is used, the server
           // will throw an error that the file is not allowed to be read.
@@ -1313,7 +1317,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   async buildApp(builder) {
                     invariant(viteConfig);
                     viteConfig.logger.info(
-                      "Using Vite Environment API (experimental)"
+                      "Using Vite Environment API (experimental)",
                     );
 
                     let { reactRouterConfig } = ctx;
@@ -1324,7 +1328,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
                     let serverEnvironments = getServerEnvironmentValues(
                       ctx,
-                      builder.environments
+                      builder.environments,
                     );
 
                     await Promise.all(serverEnvironments.map(builder.build));
@@ -1380,8 +1384,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                         (route) =>
                           resolveRelativeRouteFilePath(
                             route,
-                            ctx.reactRouterConfig
-                          )
+                            ctx.reactRouterConfig,
+                          ),
                       ),
                     ],
                     include: [
@@ -1411,7 +1415,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // may respond to by updating state referenced by the parent.
         if (!viteConfig.configFile) {
           throw new Error(
-            "The React Router Vite plugin requires the use of a Vite config file"
+            "The React Router Vite plugin requires the use of a Vite config file",
           );
         }
 
@@ -1422,35 +1426,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             command: viteConfig.command,
             mode: viteConfig.mode,
           },
-          viteConfig.configFile
+          viteConfig.configFile,
         );
 
         invariant(
           childCompilerConfigFile,
-          "Vite config file was unable to be resolved for React Router child compiler"
+          "Vite config file was unable to be resolved for React Router child compiler",
         );
 
-        // Validate that commonly used Rollup plugins that need to run before
-        // ours are in the correct order. This is because Rollup plugins can't
-        // set `enforce: "pre"` like Vite plugins can. Explicitly validating
-        // this provides a much nicer developer experience.
-        let rollupPrePlugins = [
-          { pluginName: "@mdx-js/rollup", displayName: "@mdx-js/rollup" },
-        ];
-        for (let prePlugin of rollupPrePlugins) {
-          let prePluginIndex = pluginIndex(prePlugin.pluginName);
-          if (
-            prePluginIndex >= 0 &&
-            prePluginIndex > pluginIndex("react-router")
-          ) {
-            throw new Error(
-              `The "${prePlugin.displayName}" plugin should be placed before the React Router plugin in your Vite config file`
-            );
-          }
-        }
-
         const childCompilerPlugins = await asyncFlatten(
-          childCompilerConfigFile.config.plugins ?? []
+          childCompilerConfigFile.config.plugins ?? [],
         );
 
         viteChildCompiler = await vite.createServer({
@@ -1481,9 +1466,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
                   plugin.name !== "react-router:route-exports" &&
-                  plugin.name !== "react-router:hmr-updates"
+                  plugin.name !== "react-router:hmr-updates" &&
+                  plugin.name !== "react-router:validate-plugin-order",
               )
-              // Remove server hooks to avoid conflicts with main dev server
+              // Remove server hooks to avoid conflicts with the main dev server
               .map((plugin) => ({
                 ...plugin,
                 configureServer: undefined,
@@ -1496,34 +1482,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async transform(code, id) {
         if (isCssModulesFile(id)) {
           cssModulesManifest[id] = code;
-        }
-      },
-      buildStart() {
-        invariant(viteConfig);
-
-        if (
-          viteCommand === "build" &&
-          viteConfig.mode === "production" &&
-          !viteConfig.build.ssr &&
-          viteConfig.build.sourcemap
-        ) {
-          viteConfig.logger.warn(
-            colors.yellow(
-              "\n" +
-                colors.bold("  ⚠️  Source maps are enabled in production\n") +
-                [
-                  "This makes your server code publicly",
-                  "visible in the browser. This is highly",
-                  "discouraged! If you insist, ensure that",
-                  "you are using environment variables for",
-                  "secrets and not hard-coding them in",
-                  "your source code.",
-                ]
-                  .map((line) => "     " + line)
-                  .join("\n") +
-                "\n"
-            )
-          );
         }
       },
       async configureServer(viteDevServer) {
@@ -1552,7 +1510,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         reactRouterConfigLoader.onChange(
           async ({
             result,
-            configCodeUpdated,
+            configCodeChanged,
+            routeConfigCodeChanged,
             configChanged,
             routeConfigChanged,
           }) => {
@@ -1565,30 +1524,31 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return;
             }
 
-            if (routeConfigChanged) {
-              logger.info(colors.green("Route config changed."), {
-                clear: true,
-                timestamp: true,
-              });
-            } else if (configCodeUpdated) {
-              logger.info(colors.green("Config updated."), {
-                clear: true,
-                timestamp: true,
-              });
-            }
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
+
+            logger.info(colors.green(message), {
+              clear: true,
+              timestamp: true,
+            });
 
             await updatePluginContext();
 
-            if (configChanged) {
+            if (configChanged || routeConfigChanged) {
               invalidateVirtualModules(viteDevServer);
             }
-          }
+          },
         );
 
         if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
-            if (reqPathname === `${ctx.publicPath}@react-router/critical.css`) {
+            if (reqPathname.endsWith("/@react-router/critical.css")) {
               let pathname = new URLSearchParams(reqSearch).get("pathname");
               if (!pathname) {
                 return next("No pathname provided");
@@ -1624,23 +1584,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     return;
                   }
                   build = (await ssrEnvironment.runner.import(
-                    virtual.serverBuild.id
+                    virtual.serverBuild.id,
                   )) as ServerBuild;
                 } else {
                   build = (await viteDevServer.ssrLoadModule(
-                    virtual.serverBuild.id
+                    virtual.serverBuild.id,
                   )) as ServerBuild;
                 }
 
                 let handler = createRequestHandler(build, "development");
                 let nodeHandler: NodeRequestHandler = async (
                   nodeReq,
-                  nodeRes
+                  nodeRes,
                 ) => {
                   let req = fromNodeRequest(nodeReq, nodeRes);
                   let res = await handler(
                     req,
-                    await reactRouterDevLoadContext(req)
+                    await reactRouterDevLoadContext(req),
                   );
                   await toNodeRequest(res, nodeRes);
                 };
@@ -1668,61 +1628,137 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           invariant(viteConfig);
 
           let clientBuildDirectory = getClientBuildDirectory(
-            ctx.reactRouterConfig
+            ctx.reactRouterConfig,
           );
 
           let serverBuildDirectory = future.unstable_viteEnvironmentApi
             ? this.environment.config?.build?.outDir
-            : ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx.reactRouterConfig);
+            : (ctx.environmentBuildContext?.options.build?.outDir ??
+              getServerBuildDirectory(ctx.reactRouterConfig));
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
 
-          // We only move assets that aren't in the client build, otherwise we
-          // remove them. These assets only exist because we explicitly set
-          // `ssrEmitAssets: true` in the SSR Vite config. These assets
-          // typically wouldn't exist by default, which is why we assume it's
-          // safe to remove them. We're aiming for a clean build output so that
-          // unnecessary assets don't get deployed alongside the server code.
+          // If the consumer has explicitly opted in to keeping the SSR build
+          // assets, we don't remove them. We only copy missing assets from the
+          // SSR to the client build.
+          let userSsrEmitAssets =
+            (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+              ? (viteUserConfig.environments?.ssr?.build?.ssrEmitAssets ??
+                viteUserConfig.environments?.ssr?.build?.emitAssets)
+              : null) ??
+            viteUserConfig.build?.ssrEmitAssets ??
+            false;
+
+          // We only move/copy assets that aren't in the client build, otherwise
+          // we remove them if the consumer hasn't explicitly enabled
+          // `ssrEmitAssets` in their Vite config. These assets only exist
+          // because we internally enable `ssrEmitAssets` within our plugin.
+          // These assets typically wouldn't exist by default, which is why we
+          // assume it's safe to remove them.
           let movedAssetPaths: string[] = [];
+          let removedAssetPaths: string[] = [];
+          let copiedAssetPaths: string[] = [];
           for (let ssrAssetPath of ssrAssetPaths) {
             let src = path.join(serverBuildDirectory, ssrAssetPath);
             let dest = path.join(clientBuildDirectory, ssrAssetPath);
 
-            if (!fse.existsSync(dest)) {
-              await fse.move(src, dest);
-              movedAssetPaths.push(dest);
-            } else {
-              await fse.remove(src);
+            if (!userSsrEmitAssets) {
+              if (!existsSync(dest)) {
+                await mkdir(path.dirname(dest), { recursive: true });
+                await rename(src, dest);
+                movedAssetPaths.push(dest);
+              } else {
+                await rm(src, { force: true, recursive: true });
+                removedAssetPaths.push(dest);
+              }
+            } else if (!existsSync(dest)) {
+              await cp(src, dest, { recursive: true });
+              copiedAssetPaths.push(dest);
             }
           }
 
-          // We assume CSS assets from the SSR build are unnecessary and remove
-          // them for the same reasons as above.
-          let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
-            (chunk) => chunk.css ?? []
-          );
-          await Promise.all(
-            ssrCssPaths.map((cssPath) =>
-              fse.remove(path.join(serverBuildDirectory, cssPath))
-            )
-          );
-
-          if (movedAssetPaths.length) {
-            viteConfig.logger.info(
-              [
-                "",
-                `${colors.green("✓")} ${movedAssetPaths.length} asset${
-                  movedAssetPaths.length > 1 ? "s" : ""
-                } moved from React Router server build to client assets.`,
-                ...movedAssetPaths.map((movedAssetPath) =>
-                  colors.dim(path.relative(ctx.rootDirectory, movedAssetPath))
-                ),
-                "",
-              ].join("\n")
+          if (!userSsrEmitAssets) {
+            // We assume CSS assets from the SSR build are unnecessary and
+            // remove them for the same reasons as above.
+            let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
+              (chunk) => chunk.css ?? [],
+            );
+            await Promise.all(
+              ssrCssPaths.map(async (cssPath) => {
+                let src = path.join(serverBuildDirectory, cssPath);
+                await rm(src, { force: true, recursive: true });
+                removedAssetPaths.push(src);
+              }),
             );
           }
+
+          let cleanedAssetPaths = [...removedAssetPaths, ...movedAssetPaths];
+          let handledAssetPaths = [...cleanedAssetPaths, ...copiedAssetPaths];
+
+          // Clean empty asset directories
+          let cleanedAssetDirs = new Set(cleanedAssetPaths.map(path.dirname));
+          await Promise.all(
+            Array.from(cleanedAssetDirs).map(async (dir) => {
+              try {
+                const files = await readdir(dir, { recursive: true });
+                if (files.length === 0) {
+                  await rm(dir, { force: true, recursive: true });
+                }
+              } catch {}
+            }),
+          );
+
+          // If we handled any assets, add some leading whitespace to
+          // our logs to make them more prominent
+          if (handledAssetPaths.length) {
+            viteConfig.logger.info("");
+          }
+
+          function logHandledAssets(paths: string[], message: string) {
+            invariant(viteConfig);
+            if (paths.length) {
+              viteConfig.logger.info(
+                [
+                  `${colors.green("✓")} ${message}`,
+                  ...paths.map((assetPath) =>
+                    colors.dim(path.relative(ctx.rootDirectory, assetPath)),
+                  ),
+                ].join("\n"),
+              );
+            }
+          }
+
+          logHandledAssets(
+            removedAssetPaths,
+            `${removedAssetPaths.length} asset${
+              removedAssetPaths.length > 1 ? "s" : ""
+            } cleaned from React Router server build.`,
+          );
+
+          logHandledAssets(
+            movedAssetPaths,
+            `${movedAssetPaths.length} asset${
+              movedAssetPaths.length > 1 ? "s" : ""
+            } moved from React Router server build to client assets.`,
+          );
+
+          logHandledAssets(
+            copiedAssetPaths,
+            `${copiedAssetPaths.length} asset${
+              copiedAssetPaths.length > 1 ? "s" : ""
+            } copied from React Router server build to client assets.`,
+          );
+
+          // If we handled any assets, add some leading whitespace to our logs
+          // to make them more prominent
+          if (handledAssetPaths.length) {
+            viteConfig.logger.info("");
+          }
+
+          // Set an environment variable we can look for in the handler to
+          // enable some build-time-only logic
+          process.env.IS_RR_BUILD_REQUEST = "yes";
 
           if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
             // If we have prerender routes, that takes precedence over SPA mode
@@ -1732,7 +1768,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               ctx.reactRouterConfig,
               serverBuildDirectory,
               getServerBuildFile(ssrViteManifest),
-              clientBuildDirectory
+              clientBuildDirectory,
             );
           }
 
@@ -1745,7 +1781,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               ctx.reactRouterConfig,
               serverBuildDirectory,
               getServerBuildFile(ssrViteManifest),
-              clientBuildDirectory
+              clientBuildDirectory,
             );
           }
 
@@ -1758,9 +1794,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 "Removing the server build in",
                 colors.green(serverBuildDirectory),
                 "due to ssr:false",
-              ].join(" ")
+              ].join(" "),
             );
-            fse.removeSync(serverBuildDirectory);
+            rmSync(serverBuildDirectory, { force: true, recursive: true });
           }
         },
       },
@@ -1779,7 +1815,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       // primarily ensures code is never duplicated across a route module and
       // its chunks. If we didn't have this plugin, any app that explicitly
       // imports a route module would result in duplicate code since the app
-      // would contain code for both the unprocessed route module as well as its
+      // would contain code for both the unprocessed route module and its
       // individual chunks. This is because, since they have different module
       // IDs, they are treated as completely separate modules even though they
       // all reference the same underlying file. This plugin addresses this by
@@ -1816,7 +1852,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let sourceExports = await getRouteModuleExports(
           viteChildCompiler,
           ctx,
-          id
+          id,
         );
 
         let isMainChunkExport = (name: string) =>
@@ -1831,14 +1867,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return [
           `export { ${mainChunkReexports} } from "${getRouteChunkModuleId(
             chunkBasePath,
-            "main"
+            "main",
           )}";`,
           ...chunkedExports.map(
             (exportName) =>
               `export { ${exportName} } from "${getRouteChunkModuleId(
                 chunkBasePath,
-                exportName
-              )}";`
+                exportName,
+              )}";`,
           ),
         ]
           .filter(Boolean)
@@ -1856,7 +1892,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let sourceExports = await getRouteModuleExports(
           viteChildCompiler,
           ctx,
-          routeModuleId
+          routeModuleId,
         );
 
         let { chunkedExports = [] } = options?.ssr
@@ -1871,7 +1907,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               CLIENT_ROUTE_EXPORTS.includes(exportName);
 
             let isChunkedExport = chunkedExports.includes(
-              exportName as string & RouteChunkExportName
+              exportName as string & RouteChunkExportName,
             );
 
             return isRouteEntryExport && !isChunkedExport;
@@ -1887,12 +1923,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // Routes aren't chunked on the server
         if (options?.ssr) return;
 
-        // Ignore anything that isn't marked as a route chunk
+        // Ignore anything not marked as a route chunk
         if (!isRouteChunkModuleId(id)) return;
 
         invariant(
           viteCommand === "build",
-          "Route modules are only split in build mode"
+          "Route modules are only split in build mode",
         );
 
         let chunkName = getRouteChunkNameFromModuleId(id);
@@ -1906,7 +1942,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ctx,
           id,
           chunkName,
-          code
+          code,
         );
 
         let preventEmptyChunkSnippet = ({ reason }: { reason: string }) =>
@@ -1930,9 +1966,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             valid: {
               clientAction: !exportNames.includes("clientAction"),
               clientLoader: !exportNames.includes("clientLoader"),
-              unstable_clientMiddleware: !exportNames.includes(
-                "unstable_clientMiddleware"
-              ),
+              clientMiddleware: !exportNames.includes("clientMiddleware"),
               HydrateFallback: !exportNames.includes("HydrateFallback"),
             },
           });
@@ -1958,10 +1992,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
           case virtual.serverManifest.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
+            invariant(viteConfig);
             let reactRouterManifest =
               viteCommand === "build"
                 ? (
                     await generateReactRouterManifestsForBuild({
+                      viteConfig,
                       routeIds,
                     })
                   ).reactRouterServerManifest
@@ -1974,7 +2010,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 viteConfig,
                 ctx,
                 reactRouterManifest,
-                viteChildCompiler
+                viteChildCompiler,
               );
             }
 
@@ -2030,11 +2066,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let vite = getVite();
         let importerShort = vite.normalizePath(
-          path.relative(ctx.rootDirectory, importer)
+          path.relative(ctx.rootDirectory, importer),
         );
         if (isRoute(ctx.reactRouterConfig, importer)) {
           let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
-            (xport) => `\`${xport}\``
+            (xport) => `\`${xport}\``,
           ).join(", ");
           throw Error(
             [
@@ -2049,7 +2085,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "",
               "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
               "",
-            ].join("\n")
+            ].join("\n"),
           );
         }
 
@@ -2061,7 +2097,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             "",
             "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
             "",
-          ].join("\n")
+          ].join("\n"),
         );
       },
     },
@@ -2078,7 +2114,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               .map((name) =>
                 name === "default"
                   ? "export default undefined;"
-                  : `export const ${name} = undefined;`
+                  : `export const ${name} = undefined;`,
               )
               .join("\n"),
             map: null,
@@ -2086,7 +2122,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     },
-    WithProps.plugin,
     {
       name: "react-router:route-exports",
       async transform(code, id, options) {
@@ -2119,7 +2154,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           if (route.id !== "root") {
             let hasHydrateFallback = exportNames.some(
-              (exp) => exp === "HydrateFallback"
+              (exp) => exp === "HydrateFallback",
             );
             if (hasHydrateFallback) {
               let message =
@@ -2138,7 +2173,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
         }
-        WithProps.transform(ast);
+        decorateComponentExportsWithProps(ast);
         return generate(ast, {
           sourceMaps: true,
           filename: id,
@@ -2176,20 +2211,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (id !== virtualHmrRuntime.resolvedId) return;
 
         let reactRefreshDir = path.dirname(
-          require.resolve("react-refresh/package.json")
+          require.resolve("react-refresh/package.json"),
         );
         let reactRefreshRuntimePath = path.join(
           reactRefreshDir,
-          "cjs/react-refresh-runtime.development.js"
+          "cjs/react-refresh-runtime.development.js",
         );
 
         return [
           "const exports = {}",
-          await fse.readFile(reactRefreshRuntimePath, "utf8"),
-          await fse.readFile(
-            require.resolve("./static/refresh-utils.cjs"),
-            "utf8"
-          ),
+          await readFile(reactRefreshRuntimePath, "utf8"),
+          await readFile(require.resolve("./static/refresh-utils.mjs"), "utf8"),
           "export default exports",
         ].join("\n");
       },
@@ -2253,7 +2285,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ctx,
             viteChildCompiler,
             route,
-            read
+            read,
           );
 
           hmrEventData.route = newRouteMetadata;
@@ -2291,10 +2323,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     {
       name: "react-router-server-change-trigger-client-hmr",
       // This hook is only available in Vite v6+ so this is a no-op in v5.
-      // Previously the server and client modules were shared in a single module
+      // Previously, the server and client modules were shared in a single module
       // graph. This meant that changes to server code automatically resulted in
-      // client HMR updates. In Vite v6+ these module graphs are separate from
-      // each other so we need to manually trigger client HMR updates if server
+      // client HMR updates. In Vite v6+, these module graphs are separate from
+      // each other, so we need to manually trigger client HMR updates if server
       // code has changed.
       hotUpdate(this, { server, modules }) {
         if (this.environment.name !== "ssr" && modules.length <= 0) {
@@ -2303,8 +2335,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let clientModules = uniqueNodes(
           modules.flatMap((mod) =>
-            getParentClientNodes(server.environments.client.moduleGraph, mod)
-          )
+            getParentClientNodes(server.environments.client.moduleGraph, mod),
+          ),
         );
 
         for (let clientModule of clientModules) {
@@ -2312,12 +2344,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     },
+    validatePluginOrder(),
+    warnOnClientSourceMaps(),
   ];
 };
 
 function getParentClientNodes(
   clientModuleGraph: Vite.EnvironmentModuleGraph,
-  module: Vite.EnvironmentModuleNode
+  module: Vite.EnvironmentModuleNode,
 ): Vite.EnvironmentModuleNode[] {
   if (!module.id) {
     return [];
@@ -2329,12 +2363,12 @@ function getParentClientNodes(
   }
 
   return [...module.importers].flatMap((importer) =>
-    getParentClientNodes(clientModuleGraph, importer)
+    getParentClientNodes(clientModuleGraph, importer),
   );
 }
 
 function uniqueNodes(
-  nodes: Vite.EnvironmentModuleNode[]
+  nodes: Vite.EnvironmentModuleNode[],
 ): Vite.EnvironmentModuleNode[] {
   let nodeUrls = new Set<string>();
   let unique: Vite.EnvironmentModuleNode[] = [];
@@ -2351,7 +2385,7 @@ function uniqueNodes(
 function addRefreshWrapper(
   reactRouterConfig: ResolvedReactRouterConfig,
   code: string,
-  id: string
+  id: string,
 ): string {
   let route = getRoute(reactRouterConfig, id);
   let acceptExports = route ? CLIENT_NON_COMPONENT_EXPORTS : [];
@@ -2403,21 +2437,21 @@ if (import.meta.hot && !inWebWorker) {
 
 function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
-  file: string
+  file: string,
 ): RouteManifestEntry | undefined {
   let vite = getVite();
   let routePath = vite.normalizePath(
-    path.relative(pluginConfig.appDirectory, file)
+    path.relative(pluginConfig.appDirectory, file),
   );
   let route = Object.values(pluginConfig.routes).find(
-    (r) => vite.normalizePath(r.file) === routePath
+    (r) => vite.normalizePath(r.file) === routePath,
   );
   return route;
 }
 
 function isRoute(
   pluginConfig: ResolvedReactRouterConfig,
-  file: string
+  file: string,
 ): boolean {
   return Boolean(getRoute(pluginConfig, file));
 }
@@ -2427,29 +2461,29 @@ async function getRouteMetadata(
   ctx: ReactRouterPluginContext,
   viteChildCompiler: Vite.ViteDevServer | null,
   route: RouteManifestEntry,
-  readRouteFile?: () => string | Promise<string>
+  readRouteFile?: () => string | Promise<string>,
 ): Promise<ManifestRoute & { url: string }> {
   let routeFile = route.file;
   let sourceExports = await getRouteModuleExports(
     viteChildCompiler,
     ctx,
     route.file,
-    readRouteFile
+    readRouteFile,
   );
 
   let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
     cache,
     ctx,
     routeFile,
-    { routeFile, readRouteFile, viteChildCompiler }
+    { routeFile, readRouteFile, viteChildCompiler },
   );
 
   let moduleUrl = combineURLs(
     ctx.publicPath,
     `${resolveFileUrl(
       ctx,
-      resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-    )}`
+      resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+    )}`,
   );
 
   let info: ManifestRoute & { url: string } = {
@@ -2463,8 +2497,8 @@ async function getRouteMetadata(
       "/" +
         path.relative(
           ctx.rootDirectory,
-          resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-        )
+          resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+        ),
     ),
     module: `${moduleUrl}?import`, // Ensure the Vite dev server responds with a JS module
     clientActionModule: hasRouteChunkByExportName.clientAction
@@ -2473,8 +2507,8 @@ async function getRouteMetadata(
     clientLoaderModule: hasRouteChunkByExportName.clientLoader
       ? `${getRouteChunkModuleId(moduleUrl, "clientLoader")}`
       : undefined,
-    clientMiddlewareModule: hasRouteChunkByExportName.unstable_clientMiddleware
-      ? `${getRouteChunkModuleId(moduleUrl, "unstable_clientMiddleware")}`
+    clientMiddlewareModule: hasRouteChunkByExportName.clientMiddleware
+      ? `${getRouteChunkModuleId(moduleUrl, "clientMiddleware")}`
       : undefined,
     hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
       ? `${getRouteChunkModuleId(moduleUrl, "HydrateFallback")}`
@@ -2483,7 +2517,7 @@ async function getRouteMetadata(
     hasClientAction: sourceExports.includes("clientAction"),
     hasLoader: sourceExports.includes("loader"),
     hasClientLoader: sourceExports.includes("clientLoader"),
-    hasClientMiddleware: sourceExports.includes("unstable_clientMiddleware"),
+    hasClientMiddleware: sourceExports.includes("clientMiddleware"),
     hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
     imports: [],
   };
@@ -2491,7 +2525,7 @@ async function getRouteMetadata(
 }
 
 function isPrerenderingEnabled(
-  reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"]
+  reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"],
 ) {
   return (
     reactRouterConfig.prerender != null && reactRouterConfig.prerender !== false
@@ -2499,7 +2533,7 @@ function isPrerenderingEnabled(
 }
 
 function isSpaModeEnabled(
-  reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"]
+  reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"],
 ) {
   // "SPA Mode" is possible in 2 ways:
   //  - `ssr:false` and no `prerender` config (undefined or null)
@@ -2524,7 +2558,7 @@ function isSpaModeEnabled(
 async function getPrerenderBuildAndHandler(
   viteConfig: Vite.ResolvedConfig,
   serverBuildDirectory: string,
-  serverBuildFile: string
+  serverBuildFile: string,
 ) {
   let serverBuildPath = path.join(serverBuildDirectory, serverBuildFile);
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
@@ -2540,12 +2574,12 @@ async function handleSpaMode(
   reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
   serverBuildFile: string,
-  clientBuildDirectory: string
+  clientBuildDirectory: string,
 ) {
   let { build, handler } = await getPrerenderBuildAndHandler(
     viteConfig,
     serverBuildDirectory,
-    serverBuildFile
+    serverBuildFile,
   );
   let request = new Request(`http://localhost${reactRouterConfig.basename}`, {
     headers: {
@@ -2557,7 +2591,7 @@ async function handleSpaMode(
   let html = await response.text();
 
   // If the user prerendered `/`, then we write this out to a separate file
-  // they can serve.  Otherwise it can be the main entry point.
+  // they can serve. Otherwise, it can be the main entry point.
   let isPrerenderSpaFallback = build.prerender.includes("/");
   let filename = isPrerenderSpaFallback ? "__spa-fallback.html" : "index.html";
   if (response.status !== 200) {
@@ -2565,13 +2599,13 @@ async function handleSpaMode(
       throw new Error(
         `Prerender: Received a ${response.status} status code from ` +
           `\`entry.server.tsx\` while prerendering your \`${filename}\` file.\n` +
-          html
+          html,
       );
     } else {
       throw new Error(
         `SPA Mode: Received a ${response.status} status code from ` +
           `\`entry.server.tsx\` while prerendering your \`${filename}\` file.\n` +
-          html
+          html,
       );
     }
   }
@@ -2582,17 +2616,17 @@ async function handleSpaMode(
   ) {
     throw new Error(
       "SPA Mode: Did you forget to include `<Scripts/>` in your root route? " +
-        "Your pre-rendered HTML cannot hydrate without `<Scripts />`."
+        "Your pre-rendered HTML cannot hydrate without `<Scripts />`.",
     );
   }
 
   // Write out the HTML file for the SPA
-  await fse.writeFile(path.join(clientBuildDirectory, filename), html);
-  let prettyDir = path.relative(process.cwd(), clientBuildDirectory);
+  await writeFile(path.join(clientBuildDirectory, filename), html);
+  let prettyDir = path.relative(viteConfig.root, clientBuildDirectory);
   let prettyPath = path.join(prettyDir, filename);
   if (build.prerender.length > 0) {
     viteConfig.logger.info(
-      `Prerender (html): SPA Fallback -> ${colors.bold(prettyPath)}`
+      `Prerender (html): SPA Fallback -> ${colors.bold(prettyPath)}`,
     );
   } else {
     viteConfig.logger.info(`SPA Mode: Generated ${colors.bold(prettyPath)}`);
@@ -2604,12 +2638,12 @@ async function handlePrerender(
   reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
   serverBuildPath: string,
-  clientBuildDirectory: string
+  clientBuildDirectory: string,
 ) {
   let { build, handler } = await getPrerenderBuildAndHandler(
     viteConfig,
     serverBuildDirectory,
-    serverBuildPath
+    serverBuildPath,
   );
 
   let routes = createPrerenderRoutes(reactRouterConfig.routes);
@@ -2617,17 +2651,12 @@ async function handlePrerender(
     let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
     if (!matches) {
       throw new Error(
-        `Unable to prerender path because it does not match any routes: ${path}`
+        `Unable to prerender path because it does not match any routes: ${path}`,
       );
     }
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  let headers = {
-    // Header that can be used in the loader to know if you're running at
-    // build time or runtime
-    "X-React-Router-Prerender": "yes",
-  };
   for (let path of build.prerender) {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
@@ -2656,7 +2685,6 @@ async function handlePrerender(
           clientBuildDirectory,
           reactRouterConfig,
           viteConfig,
-          { headers }
         );
         // Prerender a raw file for external consumption
         await prerenderResourceRoute(
@@ -2665,16 +2693,15 @@ async function handlePrerender(
           clientBuildDirectory,
           reactRouterConfig,
           viteConfig,
-          { headers }
         );
       } else {
         viteConfig.logger.warn(
-          `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute?.id}`
+          `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute?.id}`,
         );
       }
     } else {
       let hasLoaders = matches.some(
-        (m) => build.assets.routes[m.route.id]?.hasLoader
+        (m) => build.assets.routes[m.route.id]?.hasLoader,
       );
       let data: string | undefined;
       if (!isResourceRoute && hasLoaders) {
@@ -2685,7 +2712,6 @@ async function handlePrerender(
           clientBuildDirectory,
           reactRouterConfig,
           viteConfig,
-          { headers }
         );
       }
 
@@ -2698,11 +2724,10 @@ async function handlePrerender(
         data
           ? {
               headers: {
-                ...headers,
                 "X-React-Router-Prerender-Data": encodeURI(data),
               },
             }
-          : { headers }
+          : undefined,
       );
     }
   }
@@ -2746,7 +2771,7 @@ async function prerenderData(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit,
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
@@ -2761,24 +2786,28 @@ async function prerenderData(
   let response = await handler(request);
   let data = await response.text();
 
-  if (response.status !== 200) {
+  // 202 is used for `.data` redirects
+  if (response.status !== 200 && response.status !== 202) {
     throw new Error(
       `Prerender (data): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${prerenderPath}\` ` +
-        `path.\n${normalizedPath}`
+        `path.\n${normalizedPath}`,
     );
   }
 
   // Write out the .data file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
-  await fse.ensureDir(path.dirname(outfile));
-  await fse.outputFile(outfile, data);
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
+  await mkdir(path.dirname(outfile), { recursive: true });
+  await writeFile(outfile, data);
   viteConfig.logger.info(
-    `Prerender (data): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (data): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile),
+    )}`,
   );
   return data;
 }
+
+let redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
 async function prerenderRoute(
   handler: RequestHandler,
@@ -2786,31 +2815,58 @@ async function prerenderRoute(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit,
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
     /\/\/+/g,
-    "/"
+    "/",
   );
   let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
   let html = await response.text();
 
-  if (response.status !== 200) {
+  if (redirectStatusCodes.has(response.status)) {
+    // This isn't ideal but gets the job done as a fallback if the user can't
+    // implement proper redirects via .htaccess or something else.  This is the
+    // approach used by Astro as well, so there's some precedent.
+    // https://github.com/withastro/roadmap/issues/466
+    // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
+    let location = response.headers.get("Location");
+    // A short delay causes Google to interpret the redirect as temporary.
+    // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
+    let delay = response.status === 302 ? 2 : 0;
+    html = `<!doctype html>
+<head>
+<title>Redirecting to: ${location}</title>
+<meta http-equiv="refresh" content="${delay};url=${location}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+	<a href="${location}">
+    Redirecting from <code>${normalizedPath}</code> to <code>${location}</code>
+  </a>
+</body>
+</html>`;
+  } else if (response.status !== 200) {
     throw new Error(
       `Prerender (html): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${html}`
+        `path.\n${html}`,
     );
   }
 
   // Write out the HTML file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
-  await fse.ensureDir(path.dirname(outfile));
-  await fse.outputFile(outfile, html);
+  let outfile = path.join(
+    clientBuildDirectory,
+    ...normalizedPath.split("/"),
+    "index.html",
+  );
+  await mkdir(path.dirname(outfile), { recursive: true });
+  await writeFile(outfile, html);
   viteConfig.logger.info(
-    `Prerender (html): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (html): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile),
+    )}`,
   );
 }
 
@@ -2820,7 +2876,7 @@ async function prerenderResourceRoute(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit,
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
     .replace(/\/\/+/g, "/")
@@ -2833,17 +2889,18 @@ async function prerenderResourceRoute(
     throw new Error(
       `Prerender (resource): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${content.toString("utf8")}`
+        `path.\n${content.toString("utf8")}`,
     );
   }
 
   // Write out the resource route file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
-  await fse.ensureDir(path.dirname(outfile));
-  await fse.outputFile(outfile, content);
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
+  await mkdir(path.dirname(outfile), { recursive: true });
+  await writeFile(outfile, content);
   viteConfig.logger.info(
-    `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (resource): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile),
+    )}`,
   );
 }
 
@@ -2856,7 +2913,7 @@ export async function getPrerenderPaths(
   prerender: ResolvedReactRouterConfig["prerender"],
   ssr: ResolvedReactRouterConfig["ssr"],
   routes: GenericRouteManifest,
-  logWarning = false
+  logWarning = false,
 ): Promise<string[]> {
   let prerenderPaths: string[] = [];
   if (prerender != null && prerender !== false) {
@@ -2871,8 +2928,8 @@ export async function getPrerenderPaths(
                 "using `prerender: true`. You may want to use the `prerender()` " +
                 "API to prerender the following paths:",
               ...paramRoutes.map((p) => "  - " + p),
-            ].join("\n")
-          )
+            ].join("\n"),
+          ),
         );
       }
       prerenderPaths = paths;
@@ -2908,7 +2965,7 @@ function groupRoutesByParentId(manifest: GenericRouteManifest) {
 function createPrerenderRoutes(
   manifest: GenericRouteManifest,
   parentId: string = "",
-  routesByParentId = groupRoutesByParentId(manifest)
+  routesByParentId = groupRoutesByParentId(manifest),
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
@@ -2934,13 +2991,13 @@ async function validateSsrFalsePrerenderExports(
   viteConfig: Vite.ResolvedConfig,
   ctx: ReactRouterPluginContext,
   manifest: ReactRouterManifest,
-  viteChildCompiler: Vite.ViteDevServer | null
+  viteChildCompiler: Vite.ViteDevServer | null,
 ) {
   let prerenderPaths = await getPrerenderPaths(
     ctx.reactRouterConfig.prerender,
     ctx.reactRouterConfig.ssr,
     manifest.routes,
-    true
+    true,
   );
 
   if (prerenderPaths.length === 0) {
@@ -2954,11 +3011,11 @@ async function validateSsrFalsePrerenderExports(
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(
       prerenderRoutes,
-      `/${path}/`.replace(/^\/\/+/, "/")
+      `/${path}/`.replace(/^\/\/+/, "/"),
     );
     invariant(
       matches,
-      `Unable to prerender path because it does not match any routes: ${path}`
+      `Unable to prerender path because it does not match any routes: ${path}`,
     );
     matches.forEach((m) => prerenderedRoutes.add(m.route.id));
   }
@@ -2967,7 +3024,7 @@ async function validateSsrFalsePrerenderExports(
   let errors: string[] = [];
   let routeExports = await getRouteManifestModuleExports(
     viteChildCompiler,
-    ctx
+    ctx,
   );
   for (let [routeId, route] of Object.entries(manifest.routes)) {
     let invalidApis: string[] = [];
@@ -2982,7 +3039,7 @@ async function validateSsrFalsePrerenderExports(
         `Prerender: ${invalidApis.length} invalid route export(s) in \`${route.id}\` ` +
           "when pre-rendering with `ssr:false`: " +
           `${invalidApis.map((a) => `\`${a}\``).join(", ")}.  ` +
-          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
       );
     }
 
@@ -2992,7 +3049,7 @@ async function validateSsrFalsePrerenderExports(
         errors.push(
           `Prerender: 1 invalid route export in \`${route.id}\` ` +
             "when pre-rendering with `ssr:false`: `loader`. " +
-            "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+            "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
         );
       }
 
@@ -3002,7 +3059,7 @@ async function validateSsrFalsePrerenderExports(
           errors.push(
             `Prerender: 1 invalid route export in \`${parentRoute.id}\` when ` +
               "pre-rendering with `ssr:false`: `loader`. " +
-              "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+              "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
           );
         }
         parentRoute =
@@ -3016,7 +3073,7 @@ async function validateSsrFalsePrerenderExports(
   if (errors.length > 0) {
     viteConfig.logger.error(colors.red(errors.join("\n")));
     throw new Error(
-      "Invalid route exports found when prerendering with `ssr:false`"
+      "Invalid route exports found when prerendering with `ssr:false`",
     );
   }
 }
@@ -3031,7 +3088,7 @@ function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
     if (route.index) {
       invariant(
         route.parentId,
-        `Expected index route "${route.id}" to have "parentId" set`
+        `Expected index route "${route.id}" to have "parentId" set`,
       );
       nonAddressableIds.add(route.parentId);
     }
@@ -3043,7 +3100,7 @@ function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
   }
 
   return Object.values(routes).filter(
-    (route) => !nonAddressableIds.has(route.id)
+    (route) => !nonAddressableIds.has(route.id),
   );
 }
 
@@ -3068,7 +3125,7 @@ function getServerBundleIds(ctx: ReactRouterPluginContext) {
 }
 
 function getRoutesByServerBundleId(
-  buildManifest: BuildManifest
+  buildManifest: BuildManifest,
 ): Record<string, RouteManifest> {
   if (!buildManifest.routeIdToServerBundleId) {
     return {};
@@ -3077,7 +3134,7 @@ function getRoutesByServerBundleId(
   let routesByServerBundleId: Record<string, RouteManifest> = {};
 
   for (let [routeId, serverBundleId] of Object.entries(
-    buildManifest.routeIdToServerBundleId
+    buildManifest.routeIdToServerBundleId,
   )) {
     routesByServerBundleId[serverBundleId] ??= {};
     let branch = getRouteBranch(buildManifest.routes, routeId);
@@ -3098,7 +3155,7 @@ type ResolveRouteFileCodeInput =
     };
 const resolveRouteFileCode = async (
   ctx: ReactRouterPluginContext,
-  input: ResolveRouteFileCodeInput
+  input: ResolveRouteFileCodeInput,
 ): Promise<string> => {
   if (typeof input === "string") return input;
   invariant(input.viteChildCompiler);
@@ -3106,7 +3163,7 @@ const resolveRouteFileCode = async (
     input.viteChildCompiler,
     ctx,
     input.routeFile,
-    input.readRouteFile
+    input.readRouteFile,
   );
 };
 
@@ -3121,7 +3178,7 @@ async function detectRouteChunksIfEnabled(
   cache: Cache,
   ctx: ReactRouterPluginContext,
   id: string,
-  input: ResolveRouteFileCodeInput
+  input: ResolveRouteFileCodeInput,
 ): Promise<ReturnType<typeof detectRouteChunks>> {
   function noRouteChunks(): ReturnType<typeof detectRouteChunks> {
     return {
@@ -3130,7 +3187,7 @@ async function detectRouteChunksIfEnabled(
       hasRouteChunkByExportName: {
         clientAction: false,
         clientLoader: false,
-        unstable_clientMiddleware: false,
+        clientMiddleware: false,
         HydrateFallback: false,
       },
     };
@@ -3165,7 +3222,7 @@ async function getRouteChunkIfEnabled(
   ctx: ReactRouterPluginContext,
   id: string,
   chunkName: RouteChunkName,
-  input: ResolveRouteFileCodeInput
+  input: ResolveRouteFileCodeInput,
 ): Promise<ReturnType<typeof getRouteChunkCode> | null> {
   if (!ctx.reactRouterConfig.future.unstable_splitRouteModules) {
     return null;
@@ -3207,7 +3264,7 @@ function validateRouteChunks({
     [
       `Error splitting route module: ${normalizeRelativeFilePath(
         id,
-        ctx.reactRouterConfig
+        ctx.reactRouterConfig,
       )}`,
 
       invalidChunks.map((name) => `- ${name}`).join("\n"),
@@ -3217,13 +3274,13 @@ function validateRouteChunks({
       } because ${
         plural ? "they share" : "it shares"
       } code with other exports. You should extract any shared code into its own module and then import it within the route module.`,
-    ].join("\n\n")
+    ].join("\n\n"),
   );
 }
 
 export async function cleanBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
-  ctx: ReactRouterPluginContext
+  ctx: ReactRouterPluginContext,
 ) {
   let buildDirectory = ctx.reactRouterConfig.buildDirectory;
   let isWithinRoot = () => {
@@ -3232,38 +3289,38 @@ export async function cleanBuildDirectory(
   };
 
   if (viteConfig.build.emptyOutDir ?? isWithinRoot()) {
-    await fse.remove(buildDirectory);
+    await rm(buildDirectory, { force: true, recursive: true });
   }
 }
 
 export async function cleanViteManifests(
   environmentsOptions: Record<string, EnvironmentOptions>,
-  ctx: ReactRouterPluginContext
+  ctx: ReactRouterPluginContext,
 ) {
   let viteManifestPaths = Object.entries(environmentsOptions).map(
     ([environmentName, options]) => {
       let outDir = options.build?.outDir;
       invariant(outDir, `Expected build.outDir for ${environmentName}`);
       return path.join(outDir, ".vite/manifest.json");
-    }
+    },
   );
   await Promise.all(
     viteManifestPaths.map(async (viteManifestPath) => {
-      let manifestExists = await fse.pathExists(viteManifestPath);
+      let manifestExists = existsSync(viteManifestPath);
       if (!manifestExists) return;
 
-      // Delete original Vite manifest file if consumer doesn't want it
+      // Delete the original Vite manifest file if consumer doesn't want it
       if (!ctx.viteManifestEnabled) {
-        await fse.remove(viteManifestPath);
+        await rm(viteManifestPath, { force: true, recursive: true });
       }
 
       // Remove .vite dir if it's now empty
       let viteDir = path.dirname(viteManifestPath);
-      let viteDirFiles = await fse.readdir(viteDir);
+      let viteDirFiles = await readdir(viteDir, { recursive: true });
       if (viteDirFiles.length === 0) {
-        await fse.remove(viteDir);
+        await rm(viteDir, { force: true, recursive: true });
       }
-    })
+    }),
   );
 }
 
@@ -3287,10 +3344,10 @@ export async function getBuildManifest({
     Object.entries(routes).map(([id, route]) => {
       let filePath = path.join(resolvedAppDirectory, route.file);
       let rootRelativeFilePath = normalizePath(
-        path.relative(rootDirectory, filePath)
+        path.relative(rootDirectory, filePath),
       );
       return [id, { ...route, file: rootRelativeFilePath }];
-    })
+    }),
   );
 
   let buildManifest: BuildManifest = {
@@ -3308,7 +3365,7 @@ export async function getBuildManifest({
             ...route,
             // Ensure absolute paths are passed to the serverBundles function
             file: path.join(resolvedAppDirectory, route.file),
-          })
+          }),
         ),
       });
       if (typeof serverBundleId !== "string") {
@@ -3318,13 +3375,13 @@ export async function getBuildManifest({
         // Server bundle IDs must be valid Vite environment names, so hyphens are not allowed
         if (!/^[a-zA-Z0-9_]+$/.test(serverBundleId)) {
           throw new Error(
-            `The "serverBundles" function must only return strings containing alphanumeric characters and underscores.`
+            `The "serverBundles" function must only return strings containing alphanumeric characters and underscores.`,
           );
         }
       } else {
         if (!/^[a-zA-Z0-9-_]+$/.test(serverBundleId)) {
           throw new Error(
-            `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
+            `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`,
           );
         }
       }
@@ -3336,13 +3393,13 @@ export async function getBuildManifest({
           path.join(
             path.relative(
               rootDirectory,
-              path.join(serverBuildDirectory, serverBundleId)
+              path.join(serverBuildDirectory, serverBundleId),
             ),
-            reactRouterConfig.serverBuildFile
-          )
+            reactRouterConfig.serverBuildFile,
+          ),
         ),
       };
-    })
+    }),
   );
 
   return buildManifest;
@@ -3356,56 +3413,69 @@ function mergeEnvironmentOptions(
 
   return overrides.reduce(
     (merged, override) => vite.mergeConfig(merged, override, false),
-    base
+    base,
   );
 }
 
 export async function getEnvironmentOptionsResolvers(
   ctx: ReactRouterPluginContext,
-  viteCommand: Vite.ResolvedConfig["command"]
+  viteCommand: Vite.ResolvedConfig["command"],
 ): Promise<EnvironmentOptionsResolvers> {
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
 
   let packageRoot = path.dirname(
-    require.resolve("@react-router/dev/package.json")
+    require.resolve("@react-router/dev/package.json"),
   );
   let { moduleSyncEnabled } = await import(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
   );
   let vite = getVite();
-  let viteServerConditions: string[] = [
-    ...(vite.defaultServerConditions ?? []),
-    ...(moduleSyncEnabled ? ["module-sync"] : []),
-  ];
 
   function getBaseOptions({
     viteUserConfig,
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
+    // This is a workaround for type errors when running in vite-ecosystem-ci
+    // against rolldown-vite since "preserveEntrySignatures" is not yet
+    // supported. We're doing this instead of using `ts-ignore` so we're still
+    // type checking against regular Vite build options. Once it's supported,
+    // this custom type can be removed and the build config can be inlined.
+    type RollupOptionsWithPreserveEntrySignatures =
+      Vite.BuildOptions["rollupOptions"] extends {
+        preserveEntrySignatures: any;
+      }
+        ? Vite.BuildOptions["rollupOptions"]
+        : Vite.BuildOptions["rollupOptions"] & {
+            // We hard-code the one value we're using. If it's not valid in
+            // Rollup, the build will fail.
+            preserveEntrySignatures: "exports-only";
+          };
+    const rollupOptions: RollupOptionsWithPreserveEntrySignatures = {
+      preserveEntrySignatures: "exports-only",
+      // Silence Rollup "use client" warnings
+      // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
+      onwarn(warning, defaultHandler) {
+        if (
+          warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+          warning.message.includes("use client")
+        ) {
+          return;
+        }
+        let userHandler = viteUserConfig.build?.rollupOptions?.onwarn;
+        if (userHandler) {
+          userHandler(warning, defaultHandler);
+        } else {
+          defaultHandler(warning);
+        }
+      },
+    };
+
     return {
       build: {
         cssMinify: viteUserConfig.build?.cssMinify ?? true,
         manifest: true, // The manifest is enabled for all builds to detect SSR-only assets
-        rollupOptions: {
-          preserveEntrySignatures: "exports-only",
-          // Silence Rollup "use client" warnings
-          // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
-          onwarn(warning, defaultHandler) {
-            if (
-              warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-              warning.message.includes("use client")
-            ) {
-              return;
-            }
-            let userHandler = viteUserConfig.build?.rollupOptions?.onwarn;
-            if (userHandler) {
-              userHandler(warning, defaultHandler);
-            } else {
-              defaultHandler(warning);
-            }
-          },
-        },
+        rollupOptions,
       },
     };
   }
@@ -3415,10 +3485,35 @@ export async function getEnvironmentOptionsResolvers(
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
-    let conditions =
-      viteCommand === "build"
-        ? viteServerConditions
-        : ["development", ...viteServerConditions];
+    // We're using the module-sync condition, but Vite
+    // doesn't support it by default.
+    // See https://github.com/vitest-dev/vitest/issues/7692
+    let maybeModuleSyncConditions: string[] = [
+      ...(moduleSyncEnabled ? ["module-sync"] : []),
+    ];
+
+    let maybeDevelopmentConditions =
+      viteCommand === "build" ? [] : ["development"];
+
+    // This is a compatibility layer for Vite 5. Default conditions were
+    // automatically added to any custom conditions in Vite 5, but Vite 6
+    // removed this behavior. Instead, the default conditions are overridden
+    // by any custom conditions. If we wish to retain the default
+    // conditions, we need to manually merge them using the provided default
+    // conditions arrays exported from Vite. In Vite 5, these default
+    // conditions arrays do not exist.
+    // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+    let maybeDefaultServerConditions = vite.defaultServerConditions || [];
+
+    // There is no helpful export with the default external conditions (see
+    // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
+    // we are hardcording the default here.
+    let defaultExternalConditions = ["node"];
+
+    let baseConditions = [
+      ...maybeDevelopmentConditions,
+      ...maybeModuleSyncConditions,
+    ];
 
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
       resolve: {
@@ -3427,17 +3522,17 @@ export async function getEnvironmentOptionsResolvers(
           ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? undefined
             : ssrExternals,
-        conditions,
-        externalConditions: conditions,
+        conditions: [...baseConditions, ...maybeDefaultServerConditions],
+        externalConditions: [...baseConditions, ...defaultExternalConditions],
       },
       build: {
         // We move SSR-only assets to client assets. Note that the
-        // SSR build can also emit code-split JS files (e.g. by
+        // SSR build can also emit code-split JS files (e.g., by
         // dynamic import) under the same assets directory
         // regardless of "ssrEmitAssets" option, so we also need to
-        // keep these JS files have to be kept as-is.
+        // keep these JS files to be kept as-is.
         ssrEmitAssets: true,
-        copyPublicDir: false, // Assets in the public directory are only used by the client
+        copyPublicDir: false, // The client only uses assets in the public directory
         rollupOptions: {
           input:
             (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
@@ -3464,13 +3559,13 @@ export async function getEnvironmentOptionsResolvers(
                 (route) => {
                   let routeFilePath = path.resolve(
                     ctx.reactRouterConfig.appDirectory,
-                    route.file
+                    route.file,
                   );
 
                   let isRootRoute =
                     route.file === ctx.reactRouterConfig.routes.root.file;
 
-                  let code = fse.readFileSync(routeFilePath, "utf-8");
+                  let code = readFileSync(routeFilePath, "utf-8");
 
                   return [
                     `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
@@ -3479,11 +3574,11 @@ export async function getEnvironmentOptionsResolvers(
                       ? routeChunkExportNames.map((exportName) =>
                           code.includes(exportName)
                             ? getRouteChunkModuleId(routeFilePath, exportName)
-                            : null
+                            : null,
                         )
                       : []),
                   ].filter(isNonNullable);
-                }
+                },
               ),
             ],
             output: (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
@@ -3495,17 +3590,21 @@ export async function getEnvironmentOptionsResolvers(
                 let routeChunkName = routeChunkModuleId
                   ? getRouteChunkNameFromModuleId(routeChunkModuleId)?.replace(
                       "unstable_",
-                      ""
+                      "",
                     )
                   : null;
                 let routeChunkSuffix = routeChunkName
                   ? `-${kebabCase(routeChunkName)}`
                   : "";
-                return path.posix.join(
+                let assetsDir =
                   (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
                     ? viteUserConfig?.environments?.client?.build?.assetsDir
-                    : viteUserConfig?.build?.assetsDir) ?? "assets",
-                  `[name]${routeChunkSuffix}-[hash].js`
+                    : null) ??
+                  viteUserConfig?.build?.assetsDir ??
+                  "assets";
+                return path.posix.join(
+                  assetsDir,
+                  `[name]${routeChunkSuffix}-[hash].js`,
                 );
               },
             },
@@ -3531,7 +3630,7 @@ export async function getEnvironmentOptionsResolvers(
           },
           // Ensure server bundle environments extend the user's SSR
           // environment config if it exists
-          viteUserConfig.environments?.ssr ?? {}
+          viteUserConfig.environments?.ssr ?? {},
         );
     }
   } else {
@@ -3543,23 +3642,16 @@ export async function getEnvironmentOptionsResolvers(
       });
   }
 
-  if (
-    ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-    viteCommand === "serve"
-  ) {
-    environmentOptionsResolvers[CSS_DEV_HELPER_ENVIRONMENT_NAME] = () => ({});
-  }
-
   return environmentOptionsResolvers;
 }
 
 export function resolveEnvironmentsOptions(
   environmentResolvers: EnvironmentOptionsResolvers,
-  resolverOptions: Parameters<EnvironmentOptionsResolver>[0]
+  resolverOptions: Parameters<EnvironmentOptionsResolver>[0],
 ): Record<string, EnvironmentOptions> {
   let environmentOptions: Record<string, EnvironmentOptions> = {};
   for (let [environmentName, resolver] of Object.entries(
-    environmentResolvers
+    environmentResolvers,
   ) as [EnvironmentName, EnvironmentOptionsResolver][]) {
     environmentOptions[environmentName] = resolver(resolverOptions);
   }
@@ -3569,15 +3661,15 @@ export function resolveEnvironmentsOptions(
 async function getEnvironmentsOptions(
   ctx: ReactRouterPluginContext,
   viteCommand: Vite.ResolvedConfig["command"],
-  resolverOptions: Parameters<EnvironmentOptionsResolver>[0]
+  resolverOptions: Parameters<EnvironmentOptionsResolver>[0],
 ): Promise<Record<string, EnvironmentOptions>> {
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
-    viteCommand
+    viteCommand,
   );
   return resolveEnvironmentsOptions(
     environmentOptionsResolvers,
-    resolverOptions
+    resolverOptions,
   );
 }
 
@@ -3591,7 +3683,7 @@ type AsyncFlatten<T extends unknown[]> = T extends (infer U)[]
   : never;
 
 async function asyncFlatten<T extends unknown[]>(
-  arr: T
+  arr: T,
 ): Promise<AsyncFlatten<T>> {
   do {
     arr = (await Promise.all(arr)).flat(Infinity) as any;

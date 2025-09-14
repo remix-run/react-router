@@ -13,7 +13,7 @@ test(
   async ({ page, browserName }) => {
     test.skip(
       browserName === "firefox",
-      "FireFox doesn't support browsing to an empty page (aka about:blank)"
+      "FireFox doesn't support browsing to an empty page (aka about:blank)",
     );
 
     let fixture = await createFixture({
@@ -78,7 +78,7 @@ test(
     expect(await app.getHtml()).toContain("cheeseburger");
 
     appFixture.close();
-  }
+  },
 );
 
 test("allows users to pass a client side context to HydratedRouter", async ({
@@ -87,29 +87,33 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   let fixture = await createFixture({
     files: {
       "app/entry.client.tsx": js`
-        import { unstable_createContext } from "react-router";
+        import { createContext, RouterContextProvider } from "react-router";
         import { HydratedRouter } from "react-router/dom";
         import { startTransition, StrictMode } from "react";
         import { hydrateRoot } from "react-dom/client";
 
-        export const initialContext = new unstable_createContext('empty');
+        export const myContext = new createContext('foo');
 
         startTransition(() => {
           hydrateRoot(
             document,
             <StrictMode>
-              <HydratedRouter unstable_getContext={() => {
-                return new Map([[initialContext, 'bar']]);
-               }} />
+              <HydratedRouter
+                getContext={() => {
+                  return new RouterContextProvider([
+                    [myContext, 'bar']
+                  ]);
+                }}
+              />
             </StrictMode>
           );
         });
       `,
       "app/routes/_index.tsx": js`
-        import { initialContext } from "../entry.client";
+        import { myContext } from "../entry.client";
 
         export function clientLoader({ context }) {
-          return context.get(initialContext);
+          return context.get(myContext);
         }
         export default function Index({ loaderData }) {
           return <h1>Hello, {loaderData}</h1>
@@ -122,6 +126,73 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/", true);
   expect(await app.getHtml()).toContain("Hello, bar");
+
+  appFixture.close();
+});
+
+test("allows users to pass an onError function to HydratedRouter", async ({
+  page,
+  browserName,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                unstable_onError={(error, errorInfo) => {
+                  console.log(error.message, JSON.stringify(errorInfo))
+                }}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+        export default function Index() {
+          return <Link to="/page">Go to Page</Link>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        export default function Page() {
+          throw new Error("Render error");
+        }
+        export function ErrorBoundary({ error }) {
+          return <h1 data-error>Error: {error.message}</h1>
+        }
+      `,
+    },
+  });
+
+  let logs: string[] = [];
+  page.on("console", (msg) => logs.push(msg.text()));
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.goto("/", true);
+  await page.click('a[href="/page"]');
+  await page.waitForSelector("[data-error]");
+
+  expect(await app.getHtml()).toContain("Error: Render error");
+  expect(logs.length).toBe(2);
+  // First one is react logging the error
+  if (browserName === "firefox") {
+    expect(logs[0]).toContain("Error");
+  } else {
+    expect(logs[0]).toContain("Error: Render error");
+  }
+  expect(logs[0]).not.toContain("componentStack");
+  // Second one is ours
+  expect(logs[1]).toContain("Render error");
+  expect(logs[1]).toContain('"componentStack":');
 
   appFixture.close();
 });

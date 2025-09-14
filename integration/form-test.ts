@@ -582,7 +582,7 @@ test.describe("Forms", () => {
         await app.clickSubmitButton("/stop-propagation", { wait: true });
         await page.waitForSelector("#action-data");
         expect(await app.getHtml()).toMatch('{"intent":"add"}');
-      }
+      },
     );
 
     test.describe("<Form> action", () => {
@@ -999,7 +999,7 @@ test.describe("Forms", () => {
         test(`submits with ${method}`, async ({ page, javaScriptEnabled }) => {
           test.fail(
             !javaScriptEnabled && !NATIVE_FORM_METHODS.includes(method),
-            `Native <form> doesn't support method ${method} #4420`
+            `Native <form> doesn't support method ${method} #4420`,
           );
 
           let app = new PlaywrightFixture(appFixture, page);
@@ -1024,12 +1024,12 @@ test.describe("Forms", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto(
             `/form-method?method=${method}&submitterFormMethod=${overrideMethod}`,
-            true
+            true,
           );
           await page.locator(`text=Submit with ${overrideMethod}`).click();
           if (overrideMethod !== "GET") {
             await expect(page.locator("pre#action-method")).toHaveText(
-              overrideMethod
+              overrideMethod,
             );
           }
           await expect(page.locator("pre#loader-method")).toHaveText("GET");
@@ -1047,7 +1047,7 @@ test.describe("Forms", () => {
       await app.goto("/submitter");
       await page.locator("text=Add Task").click();
       await expect(formData).toHaveValue(
-        "tasks=first&tasks=second&tasks=&tasks=last"
+        "tasks=first&tasks=second&tasks=&tasks=last",
       );
 
       await app.goto("/submitter");
@@ -1057,19 +1057,19 @@ test.describe("Forms", () => {
       await app.goto("/submitter");
       await page.locator("[alt='Add Task']").click();
       await expect(formData).toHaveValue(
-        /^tasks=first&tasks=second&tasks.x=\d+&tasks.y=\d+&tasks=last$/
+        /^tasks=first&tasks=second&tasks.x=\d+&tasks.y=\d+&tasks=last$/,
       );
 
       await app.goto("/submitter");
       await page.locator("[alt='No Name']").click();
       await expect(formData).toHaveValue(
-        /^tasks=first&tasks=second&x=\d+&y=\d+&tasks=last$/
+        /^tasks=first&tasks=second&x=\d+&y=\d+&tasks=last$/,
       );
 
       await app.goto("/submitter");
       await page.locator("text=Outside").click();
       await expect(formData).toHaveValue(
-        "tasks=outside&tasks=first&tasks=second&tasks=last"
+        "tasks=outside&tasks=first&tasks=second&tasks=last",
       );
     });
 
@@ -1087,7 +1087,7 @@ test.describe("Forms", () => {
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
       await submit.click();
       await expect(formData).toHaveValue(
-        "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
+        "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3=",
       );
 
       await app.goto("/file-upload?method=post");
@@ -1096,24 +1096,20 @@ test.describe("Forms", () => {
       await submit.click();
 
       await expect(formData).toHaveValue(
-        "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
+        "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3=",
       );
     });
 
     test("empty file inputs resolve to File objects on the server", async ({
       page,
-      channel,
     }) => {
-      // TODO: Look into this test failing on windows
-      test.skip(channel === "msedge", "Fails on windows with undici");
-
       let app = new PlaywrightFixture(appFixture, page);
 
       await app.goto("/empty-file-upload");
       await app.clickSubmitButton("/empty-file-upload");
       await page.waitForSelector("#action-data");
       expect((await app.getElement("#action-data")).text()).toContain(
-        '{"text":"","file":{"name":"","size":0},"fileMultiple":[{"name":"","size":0}]}'
+        '{"text":"","file":{"name":"","size":0},"fileMultiple":[{"name":"","size":0}]}',
       );
     });
 
@@ -1124,13 +1120,13 @@ test.describe("Forms", () => {
       await app.goto("/pathless-layout-parent/nested");
 
       await expect(
-        page.getByText("Pathless Layout Parent", { exact: true })
+        page.getByText("Pathless Layout Parent", { exact: true }),
       ).toBeVisible();
       await expect(
-        page.getByText("Pathless Layout", { exact: true })
+        page.getByText("Pathless Layout", { exact: true }),
       ).toBeVisible();
       await expect(
-        page.getByText("Pathless Layout Index", { exact: true })
+        page.getByText("Pathless Layout Index", { exact: true }),
       ).toBeVisible();
 
       const form = page.locator("form");

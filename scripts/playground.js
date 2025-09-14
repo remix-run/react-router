@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+let { existsSync, readdirSync } = require("node:fs");
+let { cp } = require("node:fs/promises");
 let path = require("node:path");
-let fse = require("fs-extra");
 let prompts = require("prompts");
 let chalk = require("chalk");
 
@@ -15,7 +16,7 @@ async function copyPlayground() {
       type: "select",
       name: "templateName",
       message: "Select a playground to copy",
-      choices: fse.readdirSync(playgroundRootDir).map((value) => ({ value })),
+      choices: readdirSync(playgroundRootDir).map((value) => ({ value })),
     },
     {
       type: "text",
@@ -29,12 +30,12 @@ async function copyPlayground() {
   let destDir = path.join(__dirname, "../playground-local", playgroundName);
   let relativeDestDir = destDir.replace(process.cwd(), ".");
 
-  if (await fse.pathExists(destDir)) {
+  if (existsSync(destDir)) {
     throw new Error(
-      `A local playground with the name "${playgroundName}" already exists. Delete it first or use a different name.`
+      `A local playground with the name "${playgroundName}" already exists. Delete it first or use a different name.`,
     );
   }
-  await fse.copy(srcDir, destDir, {});
+  await cp(srcDir, destDir, { recursive: true });
 
   console.log(
     [
@@ -44,6 +45,6 @@ async function copyPlayground() {
       "",
       `cd ${relativeDestDir}`,
       "pnpm dev",
-    ].join("\n")
+    ].join("\n"),
   );
 }

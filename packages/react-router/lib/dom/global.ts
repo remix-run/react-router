@@ -1,22 +1,12 @@
 import type { HydrationState, Router as DataRouter } from "../router/router";
-import type { AssetsManifest, CriticalCss, FutureConfig } from "./ssr/entry";
+import type { ServerHandoff } from "../server-runtime/serverHandoff";
+import type { AssetsManifest } from "./ssr/entry";
 import type { RouteModules } from "./ssr/routeModules";
 
-export type WindowReactRouterContext = {
-  basename?: string;
-  state: HydrationState;
-  criticalCss?: CriticalCss;
-  future: FutureConfig;
-  ssr: boolean;
-  isSpaMode: boolean;
+export type WindowReactRouterContext = ServerHandoff & {
+  state: HydrationState; // Deserialized via the stream
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;
-  // The number of active deferred keys rendered on the server
-  a?: number;
-  dev?: {
-    port?: number;
-    hmrRuntime?: string;
-  };
 };
 
 export interface ViewTransition {
@@ -39,7 +29,6 @@ declare global {
   var __reactRouterRouteModules: RouteModules | undefined;
   var __reactRouterDataRouter: DataRouter | undefined;
   var __reactRouterHdrActive: boolean;
-  var __reactRouterClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
     | {
         performReactRefresh: () => void;

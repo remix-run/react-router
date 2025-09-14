@@ -4,6 +4,11 @@ title: Streaming with Suspense
 
 # Streaming with Suspense
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 Streaming with React Suspense allows apps to speed up initial renders by deferring non-critical data and unblocking UI rendering.
 
 React Router supports React Suspense by returning promises from loaders and actions.
@@ -18,16 +23,18 @@ import type { Route } from "./+types/my-route";
 export async function loader({}: Route.LoaderArgs) {
   // note this is NOT awaited
   let nonCriticalData = new Promise((res) =>
-    setTimeout(() => res("non-critical"), 5000)
+    setTimeout(() => res("non-critical"), 5000),
   );
 
   let criticalData = await new Promise((res) =>
-    setTimeout(() => res("critical"), 300)
+    setTimeout(() => res("critical"), 300),
   );
 
   return { nonCriticalData, criticalData };
 }
 ```
+
+Note you can't return a single promise, it must be an object with keys.
 
 ## 2. Render the fallback and resolved UI
 
@@ -74,4 +81,13 @@ function NonCriticalUI({ p }: { p: Promise<string> }) {
   let value = React.use(p);
   return <h3>Non critical value {value}</h3>;
 }
+```
+
+## Timeouts
+
+By default, loaders and actions reject any outstanding promises after 4950ms. You can control this by exporting a `streamTimeout` numerical value from your `entry.server.tsx`.
+
+```ts filename=entry.server.tsx
+// Reject all pending promises from handler functions after 10 seconds
+export const streamTimeout = 10_000;
 ```

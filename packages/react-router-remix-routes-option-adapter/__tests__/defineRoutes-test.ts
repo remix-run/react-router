@@ -136,7 +136,7 @@ describe("defineRoutes", () => {
     };
 
     expect(defineNonUniqueRoutes).toThrowErrorMatchingInlineSnapshot(
-      `"Unable to define routes with duplicate route id: "user""`
+      `"Unable to define routes with duplicate route id: "user""`,
     );
 
     // Custom id conflicting with a later-defined auto-generated id
@@ -148,7 +148,7 @@ describe("defineRoutes", () => {
     };
 
     expect(defineNonUniqueRoutes).toThrowErrorMatchingInlineSnapshot(
-      `"Unable to define routes with duplicate route id: "routes/user""`
+      `"Unable to define routes with duplicate route id: "routes/user""`,
     );
 
     // Custom id conflicting with an earlier-defined auto-generated id
@@ -160,7 +160,7 @@ describe("defineRoutes", () => {
     };
 
     expect(defineNonUniqueRoutes).toThrowErrorMatchingInlineSnapshot(
-      `"Unable to define routes with duplicate route id: "routes/user""`
+      `"Unable to define routes with duplicate route id: "routes/user""`,
     );
   });
 });

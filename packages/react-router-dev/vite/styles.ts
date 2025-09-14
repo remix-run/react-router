@@ -6,6 +6,7 @@ import type { ResolvedReactRouterConfig } from "../config/config";
 import type { RouteManifest, RouteManifestEntry } from "../config/routes";
 import type { LoadCssContents } from "./plugin";
 import { resolveFileUrl } from "./resolve-file-url";
+import * as babel from "./babel";
 
 // Style collection logic adapted from solid-start: https://github.com/solidjs/solid-start
 
@@ -73,7 +74,7 @@ const getStylesForFiles = async ({
       if (!node) {
         try {
           await viteDevServer.transformRequest(
-            resolveFileUrl({ rootDirectory }, normalizedPath)
+            resolveFileUrl({ rootDirectory }, normalizedPath),
           );
         } catch (err) {
           console.error(err);
@@ -126,7 +127,7 @@ const getStylesForFiles = async ({
 const findDeps = async (
   vite: ViteDevServer,
   node: ModuleNode,
-  deps: Set<ModuleNode>
+  deps: Set<ModuleNode>,
 ) => {
   // since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
   // instead of using `await`, we resolve all branches in parallel.
@@ -150,7 +151,7 @@ const findDeps = async (
   if (node.ssrTransformResult) {
     if (node.ssrTransformResult.deps) {
       node.ssrTransformResult.deps.forEach((url) =>
-        branches.push(addFromUrl(url))
+        branches.push(addFromUrl(url)),
       );
     }
   } else {
@@ -185,7 +186,7 @@ type RouteManifestEntryWithChildren = Omit<RouteManifestEntry, "index"> &
 const createRoutesWithChildren = (
   manifest: RouteManifest,
   parentId: string = "",
-  routesByParentId = groupRoutesByParentId(manifest)
+  routesByParentId = groupRoutesByParentId(manifest),
 ): RouteManifestEntryWithChildren[] => {
   return (routesByParentId[parentId] || []).map((route) => ({
     ...route,
@@ -198,7 +199,7 @@ const createRoutesWithChildren = (
           children: createRoutesWithChildren(
             manifest,
             route.id,
-            routesByParentId
+            routesByParentId,
           ),
         }),
   }));
@@ -231,7 +232,7 @@ export const getStylesForPathname = async ({
   let documentRouteFiles =
     matchRoutes(routesWithChildren, pathname, reactRouterConfig.basename)?.map(
       (match) =>
-        path.resolve(appPath, reactRouterConfig.routes[match.route.id].file)
+        path.resolve(appPath, reactRouterConfig.routes[match.route.id].file),
     ) ?? [];
 
   let styles = await getStylesForFiles({
@@ -247,4 +248,27 @@ export const getStylesForPathname = async ({
   });
 
   return styles;
+};
+
+export const getCssStringFromViteDevModuleCode = (
+  code: string,
+): string | undefined => {
+  let cssContent = undefined;
+
+  const ast = babel.parse(code, { sourceType: "module" });
+  babel.traverse(ast, {
+    VariableDeclaration(path) {
+      const declaration = path.node.declarations[0];
+      if (
+        declaration?.id?.type === "Identifier" &&
+        declaration.id.name === "__vite__css" &&
+        declaration.init?.type === "StringLiteral"
+      ) {
+        cssContent = declaration.init.value;
+        path.stop();
+      }
+    },
+  });
+
+  return cssContent;
 };

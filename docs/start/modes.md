@@ -15,7 +15,7 @@ The features available in each mode are additive, so moving from Declarative to 
 
 The mode depends on which "top level" router API you're using:
 
-**Declarative**
+## Declarative
 
 Declarative mode enables basic routing features like matching URLs to components, navigating around the app, and providing active states with APIs like `<Link>`, `useNavigate`, and `useLocation`.
 
@@ -25,11 +25,11 @@ import { BrowserRouter } from "react-router";
 ReactDOM.createRoot(root).render(
   <BrowserRouter>
     <App />
-  </BrowserRouter>
+  </BrowserRouter>,
 );
 ```
 
-**Data**
+## Data
 
 By moving route configuration outside of React rendering, Data Mode adds data loading, actions, pending states and more with APIs like `loader`, `action`, and `useFetcher`.
 
@@ -48,16 +48,16 @@ let router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(root).render(
-  <RouterProvider router={router} />
+  <RouterProvider router={router} />,
 );
 ```
 
-**Framework**
+## Framework
 
 Framework Mode wraps Data Mode with a Vite plugin to add the full React Router experience with:
 
-- typesafe `href`
-- typesafe Route Module API
+- type-safe `href`
+- type-safe Route Module API
 - intelligent code splitting
 - SPA, SSR, and static rendering strategies
 - and more
@@ -71,10 +71,10 @@ export default [
 ];
 ```
 
-You'll then have access to the Route Module API with typesafe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
+You'll then have access to the Route Module API with type-safe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
 
 ```ts filename=product.tsx
-import { Route } from "+./types/product.tsx";
+import { Route } from "./+types/product.tsx";
 
 export async function loader({ params }: Route.LoaderArgs) {
   let product = await getProduct(params.pid);
@@ -117,7 +117,7 @@ Every mode supports any architecture and deployment target, so the question isn'
 - have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
 - are coming from Create React App (you may want to consider framework mode though)
 
-[→ Get Started with Declarative Mode](./library/installation).
+[→ Get Started with Declarative Mode](./declarative/installation).
 
 ## API + Mode Availability Table
 
@@ -146,12 +146,12 @@ This is mostly for the LLMs, but knock yourself out:
 | Scripts                        | ✅        |      |             |
 | ScrollRestoration              | ✅        | ✅   |             |
 | ServerRouter                   | ✅        |      |             |
-| usePrompt                      | ✅        | ✅   | ✅          |
+| usePrompt                      | ✅        | ✅   |             |
 | useActionData                  | ✅        | ✅   |             |
 | useAsyncError                  | ✅        | ✅   |             |
 | useAsyncValue                  | ✅        | ✅   |             |
 | useBeforeUnload                | ✅        | ✅   | ✅          |
-| useBlocker                     | ✅        | ✅   | ✅          |
+| useBlocker                     | ✅        | ✅   |             |
 | useFetcher                     | ✅        | ✅   |             |
 | useFetchers                    | ✅        | ✅   |             |
 | useFormAction                  | ✅        | ✅   |             |
@@ -175,13 +175,14 @@ This is mostly for the LLMs, but knock yourself out:
 | useRoutes                      | ✅        | ✅   | ✅          |
 | useSearchParams                | ✅        | ✅   | ✅          |
 | useSubmit                      | ✅        | ✅   |             |
-| useViewTransitionState         | ✅        | ✅   | ✅          |
+| useViewTransitionState         | ✅        | ✅   |             |
 | isCookieFunction               | ✅        | ✅   |             |
 | isSessionFunction              | ✅        | ✅   |             |
 | createCookie                   | ✅        | ✅   |             |
 | createCookieSessionStorage     | ✅        | ✅   |             |
 | createMemorySessionStorage     | ✅        | ✅   |             |
 | createPath                     | ✅        | ✅   | ✅          |
+| createRoutesFromElements       |           | ✅   |             |
 | createRoutesStub               | ✅        | ✅   |             |
 | createSearchParams             | ✅        | ✅   | ✅          |
 | data                           | ✅        | ✅   |             |

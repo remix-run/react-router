@@ -4,6 +4,11 @@ title: Pre-Rendering
 
 # Pre-Rendering
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime. Pre-rendering is enabled via the `prerender` config in `react-router.config.ts` and can be used in two ways based on the `ssr` config value:
 
 - Alongside a runtime SSR server with `ssr:true` (the default value)

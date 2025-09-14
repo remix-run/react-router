@@ -6,6 +6,7 @@ import dedent from "dedent";
 
 import {
   reactRouterConfig,
+  viteConfig,
   test,
   type TemplateName,
   type Files,
@@ -13,29 +14,36 @@ import {
 
 const tsx = dedent;
 
+const fixtures = [
+  {
+    templateName: "vite-5-template",
+    viteEnvironmentApi: false,
+  },
+  {
+    templateName: "vite-6-template",
+    viteEnvironmentApi: true,
+  },
+  {
+    templateName: "rsc-vite-framework",
+    viteEnvironmentApi: true,
+  },
+] as const satisfies ReadonlyArray<{
+  templateName: TemplateName;
+  viteEnvironmentApi: boolean;
+}>;
+
 test.describe("Vite dev", () => {
-  [false, true].forEach((viteEnvironmentApi) => {
-    test.describe(`viteEnvironmentApi: ${viteEnvironmentApi}`, () => {
+  for (const { templateName, viteEnvironmentApi } of fixtures) {
+    test.describe(`template: ${templateName} viteEnvironmentApi: ${viteEnvironmentApi}`, () => {
       const files: Files = async ({ port }) => ({
         "react-router.config.ts": reactRouterConfig({
           viteEnvironmentApi,
         }),
-        "vite.config.ts": tsx`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-          import mdx from "@mdx-js/rollup";
-
-          export default defineConfig({
-            server: {
-              port: ${port},
-              strictPort: true,
-            },
-            plugins: [
-              mdx(),
-              reactRouter(),
-            ],
-          });
-        `,
+        "vite.config.ts": await viteConfig.basic({
+          port,
+          templateName,
+          mdx: true,
+        }),
         "app/root.tsx": tsx`
           import { Links, Meta, Outlet, Scripts } from "react-router";
 
@@ -58,6 +66,17 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/_index.tsx": tsx`
+          export default function IndexRoute() {
+            return (
+              <div id="index">
+                <h2 data-title>Index</h2>
+                <input />
+                <p data-hmr>HMR updated: no</p>
+              </div>
+            );
+          }
+        `,
+        "app/routes/deferred-loader-data.tsx": tsx`
           import { Suspense } from "react";
           import { Await, useLoaderData } from "react-router";
 
@@ -73,9 +92,6 @@ test.describe("Vite dev", () => {
 
             return (
               <div id="index">
-                <h2 data-title>Index</h2>
-                <input />
-                <p data-hmr>HMR updated: no</p>
                 <Suspense fallback={<p data-defer>Defer finished: no</p>}>
                   <Await resolve={deferred}>{() => <p data-defer>Defer finished: yes</p>}</Await>
                 </Suspense>
@@ -159,37 +175,41 @@ test.describe("Vite dev", () => {
 
           <MdxComponent />
         `,
-        ".env": `
-          ENV_VAR_FROM_DOTENV_FILE=Content from .env file
-        `,
-        "app/routes/dotenv.tsx": tsx`
-          import { useState, useEffect } from "react";
-          import { useLoaderData } from "react-router";
+        ...(!templateName.includes("rsc")
+          ? {
+              ".env": `
+                ENV_VAR_FROM_DOTENV_FILE=Content from .env file
+              `,
+              "app/routes/dotenv.tsx": tsx`
+                import { useState, useEffect } from "react";
+                import { useLoaderData } from "react-router";
 
-          export const loader = () => {
-            return {
-              loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
+                export const loader = () => {
+                  return {
+                    loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
+                  }
+                }
+
+                export default function DotenvRoute() {
+                  const { loaderContent } = useLoaderData();
+
+                  const [clientContent, setClientContent] = useState('');
+                  useEffect(() => {
+                    try {
+                      setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE shouldn't be available on the client, found: " + process.env.ENV_VAR_FROM_DOTENV_FILE);
+                    } catch (err) {
+                      setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing");
+                    }
+                  }, []);
+
+                  return <>
+                    <div data-dotenv-route-loader-content>{loaderContent}</div>
+                    <div data-dotenv-route-client-content>{clientContent}</div>
+                  </>
+                }
+              `,
             }
-          }
-
-          export default function DotenvRoute() {
-            const { loaderContent } = useLoaderData();
-
-            const [clientContent, setClientContent] = useState('');
-            useEffect(() => {
-              try {
-                setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE shouldn't be available on the client, found: " + process.env.ENV_VAR_FROM_DOTENV_FILE);
-              } catch (err) {
-                setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing");
-              }
-            }, []);
-
-            return <>
-              <div data-dotenv-route-loader-content>{loaderContent}</div>
-              <div data-dotenv-route-client-content>{clientContent}</div>
-            </>
-          }
-        `,
+          : {}),
         "app/routes/error-stacktrace.tsx": tsx`
           import { Link, useLocation, type LoaderFunction, type MetaFunction } from "react-router";
 
@@ -254,11 +274,7 @@ test.describe("Vite dev", () => {
         `,
       });
 
-      const templateName: TemplateName = viteEnvironmentApi
-        ? "vite-6-template"
-        : "vite-5-template";
-
-      test("renders matching routes", async ({ dev, page }) => {
+      test("renders matching routes with HMR", async ({ dev, page }) => {
         const { cwd, port } = await dev(files, templateName);
 
         await page.goto(`http://localhost:${port}/`, {
@@ -269,9 +285,6 @@ test.describe("Vite dev", () => {
         expect(page.errors).toEqual([]);
 
         await expect(page.locator("#index [data-title]")).toHaveText("Index");
-        await expect(page.locator("#index [data-defer]")).toHaveText(
-          "Defer finished: yes"
-        );
 
         let hmrStatus = page.locator("#index [data-hmr]");
         await expect(hmrStatus).toHaveText("HMR updated: no");
@@ -282,18 +295,39 @@ test.describe("Vite dev", () => {
 
         let indexRouteContents = await fs.readFile(
           path.join(cwd, "app/routes/_index.tsx"),
-          "utf8"
+          "utf8",
         );
         await fs.writeFile(
           path.join(cwd, "app/routes/_index.tsx"),
           indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
-          "utf8"
+          "utf8",
         );
         await page.waitForLoadState("networkidle");
         await expect(hmrStatus).toHaveText("HMR updated: yes");
         await expect(input).toHaveValue("stateful");
 
         // Ensure no errors after HMR
+        expect(page.errors).toEqual([]);
+      });
+
+      test("deferred loader data", async ({ dev, page }) => {
+        test.fixme(
+          templateName.includes("rsc"),
+          "RSC doesn't support Await component",
+        );
+
+        const { port } = await dev(files, templateName);
+        await page.goto(`http://localhost:${port}/deferred-loader-data`, {
+          waitUntil: "networkidle",
+        });
+
+        // Ensure no errors on page load
+        expect(page.errors).toEqual([]);
+
+        await expect(page.locator("#index [data-defer]")).toHaveText(
+          "Defer finished: yes",
+        );
+        // Ensure no errors after deferred rendering
         expect(page.errors).toEqual([]);
       });
 
@@ -310,7 +344,7 @@ test.describe("Vite dev", () => {
         expect(new URL(page.url()).pathname).toBe("/get-cookies");
 
         await expect(page.locator("#get-cookies [data-cookies]")).toHaveText(
-          "first=one; second=two; third=three"
+          "first=one; second=two; third=three",
         );
       });
 
@@ -330,12 +364,12 @@ test.describe("Vite dev", () => {
 
         let indexRouteContents = await fs.readFile(
           path.join(cwd, "app/routes/jsx.jsx"),
-          "utf8"
+          "utf8",
         );
         await fs.writeFile(
           path.join(cwd, "app/routes/jsx.jsx"),
           indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
-          "utf8"
+          "utf8",
         );
         await page.waitForLoadState("networkidle");
         await expect(hmrStatus).toHaveText("HMR updated: yes");
@@ -357,6 +391,11 @@ test.describe("Vite dev", () => {
       });
 
       test("loads .env file", async ({ dev, page }) => {
+        test.fixme(
+          templateName.includes("rsc"),
+          "RSC Framework Mode doesn't load .env files",
+        );
+
         const { port } = await dev(files, templateName);
 
         await page.goto(`http://localhost:${port}/dotenv`, {
@@ -369,7 +408,7 @@ test.describe("Vite dev", () => {
 
         let clientContent = page.locator("[data-dotenv-route-client-content]");
         await expect(clientContent).toHaveText(
-          "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+          "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
         );
 
         expect(page.errors).toEqual([]);
@@ -379,28 +418,38 @@ test.describe("Vite dev", () => {
         dev,
         page,
       }) => {
+        test.fixme(
+          templateName.includes("rsc"),
+          "Investigate this for RSC Framework Mode",
+        );
+
         const { port } = await dev(files, templateName);
 
         await page.goto(
-          `http://localhost:${port}/error-stacktrace?crash-server-render`
+          `http://localhost:${port}/error-stacktrace?crash-server-render`,
         );
         await expect(page.locator("main")).toContainText(
-          "Error: crash-server-render"
+          "Error: crash-server-render",
         );
         await expect(page.locator("main")).toContainText(
-          "error-stacktrace.tsx:14:11"
+          "error-stacktrace.tsx:14:11",
         );
 
         await page.goto(
-          `http://localhost:${port}/error-stacktrace?crash-loader`
+          `http://localhost:${port}/error-stacktrace?crash-loader`,
         );
         await expect(page.locator("main")).toContainText("Error: crash-loader");
         await expect(page.locator("main")).toContainText(
-          "error-stacktrace.tsx:5:11"
+          "error-stacktrace.tsx:5:11",
         );
       });
 
       test("handle known route exports with HMR", async ({ dev, page }) => {
+        test.fixme(
+          templateName.includes("rsc"),
+          "Investigate why this is failing in RSC Framework Mode",
+        );
+
         const { cwd, port } = await dev(files, templateName);
 
         await page.goto(`http://localhost:${port}/known-route-exports`, {
@@ -423,14 +472,14 @@ test.describe("Vite dev", () => {
 
         // component
         await editFile((data) =>
-          data.replace("HMR component: 0", "HMR component: 1")
+          data.replace("HMR component: 0", "HMR component: 1"),
         );
         await expect(page.locator("[data-hmr]")).toHaveText("HMR component: 1");
         await expect(input).toHaveValue("stateful");
 
         // handle
         await editFile((data) =>
-          data.replace("HMR handle: 0", "HMR handle: 1")
+          data.replace("HMR handle: 0", "HMR handle: 1"),
         );
         await expect(page.locator("[data-handle]")).toHaveText("HMR handle: 1");
         await expect(input).toHaveValue("stateful");
@@ -444,11 +493,11 @@ test.describe("Vite dev", () => {
         await editFile((data) => data.replace("HMR links: 0", "HMR links: 1"));
         await expect(page.locator("[data-link]")).toHaveAttribute(
           "data-link",
-          "HMR links: 1"
+          "HMR links: 1",
         );
 
         expect(page.errors).toEqual([]);
       });
     });
-  });
+  }
 });

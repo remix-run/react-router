@@ -33,7 +33,7 @@ describe("<Routes> with a location", () => {
             <Route path="home" element={<Home />} />
             <Route path="users/:userId" element={<User />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -53,7 +53,7 @@ describe("<Routes> with a location", () => {
             <Route path="home" element={<Home />} />
             <Route path="users/:userId" element={<User />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

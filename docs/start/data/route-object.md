@@ -54,6 +54,53 @@ function MyRouteComponent() {
 }
 ```
 
+## `middleware`
+
+Route [middleware][middleware] runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
+
+```tsx
+createBrowserRouter([
+  {
+    path: "/",
+    middleware: [loggingMiddleware],
+    loader: rootLoader,
+    Component: Root,
+    children: [{
+      path: 'auth',
+      middleware: [authMiddleware],
+      loader: authLoader,
+      Component: Auth,
+      children: [...]
+    }]
+  },
+]);
+
+async function loggingMiddleware({ request }, next) {
+  let url = new URL(request.url);
+  console.log(`Starting navigation: ${url.pathname}${url.search}`);
+  const start = performance.now();
+  await next();
+  const duration = performance.now() - start;
+  console.log(`Navigation completed in ${duration}ms`);
+}
+
+const userContext = createContext<User>();
+
+async function authMiddleware ({ context }) {
+  const userId = getUserId();
+
+  if (!userId) {
+    throw redirect("/login");
+  }
+
+  context.set(userContext, await getUserById(userId));
+};
+```
+
+See also:
+
+- [Middleware][middleware]
+
 ## `loader`
 
 Route loaders provide data to route components before they are rendered.
@@ -139,13 +186,23 @@ export default function Items() {
 
 ## `shouldRevalidate`
 
-By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
+Loader data is automatically revalidated after certain events like navigations and form submissions.
+
+This hook enables you to opt in or out of the default revalidation behavior. The default behavior is nuanced to avoid calling loaders unnecessarily.
+
+A route loader is revalidated when:
+
+- its own route params change
+- any change to URL search params
+- after an action is called and returns a non-error status code
+
+By defining this function, you opt out of the default behavior completely and can manually control when loader data is revalidated for navigations and form submissions.
 
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
 function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs
+  arg: ShouldRevalidateFunctionArgs,
 ) {
   return true; // false
 }
@@ -158,6 +215,10 @@ createBrowserRouter([
   },
 ]);
 ```
+
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
+
+Please note the default behavior is different in [Framework Mode](../modes).
 
 ## `lazy`
 
@@ -181,6 +242,7 @@ createBrowserRouter([
 
 ---
 
-Next: [Rendering Strategies](./rendering)
+Next: [Data Loading](./data-loading)
 
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
+[middleware]: ../../how-to/middleware

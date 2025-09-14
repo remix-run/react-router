@@ -1,0 +1,49 @@
+# This is a bulk-close script that was used initially to find and close issues
+# without a repro, but moving forward we'll likely use the singular version
+# (close-no-repro-issue.yml) on new issues which is driven by a label added to
+# the issue
+
+name: 🚪 Close issues without a reproduction
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        type: boolean
+        description: "Dry Run? (no issues will be closed)"
+        default: false
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  close-no-repro-issues:
+    name: 🚪 Close issues
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          # required for --experimental-strip-types
+          node-version: 22
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🚪 Close Issues (Dry Run)
+        if: ${{ inputs.dryRun }}
+        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts --dryRun
+
+      - name: 🚪 Close Issues
+        if: ${{ ! inputs.dryRun }}
+        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts

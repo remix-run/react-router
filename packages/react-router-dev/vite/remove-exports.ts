@@ -8,11 +8,14 @@ import { traverse } from "./babel";
 
 export const removeExports = (
   ast: ParseResult<Babel.File>,
-  exportsToRemove: string[]
+  exportsToRemove: readonly string[],
 ) => {
   let previouslyReferencedIdentifiers = findReferencedIdentifiers(ast);
   let exportsFiltered = false;
   let markedForRemoval = new Set<NodePath<Babel.Node>>();
+  // Keep track of identifiers referenced by removed exports,
+  // e.g. export { localName as exportName }, export default function localName
+  let removedExportLocalNames = new Set<string>();
 
   traverse(ast, {
     ExportDeclaration(path) {
@@ -28,6 +31,13 @@ export const removeExports = (
             ) {
               if (exportsToRemove.includes(specifier.exported.name)) {
                 exportsFiltered = true;
+                // Track the local identifier if it's different from the exported name
+                if (
+                  specifier.local &&
+                  specifier.local.name !== specifier.exported.name
+                ) {
+                  removedExportLocalNames.add(specifier.local.name);
+                }
                 return false;
               }
             }
@@ -69,7 +79,7 @@ export const removeExports = (
               }
 
               return true;
-            }
+            },
           );
           // Remove the entire export statement if all variables were removed
           if (declaration.declarations.length === 0) {
@@ -95,11 +105,45 @@ export const removeExports = (
       }
 
       // export default ...;
-      if (
-        path.node.type === "ExportDefaultDeclaration" &&
-        exportsToRemove.includes("default")
-      ) {
-        markedForRemoval.add(path);
+      if (path.node.type === "ExportDefaultDeclaration") {
+        if (exportsToRemove.includes("default")) {
+          markedForRemoval.add(path);
+          // Track the identifier being exported as default
+          if (path.node.declaration) {
+            if (path.node.declaration.type === "Identifier") {
+              removedExportLocalNames.add(path.node.declaration.name);
+            } else if (
+              (path.node.declaration.type === "FunctionDeclaration" ||
+                path.node.declaration.type === "ClassDeclaration") &&
+              path.node.declaration.id
+            ) {
+              removedExportLocalNames.add(path.node.declaration.id.name);
+            }
+          }
+        }
+      }
+    },
+  });
+
+  // Remove top-level property assignments to removed exports. Handles
+  // `clientLoader.hydrate = true`, `Component.displayName = "..."`, etc.
+  traverse(ast, {
+    ExpressionStatement(path) {
+      // Only handle top-level statements
+      if (!path.parentPath.isProgram()) {
+        return;
+      }
+
+      if (path.node.expression.type === "AssignmentExpression") {
+        const left = path.node.expression.left;
+        if (
+          left.type === "MemberExpression" &&
+          left.object.type === "Identifier" &&
+          (exportsToRemove.includes(left.object.name) ||
+            removedExportLocalNames.has(left.object.name))
+        ) {
+          markedForRemoval.add(path);
+        }
       }
     },
   });
@@ -116,7 +160,7 @@ export const removeExports = (
 
 function validateDestructuredExports(
   id: Babel.ArrayPattern | Babel.ObjectPattern,
-  exportsToRemove: string[]
+  exportsToRemove: readonly string[],
 ) {
   if (id.type === "ArrayPattern") {
     for (let element of id.elements) {

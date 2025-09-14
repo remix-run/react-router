@@ -5,7 +5,12 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["index.ts", "dom-export.ts", "lib/types/route-module.ts"];
+const entry = [
+  "index.ts",
+  "index-react-server-client.ts",
+  "dom-export.ts",
+  "lib/types/internal.ts",
+];
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
@@ -13,6 +18,9 @@ const config = (enableDevWarnings: boolean) =>
       clean: false,
       entry,
       format: ["cjs"],
+      splitting: true,
+      // Don't bundle `react-router` in sub-exports (i.e., `react-router/dom`)
+      external: ["react-router"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {
@@ -28,6 +36,11 @@ const config = (enableDevWarnings: boolean) =>
       clean: false,
       entry,
       format: ["esm"],
+      splitting: true,
+      // We don't do the external thing for `react-router` here because it
+      // doesn't get bundled by default in the ESM build, and when we tried it
+      // in https://github.com/remix-run/react-router/pull/13497 it changed up
+      // some chunk creation that we didn't want to risk having any side effects
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {

@@ -15,6 +15,8 @@ Loader data is automatically serialized from loaders and deserialized in compone
 
 The type for the `loaderData` prop is [automatically generated][type-safety].
 
+<docs-info>We try to support the same set of [serializable types][serializable-types] that React permits server components to pass as props to client components. This future proofs your application for any eventual migration to [RSC][rsc].</docs-info>
+
 ## Client Data Loading
 
 `clientLoader` is used to fetch data on the client. This is useful for pages or full projects that you'd prefer to fetch data from the browser only.
@@ -113,7 +115,7 @@ export default {
   async prerender() {
     let products = await readProductsFromCSVFile();
     return products.map(
-      (product) => `/products/${product.id}`
+      (product) => `/products/${product.id}`,
     );
   },
 } satisfies Config;
@@ -182,14 +184,18 @@ export default function Product() {
 
 ---
 
-Next: [Actions](./actions)
+Next: [Actions][actions]
 
 See also:
 
-- [Streaming with Suspense](../../how-to/suspense)
-- [Client Data](../../how-to/client-data)
-- [Using Fetchers](../../how-to/fetchers#loading-data)
+- [Streaming with Suspense][streaming]
+- [Client Data][client-data]
+- [Using Fetchers][fetchers]
 
-[advanced_data_fetching]: ../tutorials/advanced-data-fetching
-[data]: ../../api/react-router/data
 [type-safety]: ../../explanation/type-safety
+[serializable-types]: https://react.dev/reference/rsc/use-client#serializable-types
+[rsc]: ../../how-to/react-server-components
+[actions]: ./actions
+[streaming]: ../../how-to/suspense
+[client-data]: ../../how-to/client-data
+[fetchers]: ../../how-to/fetchers#loading-data

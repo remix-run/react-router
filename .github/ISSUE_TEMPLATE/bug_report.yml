@@ -8,32 +8,31 @@ body:
       value: |
         Thank you for helping to improve React Router!
 
-        ## Option 1: Submit a PR with a failing test
+        Please note that **all** bugs must have a **minimal** and **runnable** reproduction, meaning that it is not just pointing to a deployed site or a branch in your existing application, or showing a small code snippet. For more information, please refer to the [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process).
+
+        ## If you are using **Framework Mode**, you have 2 preferred options
+
+        ### Option 1 - Create a failing integration test
 
         🏆 The most helpful reproduction is to use our _bug report integration test_ template:
 
         1. [Fork `remix-run/react-router`](https://github.com/remix-run/react-router/fork)
         2. Open [`integration/bug-report-test.ts`](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts) in your editor
-        3. Follow the instructions and submit a pull request with a failing bug report test!
+        3. Follow the instructions to create a failing bug report test
+        4. Link to your forked branch with the failing test in this issue
 
-        ## Option 2: Continue filling out this form
-
-        If you'd rather open a GitHub issue, here are other ways to share a reproduction (ordered from most helpful to least):
+        ### Option 2 - Create a **minimal** reproduction
 
         - 🥇 Link to a [StackBlitz](https://reactrouter.com/new) environment
-        - 🥈 Link to a GitHub repository
-        - 🥉 Description of project including template, config files, `package.json` scripts, etc.
+        - 🥈 Link to a GitHub repository containing a minimal reproduction app
 
-  - type: dropdown
-    id: mode
-    attributes:
-      label: I'm using React Router as a...
-      description: See https://reactrouter.com/home for explanation
-      options:
-        - library
-        - framework
-    validations:
-      required: true
+        ## If you are using **Data** or **Declarative Mode**
+
+        Create a **minimal** reproduction
+
+        - 🥇 Link to a CodeSandbox repro: [TS](https://codesandbox.io/templates/react-vite-ts) | [JS](https://codesandbox.io/templates/react-vite)
+        - 🥈 Link to a GitHub repository containing a minimal reproduction app
+
   - type: textarea
     id: reproduction
     attributes:

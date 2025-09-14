@@ -4,9 +4,14 @@ title: Progressive Enhancement
 
 # Progressive Enhancement
 
-> Progressive enhancement is a strategy in web design that puts emphasis on web content first, allowing everyone to access the basic content and functionality of a web page, whilst users with additional browser features or faster Internet access receive the enhanced version instead.
+[MODES: framework]
 
-<cite>- [Wikipedia][wikipedia]</cite>
+<br/>
+<br/>
+
+> Progressive enhancement is a strategy in web design that puts emphasis on web content first, allowing everyone to access the basic content and functionality of a web page, whilst users with additional browser features or faster Internet access receive the enhanced version instead.
+>
+> <cite>- [Wikipedia][wikipedia]</cite>
 
 When using React Router with Server-Side Rendering (the default in framework mode), you can automatically leverage the benefits of progressive enhancement.
 

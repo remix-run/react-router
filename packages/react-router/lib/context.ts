@@ -1,8 +1,9 @@
 import * as React from "react";
+import type { unstable_ClientOnErrorFunction } from "./components";
 import type {
   History,
-  Action as NavigationType,
   Location,
+  Action as NavigationType,
   To,
 } from "./router/history";
 import type {
@@ -26,7 +27,7 @@ export interface IndexRouteObject {
   caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
-  unstable_middleware?: AgnosticIndexRouteObject["unstable_middleware"];
+  middleware?: AgnosticIndexRouteObject["middleware"];
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
@@ -47,7 +48,7 @@ export interface NonIndexRouteObject {
   caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
-  unstable_middleware?: AgnosticNonIndexRouteObject["unstable_middleware"];
+  middleware?: AgnosticNonIndexRouteObject["middleware"];
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
@@ -73,7 +74,7 @@ export type DataRouteObject = RouteObject & {
 
 export interface RouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends RouteObject = RouteObject,
 > extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
@@ -90,6 +91,7 @@ export interface DataRouterContextObject
   extends Omit<NavigationContextObject, "future"> {
   router: Router;
   staticContext?: StaticHandlerContext;
+  unstable_onError?: unstable_ClientOnErrorFunction;
 }
 
 export const DataRouterContext =
@@ -100,6 +102,12 @@ export const DataRouterStateContext = React.createContext<
   Router["state"] | null
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
+
+export const RSCRouterContext = React.createContext<boolean>(false);
+
+export function useIsRSCRouterContext(): boolean {
+  return React.useContext(RSCRouterContext);
+}
 
 export type ViewTransitionContextObject =
   | {
@@ -122,12 +130,16 @@ ViewTransitionContext.displayName = "ViewTransition";
 export type FetchersContextObject = Map<string, any>;
 
 export const FetchersContext = React.createContext<FetchersContextObject>(
-  new Map()
+  new Map(),
 );
 FetchersContext.displayName = "Fetchers";
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 AwaitContext.displayName = "Await";
+
+export const AwaitContextProvider = (
+  props: React.ComponentProps<typeof AwaitContext.Provider>,
+) => React.createElement(AwaitContext.Provider, props);
 
 export interface NavigateOptions {
   /** Replace the current entry in the history stack instead of pushing a new one */
@@ -172,7 +184,7 @@ interface NavigationContextObject {
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(
-  null!
+  null!,
 );
 NavigationContext.displayName = "Navigation";
 
@@ -182,7 +194,7 @@ interface LocationContextObject {
 }
 
 export const LocationContext = React.createContext<LocationContextObject>(
-  null!
+  null!,
 );
 LocationContext.displayName = "Location";
 
@@ -201,3 +213,7 @@ RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";
+
+// Provided by the build system
+declare const __DEV__: boolean;
+export const ENABLE_DEV_WARNINGS = __DEV__;

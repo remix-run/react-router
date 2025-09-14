@@ -1,6 +1,5 @@
 /* eslint-disable jest/expect-expect */
 
-import { JSDOM } from "jsdom";
 import * as React from "react";
 import {
   cleanup,
@@ -28,6 +27,7 @@ import {
   useNavigate,
   useParams,
 } from "../../index";
+import getWindow from "../utils/getWindow";
 import getHtml from "../utils/getHtml";
 
 /**
@@ -158,14 +158,9 @@ describe("special character tests", () => {
       navigatePath: string,
       expectedHeading: string,
       expectedLocation: Omit<Location, "state" | "key">,
-      expectedParams = {}
+      expectedParams = {},
     ) {
-      // Need to use our own custom DOM in order to get a working history
-      const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-        url: "https://remix.run/",
-      });
-      let testWindow = dom.window as unknown as Window;
-      testWindow.history.replaceState(null, "", navigatePath);
+      let testWindow = getWindow(navigatePath);
 
       function Comp({ heading }) {
         return (
@@ -224,11 +219,11 @@ describe("special character tests", () => {
       let ctx = render(
         <BrowserRouter window={testWindow}>
           <Routes>{routeElements}</Routes>
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       expect(ctx.container.querySelector("h1")?.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
 
       let windowLocation = {
@@ -248,7 +243,7 @@ describe("special character tests", () => {
       await waitFor(() => screen.getByText(/Link to reset/));
 
       expect(ctx.container.querySelector("h1")?.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
 
       windowLocation = {
@@ -273,7 +268,7 @@ describe("special character tests", () => {
       ctx = render(<RouterProvider router={router} />);
 
       expect(ctx.container.querySelector("h1")?.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
 
       windowLocation = {
@@ -294,7 +289,7 @@ describe("special character tests", () => {
       await waitFor(() => screen.getByText(/Link to reset/));
 
       expect(ctx.container.querySelector("h1")!.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
 
       windowLocation = {
@@ -324,7 +319,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: decodedChar }
+          { slug: decodedChar },
         );
 
         await testParamValues(
@@ -335,7 +330,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: `foo${decodedChar}bar` }
+          { slug: `foo${decodedChar}bar` },
         );
       }
     });
@@ -351,7 +346,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: decodedChar }
+          { slug: decodedChar },
         );
 
         await testParamValues(
@@ -362,7 +357,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: `foo${decodedChar}bar` }
+          { slug: `foo${decodedChar}bar` },
         );
       }
     });
@@ -378,7 +373,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": decodedChar }
+          { "*": decodedChar },
         );
 
         await testParamValues(
@@ -389,7 +384,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${decodedChar}bar` }
+          { "*": `foo${decodedChar}bar` },
         );
       }
     });
@@ -405,7 +400,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": decodedChar }
+          { "*": decodedChar },
         );
 
         await testParamValues(
@@ -416,7 +411,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${decodedChar}bar` }
+          { "*": `foo${decodedChar}bar` },
         );
       }
     });
@@ -432,7 +427,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo/bar${decodedChar}` }
+          { "*": `foo/bar${decodedChar}` },
         );
       }
     });
@@ -448,7 +443,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": decodedChar }
+          { "*": decodedChar },
         );
 
         await testParamValues(
@@ -459,7 +454,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${decodedChar}bar` }
+          { "*": `foo${decodedChar}bar` },
         );
       }
     });
@@ -475,7 +470,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo/bar${decodedChar}` }
+          { "*": `foo/bar${decodedChar}` },
         );
       }
     });
@@ -492,7 +487,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { param: decodedChar, "*": "match" }
+          { param: decodedChar, "*": "match" },
         );
 
         await testParamValues(
@@ -503,7 +498,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { param: `foo${decodedChar}bar`, "*": "match" }
+          { param: `foo${decodedChar}bar`, "*": "match" },
         );
       }
     });
@@ -534,7 +529,7 @@ describe("special character tests", () => {
       let ctx = render(
         <BrowserRouter window={getWindow("/parent/child/%20%20param%20%20")}>
           <App />
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
@@ -608,6 +603,164 @@ describe("special character tests", () => {
         );
       }
     });
+
+    it("handles encoded question marks in ancestor splat route segments", async () => {
+      let ctx = render(
+        <BrowserRouter window={getWindow("/parent/child/question-%3F-mark")}>
+          <App />
+        </BrowserRouter>,
+      );
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/question-%3F-mark/grandchild"
+          >
+            Link to grandchild
+          </a>
+        </div>"
+      `);
+
+      await fireEvent.click(screen.getByText("Link to grandchild"));
+      await waitFor(() => screen.getByText("Grandchild"));
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/question-%3F-mark/grandchild"
+          >
+            Link to grandchild
+          </a>
+          <h1>
+            Grandchild
+          </h1>
+          <pre>
+            {"*":"grandchild","param":"question-?-mark"}
+          </pre>
+        </div>"
+      `);
+
+      function App() {
+        return (
+          <Routes>
+            <Route path="/parent/*" element={<Parent />} />
+          </Routes>
+        );
+      }
+
+      function Parent() {
+        return (
+          <Routes>
+            <Route path="child/:param/*" element={<Child />} />
+          </Routes>
+        );
+      }
+
+      function Child() {
+        let location = useLocation();
+        let to = location.pathname.endsWith("grandchild")
+          ? "."
+          : "./grandchild";
+        return (
+          <>
+            <Link to={to}>Link to grandchild</Link>
+            <Routes>
+              <Route path="grandchild" element={<Grandchild />} />
+            </Routes>
+          </>
+        );
+      }
+
+      function Grandchild() {
+        return (
+          <>
+            <h1>Grandchild</h1>
+            <pre>{JSON.stringify(useParams())}</pre>
+          </>
+        );
+      }
+    });
+
+    it("handles encoded hashes in ancestor splat route segments", async () => {
+      let ctx = render(
+        <BrowserRouter window={getWindow("/parent/child/hash-%23-char")}>
+          <App />
+        </BrowserRouter>,
+      );
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/hash-%23-char/grandchild"
+          >
+            Link to grandchild
+          </a>
+        </div>"
+      `);
+
+      await fireEvent.click(screen.getByText("Link to grandchild"));
+      await waitFor(() => screen.getByText("Grandchild"));
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            data-discover="true"
+            href="/parent/child/hash-%23-char/grandchild"
+          >
+            Link to grandchild
+          </a>
+          <h1>
+            Grandchild
+          </h1>
+          <pre>
+            {"*":"grandchild","param":"hash-#-char"}
+          </pre>
+        </div>"
+      `);
+
+      function App() {
+        return (
+          <Routes>
+            <Route path="/parent/*" element={<Parent />} />
+          </Routes>
+        );
+      }
+
+      function Parent() {
+        return (
+          <Routes>
+            <Route path="child/:param/*" element={<Child />} />
+          </Routes>
+        );
+      }
+
+      function Child() {
+        let location = useLocation();
+        let to = location.pathname.endsWith("grandchild")
+          ? "."
+          : "./grandchild";
+        return (
+          <>
+            <Link to={to}>Link to grandchild</Link>
+            <Routes>
+              <Route path="grandchild" element={<Grandchild />} />
+            </Routes>
+          </>
+        );
+      }
+
+      function Grandchild() {
+        return (
+          <>
+            <h1>Grandchild</h1>
+            <pre>{JSON.stringify(useParams())}</pre>
+          </>
+        );
+      }
+    });
   });
 
   describe("when matching as part of the defined route path", () => {
@@ -616,15 +769,9 @@ describe("special character tests", () => {
       path: string,
       expectedHeading: string,
       expectedLocation: Omit<Location, "state" | "key">,
-      expectedParams = {}
+      expectedParams = {},
     ) {
-      // Need to use our own custom DOM in order to get a working history
-      const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-        url: "https://remix.run/",
-      });
-      let testWindow = dom.window as unknown as Window;
-      testWindow.history.replaceState(null, "", path);
-
+      let testWindow = getWindow(path);
       let renderedUseLocation: Omit<Location, "state" | "key"> | null = null;
       let renderedParams: Params<string> | null = null;
 
@@ -692,11 +839,11 @@ describe("special character tests", () => {
       let ctx = render(
         <BrowserRouter window={testWindow}>
           <Routes>{routeElements}</Routes>
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       expect(ctx.container.querySelector("h1")!.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
       let windowLocation = {
         pathname: testWindow.location.pathname,
@@ -720,7 +867,7 @@ describe("special character tests", () => {
       ctx = render(<RouterProvider router={router} />);
 
       expect(ctx.container.querySelector("h1")!.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
       windowLocation = {
         pathname: testWindow.location.pathname,
@@ -739,7 +886,7 @@ describe("special character tests", () => {
       await waitFor(() => screen.getByText(/Link to reset/));
 
       expect(ctx.container.querySelector("h1")!.innerHTML).toBe(
-        expectedHeading
+        expectedHeading,
       );
       windowLocation = {
         pathname: testWindow.location.pathname,
@@ -786,7 +933,7 @@ describe("special character tests", () => {
             pathname: `/nested/${pathChar}`,
             search: "",
             hash: "",
-          }
+          },
         );
       }
     });
@@ -809,7 +956,7 @@ describe("special character tests", () => {
           },
           {
             param: "foo",
-          }
+          },
         );
       }
     });
@@ -828,11 +975,11 @@ describe("special character tests", () => {
             <Routes>
               <Route path="/with space" element={<ShowPath />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -850,23 +997,23 @@ describe("special character tests", () => {
               <Route path="/" element={<Start />} />
               <Route path="/with space" element={<ShowPath />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`,
         );
       });
 
       it("does not encode characters in createMemoryRouter", () => {
         let router = createMemoryRouter(
           [{ path: "/with space", element: <ShowPath /> }],
-          { initialEntries: ["/with space"] }
+          { initialEntries: ["/with space"] },
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -885,7 +1032,7 @@ describe("special character tests", () => {
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`,
         );
       });
     });
@@ -899,12 +1046,12 @@ describe("special character tests", () => {
             <Routes>
               <Route path="/with space" element={<ShowPath />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -925,12 +1072,12 @@ describe("special character tests", () => {
               <Route path="/" element={<Start />} />
               <Route path="/with space" element={<ShowPath />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -939,13 +1086,13 @@ describe("special character tests", () => {
 
         let router = createBrowserRouter(
           [{ path: "/with space", element: <ShowPath /> }],
-          { window: testWindow }
+          { window: testWindow },
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -965,13 +1112,13 @@ describe("special character tests", () => {
             { path: "/", element: <Start /> },
             { path: "/with space", element: <ShowPath /> },
           ],
-          { window: testWindow }
+          { window: testWindow },
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -999,7 +1146,7 @@ describe("special character tests", () => {
               ],
             },
           ],
-          { window: testWindow }
+          { window: testWindow },
         );
         let ctx = render(<RouterProvider router={router} />);
 
@@ -1030,13 +1177,13 @@ describe("special character tests", () => {
             <Routes>
               <Route path="/with space" element={<ShowPath />} />
             </Routes>
-          </HashRouter>
+          </HashRouter>,
         );
 
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -1057,13 +1204,13 @@ describe("special character tests", () => {
               <Route path="/" element={<Start />} />
               <Route path="/with space" element={<ShowPath />} />
             </Routes>
-          </HashRouter>
+          </HashRouter>,
         );
 
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -1072,14 +1219,14 @@ describe("special character tests", () => {
 
         let router = createHashRouter(
           [{ path: "/with space", element: <ShowPath /> }],
-          { window: testWindow }
+          { window: testWindow },
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
 
@@ -1099,26 +1246,16 @@ describe("special character tests", () => {
             { path: "/", element: <Start /> },
             { path: "/with space", element: <ShowPath /> },
           ],
-          { window: testWindow }
+          { window: testWindow },
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`,
         );
       });
     });
   });
 });
-
-function getWindow(initialPath) {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-    url: "https://remix.run/",
-  });
-  let testWindow = dom.window as unknown as Window;
-  testWindow.history.pushState({}, "", initialPath);
-  return testWindow;
-}

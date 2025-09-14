@@ -32,7 +32,7 @@ describe("useRevalidator", () => {
             loader={async () => `count=${++count}`}
             element={<Foo />}
           />
-        </Route>
+        </Route>,
       ),
       {
         initialEntries: ["/foo"],
@@ -41,7 +41,7 @@ describe("useRevalidator", () => {
             "0-0": "count=1",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -157,14 +157,14 @@ describe("useRevalidator", () => {
               );
             }}
           />
-        </Route>
-      )
+        </Route>,
+      ),
     );
 
     let { container } = render(
       <div>
         <RouterProvider router={router} />
-      </div>
+      </div>,
     );
 
     fireEvent.click(screen.getByText("/child"));
@@ -214,14 +214,14 @@ describe("useRevalidator", () => {
             }}
             Component={() => <p>{("Child:" + useLoaderData()) as string}</p>}
           />
-        </Route>
-      )
+        </Route>,
+      ),
     );
 
     let { container } = render(
       <div>
         <RouterProvider router={router} />
-      </div>
+      </div>,
     );
 
     fireEvent.click(screen.getByText("/child"));
@@ -282,5 +282,51 @@ describe("useRevalidator", () => {
     await waitFor(() => screen.getByText("Home Page"));
 
     expect(count).toBe(1);
+  });
+
+  it("is stable across revalidation changes", async () => {
+    let uiCount = 0;
+    let stableCount = 0;
+    let unstableCount = 0;
+    let router = createMemoryRouter(
+      [
+        {
+          id: "root",
+          path: "/",
+          loader: () => ++uiCount,
+          Component() {
+            let { revalidate, state } = useRevalidator();
+
+            React.useEffect(() => void stableCount++, [revalidate]);
+            React.useEffect(() => void unstableCount++, [state]);
+
+            return (
+              <button onClick={() => revalidate()}>
+                Revalidate: {useLoaderData()}
+              </button>
+            );
+          },
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: { root: 0 },
+        },
+      },
+    );
+
+    render(<RouterProvider router={router} />);
+
+    fireEvent.click(screen.getByText("Revalidate: 0"));
+    await waitFor(() => screen.getByText("Revalidate: 1"));
+
+    fireEvent.click(screen.getByText("Revalidate: 1"));
+    await waitFor(() => screen.getByText("Revalidate: 2"));
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // idle -> loading -> idle -> loading -> idle
+    expect(unstableCount).toBe(5);
+    expect(stableCount).toBe(1);
   });
 });

@@ -1,5 +1,103 @@
 # react-router-dom
 
+## 7.9.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.1`
+
+## 7.9.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.0`
+
+## 7.8.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.2`
+
+## 7.8.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.1`
+
+## 7.8.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.0`
+
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.1`
+
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+
+## 7.6.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.3`
+
+## 7.6.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+
+## 7.6.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.1`
+
 ## 7.5.0
 
 ### Patch Changes
@@ -96,7 +194,6 @@
 ### Major Changes
 
 - Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
-
   - `defer`
   - `AbortedDeferredError`
   - `type TypedDeferredData`

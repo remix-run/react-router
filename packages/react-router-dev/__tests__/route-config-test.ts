@@ -1,5 +1,5 @@
 import path from "node:path";
-import { normalizePath } from "vite";
+import { normalize as normalizePath } from "pathe";
 
 import {
   validateRouteConfig,
@@ -15,21 +15,25 @@ const cleanPathsForSnapshot = (obj: any): any =>
     JSON.stringify(obj, (_key, value) =>
       typeof value === "string" && path.isAbsolute(value)
         ? normalizePath(value.replace(process.cwd(), "{{CWD}}"))
-        : value
-    )
+        : value,
+    ),
   );
 
 describe("route config", () => {
   describe("validateRouteConfig", () => {
     it("validates a route config", () => {
+      const routeConfig = prefix("prefix", [
+        route("parent", "parent.tsx", [route("child", "child.tsx")]),
+      ]);
       expect(
         validateRouteConfig({
           routeConfigFile: "routes.ts",
-          routeConfig: prefix("prefix", [
-            route("parent", "parent.tsx", [route("child", "child.tsx")]),
-          ]),
-        }).valid
-      ).toBe(true);
+          routeConfig,
+        }),
+      ).toEqual({
+        valid: true,
+        routeConfig,
+      });
     });
 
     it("is invalid when not an array", () => {
@@ -40,7 +44,7 @@ describe("route config", () => {
 
       expect(result.valid).toBe(false);
       expect(!result.valid && result.message).toMatchInlineSnapshot(
-        `"Route config in "routes.ts" must be an array."`
+        `"Route config in "routes.ts" must be an array."`,
       );
     });
 
@@ -73,6 +77,21 @@ describe("route config", () => {
 
         Path: routes.0.children.0.file
         Invalid type: Expected string but received undefined"
+      `);
+    });
+
+    it("is invalid it uses the 'root' id", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        routeConfig: [route("/", "root.tsx", { id: "root" })],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(`
+        "Route config in "routes.ts" is invalid.
+
+        Path: routes.0.id
+        A route cannot use the reserved id 'root'."
       `);
     });
 
@@ -166,7 +185,7 @@ describe("route config", () => {
         expect(
           route("parent", "parent.tsx", { id: "custom-id" }, [
             route("child", "child.tsx"),
-          ])
+          ]),
         ).toMatchInlineSnapshot(`
           {
             "children": [
@@ -212,7 +231,7 @@ describe("route config", () => {
           route(null, "file.tsx", {
             index: true,
             unsupportedOption: 123,
-          })
+          }),
         ).toMatchInlineSnapshot(`
           {
             "children": undefined,
@@ -250,7 +269,7 @@ describe("route config", () => {
             id: "custom-id",
             // @ts-expect-error
             unsupportedOption: 123,
-          })
+          }),
         ).toMatchInlineSnapshot(`
           {
             "file": "file.tsx",
@@ -302,7 +321,7 @@ describe("route config", () => {
         expect(
           layout("layout.tsx", { id: "custom-id" }, [
             route("child", "child.tsx"),
-          ])
+          ]),
         ).toMatchInlineSnapshot(`
           {
             "children": [
@@ -403,7 +422,7 @@ describe("route config", () => {
         expect(
           prefix("prefix", [
             layout("routes/layout.tsx", [route("route", "routes/route.tsx")]),
-          ])
+          ]),
         ).toMatchInlineSnapshot(`
           [
             {
@@ -432,7 +451,7 @@ describe("route config", () => {
                 ]),
               ]),
             ]),
-          ])
+          ]),
         ).toMatchInlineSnapshot(`
           [
             {
@@ -477,8 +496,8 @@ describe("route config", () => {
           cleanPathsForSnapshot(
             route("parent", "nested/parent.tsx", [
               route("child", "nested/child.tsx", { id: "child" }),
-            ])
-          )
+            ]),
+          ),
         ).toMatchInlineSnapshot(`
           {
             "children": [
@@ -500,7 +519,7 @@ describe("route config", () => {
           cleanPathsForSnapshot([
             index("nested/without-options.tsx"),
             index("nested/with-options.tsx", { id: "with-options" }),
-          ])
+          ]),
         ).toMatchInlineSnapshot(`
           [
             {
@@ -522,8 +541,8 @@ describe("route config", () => {
           cleanPathsForSnapshot(
             layout("nested/parent.tsx", [
               layout("nested/child.tsx", { id: "child" }),
-            ])
-          )
+            ]),
+          ),
         ).toMatchInlineSnapshot(`
           {
             "children": [

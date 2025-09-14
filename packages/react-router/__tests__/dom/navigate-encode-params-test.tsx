@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import {
   BrowserRouter,
   Routes,
@@ -46,7 +46,7 @@ describe("navigate with params", () => {
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 
@@ -79,7 +79,7 @@ describe("navigate with params", () => {
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 

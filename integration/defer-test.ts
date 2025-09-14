@@ -552,14 +552,27 @@ test.describe("non-aborted", () => {
     return `<p id="count-${id}">${val}</p>`;
   }
 
+  const deferredHTMLStartString = "<template id=";
+  function getCriticalHTML(html: string) {
+    return html.slice(
+      0,
+      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length,
+    );
+  }
+  function getDeferredHTML(html: string) {
+    return html.slice(
+      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length,
+    );
+  }
+
   test("works with critical JSON like data", async ({ page }) => {
     let response = await fixture.requestDocument("/");
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(INDEX_ID, 0));
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
-    expect(deferredHTML).not.toBe("");
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML.replace("</body></html>", "")).not.toBe("");
     expect(deferredHTML).not.toContain('<p id="count-');
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -579,12 +592,12 @@ test.describe("non-aborted", () => {
   }) => {
     let response = await fixture.requestDocument("/deferred-noscript-resolved");
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(FALLBACK_ID);
     expect(criticalHTML).not.toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML).toContain(FALLBACK_ID);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -596,15 +609,15 @@ test.describe("non-aborted", () => {
 
   test("slow promises render in subsequent payload", async ({ page }) => {
     let response = await fixture.requestDocument(
-      "/deferred-noscript-unresolved"
+      "/deferred-noscript-unresolved",
     );
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(criticalHTML).not.toContain(RESOLVED_DEFERRED_ID);
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -619,11 +632,11 @@ test.describe("non-aborted", () => {
   }) => {
     let response = await fixture.requestDocument("/deferred-script-resolved");
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(FALLBACK_ID);
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML).toContain(FALLBACK_ID);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -645,12 +658,12 @@ test.describe("non-aborted", () => {
   }) => {
     let response = await fixture.requestDocument("/deferred-script-unresolved");
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(criticalHTML).not.toContain(RESOLVED_DEFERRED_ID);
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -672,11 +685,11 @@ test.describe("non-aborted", () => {
   }) => {
     let response = await fixture.requestDocument("/deferred-script-rejected");
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(FALLBACK_ID);
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML).toContain(FALLBACK_ID);
     expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -698,12 +711,12 @@ test.describe("non-aborted", () => {
   }) => {
     let response = await fixture.requestDocument("/deferred-script-unrejected");
     let html = await response.text();
-    let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
+    let criticalHTML = getCriticalHTML(html);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(criticalHTML).not.toContain(ERROR_ID);
-    let deferredHTML = html.slice(html.indexOf("</html>") + 7);
+    let deferredHTML = getDeferredHTML(html);
+    expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
@@ -796,7 +809,7 @@ test.describe("non-aborted", () => {
     await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
 
     global.__deferredManualResolveCache.deferreds[id].reject(
-      new Error("error")
+      new Error("error"),
     );
 
     await ensureInteractivity(page, ROOT_ID, 2);
@@ -1275,7 +1288,7 @@ function monitorConsole(page: Page) {
         logs.push(arg0);
       }
       errors.push(
-        `Unexpected console.log(${JSON.stringify(logs).slice(1, -1)})`
+        `Unexpected console.log(${JSON.stringify(logs).slice(1, -1)})`,
       );
     }
     if (errors.length) {

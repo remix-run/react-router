@@ -11,5 +11,5 @@ ReactDOM.hydrateRoot(
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

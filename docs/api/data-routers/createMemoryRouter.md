@@ -4,28 +4,82 @@ title: createMemoryRouter
 
 # createMemoryRouter
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/components.tsx
+-->
+
 [MODES: data]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createMemoryRouter.html)
 
+Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application path using an
+in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+stack. Useful for non-browser environments without a DOM API.
+
 ## Signature
 
 ```tsx
-createMemoryRouter(routes, opts): DataRouter
+function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: MemoryRouterOpts,
+): DataRouter
 ```
 
 ## Params
 
 ### routes
 
-[modes: data]
+Application routes
 
-_No documentation_
+### opts.basename
 
-### opts
+Basename path for the application.
 
-[modes: data]
+### opts.dataStrategy
 
-_No documentation_
+Override the default data strategy of loading in parallel.
+Only intended for advanced usage.
+
+### opts.future
+
+Future flags to enable for the router.
+
+### opts.getContext
+
+A function that returns an [`RouterContextProvider`](../utils/RouterContextProvider) instance
+which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
+[`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+This function is called to generate a fresh `context` instance on each
+navigation or fetcher call.
+
+### opts.hydrationData
+
+Hydration data to initialize the router with if you have already performed
+data loading on the server.
+
+### opts.initialEntries
+
+Initial entries in the in-memory history stack
+
+### opts.initialIndex
+
+Index of `initialEntries` the application should initialize to
+
+### opts.patchRoutesOnNavigation
+
+Lazily define portions of the route tree on navigations.
+
+## Returns
+
+An initialized [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+
