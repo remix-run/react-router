@@ -23,22 +23,15 @@ function typecheck(cwd: string) {
   return spawnSync(nodeBin, [tscBin], { cwd });
 }
 
-const viteConfig = ({ rsc }: { rsc: boolean } = { rsc: false }) => tsx`
-  ${
-    rsc
-      ? tsx`
-          import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from '@react-router/dev/internal';
-          const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;
-        `
-      : tsx`
-          import { reactRouter } from "@react-router/dev/vite";
-        `
-  }
+const viteConfig = ({ rsc }: { rsc: boolean } = { rsc: false }) => {
+  return tsx`
+    import { ${rsc ? "unstable_reactRouterRSC as reactRouter" : "reactRouter"} } from "@react-router/dev/vite";
 
-  export default {
-    plugins: [reactRouter()],
-  };
-`;
+    export default {
+      plugins: [reactRouter()],
+    };
+  `;
+};
 
 const expectType = tsx`
   export type Expect<T extends true> = T

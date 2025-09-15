@@ -5,7 +5,7 @@ unstable: true
 
 # React Server Components
 
-[MODES: data]
+[MODES: framework, data]
 
 <br/>
 <br/>
@@ -22,34 +22,266 @@ From the docs:
 
 React Router provides a set of APIs for integrating with RSC-compatible bundlers, allowing you to leverage [Server Components][react-server-components-doc] and [Server Functions][react-server-functions-doc] in your React Router applications.
 
+If you're unfamiliar with these React features, we recommend reading the official [Server Components documentation][react-server-components-doc] before using React Router's RSC APIs.
+
+RSC support is available in both Framework Mode and Data Mode. For more information on the difference between these modes, see the [Picking a Mode][picking-a-mode] guide.
+
 ## Quick Start
 
 The quickest way to get started is with one of our templates.
 
-These templates come with React Router RSC APIs already configured with the respective bundler, offering you out of the box features such as:
+These templates come with React Router RSC APIs already configured, offering you out of the box features such as:
 
 - Server Component Routes
 - Server Side Rendering (SSR)
 - Client Components (via [`"use client"`][use-client-docs] directive)
 - Server Functions (via [`"use server"`][use-server-docs] directive)
 
-**Parcel Template**
+### RSC Framework Mode Template
 
-The [parcel template][parcel-rsc-template] uses the official React `react-server-dom-parcel` plugin.
-
-```shellscript
-npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-parcel
-```
-
-**Vite Template**
-
-The [vite template][vite-rsc-template] uses the experimental Vite `@vitejs/plugin-rsc` plugin.
+The [RSC Framework Mode template][framework-rsc-template] uses the unstable React Router RSC Vite plugin along with the experimental [`@vitejs/plugin-rsc` plugin][vite-plugin-rsc].
 
 ```shellscript
-npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-vite
+npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-framework-mode
 ```
 
-## Using RSC with React Router
+### RSC Data Mode Templates
+
+When using RSC Data Mode, you can choose between the Vite and Parcel templates.
+
+The [Vite RSC Data Mode template][vite-rsc-template] uses the experimental Vite `@vitejs/plugin-rsc` plugin.
+
+```shellscript
+npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-data-mode-vite
+```
+
+The [Parcel RSC Data Mode template][parcel-rsc-template] uses the official React `react-server-dom-parcel` plugin.
+
+```shellscript
+npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-data-mode-parcel
+```
+
+## RSC Framework Mode
+
+Most APIs and features in RSC Framework Mode are the same as non-RSC Framework Mode, so this guide will focus on the differences.
+
+### New React Router RSC Vite Plugin
+
+RSC Framework Mode uses a different Vite plugin than non-RSC Framework Mode, currently exported as `unstable_reactRouterRSC`.
+
+This new Vite plugin also has a peer dependency on the experimental `@vitejs/plugin-rsc` plugin. Note that the `@vitejs/plugin-rsc` plugin should be placed after the React Router RSC plugin in your Vite config.
+
+```tsx filename=vite.config.ts
+import { defineConfig } from "vite";
+import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+import rsc from "@vitejs/plugin-rsc";
+
+export default defineConfig({
+  plugins: [reactRouterRSC(), rsc()],
+});
+```
+
+### Build Output
+
+The RSC Framework Mode server build file (`build/server/index.js`) now exports a `default` request handler function (`(request: Request) => Promise<Response>`) for document/data requests.
+
+If needed, you can convert this into a [standard Node.js request listener][node-request-listener] for use with Node's built-in `http.createServer` function (or anything that supports it, e.g. [Express][express]) by using the `createRequestListener` function from [@remix-run/node-fetch-server][node-fetch-server].
+
+For example, in Express:
+
+```tsx filename=start.js
+import express from "express";
+import requestHandler from "./build/server/index.js";
+import { createRequestListener } from "@remix-run/node-fetch-server";
+
+const app = express();
+
+app.use(
+  "/assets",
+  express.static("build/client/assets", {
+    immutable: true,
+    maxAge: "1y",
+  }),
+);
+app.use(express.static("build/client"));
+app.use(createRequestListener(requestHandler));
+app.listen(3000);
+```
+
+### React Elements From Loaders/Actions
+
+In RSC Framework Mode, loaders and actions can now return React elements along with other data. These elements will only ever be rendered on the server.
+
+```tsx
+import type { Route } from "./+types/route";
+
+export async function loader() {
+  return {
+    message: "Message from the server!",
+    element: <p>Element from the server!</p>,
+  };
+}
+
+export default function Route({
+  loaderData,
+}: Route.ComponentProps) {
+  return (
+    <>
+      <h1>{loaderData.message}</h1>
+      {loaderData.element}
+    </>
+  );
+}
+```
+
+If you need to use client-only features (e.g. [Hooks][hooks], event handlers) within React elements returned from loaders/actions, you'll need to extract components using these features into a [client module][use-client-docs]:
+
+```tsx filename=src/routes/counter/counter.tsx
+"use client";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+```
+
+```tsx filename=src/routes/counter/route.tsx
+import type { Route } from "./+types/route";
+import { Counter } from "./counter";
+
+export async function loader() {
+  return {
+    message: "Message from the server!",
+    element: (
+      <>
+        <p>Element from the server!</p>
+        <Counter />
+      </>
+    ),
+  };
+}
+
+export default function Route({
+  loaderData,
+}: Route.ComponentProps) {
+  return (
+    <>
+      <h1>{loaderData.message}</h1>
+      {loaderData.element}
+    </>
+  );
+}
+```
+
+### Server Component Routes
+
+If a route exports a `ServerComponent` instead of the typical `default` component export, this component along with other route components (`ErrorBoundary`, `HydrateFallback`, `Layout`) will be server components rather than the usual client components.
+
+```tsx
+import type { Route } from "./+types/route";
+import { Outlet } from "react-router";
+import { getMessage } from "./message";
+
+export async function loader() {
+  return {
+    message: await getMessage(),
+  };
+}
+
+export function ServerComponent({
+  loaderData,
+}: Route.ComponentProps) {
+  return (
+    <>
+      <h1>Server Component Route</h1>
+      <p>Message from the server: {loaderData.message}</p>
+      <Outlet />
+    </>
+  );
+}
+```
+
+If you need to use client-only features (e.g. [Hooks][hooks], event handlers) within a server-first route, you'll need to extract components using these features into a [client module][use-client-docs]:
+
+```tsx filename=src/routes/counter/counter.tsx
+"use client";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+```
+
+```tsx filename=src/routes/counter/route.tsx
+import { Counter } from "./counter";
+
+export function ServerComponent() {
+  return (
+    <>
+      <h1>Counter</h1>
+      <Counter />
+    </>
+  );
+}
+```
+
+### `.server`/`.client` Modules
+
+To avoid confusion with React's `"use server"` and `"use client"` directives, support for [`.server` modules][server-modules] and [`.client` modules][client-modules] is no longer built-in.
+
+If you need either of these features, we recommend using the [`vite-env-only` plugin][vite-env-only] directly. For example, to ensure `.server` modules aren't accidentally included in the client build:
+
+```tsx filename=vite.config.ts
+import { defineConfig } from "vite";
+import { denyImports } from "vite-env-only";
+import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+import rsc from "@vitejs/plugin-rsc";
+
+export default defineConfig({
+  plugins: [
+    denyImports({
+      client: { files: ["**/.server/*", "**/*.server.*"] },
+    }),
+    reactRouterRSC(),
+    rsc(),
+  ],
+});
+```
+
+### MDX Route Support
+
+MDX routes are supported in RSC Framework Mode when using `@mdx-js/rollup` v3.1.1+.
+
+Note that any components exported from an MDX route must also be valid in RSC environments, meaning that they cannot use client-only features like [Hooks][hooks]. Any components that need to use these features should be extracted into a [client module][use-client-docs].
+
+### Unsupported Config Options
+
+For the initial unstable release, the following options from `react-router.config.ts` are not yet supported in RSC Framework Mode:
+
+- `buildEnd`
+- `prerender`
+- `presets`
+- `routeDiscovery`
+- `serverBundles`
+- `ssr: false` (SPA Mode)
+- `future.unstable_splitRouteModules`
+- `future.unstable_subResourceIntegrity`
+
+Custom build entry files are also not yet supported.
+
+## RSC Data Mode
+
+The RSC Framework Mode APIs described above are built on top of lower-level RSC Data Mode APIs.
+
+RSC Data Mode is missing some of the features of RSC Framework Mode (e.g. `routes.ts` config and file system routing, HMR and Hot Data Revalidation), but is more flexible and allows you to integrate with your own bundler and server abstractions.
 
 ### Configuring Routes
 
@@ -238,7 +470,7 @@ export default function Root() {
 }
 ```
 
-## Configuring RSC with React Router
+### Bundler Configuration
 
 React Router provides several APIs that allow you to easily integrate with RSC-compatible bundlers, useful if you are using React Router Data Mode to make your own [custom framework][custom-framework].
 
@@ -303,7 +535,7 @@ Relevant APIs:
 
 ### Parcel
 
-See the [Parcel RSC docs][parcel-rsc-doc] for more information. You can also refer to our [Parcel RSC Parcel template][parcel-rsc-template] to see a working version.
+See the [Parcel RSC docs][parcel-rsc-doc] for more information. You can also refer to our [Parcel RSC Data Mode template][parcel-rsc-template] to see a working version.
 
 In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
 
@@ -553,7 +785,7 @@ createFromReadableStream(getRSCStream()).then(
 
 ### Vite
 
-See the [Vite RSC docs][vite-rsc-doc] for more information. You can also refer to our [Vite RSC template][vite-rsc-template] to see a working version.
+See the [@vitejs/plugin-rsc docs][vite-plugin-rsc] for more information. You can also refer to our [Vite RSC Data Mode template][vite-rsc-template] to see a working version.
 
 In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
 
@@ -765,6 +997,7 @@ createFromReadableStream<RSCServerPayload>(
 });
 ```
 
+[picking-a-mode]: ../start/modes
 [react-server-components-doc]: https://react.dev/reference/rsc/server-components
 [react-server-functions-doc]: https://react.dev/reference/rsc/server-functions
 [use-client-docs]: https://react.dev/reference/rsc/use-client
@@ -773,7 +1006,7 @@ createFromReadableStream<RSCServerPayload>(
 [framework-mode]: ../start/modes#framework
 [custom-framework]: ../start/data/custom
 [parcel-rsc-doc]: https://parceljs.org/recipes/rsc/
-[vite-rsc-doc]: https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc
+[vite-plugin-rsc]: https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc
 [match-rsc-server-request]: ../api/rsc/matchRSCServerRequest
 [route-rsc-server-request]: ../api/rsc/routeRSCServerRequest
 [rsc-static-router]: ../api/rsc/RSCStaticRouter
@@ -782,5 +1015,11 @@ createFromReadableStream<RSCServerPayload>(
 [rsc-hydrated-router]: ../api/rsc/RSCHydratedRouter
 [express]: https://expressjs.com/
 [node-fetch-server]: https://www.npmjs.com/package/@remix-run/node-fetch-server
-[parcel-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-parcel
-[vite-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-vite
+[framework-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-framework-mode
+[parcel-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-data-mode-parcel
+[vite-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-data-mode-vite
+[node-request-listener]: https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener
+[hooks]: https://react.dev/reference/react/hooks
+[vite-env-only]: https://github.com/pcattori/vite-env-only
+[server-modules]: ../api/framework-conventions/server-modules
+[client-modules]: ../api/framework-conventions/client-modules

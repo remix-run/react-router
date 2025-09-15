@@ -138,9 +138,8 @@ export const viteConfig = {
         !isRsc
           ? "import { reactRouter } from '@react-router/dev/vite';"
           : [
-              "import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from '@react-router/dev/internal';",
+              "import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';",
               "import rsc from '@vitejs/plugin-rsc';",
-              "const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;",
             ].join("\n")
       }
       ${args.mdx ? 'import mdx from "@mdx-js/rollup";' : ""}
@@ -156,7 +155,7 @@ export const viteConfig = {
         plugins: [
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
-          reactRouter(),
+          ${isRsc ? "reactRouterRSC()," : "reactRouter(),"}
           ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
           tsconfigPaths()
