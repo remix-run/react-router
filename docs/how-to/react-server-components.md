@@ -24,7 +24,7 @@ React Router provides a set of APIs for integrating with RSC-compatible bundlers
 
 If you're unfamiliar with these React features, we recommend reading the official [Server Components documentation][react-server-components-doc] before using React Router's RSC APIs.
 
-RSC support is available in both Framework Mode and Data Mode. For more information on the difference between these modes, see the [Picking a Mode][picking-a-mode] guide.
+RSC support is available in both Framework and Data Modes. For more information on the conceptual difference between these, see ["Picking a Mode"][picking-a-mode]. However, note that the APIs and features differ between RSC and non-RSC modes in ways that this guide will cover in more detail.
 
 ## Quick Start
 
