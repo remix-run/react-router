@@ -235,9 +235,19 @@ export function ServerComponent() {
 
 ### `.server`/`.client` Modules
 
-To avoid confusion with React's `"use server"` and `"use client"` directives, support for [`.server` modules][server-modules] and [`.client` modules][client-modules] is no longer built-in.
+To avoid confusion with RSC's `"use server"` and `"use client"` directives, support for [`.server` modules][server-modules] and [`.client` modules][client-modules] is no longer built-in when using RSC Framework Mode.
 
-If you need either of these features, we recommend using the [`vite-env-only` plugin][vite-env-only] directly. For example, to ensure `.server` modules aren't accidentally included in the client build:
+As an alternative solution that doesn't rely on file naming conventions, we recommend using the ["server-only"][server-only-package] and ["client-only"][client-only-package] packages. These are commonly referred to as "poison pills" because they will break the build if they're included outside of the designated environment.
+
+For example, to ensure a module is never accidentally included in the client build, simply import the `server-only` package as a side effect.
+
+```ts filename=app/utils/db.ts
+import "server-only";
+
+// Rest of the module...
+```
+
+If you'd like to quickly migrate existing code that relies on the `.server` and `.client` file naming conventions, we recommend using the [`vite-env-only` plugin][vite-env-only] directly. For example, to ensure `.server` modules aren't accidentally included in the client build:
 
 ```tsx filename=vite.config.ts
 import { defineConfig } from "vite";
@@ -1023,3 +1033,5 @@ createFromReadableStream<RSCServerPayload>(
 [vite-env-only]: https://github.com/pcattori/vite-env-only
 [server-modules]: ../api/framework-conventions/server-modules
 [client-modules]: ../api/framework-conventions/client-modules
+[server-only-package]: https://www.npmjs.com/package/server-only
+[client-only-package]: https://www.npmjs.com/package/client-only
