@@ -3498,8 +3498,64 @@ export function createRouter(init: RouterInit): Router {
 
 export interface CreateStaticHandlerOptions {
   basename?: string;
+  events?: EventTarget;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: {};
+}
+
+const EVENTS = {
+  navigateStart: {
+    name: "navigate:start",
+    detail(request: Request, context: RouterContextProvider) {
+      return {
+        request,
+        context,
+      };
+    },
+  },
+  navigateEnd: {
+    name: "navigate:end",
+    detail(request: Request, context: RouterContextProvider) {
+      return {
+        request,
+        context,
+      };
+    },
+  },
+  loaderStart: {
+    name: "loader:start",
+    detail(request: Request, context: RouterContextProvider, routeId: string) {
+      return {
+        request,
+        context,
+        routeId,
+      };
+    },
+  },
+  loaderEnd: {
+    name: "loader:end",
+    detail(request: Request, context: RouterContextProvider, routeId: string) {
+      return {
+        request,
+        context,
+        routeId,
+      };
+    },
+  },
+};
+
+function fireEvent(
+  events: EventTarget | undefined,
+  event: keyof typeof EVENTS,
+  ...args: any[]
+) {
+  console.log("firing event", events, event, EVENTS[event].name);
+  events?.dispatchEvent(
+    new CustomEvent(EVENTS[event].name, {
+      // @ts-expect-error
+      detail: EVENTS[event].detail(...args),
+    }),
+  );
 }
 
 export function createStaticHandler(
@@ -3632,6 +3688,8 @@ export function createStaticHandler(
           "`requestContext` must be an instance of `RouterContextProvider`",
       );
       try {
+        fireEvent(opts?.events, "navigateStart", request, requestContext);
+
         await loadLazyMiddlewareForMatches(
           matches,
           manifest,
@@ -3774,6 +3832,8 @@ export function createStaticHandler(
           return e;
         }
         throw e;
+      } finally {
+        fireEvent(opts?.events, "navigateEnd", request, requestContext);
       }
     }
 
@@ -4273,6 +4333,7 @@ export function createStaticHandler(
             match,
             [],
             requestContext,
+            opts?.events,
             false,
           );
         }
@@ -4284,6 +4345,7 @@ export function createStaticHandler(
           match,
           [],
           requestContext,
+          opts?.events,
           (match.route.loader || match.route.lazy) != null &&
             (!filterMatchesToLoad || filterMatchesToLoad(match)),
         );
@@ -4771,6 +4833,7 @@ function getMatchesToLoad(
         match,
         lazyRoutePropertiesToSkip,
         scopedContext,
+        undefined, // TODO: client-side events
         forceShouldLoad,
       );
     }
@@ -4800,6 +4863,7 @@ function getMatchesToLoad(
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
+      undefined, // TODO: client-side events
       shouldLoad,
       shouldRevalidateArgs,
     );
@@ -5676,6 +5740,7 @@ function getDataStrategyMatch(
   match: DataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
+  events: EventTarget | undefined,
   shouldLoad: boolean,
   unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
 ): DataStrategyMatch {
@@ -5726,6 +5791,7 @@ function getDataStrategyMatch(
           lazyRoutePromise: _lazyPromises?.route,
           handlerOverride,
           scopedContext,
+          events,
         });
       }
       return Promise.resolve({ type: ResultType.data, result: undefined });
@@ -5770,6 +5836,7 @@ function getTargetedDataStrategyMatches(
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
+      undefined, // TODO: client-side events
       true,
       shouldRevalidateArgs,
     );
@@ -5856,6 +5923,7 @@ async function callLoaderOrAction({
   lazyRoutePromise,
   handlerOverride,
   scopedContext,
+  events,
 }: {
   request: Request;
   match: AgnosticDataRouteMatch;
@@ -5863,6 +5931,7 @@ async function callLoaderOrAction({
   lazyRoutePromise: Promise<void> | undefined;
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0];
   scopedContext: unknown;
+  events: EventTarget | undefined;
 }): Promise<DataStrategyResult> {
   let result: DataStrategyResult;
   let onReject: (() => void) | undefined;
@@ -5879,23 +5948,36 @@ async function callLoaderOrAction({
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
 
-    let actualHandler = (ctx?: unknown) => {
+    let actualHandler = async (ctx?: unknown) => {
       if (typeof handler !== "function") {
-        return Promise.reject(
-          new Error(
-            `You cannot call the handler for a route which defines a boolean ` +
-              `"${type}" [routeId: ${match.route.id}]`,
-          ),
+        throw new Error(
+          `You cannot call the handler for a route which defines a boolean ` +
+            `"${type}" [routeId: ${match.route.id}]`,
         );
       }
-      return handler(
-        {
+
+      try {
+        // TODO: Handle actions
+        fireEvent(
+          events,
+          "loaderStart",
           request,
-          params: match.params,
-          context: scopedContext,
-        },
-        ...(ctx !== undefined ? [ctx] : []),
-      );
+          scopedContext,
+          match.route.id,
+        );
+        let value = await handler(
+          {
+            request,
+            params: match.params,
+            context: scopedContext,
+          },
+          ...(ctx !== undefined ? [ctx] : []),
+        );
+        return value;
+      } finally {
+        // TODO: Handle actions
+        fireEvent(events, "loaderEnd", request, scopedContext, match.route.id);
+      }
     };
 
     let handlerPromise: Promise<DataStrategyResult> = (async () => {

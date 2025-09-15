@@ -43,10 +43,12 @@ export type RequestHandler = (
  */
 export function createRequestHandler({
   build,
+  events,
   getLoadContext,
   mode = process.env.NODE_ENV,
 }: {
   build: ServerBuild | (() => Promise<ServerBuild>);
+  events?: EventTarget;
   getLoadContext?: GetLoadContextFunction;
   mode?: string;
 }): RequestHandler {
@@ -61,7 +63,7 @@ export function createRequestHandler({
       let request = createRemixRequest(req, res);
       let loadContext = await getLoadContext?.(req, res);
 
-      let response = await handleRequest(request, loadContext);
+      let response = await handleRequest(request, loadContext, events);
 
       await sendRemixResponse(res, response);
     } catch (error: unknown) {

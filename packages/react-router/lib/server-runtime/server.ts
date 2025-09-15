@@ -42,6 +42,7 @@ export type RequestHandler = (
   loadContext?: MiddlewareEnabled extends true
     ? RouterContextProvider
     : AppLoadContext,
+  events?: EventTarget,
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -49,12 +50,13 @@ export type CreateRequestHandlerFunction = (
   mode?: string,
 ) => RequestHandler;
 
-function derive(build: ServerBuild, mode?: string) {
+function derive(build: ServerBuild, events?: EventTarget, mode?: string) {
   let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
+    events,
   });
 
   let errorHandler =
@@ -86,17 +88,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
 
-  return async function requestHandler(request, initialContext) {
+  return async function requestHandler(request, initialContext, events) {
     _build = typeof build === "function" ? await build() : build;
 
     if (typeof build === "function") {
-      let derived = derive(_build, mode);
+      let derived = derive(_build, events, mode);
       routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
     } else if (!routes || !serverMode || !staticHandler || !errorHandler) {
-      let derived = derive(_build, mode);
+      let derived = derive(_build, events, mode);
       routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
