@@ -237,15 +237,15 @@ export function ServerComponent() {
 
 To avoid confusion with RSC's `"use server"` and `"use client"` directives, support for [`.server` modules][server-modules] and [`.client` modules][client-modules] is no longer built-in when using RSC Framework Mode.
 
-As an alternative solution that doesn't rely on file naming conventions, we recommend using the ["server-only"][server-only-package] and ["client-only"][client-only-package] packages. These are commonly referred to as "poison pills" because they will break the build if they're included outside of the designated environment.
-
-For example, to ensure a module is never accidentally included in the client build, simply import the `server-only` package as a side effect.
+As an alternative solution that doesn't rely on file naming conventions, we recommend using the `"server-only"` and `"client-only"` imports provided by [`@vitejs/plugin-rsc`][vite-plugin-rsc]. For example, to ensure a module is never accidentally included in the client build, simply import from `"server-only"` as a side effect within your server-only module.
 
 ```ts filename=app/utils/db.ts
 import "server-only";
 
 // Rest of the module...
 ```
+
+Note that there are official npm packages [`server-only`][server-only-package] and [`client-only`][client-only-package] created by the React team, but they don't need to be installed. `@vitejs/plugin-rsc` internally overrides them to provide a better error message during build time instead of the runtime error provided by the actual packages.
 
 If you'd like to quickly migrate existing code that relies on the `.server` and `.client` file naming conventions, we recommend using the [`vite-env-only` plugin][vite-env-only] directly. For example, to ensure `.server` modules aren't accidentally included in the client build:
 
