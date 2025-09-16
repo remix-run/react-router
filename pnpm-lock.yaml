@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-b1b0955f-20250901(eslint@8.57.0)
+        version: 6.1.0-canary-67a44bcd-20250915(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -6252,8 +6252,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901:
-    resolution: {integrity: sha512-T6+EUTSU6FeRntFJ0tGyFWuHnkAWgBlTFPzPMu8B+ny6zUEWrApVfMdtBjCjszAN775OzBM1jCKr29Z/SbwGRg==}
+  eslint-plugin-react-hooks@6.1.0-canary-67a44bcd-20250915:
+    resolution: {integrity: sha512-8qekpMzs36M7AOcq+AVqPpaWrpjRdEHUQBbcO/soxGXVHjHw2cW/A7FdAturo/7fyFEGekZBXwNIDhUdsjlTzg==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -15070,7 +15070,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-67a44bcd-20250915(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
