@@ -20,7 +20,7 @@
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-rsc": "0.4.26",
+    "@vitejs/plugin-rsc": "0.4.30",
     "cross-env": "^7.0.3",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
