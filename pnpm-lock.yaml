@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-b1b0955f-20250901(eslint@8.57.0)
+        version: 6.1.0-canary-67a44bcd-20250915(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -465,6 +465,9 @@ importers:
       '@mjackson/node-fetch-server':
         specifier: 0.6.1
         version: 0.6.1
+      '@react-router/serve':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-serve
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1304,6 +1307,9 @@ importers:
 
   packages/react-router-serve:
     dependencies:
+      '@mjackson/node-fetch-server':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@react-router/express':
         specifier: workspace:*
         version: link:../react-router-express
@@ -1840,6 +1846,9 @@ importers:
       '@react-router/fs-routes':
         specifier: workspace:*
         version: link:../../packages/react-router-fs-routes
+      '@react-router/serve':
+        specifier: workspace:*
+        version: link:../../packages/react-router-serve
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.1
@@ -6243,8 +6252,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901:
-    resolution: {integrity: sha512-T6+EUTSU6FeRntFJ0tGyFWuHnkAWgBlTFPzPMu8B+ny6zUEWrApVfMdtBjCjszAN775OzBM1jCKr29Z/SbwGRg==}
+  eslint-plugin-react-hooks@6.1.0-canary-67a44bcd-20250915:
+    resolution: {integrity: sha512-8qekpMzs36M7AOcq+AVqPpaWrpjRdEHUQBbcO/soxGXVHjHw2cW/A7FdAturo/7fyFEGekZBXwNIDhUdsjlTzg==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -15061,7 +15070,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-b1b0955f-20250901(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-67a44bcd-20250915(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
