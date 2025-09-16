@@ -279,9 +279,8 @@ export async function fetchAndApplyManifestPatches(
         }
 
         sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
-      } catch (error) {
-        // Catches when storage is blocked
-        // Skip version tracking and continue with reload
+      } catch {
+        // Session storage unavailable
       }
 
       window.location.href = errorReloadPath;
@@ -300,8 +299,7 @@ export async function fetchAndApplyManifestPatches(
     try {
       sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
     } catch {
-      // Catches when storage is blocked
-      // Skip version tracking and continue with reload
+      // Session storage unavailable
     }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
