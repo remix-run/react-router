@@ -263,21 +263,26 @@ export async function fetchAndApplyManifestPatches(
         return;
       }
 
-      // This will hard reload the destination path on navigations, or the
-      // current path on fetcher calls
-      if (
-        sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
-        manifest.version
-      ) {
-        // We've already tried fixing for this version, don' try again to
-        // avoid loops - just let this navigation/fetch 404
-        console.error(
-          "Unable to discover routes due to manifest version mismatch.",
-        );
-        return;
+      try {
+        // This will hard reload the destination path on navigations, or the
+        // current path on fetcher calls
+        if (
+          sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
+          manifest.version
+        ) {
+          // We've already tried fixing for this version, don' try again to
+          // avoid loops - just let this navigation/fetch 404
+          console.error(
+            "Unable to discover routes due to manifest version mismatch.",
+          );
+          return;
+        }
+
+        sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
+      } catch {
+        // Session storage unavailable
       }
 
-      sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
       window.location.href = errorReloadPath;
       console.warn("Detected manifest version mismatch, reloading...");
 
@@ -291,7 +296,11 @@ export async function fetchAndApplyManifestPatches(
     }
 
     // Reset loop-detection on a successful response
-    sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+    try {
+      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+    } catch {
+      // Session storage unavailable
+    }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
     if (signal?.aborted) return;
