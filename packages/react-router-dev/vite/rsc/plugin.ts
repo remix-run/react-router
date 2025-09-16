@@ -280,6 +280,24 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         await configLoader.close();
       },
     },
+    (() => {
+      let logged = false;
+      function logExperimentalNotice() {
+        if (logged) return;
+        logged = true;
+        logger.info(
+          colors.yellow(
+            `${viteCommand === "serve" ? "  " : ""}🧪 Using React Router's RSC Framework Mode (experimental)`,
+          ),
+        );
+      }
+      return {
+        name: "react-router/rsc/log-experimental-notice",
+        sharedDuringBuild: true,
+        buildStart: logExperimentalNotice,
+        configureServer: logExperimentalNotice,
+      };
+    })(),
     {
       name: "react-router/rsc/typegen",
       async config(viteUserConfig, { command, mode }) {
