@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
+    "@react-router/serve": "workspace:*",
     "compression": "^1.8.0",
     "express": "^4.21.2",
     "react": "^19.0.0",

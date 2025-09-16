@@ -465,6 +465,9 @@ importers:
       '@mjackson/node-fetch-server':
         specifier: 0.6.1
         version: 0.6.1
+      '@react-router/serve':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-serve
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1304,6 +1307,9 @@ importers:
 
   packages/react-router-serve:
     dependencies:
+      '@mjackson/node-fetch-server':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@react-router/express':
         specifier: workspace:*
         version: link:../react-router-express
@@ -1840,6 +1846,9 @@ importers:
       '@react-router/fs-routes':
         specifier: workspace:*
         version: link:../../packages/react-router-fs-routes
+      '@react-router/serve':
+        specifier: workspace:*
+        version: link:../../packages/react-router-serve
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.1
