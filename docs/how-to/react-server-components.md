@@ -245,7 +245,7 @@ import "server-only";
 // Rest of the module...
 ```
 
-Note that there are official npm packages [`server-only`][server-only-package] and [`client-only`][client-only-package] created by the React team, but they don't need to be installed. `@vitejs/plugin-rsc` internally overrides them to provide a better error message during build time instead of the runtime error provided by the actual packages.
+Note that while there are official npm packages [`server-only`][server-only-package] and [`client-only`][client-only-package] created by the React team, they don't need to be installed. `@vitejs/plugin-rsc` internally handles these imports and provides build-time validation instead of runtime errors.
 
 If you'd like to quickly migrate existing code that relies on the `.server` and `.client` file naming conventions, we recommend using the [`vite-env-only` plugin][vite-env-only] directly. For example, to ensure `.server` modules aren't accidentally included in the client build:
 
