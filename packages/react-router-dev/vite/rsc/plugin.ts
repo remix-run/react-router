@@ -29,6 +29,8 @@ import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 
+let loggedExperimentalWarning = false;
+
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
@@ -278,6 +280,18 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
       async buildEnd() {
         await configLoader.close();
+      },
+    },
+    {
+      name: "react-router/rsc/experimental-warning",
+      configResolved() {
+        if (loggedExperimentalWarning) return;
+        loggedExperimentalWarning = true;
+        logger.warn(
+          colors.yellow(
+            `${viteCommand === "serve" ? "  " : ""}🧪 Using React Router's RSC Framework Mode (experimental)`,
+          ),
+        );
       },
     },
     {
