@@ -282,7 +282,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     (() => {
       let logged = false;
-      function logExperimentalInfo() {
+      function logExperimentalNotice() {
         if (logged) return;
         logged = true;
         logger.info(
@@ -292,10 +292,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
       }
       return {
-        name: "react-router/rsc/experimental-warning",
+        name: "react-router/rsc/log-experimental-notice",
         sharedDuringBuild: true,
-        buildStart: logExperimentalInfo,
-        configureServer: logExperimentalInfo,
+        buildStart: logExperimentalNotice,
+        configureServer: logExperimentalNotice,
       };
     })(),
     {
