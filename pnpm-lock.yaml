@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-f3a80361-20250911(eslint@8.57.0)
+        version: 6.1.0-canary-128abcfa-20250917(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -598,7 +598,7 @@ importers:
         version: 3.0.1(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1)(terser@5.15.0))
+        version: 4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))
 
   integration/helpers/vite-6-template:
     dependencies:
@@ -1069,8 +1069,8 @@ importers:
         specifier: workspace:*
         version: link:../react-router-node
       '@remix-run/node-fetch-server':
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.9.0
+        version: 0.9.0
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -1161,7 +1161,7 @@ importers:
         version: 0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
-        version: 3.6.0(esbuild@0.25.4)
+        version: 3.6.0(esbuild@0.25.0)
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -1573,7 +1573,7 @@ importers:
         version: 5.1.3(@types/node@22.14.0)(lightningcss@1.30.1)(terser@5.15.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1)(terser@5.15.0))
+        version: 4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))
 
   playground/framework-vite-7-beta:
     dependencies:
@@ -4298,6 +4298,9 @@ packages:
   '@remix-run/node-fetch-server@0.8.1':
     resolution: {integrity: sha512-J1dev372wtJqmqn9U/qbpbZxbJSQrogNN2+Qv1lKlpATpe/WQ9aCZfl/xSb9d2Rgh1IyLSvNxZAXPZxruO6Xig==}
 
+  '@remix-run/node-fetch-server@0.9.0':
+    resolution: {integrity: sha512-SoLMv7dbH+njWzXnOY6fI08dFMI5+/dQ+vY3n8RnnbdG7MdJEgiP28Xj/xWlnRnED/aB6SFw56Zop+LbmaaKqA==}
+
   '@remix-run/web-blob@3.1.0':
     resolution: {integrity: sha512-owGzFLbqPH9PlKb8KvpNJ0NO74HWE2euAn61eEiyCXX/oteoVzTVSN8mpLgDjaxBf2btj5/nUllSUgpyd6IH6g==}
 
@@ -6249,8 +6252,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-f3a80361-20250911:
-    resolution: {integrity: sha512-QctnrvG6O5Ha5qfm4nq0pAsaJrv58OHArsY9IpmtPdLg0R/yZpFs0arRnHfoLtpYef3yt/o7lOhESEPxhgLipg==}
+  eslint-plugin-react-hooks@6.1.0-canary-128abcfa-20250917:
+    resolution: {integrity: sha512-cR/EftrsVDqCbmfq6IEsLaPqMhkLFgoiJvnSF6nArECbchE8ZQJyGQv7sXGwsf1sKYXr7N9vaB45iDmZAx4Ecw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -12690,6 +12693,8 @@ snapshots:
 
   '@remix-run/node-fetch-server@0.8.1': {}
 
+  '@remix-run/node-fetch-server@0.9.0': {}
+
   '@remix-run/web-blob@3.1.0':
     dependencies:
       '@remix-run/web-stream': 1.1.0
@@ -14779,13 +14784,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  esbuild-register@3.6.0(esbuild@0.25.4):
-    dependencies:
-      debug: 4.4.1
-      esbuild: 0.25.4
-    transitivePeerDependencies:
-      - supports-color
-
   esbuild@0.19.12:
     optionalDependencies:
       '@esbuild/aix-ppc64': 0.19.12
@@ -15067,7 +15065,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-f3a80361-20250911(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-128abcfa-20250917(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
@@ -19364,7 +19362,7 @@ snapshots:
       - supports-color
       - typescript
 
-  vite-tsconfig-paths@4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1)(terser@5.15.0)):
+  vite-tsconfig-paths@4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1)):
     dependencies:
       debug: 4.4.1
       globrex: 0.1.2
