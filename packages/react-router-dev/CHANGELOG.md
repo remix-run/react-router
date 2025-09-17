@@ -1,5 +1,36 @@
 # `@react-router/dev`
 
+## 7.9.1
+
+### Patch Changes
+
+- Fix internal `Future` interface naming from `middleware` -> `v8_middleware` ([#14327](https://github.com/remix-run/react-router/pull/14327))
+- Updated dependencies:
+  - `react-router@7.9.1`
+  - `@react-router/node@7.9.1`
+  - `@react-router/serve@7.9.1`
+
+## 7.9.0
+
+### Minor Changes
+
+- Stabilize middleware and context APIs. ([#14215](https://github.com/remix-run/react-router/pull/14215))
+
+  We have removed the `unstable_` prefix from the following APIs and they are now considered stable and ready for production use:
+  - [`RouterContextProvider`](https://reactrouter.com/api/utils/RouterContextProvider)
+  - [`createContext`](https://reactrouter.com/api/utils/createContext)
+  - `createBrowserRouter` [`getContext`](https://reactrouter.com/api/data-routers/createBrowserRouter#optsgetcontext) option
+  - `<HydratedRouter>` [`getContext`](https://reactrouter.com/api/framework-routers/HydratedRouter#getcontext) prop
+
+  Please see the [Middleware Docs](https://reactrouter.com/how-to/middleware), the [Middleware RFC](https://github.com/remix-run/remix/discussions/7642), and the [Client-side Context RFC](https://github.com/remix-run/react-router/discussions/9856) for more information.
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.0`
+  - `@react-router/node@7.9.0`
+  - `@react-router/serve@7.9.0`
+
 ## 7.8.2
 
 ### Patch Changes

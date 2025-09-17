@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.Link.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Link.html)
 
 A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
 wrapper to enable navigation with client-side routing.

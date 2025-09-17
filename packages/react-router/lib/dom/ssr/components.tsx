@@ -19,7 +19,7 @@ import {
   isPageLinkDescriptor,
 } from "./links";
 import type { KeyedHtmlLinkDescriptor } from "./links";
-import { createHtml } from "./markup";
+import { escapeHtml } from "./markup";
 import type {
   MetaFunction,
   MetaDescriptor,
@@ -629,7 +629,7 @@ export function Meta(): React.JSX.Element {
               <script
                 key={`script:ld+json:${json}`}
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: json }}
+                dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
           } catch (err) {
@@ -860,13 +860,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
         <script
           {...scriptProps}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={createHtml(contextScript)}
+          dangerouslySetInnerHTML={{ __html: contextScript }}
           type={undefined}
         />
         <script
           {...scriptProps}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={createHtml(routeModulesScript)}
+          dangerouslySetInnerHTML={{ __html: routeModulesScript }}
           type="module"
           async
         />

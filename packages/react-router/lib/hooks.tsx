@@ -533,12 +533,15 @@ export function useOutletContext<Context = unknown>(): Context {
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
-  if (outlet) {
-    return (
-      <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
-    );
-  }
-  return outlet;
+  return React.useMemo(
+    () =>
+      outlet && (
+        <OutletContext.Provider value={context}>
+          {outlet}
+        </OutletContext.Provider>
+      ),
+    [outlet, context],
+  );
 }
 
 /**
@@ -869,9 +872,14 @@ export function useRoutesImpl(
           params: Object.assign({}, parentParams, match.params),
           pathname: joinPaths([
             parentPathnameBase,
-            // Re-encode pathnames that were decoded inside matchRoutes
+            // Re-encode pathnames that were decoded inside matchRoutes.
+            // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+            // `new URL()` internally and we need to prevent it from treating
+            // them as separators
             navigator.encodeLocation
-              ? navigator.encodeLocation(match.pathname).pathname
+              ? navigator.encodeLocation(
+                  match.pathname.replace(/\?/g, "%3F").replace(/#/g, "%23"),
+                ).pathname
               : match.pathname,
           ]),
           pathnameBase:
@@ -880,8 +888,15 @@ export function useRoutesImpl(
               : joinPaths([
                   parentPathnameBase,
                   // Re-encode pathnames that were decoded inside matchRoutes
+                  // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+                  // `new URL()` internally and we need to prevent it from treating
+                  // them as separators
                   navigator.encodeLocation
-                    ? navigator.encodeLocation(match.pathnameBase).pathname
+                    ? navigator.encodeLocation(
+                        match.pathnameBase
+                          .replace(/\?/g, "%3F")
+                          .replace(/#/g, "%23"),
+                      ).pathname
                     : match.pathnameBase,
                 ]),
         }),

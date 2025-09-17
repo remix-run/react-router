@@ -51,6 +51,9 @@ function SomeComponent() {
     method: "post",
     encType: "application/json"
   })
+
+  // reset fetcher
+  fetcher.unstable_reset()
 }
 ```
 

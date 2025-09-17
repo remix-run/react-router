@@ -1,5 +1,5 @@
 import type { CriticalCss, FutureConfig } from "../dom/ssr/entry";
-import { escapeHtml } from "./markup";
+import { escapeHtml } from "../dom/ssr/markup";
 import type { ServerBuild } from "./build";
 
 export type ServerHandoff = {

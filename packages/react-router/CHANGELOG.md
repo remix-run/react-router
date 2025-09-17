@@ -1,5 +1,34 @@
 # `react-router`
 
+## 7.9.1
+
+### Patch Changes
+
+- Fix internal `Future` interface naming from `middleware` -> `v8_middleware` ([#14327](https://github.com/remix-run/react-router/pull/14327))
+
+## 7.9.0
+
+### Minor Changes
+
+- Stabilize middleware and context APIs. ([#14215](https://github.com/remix-run/react-router/pull/14215))
+
+  We have removed the `unstable_` prefix from the following APIs and they are now considered stable and ready for production use:
+  - [`RouterContextProvider`](https://reactrouter.com/api/utils/RouterContextProvider)
+  - [`createContext`](https://reactrouter.com/api/utils/createContext)
+  - `createBrowserRouter` [`getContext`](https://reactrouter.com/api/data-routers/createBrowserRouter#optsgetcontext) option
+  - `<HydratedRouter>` [`getContext`](https://reactrouter.com/api/framework-routers/HydratedRouter#getcontext) prop
+
+  Please see the [Middleware Docs](https://reactrouter.com/how-to/middleware), the [Middleware RFC](https://github.com/remix-run/remix/discussions/7642), and the [Client-side Context RFC](https://github.com/remix-run/react-router/discussions/9856) for more information.
+
+### Patch Changes
+
+- Escape HTML in `meta()` JSON-LD content ([#14316](https://github.com/remix-run/react-router/pull/14316))
+- Add react-server Await component implementation ([#14261](https://github.com/remix-run/react-router/pull/14261))
+- In RSC Data Mode when using a custom basename, fix hydration errors for routes that only have client loaders ([#14264](https://github.com/remix-run/react-router/pull/14264))
+- Make `href` function available in a react-server context ([#14262](https://github.com/remix-run/react-router/pull/14262))
+- decode each time `getPayload()` is called to allow for "in-context" decoding and hoisting of contextual assets ([#14248](https://github.com/remix-run/react-router/pull/14248))
+- `href()` now correctly processes routes that have an extension after the parameter or are a single optional parameter. ([#13797](https://github.com/remix-run/react-router/pull/13797))
+
 ## 7.8.2
 
 ### Patch Changes
