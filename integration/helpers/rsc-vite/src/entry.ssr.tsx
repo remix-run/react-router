@@ -18,7 +18,7 @@ export default async function handler(
     createFromReadableStream,
     async renderHTML(getPayload) {
       const payload = getPayload();
-      
+
       return ReactDomServer.renderToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {

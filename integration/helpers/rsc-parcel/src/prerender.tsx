@@ -22,7 +22,7 @@ export async function prerender(
     // Render the router to HTML.
     async renderHTML(getPayload) {
       const payload = getPayload();
-      
+
       return await renderHTMLToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
