@@ -959,8 +959,14 @@ export function createRouter(init: RouterInit): Router {
       // All initialMatches need to be loaded before we're ready.  If we have lazy
       // functions around still then we'll need to run them in initialize()
       initialized = false;
-    } else if (!initialMatches.some((m) => m.route.loader)) {
-      // If we've got no loaders to run, then we're good to go
+    } else if (
+      !initialMatches.some(
+        (m) =>
+          m.route.loader ||
+          (m.route.middleware && m.route.middleware.length > 0),
+      )
+    ) {
+      // If we've got no loaders or middleware to run, then we're good to go
       initialized = true;
     } else {
       // With "partial hydration", we're initialized so long as we were
@@ -4960,8 +4966,8 @@ function shouldLoadRouteOnHydration(
     return true;
   }
 
-  // No loader, nothing to initialize
-  if (!route.loader) {
+  // No loader or middleware, nothing to run
+  if (!route.loader && (!route.middleware || route.middleware.length === 0)) {
     return false;
   }
 
@@ -5519,9 +5525,15 @@ function runClientMiddlewarePipeline(
       let { matches } = args;
       let maxBoundaryIdx = Math.min(
         // Throwing route
-        matches.findIndex((m) => m.route.id === routeId) || 0,
+        Math.max(
+          matches.findIndex((m) => m.route.id === routeId),
+          0,
+        ),
         // or the shallowest route that needs to load data
-        matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
+        Math.max(
+          matches.findIndex((m) => m.unstable_shouldCallHandler()),
+          0,
+        ),
       );
       let boundaryRouteId = findNearestBoundary(
         matches,
