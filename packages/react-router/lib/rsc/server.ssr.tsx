@@ -52,13 +52,13 @@ export type SSRCreateFromReadableStreamFunction = (
  *   fetchServer,
  *   createFromReadableStream,
  *   async renderHTML(getPayload) {
- *     const payload = await getPayload();
+ *     const payload = getPayload();
  *
  *     return await renderHTMLToReadableStream(
  *       <RSCStaticRouter getPayload={getPayload} />,
  *       {
  *         bootstrapScriptContent,
- *         formState: await getFormState(payload),
+ *         formState: await payload.formState,
  *       }
  *     );
  *   },
@@ -328,13 +328,13 @@ export interface RSCStaticRouterProps {
  *   fetchServer,
  *   createFromReadableStream,
  *   async renderHTML(getPayload) {
- *     const payload = await getPayload();
+ *     const payload = getPayload();
  *
  *     return await renderHTMLToReadableStream(
  *       <RSCStaticRouter getPayload={getPayload} />,
  *       {
  *         bootstrapScriptContent,
- *         formState: await getFormState(payload),
+ *         formState: await payload.formState,
  *       }
  *     );
  *   },
