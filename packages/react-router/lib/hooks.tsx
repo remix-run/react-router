@@ -540,7 +540,7 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
           {outlet}
         </OutletContext.Provider>
       ),
-    [outlet, context]
+    [outlet, context],
   );
 }
 
