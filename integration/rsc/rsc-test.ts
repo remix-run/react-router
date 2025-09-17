@@ -502,7 +502,12 @@ implementations.forEach((implementation) => {
                           lazy: () => import("./routes/await-component/api"),
                         }
                       ]
-                    }
+                    },
+                    {
+                      id: "ssr-error",
+                      path: "ssr-error",
+                      lazy: () => import("./routes/ssr-error/ssr-error"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1288,6 +1293,27 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+            "src/routes/ssr-error/ssr-error.tsx": js`
+              "use client";
+              import { useState } from "react";
+
+              export function ErrorBoundary() {
+                const [count, setCount] = useState(0);
+
+                return (
+                  <div>
+                    <div data-error-boundary>Client Error Boundary</div>
+                    <button data-increment onClick={() => setCount(c => c + 1)}>
+                      Increment {count}
+                    </button>
+                  </div>
+                );
+              }
+
+              export default function SSRError() {
+                throw new Error("Error from SSR component");
+              }
+            `,
           },
         });
       });
@@ -1784,6 +1810,25 @@ implementations.forEach((implementation) => {
           expect(await page.locator("[data-error-message]").textContent()).toBe(
             "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
           );
+
+          // Ensure this is using RSC
+          validateRSCHtml(await page.content());
+        });
+
+        test("Handles errors thrown in SSR components correctly", async ({
+          page,
+        }) => {
+          test.skip(
+            implementation.name === "parcel",
+            "Parcel's error overlays are interfering with this test",
+          );
+          await page.goto(`http://localhost:${port}/ssr-error`);
+
+          // Verify error boundary is shown
+          await page.waitForSelector("[data-error-boundary]");
+          expect(
+            await page.locator("[data-error-boundary]").textContent(),
+          ).toBe("Client Error Boundary");
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());

@@ -48,13 +48,13 @@ routeRSCServerRequest({
   fetchServer,
   createFromReadableStream,
   async renderHTML(getPayload) {
-    const payload = await getPayload();
+    const payload = getPayload();
 
     return await renderHTMLToReadableStream(
       <RSCStaticRouter getPayload={getPayload} />,
       {
         bootstrapScriptContent,
-        formState: await getFormState(payload),
+        formState: await payload.formState,
       }
     );
   },
@@ -75,7 +75,7 @@ async function routeRSCServerRequest({
   fetchServer: (request: Request) => Promise<Response>;
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<RSCPayload>,
+    getPayload: () => DecodedPayload,
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }): Promise<Response>

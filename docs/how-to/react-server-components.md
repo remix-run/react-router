@@ -644,17 +644,13 @@ export async function generateHTML(
     createFromReadableStream,
     // Render the router to HTML.
     async renderHTML(getPayload) {
-      const payload = await getPayload();
-      const formState =
-        payload.type === "render"
-          ? await payload.formState
-          : undefined;
+      const payload = getPayload();
 
       return await renderHTMLToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
           bootstrapScriptContent,
-          formState,
+          formState: await payload.formState,
         },
       );
     },
@@ -877,11 +873,7 @@ export async function generateHTML(
     createFromReadableStream,
     // Render the router to HTML.
     async renderHTML(getPayload) {
-      const payload = await getPayload();
-      const formState =
-        payload.type === "render"
-          ? await payload.formState
-          : undefined;
+      const payload = getPayload();
 
       const bootstrapScriptContent =
         await import.meta.viteRsc.loadBootstrapScriptContent(
@@ -892,7 +884,7 @@ export async function generateHTML(
         <RSCStaticRouter getPayload={getPayload} />,
         {
           bootstrapScriptContent,
-          formState,
+          formState: payload.formState,
         },
       );
     },

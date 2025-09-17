@@ -22,9 +22,7 @@ app.use(
       fetchServer,
       createFromReadableStream,
       async renderHTML(getPayload) {
-        const payload = await getPayload();
-        const formState =
-          payload.type === "render" ? await payload.formState : undefined;
+        const payload = getPayload();
 
         return await renderHTMLToReadableStream(
           <RSCStaticRouter getPayload={getPayload} />,
@@ -32,7 +30,7 @@ app.use(
             bootstrapScriptContent: (
               fetchServer as unknown as { bootstrapScript: string }
             ).bootstrapScript,
-            formState,
+            formState: await payload.formState,
           },
         );
       },
