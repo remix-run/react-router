@@ -191,4 +191,25 @@ describe("generatePath", () => {
 
     consoleWarn.mockRestore();
   });
+
+  describe("with params followed by static text", () => {
+    it("interpolates params with file extensions", () => {
+      expect(generatePath("/books/:id.json", { id: "42" })).toBe(
+        "/books/42.json",
+      );
+      expect(generatePath("/api/:resource.xml", { resource: "users" })).toBe(
+        "/api/users.xml",
+      );
+      expect(generatePath("/:lang.html", { lang: "en" })).toBe("/en.html");
+    });
+
+    it("handles multiple extensions", () => {
+      expect(generatePath("/files/:name.tar.gz", { name: "archive" })).toBe(
+        "/files/archive.tar.gz",
+      );
+      expect(generatePath("/:file.min.js", { file: "app" })).toBe(
+        "/app.min.js",
+      );
+    });
+  });
 });
