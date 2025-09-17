@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-handle SSR'd client errors and re-try in the browser
+In RSC Data Mode, handle SSR'd client errors and re-try in the browser
