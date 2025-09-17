@@ -75,7 +75,7 @@ async function routeRSCServerRequest({
   fetchServer: (request: Request) => Promise<Response>;
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<RSCPayload>,
+    getPayload: () => DecodedPayload,
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }): Promise<Response>
