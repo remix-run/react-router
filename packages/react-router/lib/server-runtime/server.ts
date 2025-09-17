@@ -354,7 +354,7 @@ async function handleManifestRequest(
 
   let patches: Record<string, EntryRoute> = {};
 
-  if (url.searchParams.has("p")) {
+  if (url.searchParams.has("paths")) {
     let paths = new Set<string>();
 
     // In addition to responding with the patches for the requested paths, we
@@ -365,7 +365,9 @@ async function handleManifestRequest(
     // for client side matching if the user routes back up to `/parent`.
     // This is the same thing we do on initial load in <Scripts> via
     // `getPartialManifest()`
-    url.searchParams.getAll("p").forEach((path) => {
+    let pathParam = url.searchParams.get("paths") || "";
+    let requestedPaths = pathParam.split(",").filter(Boolean);
+    requestedPaths.forEach((path) => {
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
