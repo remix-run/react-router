@@ -960,11 +960,7 @@ export function createRouter(init: RouterInit): Router {
       // functions around still then we'll need to run them in initialize()
       initialized = false;
     } else if (
-      !initialMatches.some(
-        (m) =>
-          m.route.loader ||
-          (m.route.middleware && m.route.middleware.length > 0),
-      )
+      !initialMatches.some((m) => routeHasLoaderOrMiddleware(m.route))
     ) {
       // If we've got no loaders or middleware to run, then we're good to go
       initialized = true;
@@ -2098,7 +2094,9 @@ export function createRouter(init: RouterInit): Router {
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
-      !dsMatches.some((m) => m.route.middleware) &&
+      !dsMatches.some(
+        (m) => m.route.middleware && m.route.middleware.length > 0,
+      ) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -4769,7 +4767,7 @@ function getMatchesToLoad(
     } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       forceShouldLoad = true;
-    } else if (route.loader == null) {
+    } else if (!routeHasLoaderOrMiddleware(route)) {
       // Nothing to load!
       forceShouldLoad = false;
     } else if (initialHydration) {
@@ -4956,6 +4954,13 @@ function getMatchesToLoad(
   return { dsMatches, revalidatingFetchers };
 }
 
+function routeHasLoaderOrMiddleware(route: RouteObject) {
+  return (
+    route.loader != null ||
+    (route.middleware != null && route.middleware.length > 0)
+  );
+}
+
 function shouldLoadRouteOnHydration(
   route: AgnosticDataRouteObject,
   loaderData: RouteData | null | undefined,
@@ -4967,7 +4972,7 @@ function shouldLoadRouteOnHydration(
   }
 
   // No loader or middleware, nothing to run
-  if (!route.loader && (!route.middleware || route.middleware.length === 0)) {
+  if (!routeHasLoaderOrMiddleware(route)) {
     return false;
   }
 
