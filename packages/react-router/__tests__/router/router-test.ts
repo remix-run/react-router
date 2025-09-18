@@ -936,6 +936,42 @@ describe("a router", () => {
       });
     });
 
+    it("does not run middlewares when complete hydrationData exists", async () => {
+      let middlewareSpy = jest.fn();
+      let loaderSpy = jest.fn();
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            middleware: [middlewareSpy],
+            loader: loaderSpy,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX DATA",
+          },
+        },
+      });
+      router.initialize();
+
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          index: "INDEX DATA",
+        },
+      });
+      expect(middlewareSpy).not.toHaveBeenCalled();
+      expect(loaderSpy).not.toHaveBeenCalled();
+    });
+
     it("kicks off initial data load if no hydration data is provided", async () => {
       let parentDfd = createDeferred();
       let parentSpy = jest.fn(() => parentDfd.promise);
@@ -988,6 +1024,61 @@ describe("a router", () => {
           "0": "PARENT DATA",
           "0-0": "CHILD DATA",
         },
+      });
+
+      router.dispose();
+    });
+
+    it("run middlewares without loaders on initial load if no hydration data is provided", async () => {
+      let parentDfd = createDeferred();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = createDeferred();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+            middleware: [parentSpy],
+            children: [
+              {
+                index: true,
+                middleware: [childSpy],
+              },
+            ],
+          },
+        ],
+      });
+      router.initialize();
+      await tick();
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(parentSpy.mock.calls.length).toBe(1);
+      expect(childSpy.mock.calls.length).toBe(0);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/" }),
+        initialized: false,
+        navigation: IDLE_NAVIGATION,
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await parentDfd.resolve(undefined);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/" }),
+        initialized: false,
+        navigation: IDLE_NAVIGATION,
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await childDfd.resolve(undefined);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/" }),
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
       });
 
       router.dispose();
