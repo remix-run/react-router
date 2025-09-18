@@ -164,6 +164,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                 },
                 outDir: join(config.buildDirectory, "client"),
               },
+              optimizeDeps: {
+                include: [
+                  "react-router > cookie",
+                  "react-router > set-cookie-parser",
+                ],
+              },
             },
             rsc: {
               build: {
