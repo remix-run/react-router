@@ -842,6 +842,11 @@ export interface PathRouteProps {
    */
   lazy?: LazyRouteFunction<NonIndexRouteObject>;
   /**
+   * The route middleware.
+   * See [`middleware`](../../start/data/route-object#middleware).
+   */
+  middleware?: NonIndexRouteObject["middleware"];
+  /**
    * The route loader.
    * See [`loader`](../../start/data/route-object#loader).
    */
@@ -929,6 +934,11 @@ export interface IndexRouteProps {
    * See [`lazy`](../../start/data/route-object#lazy).
    */
   lazy?: LazyRouteFunction<IndexRouteObject>;
+  /**
+   * The route middleware.
+   * See [`middleware`](../../start/data/route-object#middleware).
+   */
+  middleware?: IndexRouteObject["middleware"];
   /**
    * The route loader.
    * See [`loader`](../../start/data/route-object#loader).
@@ -1578,6 +1588,7 @@ export function createRoutesFromChildren(
       Component: element.props.Component,
       index: element.props.index,
       path: element.props.path,
+      middleware: element.props.middleware,
       loader: element.props.loader,
       action: element.props.action,
       hydrateFallbackElement: element.props.hydrateFallbackElement,
