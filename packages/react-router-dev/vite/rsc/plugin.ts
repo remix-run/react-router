@@ -166,6 +166,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               },
               optimizeDeps: {
                 include: [
+                  "react-router",
                   "react-router > cookie",
                   "react-router > set-cookie-parser",
                 ],
