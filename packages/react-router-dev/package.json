@@ -29,10 +29,6 @@
       "types": "./dist/vite/cloudflare.d.ts",
       "default": "./dist/vite/cloudflare.js"
     },
-    "./internal": {
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
-    },
     "./package.json": "./package.json"
   },
   "imports": {
