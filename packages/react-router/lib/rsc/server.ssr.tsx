@@ -209,7 +209,7 @@ export async function routeRSCServerRequest({
     const html = await renderHTML(getPayload);
 
     const headers = new Headers(serverResponse.headers);
-    headers.set("Content-Type", "text/html");
+    headers.set("Content-Type", "text/html; charset=utf-8");
 
     if (!hydrate) {
       return new Response(html, {
