@@ -1,5 +1,16 @@
 # `@react-router/dev`
 
+## 7.9.2-pre.0
+
+### Patch Changes
+
+- Add unstable support for RSC Framework Mode ([#14336](https://github.com/remix-run/react-router/pull/14336))
+- Switch internal vite plugin Response logic to use `@remix-run/node-fetch-server` ([#13927](https://github.com/remix-run/react-router/pull/13927))
+- Updated dependencies:
+  - `react-router@7.9.2-pre.0`
+  - `@react-router/node@7.9.2-pre.0`
+  - `@react-router/serve@7.9.2-pre.0`
+
 ## 7.9.1
 
 ### Patch Changes
