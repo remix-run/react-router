@@ -1,12 +1,23 @@
 import type { Route } from "./+types/root";
 
-import { Meta, Link, Outlet, isRouteErrorResponse } from "react-router";
+import {
+  Meta,
+  Link,
+  Outlet,
+  isRouteErrorResponse,
+  useNavigation,
+  useRevalidator,
+} from "react-router";
 import "./root.css";
 
 export const meta = () => [{ title: "React Router Vite" }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  console.log("Layout");
+  const navigation = useNavigation();
+  const revalidator = useRevalidator();
+
+  console.log({ navigation: navigation.state, revalidator: revalidator.state });
+
   return (
     <html lang="en">
       <head>
@@ -17,13 +28,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <header>
           <h1 className="root__header">React Router Vite</h1>
+          <p>Navigation: {navigation.state}</p>
+          <p>Revalidation: {revalidator.state}</p>
           <nav>
             <ul>
               <li>
-                <Link to="/">Home</Link>
+                <Link to="/" viewTransition={true}>
+                  Home
+                </Link>
               </li>
               <li>
-                <Link to="/server-loader">Server loader</Link>
+                <Link to="/server-loader" viewTransition={true}>
+                  Server loader
+                </Link>
               </li>
               <li>
                 <Link to="/client-loader">Client loader</Link>
@@ -51,8 +68,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ServerComponent() {
-  console.log("Root");
+export default function Root() {
   return (
     <>
       <Outlet />

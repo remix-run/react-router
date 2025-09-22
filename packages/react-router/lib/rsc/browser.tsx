@@ -703,18 +703,6 @@ export function RSCHydratedRouter({
     }
   }, []);
 
-  let [location, setLocation] = React.useState(router.state.location);
-
-  React.useLayoutEffect(
-    () =>
-      router.subscribe((newState) => {
-        if (newState.location !== location) {
-          setLocation(newState.location);
-        }
-      }),
-    [router, location],
-  );
-
   React.useEffect(() => {
     if (
       routeDiscovery === "lazy" ||
@@ -813,7 +801,7 @@ export function RSCHydratedRouter({
 
   return (
     <RSCRouterContext.Provider value={true}>
-      <RSCRouterGlobalErrorBoundary location={location}>
+      <RSCRouterGlobalErrorBoundary location={router.state.location}>
         <FrameworkContext.Provider value={frameworkContext}>
           <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
         </FrameworkContext.Provider>
