@@ -370,7 +370,7 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
         });
         deletedFetchers.forEach((key) => fetcherData.current.delete(key));
 
-        const diff = shallowDiff(state, newState);
+        let diff = shallowDiff(state, newState);
 
         if (!diff) return;
 

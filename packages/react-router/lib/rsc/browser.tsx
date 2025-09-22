@@ -20,6 +20,7 @@ import type {
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyResult,
   RouterContextProvider,
 } from "../router/utils";
 import { ErrorResponseImpl, createContext } from "../router/utils";
@@ -41,6 +42,7 @@ import {
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
+import { Deferred } from "../../vendor/turbo-stream-v2/utils";
 
 export type BrowserCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
@@ -110,15 +112,15 @@ export function createCallServer({
   encodeReply: EncodeReplyFunction;
   fetch?: (request: Request) => Promise<Response>;
 }) {
-  const globalVar = window as WindowWithRouterGlobals;
+  let globalVar = window as WindowWithRouterGlobals;
 
   let landedActionId = 0;
   return async (id: string, args: unknown[]) => {
     let actionId = (globalVar.__routerActionID =
       (globalVar.__routerActionID ??= 0) + 1);
 
-    const temporaryReferences = createTemporaryReferenceSet();
-    const payloadPromise = fetchImplementation(
+    let temporaryReferences = createTemporaryReferenceSet();
+    let payloadPromise = fetchImplementation(
       new Request(location.href, {
         body: await encodeReply(args, { temporaryReferences }),
         method: "POST",
@@ -156,7 +158,7 @@ export function createCallServer({
             throw new Error("Unexpected payload type");
           }
 
-          const rerender = await payload.rerender;
+          let rerender = await payload.rerender;
           if (
             rerender &&
             landedActionId < actionId &&
@@ -176,7 +178,7 @@ export function createCallServer({
 
             return () => {
               let lastMatch: RSCRouteManifest | undefined;
-              for (const match of rerender.matches) {
+              for (let match of rerender.matches) {
                 globalVar.__reactRouterDataRouter.patchRoutes(
                   lastMatch?.id ?? null,
                   [createRouteFromServerManifest(match)],
@@ -235,7 +237,7 @@ function createRouterFromPayload({
   router: DataRouter;
   routeModules: RouteModules;
 } {
-  const globalVar = window as WindowWithRouterGlobals;
+  let globalVar = window as WindowWithRouterGlobals;
 
   if (globalVar.__reactRouterDataRouter && globalVar.__reactRouterRouteModules)
     return {
@@ -258,10 +260,7 @@ function createRouterFromPayload({
     patches.get(patch.parentId)?.push(patch);
   });
   let routes = payload.matches.reduceRight((previous, match) => {
-    const route: DataRouteObject = createRouteFromServerManifest(
-      match,
-      payload,
-    );
+    let route: DataRouteObject = createRouteFromServerManifest(match, payload);
     if (previous.length > 0) {
       route.children = previous;
       let childrenToPatch = patches.get(match.id);
@@ -349,26 +348,26 @@ function createRouterFromPayload({
       }
     >,
   ) => {
-    const oldRoutes = (window as WindowWithRouterGlobals)
-      .__reactRouterDataRouter.routes;
-    const newRoutes: DataRouteObjectWithManifestInfo[] = [];
+    let oldRoutes = (window as WindowWithRouterGlobals).__reactRouterDataRouter
+      .routes;
+    let newRoutes: DataRouteObjectWithManifestInfo[] = [];
 
     function walkRoutes(
       routes: DataRouteObjectWithManifestInfo[],
       parentId?: string,
     ): DataRouteObjectWithManifestInfo[] {
       return routes.map((route) => {
-        const routeUpdate = routeUpdateByRouteId.get(route.id);
+        let routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const {
+          let {
             routeModule,
             hasAction,
             hasComponent,
             hasErrorBoundary,
             hasLoader,
           } = routeUpdate;
-          const newRoute = createRouteFromServerManifest({
+          let newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
             element: route.element as React.ReactElement,
@@ -394,7 +393,7 @@ function createRouterFromPayload({
           return newRoute;
         }
 
-        const updatedRoute = { ...route };
+        let updatedRoute = { ...route };
         if (route.children) {
           updatedRoute.children = walkRoutes(route.children, route.id);
         }
@@ -466,45 +465,56 @@ export function getRSCSingleFetchDataStrategy(
   );
   return async (args) =>
     args.runClientMiddleware(async () => {
-      // Before we run the dataStrategy, create a place to stick rendered routes
-      // from the payload so we can patch them into the router after all loaders
-      // have completed.  Need to do this since we may have multiple fetch
-      // requests returning multiple server payloads (due to clientLoaders, fine
-      // grained revalidation, etc.).  This lets us stitch them all together and
-      // patch them all at the end
-      // This cast should be fine since this is always run client side and
-      // `context` is always of this type on the client -- unlike on the server
-      // in framework mode when it could be `AppLoadContext`
-      let context = args.context as RouterContextProvider;
-      context.set(renderedRoutesContext, []);
-      let results = await dataStrategy(args);
-      // patch into router from all payloads in map
-      // TODO: Confirm that it's correct for us to have multiple rendered routes
-      // with the same ID. This is currently happening in `clientLoader` cases
-      // where we're calling `fetchAndDecode` multiple times. This may be a
-      // sign of a logical error in how we're handling client loader routes.
-      const renderedRoutesById = new Map<string, RSCRouteManifest[]>();
-      for (const route of context.get(renderedRoutesContext)) {
-        if (!renderedRoutesById.has(route.id)) {
-          renderedRoutesById.set(route.id, []);
-        }
-        renderedRoutesById.get(route.id)!.push(route);
-      }
-      for (const match of args.matches) {
-        const renderedRoutes = renderedRoutesById.get(match.route.id);
-        if (renderedRoutes) {
-          for (const rendered of renderedRoutes) {
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter.patchRoutes(
-              rendered.parentId ?? null,
-              [createRouteFromServerManifest(rendered)],
-              true,
-            );
+      // let resultsResolver: Promise<Record<string, DataStrategyResult>>;
+      let resultsDeferred = new Deferred<Record<string, DataStrategyResult>>();
+      let updatePromise = (async () => {
+        // Before we run the dataStrategy, create a place to stick rendered routes
+        // from the payload so we can patch them into the router after all loaders
+        // have completed.  Need to do this since we may have multiple fetch
+        // requests returning multiple server payloads (due to clientLoaders, fine
+        // grained revalidation, etc.).  This lets us stitch them all together and
+        // patch them all at the end
+        // This cast should be fine since this is always run client side and
+        // `context` is always of this type on the client -- unlike on the server
+        // in framework mode when it could be `AppLoadContext`
+        let context = args.context as RouterContextProvider;
+        context.set(renderedRoutesContext, []);
+        let results = await dataStrategy(args);
+        // patch into router from all payloads in map
+        // TODO: Confirm that it's correct for us to have multiple rendered routes
+        // with the same ID. This is currently happening in `clientLoader` cases
+        // where we're calling `fetchAndDecode` multiple times. This may be a
+        // sign of a logical error in how we're handling client loader routes.
+        let renderedRoutesById = new Map<string, RSCRouteManifest[]>();
+        for (let route of context.get(renderedRoutesContext)) {
+          if (!renderedRoutesById.has(route.id)) {
+            renderedRoutesById.set(route.id, []);
           }
+          renderedRoutesById.get(route.id)!.push(route);
         }
-      }
-      return results;
+        return () => {
+          for (let match of args.matches) {
+            let renderedRoutes = renderedRoutesById.get(match.route.id);
+            if (renderedRoutes) {
+              for (let rendered of renderedRoutes) {
+                (
+                  window as WindowWithRouterGlobals
+                ).__reactRouterDataRouter.patchRoutes(
+                  rendered.parentId ?? null,
+                  [createRouteFromServerManifest(rendered)],
+                  true,
+                );
+              }
+            }
+          }
+          resultsDeferred.resolve(results);
+        };
+      })();
+      (
+        (window as WindowWithRouterGlobals).__reactRouterDataRouter as any
+      ).__setPendingRerender(updatePromise);
+
+      return await resultsDeferred.promise;
     });
 }
 
@@ -539,7 +549,7 @@ function getFetchAndDecodeViaRSC(
     invariant(res.body, "No response body to decode");
 
     try {
-      const payload = (await createFromReadableStream(res.body, {
+      let payload = (await createFromReadableStream(res.body, {
         temporaryReferences: undefined,
       })) as RSCPayload;
       if (payload.type === "redirect") {
@@ -571,9 +581,9 @@ function getFetchAndDecodeViaRSC(
         .push(...payload.matches);
 
       let results: DecodedSingleFetchResults = { routes: {} };
-      const dataKey = isMutationMethod(request.method)
-        ? "actionData"
-        : "loaderData";
+      let dataKey = isMutationMethod(request.method)
+        ? ("actionData" as const)
+        : ("loaderData" as const);
       for (let [routeId, data] of Object.entries(payload[dataKey] || {})) {
         results.routes[routeId] = { data };
       }
@@ -696,7 +706,7 @@ export function RSCHydratedRouter({
   React.useLayoutEffect(() => {
     // If we had to run clientLoaders on hydration, we delay initialization until
     // after we've hydrated to avoid hydration issues from synchronous client loaders
-    const globalVar = window as WindowWithRouterGlobals;
+    let globalVar = window as WindowWithRouterGlobals;
     if (!globalVar.__routerInitialized) {
       globalVar.__routerInitialized = true;
       globalVar.__reactRouterDataRouter.initialize();
@@ -776,7 +786,7 @@ export function RSCHydratedRouter({
     });
   }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
 
-  const frameworkContext: FrameworkContextObject = {
+  let frameworkContext: FrameworkContextObject = {
     future: {
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
@@ -959,7 +969,7 @@ function getManifestUrl(paths: string[]): URL | null {
     return new URL(`${paths[0]}.manifest`, window.location.origin);
   }
 
-  const globalVar = window as WindowWithRouterGlobals;
+  let globalVar = window as WindowWithRouterGlobals;
   let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
     /^\/|\/$/g,
     "",
