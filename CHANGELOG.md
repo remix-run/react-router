@@ -387,6 +387,7 @@ Date: 2025-09-24
 - `@react-router/dev` - Add unstable support for RSC Framework Mode ([#14336](https://github.com/remix-run/react-router/pull/14336))
 - `react-router` - Add `fetcher.unstable_reset()` API ([#14206](https://github.com/remix-run/react-router/pull/14206))
 - `react-router` - In RSC Data Mode, handle SSR'd client errors and re-try in the browser ([#14342](https://github.com/remix-run/react-router/pull/14342))
+- `react-router` - Enable full transition support for the RSC router ([#14362](https://github.com/remix-run/react-router/pull/14362))
 
 **Full Changelog**: [`v7.9.1...v7.9.2`](https://github.com/remix-run/react-router/compare/react-router@7.9.1...react-router@7.9.2)
 
