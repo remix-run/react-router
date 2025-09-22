@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { RouterProvider } from "../components";
+import { UNSTABLE_TransitionEnabledRouterProvider as RouterProvider } from "../components";
 import {
   RSCRouterContext,
   type DataRouteMatch,
@@ -153,8 +153,7 @@ export function createCallServer({
     }
 
     if (payload.rerender) {
-      React.startTransition(
-        // @ts-expect-error - We have old react types that don't know this can be async
+      (globalVar.__reactRouterDataRouter as any).__startRevalidation(
         async () => {
           const rerender = await payload.rerender;
           if (!rerender) return;
@@ -176,41 +175,38 @@ export function createCallServer({
               return;
             }
 
-            let lastMatch: RSCRouteManifest | undefined;
-            for (const match of rerender.matches) {
-              globalVar.__reactRouterDataRouter.patchRoutes(
-                lastMatch?.id ?? null,
-                [createRouteFromServerManifest(match)],
-                true,
-              );
-              lastMatch = match;
-            }
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
-              {},
-            );
+            (globalVar.__reactRouterDataRouter as any).__startRevalidation(
+              () => {
+                let lastMatch: RSCRouteManifest | undefined;
+                for (const match of rerender.matches) {
+                  globalVar.__reactRouterDataRouter.patchRoutes(
+                    lastMatch?.id ?? null,
+                    [createRouteFromServerManifest(match)],
+                    true,
+                  );
+                  lastMatch = match;
+                }
 
-            React.startTransition(() => {
-              (
-                window as WindowWithRouterGlobals
-              ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
-                {
-                  loaderData: Object.assign(
-                    {},
-                    globalVar.__reactRouterDataRouter.state.loaderData,
-                    rerender.loaderData,
-                  ),
-                  errors: rerender.errors
-                    ? Object.assign(
-                        {},
-                        globalVar.__reactRouterDataRouter.state.errors,
-                        rerender.errors,
-                      )
-                    : null,
-                },
-              );
-            });
+                (
+                  window as WindowWithRouterGlobals
+                ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
+                  {
+                    loaderData: Object.assign(
+                      {},
+                      globalVar.__reactRouterDataRouter.state.loaderData,
+                      rerender.loaderData,
+                    ),
+                    errors: rerender.errors
+                      ? Object.assign(
+                          {},
+                          globalVar.__reactRouterDataRouter.state.errors,
+                          rerender.errors,
+                        )
+                      : null,
+                  },
+                );
+              },
+            );
           }
         },
       );
