@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.9.2-pre.1
+
+### Patch Changes
+
+- feat: enable full transition support for the rsc router ([#14362](https://github.com/remix-run/react-router/pull/14362))
+
 ## 7.9.2-pre.0
 
 ### Patch Changes
