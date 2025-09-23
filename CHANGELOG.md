@@ -368,7 +368,7 @@ Date: 2025-09-24
 
 ### Patch Changes
 
-- `react-router` - Ensure client-side router runs client `middleware` on initial load even if no loaders exist ([#14348](https://github.com/remix-run/react-router/pull/14348))
+- `react-router` - Ensure client-side router runs client `middleware` during initialization data load (if required) even if no loaders exist ([#14348](https://github.com/remix-run/react-router/pull/14348))
 - `react-router` - Fix `middleware` prop not being supported on `<Route>` when used with a data router via `createRoutesFromElements` ([#14357](https://github.com/remix-run/react-router/pull/14357))
 - `react-router` - Update `createRoutesStub` to work with `middleware` ([#14348](https://github.com/remix-run/react-router/pull/14348))
   - You will need to set the `<RoutesStub future={{ v8_middleware: true }} />` flag to enable the proper `context` type
