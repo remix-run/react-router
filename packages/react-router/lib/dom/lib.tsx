@@ -75,6 +75,7 @@ import type {
   RouteObject,
   NavigateOptions,
   PatchRoutesOnNavigationFunction,
+  DataRouteObject,
 } from "../context";
 import {
   DataRouterContext,
@@ -235,6 +236,19 @@ export interface DOMRouterOpts {
    * ```
    */
   hydrationData?: HydrationState;
+  /**
+   * Function allowing you to instrument a route object prior to creating the
+   * client-side router (and on any subsequently added routes via `route.lazy` or
+   * `patchRoutesOnNavigation`).  This is mostly useful for observability such
+   * as wrapping loaders/actions/middlewares with logging and/or performance tracing.
+   */
+  unstable_instrumentRoute?: (r: DataRouteObject) => DataRouteObject;
+  /**
+   * Function allowing you to instrument the client-side router.  This is mostly
+   * useful for observability such as wrapping `router.navigate`/`router.fetch`
+   * with logging and/or performance tracing.
+   */
+  unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
   /**
    * Override the default data strategy of running loaders in parallel.
    * See {@link DataStrategyFunction}.
@@ -741,6 +755,8 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {DOMRouterOpts.unstable_instrumentRoute} opts.unstable_instrumentRoute n/a
+ * @param {DOMRouterOpts.unstable_instrumentRouter} opts.unstable_instrumentRouter n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
  * @returns An initialized {@link DataRouter| data router} to pass to {@link RouterProvider | `<RouterProvider>`}
@@ -749,19 +765,26 @@ export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts,
 ): DataRouter {
-  return createRouter({
+  let router = createRouter({
     basename: opts?.basename,
     getContext: opts?.getContext,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
+    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
     routes,
     mapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
-  }).initialize();
+  });
+
+  if (opts?.unstable_instrumentRouter) {
+    router = opts.unstable_instrumentRouter(router);
+  }
+
+  return router.initialize();
 }
 
 /**
@@ -777,6 +800,8 @@ export function createBrowserRouter(
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {DOMRouterOpts.unstable_instrumentRoute} opts.unstable_instrumentRoute n/a
+ * @param {DOMRouterOpts.unstable_instrumentRouter} opts.unstable_instrumentRouter n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
@@ -786,19 +811,26 @@ export function createHashRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts,
 ): DataRouter {
-  return createRouter({
+  let router = createRouter({
     basename: opts?.basename,
     getContext: opts?.getContext,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
+    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
     routes,
     mapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
-  }).initialize();
+  });
+
+  if (opts?.unstable_instrumentRouter) {
+    router = opts.unstable_instrumentRouter(router);
+  }
+
+  return router.initialize();
 }
 
 function parseHydrationData(): HydrationState | undefined {

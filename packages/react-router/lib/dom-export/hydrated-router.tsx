@@ -7,6 +7,7 @@ import type {
   HydrationState,
   RouterInit,
   unstable_ClientOnErrorFunction,
+  DataRouteObject,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -78,8 +79,12 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   getContext,
+  unstable_instrumentRoute,
+  unstable_instrumentRouter,
 }: {
   getContext?: RouterInit["getContext"];
+  unstable_instrumentRoute?: RouterInit["unstable_instrumentRoute"];
+  unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
 }): DataRouter {
   initSsrInfo();
 
@@ -172,6 +177,7 @@ function createHydratedRouter({
     getContext,
     hydrationData,
     hydrationRouteProperties,
+    unstable_instrumentRoute,
     mapRouteProperties,
     future: {
       middleware: ssrInfo.context.future.v8_middleware,
@@ -192,6 +198,11 @@ function createHydratedRouter({
       ssrInfo.context.basename,
     ),
   });
+
+  if (unstable_instrumentRouter) {
+    router = unstable_instrumentRouter(router);
+  }
+
   ssrInfo.router = router;
 
   // We can call initialize() immediately if the router doesn't have any
@@ -223,6 +234,18 @@ export interface HydratedRouterProps {
    * functions
    */
   getContext?: RouterInit["getContext"];
+  /**
+   * Function allowing you to instrument a route object prior to creating the
+   * client-side router.  This is mostly useful for observability such as wrapping
+   * loaders/actions/middlewares with logging and/or performance tracing.
+   */
+  unstable_instrumentRoute(route: DataRouteObject): DataRouteObject;
+  /**
+   * Function allowing you to instrument the client-side router.  This is mostly
+   * useful for observability such as wrapping `router.navigate`/`router.fetch`
+   * with logging and/or performance tracing.
+   */
+  unstable_instrumentRouter(router: DataRouter): DataRouter;
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for
@@ -259,6 +282,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       getContext: props.getContext,
+      unstable_instrumentRoute: props.unstable_instrumentRoute,
+      unstable_instrumentRouter: props.unstable_instrumentRouter,
     });
   }
 
