@@ -1,5 +1,6 @@
 import type {
   ActionFunctionArgs,
+  AgnosticDataRouteObject,
   LoaderFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
@@ -12,6 +13,7 @@ import type {
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
 import type { MiddlewareEnabled } from "../types/future";
+import type { RequestHandler } from "./server";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -59,9 +61,9 @@ export interface HandleDataRequestFunction {
   (
     response: Response,
     args: {
-      request: LoaderFunctionArgs["request"];
-      context: LoaderFunctionArgs["context"];
-      params: LoaderFunctionArgs["params"];
+      request: LoaderFunctionArgs["request"] | ActionFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"] | ActionFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
     },
   ): Promise<Response> | Response;
 }
@@ -70,9 +72,9 @@ export interface HandleErrorFunction {
   (
     error: unknown,
     args: {
-      request: LoaderFunctionArgs["request"];
-      context: LoaderFunctionArgs["context"];
-      params: LoaderFunctionArgs["params"];
+      request: LoaderFunctionArgs["request"] | ActionFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"] | ActionFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
     },
   ): void;
 }
@@ -85,5 +87,9 @@ export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
+  unstable_instrumentHandler?: (handler: RequestHandler) => RequestHandler;
+  unstable_instrumentRoute?: (
+    route: AgnosticDataRouteObject,
+  ) => AgnosticDataRouteObject;
   streamTimeout?: number;
 }

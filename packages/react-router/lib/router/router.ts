@@ -1,4 +1,4 @@
-import type { DataRouteMatch, RouteObject } from "../context";
+import type { DataRouteMatch, DataRouteObject, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -3538,6 +3538,9 @@ export function createRouter(init: RouterInit): Router {
 export interface CreateStaticHandlerOptions {
   basename?: string;
   mapRouteProperties?: MapRoutePropertiesFunction;
+  unstable_instrumentRoute?: (
+    r: AgnosticDataRouteObject,
+  ) => AgnosticDataRouteObject;
   future?: {};
 }
 
@@ -3552,8 +3555,24 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
-  let mapRouteProperties =
+  let _mapRouteProperties =
     opts?.mapRouteProperties || defaultMapRouteProperties;
+  let mapRouteProperties = _mapRouteProperties;
+
+  // Leverage the existing mapRouteProperties logic to execute instrumentRoute
+  // (if it exists) on all routes in the application
+  if (opts?.unstable_instrumentRoute) {
+    let instrument = opts?.unstable_instrumentRoute;
+    // TODO: Clean up these types
+    mapRouteProperties = (r: AgnosticRouteObject) => {
+      return instrument({
+        ...r,
+        ..._mapRouteProperties(r),
+      } as AgnosticDataRouteObject) as AgnosticDataRouteObject & {
+        hasErrorBoundary: boolean;
+      };
+    };
+  }
 
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
