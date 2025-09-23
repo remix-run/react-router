@@ -1503,6 +1503,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        pattern: "/tasks",
         context: {},
       });
 
@@ -1512,6 +1513,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
+        pattern: "/tasks/:id",
         context: {},
       });
 
@@ -1521,6 +1523,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        pattern: "/tasks",
         context: {},
       });
 
@@ -1532,6 +1535,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        pattern: "/tasks",
         context: {},
       });
 
@@ -1930,6 +1934,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: "/tasks",
         context: {},
       });
 
@@ -1974,6 +1979,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
@@ -2007,6 +2013,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 

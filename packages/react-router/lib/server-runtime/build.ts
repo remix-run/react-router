@@ -58,12 +58,23 @@ export interface HandleDocumentRequestFunction {
 export interface HandleDataRequestFunction {
   (
     response: Response,
-    args: LoaderFunctionArgs | ActionFunctionArgs,
+    args: {
+      request: LoaderFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"];
+    },
   ): Promise<Response> | Response;
 }
 
 export interface HandleErrorFunction {
-  (error: unknown, args: LoaderFunctionArgs | ActionFunctionArgs): void;
+  (
+    error: unknown,
+    args: {
+      request: LoaderFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"];
+    },
+  ): void;
 }
 
 /**
