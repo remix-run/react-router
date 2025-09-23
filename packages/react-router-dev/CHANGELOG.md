@@ -1,5 +1,20 @@
 # `@react-router/dev`
 
+## 7.9.2-pre.2
+
+### Patch Changes
+
+- Fix preset future flags being ignored during config resolution ([#14369](https://github.com/remix-run/react-router/pull/14369))
+
+  Fixes a bug where future flags defined by presets were completely ignored. The config resolution was incorrectly reading from `reactRouterUserConfig.future` instead of the merged `userAndPresetConfigs.future`, causing all preset-defined future flags to be lost.
+
+  This fix ensures presets can properly enable experimental features as intended by the preset system design.
+
+- Updated dependencies:
+  - `react-router@7.9.2-pre.2`
+  - `@react-router/node@7.9.2-pre.2`
+  - `@react-router/serve@7.9.2-pre.2`
+
 ## 7.9.2-pre.1
 
 ### Patch Changes
