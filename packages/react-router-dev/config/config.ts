@@ -227,6 +227,16 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   prerender: ReactRouterConfig["prerender"];
   /**
+   * Defaults to 1, which means "no concurrency" - fully serial execution.
+   * Setting it to a value more than 1 enables concurrent prerendering.
+   * For example, prerenderConcurrency of 2 would run prerender with the
+   * concurrency of 2 (two pages at a time).
+   * Setting it to a value higher than one can increase the speed of the build,
+   * but may consume more resources, and send more concurrent requests to the
+   * server/CMS.
+   */
+  prerenderConcurrency?: number;
+  /**
    * Control the "Lazy Route Discovery" behavior
    *
    * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will

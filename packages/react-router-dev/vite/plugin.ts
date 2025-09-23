@@ -85,6 +85,7 @@ import { decorateComponentExportsWithProps } from "./with-props";
 import { loadDotenv } from "./load-dotenv";
 import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
+import { pMap } from "./pmap";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -2658,11 +2659,12 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  for (let path of build.prerender) {
+  const { prerenderConcurrency = 1 } = reactRouterConfig
+  await pMap(build.prerender, async path => {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
     if (!matches) {
-      continue;
+      return
     }
     // When prerendering a resource route, we don't want to pass along the
     // `.data` file since we want to prerender the raw Response returned from
@@ -2731,7 +2733,7 @@ async function handlePrerender(
           : undefined,
       );
     }
-  }
+  }, { concurrency: prerenderConcurrency });
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
