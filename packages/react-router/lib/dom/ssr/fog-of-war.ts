@@ -242,6 +242,25 @@ export async function fetchAndApplyManifestPatches(
   try {
     let res = await fetch(url, { signal });
 
+    // To avoid issues during rolling deployments if we get back a 400 when
+    // using `paths`, it's likely we hit an old server so retry the request
+    // with the old `p` parameters
+    if (res.status === 400) {
+      let body = await res.text();
+      if (body !== "Invalid Request") {
+        throw new Error(`${res.status} ${res.statusText}`);
+      }
+      const retrySearchParams = new URLSearchParams();
+      paths.sort().forEach((path) => retrySearchParams.append("p", path));
+      retrySearchParams.set("version", manifest.version);
+      let url = new URL(
+        getManifestPath(manifestPath, basename),
+        window.location.origin,
+      );
+      url.search = retrySearchParams.toString();
+      res = await fetch(url, { signal });
+    }
+
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);
     } else if (
