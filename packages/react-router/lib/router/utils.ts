@@ -270,6 +270,11 @@ interface DataFunctionArgs<Context> {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
   /**
+   * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
+   * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
+   */
+  pattern: string;
+  /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
    * // app/routes.ts
@@ -1994,4 +1999,8 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.internal === "boolean" &&
     "data" in error
   );
+}
+
+export function getRoutePattern(paths: (string | undefined)[]) {
+  return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/");
 }

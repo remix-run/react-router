@@ -948,6 +948,7 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 
@@ -982,6 +983,7 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 
@@ -1014,6 +1016,7 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 
@@ -1118,6 +1121,7 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 
@@ -1156,6 +1160,7 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 
@@ -1191,6 +1196,7 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
         context: {},
       });
 

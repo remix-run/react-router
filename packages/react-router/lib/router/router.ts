@@ -57,6 +57,7 @@ import {
   resolveTo,
   stripBasename,
   RouterContextProvider,
+  getRoutePattern,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3679,6 +3680,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
+            pattern: getRoutePattern(matches.map((m) => m.route.path)),
             matches,
             params: matches[0].params,
             // If we're calling middleware then it must be enabled so we can cast
@@ -3910,6 +3912,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
+          pattern: getRoutePattern(matches.map((m) => m.route.path)),
           matches,
           params: matches[0].params,
           // If we're calling middleware then it must be enabled so we can cast
@@ -4308,6 +4311,7 @@ export function createStaticHandler(
             mapRouteProperties,
             manifest,
             request,
+            getRoutePattern(matches.map((m) => m.route.path)),
             match,
             [],
             requestContext,
@@ -4319,6 +4323,7 @@ export function createStaticHandler(
           mapRouteProperties,
           manifest,
           request,
+          getRoutePattern(matches.map((m) => m.route.path)),
           match,
           [],
           requestContext,
@@ -4806,6 +4811,7 @@ function getMatchesToLoad(
         mapRouteProperties,
         manifest,
         request,
+        getRoutePattern(matches.map((m) => m.route.path)),
         match,
         lazyRoutePropertiesToSkip,
         scopedContext,
@@ -4835,6 +4841,7 @@ function getMatchesToLoad(
       mapRouteProperties,
       manifest,
       request,
+      getRoutePattern(matches.map((m) => m.route.path)),
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
@@ -5602,7 +5609,12 @@ async function runMiddlewarePipeline<Result>(
   ) as [string, MiddlewareFunction<Result>][];
 
   let result = await callRouteMiddleware(
-    { request, params, context },
+    {
+      request,
+      params,
+      context,
+      pattern: getRoutePattern(matches.map((m) => m.route.path)),
+    },
     tuples,
     handler,
     processResult,
@@ -5724,6 +5736,7 @@ function getDataStrategyMatch(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
   request: Request,
+  pattern: string,
   match: DataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
@@ -5781,6 +5794,7 @@ function getDataStrategyMatch(
       if (callHandler && !isMiddlewareOnlyRoute) {
         return callLoaderOrAction({
           request,
+          pattern,
           match,
           lazyHandlerPromise: _lazyPromises?.handler,
           lazyRoutePromise: _lazyPromises?.route,
@@ -5827,6 +5841,7 @@ function getTargetedDataStrategyMatches(
       mapRouteProperties,
       manifest,
       request,
+      getRoutePattern(matches.map((m) => m.route.path)),
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
@@ -5854,6 +5869,7 @@ async function callDataStrategyImpl(
   // back out below.
   let dataStrategyArgs = {
     request,
+    pattern: getRoutePattern(matches.map((m) => m.route.path)),
     params: matches[0].params,
     context: scopedContext,
     matches,
@@ -5911,6 +5927,7 @@ async function callDataStrategyImpl(
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
 async function callLoaderOrAction({
   request,
+  pattern,
   match,
   lazyHandlerPromise,
   lazyRoutePromise,
@@ -5918,6 +5935,7 @@ async function callLoaderOrAction({
   scopedContext,
 }: {
   request: Request;
+  pattern: string;
   match: AgnosticDataRouteMatch;
   lazyHandlerPromise: Promise<void> | undefined;
   lazyRoutePromise: Promise<void> | undefined;
@@ -5951,6 +5969,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
+          pattern,
           params: match.params,
           context: scopedContext,
         },
