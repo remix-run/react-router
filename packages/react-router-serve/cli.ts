@@ -105,16 +105,20 @@ async function run() {
 
   let app = express();
   app.disable("x-powered-by");
-  app.use(compression());
   app.use(
     path.posix.join(build.publicPath, "assets"),
+    compression(),
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
-  app.use(express.static("public", { maxAge: "1h" }));
+  app.use(
+    build.publicPath,
+    compression(),
+    express.static(build.assetsBuildDirectory),
+  );
+  app.use(compression(), express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
   if (isRSCServerBuild(build)) {
@@ -122,6 +126,7 @@ async function run() {
   } else {
     app.all(
       "*",
+      compression(),
       createRequestHandler({
         build,
         mode: process.env.NODE_ENV,
