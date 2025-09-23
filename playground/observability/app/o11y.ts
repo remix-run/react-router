@@ -16,12 +16,9 @@ export function startMeasure(label: string[]) {
   let strLabel = label.join("--");
   let now = Date.now().toString();
   let start = `start:${strLabel}:${now}`;
-  console.log(new Date().toISOString(), "start", strLabel);
-  start += `start:${strLabel}:${now}`;
   performance.mark(start);
   return () => {
     let end = `end:${strLabel}:${now}`;
-    console.log(new Date().toISOString(), "end", strLabel);
     performance.mark(end);
     performance.measure(strLabel, start, end);
   };
@@ -36,5 +33,17 @@ export async function measure<T>(
     return await cb();
   } finally {
     end();
+  }
+}
+
+export async function log<T>(
+  label: string[],
+  cb: () => Promise<T>,
+): Promise<T> {
+  console.log(new Date().toISOString(), "start", label.join("--"));
+  try {
+    return await cb();
+  } finally {
+    console.log(new Date().toISOString(), "end", label.join("--"));
   }
 }

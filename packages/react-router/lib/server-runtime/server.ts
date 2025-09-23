@@ -55,6 +55,7 @@ function derive(build: ServerBuild, mode?: string) {
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
+    unstable_instrumentRoute: build.entry.module.unstable_instrumentRoute,
   });
 
   let errorHandler =
@@ -67,42 +68,8 @@ function derive(build: ServerBuild, mode?: string) {
         );
       }
     });
-  return {
-    routes,
-    dataRoutes,
-    serverMode,
-    staticHandler,
-    errorHandler,
-  };
-}
 
-export const createRequestHandler: CreateRequestHandlerFunction = (
-  build,
-  mode,
-) => {
-  let _build: ServerBuild;
-  let routes: ServerRoute[];
-  let serverMode: ServerMode;
-  let staticHandler: StaticHandler;
-  let errorHandler: HandleErrorFunction;
-
-  return async function requestHandler(request, initialContext) {
-    _build = typeof build === "function" ? await build() : build;
-
-    if (typeof build === "function") {
-      let derived = derive(_build, mode);
-      routes = derived.routes;
-      serverMode = derived.serverMode;
-      staticHandler = derived.staticHandler;
-      errorHandler = derived.errorHandler;
-    } else if (!routes || !serverMode || !staticHandler || !errorHandler) {
-      let derived = derive(_build, mode);
-      routes = derived.routes;
-      serverMode = derived.serverMode;
-      staticHandler = derived.staticHandler;
-      errorHandler = derived.errorHandler;
-    }
-
+  let requestHandler: RequestHandler = async (request, initialContext) => {
     let params: RouteMatch<ServerRoute>["params"] = {};
     let loadContext: AppLoadContext | RouterContextProvider;
 
@@ -118,7 +85,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     };
 
-    if (_build.future.v8_middleware) {
+    if (build.future.v8_middleware) {
       if (
         initialContext &&
         !(initialContext instanceof RouterContextProvider)
@@ -138,7 +105,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     let url = new URL(request.url);
 
-    let normalizedBasename = _build.basename || "/";
+    let normalizedBasename = build.basename || "/";
     let normalizedPath = url.pathname;
     if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
       normalizedPath = normalizedBasename;
@@ -158,7 +125,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
-    if (!_build.ssr) {
+    if (!build.ssr) {
       // Decode the URL path before checking against the prerender config
       let decodedPath = decodeURI(normalizedPath);
 
@@ -188,12 +155,12 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
       // When SSR is disabled this, file can only ever run during dev because we
       // delete the server build at the end of the build
-      if (_build.prerender.length === 0) {
+      if (build.prerender.length === 0) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !_build.prerender.includes(decodedPath) &&
-        !_build.prerender.includes(decodedPath + "/")
+        !build.prerender.includes(decodedPath) &&
+        !build.prerender.includes(decodedPath + "/")
       ) {
         if (url.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
@@ -222,12 +189,12 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     // Manifest request for fog of war
     let manifestUrl = getManifestPath(
-      _build.routeDiscovery.manifestPath,
+      build.routeDiscovery.manifestPath,
       normalizedBasename,
     );
     if (url.pathname === manifestUrl) {
       try {
-        let res = await handleManifestRequest(_build, routes, url);
+        let res = await handleManifestRequest(build, routes, url);
         return res;
       } catch (e) {
         handleError(e);
@@ -235,7 +202,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     }
 
-    let matches = matchServerRoutes(routes, normalizedPath, _build.basename);
+    let matches = matchServerRoutes(routes, normalizedPath, build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
@@ -248,12 +215,12 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       let singleFetchMatches = matchServerRoutes(
         routes,
         handlerUrl.pathname,
-        _build.basename,
+        build.basename,
       );
 
       response = await handleSingleFetchRequest(
         serverMode,
-        _build,
+        build,
         staticHandler,
         request,
         handlerUrl,
@@ -265,13 +232,13 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         response = generateSingleFetchRedirectResponse(
           response,
           request,
-          _build,
+          build,
           serverMode,
         );
       }
 
-      if (_build.entry.module.handleDataRequest) {
-        response = await _build.entry.module.handleDataRequest(response, {
+      if (build.entry.module.handleDataRequest) {
+        response = await build.entry.module.handleDataRequest(response, {
           context: loadContext,
           params: singleFetchMatches ? singleFetchMatches[0].params : {},
           request,
@@ -281,7 +248,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
           response = generateSingleFetchRedirectResponse(
             response,
             request,
-            _build,
+            build,
             serverMode,
           );
         }
@@ -294,7 +261,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequest(
         serverMode,
-        _build,
+        build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -305,8 +272,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       let { pathname } = url;
 
       let criticalCss: CriticalCss | undefined = undefined;
-      if (_build.unstable_getCriticalCss) {
-        criticalCss = await _build.unstable_getCriticalCss({ pathname });
+      if (build.unstable_getCriticalCss) {
+        criticalCss = await build.unstable_getCriticalCss({ pathname });
       } else if (
         mode === ServerMode.Development &&
         getDevServerHooks()?.getCriticalCss
@@ -316,7 +283,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
       response = await handleDocumentRequest(
         serverMode,
-        _build,
+        build,
         staticHandler,
         request,
         loadContext,
@@ -335,6 +302,60 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     return response;
+  };
+
+  if (build.entry.module.unstable_instrumentHandler) {
+    requestHandler =
+      build.entry.module.unstable_instrumentHandler(requestHandler);
+  }
+
+  return {
+    routes,
+    dataRoutes,
+    serverMode,
+    staticHandler,
+    errorHandler,
+    requestHandler,
+  };
+}
+
+export const createRequestHandler: CreateRequestHandlerFunction = (
+  build,
+  mode,
+) => {
+  let _build: ServerBuild;
+  let routes: ServerRoute[];
+  let serverMode: ServerMode;
+  let staticHandler: StaticHandler;
+  let errorHandler: HandleErrorFunction;
+  let _requestHandler: RequestHandler;
+
+  return async function requestHandler(request, initialContext) {
+    _build = typeof build === "function" ? await build() : build;
+
+    if (typeof build === "function") {
+      let derived = derive(_build, mode);
+      routes = derived.routes;
+      serverMode = derived.serverMode;
+      staticHandler = derived.staticHandler;
+      errorHandler = derived.errorHandler;
+      _requestHandler = derived.requestHandler;
+    } else if (
+      !routes ||
+      !serverMode ||
+      !staticHandler ||
+      !errorHandler ||
+      !_requestHandler
+    ) {
+      let derived = derive(_build, mode);
+      routes = derived.routes;
+      serverMode = derived.serverMode;
+      staticHandler = derived.staticHandler;
+      errorHandler = derived.errorHandler;
+      _requestHandler = derived.requestHandler;
+    }
+
+    return _requestHandler(request, initialContext);
   };
 };
 
