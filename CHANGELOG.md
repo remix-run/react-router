@@ -379,6 +379,7 @@ Date: 2025-09-24
 - `react-router` - Update `useOutlet` returned element to have a stable identity in-between route changes ([#13382](https://github.com/remix-run/react-router/pull/13382))
 - `react-router` - Handle encoded question mark and hash characters in ancestor splat routes ([#14249](https://github.com/remix-run/react-router/pull/14249))
 - `@react-router/dev` - Switch internal vite plugin Response logic to use `@remix-run/node-fetch-server` ([#13927](https://github.com/remix-run/react-router/pull/13927))
+- `@react-router/dev` - Fix `presets` `future` flags being ignored during config resolution ([#14369](https://github.com/remix-run/react-router/pull/14369))
 
 ### Unstable Changes
 
