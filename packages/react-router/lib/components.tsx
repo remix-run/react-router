@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import type {
+  History,
   InitialEntry,
   Location,
   MemoryHistory,
@@ -169,6 +170,19 @@ export interface MemoryRouterOpts {
    */
   initialIndex?: number;
   /**
+   * Function allowing you to instrument a route object prior to creating the
+   * client-side router (and on any subsequently added routes via `route.lazy` or
+   * `patchRoutesOnNavigation`).  This is mostly useful for observability such
+   * as wrapping loaders/actions/middlewares with logging and/or performance tracing.
+   */
+  unstable_instrumentRoute?: (r: DataRouteObject) => DataRouteObject;
+  /**
+   * Function allowing you to instrument the client-side router.  This is mostly
+   * useful for observability such as wrapping `router.navigate`/`router.fetch`
+   * with logging and/or performance tracing.
+   */
+  unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
+  /**
    * Override the default data strategy of loading in parallel.
    * Only intended for advanced usage.
    */
@@ -196,6 +210,8 @@ export interface MemoryRouterOpts {
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
+ * @param {MemoryRouterOpts.unstable_instrumentRoute} opts.unstable_instrumentRoute n/a
+ * @param {MemoryRouterOpts.unstable_instrumentRouter} opts.unstable_instrumentRouter n/a
  * @param {MemoryRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @returns An initialized {@link DataRouter} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
@@ -203,21 +219,45 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: MemoryRouterOpts,
 ): DataRouter {
-  return createRouter({
-    basename: opts?.basename,
-    getContext: opts?.getContext,
-    future: opts?.future,
-    history: createMemoryHistory({
+  return createAndInitializeDataRouter(
+    routes,
+    createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,
     }),
-    hydrationData: opts?.hydrationData,
-    routes,
-    hydrationRouteProperties,
-    mapRouteProperties,
+    opts,
+  );
+}
+
+export function createAndInitializeDataRouter(
+  routes: RouteObject[],
+  history: History,
+  opts?: Omit<
+    RouterInit,
+    "routes" | "history" | "mapRouteProperties" | "hydrationRouteProperties"
+  > & {
+    unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
+  },
+): DataRouter {
+  let router = createRouter({
+    basename: opts?.basename,
     dataStrategy: opts?.dataStrategy,
+    future: opts?.future,
+    getContext: opts?.getContext,
+    history,
+    hydrationData: opts?.hydrationData,
+    hydrationRouteProperties,
+    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
+    mapRouteProperties,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
-  }).initialize();
+    routes,
+  });
+
+  if (opts?.unstable_instrumentRouter) {
+    router = opts.unstable_instrumentRouter(router);
+  }
+
+  return router.initialize();
 }
 
 class Deferred<T> {

@@ -40,7 +40,6 @@ import type {
   ActionFunction,
   MiddlewareFunction,
   MiddlewareNextFunction,
-  ErrorResponse,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -403,6 +402,9 @@ export interface RouterInit {
   history: History;
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
+  unstable_instrumentRoute?: (
+    route: AgnosticDataRouteObject,
+  ) => AgnosticDataRouteObject;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -866,7 +868,24 @@ export function createRouter(init: RouterInit): Router {
   );
 
   let hydrationRouteProperties = init.hydrationRouteProperties || [];
-  let mapRouteProperties = init.mapRouteProperties || defaultMapRouteProperties;
+  let _mapRouteProperties =
+    init.mapRouteProperties || defaultMapRouteProperties;
+  let mapRouteProperties = _mapRouteProperties;
+
+  // Leverage the existing mapRouteProperties logic to execute instrumentRoute
+  // (if it exists) on all routes in the application
+  if (init.unstable_instrumentRoute) {
+    let instrument = init.unstable_instrumentRoute;
+    // TODO: Clean up these types
+    mapRouteProperties = (r: AgnosticRouteObject) => {
+      return instrument({
+        ...r,
+        ..._mapRouteProperties(r),
+      } as AgnosticDataRouteObject) as AgnosticDataRouteObject & {
+        hasErrorBoundary: boolean;
+      };
+    };
+  }
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};
