@@ -610,10 +610,14 @@ async function fetchAndDecodeViaTurboStream(
 
   let res = await fetch(url, await createRequestInit(request));
 
-  // If this 404'd without hitting the running server (most likely in a
-  // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
-  if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
-    throw new ErrorResponseImpl(404, "Not Found", true);
+  // If this error'd without hitting the running server, then bubble a normal
+  // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
+  //
+  // This could be triggered by a few scenarios:
+  // - `.data` request 404 on a pre-rendered app using a CDN
+  // - 429 error returned from a CDN on a SSR app
+  if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
+    throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
   }
 
   // Handle non-RR redirects (i.e., from express middleware)
