@@ -79,6 +79,7 @@ import {
   createConfigLoader,
   resolveEntryFiles,
   configRouteToBranchRoute,
+  type PrerenderPaths,
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
@@ -2659,7 +2660,7 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  const { prerenderConcurrency = 1 } = reactRouterConfig
+  const concurrency = getPrerenderConcurrency(reactRouterConfig.prerender);
   await pMap(build.prerender, async path => {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
@@ -2733,7 +2734,7 @@ async function handlePrerender(
           : undefined,
       );
     }
-  }, { concurrency: prerenderConcurrency });
+  }, { concurrency });
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
@@ -2921,6 +2922,10 @@ export async function getPrerenderPaths(
   let prerenderPaths: string[] = [];
   if (prerender != null && prerender !== false) {
     let prerenderRoutes = createPrerenderRoutes(routes);
+    if (typeof prerender === "object") {
+      prerender = (prerender as { paths: PrerenderPaths }).paths
+    }
+
     if (prerender === true) {
       let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
       if (logWarning && !ssr && paramRoutes.length > 0) {
@@ -2945,6 +2950,17 @@ export async function getPrerenderPaths(
     }
   }
   return prerenderPaths;
+}
+
+const DEFAULT_PRERENDER_CONCURRENCY = 1
+
+function getPrerenderConcurrency(
+  prerender: ResolvedReactRouterConfig["prerender"],
+): number {
+  if (typeof prerender === "object") {
+    return (prerender as { unstable_concurrency?: number }).unstable_concurrency || DEFAULT_PRERENDER_CONCURRENCY
+  }
+  return DEFAULT_PRERENDER_CONCURRENCY
 }
 
 // Note: Duplicated from react-router/lib/server-runtime

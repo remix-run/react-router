@@ -149,13 +149,18 @@ export type ReactRouterConfig = {
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
+   *
+   * `unstable_concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
+   * Setting it to a value more than 1 enables concurrent prerendering.
+   * Setting it to a value higher than one can increase the speed of the build,
+   * but may consume more resources, and send more concurrent requests to the
+   * server/CMS.
    */
-  prerender?:
-    | boolean
-    | Array<string>
-    | ((args: {
-        getStaticPaths: () => string[];
-      }) => Array<string> | Promise<Array<string>>);
+  prerender?: PrerenderPaths
+    | {
+        paths: PrerenderPaths;
+        unstable_concurrency?: number;
+      };
   /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
@@ -200,6 +205,10 @@ export type ReactRouterConfig = {
   ssr?: boolean;
 };
 
+export type PrerenderPaths = boolean
+  | Array<string>
+  | ((args: { getStaticPaths: () => string[] }) => Array<string> | Promise<Array<string>>);
+
 export type ResolvedReactRouterConfig = Readonly<{
   /**
    * The absolute path to the application source directory.
@@ -226,16 +235,6 @@ export type ResolvedReactRouterConfig = Readonly<{
    * function returning an array to dynamically generate URLs.
    */
   prerender: ReactRouterConfig["prerender"];
-  /**
-   * Defaults to 1, which means "no concurrency" - fully serial execution.
-   * Setting it to a value more than 1 enables concurrent prerendering.
-   * For example, prerenderConcurrency of 2 would run prerender with the
-   * concurrency of 2 (two pages at a time).
-   * Setting it to a value higher than one can increase the speed of the build,
-   * but may consume more resources, and send more concurrent requests to the
-   * server/CMS.
-   */
-  prerenderConcurrency?: number;
   /**
    * Control the "Lazy Route Discovery" behavior
    *
