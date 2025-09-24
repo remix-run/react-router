@@ -110,6 +110,13 @@ type BuildEndHook = (args: {
   viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
 
+export type PrerenderPaths =
+  | boolean
+  | Array<string>
+  | ((args: {
+      getStaticPaths: () => string[];
+    }) => Array<string> | Promise<Array<string>>);
+
 /**
  * Config to be exported via the default export from `react-router.config.ts`.
  */
@@ -156,7 +163,8 @@ export type ReactRouterConfig = {
    * but may consume more resources, and send more concurrent requests to the
    * server/CMS.
    */
-  prerender?: PrerenderPaths
+  prerender?:
+    | PrerenderPaths
     | {
         paths: PrerenderPaths;
         unstable_concurrency?: number;
@@ -204,10 +212,6 @@ export type ReactRouterConfig = {
    */
   ssr?: boolean;
 };
-
-export type PrerenderPaths = boolean
-  | Array<string>
-  | ((args: { getStaticPaths: () => string[] }) => Array<string> | Promise<Array<string>>);
 
 export type ResolvedReactRouterConfig = Readonly<{
   /**

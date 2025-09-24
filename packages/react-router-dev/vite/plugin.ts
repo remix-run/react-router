@@ -79,7 +79,7 @@ import {
   createConfigLoader,
   resolveEntryFiles,
   configRouteToBranchRoute,
-  type PrerenderPaths,
+  PrerenderPaths,
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
@@ -2660,81 +2660,93 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  const concurrency = getPrerenderConcurrency(reactRouterConfig.prerender);
-  await pMap(build.prerender, async path => {
-    // Ensure we have a leading slash for matching
-    let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
-    if (!matches) {
-      return
-    }
-    // When prerendering a resource route, we don't want to pass along the
-    // `.data` file since we want to prerender the raw Response returned from
-    // the loader.  Presumably this is for routes where a file extension is
-    // already included, such as `app/routes/items[.json].tsx` that will
-    // render into `/items.json`
-    let leafRoute = matches ? matches[matches.length - 1].route : null;
-    let manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
-    let isResourceRoute =
-      manifestRoute && !manifestRoute.default && !manifestRoute.ErrorBoundary;
+  await pMap(
+    build.prerender,
+    async (path) => {
+      // Ensure we have a leading slash for matching
+      let matches = matchRoutes(
+        buildRoutes,
+        `/${path}/`.replace(/^\/\/+/, "/"),
+      );
+      if (!matches) {
+        return;
+      }
+      // When prerendering a resource route, we don't want to pass along the
+      // `.data` file since we want to prerender the raw Response returned from
+      // the loader.  Presumably this is for routes where a file extension is
+      // already included, such as `app/routes/items[.json].tsx` that will
+      // render into `/items.json`
+      let leafRoute = matches ? matches[matches.length - 1].route : null;
+      let manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
+      let isResourceRoute =
+        manifestRoute && !manifestRoute.default && !manifestRoute.ErrorBoundary;
 
-    if (isResourceRoute) {
-      invariant(leafRoute);
-      invariant(manifestRoute);
-      if (manifestRoute.loader) {
-        // Prerender a .data file for turbo-stream consumption
-        await prerenderData(
-          handler,
-          path,
-          [leafRoute.id],
-          clientBuildDirectory,
-          reactRouterConfig,
-          viteConfig,
-        );
-        // Prerender a raw file for external consumption
-        await prerenderResourceRoute(
-          handler,
-          path,
-          clientBuildDirectory,
-          reactRouterConfig,
-          viteConfig,
-        );
+      if (isResourceRoute) {
+        invariant(leafRoute);
+        invariant(manifestRoute);
+        if (manifestRoute.loader) {
+          // Prerender a .data file for turbo-stream consumption
+          await prerenderData(
+            handler,
+            path,
+            [leafRoute.id],
+            clientBuildDirectory,
+            reactRouterConfig,
+            viteConfig,
+          );
+          // Prerender a raw file for external consumption
+          await prerenderResourceRoute(
+            handler,
+            path,
+            clientBuildDirectory,
+            reactRouterConfig,
+            viteConfig,
+          );
+        } else {
+          viteConfig.logger.warn(
+            `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute?.id}`,
+          );
+        }
       } else {
-        viteConfig.logger.warn(
-          `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute?.id}`,
+        let hasLoaders = matches.some(
+          (m) => build.assets.routes[m.route.id]?.hasLoader,
         );
-      }
-    } else {
-      let hasLoaders = matches.some(
-        (m) => build.assets.routes[m.route.id]?.hasLoader,
-      );
-      let data: string | undefined;
-      if (!isResourceRoute && hasLoaders) {
-        data = await prerenderData(
+        let data: string | undefined;
+        if (!isResourceRoute && hasLoaders) {
+          data = await prerenderData(
+            handler,
+            path,
+            null,
+            clientBuildDirectory,
+            reactRouterConfig,
+            viteConfig,
+          );
+        }
+
+        await prerenderRoute(
           handler,
           path,
-          null,
           clientBuildDirectory,
           reactRouterConfig,
           viteConfig,
+          data
+            ? {
+                headers: {
+                  "X-React-Router-Prerender-Data": encodeURI(data),
+                },
+              }
+            : undefined,
         );
       }
-
-      await prerenderRoute(
-        handler,
-        path,
-        clientBuildDirectory,
-        reactRouterConfig,
-        viteConfig,
-        data
-          ? {
-              headers: {
-                "X-React-Router-Prerender-Data": encodeURI(data),
-              },
-            }
-          : undefined,
-      );
-    }
-  }, { concurrency });
+    },
+    {
+      concurrency:
+        typeof reactRouterConfig.prerender === "object" &&
+        "paths" in reactRouterConfig.prerender
+          ? reactRouterConfig.prerender.unstable_concurrency || 1
+          : 1,
+    },
+  );
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
@@ -2919,48 +2931,49 @@ export async function getPrerenderPaths(
   routes: GenericRouteManifest,
   logWarning = false,
 ): Promise<string[]> {
-  let prerenderPaths: string[] = [];
-  if (prerender != null && prerender !== false) {
-    let prerenderRoutes = createPrerenderRoutes(routes);
-    if (typeof prerender === "object") {
-      prerender = (prerender as { paths: PrerenderPaths }).paths
-    }
-
-    if (prerender === true) {
-      let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
-      if (logWarning && !ssr && paramRoutes.length > 0) {
-        console.warn(
-          colors.yellow(
-            [
-              "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
-                "using `prerender: true`. You may want to use the `prerender()` " +
-                "API to prerender the following paths:",
-              ...paramRoutes.map((p) => "  - " + p),
-            ].join("\n"),
-          ),
-        );
-      }
-      prerenderPaths = paths;
-    } else if (typeof prerender === "function") {
-      prerenderPaths = await prerender({
-        getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
-      });
-    } else {
-      prerenderPaths = prerender || ["/"];
-    }
+  if (prerender == null || prerender === false) {
+    return [];
   }
-  return prerenderPaths;
-}
 
-const DEFAULT_PRERENDER_CONCURRENCY = 1
+  let pathsConfig: PrerenderPaths;
 
-function getPrerenderConcurrency(
-  prerender: ResolvedReactRouterConfig["prerender"],
-): number {
-  if (typeof prerender === "object") {
-    return (prerender as { unstable_concurrency?: number }).unstable_concurrency || DEFAULT_PRERENDER_CONCURRENCY
+  if (typeof prerender === "object" && "paths" in prerender) {
+    pathsConfig = prerender.paths;
+  } else {
+    pathsConfig = prerender;
   }
-  return DEFAULT_PRERENDER_CONCURRENCY
+
+  if (pathsConfig === false) {
+    return [];
+  }
+
+  let prerenderRoutes = createPrerenderRoutes(routes);
+
+  if (pathsConfig === true) {
+    let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
+    if (logWarning && !ssr && paramRoutes.length > 0) {
+      console.warn(
+        colors.yellow(
+          [
+            "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
+              "using `prerender: true`. You may want to use the `prerender()` " +
+              "API to prerender the following paths:",
+            ...paramRoutes.map((p) => "  - " + p),
+          ].join("\n"),
+        ),
+      );
+    }
+    return paths;
+  }
+
+  if (typeof pathsConfig === "function") {
+    let paths = await pathsConfig({
+      getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
+    });
+    return paths;
+  }
+
+  return pathsConfig;
 }
 
 // Note: Duplicated from react-router/lib/server-runtime
