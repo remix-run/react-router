@@ -1,41 +1,14 @@
 # `@react-router/serve`
 
-## 7.9.2-pre.3
+## 7.9.2
 
 ### Patch Changes
 
 - disable compression for RSC responses for now ([#14381](https://github.com/remix-run/react-router/pull/14381))
 - Updated dependencies:
-  - `react-router@7.9.2-pre.3`
-  - `@react-router/express@7.9.2-pre.3`
-  - `@react-router/node@7.9.2-pre.3`
-
-## 7.9.2-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.9.2-pre.2`
-  - `@react-router/express@7.9.2-pre.2`
-  - `@react-router/node@7.9.2-pre.2`
-
-## 7.9.2-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.9.2-pre.1`
-  - `@react-router/node@7.9.2-pre.1`
-  - `@react-router/express@7.9.2-pre.1`
-
-## 7.9.2-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.9.2-pre.0`
-  - `@react-router/node@7.9.2-pre.0`
-  - `@react-router/express@7.9.2-pre.0`
+  - `react-router@7.9.2`
+  - `@react-router/node@7.9.2`
+  - `@react-router/express@7.9.2`
 
 ## 7.9.1
 
@@ -663,10 +636,12 @@
 - Introduces the `defer()` API from `@remix-run/router` with support for server-rendering and HTTP streaming. This utility allows you to defer values returned from `loader` functions by returning promises instead of resolved values. This has been refered to as _"sending a promise over the wire"_. ([#4920](https://github.com/remix-run/remix/pull/4920))
 
   Informational Resources:
+
   - <https://gist.github.com/jacob-ebey/9bde9546c1aafaa6bc8c242054b1be26>
   - <https://github.com/remix-run/remix/blob/main/decisions/0004-streaming-apis.md>
 
   Documentation Resources (better docs specific to Remix are in the works):
+
   - <https://reactrouter.com/en/main/utils/defer>
   - <https://reactrouter.com/en/main/components/await>
   - <https://reactrouter.com/en/main/hooks/use-async-value>
