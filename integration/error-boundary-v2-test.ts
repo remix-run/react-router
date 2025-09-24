@@ -177,8 +177,8 @@ test.describe("ErrorBoundary", () => {
       await waitForAndAssert(
         page,
         app,
-        "#parent-error",
-        "Unable to decode turbo-stream response",
+        "#parent-error-response",
+        "500 CDN Error!",
       );
     });
   });
