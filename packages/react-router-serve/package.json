@@ -1,6 +1,6 @@
 {
   "name": "@react-router/serve",
-  "version": "7.9.1",
+  "version": "7.9.2",
   "description": "Production application server for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -36,6 +36,7 @@
     }
   },
   "dependencies": {
+    "@mjackson/node-fetch-server": "^0.2.0",
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
     "compression": "^1.7.4",

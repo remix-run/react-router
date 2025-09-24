@@ -5,6 +5,7 @@ import path from "node:path";
 import url from "node:url";
 import type { ServerBuild } from "react-router";
 import { createRequestHandler } from "@react-router/express";
+import { createRequestListener } from "@mjackson/node-fetch-server";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
@@ -32,6 +33,18 @@ sourceMapSupport.install({
 
 run();
 
+type RSCServerBuild = {
+  fetch: (request: Request) => Response;
+  publicPath: string;
+  assetsBuildDirectory: string;
+};
+
+function isRSCServerBuild(
+  build: ServerBuild | RSCServerBuild,
+): build is RSCServerBuild {
+  return "fetch" in build && typeof build.fetch === "function";
+}
+
 function parseNumber(raw?: string) {
   if (raw === undefined) return undefined;
   let maybe = Number(raw);
@@ -52,7 +65,26 @@ async function run() {
 
   let buildPath = path.resolve(buildPathArg);
 
-  let build: ServerBuild = await import(url.pathToFileURL(buildPath).href);
+  let buildModule = await import(url.pathToFileURL(buildPath).href);
+  let build: ServerBuild | RSCServerBuild;
+
+  if (buildModule.default && typeof buildModule.default === "function") {
+    const config = {
+      publicPath: "/",
+      assetsBuildDirectory: "../client",
+      ...(buildModule.unstable_reactRouterServeConfig || {}),
+    };
+    build = {
+      fetch: buildModule.default,
+      publicPath: config.publicPath,
+      assetsBuildDirectory: path.resolve(
+        path.dirname(buildPath),
+        config.assetsBuildDirectory,
+      ),
+    } satisfies RSCServerBuild;
+  } else {
+    build = buildModule as ServerBuild;
+  }
 
   let onListen = () => {
     let address =
@@ -73,7 +105,11 @@ async function run() {
 
   let app = express();
   app.disable("x-powered-by");
-  app.use(compression());
+
+  if (!isRSCServerBuild(build)) {
+    app.use(compression());
+  }
+
   app.use(
     path.posix.join(build.publicPath, "assets"),
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
@@ -85,13 +121,17 @@ async function run() {
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
-  app.all(
-    "*",
-    createRequestHandler({
-      build,
-      mode: process.env.NODE_ENV,
-    }),
-  );
+  if (isRSCServerBuild(build)) {
+    app.all("*", createRequestListener(build.fetch));
+  } else {
+    app.all(
+      "*",
+      createRequestHandler({
+        build,
+        mode: process.env.NODE_ENV,
+      }),
+    );
+  }
 
   let server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)

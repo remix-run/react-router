@@ -1,3 +1,6 @@
+import * as React from "react";
+
+import { Route, createRoutesFromElements } from "../../lib/components";
 import { createMemoryHistory } from "../../lib/router/history";
 import type { Router, StaticHandlerContext } from "../../lib/router/router";
 import {
@@ -12,11 +15,11 @@ import type {
   RouterContext,
 } from "../../lib/router/utils";
 import {
-  createContext,
-  redirect,
-  RouterContextProvider,
-  data,
   ErrorResponseImpl,
+  RouterContextProvider,
+  createContext,
+  data,
+  redirect,
 } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData, invariant, tick } from "./utils/utils";
@@ -163,7 +166,7 @@ describe("context/middleware", () => {
               child: context.get(childContext),
             }),
             handle: {
-              middleware(context) {
+              middleware(context: RouterContextProvider) {
                 context.set(parentContext, "PARENT MIDDLEWARE");
               },
             },
@@ -176,7 +179,7 @@ describe("context/middleware", () => {
                   child: context.get(childContext),
                 }),
                 handle: {
-                  middleware(context) {
+                  middleware(context: RouterContextProvider) {
                     context.set(
                       parentContext,
                       context.get(parentContext) + " (amended from child)",
@@ -433,8 +436,11 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               middleware: [
-                async ({ context }, next) => {
-                  let results = await next();
+                async (_, next) => {
+                  let results = (await next()) as Record<
+                    string,
+                    DataStrategyResult
+                  >;
                   values.push({ ...results });
                   return results;
                 },
@@ -447,8 +453,11 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   middleware: [
-                    async ({ context }, next) => {
-                      let results = await next();
+                    async (_, next) => {
+                      let results = (await next()) as Record<
+                        string,
+                        DataStrategyResult
+                      >;
                       values.push({ ...results });
                       return results;
                     },
@@ -493,7 +502,7 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               middleware: [
-                ({ context }, next) => {
+                ({ context }) => {
                   context.set(parentContext, "PARENT MIDDLEWARE");
                 },
               ],
@@ -505,7 +514,7 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   middleware: [
-                    ({ context }, next) => {
+                    ({ context }) => {
                       context.set(childContext, "CHILD MIDDLEWARE");
                     },
                   ],
@@ -618,6 +627,57 @@ describe("context/middleware", () => {
         expect(router.state.loaderData.page).toEqual(2);
 
         unsub();
+      });
+
+      it("works with createRoutesFromElements", async () => {
+        let context = new RouterContextProvider();
+        router = createRouter({
+          history: createMemoryHistory(),
+          getContext: () => context,
+          routes: createRoutesFromElements(
+            <>
+              <Route path="/" />
+              <Route
+                id="parent"
+                path="/parent"
+                middleware={[
+                  getOrderMiddleware(orderContext, "a"),
+                  getOrderMiddleware(orderContext, "b"),
+                ]}
+                loader={({ context }) => {
+                  context.get(orderContext).push("parent loader");
+                }}
+              >
+                <Route
+                  id="child"
+                  path="child"
+                  middleware={[
+                    getOrderMiddleware(orderContext, "c"),
+                    getOrderMiddleware(orderContext, "d"),
+                  ]}
+                  loader={({ context }) => {
+                    context.get(orderContext).push("child loader");
+                  }}
+                />
+              </Route>
+            </>,
+          ),
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(context.get(orderContext)).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "parent loader",
+          "child loader",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
       });
     });
 
@@ -1035,8 +1095,8 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               middleware: [
-                async ({ context }, next) => {
-                  await next();
+                async () => {
+                  // next was unused
                 },
                 async ({ request, context }, next) => {
                   if (request.method !== "GET") {
@@ -1318,7 +1378,7 @@ describe("context/middleware", () => {
             {
               path: "/parent",
               middleware: [
-                async (_, next) => {
+                async () => {
                   throw redirect("/target");
                 },
               ],
@@ -1671,7 +1731,7 @@ describe("context/middleware", () => {
           id: "parent",
           path: "/parent",
           middleware: [
-            async (_, next) => {
+            async () => {
               return new Response("test");
             },
           ],
@@ -1704,7 +1764,7 @@ describe("context/middleware", () => {
               expect(isResponse(result)).toBe(true);
               return result;
             },
-            async (_, next) => {
+            async () => {
               return data("not found", { status: 404 });
             },
           ],
@@ -1738,7 +1798,7 @@ describe("context/middleware", () => {
               expect(isResponse(result)).toBe(true);
               return result;
             },
-            async (_, next) => {
+            async () => {
               throw data("not found", { status: 404, statusText: "Not Found" });
             },
           ],
@@ -1984,7 +2044,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              ({ context }, next) => {
+              ({ context }) => {
                 context.set(parentContext, "PARENT MIDDLEWARE");
               },
             ],
@@ -1996,7 +2056,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 middleware: [
-                  ({ context }, next) => {
+                  ({ context }) => {
                     context.set(childContext, "CHILD MIDDLEWARE");
                   },
                 ],
@@ -2079,7 +2139,7 @@ describe("context/middleware", () => {
                 await next();
                 pushOrderContext(context, "PARENT 1 UP");
               },
-              async ({ context }, next) => {
+              async () => {
                 throw new Error("PARENT 2");
               },
             ],
@@ -2097,7 +2157,7 @@ describe("context/middleware", () => {
                     pushOrderContext(context, "CHILD UP");
                   },
                 ],
-                loader({ context }) {
+                loader() {
                   return "CHILD";
                 },
               },
@@ -2153,7 +2213,7 @@ describe("context/middleware", () => {
                     throw new Error("CHILD UP");
                   },
                 ],
-                loader({ context }) {
+                loader() {
                   return "CHILD";
                 },
               },
@@ -2192,7 +2252,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 pushOrderContext(context, "parent start");
                 let res = await next();
                 pushOrderContext(context, "parent end");
@@ -2208,11 +2268,11 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }) => {
                     pushOrderContext(context, "child 1 start - throwing");
                     throw new Error("child 1 error");
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     pushOrderContext(context, "child 2 start");
                     let res = await next();
                     pushOrderContext(context, "child 2 end");
@@ -2263,7 +2323,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 pushOrderContext(context, "parent start");
                 let res = await next();
                 pushOrderContext(context, "parent end");
@@ -2279,12 +2339,12 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     pushOrderContext(context, "child 1 start");
                     await next();
                     pushOrderContext(context, "child 1 end");
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     pushOrderContext(context, "child 2 start");
                     await next();
                     pushOrderContext(context, "child 2 end - throwing");
@@ -2340,7 +2400,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 pushOrderContext(context, "parent start");
                 let res = await next();
                 pushOrderContext(context, "parent end");
@@ -2355,11 +2415,11 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }) => {
                     pushOrderContext(context, "child 1 start - throwing");
                     throw new Error("child 1 error");
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     pushOrderContext(context, "child 2 start");
                     let res = await next();
                     pushOrderContext(context, "child 2 end");
@@ -2410,7 +2470,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 pushOrderContext(context, "parent start");
                 let res = await next();
                 pushOrderContext(context, "parent end");
@@ -2425,13 +2485,13 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     pushOrderContext(context, "child 1 start");
                     let res = await next();
                     pushOrderContext(context, "child 1 end");
                     return res;
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     pushOrderContext(context, "child 2 start");
                     await next();
                     pushOrderContext(context, "child 2 end - throwing");
@@ -2482,7 +2542,7 @@ describe("context/middleware", () => {
           {
             path: "/",
             middleware: [
-              async (_, next) => {
+              async () => {
                 throw new Response("Error", { status: 401 });
               },
             ],
@@ -2513,7 +2573,7 @@ describe("context/middleware", () => {
           {
             path: "/parent",
             middleware: [
-              async (_, next) => {
+              async () => {
                 throw redirect("/target");
               },
             ],
@@ -2597,12 +2657,12 @@ describe("context/middleware", () => {
           id: "parent",
           path: "/parent",
           middleware: [
-            async ({ context }, next) => {
+            async (_, next) => {
               let res = (await next()) as Response;
               res.headers.set("parent1", "yes");
               return res;
             },
-            async ({ context }, next) => {
+            async (_, next) => {
               let res = (await next()) as Response;
               res.headers.set("parent2", "yes");
               return res;
@@ -2616,18 +2676,18 @@ describe("context/middleware", () => {
               id: "child",
               path: "child",
               middleware: [
-                async ({ context }, next) => {
+                async (_, next) => {
                   let res = (await next()) as Response;
                   res.headers.set("child1", "yes");
                   return res;
                 },
-                async ({ context }, next) => {
+                async (_, next) => {
                   let res = (await next()) as Response;
                   res.headers.set("child2", "yes");
                   return res;
                 },
               ],
-              loader({ context }) {
+              loader() {
                 return new Response("CHILD");
               },
             },
@@ -2657,12 +2717,12 @@ describe("context/middleware", () => {
           path: "/parent",
           lazy: {
             middleware: async () => [
-              async ({ context }, next) => {
+              async (_, next) => {
                 let res = (await next()) as Response;
                 res.headers.set("parent1", "yes");
                 return res;
               },
-              async ({ context }, next) => {
+              async (_, next) => {
                 let res = (await next()) as Response;
                 res.headers.set("parent2", "yes");
                 return res;
@@ -2678,19 +2738,19 @@ describe("context/middleware", () => {
               path: "child",
               lazy: {
                 middleware: async () => [
-                  async ({ context }, next) => {
+                  async (_, next) => {
                     let res = (await next()) as Response;
                     res.headers.set("child1", "yes");
                     return res;
                   },
-                  async ({ context }, next) => {
+                  async (_, next) => {
                     let res = (await next()) as Response;
                     res.headers.set("child2", "yes");
                     return res;
                   },
                 ],
               },
-              loader({ context }) {
+              loader() {
                 return new Response("CHILD");
               },
             },
@@ -2748,7 +2808,7 @@ describe("context/middleware", () => {
           id: "parent",
           path: "/parent",
           middleware: [
-            async (_, next) => {
+            async () => {
               return new Response("test");
             },
           ],
@@ -2780,7 +2840,7 @@ describe("context/middleware", () => {
               expect(isResponse(result)).toBe(true);
               return result;
             },
-            async (_, next) => {
+            async () => {
               return data("not found", { status: 404 });
             },
           ],
@@ -2813,7 +2873,7 @@ describe("context/middleware", () => {
               expect(isResponse(result)).toBe(true);
               return result;
             },
-            async (_, next) => {
+            async () => {
               throw data("not found", { status: 404 });
             },
           ],
@@ -3023,7 +3083,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              ({ context }, next) => {
+              ({ context }) => {
                 context.set(parentContext, "PARENT MIDDLEWARE");
               },
             ],
@@ -3035,7 +3095,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 middleware: [
-                  ({ context }, next) => {
+                  ({ context }) => {
                     context.set(childContext, "CHILD MIDDLEWARE");
                   },
                 ],
@@ -3098,10 +3158,10 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              async ({ context }, next) => {
+              async ({ context }) => {
                 context.set(parentContext, "PARENT 1");
               },
-              async ({ context }, next) => {
+              async () => {
                 throw new Error("PARENT 2");
               },
             ],
@@ -3118,7 +3178,7 @@ describe("context/middleware", () => {
                     return next();
                   },
                 ],
-                loader({ context }) {
+                loader() {
                   return "CHILD";
                 },
               },
@@ -3169,7 +3229,7 @@ describe("context/middleware", () => {
                     throw new Error("CHILD UP");
                   },
                 ],
-                loader({ context }) {
+                loader() {
                   return "CHILD";
                 },
               },
@@ -3199,7 +3259,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 context.set(orderContext, [
                   ...context.get(orderContext),
                   "parent start",
@@ -3221,14 +3281,14 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 1 start - throwing",
                     ]);
                     throw new Error("child 1 error");
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 2 start",
@@ -3278,7 +3338,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 context.set(orderContext, [
                   ...context.get(orderContext),
                   "parent start",
@@ -3300,7 +3360,7 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 1 start",
@@ -3312,7 +3372,7 @@ describe("context/middleware", () => {
                     ]);
                     return res;
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 2 start",
@@ -3366,7 +3426,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 context.set(orderContext, [
                   ...context.get(orderContext),
                   "parent action start",
@@ -3387,14 +3447,14 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 1 start - throwing",
                     ]);
                     throw new Error("child 1 action error");
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 2 start",
@@ -3446,7 +3506,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             middleware: [
-              async ({ request, context }, next) => {
+              async ({ context }, next) => {
                 context.set(orderContext, [
                   ...context.get(orderContext),
                   "parent start",
@@ -3467,7 +3527,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 middleware: [
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 1 start",
@@ -3479,7 +3539,7 @@ describe("context/middleware", () => {
                     ]);
                     return res;
                   },
-                  async ({ request, context }, next) => {
+                  async ({ context }, next) => {
                     context.set(orderContext, [
                       ...context.get(orderContext),
                       "child 2 start",
@@ -3531,7 +3591,7 @@ describe("context/middleware", () => {
           {
             path: "/parent",
             middleware: [
-              async (_, next) => {
+              async () => {
                 throw redirect("/target");
               },
             ],

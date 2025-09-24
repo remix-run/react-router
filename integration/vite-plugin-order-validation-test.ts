@@ -30,12 +30,9 @@ test.describe("Vite plugin order validation", () => {
       {
         "vite.config.js": dedent`
           import { defineConfig } from "vite";
-          import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from "@react-router/dev/internal";
+          import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
           import rsc from "@vitejs/plugin-rsc";
           import mdx from "@mdx-js/rollup";
-
-          const { unstable_reactRouterRSC: reactRouterRSC } =
-            __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;
 
           export default defineConfig({
             plugins: [
@@ -63,12 +60,9 @@ test.describe("Vite plugin order validation", () => {
       {
         "vite.config.js": dedent`
           import { defineConfig } from "vite";
-          import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from "@react-router/dev/internal";
+          import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
           import rsc from "@vitejs/plugin-rsc";
           import mdx from "@mdx-js/rollup";
-
-          const { unstable_reactRouterRSC: reactRouterRSC } =
-            __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;
 
           export default defineConfig({
             plugins: [

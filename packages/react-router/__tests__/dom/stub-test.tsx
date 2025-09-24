@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import user from "@testing-library/user-event";
 import {
   Form,
@@ -12,7 +12,11 @@ import {
   type LoaderFunctionArgs,
   useRouteError,
 } from "../../index";
-import { RouterContextProvider, createContext } from "../../lib/router/utils";
+import {
+  RouterContextProvider,
+  createContext,
+  redirect,
+} from "../../lib/router/utils";
 
 test("renders a route", () => {
   let RoutesStub = createRoutesStub([
@@ -51,6 +55,57 @@ test("renders a nested route", () => {
 
   expect(screen.getByText("ROOT")).toBeInTheDocument();
   expect(screen.getByText("INDEX")).toBeInTheDocument();
+});
+
+test("middleware works without loader", async () => {
+  let RoutesStub = createRoutesStub([
+    {
+      path: "/",
+      middleware: [
+        () => {
+          throw redirect("/target");
+        },
+      ],
+      HydrateFallback: () => null,
+      Component() {
+        return <pre>Home</pre>;
+      },
+    },
+    {
+      path: "/target",
+      Component() {
+        return <pre>Target</pre>;
+      },
+    },
+  ]);
+
+  act(() => {
+    render(<RoutesStub future={{ v8_middleware: true }} />);
+  });
+
+  await waitFor(() => screen.findByText("Target"));
+});
+
+test("middleware works with loader", async () => {
+  let stringContext = createContext<string>();
+  let RoutesStub = createRoutesStub([
+    {
+      path: "/",
+      HydrateFallback: () => null,
+      Component() {
+        let data = useLoaderData();
+        return <pre data-testid="data">Message: {data.message}</pre>;
+      },
+      middleware: [({ context }) => context.set(stringContext, "hello")],
+      loader({ context }) {
+        return { message: context.get(stringContext) };
+      },
+    },
+  ]);
+
+  render(<RoutesStub future={{ v8_middleware: true }} />);
+
+  await waitFor(() => screen.findByText("Message: hello"));
 });
 
 // eslint-disable-next-line jest/expect-expect

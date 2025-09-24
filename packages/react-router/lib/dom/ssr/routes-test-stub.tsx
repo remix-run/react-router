@@ -4,6 +4,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
+  MiddlewareFunction,
 } from "../../router/utils";
 import type {
   DataRouteObject,
@@ -208,6 +209,16 @@ function processRoutes(
         : undefined,
       loader: route.loader
         ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
+        : undefined,
+      middleware: route.middleware
+        ? route.middleware.map(
+            (mw) =>
+              (...args: Parameters<MiddlewareFunction>) =>
+                mw(
+                  { ...args[0], context: context as RouterContextProvider },
+                  args[1],
+                ),
+          )
         : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,

@@ -216,6 +216,15 @@ export interface Router {
   getFetcher<TData = any>(key: string): Fetcher<TData>;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Reset the fetcher for a given key
+   * @param key
+   */
+  resetFetcher(key: string, opts?: { reason?: unknown }): void;
+
+  /**
    * @private
    * PRIVATE - DO NOT USE
    *
@@ -950,8 +959,10 @@ export function createRouter(init: RouterInit): Router {
       // All initialMatches need to be loaded before we're ready.  If we have lazy
       // functions around still then we'll need to run them in initialize()
       initialized = false;
-    } else if (!initialMatches.some((m) => m.route.loader)) {
-      // If we've got no loaders to run, then we're good to go
+    } else if (
+      !initialMatches.some((m) => routeHasLoaderOrMiddleware(m.route))
+    ) {
+      // If we've got no loaders or middleware to run, then we're good to go
       initialized = true;
     } else {
       // With "partial hydration", we're initialized so long as we were
@@ -2083,7 +2094,9 @@ export function createRouter(init: RouterInit): Router {
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
-      !dsMatches.some((m) => m.route.middleware) &&
+      !dsMatches.some(
+        (m) => m.route.middleware && m.route.middleware.length > 0,
+      ) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -3061,6 +3074,11 @@ export function createRouter(init: RouterInit): Router {
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
+  function resetFetcher(key: string, opts?: { reason?: unknown }) {
+    abortFetcher(key, opts?.reason);
+    updateFetcherState(key, getDoneFetcher(null));
+  }
+
   function deleteFetcher(key: string): void {
     let fetcher = state.fetchers.get(key);
     // Don't abort the controller if this is a deletion of a fetcher.submit()
@@ -3091,10 +3109,10 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
   }
 
-  function abortFetcher(key: string) {
+  function abortFetcher(key: string, reason?: unknown) {
     let controller = fetchControllers.get(key);
     if (controller) {
-      controller.abort();
+      controller.abort(reason);
       fetchControllers.delete(key);
     }
   }
@@ -3474,6 +3492,7 @@ export function createRouter(init: RouterInit): Router {
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
+    resetFetcher,
     deleteFetcher: queueFetcherForDeletion,
     dispose,
     getBlocker,
@@ -4748,7 +4767,7 @@ function getMatchesToLoad(
     } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       forceShouldLoad = true;
-    } else if (route.loader == null) {
+    } else if (!routeHasLoaderOrMiddleware(route)) {
       // Nothing to load!
       forceShouldLoad = false;
     } else if (initialHydration) {
@@ -4935,6 +4954,13 @@ function getMatchesToLoad(
   return { dsMatches, revalidatingFetchers };
 }
 
+function routeHasLoaderOrMiddleware(route: RouteObject) {
+  return (
+    route.loader != null ||
+    (route.middleware != null && route.middleware.length > 0)
+  );
+}
+
 function shouldLoadRouteOnHydration(
   route: AgnosticDataRouteObject,
   loaderData: RouteData | null | undefined,
@@ -4945,8 +4971,8 @@ function shouldLoadRouteOnHydration(
     return true;
   }
 
-  // No loader, nothing to initialize
-  if (!route.loader) {
+  // No loader or middleware, nothing to run
+  if (!routeHasLoaderOrMiddleware(route)) {
     return false;
   }
 
@@ -5504,9 +5530,15 @@ function runClientMiddlewarePipeline(
       let { matches } = args;
       let maxBoundaryIdx = Math.min(
         // Throwing route
-        matches.findIndex((m) => m.route.id === routeId) || 0,
+        Math.max(
+          matches.findIndex((m) => m.route.id === routeId),
+          0,
+        ),
         // or the shallowest route that needs to load data
-        matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
+        Math.max(
+          matches.findIndex((m) => m.unstable_shouldCallHandler()),
+          0,
+        ),
       );
       let boundaryRouteId = findNearestBoundary(
         matches,

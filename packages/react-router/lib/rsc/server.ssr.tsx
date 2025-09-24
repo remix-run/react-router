@@ -9,6 +9,12 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
+import { isRouteErrorResponse } from "../router/utils";
+
+type DecodedPayload = Promise<RSCPayload> & {
+  _deepestRenderedBoundaryId?: string | null;
+  formState: Promise<any>;
+};
 
 // Safe version of React.use() that will not cause compilation errors against
 // React 18 and will result in a runtime error if used (you can't use RSC against
@@ -46,13 +52,13 @@ export type SSRCreateFromReadableStreamFunction = (
  *   fetchServer,
  *   createFromReadableStream,
  *   async renderHTML(getPayload) {
- *     const payload = await getPayload();
+ *     const payload = getPayload();
  *
  *     return await renderHTMLToReadableStream(
  *       <RSCStaticRouter getPayload={getPayload} />,
  *       {
  *         bootstrapScriptContent,
- *         formState: await getFormState(payload),
+ *         formState: await payload.formState,
  *       }
  *     );
  *   },
@@ -88,7 +94,7 @@ export async function routeRSCServerRequest({
   fetchServer: (request: Request) => Promise<Response>;
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<RSCPayload>,
+    getPayload: () => DecodedPayload,
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }): Promise<Response> {
@@ -150,8 +156,29 @@ export async function routeRSCServerRequest({
     });
   };
 
-  const getPayload = async () => {
-    return createFromReadableStream(createStream()) as Promise<RSCPayload>;
+  let deepestRenderedBoundaryId: string | null = null;
+  const getPayload = (): DecodedPayload => {
+    const payloadPromise = Promise.resolve(
+      createFromReadableStream(createStream()),
+    ) as Promise<RSCPayload>;
+
+    return Object.defineProperties(payloadPromise, {
+      _deepestRenderedBoundaryId: {
+        get() {
+          return deepestRenderedBoundaryId;
+        },
+        set(boundaryId: string | null) {
+          deepestRenderedBoundaryId = boundaryId;
+        },
+      },
+      formState: {
+        get() {
+          return payloadPromise.then((payload) =>
+            payload.type === "render" ? payload.formState : undefined,
+          );
+        },
+      },
+    }) as DecodedPayload;
   };
 
   try {
@@ -182,7 +209,7 @@ export async function routeRSCServerRequest({
     const html = await renderHTML(getPayload);
 
     const headers = new Headers(serverResponse.headers);
-    headers.set("Content-Type", "text/html");
+    headers.set("Content-Type", "text/html; charset=utf-8");
 
     if (!hydrate) {
       return new Response(html, {
@@ -204,11 +231,69 @@ export async function routeRSCServerRequest({
     if (reason instanceof Response) {
       return reason;
     }
+
+    try {
+      const status = isRouteErrorResponse(reason) ? reason.status : 500;
+
+      const html = await renderHTML(() => {
+        const decoded = Promise.resolve(
+          createFromReadableStream(createStream()),
+        ) as Promise<RSCPayload>;
+
+        const payloadPromise = decoded.then((payload) =>
+          Object.assign(payload, {
+            status,
+            errors: deepestRenderedBoundaryId
+              ? {
+                  [deepestRenderedBoundaryId]: reason,
+                }
+              : {},
+          }),
+        );
+
+        return Object.defineProperties(payloadPromise, {
+          _deepestRenderedBoundaryId: {
+            get() {
+              return deepestRenderedBoundaryId;
+            },
+            set(boundaryId: string | null) {
+              deepestRenderedBoundaryId = boundaryId;
+            },
+          },
+          formState: {
+            get() {
+              return payloadPromise.then((payload) =>
+                payload.type === "render" ? payload.formState : undefined,
+              );
+            },
+          },
+        }) as unknown as DecodedPayload;
+      });
+
+      const headers = new Headers(serverResponse.headers);
+      headers.set("Content-Type", "text/html");
+
+      if (!hydrate) {
+        return new Response(html, {
+          status: status,
+          headers,
+        });
+      }
+
+      if (!serverResponseB?.body) {
+        throw new Error("Failed to clone server response");
+      }
+
+      const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
+      return new Response(body, {
+        status,
+        headers,
+      });
+    } catch {
+      // Throw the original error below
+    }
+
     throw reason;
-    // TODO: Track deepest rendered boundary and re-try
-    // Figure out how / if we need to transport the error,
-    // or if we can just re-try on the client to reach
-    // the correct boundary.
   }
 }
 
@@ -223,7 +308,7 @@ export interface RSCStaticRouterProps {
    * A function that starts decoding of the {@link unstable_RSCPayload}. Usually passed
    * through from {@link unstable_routeRSCServerRequest}'s `renderHTML`.
    */
-  getPayload: () => Promise<RSCPayload>;
+  getPayload: () => DecodedPayload;
 }
 
 /**
@@ -243,13 +328,13 @@ export interface RSCStaticRouterProps {
  *   fetchServer,
  *   createFromReadableStream,
  *   async renderHTML(getPayload) {
- *     const payload = await getPayload();
+ *     const payload = getPayload();
  *
  *     return await renderHTMLToReadableStream(
  *       <RSCStaticRouter getPayload={getPayload} />,
  *       {
  *         bootstrapScriptContent,
- *         formState: await getFormState(payload),
+ *         formState: await payload.formState,
  *       }
  *     );
  *   },
@@ -264,8 +349,9 @@ export interface RSCStaticRouterProps {
  * @returns A React component that renders the {@link unstable_RSCPayload} as HTML.
  */
 export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
+  const decoded = getPayload();
   // Can be replaced with React.use when v18 compatibility is no longer required.
-  const payload = useSafe(getPayload());
+  const payload = useSafe(decoded);
 
   if (payload.type === "redirect") {
     throw new Response(null, {
@@ -298,6 +384,12 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   }
 
   const context = {
+    get _deepestRenderedBoundaryId() {
+      return decoded._deepestRenderedBoundaryId ?? null;
+    },
+    set _deepestRenderedBoundaryId(boundaryId: string | null) {
+      decoded._deepestRenderedBoundaryId = boundaryId;
+    },
     actionData: payload.actionData,
     actionHeaders: {},
     basename: payload.basename,

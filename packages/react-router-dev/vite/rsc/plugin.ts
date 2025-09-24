@@ -9,6 +9,7 @@ import * as Typegen from "../../typegen";
 import { readFileSync } from "fs";
 import { readFile } from "fs/promises";
 import path, { join, dirname } from "pathe";
+import invariant from "../../invariant";
 import {
   type ConfigLoader,
   type ResolvedReactRouterConfig,
@@ -32,6 +33,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
+  let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
   let logger: Vite.Logger;
 
@@ -162,6 +164,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                 },
                 outDir: join(config.buildDirectory, "client"),
               },
+              optimizeDeps: {
+                include: [
+                  "react-router > cookie",
+                  "react-router > set-cookie-parser",
+                ],
+              },
             },
             rsc: {
               build: {
@@ -231,6 +239,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
         };
       },
+      configResolved(viteConfig) {
+        resolvedViteConfig = viteConfig;
+      },
       async configureServer(viteDevServer) {
         configLoader.onChange(
           async ({
@@ -275,6 +286,24 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         await configLoader.close();
       },
     },
+    (() => {
+      let logged = false;
+      function logExperimentalNotice() {
+        if (logged) return;
+        logged = true;
+        logger.info(
+          colors.yellow(
+            `${viteCommand === "serve" ? "  " : ""}🧪 Using React Router's RSC Framework Mode (experimental)`,
+          ),
+        );
+      }
+      return {
+        name: "react-router/rsc/log-experimental-notice",
+        sharedDuringBuild: true,
+        buildStart: logExperimentalNotice,
+        configureServer: logExperimentalNotice,
+      };
+    })(),
     {
       name: "react-router/rsc/typegen",
       async config(viteUserConfig, { command, mode }) {
@@ -499,6 +528,30 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return modules;
       },
     },
+    {
+      name: "react-router/rsc/virtual-react-router-serve-config",
+      resolveId(id) {
+        if (id === virtual.reactRouterServeConfig.id) {
+          return virtual.reactRouterServeConfig.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.reactRouterServeConfig.resolvedId) {
+          const rscOutDir = resolvedViteConfig.environments.rsc?.build?.outDir;
+          invariant(rscOutDir, "RSC build directory config not found");
+          const clientOutDir =
+            resolvedViteConfig.environments.client?.build?.outDir;
+          invariant(clientOutDir, "Client build directory config not found");
+          const assetsBuildDirectory = Path.relative(rscOutDir, clientOutDir);
+          const publicPath = resolvedViteConfig.base;
+
+          return `export default ${JSON.stringify({
+            assetsBuildDirectory,
+            publicPath,
+          })};`;
+        }
+      },
+    },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
   ];
@@ -510,6 +563,7 @@ const virtual = {
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
   rscEntry: create("unstable_rsc/rsc-entry"),
+  reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
 
 function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {

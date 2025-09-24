@@ -502,6 +502,16 @@ implementations.forEach((implementation) => {
                           lazy: () => import("./routes/await-component/api"),
                         }
                       ]
+                    },
+                    {
+                      id: "ssr-error",
+                      path: "ssr-error",
+                      lazy: () => import("./routes/ssr-error/ssr-error"),
+                    },
+                    {
+                      id: "action-transition-state",
+                      path: "action-transition-state",
+                      lazy: () => import("./routes/action-transition-state/home"),
                     }
                   ],
                 },
@@ -1288,6 +1298,70 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+            "src/routes/ssr-error/ssr-error.tsx": js`
+              "use client";
+              import { useState } from "react";
+
+              export function ErrorBoundary() {
+                const [count, setCount] = useState(0);
+
+                return (
+                  <div>
+                    <div data-error-boundary>Client Error Boundary</div>
+                    <button data-increment onClick={() => setCount(c => c + 1)}>
+                      Increment {count}
+                    </button>
+                  </div>
+                );
+              }
+
+              export default function SSRError() {
+                throw new Error("Error from SSR component");
+              }
+            `,
+
+            "src/routes/action-transition-state/home.tsx": js`
+              import { Suspense } from "react";
+              import { IncrementButton } from "./client";
+              let count = 0;
+
+              export default function ActionTransitionState() {
+                return (
+                  <div>
+                    <form
+                      action={async () => {
+                        "use server";
+                        await new Promise((r) => setTimeout(r, 1000));
+                        count++;
+                      }}
+                    >
+                      <IncrementButton count={count} />
+                    </form>
+                    <Suspense>
+                      <AsyncComponent count={count} />
+                    </Suspense>
+                  </div>
+                );
+              }
+
+              async function AsyncComponent({ count }) {
+                await new Promise((r) => setTimeout(r, 1000));
+                return <div data-testid="async-count">AsyncCount: {count}</div>;
+              }
+            `,
+            "src/routes/action-transition-state/client.tsx": js`
+              "use client";
+              import { useFormStatus } from "react-dom";
+
+              export function IncrementButton({ count }: { count: number }) {
+                const { pending } = useFormStatus();
+                return (
+                  <button data-testid="increment-button" type="submit" disabled={pending}>
+                    IncrementCount: {pending ? count + 1 : count}
+                  </button>
+                );
+              }
+            `,
           },
         });
       });
@@ -1770,6 +1844,44 @@ implementations.forEach((implementation) => {
           const actionResponse = await actionResponsePromise;
           expect(await actionResponse.headerValue("x-test")).toBe("test");
         });
+
+        test("Supports transition state throughout the revalidation lifecycle", async ({
+          page,
+        }) => {
+          test.skip(
+            implementation.name === "parcel",
+            "Uses inline server actions which parcel doesn't support yet",
+          );
+
+          await page.goto(`http://localhost:${port}/action-transition-state`, {
+            waitUntil: "networkidle",
+          });
+
+          const count0Button = page.getByText("IncrementCount: 0");
+          await expect(count0Button).toBeEnabled();
+          await count0Button.click();
+
+          const count1Button = page.getByText("IncrementCount: 1");
+          await expect(count1Button).toBeDisabled();
+
+          expect(await page.getByTestId("async-count").textContent()).toBe(
+            "AsyncCount: 0",
+          );
+
+          await page.waitForFunction(
+            () =>
+              !(
+                document.querySelector(
+                  '[data-testid="increment-button"]',
+                ) as HTMLButtonElement
+              )?.disabled,
+          );
+          await expect(count1Button).toBeEnabled();
+
+          await expect(page.getByTestId("async-count")).toHaveText(
+            "AsyncCount: 1",
+          );
+        });
       });
 
       test.describe("Errors", () => {
@@ -1784,6 +1896,25 @@ implementations.forEach((implementation) => {
           expect(await page.locator("[data-error-message]").textContent()).toBe(
             "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
           );
+
+          // Ensure this is using RSC
+          validateRSCHtml(await page.content());
+        });
+
+        test("Handles errors thrown in SSR components correctly", async ({
+          page,
+        }) => {
+          test.skip(
+            implementation.name === "parcel",
+            "Parcel's error overlays are interfering with this test",
+          );
+          await page.goto(`http://localhost:${port}/ssr-error`);
+
+          // Verify error boundary is shown
+          await page.waitForSelector("[data-error-boundary]");
+          expect(
+            await page.locator("[data-error-boundary]").textContent(),
+          ).toBe("Client Error Boundary");
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
