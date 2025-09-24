@@ -79,7 +79,7 @@ import {
   createConfigLoader,
   resolveEntryFiles,
   configRouteToBranchRoute,
-  PrerenderPaths,
+  type PrerenderPaths,
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
