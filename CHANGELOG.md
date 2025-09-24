@@ -369,7 +369,7 @@ Date: 2025-09-24
 
 ### What's Changed
 
-This release contains a handful of bug fixes, but we think you'll be most excited about the new unstable stuff. This release includes our first release of unstable support for RSC in Framework Mode! You can read more about it in our [blog post](https://remix.run/blog/rsc-framework-mode-preview) and the [docs](https://reactrouter.com/dev/how-to/react-server-components#rsc-framework-mode). This release also includes a new (long-requested) `fetcher.unstable_reset()` API to reset fetchers back to their initial `idle` state.
+This release contains a handful of bug fixes, but we think you'll be most excited about the new unstable stuff. This release includes our first release of unstable support for RSC in Framework Mode! You can read more about it in our [blog post](https://remix.run/blog/rsc-framework-mode-preview) and the [docs](https://reactrouter.com/how-to/react-server-components#rsc-framework-mode). This release also includes a new (long-requested) `fetcher.unstable_reset()` API to reset fetchers back to their initial `idle` state.
 
 ### Patch Changes
 
