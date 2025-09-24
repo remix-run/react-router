@@ -1,5 +1,7 @@
 // vendored from: https://github.com/sindresorhus/p-map/
 
+/* eslint-disable */
+
 export async function pMap(
   iterable,
   mapper,
