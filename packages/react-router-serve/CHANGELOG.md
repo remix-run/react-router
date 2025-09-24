@@ -1,5 +1,15 @@
 # `@react-router/serve`
 
+## 7.9.2-pre.3
+
+### Patch Changes
+
+- disable compression for RSC responses for now ([#14381](https://github.com/remix-run/react-router/pull/14381))
+- Updated dependencies:
+  - `react-router@7.9.2-pre.3`
+  - `@react-router/express@7.9.2-pre.3`
+  - `@react-router/node@7.9.2-pre.3`
+
 ## 7.9.2-pre.2
 
 ### Patch Changes
