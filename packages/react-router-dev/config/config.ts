@@ -475,17 +475,35 @@ async function resolveConfig({
     serverBundles = undefined;
   }
 
-  let isValidPrerenderConfig =
-    prerender == null ||
-    typeof prerender === "boolean" ||
-    Array.isArray(prerender) ||
-    typeof prerender === "function";
+  if (prerender) {
+    let isValidPrerenderPathsConfig = (p: unknown) =>
+      typeof p === "boolean" || typeof p === "function" || Array.isArray(p);
 
-  if (!isValidPrerenderConfig) {
-    return err(
-      "The `prerender` config must be a boolean, an array of string paths, " +
-        "or a function returning a boolean or array of string paths",
-    );
+    let isValidPrerenderConfig =
+      isValidPrerenderPathsConfig(prerender) ||
+      (typeof prerender === "object" &&
+        "paths" in prerender &&
+        isValidPrerenderPathsConfig(prerender.paths));
+
+    if (!isValidPrerenderConfig) {
+      return err(
+        "The `prerender`/`prerender.paths` config must be a boolean, an array " +
+          "of string paths, or a function returning a boolean or array of string paths.",
+      );
+    }
+
+    let isValidConcurrencyConfig =
+      typeof prerender != "object" ||
+      !("unstable_concurrency" in prerender) ||
+      (typeof prerender.unstable_concurrency === "number" &&
+        Number.isInteger(prerender.unstable_concurrency) &&
+        prerender.unstable_concurrency > 0);
+
+    if (!isValidConcurrencyConfig) {
+      return err(
+        "The `prerender.unstable_concurrency` config must be a positive integer if specified.",
+      );
+    }
   }
 
   let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
