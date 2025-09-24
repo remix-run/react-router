@@ -83,7 +83,7 @@ export async function pMap(
 
         if (resolvingCount === 0 && !isResolved) {
           if (!stopOnError && errors.length > 0) {
-            reject(new AggregateError(errors)); // eslint-disable-line unicorn/error-message
+            reject(new AggregateError(errors));
             return;
           }
 
@@ -163,7 +163,6 @@ export async function pMap(
     (async () => {
       for (let index = 0; index < concurrency; index++) {
         try {
-          // eslint-disable-next-line no-await-in-loop
           await next();
         } catch (error) {
           reject(error);
@@ -257,7 +256,7 @@ export function pMapIterable(
       trySpawn();
 
       while (promises.length > 0) {
-        const {error, done, value} = await promises[0]; // eslint-disable-line no-await-in-loop
+        const {error, done, value} = await promises[0];
 
         promises.shift();
 
