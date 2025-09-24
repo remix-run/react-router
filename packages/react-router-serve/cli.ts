@@ -105,7 +105,11 @@ async function run() {
 
   let app = express();
   app.disable("x-powered-by");
-  app.use(compression());
+
+  if (!isRSCServerBuild(build)) {
+    app.use(compression());
+  }
+
   app.use(
     path.posix.join(build.publicPath, "assets"),
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
