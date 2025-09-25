@@ -1,4 +1,4 @@
-import type { DataRouteMatch, DataRouteObject, RouteObject } from "../context";
+import type { DataRouteMatch, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -9,6 +9,10 @@ import {
   parsePath,
   warning,
 } from "./history";
+import {
+  getInstrumentationUpdates,
+  unstable_InstrumentRouteFunction,
+} from "./instrumentation";
 import type {
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
@@ -403,9 +407,7 @@ export interface RouterInit {
   history: History;
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
-  unstable_instrumentRoute?: (
-    route: AgnosticDataRouteObject,
-  ) => AgnosticDataRouteObject;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -877,13 +879,11 @@ export function createRouter(init: RouterInit): Router {
   // (if it exists) on all routes in the application
   if (init.unstable_instrumentRoute) {
     let instrument = init.unstable_instrumentRoute;
-    // TODO: Clean up these types
-    mapRouteProperties = (r: AgnosticRouteObject) => {
-      return instrument({
-        ...r,
-        ..._mapRouteProperties(r),
-      } as AgnosticDataRouteObject) as AgnosticDataRouteObject & {
-        hasErrorBoundary: boolean;
+
+    mapRouteProperties = (route: AgnosticDataRouteObject) => {
+      return {
+        ..._mapRouteProperties(route),
+        ...getInstrumentationUpdates(instrument, route),
       };
     };
   }
@@ -3564,7 +3564,7 @@ export function createStaticHandler(
   if (opts?.unstable_instrumentRoute) {
     let instrument = opts?.unstable_instrumentRoute;
     // TODO: Clean up these types
-    mapRouteProperties = (r: AgnosticRouteObject) => {
+    mapRouteProperties = (r: AgnosticDataRouteObject) => {
       return instrument({
         ...r,
         ..._mapRouteProperties(r),

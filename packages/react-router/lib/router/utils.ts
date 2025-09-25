@@ -540,7 +540,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
  * properties from framework-agnostic properties
  */
 export interface MapRoutePropertiesFunction {
-  (route: AgnosticRouteObject): {
+  (route: AgnosticDataRouteObject): {
     hasErrorBoundary: boolean;
   } & Record<string, any>;
 }
@@ -813,18 +813,18 @@ export function convertRoutesToDataRoutes(
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
         ...route,
-        ...mapRouteProperties(route),
         id,
       };
+      Object.assign(indexRoute, mapRouteProperties(indexRoute));
       manifest[id] = indexRoute;
       return indexRoute;
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
-        ...mapRouteProperties(route),
         id,
         children: undefined,
       };
+      Object.assign(pathOrLayoutRoute, mapRouteProperties(pathOrLayoutRoute));
       manifest[id] = pathOrLayoutRoute;
 
       if (route.children) {
