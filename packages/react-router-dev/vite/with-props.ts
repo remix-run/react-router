@@ -40,8 +40,9 @@ export const decorateComponentExportsWithProps = (
       const { source } = path.node;
 
       const exports: Array<{
-        uid: Babel.Identifier;
+        specifier: NodePath;
         local: Babel.Identifier;
+        uid: Babel.Identifier;
         exported: Babel.Identifier;
       }> = [];
       for (const specifier of path.get("specifiers")) {
@@ -51,8 +52,7 @@ export const decorateComponentExportsWithProps = (
           if (!t.isIdentifier(exported)) continue;
           const uid = path.scope.generateUidIdentifier(`_${name}`);
           if (exported.name === "default" || isNamedComponentExport(name)) {
-            exports.push({ uid, local, exported });
-            specifier.remove();
+            exports.push({ specifier, local, uid, exported });
           }
         }
       }
@@ -67,9 +67,8 @@ export const decorateComponentExportsWithProps = (
           ),
         ]);
       } else {
-        for (const { local, uid } of exports) {
-          path.scope.getBinding(local.name)?.scope.rename(uid.name);
-        }
+        const scope = path.scope.getProgramParent();
+        exports.forEach(({ local, uid }) => scope.rename(local.name, uid.name));
       }
 
       // `export const exported = uid`
@@ -85,6 +84,8 @@ export const decorateComponentExportsWithProps = (
           );
         }),
       );
+
+      exports.forEach(({ specifier }) => specifier.remove());
     },
   });
 
