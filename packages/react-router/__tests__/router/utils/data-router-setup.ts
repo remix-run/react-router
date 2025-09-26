@@ -2,7 +2,6 @@ import type { InitialEntry } from "../../../lib/router/history";
 import type {
   Fetcher,
   RouterFetchOptions,
-  HydrationState,
   Router,
   RouterNavigateOptions,
   RouterInit,
@@ -20,7 +19,6 @@ import {
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
-  DataStrategyFunction,
 } from "../../../lib/router/utils";
 import {
   matchRoutes,
@@ -35,7 +33,13 @@ import { isRedirect, tick } from "./utils";
 // by our test harness
 export type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
+  | "id"
+  | "index"
+  | "path"
+  | "shouldRevalidate"
+  | "handle"
+  | "lazy"
+  | "middleware"
 > & {
   loader?: boolean;
   action?: boolean;
@@ -44,7 +48,13 @@ export type TestIndexRouteObject = Pick<
 
 export type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
+  | "id"
+  | "index"
+  | "path"
+  | "shouldRevalidate"
+  | "handle"
+  | "lazy"
+  | "middleware"
 > & {
   loader?: boolean;
   action?: boolean;
