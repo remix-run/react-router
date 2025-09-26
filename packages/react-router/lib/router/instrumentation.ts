@@ -21,15 +21,16 @@ type InstrumentationInfo = Readonly<{
   context: Pick<RouterContextProvider, "get">;
 }>;
 
+type InstrumentLazyFunction = (handler: () => Promise<void>) => Promise<void>;
+
 type InstrumentHandlerFunction = (
   handler: () => Promise<void>,
   info: InstrumentationInfo,
 ) => MaybePromise<void>;
 
-type InstrumentLazyFunction = (handler: () => Promise<void>) => Promise<void>;
-
 type Instrumentations = {
   lazy?: InstrumentLazyFunction;
+  middleware?: InstrumentHandlerFunction;
   loader?: InstrumentHandlerFunction;
   action?: InstrumentHandlerFunction;
 };
@@ -46,6 +47,27 @@ const UninstrumentedSymbol = Symbol("Uninstrumented");
 export type unstable_InstrumentRouteFunction = (
   route: InstrumentableRoute,
 ) => void;
+
+function getInstrumentedMiddleware(
+  impls: InstrumentHandlerFunction[],
+  handler: MiddlewareFunction,
+): MiddlewareFunction | null {
+  if (impls.length === 0) {
+    return null;
+  }
+  return async (args, next) => {
+    let value;
+    await recurseRight(
+      impls,
+      getInstrumentationInfo(args),
+      async () => {
+        value = await handler(args, next);
+      },
+      impls.length - 1,
+    );
+    return value;
+  };
+}
 
 function getInstrumentedHandler<
   H extends
@@ -162,6 +184,25 @@ export function getInstrumentationUpdates(
       if (instrumented) {
         updates.lazy = instrumented;
       }
+    }
+
+    if (route.middleware && route.middleware.length > 0) {
+      route.middleware = route.middleware.map((middleware) => {
+        // @ts-expect-error
+        let original = middleware[UninstrumentedSymbol] ?? middleware;
+        let instrumented = getInstrumentedMiddleware(
+          instrumentations
+            .map((i) => i.middleware)
+            .filter(Boolean) as InstrumentHandlerFunction[],
+          original,
+        );
+        if (instrumented) {
+          // @ts-expect-error
+          instrumented[UninstrumentedSymbol] = original;
+          return instrumented;
+        }
+        return middleware;
+      });
     }
 
     if (typeof route.loader === "function") {

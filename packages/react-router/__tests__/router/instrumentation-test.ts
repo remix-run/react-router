@@ -46,6 +46,53 @@ describe("instrumentation", () => {
     });
   });
 
+  it("allows instrumentation of middleware", async () => {
+    let spy = jest.fn();
+    let t = setup({
+      routes: [
+        {
+          index: true,
+        },
+        {
+          id: "page",
+          path: "/page",
+          middleware: [
+            async (_, next) => {
+              spy("start middleware");
+              await next();
+              spy("end middleware");
+            },
+          ],
+          loader: true,
+        },
+      ],
+      unstable_instrumentRoute: (route) => {
+        route.instrument({
+          async middleware(middleware) {
+            spy("start");
+            await middleware();
+            spy("end");
+          },
+        });
+      },
+    });
+
+    let A = await t.navigate("/page");
+    expect(spy.mock.calls).toEqual([["start"], ["start middleware"]]);
+    await A.loaders.page.resolve("PAGE");
+    expect(spy.mock.calls).toEqual([
+      ["start"],
+      ["start middleware"],
+      ["end middleware"],
+      ["end"],
+    ]);
+    expect(t.router.state).toMatchObject({
+      navigation: { state: "idle" },
+      location: { pathname: "/page" },
+      loaderData: { page: "PAGE" },
+    });
+  });
+
   it("allows instrumentation of loaders", async () => {
     let spy = jest.fn();
     let t = setup({
