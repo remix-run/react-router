@@ -5757,7 +5757,7 @@ function getDataStrategyMatch(
       // doesn't have a `loader` to run and no `lazy` to add one, then we can
       // just return undefined from the "loader" here
       let isMiddlewareOnlyRoute =
-        middleware && middleware.length > 0 && loader == null && !lazy;
+        middleware && middleware.length > 0 && !loader && !lazy;
 
       if (callHandler && !isMiddlewareOnlyRoute) {
         return callLoaderOrAction({
