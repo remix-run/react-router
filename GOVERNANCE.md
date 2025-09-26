@@ -165,6 +165,32 @@ This section captures the notes from the React Router Steering Committee meeting
 -->
 
 <details>
+  <summary>2025-09-23 Meeting Notes</summary>
+
+**Summary**
+
+Brooks Lybrand announced the planned release of unstable framework RSC support in 7.9.2 and the `fetcher.unstable_reset()` API. Matt Brophy and Pedro Cattori discussed splitting Ryan's proposal for `useRouteLoaderData` type-safety to separate "router data" from "route data." Bryan Ross (rossipedia) and Matt Brophy reviewed the proposal for new instrumentation APIs. Matt Brophy and Jacob Ebey decided to close several issues related to ESLint configuration, OpenTelemetry, and module federation.
+
+**Details**
+
+- 7.9.2 will contain unstable support for RSC framework mode as well as the `fetcher.unstable_reset()` API
+- The team reviewed the current instrumentation POC implementation:
+  - RFC: https://github.com/remix-run/react-router/discussions/13749
+  - POC PR: https://github.com/remix-run/react-router/pull/14377
+  - Current `instrumentRouter`/`instrumentRoutes` APIs should be sufficient for various implementations of logging/tracing layered on top
+  - React Router docs can show simple examples of a few types of observability implementations (logging, OTEL, `performance.mark`/`measure`), but will lean on the community to provide packages for specific observability approaches
+  - Jacob raised a good point about the design of the current APIs permitting more than instrumentation because folks could mutate existing handler parameters, so Matt is going to look into ways top provide a subset of read-only information that will prohibit this since it is not an intended use case and would likely be abused in unforeseen ways
+  - Matt Brophy will also play around with potential instrumentation utils to see if it is worth shipping anything or just putting them in documentation
+- The committee reviewed and agreed to move forward 2 new RFCs to the "consideration" stage:
+  - [Prerender concurrency](https://github.com/remix-run/react-router/discussions/14080)
+  - [Per-route Layout component](https://github.com/remix-run/react-router/discussions/13818)
+- Matt Brophy will comment back on the ESLint issue to get it closed out and point to the OpenTelemetry issue to the new instrumentation approach
+- Pedro Cattori will start on the route stuff and try to get a PR up for it, once a PR is opened we will also get an issue on the roadmap
+- Jacob Ebey will check in with Zach about his interest in the [current work w.r.t. module imoports](https://github.com/remix-run/react-router/pull/12638), and Matt Brophy will add a comment to the issue asking if it is needed and close it if there is no response in a week.
+
+</details>
+
+<details>
   <summary>2025-09-08 Meeting Notes</summary>
 
 **Summary**
