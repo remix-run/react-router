@@ -9,10 +9,8 @@ import {
   parsePath,
   warning,
 } from "./history";
-import {
-  getInstrumentationUpdates,
-  unstable_InstrumentRouteFunction,
-} from "./instrumentation";
+import type { unstable_InstrumentRouteFunction } from "./instrumentation";
+import { getInstrumentationUpdates } from "./instrumentation";
 import type {
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
