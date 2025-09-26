@@ -5744,13 +5744,22 @@ function getDataStrategyMatch(
       return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
     },
     resolve(handlerOverride) {
-      if (
+      let { lazy, loader, middleware } = match.route;
+
+      let callHandler =
         isUsingNewApi ||
         shouldLoad ||
         (handlerOverride &&
           !isMutationMethod(request.method) &&
-          (match.route.lazy || match.route.loader))
-      ) {
+          (lazy || loader));
+
+      // If this match was marked `shouldLoad` due to a middleware and it
+      // doesn't have a `loader` to run and no `lazy` to add one, then we can
+      // just return undefined from the "loader" here
+      let isMiddlewareOnlyRoute =
+        middleware && middleware.length > 0 && !loader && !lazy;
+
+      if (callHandler && !isMiddlewareOnlyRoute) {
         return callLoaderOrAction({
           request,
           match,
