@@ -1,5 +1,14 @@
 # `react-router`
 
+## 7.9.3-pre.0
+
+### Patch Changes
+
+- Do not try to use `turbo-stream` to decode CDN errors that never reached the server ([#14385](https://github.com/remix-run/react-router/pull/14385))
+  - We used to do this but lost this check with the adoption of single fetch
+
+- Fix Data Mode regression causing a 404 during initial load in when `middleware` exists without any `loader` functions ([#14393](https://github.com/remix-run/react-router/pull/14393))
+
 ## 7.9.2
 
 ### Patch Changes
