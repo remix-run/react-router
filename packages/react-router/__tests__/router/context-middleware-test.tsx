@@ -300,6 +300,62 @@ describe("context/middleware", () => {
         ]);
       });
 
+      it("runs middleware on initialization even if no loaders exist", async () => {
+        let snapshot;
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+              middleware: [
+                async ({ context }, next) => {
+                  await next();
+                  // Grab a snapshot at the end of the upwards middleware chain
+                  snapshot = context.get(orderContext);
+                },
+                getOrderMiddleware(orderContext, "a"),
+                getOrderMiddleware(orderContext, "b"),
+              ],
+              children: [
+                {
+                  index: true,
+                  middleware: [
+                    getOrderMiddleware(orderContext, "c"),
+                    getOrderMiddleware(orderContext, "d"),
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        let initPromise = new Promise((r) => {
+          let unsub = router.subscribe((state) => {
+            if (state.initialized) {
+              unsub();
+              r(undefined);
+            }
+          });
+        });
+        await router.initialize();
+        await initPromise;
+        expect(router.state).toMatchObject({
+          initialized: true,
+          location: { pathname: "/" },
+          navigation: { state: "idle" },
+          errors: null,
+        });
+        expect(snapshot).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+      });
+
       it("runs middleware even if no loaders exist", async () => {
         let snapshot;
         router = createRouter({
