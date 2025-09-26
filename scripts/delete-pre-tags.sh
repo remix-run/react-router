@@ -24,5 +24,7 @@ echo "Found ${NUM_TAGS} tags to delete. To delete, run the following commands:"
 echo ""
 echo "git push origin --delete ${TAGS_LINE}"
 echo "git fetch --prune --prune-tags"
+echo ""
+echo ""
 
 set +e
