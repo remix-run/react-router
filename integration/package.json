@@ -25,7 +25,7 @@
     "cheerio": "^1.0.0-rc.12",
     "cross-spawn": "^7.0.3",
     "dedent": "^0.7.0",
-    "execa": "^5.1.1",
+    "execa": "^9.6.0",
     "express": "^4.19.2",
     "get-port": "^5.1.1",
     "glob": "8.0.3",
