@@ -29,7 +29,7 @@ type Edit = (
 
 type Command = (
   command: string,
-  options?: Pick<Options, "env" | "timeout">,
+  options?: Pick<Options, "env" | "timeout" | "reject">,
 ) => ResultPromise<{ reject: false }> & {
   buffer: { stdout: string; stderr: string };
 };
@@ -50,15 +50,12 @@ export const testTemplate = (templateName: string) =>
     cwd: async ({}, use, testInfo) => {
       await fs.mkdir(TMP, { recursive: true });
       const cwd = await fs.mkdtemp(Path.join(TMP, templateName + "-"));
-      // await fs.mkdir(cwd, { recursive: true });
+      testInfo.attach("cwd", { body: cwd });
 
       const templateDir = Path.resolve(ROOT, "helpers", templateName);
       await fs.cp(templateDir, cwd, { errorOnExist: true, recursive: true });
 
       await use(cwd);
-
-      const testPassed = testInfo.errors.length === 0;
-      if (!testPassed) console.log("cwd: ", cwd);
     },
 
     edit: async ({ cwd }, use) => {
@@ -77,7 +74,6 @@ export const testTemplate = (templateName: string) =>
           NO_COLOR: "1",
           FORCE_COLOR: "0",
         },
-        reject: false,
       });
 
       let testHasEnded = false;
