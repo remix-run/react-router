@@ -22,23 +22,32 @@ const __filename = fileURLToPath(import.meta.url);
 const ROOT = Path.join(__filename, "..");
 const TMP = Path.join(ROOT, ".tmp");
 
-type Edit = (
-  file: string,
-  transform: (contents: string) => string,
-) => Promise<void>;
+type Edits = Record<string, string | ((contents: string) => string)>;
 
-type Command = (
-  command: string,
-  options?: Pick<Options, "env" | "timeout" | "reject">,
-) => ResultPromise<{ reject: false }> & {
-  buffer: { stdout: string; stderr: string };
-};
+async function applyEdits(cwd: string, edits: Edits) {
+  const promises = Object.entries(edits).map(async ([file, transform]) => {
+    const filepath = Path.join(cwd, file);
+    const contents = await fs.readFile(filepath, "utf8");
+    await fs.writeFile(
+      filepath,
+      typeof transform === "function" ? transform(contents) : transform,
+      "utf8",
+    );
+    return;
+  });
+  await Promise.all(promises);
+}
 
-export const testTemplate = (templateName: string) =>
+export const testTemplate = (templateName: string, initialEdits?: Edits) =>
   playwrightTest.extend<{
     cwd: string;
-    edit: Edit;
-    $: Command;
+    edit: (edits: Edits) => Promise<void>;
+    $: (
+      command: string,
+      options?: Options,
+    ) => ResultPromise & {
+      buffer: { stdout: string; stderr: string };
+    };
   }>({
     page: async ({ page }, use) => {
       page.errors = [];
@@ -55,16 +64,15 @@ export const testTemplate = (templateName: string) =>
       const templateDir = Path.resolve(ROOT, "helpers", templateName);
       await fs.cp(templateDir, cwd, { errorOnExist: true, recursive: true });
 
+      if (initialEdits) {
+        await applyEdits(cwd, initialEdits);
+      }
+
       await use(cwd);
     },
 
     edit: async ({ cwd }, use) => {
-      await use(async (file, transform) => {
-        const filepath = Path.join(cwd, file);
-        const contents = await fs.readFile(filepath, "utf8");
-        await fs.writeFile(filepath, transform(contents), "utf8");
-        return;
-      });
+      await use(async (edits) => applyEdits(cwd, edits));
     },
 
     $: async ({ cwd }, use) => {
@@ -91,15 +99,17 @@ export const testTemplate = (templateName: string) =>
 
           // Once the test has ended, this process will be killed as part of its teardown resulting in an ExecaError.
           // We only care about surfacing errors that occurred during test execution, not during teardown.
-          const expectedError = testHasEnded && result instanceof ExecaError;
+          const expectedError =
+            options.reject === false ||
+            (testHasEnded && result instanceof ExecaError);
           if (expectedError) return result;
 
           throw result;
         });
 
         const buffer = { stdout: "", stderr: "" };
-        p.stdout.on("data", (data) => (buffer.stdout += data.toString()));
-        p.stderr.on("data", (data) => (buffer.stderr += data.toString()));
+        p.stdout?.on("data", (data) => (buffer.stdout += data.toString()));
+        p.stderr?.on("data", (data) => (buffer.stderr += data.toString()));
         return Object.assign(p, { buffer });
       });
 
