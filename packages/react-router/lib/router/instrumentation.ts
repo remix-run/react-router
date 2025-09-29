@@ -1,11 +1,8 @@
 import type {
-  ActionFunction,
   AgnosticDataRouteObject,
-  LazyRouteFunction,
-  LoaderFunction,
+  LazyRouteObject,
   LoaderFunctionArgs,
   MaybePromise,
-  MiddlewareFunction,
   RouterContextProvider,
 } from "./utils";
 
@@ -51,20 +48,21 @@ export type unstable_InstrumentRouteFunction = (
   route: InstrumentableRoute,
 ) => void;
 
-function getInstrumentedMiddleware(
-  impls: InstrumentHandlerFunction[],
-  handler: MiddlewareFunction,
-): MiddlewareFunction | null {
+function getInstrumentedImplementation(
+  impls: Instrumentations[keyof Instrumentations][],
+  handler: (...args: any[]) => Promise<any>,
+) {
   if (impls.length === 0) {
     return null;
   }
-  return async (args, next) => {
-    let value;
+  return async (arg1: any, arg2?: any) => {
+    let value: unknown;
+    let info = arg1 != null ? getInstrumentationInfo(arg1) : undefined;
     await recurseRight(
       impls,
-      getInstrumentationInfo(args),
+      info,
       async () => {
-        value = await handler(args, next);
+        value = arg1 == null ? await handler() : await handler(arg1, arg2);
       },
       impls.length - 1,
     );
@@ -72,51 +70,8 @@ function getInstrumentedMiddleware(
   };
 }
 
-function getInstrumentedHandler<
-  H extends
-    | LoaderFunction<RouterContextProvider>
-    | ActionFunction<RouterContextProvider>,
->(impls: InstrumentHandlerFunction[], handler: H): H | null {
-  if (impls.length === 0) {
-    return null;
-  }
-  return (async (args, ctx?) => {
-    let value;
-    await recurseRight(
-      impls,
-      getInstrumentationInfo(args),
-      async () => {
-        value = await handler(args, ctx);
-      },
-      impls.length - 1,
-    );
-    return value;
-  }) as H;
-}
-
-function getInstrumentedLazy(
-  impls: InstrumentLazyFunction[],
-  handler: LazyRouteFunction<AgnosticDataRouteObject>,
-): LazyRouteFunction<AgnosticDataRouteObject> | null {
-  if (impls.length === 0) {
-    return null;
-  }
-  return (async () => {
-    let value;
-    await recurseRight(
-      impls,
-      undefined,
-      async () => {
-        value = await handler();
-      },
-      impls.length - 1,
-    );
-    return value;
-  }) as unknown as LazyRouteFunction<AgnosticDataRouteObject>;
-}
-
 async function recurseRight(
-  impls: InstrumentHandlerFunction[] | InstrumentLazyFunction[],
+  impls: Instrumentations[keyof Instrumentations][],
   info: InstrumentationInfo | undefined,
   handler: () => MaybePromise<void>,
   index: number,
@@ -156,6 +111,20 @@ function getInstrumentationInfo(args: LoaderFunctionArgs): InstrumentationInfo {
   };
 }
 
+function getInstrumentationsByType<T extends keyof Instrumentations>(
+  instrumentations: Instrumentations[],
+  key: T,
+): Instrumentations[T][] {
+  let value: Instrumentations[T][] = [];
+  for (let i in instrumentations) {
+    let instrumentation = instrumentations[i];
+    if (key in instrumentation && instrumentation[key] != null) {
+      value.push(instrumentation[key]!);
+    }
+  }
+  return value;
+}
+
 export function getInstrumentationUpdates(
   unstable_instrumentRoute: unstable_InstrumentRouteFunction,
   route: AgnosticDataRouteObject,
@@ -177,68 +146,31 @@ export function getInstrumentationUpdates(
   } = {};
 
   if (instrumentations.length > 0) {
-    if (typeof route.lazy === "function") {
-      let instrumented = getInstrumentedLazy(
-        instrumentations
-          .map((i) => i.lazy)
-          .filter(Boolean) as InstrumentLazyFunction[],
-        route.lazy,
-      );
-      if (instrumented) {
-        updates.lazy = instrumented;
-      }
-    } else if (typeof route.lazy === "object") {
-      if (typeof route.lazy.middleware === "function") {
-        let instrumented = getInstrumentedLazy(
-          instrumentations
-            .map((i) => i["lazy.middleware"])
-            .filter(Boolean) as InstrumentLazyFunction[],
-          route.lazy.middleware,
+    // Instrument lazy, loader, and action functions
+    (["lazy", "loader", "action"] as const).forEach((key) => {
+      let func = route[key as "loader" | "action"];
+      if (typeof func === "function") {
+        // @ts-expect-error
+        let original = func[UninstrumentedSymbol] ?? func;
+        let instrumented = getInstrumentedImplementation(
+          getInstrumentationsByType(instrumentations, key),
+          original,
         );
         if (instrumented) {
-          updates.lazy = Object.assign(updates.lazy || {}, {
-            middleware: instrumented,
-          });
+          // @ts-expect-error
+          instrumented[UninstrumentedSymbol] = original;
+          updates[key] = instrumented;
         }
       }
+    });
 
-      if (typeof route.lazy.loader === "function") {
-        let instrumented = getInstrumentedLazy(
-          instrumentations
-            .map((i) => i["lazy.loader"])
-            .filter(Boolean) as InstrumentLazyFunction[],
-          route.lazy.loader,
-        );
-        if (instrumented) {
-          updates.lazy = Object.assign(updates.lazy || {}, {
-            loader: instrumented,
-          });
-        }
-      }
-
-      if (typeof route.lazy.action === "function") {
-        let instrumented = getInstrumentedLazy(
-          instrumentations
-            .map((i) => i["lazy.action"])
-            .filter(Boolean) as InstrumentLazyFunction[],
-          route.lazy.action,
-        );
-        if (instrumented) {
-          updates.lazy = Object.assign(updates.lazy || {}, {
-            action: instrumented,
-          });
-        }
-      }
-    }
-
+    // Instrument middleware functions
     if (route.middleware && route.middleware.length > 0) {
       route.middleware = route.middleware.map((middleware) => {
         // @ts-expect-error
         let original = middleware[UninstrumentedSymbol] ?? middleware;
-        let instrumented = getInstrumentedMiddleware(
-          instrumentations
-            .map((i) => i.middleware)
-            .filter(Boolean) as InstrumentHandlerFunction[],
+        let instrumented = getInstrumentedImplementation(
+          getInstrumentationsByType(instrumentations, "middleware"),
           original,
         );
         if (instrumented) {
@@ -250,34 +182,23 @@ export function getInstrumentationUpdates(
       });
     }
 
-    if (typeof route.loader === "function") {
-      // @ts-expect-error
-      let original = route.loader[UninstrumentedSymbol] ?? route.loader;
-      let instrumented = getInstrumentedHandler(
-        instrumentations
-          .map((i) => i.loader)
-          .filter(Boolean) as InstrumentHandlerFunction[],
-        original,
-      );
-      if (instrumented) {
-        instrumented[UninstrumentedSymbol] = original;
-        updates.loader = instrumented;
-      }
-    }
-
-    if (typeof route.action === "function") {
-      // @ts-expect-error
-      let original = route.action[UninstrumentedSymbol] ?? route.action;
-      let instrumented = getInstrumentedHandler(
-        instrumentations
-          .map((i) => i.action)
-          .filter(Boolean) as InstrumentHandlerFunction[],
-        original,
-      );
-      if (instrumented) {
-        instrumented[UninstrumentedSymbol] = original;
-        updates.action = instrumented;
-      }
+    // Instrument the lazy object format
+    if (typeof route.lazy === "object") {
+      let lazyObject: LazyRouteObject<AgnosticDataRouteObject> = route.lazy;
+      (["middleware", "loader", "action"] as const).forEach((key) => {
+        let func = lazyObject[key];
+        if (typeof func === "function") {
+          let instrumented = getInstrumentedImplementation(
+            getInstrumentationsByType(instrumentations, `lazy.${key}`),
+            func,
+          );
+          if (instrumented) {
+            updates.lazy = Object.assign(updates.lazy || {}, {
+              [key]: instrumented,
+            });
+          }
+        }
+      });
     }
   }
   return updates;
