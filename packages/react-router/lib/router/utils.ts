@@ -815,8 +815,10 @@ export function convertRoutesToDataRoutes(
         ...route,
         id,
       };
-      Object.assign(indexRoute, mapRouteProperties(indexRoute));
-      manifest[id] = indexRoute;
+      manifest[id] = mergeRouteUpdates(
+        indexRoute,
+        mapRouteProperties(indexRoute),
+      );
       return indexRoute;
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
@@ -824,8 +826,10 @@ export function convertRoutesToDataRoutes(
         id,
         children: undefined,
       };
-      Object.assign(pathOrLayoutRoute, mapRouteProperties(pathOrLayoutRoute));
-      manifest[id] = pathOrLayoutRoute;
+      manifest[id] = mergeRouteUpdates(
+        pathOrLayoutRoute,
+        mapRouteProperties(pathOrLayoutRoute),
+      );
 
       if (route.children) {
         pathOrLayoutRoute.children = convertRoutesToDataRoutes(
@@ -839,6 +843,23 @@ export function convertRoutesToDataRoutes(
 
       return pathOrLayoutRoute;
     }
+  });
+}
+
+function mergeRouteUpdates<T extends AgnosticDataRouteObject>(
+  route: T,
+  updates: ReturnType<MapRoutePropertiesFunction>,
+): T {
+  return Object.assign(route, {
+    ...updates,
+    ...(typeof updates.lazy === "object" && updates.lazy != null
+      ? {
+          lazy: {
+            ...route.lazy,
+            ...updates.lazy,
+          },
+        }
+      : {}),
   });
 }
 
