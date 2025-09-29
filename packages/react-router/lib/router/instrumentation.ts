@@ -30,6 +30,9 @@ type InstrumentHandlerFunction = (
 
 type Instrumentations = {
   lazy?: InstrumentLazyFunction;
+  "lazy.loader"?: InstrumentLazyFunction;
+  "lazy.action"?: InstrumentLazyFunction;
+  "lazy.middleware"?: InstrumentLazyFunction;
   middleware?: InstrumentHandlerFunction;
   loader?: InstrumentHandlerFunction;
   action?: InstrumentHandlerFunction;
@@ -183,6 +186,48 @@ export function getInstrumentationUpdates(
       );
       if (instrumented) {
         updates.lazy = instrumented;
+      }
+    } else if (typeof route.lazy === "object") {
+      if (typeof route.lazy.middleware === "function") {
+        let instrumented = getInstrumentedLazy(
+          instrumentations
+            .map((i) => i["lazy.middleware"])
+            .filter(Boolean) as InstrumentLazyFunction[],
+          route.lazy.middleware,
+        );
+        if (instrumented) {
+          updates.lazy = Object.assign(updates.lazy || {}, {
+            middleware: instrumented,
+          });
+        }
+      }
+
+      if (typeof route.lazy.loader === "function") {
+        let instrumented = getInstrumentedLazy(
+          instrumentations
+            .map((i) => i["lazy.loader"])
+            .filter(Boolean) as InstrumentLazyFunction[],
+          route.lazy.loader,
+        );
+        if (instrumented) {
+          updates.lazy = Object.assign(updates.lazy || {}, {
+            loader: instrumented,
+          });
+        }
+      }
+
+      if (typeof route.lazy.action === "function") {
+        let instrumented = getInstrumentedLazy(
+          instrumentations
+            .map((i) => i["lazy.action"])
+            .filter(Boolean) as InstrumentLazyFunction[],
+          route.lazy.action,
+        );
+        if (instrumented) {
+          updates.lazy = Object.assign(updates.lazy || {}, {
+            action: instrumented,
+          });
+        }
       }
     }
 
