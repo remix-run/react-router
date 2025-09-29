@@ -887,10 +887,13 @@ function generateRedirectResponse(
     redirect = stripBasename(redirect, basename) || redirect;
   }
 
+  const isExternal = isAbsoluteUrl(redirect);
+
   let payload: RSCRedirectPayload = {
     type: "redirect",
     location: redirect,
-    reload: response.headers.get("X-Remix-Reload-Document") === "true",
+    reload:
+      isExternal || response.headers.get("X-Remix-Reload-Document") === "true",
     replace: response.headers.get("X-Remix-Replace") === "true",
     status: response.status,
     actionResult,
