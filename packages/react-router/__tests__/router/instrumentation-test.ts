@@ -781,6 +781,242 @@ describe("instrumentation", () => {
     });
   });
 
+  it("allows instrumentation of everything for a statically defined route via patchRoutesOnNavigation", async () => {
+    let spy = jest.fn();
+    let middlewareDfd = createDeferred<MiddlewareFunction[]>();
+    let t = setup({
+      routes: [
+        {
+          index: true,
+        },
+      ],
+      patchRoutesOnNavigation: ({ path, patch }) => {
+        if (path === "/page") {
+          patch(null, [
+            {
+              id: "page",
+              path: "/page",
+              middleware: [
+                async (_, next) => {
+                  await middlewareDfd.promise;
+                  return next();
+                },
+              ],
+              loader: () => "PAGE",
+              action: () => "ACTION",
+            },
+          ]);
+        }
+      },
+      unstable_instrumentRoute: (route) => {
+        route.instrument({
+          middleware: async (impl) => {
+            spy("start middleware");
+            await impl();
+            spy("end middleware");
+          },
+          action: async (impl) => {
+            spy("start action");
+            await impl();
+            spy("end action");
+          },
+          loader: async (impl) => {
+            spy("start loader");
+            await impl();
+            spy("end loader");
+          },
+        });
+      },
+    });
+
+    await t.navigate("/page", {
+      formMethod: "POST",
+      formData: createFormData({}),
+    });
+    await tick();
+    await tick();
+    expect(spy.mock.calls).toEqual([["start middleware"]]);
+
+    await middlewareDfd.resolve(undefined);
+    await tick();
+    expect(spy.mock.calls).toEqual([
+      ["start middleware"],
+      ["start action"],
+      ["end action"],
+      ["end middleware"],
+      ["start middleware"],
+      ["start loader"],
+      ["end loader"],
+      ["end middleware"],
+    ]);
+
+    expect(t.router.state).toMatchObject({
+      navigation: { state: "idle" },
+      location: { pathname: "/page" },
+      actionData: { page: "ACTION" },
+      loaderData: { page: "PAGE" },
+    });
+  });
+
+  it("allows instrumentation of everything for a lazy function route via patchRoutesOnNavigation", async () => {
+    let spy = jest.fn();
+    let lazyDfd = createDeferred<any>();
+    let t = setup({
+      routes: [
+        {
+          index: true,
+        },
+      ],
+      patchRoutesOnNavigation: ({ path, patch }) => {
+        if (path === "/page") {
+          patch(null, [
+            {
+              id: "page",
+              path: "/page",
+              // Middleware can't be returned from lazy()
+              middleware: [(_, next) => next()],
+              lazy: () => lazyDfd.promise,
+            },
+          ]);
+        }
+      },
+      unstable_instrumentRoute: (route) => {
+        route.instrument({
+          middleware: async (impl) => {
+            spy("start middleware");
+            await impl();
+            spy("end middleware");
+          },
+          action: async (impl) => {
+            spy("start action");
+            await impl();
+            spy("end action");
+          },
+          loader: async (impl) => {
+            spy("start loader");
+            await impl();
+            spy("end loader");
+          },
+        });
+      },
+    });
+
+    await t.navigate("/page", {
+      formMethod: "POST",
+      formData: createFormData({}),
+    });
+    expect(spy.mock.calls).toEqual([]);
+
+    await lazyDfd.resolve({
+      loader: () => "PAGE",
+      action: () => "ACTION",
+    });
+    await tick();
+    expect(spy.mock.calls).toEqual([
+      ["start middleware"],
+      ["start action"],
+      ["end action"],
+      ["end middleware"],
+      ["start middleware"],
+      ["start loader"],
+      ["end loader"],
+      ["end middleware"],
+    ]);
+
+    expect(t.router.state).toMatchObject({
+      navigation: { state: "idle" },
+      location: { pathname: "/page" },
+      actionData: { page: "ACTION" },
+      loaderData: { page: "PAGE" },
+    });
+  });
+
+  it("allows instrumentation of everything for a lazy object route via patchRoutesOnNavigation", async () => {
+    let spy = jest.fn();
+    let middlewareDfd = createDeferred<MiddlewareFunction[]>();
+    let actionDfd = createDeferred<ActionFunction>();
+    let loaderDfd = createDeferred<LoaderFunction>();
+    let t = setup({
+      routes: [
+        {
+          index: true,
+        },
+      ],
+      patchRoutesOnNavigation: ({ path, patch }) => {
+        if (path === "/page") {
+          patch(null, [
+            {
+              id: "page",
+              path: "/page",
+              lazy: {
+                middleware: () => middlewareDfd.promise,
+                action: () => actionDfd.promise,
+                loader: () => loaderDfd.promise,
+              },
+            },
+          ]);
+        }
+      },
+      unstable_instrumentRoute: (route) => {
+        route.instrument({
+          middleware: async (impl) => {
+            spy("start middleware");
+            await impl();
+            spy("end middleware");
+          },
+          action: async (impl) => {
+            spy("start action");
+            await impl();
+            spy("end action");
+          },
+          loader: async (impl) => {
+            spy("start loader");
+            await impl();
+            spy("end loader");
+          },
+        });
+      },
+    });
+
+    await t.navigate("/page", {
+      formMethod: "POST",
+      formData: createFormData({}),
+    });
+    expect(spy.mock.calls).toEqual([]);
+
+    await middlewareDfd.resolve([(_, next) => next()]);
+    await tick();
+    expect(spy.mock.calls).toEqual([["start middleware"]]);
+
+    await actionDfd.resolve(() => "ACTION");
+    await tick();
+    expect(spy.mock.calls).toEqual([
+      ["start middleware"],
+      ["start action"],
+      ["end action"],
+    ]);
+
+    await loaderDfd.resolve(() => "PAGE");
+    await tick();
+    expect(spy.mock.calls).toEqual([
+      ["start middleware"],
+      ["start action"],
+      ["end action"],
+      ["end middleware"],
+      ["start middleware"],
+      ["start loader"],
+      ["end loader"],
+      ["end middleware"],
+    ]);
+
+    expect(t.router.state).toMatchObject({
+      navigation: { state: "idle" },
+      location: { pathname: "/page" },
+      actionData: { page: "ACTION" },
+      loaderData: { page: "PAGE" },
+    });
+  });
+
   it("provides read-only information to instrumentation wrappers", async () => {
     let spy = jest.fn();
     let t = setup({
