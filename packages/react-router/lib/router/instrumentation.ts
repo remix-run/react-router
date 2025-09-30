@@ -1,12 +1,18 @@
+import { createPath } from "./history";
+import type { Router } from "./router";
 import type {
+  ActionFunctionArgs,
   AgnosticDataRouteObject,
+  FormEncType,
+  HTMLFormMethod,
   LazyRouteObject,
   LoaderFunctionArgs,
   MaybePromise,
+  MiddlewareFunction,
   RouterContextProvider,
 } from "./utils";
 
-type InstrumentationInfo = Readonly<{
+type RouteHandlerInstrumentationInfo = Readonly<{
   request: {
     method: string;
     url: string;
@@ -18,14 +24,22 @@ type InstrumentationInfo = Readonly<{
   context: Pick<RouterContextProvider, "get">;
 }>;
 
-type InstrumentLazyFunction = (handler: () => Promise<void>) => Promise<void>;
+interface GenericInstrumentFunction {
+  (handler: () => Promise<void>, info: unknown): Promise<void>;
+}
 
-type InstrumentHandlerFunction = (
-  handler: () => Promise<void>,
-  info: InstrumentationInfo,
-) => MaybePromise<void>;
+interface InstrumentLazyFunction extends GenericInstrumentFunction {
+  (handler: () => Promise<void>): Promise<void>;
+}
 
-type Instrumentations = {
+interface InstrumentHandlerFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: RouteHandlerInstrumentationInfo,
+  ): Promise<void>;
+}
+
+type RouteInstrumentations = {
   lazy?: InstrumentLazyFunction;
   "lazy.loader"?: InstrumentLazyFunction;
   "lazy.action"?: InstrumentLazyFunction;
@@ -39,30 +53,77 @@ type InstrumentableRoute = {
   id: string;
   index: boolean | undefined;
   path: string | undefined;
-  instrument(instrumentations: Instrumentations): void;
+  instrument(instrumentations: RouteInstrumentations): void;
 };
 
-const UninstrumentedSymbol = Symbol("Uninstrumented");
+interface InstrumentNavigateFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: RouterNavigationInstrumentationInfo,
+  ): MaybePromise<void>;
+}
+
+interface InstrumentFetchFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: RouterFetchInstrumentationInfo,
+  ): MaybePromise<void>;
+}
+
+type RouterNavigationInstrumentationInfo = Readonly<{
+  to: string | number;
+  currentUrl: string;
+  formMethod?: HTMLFormMethod;
+  formEncType?: FormEncType;
+  formData?: FormData;
+  body?: any;
+}>;
+
+type RouterFetchInstrumentationInfo = Readonly<{
+  href: string;
+  currentUrl: string;
+  fetcherKey: string;
+  formMethod?: HTMLFormMethod;
+  formEncType?: FormEncType;
+  formData?: FormData;
+  body?: any;
+}>;
+
+type RouterInstrumentations = {
+  navigate?: InstrumentNavigateFunction;
+  fetch?: InstrumentFetchFunction;
+};
+
+type InstrumentableRouter = {
+  instrument(instrumentations: RouterInstrumentations): void;
+};
 
 export type unstable_InstrumentRouteFunction = (
   route: InstrumentableRoute,
 ) => void;
 
+export type unstable_InstrumentRouterFunction = (
+  route: InstrumentableRouter,
+) => void;
+
+const UninstrumentedSymbol = Symbol("Uninstrumented");
+
 function getInstrumentedImplementation(
-  impls: Instrumentations[keyof Instrumentations][],
+  impls: GenericInstrumentFunction[],
   handler: (...args: any[]) => Promise<any>,
+  getInfo: (...args: unknown[]) => unknown = () => undefined,
 ) {
   if (impls.length === 0) {
     return null;
   }
-  return async (arg1: any, arg2?: any) => {
+  return async (...args: unknown[]) => {
     let value: unknown;
-    let info = arg1 != null ? getInstrumentationInfo(arg1) : undefined;
+    let info = getInfo(...args);
     await recurseRight(
       impls,
       info,
       async () => {
-        value = arg1 == null ? await handler() : await handler(arg1, arg2);
+        value = await handler(...args);
       },
       impls.length - 1,
     );
@@ -71,26 +132,24 @@ function getInstrumentedImplementation(
 }
 
 async function recurseRight(
-  impls: Instrumentations[keyof Instrumentations][],
-  info: InstrumentationInfo | undefined,
+  impls: GenericInstrumentFunction[],
+  info: Parameters<GenericInstrumentFunction>[1] | undefined,
   handler: () => MaybePromise<void>,
   index: number,
 ): Promise<void> {
   let impl = impls[index];
   if (!impl) {
     await handler();
-  } else if (info) {
+  } else {
     await impl(async () => {
       await recurseRight(impls, info, handler, index - 1);
     }, info);
-  } else {
-    await (impl as InstrumentLazyFunction)(async () => {
-      await recurseRight(impls, info, handler, index - 1);
-    });
   }
 }
 
-function getInstrumentationInfo(args: LoaderFunctionArgs): InstrumentationInfo {
+function getInstrumentationInfo(
+  args: LoaderFunctionArgs,
+): RouteHandlerInstrumentationInfo {
   let { request, context, params, pattern } = args;
   return {
     // pseudo "Request" with the info they may want to read from
@@ -111,15 +170,15 @@ function getInstrumentationInfo(args: LoaderFunctionArgs): InstrumentationInfo {
   };
 }
 
-function getInstrumentationsByType<T extends keyof Instrumentations>(
-  instrumentations: Instrumentations[],
-  key: T,
-): Instrumentations[T][] {
-  let value: Instrumentations[T][] = [];
+function getInstrumentationsByType<
+  T extends RouteInstrumentations | RouterInstrumentations,
+  K extends keyof T,
+>(instrumentations: T[], key: K): GenericInstrumentFunction[] {
+  let value: GenericInstrumentFunction[] = [];
   for (let i in instrumentations) {
     let instrumentation = instrumentations[i];
     if (key in instrumentation && instrumentation[key] != null) {
-      value.push(instrumentation[key]!);
+      value.push(instrumentation[key] as GenericInstrumentFunction);
     }
   }
   return value;
@@ -129,7 +188,7 @@ export function getInstrumentationUpdates(
   unstable_instrumentRoute: unstable_InstrumentRouteFunction,
   route: AgnosticDataRouteObject,
 ) {
-  let instrumentations: Instrumentations[] = [];
+  let instrumentations: RouteInstrumentations[] = [];
   unstable_instrumentRoute({
     id: route.id,
     index: route.index,
@@ -148,13 +207,19 @@ export function getInstrumentationUpdates(
   if (instrumentations.length > 0) {
     // Instrument lazy, loader, and action functions
     (["lazy", "loader", "action"] as const).forEach((key) => {
-      let func = route[key as "loader" | "action"];
+      let func = route[key];
       if (typeof func === "function") {
         // @ts-expect-error
         let original = func[UninstrumentedSymbol] ?? func;
         let instrumented = getInstrumentedImplementation(
           getInstrumentationsByType(instrumentations, key),
           original,
+          key === "lazy"
+            ? () => undefined
+            : (...args) =>
+                getInstrumentationInfo(
+                  args[0] as LoaderFunctionArgs | ActionFunctionArgs,
+                ),
         );
         if (instrumented) {
           // @ts-expect-error
@@ -172,6 +237,10 @@ export function getInstrumentationUpdates(
         let instrumented = getInstrumentedImplementation(
           getInstrumentationsByType(instrumentations, "middleware"),
           original,
+          (...args) =>
+            getInstrumentationInfo(
+              args[0] as Parameters<MiddlewareFunction>[0],
+            ),
         );
         if (instrumented) {
           // @ts-expect-error
@@ -202,4 +271,76 @@ export function getInstrumentationUpdates(
     }
   }
   return updates;
+}
+
+export function instrumentClientSideRouter(
+  router: Router,
+  unstable_instrumentRouter: unstable_InstrumentRouterFunction,
+): Router {
+  let instrumentations: RouterInstrumentations[] = [];
+  unstable_instrumentRouter({
+    instrument(i) {
+      instrumentations.push(i);
+    },
+  });
+
+  if (instrumentations.length > 0) {
+    // @ts-expect-error
+    let navigate = router.navigate[UninstrumentedSymbol] ?? router.navigate;
+    let instrumentedNavigate = getInstrumentedImplementation(
+      getInstrumentationsByType(instrumentations, "navigate"),
+      navigate,
+      (...args) => {
+        let [to, opts] = args as Parameters<Router["navigate"]>;
+        opts = opts ?? {};
+        let info: RouterNavigationInstrumentationInfo = {
+          to:
+            typeof to === "number" || typeof to === "string"
+              ? to
+              : to
+                ? createPath(to)
+                : ".",
+          currentUrl: createPath(router.state.location),
+          ...("formMethod" in opts ? { formMethod: opts.formMethod } : {}),
+          ...("formEncType" in opts ? { formEncType: opts.formEncType } : {}),
+          ...("formData" in opts ? { formData: opts.formData } : {}),
+          ...("body" in opts ? { body: opts.body } : {}),
+        };
+        return info;
+      },
+    ) as Router["navigate"];
+    if (instrumentedNavigate) {
+      // @ts-expect-error
+      instrumentedNavigate[UninstrumentedSymbol] = navigate;
+      router.navigate = instrumentedNavigate;
+    }
+
+    // @ts-expect-error
+    let fetch = router.fetch[UninstrumentedSymbol] ?? router.fetch;
+    let instrumentedFetch = getInstrumentedImplementation(
+      getInstrumentationsByType(instrumentations, "fetch"),
+      fetch,
+      (...args) => {
+        let [key, , href, opts] = args as Parameters<Router["fetch"]>;
+        opts = opts ?? {};
+        let info: RouterFetchInstrumentationInfo = {
+          href: href ?? ".",
+          currentUrl: createPath(router.state.location),
+          fetcherKey: key,
+          ...("formMethod" in opts ? { formMethod: opts.formMethod } : {}),
+          ...("formEncType" in opts ? { formEncType: opts.formEncType } : {}),
+          ...("formData" in opts ? { formData: opts.formData } : {}),
+          ...("body" in opts ? { body: opts.body } : {}),
+        };
+        return info;
+      },
+    ) as Router["fetch"];
+    if (instrumentedFetch) {
+      // @ts-expect-error
+      instrumentedFetch[UninstrumentedSymbol] = fetch;
+      router.fetch = instrumentedFetch;
+    }
+  }
+
+  return router;
 }

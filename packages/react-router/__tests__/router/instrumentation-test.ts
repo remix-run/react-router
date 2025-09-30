@@ -1,5 +1,5 @@
+import { createMemoryRouter } from "../../lib/components";
 import {
-  AgnosticDataRouteObject,
   type ActionFunction,
   type LoaderFunction,
   type MiddlewareFunction,
@@ -159,6 +159,7 @@ describe("instrumentation", () => {
     });
 
     await t.navigate("/page");
+    await tick();
     expect(spy.mock.calls).toEqual([["start"]]);
 
     await lazyDfd.resolve({ loader: () => "PAGE" });
@@ -1100,5 +1101,84 @@ describe("instrumentation", () => {
       location: { pathname: "/page" },
       loaderData: { page: "PAGE" },
     });
+  });
+  it("allows instrumentation of navigations", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          index: true,
+        },
+        {
+          id: "page",
+          path: "/page",
+          loader: () => "PAGE",
+        },
+      ],
+      {
+        unstable_instrumentRouter: (router) => {
+          router.instrument({
+            async navigate(navigate, info) {
+              spy("start", info);
+              await navigate();
+              spy("end", info);
+            },
+          });
+        },
+      },
+    );
+
+    await router.navigate("/page");
+    expect(spy.mock.calls).toEqual([
+      ["start", { currentUrl: "/", to: "/page" }],
+      ["end", { currentUrl: "/", to: "/page" }],
+    ]);
+    expect(router.state).toMatchObject({
+      navigation: { state: "idle" },
+      location: { pathname: "/page" },
+      loaderData: { page: "PAGE" },
+    });
+  });
+
+  it("allows instrumentation of fetchers", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          index: true,
+        },
+        {
+          id: "page",
+          path: "/page",
+          loader: () => "PAGE",
+        },
+      ],
+      {
+        unstable_instrumentRouter: (router) => {
+          router.instrument({
+            async fetch(fetch, info) {
+              spy("start", info);
+              await fetch();
+              spy("end", info);
+            },
+          });
+        },
+      },
+    );
+
+    let data: unknown;
+    router.subscribe((state) => {
+      data = data ?? state.fetchers.get("key")?.data;
+    });
+    await router.fetch("key", "0", "/page");
+    expect(spy.mock.calls).toEqual([
+      ["start", { href: "/page", currentUrl: "/", fetcherKey: "key" }],
+      ["end", { href: "/page", currentUrl: "/", fetcherKey: "key" }],
+    ]);
+    expect(router.state).toMatchObject({
+      navigation: { state: "idle" },
+      location: { pathname: "/" },
+    });
+    expect(data).toBe("PAGE");
   });
 });
