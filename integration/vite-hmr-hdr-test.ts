@@ -16,63 +16,39 @@ const templates = [
   ...getTemplates(["rsc-vite-framework"]),
 ];
 
-const indexRoute = tsx`
-  // imports
-  import { useState, useEffect } from "react";
-
-  export const meta = () => [{ title: "HMR updated title: 0" }]
-
-  // loader
-
-  export default function IndexRoute() {
-    // hooks
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-      setMounted(true);
-    }, []);
-
-    return (
-      <div id="index">
-        <h2 data-title>Index</h2>
-        <input />
-        <p data-mounted>Mounted: {mounted ? "yes" : "no"}</p>
-        <p data-hmr>HMR updated: 0</p>
-        {/* elements */}
-      </div>
-    );
-  }
-`;
-
 templates.forEach((template) => {
   const isRsc = template.name.includes("rsc");
-  const viteConfig = isRsc
-    ? tsx`
-      import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';
-      import rsc from '@vitejs/plugin-rsc';
-
-      export default {
-        plugins: [
-          reactRouterRSC(),
-          rsc(),
-        ],
-      };
-    `
-    : tsx`
-      import { reactRouter } from '@react-router/dev/vite';
-
-      export default {
-        plugins: [
-          reactRouter(),
-        ],
-      };
-    `;
 
   test.describe(`${template.displayName} - HMR & HDR`, () => {
     test.use({
       template: template.name,
       files: {
-        "vite.config.ts": viteConfig,
-        "app/routes/_index.tsx": indexRoute,
+        "app/routes/_index.tsx": tsx`
+          // imports
+          import { useState, useEffect } from "react";
+
+          export const meta = () => [{ title: "HMR updated title: 0" }]
+
+          // loader
+
+          export default function IndexRoute() {
+            // hooks
+            const [mounted, setMounted] = useState(false);
+            useEffect(() => {
+              setMounted(true);
+            }, []);
+
+            return (
+              <div id="index">
+                <h2 data-title>Index</h2>
+                <input />
+                <p data-mounted>Mounted: {mounted ? "yes" : "no"}</p>
+                <p data-hmr>HMR updated: 0</p>
+                {/* elements */}
+              </div>
+            );
+          }
+        `,
       },
     });
 
