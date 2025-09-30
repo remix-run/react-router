@@ -1,9 +1,12 @@
 import { createMemoryRouter } from "../../lib/components";
+import { createStaticHandler } from "../../lib/router/router";
 import {
   type ActionFunction,
   type LoaderFunction,
   type MiddlewareFunction,
 } from "../../lib/router/utils";
+import { createRequestHandler } from "../../lib/server-runtime/server";
+import { mockServerBuild } from "../server-runtime/utils";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createDeferred, createFormData, tick } from "./utils/utils";
 
@@ -1102,6 +1105,7 @@ describe("instrumentation", () => {
       loaderData: { page: "PAGE" },
     });
   });
+
   it("allows instrumentation of navigations", async () => {
     let spy = jest.fn();
     let router = createMemoryRouter(
@@ -1180,5 +1184,231 @@ describe("instrumentation", () => {
       location: { pathname: "/" },
     });
     expect(data).toBe("PAGE");
+  });
+
+  describe("static handler", () => {
+    // TODO: Middleware instrumentation will have to happen at the server level,
+    // outside of the static handler
+    it("allows instrumentation of loaders", async () => {
+      let spy = jest.fn();
+      let { query, queryRoute } = createStaticHandler(
+        [
+          {
+            id: "index",
+            index: true,
+            loader: () => {
+              spy("loader");
+              return new Response("INDEX");
+            },
+          },
+        ],
+        {
+          unstable_instrumentRoute: (route) => {
+            route.instrument({
+              async loader(loader) {
+                spy("start");
+                await loader();
+                spy("end");
+              },
+            });
+          },
+        },
+      );
+
+      let context = await query(new Request("http://localhost/"));
+      expect(spy.mock.calls).toEqual([["start"], ["loader"], ["end"]]);
+      expect(context).toMatchObject({
+        location: { pathname: "/" },
+        loaderData: { index: "INDEX" },
+      });
+      spy.mockClear();
+
+      let response = await queryRoute(new Request("http://localhost/"));
+      expect(spy.mock.calls).toEqual([["start"], ["loader"], ["end"]]);
+      expect(await response.text()).toBe("INDEX");
+    });
+
+    it("allows instrumentation of actions", async () => {
+      let spy = jest.fn();
+      let { query, queryRoute } = createStaticHandler(
+        [
+          {
+            id: "index",
+            index: true,
+            action: () => {
+              spy("action");
+              return new Response("INDEX");
+            },
+          },
+        ],
+        {
+          unstable_instrumentRoute: (route) => {
+            route.instrument({
+              async action(action) {
+                spy("start");
+                await action();
+                spy("end");
+              },
+            });
+          },
+        },
+      );
+
+      let context = await query(
+        new Request("http://localhost/", { method: "post", body: "data" }),
+      );
+      expect(spy.mock.calls).toEqual([["start"], ["action"], ["end"]]);
+      expect(context).toMatchObject({
+        location: { pathname: "/" },
+        actionData: { index: "INDEX" },
+      });
+      spy.mockClear();
+
+      let response = await queryRoute(
+        new Request("http://localhost/", { method: "post", body: "data" }),
+      );
+      expect(spy.mock.calls).toEqual([["start"], ["action"], ["end"]]);
+      expect(await response.text()).toBe("INDEX");
+    });
+  });
+
+  describe("request handler", () => {
+    it("allows instrumentation of the request handler", async () => {
+      let spy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: () => {
+              spy("loader");
+              return "ROOT";
+            },
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method} ${request.url} COMPONENT`);
+          },
+          unstable_instrumentHandler: (handler) => {
+            handler.instrument({
+              async request(handler, info) {
+                spy("start", info);
+                await handler();
+                spy("end", info);
+              },
+            });
+          },
+        },
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(new Request("http://localhost/"));
+
+      expect(await response.text()).toBe("GET http://localhost/ COMPONENT");
+      expect(spy.mock.calls).toEqual([
+        [
+          "start",
+          {
+            request: {
+              method: "GET",
+              url: "http://localhost/",
+              headers: {
+                get: expect.any(Function),
+              },
+            },
+            context: {
+              get: expect.any(Function),
+            },
+          },
+        ],
+        ["loader"],
+        [
+          "end",
+          {
+            request: {
+              method: "GET",
+              url: "http://localhost/",
+              headers: {
+                get: expect.any(Function),
+              },
+            },
+            context: {
+              get: expect.any(Function),
+            },
+          },
+        ],
+      ]);
+    });
+
+    it("allows instrumentation of loaders", async () => {
+      let spy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "/",
+            loader: () => {
+              spy("loader");
+              return "ROOT";
+            },
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method} ${request.url} COMPONENT`);
+          },
+          unstable_instrumentRoute: (route) => {
+            route.instrument({
+              async loader(loader, info) {
+                spy("start", info);
+                await loader();
+                spy("end", info);
+              },
+            });
+          },
+        },
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(new Request("http://localhost/"));
+
+      expect(await response.text()).toBe("GET http://localhost/ COMPONENT");
+      expect(spy.mock.calls).toEqual([
+        [
+          "start",
+          {
+            request: {
+              method: "GET",
+              url: "http://localhost/",
+              headers: {
+                get: expect.any(Function),
+              },
+            },
+            params: {},
+            pattern: "/",
+            context: {
+              get: expect.any(Function),
+            },
+          },
+        ],
+        ["loader"],
+        [
+          "end",
+          {
+            request: {
+              method: "GET",
+              url: "http://localhost/",
+              headers: {
+                get: expect.any(Function),
+              },
+            },
+            params: {},
+            pattern: "/",
+            context: {
+              get: expect.any(Function),
+            },
+          },
+        ],
+      ]);
+    });
   });
 });

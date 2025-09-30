@@ -775,13 +775,13 @@ export function createBrowserRouter(
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
-    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
     routes,
     mapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
+    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
   });
 
   if (opts?.unstable_instrumentRouter) {
@@ -821,13 +821,13 @@ export function createHashRouter(
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
-    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
     routes,
     mapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
+    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
   });
 
   if (opts?.unstable_instrumentRouter) {

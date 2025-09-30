@@ -3536,9 +3536,7 @@ export function createRouter(init: RouterInit): Router {
 export interface CreateStaticHandlerOptions {
   basename?: string;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  unstable_instrumentRoute?: (
-    r: AgnosticDataRouteObject,
-  ) => AgnosticDataRouteObject;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
   future?: {};
 }
 
@@ -3560,14 +3558,12 @@ export function createStaticHandler(
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
   if (opts?.unstable_instrumentRoute) {
-    let instrument = opts?.unstable_instrumentRoute;
-    // TODO: Clean up these types
-    mapRouteProperties = (r: AgnosticDataRouteObject) => {
-      return instrument({
-        ...r,
-        ..._mapRouteProperties(r),
-      } as AgnosticDataRouteObject) as AgnosticDataRouteObject & {
-        hasErrorBoundary: boolean;
+    let instrument = opts.unstable_instrumentRoute;
+
+    mapRouteProperties = (route: AgnosticDataRouteObject) => {
+      return {
+        ..._mapRouteProperties(route),
+        ...getInstrumentationUpdates(instrument, route),
       };
     };
   }

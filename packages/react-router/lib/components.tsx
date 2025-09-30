@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import type {
-  History,
   InitialEntry,
   Location,
   MemoryHistory,
@@ -226,19 +225,19 @@ export function createMemoryRouter(
 ): DataRouter {
   let router = createRouter({
     basename: opts?.basename,
-    dataStrategy: opts?.dataStrategy,
-    future: opts?.future,
     getContext: opts?.getContext,
+    future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,
     }),
     hydrationData: opts?.hydrationData,
-    hydrationRouteProperties,
-    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
-    mapRouteProperties,
-    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     routes,
+    hydrationRouteProperties,
+    mapRouteProperties,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
+    unstable_instrumentRoute: opts?.unstable_instrumentRoute,
   });
 
   if (opts?.unstable_instrumentRouter) {
