@@ -5,11 +5,7 @@ import dedent from "dedent";
 
 import { test } from "./helpers/fixtures";
 import * as Stream from "./helpers/stream";
-import {
-  viteMajorTemplates,
-  getTemplates,
-  type Template,
-} from "./helpers/templates";
+import { viteMajorTemplates, getTemplates } from "./helpers/templates";
 import * as Express from "./helpers/express";
 
 const tsx = dedent;
@@ -87,7 +83,7 @@ templates.forEach((template) => {
       const dev = $(`pnpm dev --port ${port}`);
       await Stream.match(dev.stdout, url);
 
-      await workflow({ templateName: template.name, page, edit, url });
+      await workflow({ isRsc, page, edit, url });
     });
 
     test("express", async ({ page, edit, $ }) => {
@@ -107,7 +103,7 @@ templates.forEach((template) => {
       });
       await Stream.match(server.stdout, url);
 
-      await workflow({ templateName: template.name, page, edit, url });
+      await workflow({ isRsc, page, edit, url });
     });
 
     test("mdx", async ({ page, edit, $ }) => {
@@ -172,12 +168,12 @@ templates.forEach((template) => {
 });
 
 async function workflow({
-  templateName,
+  isRsc,
   page,
   edit,
   url,
 }: {
-  templateName: Template["name"];
+  isRsc: boolean;
   page: Page;
   edit: (
     edits: Record<string, string | ((contents: string) => string)>,
@@ -383,7 +379,7 @@ async function workflow({
     "HDR updated: route & direct 2 & indirect 2",
   );
   // TODO: Investigate why this is flaky in CI for RSC Framework Mode
-  if (!templateName.startsWith("rsc-")) {
+  if (isRsc) {
     await expect(input).toHaveValue("stateful");
   }
 
