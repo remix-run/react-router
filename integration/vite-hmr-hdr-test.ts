@@ -17,7 +17,7 @@ const templates = [
 ];
 
 templates.forEach((template) => {
-  const isRsc = template.name.includes("rsc");
+  const isRsc = template.name.startsWith("rsc-");
 
   test.describe(`${template.displayName} - HMR & HDR`, () => {
     test.use({
