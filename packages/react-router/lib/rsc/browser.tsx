@@ -140,7 +140,7 @@ export function createCallServer({
       Promise.resolve(payloadPromise)
         .then(async (payload) => {
           if (payload.type === "redirect") {
-            if (payload.reload) {
+            if (payload.reload || isExternalLocation(payload.location)) {
               window.location.href = payload.location;
               return () => {};
             }
@@ -163,7 +163,7 @@ export function createCallServer({
             globalVar.__routerActionID <= actionId
           ) {
             if (rerender.type === "redirect") {
-              if (rerender.reload) {
+              if (rerender.reload || isExternalLocation(rerender.location)) {
                 window.location.href = rerender.location;
                 return;
               }
@@ -1046,4 +1046,9 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
     window.clearTimeout(timeoutId);
     timeoutId = window.setTimeout(() => callback(...args), wait);
   };
+}
+
+function isExternalLocation(location: string) {
+  const newLocation = new URL(location, window.location.href);
+  return newLocation.origin !== window.location.origin;
 }
