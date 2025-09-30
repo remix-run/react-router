@@ -36,6 +36,7 @@ import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import type { MiddlewareEnabled } from "../types/future";
 import { getManifestPath } from "../dom/ssr/fog-of-war";
+import { instrumentHandler } from "../router/instrumentation";
 
 export type RequestHandler = (
   request: Request,
@@ -305,8 +306,10 @@ function derive(build: ServerBuild, mode?: string) {
   };
 
   if (build.entry.module.unstable_instrumentHandler) {
-    requestHandler =
-      build.entry.module.unstable_instrumentHandler(requestHandler);
+    requestHandler = instrumentHandler(
+      requestHandler,
+      build.entry.module.unstable_instrumentHandler,
+    );
   }
 
   return {

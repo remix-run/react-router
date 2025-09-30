@@ -1,6 +1,5 @@
 import type {
   ActionFunctionArgs,
-  AgnosticDataRouteObject,
   LoaderFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
@@ -13,7 +12,10 @@ import type {
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
 import type { MiddlewareEnabled } from "../types/future";
-import type { RequestHandler } from "./server";
+import type {
+  unstable_InstrumentHandlerFunction,
+  unstable_InstrumentRouteFunction,
+} from "../router/instrumentation";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -87,9 +89,7 @@ export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
-  unstable_instrumentHandler?: (handler: RequestHandler) => RequestHandler;
-  unstable_instrumentRoute?: (
-    route: AgnosticDataRouteObject,
-  ) => AgnosticDataRouteObject;
+  unstable_instrumentHandler?: unstable_InstrumentHandlerFunction;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
   streamTimeout?: number;
 }

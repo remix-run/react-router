@@ -1,3 +1,4 @@
+import { RequestHandler } from "../../dist/development";
 import { createPath } from "./history";
 import type { Router } from "./router";
 import type {
@@ -9,6 +10,7 @@ import type {
   LoaderFunctionArgs,
   MaybePromise,
   MiddlewareFunction,
+  RouterContext,
   RouterContextProvider,
 } from "./utils";
 
@@ -70,6 +72,13 @@ interface InstrumentFetchFunction extends GenericInstrumentFunction {
   ): MaybePromise<void>;
 }
 
+interface InstrumentRequestFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: HandlerRequestInstrumentationInfo,
+  ): MaybePromise<void>;
+}
+
 type RouterNavigationInstrumentationInfo = Readonly<{
   to: string | number;
   currentUrl: string;
@@ -89,13 +98,31 @@ type RouterFetchInstrumentationInfo = Readonly<{
   body?: any;
 }>;
 
+type HandlerRequestInstrumentationInfo = Readonly<{
+  request: {
+    method: string;
+    url: string;
+    headers: Pick<Headers, "get">;
+  };
+  // TODO: Fix for non-middleware
+  context: Pick<RouterContextProvider, "get">;
+}>;
+
 type RouterInstrumentations = {
   navigate?: InstrumentNavigateFunction;
   fetch?: InstrumentFetchFunction;
 };
 
+type HandlerInstrumentations = {
+  request?: InstrumentRequestFunction;
+};
+
 type InstrumentableRouter = {
   instrument(instrumentations: RouterInstrumentations): void;
+};
+
+type InstrumentableHandler = {
+  instrument(instrumentations: HandlerInstrumentations): void;
 };
 
 export type unstable_InstrumentRouteFunction = (
@@ -103,7 +130,11 @@ export type unstable_InstrumentRouteFunction = (
 ) => void;
 
 export type unstable_InstrumentRouterFunction = (
-  route: InstrumentableRouter,
+  router: InstrumentableRouter,
+) => void;
+
+export type unstable_InstrumentHandlerFunction = (
+  handler: InstrumentableHandler,
 ) => void;
 
 const UninstrumentedSymbol = Symbol("Uninstrumented");
@@ -171,7 +202,10 @@ function getInstrumentationInfo(
 }
 
 function getInstrumentationsByType<
-  T extends RouteInstrumentations | RouterInstrumentations,
+  T extends
+    | RouteInstrumentations
+    | RouterInstrumentations
+    | HandlerInstrumentations,
   K extends keyof T,
 >(instrumentations: T[], key: K): GenericInstrumentFunction[] {
   let value: GenericInstrumentFunction[] = [];
@@ -343,4 +377,45 @@ export function instrumentClientSideRouter(
   }
 
   return router;
+}
+
+export function instrumentHandler(
+  handler: RequestHandler,
+  unstable_instrumentHandler: unstable_InstrumentHandlerFunction,
+): RequestHandler {
+  let instrumentations: HandlerInstrumentations[] = [];
+  unstable_instrumentHandler({
+    instrument(i) {
+      instrumentations.push(i);
+    },
+  });
+
+  if (instrumentations.length === 0) {
+    return handler;
+  }
+  let instrumentedHandler = getInstrumentedImplementation(
+    getInstrumentationsByType(instrumentations, "request"),
+    handler,
+    (...args) => {
+      let [request, context] = args as Parameters<RequestHandler>;
+      let info: HandlerRequestInstrumentationInfo = {
+        request: {
+          method: request.method,
+          url: request.url,
+          headers: {
+            get: (...args) => request.headers.get(...args),
+          },
+        },
+        context: {
+          get: <T>(ctx: RouterContext<T>) =>
+            context
+              ? (context as unknown as RouterContextProvider).get(ctx)
+              : (undefined as T),
+        },
+      };
+      return info;
+    },
+  ) as RequestHandler;
+
+  return instrumentedHandler ?? handler;
 }

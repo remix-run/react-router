@@ -11,6 +11,10 @@ import type {
 import type { HeadersFunction } from "../../lib/dom/ssr/routeModules";
 import type { EntryRoute } from "../../lib/dom/ssr/routes";
 import type { ActionFunction, LoaderFunction } from "../../lib/router/utils";
+import type {
+  unstable_InstrumentHandlerFunction,
+  unstable_InstrumentRouteFunction,
+} from "../../lib/router/instrumentation";
 
 export function mockServerBuild(
   routes: Record<
@@ -30,6 +34,8 @@ export function mockServerBuild(
     future?: Partial<FutureConfig>;
     handleError?: HandleErrorFunction;
     handleDocumentRequest?: HandleDocumentRequestFunction;
+    unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
+    unstable_instrumentHandler?: unstable_InstrumentHandlerFunction;
   } = {},
 ): ServerBuild {
   return {
@@ -91,6 +97,8 @@ export function mockServerBuild(
           ),
         handleDataRequest: jest.fn(async (response) => response),
         handleError: opts.handleError,
+        unstable_instrumentRoute: opts.unstable_instrumentRoute,
+        unstable_instrumentHandler: opts.unstable_instrumentHandler,
       },
     },
     routes: Object.entries(routes).reduce<ServerRouteManifest>(
