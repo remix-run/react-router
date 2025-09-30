@@ -7,7 +7,6 @@ import type {
   HydrationState,
   RouterInit,
   unstable_ClientOnErrorFunction,
-  DataRouteObject,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -28,6 +27,11 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
+import {
+  instrumentClientSideRouter,
+  type unstable_InstrumentRouteFunction,
+  type unstable_InstrumentRouterFunction,
+} from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -83,8 +87,8 @@ function createHydratedRouter({
   unstable_instrumentRouter,
 }: {
   getContext?: RouterInit["getContext"];
-  unstable_instrumentRoute?: RouterInit["unstable_instrumentRoute"];
-  unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
+  unstable_instrumentRouter?: unstable_InstrumentRouterFunction;
 }): DataRouter {
   initSsrInfo();
 
@@ -200,7 +204,7 @@ function createHydratedRouter({
   });
 
   if (unstable_instrumentRouter) {
-    router = unstable_instrumentRouter(router);
+    router = instrumentClientSideRouter(router, unstable_instrumentRouter);
   }
 
   ssrInfo.router = router;
@@ -228,10 +232,11 @@ function createHydratedRouter({
  */
 export interface HydratedRouterProps {
   /**
-   * Context object to be passed through to {@link createBrowserRouter} and made
-   * available to
+   * Context factory function to be passed through to {@link createBrowserRouter}.
+   * This function will be called to create a fresh `context` instance on each
+   * navigation/fetch and made available to
    * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
-   * functions
+   * functions.
    */
   getContext?: RouterInit["getContext"];
   /**
@@ -239,13 +244,13 @@ export interface HydratedRouterProps {
    * client-side router.  This is mostly useful for observability such as wrapping
    * loaders/actions/middlewares with logging and/or performance tracing.
    */
-  unstable_instrumentRoute(route: DataRouteObject): DataRouteObject;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
   /**
    * Function allowing you to instrument the client-side router.  This is mostly
    * useful for observability such as wrapping `router.navigate`/`router.fetch`
    * with logging and/or performance tracing.
    */
-  unstable_instrumentRouter(router: DataRouter): DataRouter;
+  unstable_instrumentRouter?: unstable_InstrumentRouterFunction;
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for

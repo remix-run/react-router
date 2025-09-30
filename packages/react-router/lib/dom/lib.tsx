@@ -75,7 +75,6 @@ import type {
   RouteObject,
   NavigateOptions,
   PatchRoutesOnNavigationFunction,
-  DataRouteObject,
 } from "../context";
 import {
   DataRouterContext,
@@ -96,6 +95,11 @@ import {
   useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
+import {
+  instrumentClientSideRouter,
+  type unstable_InstrumentRouteFunction,
+  type unstable_InstrumentRouterFunction,
+} from "../router/instrumentation";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -242,13 +246,13 @@ export interface DOMRouterOpts {
    * `patchRoutesOnNavigation`).  This is mostly useful for observability such
    * as wrapping loaders/actions/middlewares with logging and/or performance tracing.
    */
-  unstable_instrumentRoute?: (r: DataRouteObject) => DataRouteObject;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
   /**
    * Function allowing you to instrument the client-side router.  This is mostly
    * useful for observability such as wrapping `router.navigate`/`router.fetch`
    * with logging and/or performance tracing.
    */
-  unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
+  unstable_instrumentRouter?: unstable_InstrumentRouterFunction;
   /**
    * Override the default data strategy of running loaders in parallel.
    * See {@link DataStrategyFunction}.
@@ -781,7 +785,7 @@ export function createBrowserRouter(
   });
 
   if (opts?.unstable_instrumentRouter) {
-    router = opts.unstable_instrumentRouter(router);
+    router = instrumentClientSideRouter(router, opts.unstable_instrumentRouter);
   }
 
   return router.initialize();
@@ -827,7 +831,7 @@ export function createHashRouter(
   });
 
   if (opts?.unstable_instrumentRouter) {
-    router = opts.unstable_instrumentRouter(router);
+    router = instrumentClientSideRouter(router, opts.unstable_instrumentRouter);
   }
 
   return router.initialize();

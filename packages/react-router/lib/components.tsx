@@ -69,6 +69,11 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
+import type {
+  unstable_InstrumentRouteFunction,
+  unstable_InstrumentRouterFunction,
+} from "./router/instrumentation";
+import { instrumentClientSideRouter } from "./router/instrumentation";
 
 export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
@@ -175,13 +180,13 @@ export interface MemoryRouterOpts {
    * `patchRoutesOnNavigation`).  This is mostly useful for observability such
    * as wrapping loaders/actions/middlewares with logging and/or performance tracing.
    */
-  unstable_instrumentRoute?: (r: DataRouteObject) => DataRouteObject;
+  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
   /**
    * Function allowing you to instrument the client-side router.  This is mostly
    * useful for observability such as wrapping `router.navigate`/`router.fetch`
    * with logging and/or performance tracing.
    */
-  unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
+  unstable_instrumentRouter?: unstable_InstrumentRouterFunction;
   /**
    * Override the default data strategy of loading in parallel.
    * Only intended for advanced usage.
@@ -219,32 +224,15 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: MemoryRouterOpts,
 ): DataRouter {
-  return createAndInitializeDataRouter(
-    routes,
-    createMemoryHistory({
-      initialEntries: opts?.initialEntries,
-      initialIndex: opts?.initialIndex,
-    }),
-    opts,
-  );
-}
-
-export function createAndInitializeDataRouter(
-  routes: RouteObject[],
-  history: History,
-  opts?: Omit<
-    RouterInit,
-    "routes" | "history" | "mapRouteProperties" | "hydrationRouteProperties"
-  > & {
-    unstable_instrumentRouter?: (r: DataRouter) => DataRouter;
-  },
-): DataRouter {
   let router = createRouter({
     basename: opts?.basename,
     dataStrategy: opts?.dataStrategy,
     future: opts?.future,
     getContext: opts?.getContext,
-    history,
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
+    }),
     hydrationData: opts?.hydrationData,
     hydrationRouteProperties,
     unstable_instrumentRoute: opts?.unstable_instrumentRoute,
@@ -254,7 +242,7 @@ export function createAndInitializeDataRouter(
   });
 
   if (opts?.unstable_instrumentRouter) {
-    router = opts.unstable_instrumentRouter(router);
+    router = instrumentClientSideRouter(router, opts.unstable_instrumentRouter);
   }
 
   return router.initialize();
