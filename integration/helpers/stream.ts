@@ -7,16 +7,22 @@ export async function match(
     /** Measured in ms */
     timeout?: number;
   } = {},
-): Promise<string> {
+): Promise<RegExpMatchArray> {
   // Prepare error outside of promise so that stacktrace points to caller of `matchLine`
-  const timeout = new Error(`Timed out - Could not find pattern: ${pattern}`);
-  return new Promise<string>(async (resolve, reject) => {
-    setTimeout(() => reject(timeout), options.timeout ?? 10_000);
+  const timeoutError = new Error(
+    `Timed out - Could not find pattern: ${pattern}`,
+  );
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(
+      () => reject(timeoutError),
+      options.timeout ?? 10_000,
+    );
     stream.on("data", (data) => {
       const line: string = data.toString();
       const matches = line.match(pattern);
       if (matches) {
-        resolve(matches[0]);
+        resolve(matches);
+        clearTimeout(timeout);
       }
     });
   });

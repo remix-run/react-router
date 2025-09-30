@@ -3,10 +3,10 @@ import { expect } from "@playwright/test";
 import getPort from "get-port";
 import dedent from "dedent";
 
+import * as Express from "./helpers/express";
 import { test } from "./helpers/fixtures";
 import * as Stream from "./helpers/stream";
 import { viteMajorTemplates, getTemplates } from "./helpers/templates";
-import * as Express from "./helpers/express";
 
 const tsx = dedent;
 const mdx = dedent;
@@ -71,6 +71,7 @@ templates.forEach((template) => {
 
       const port = await getPort();
       const url = `http://localhost:${port}`;
+
       const server = $("node server.mjs", {
         env: {
           PORT: String(port),
