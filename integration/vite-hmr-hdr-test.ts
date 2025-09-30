@@ -49,33 +49,33 @@ const indexRoute = tsx`
 
 templates.forEach((template) => {
   const isRsc = template.name.includes("rsc");
-  const viteConfigContent = tsx`
-    ${
-      !isRsc
-        ? "import { reactRouter } from '@react-router/dev/vite';"
-        : [
-            "import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';",
-            "import rsc from '@vitejs/plugin-rsc';",
-          ].join("\n")
-    }
-    import { envOnlyMacros } from "vite-env-only";
-    import tsconfigPaths from "vite-tsconfig-paths";
+  const viteConfig = isRsc
+    ? tsx`
+      import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';
+      import rsc from '@vitejs/plugin-rsc';
 
-    export default async () => ({
-      plugins: [
-        ${isRsc ? "reactRouterRSC()," : "reactRouter(),"}
-        ${isRsc ? "rsc()," : ""}
-        envOnlyMacros(),
-        tsconfigPaths()
-      ],
-    });
-  `;
+      export default {
+        plugins: [
+          reactRouterRSC(),
+          rsc(),
+        ],
+      };
+    `
+    : tsx`
+      import { reactRouter } from '@react-router/dev/vite';
+
+      export default {
+        plugins: [
+          reactRouter(),
+        ],
+      };
+    `;
 
   test.describe(`${template.displayName} - HMR & HDR`, () => {
     test.use({
       template: template.name,
       files: {
-        "vite.config.ts": viteConfigContent,
+        "vite.config.ts": viteConfig,
         "app/routes/_index.tsx": indexRoute,
       },
     });
