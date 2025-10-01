@@ -144,7 +144,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
-  useRoute,
+  useRoute as unstable_useRoute,
 } from "./lib/hooks";
 
 // Expose old RR DOM API
