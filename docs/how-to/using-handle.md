@@ -1,8 +1,8 @@
 ---
-title: Route Metadata
+title: Using handle
 ---
 
-# Route Metadata
+# Using `handle`
 
 [MODES: framework]
 
@@ -13,13 +13,25 @@ You can build dynamic UI elements like breadcrumbs based on your route hierarchy
 
 ## Understanding the Basics
 
-React Router provides access to all route matches and their data throughout your component tree. This allows routes to contribute metadata that can be rendered by ancestor components.
+React Router provides access to all route matches and their data throughout your component tree. This allows routes to contribute metadata through the `handle` export that can be rendered by ancestor components.
 
-The `useMatches` hook combined with `handle` exports enables routes to contribute to rendering processes higher up the component tree than their actual render point. While we'll use breadcrumbs as an example, this pattern works for any scenario where you need routes to provide metadata.
+The `useMatches` hook combined with `handle` exports enables routes to contribute to rendering processes higher up the component tree than their actual render point. While we'll use breadcrumbs as an example, this pattern works for any scenario where you need routes to provide additional information to their ancestors.
 
-## Defining Route Metadata
+## Defining Route `handle`s
 
-Add a `breadcrumb` property to your route's `handle` export. You can name this property whatever makes sense for your use case.
+We'll use a route structure like the following:
+
+```ts filename=app/routes.ts
+import { route } from "@react-router/dev/routes";
+
+export default [
+  route("parent", "./routes/parent.tsx", [
+    route("child", "./routes/child.tsx"),
+  ]),
+] satisfies RouteConfig;
+```
+
+Add a `breadcrumb` property to the "parent" route's `handle` export. You can name this property whatever makes sense for your use case.
 
 ```tsx filename=app/routes/parent.tsx
 import { Link } from "react-router";
@@ -31,7 +43,7 @@ export const handle = {
 
 You can define breadcrumbs for child routes as well:
 
-```tsx filename=app/routes/parent.child.tsx
+```tsx filename=app/routes/child.tsx
 import { Link } from "react-router";
 
 export const handle = {
@@ -41,9 +53,9 @@ export const handle = {
 };
 ```
 
-## Using Route Metadata
+## Using Route `handle`s
 
-Use the `useMatches` hook in your root layout or any ancestor component to collect and render the metadata:
+Use the `useMatches` hook in your root layout or any ancestor component to collect and render the components defined in the `handle` export(s):
 
 ```tsx filename=app/root.tsx lines=[7,11,22-31]
 import {
