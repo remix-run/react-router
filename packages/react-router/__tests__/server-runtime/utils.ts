@@ -10,7 +10,11 @@ import type {
 } from "../../lib/server-runtime/build";
 import type { HeadersFunction } from "../../lib/dom/ssr/routeModules";
 import type { EntryRoute } from "../../lib/dom/ssr/routes";
-import type { ActionFunction, LoaderFunction } from "../../lib/router/utils";
+import type {
+  ActionFunction,
+  LoaderFunction,
+  MiddlewareFunction,
+} from "../../lib/router/utils";
 import type {
   unstable_InstrumentHandlerFunction,
   unstable_InstrumentRouteFunction,
@@ -28,6 +32,7 @@ export function mockServerBuild(
       action?: ActionFunction;
       headers?: HeadersFunction;
       loader?: LoaderFunction;
+      middleware?: MiddlewareFunction<Response>[];
     }
   >,
   opts: {
@@ -112,8 +117,8 @@ export function mockServerBuild(
             default: config.default,
             ErrorBoundary: config.ErrorBoundary,
             action: config.action,
-            headers: config.headers,
             loader: config.loader,
+            middleware: config.middleware,
           },
         };
         return {
