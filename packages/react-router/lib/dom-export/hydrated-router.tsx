@@ -27,11 +27,7 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
-import {
-  instrumentClientSideRouter,
-  type unstable_InstrumentRouteFunction,
-  type unstable_InstrumentRouterFunction,
-} from "../router/instrumentation";
+import { unstable_ClientInstrumentation } from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -83,12 +79,10 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   getContext,
-  unstable_instrumentRoute,
-  unstable_instrumentRouter,
+  unstable_instrumentations,
 }: {
   getContext?: RouterInit["getContext"];
-  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
-  unstable_instrumentRouter?: unstable_InstrumentRouterFunction;
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
 }): DataRouter {
   initSsrInfo();
 
@@ -181,7 +175,7 @@ function createHydratedRouter({
     getContext,
     hydrationData,
     hydrationRouteProperties,
-    unstable_instrumentRoute,
+    unstable_instrumentations,
     mapRouteProperties,
     future: {
       middleware: ssrInfo.context.future.v8_middleware,
@@ -202,10 +196,6 @@ function createHydratedRouter({
       ssrInfo.context.basename,
     ),
   });
-
-  if (unstable_instrumentRouter) {
-    router = instrumentClientSideRouter(router, unstable_instrumentRouter);
-  }
 
   ssrInfo.router = router;
 
@@ -240,17 +230,59 @@ export interface HydratedRouterProps {
    */
   getContext?: RouterInit["getContext"];
   /**
-   * Function allowing you to instrument a route object prior to creating the
-   * client-side router.  This is mostly useful for observability such as wrapping
-   * loaders/actions/middlewares with logging and/or performance tracing.
+   * Array of instrumentation objects allowing you to instrument the router and
+   * individual routes prior to router initialization (and on any subsequently
+   * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
+   * mostly useful for observability such as wrapping navigations, fetches,
+   * as well as route loaders/actions/middlewares with logging and/or performance
+   * tracing.
+   *
+   * ```tsx
+   * startTransition(() => {
+   *   hydrateRoot(
+   *     document,
+   *     <HydratedRouter unstable_instrumentations={[logging]} />
+   *   );
+   * });
+   *
+   * const logging = {
+   *   router({ instrument }) {
+   *     instrument({
+   *       navigate: (impl, { to }) => logExecution(`navigate ${to}`, impl),
+   *       fetch: (impl, { to }) => logExecution(`fetch ${to}`, impl)
+   *     });
+   *   },
+   *   route({ instrument, id }) {
+   *     instrument({
+   *       middleware: (impl, { request }) => logExecution(
+   *         `middleware ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       loader: (impl, { request }) => logExecution(
+   *         `loader ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       action: (impl, { request }) => logExecution(
+   *         `action ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *     })
+   *   }
+   * };
+   *
+   * async function logExecution(label: string, impl: () => Promise<void>) {
+   *   let start = performance.now();
+   *   console.log(`start ${label}`);
+   *   try {
+   *     await impl();
+   *   } finally {
+   *     let end = performance.now();
+   *     console.log(`end ${label} (${Math.round(end - start)}ms)`);
+   *   }
+   * }
+   * ```
    */
-  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
-  /**
-   * Function allowing you to instrument the client-side router.  This is mostly
-   * useful for observability such as wrapping `router.navigate`/`router.fetch`
-   * with logging and/or performance tracing.
-   */
-  unstable_instrumentRouter?: unstable_InstrumentRouterFunction;
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for
@@ -287,8 +319,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       getContext: props.getContext,
-      unstable_instrumentRoute: props.unstable_instrumentRoute,
-      unstable_instrumentRouter: props.unstable_instrumentRouter,
+      unstable_instrumentations: props.unstable_instrumentations,
     });
   }
 

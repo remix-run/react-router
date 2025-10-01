@@ -9,8 +9,16 @@ import {
   parsePath,
   warning,
 } from "./history";
-import type { unstable_InstrumentRouteFunction } from "./instrumentation";
-import { getInstrumentationUpdates } from "./instrumentation";
+import type {
+  unstable_ClientInstrumentation,
+  unstable_InstrumentRouteFunction,
+  unstable_InstrumentRouterFunction,
+  unstable_ServerInstrumentation,
+} from "./instrumentation";
+import {
+  getInstrumentationUpdates,
+  instrumentClientSideRouter,
+} from "./instrumentation";
 import type {
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
@@ -405,7 +413,7 @@ export interface RouterInit {
   history: History;
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
-  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -875,13 +883,18 @@ export function createRouter(init: RouterInit): Router {
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
-  if (init.unstable_instrumentRoute) {
-    let instrument = init.unstable_instrumentRoute;
+  if (init.unstable_instrumentations) {
+    let instrumentations = init.unstable_instrumentations;
 
     mapRouteProperties = (route: AgnosticDataRouteObject) => {
       return {
         ..._mapRouteProperties(route),
-        ...getInstrumentationUpdates(instrument, route),
+        ...getInstrumentationUpdates(
+          instrumentations
+            .map((i) => i.route)
+            .filter(Boolean) as unstable_InstrumentRouteFunction[],
+          route,
+        ),
       };
     };
   }
@@ -3525,6 +3538,15 @@ export function createRouter(init: RouterInit): Router {
     },
   };
 
+  if (init.unstable_instrumentations) {
+    router = instrumentClientSideRouter(
+      router,
+      init.unstable_instrumentations
+        .map((i) => i.router)
+        .filter(Boolean) as unstable_InstrumentRouterFunction[],
+    );
+  }
+
   return router;
 }
 //#endregion
@@ -3536,7 +3558,7 @@ export function createRouter(init: RouterInit): Router {
 export interface CreateStaticHandlerOptions {
   basename?: string;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
+  unstable_instrumentations?: Pick<unstable_ServerInstrumentation, "route">[];
   future?: {};
 }
 
@@ -3557,13 +3579,18 @@ export function createStaticHandler(
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
-  if (opts?.unstable_instrumentRoute) {
-    let instrument = opts.unstable_instrumentRoute;
+  if (opts?.unstable_instrumentations) {
+    let instrumentations = opts.unstable_instrumentations;
 
     mapRouteProperties = (route: AgnosticDataRouteObject) => {
       return {
         ..._mapRouteProperties(route),
-        ...getInstrumentationUpdates(instrument, route),
+        ...getInstrumentationUpdates(
+          instrumentations
+            .map((i) => i.route)
+            .filter(Boolean) as unstable_InstrumentRouteFunction[],
+          route,
+        ),
       };
     };
   }

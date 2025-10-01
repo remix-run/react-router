@@ -1,4 +1,4 @@
-import { RequestHandler } from "../../dist/development";
+import type { RequestHandler } from "../server-runtime/server";
 import { createPath } from "./history";
 import type { Router } from "./router";
 import type {
@@ -14,6 +14,52 @@ import type {
   RouterContextProvider,
 } from "./utils";
 
+// Public APIs
+export type unstable_ServerInstrumentation = {
+  handler?: unstable_InstrumentRequestHandlerFunction;
+  route?: unstable_InstrumentRouteFunction;
+};
+
+export type unstable_ClientInstrumentation = {
+  router?: unstable_InstrumentRouterFunction;
+  route?: unstable_InstrumentRouteFunction;
+};
+
+export type unstable_InstrumentRequestHandlerFunction = (
+  handler: InstrumentableRequestHandler,
+) => void;
+
+export type unstable_InstrumentRouterFunction = (
+  router: InstrumentableRouter,
+) => void;
+
+export type unstable_InstrumentRouteFunction = (
+  route: InstrumentableRoute,
+) => void;
+
+// Shared
+interface GenericInstrumentFunction {
+  (handler: () => Promise<void>, info: unknown): Promise<void>;
+}
+
+// Route Instrumentation
+type InstrumentableRoute = {
+  id: string;
+  index: boolean | undefined;
+  path: string | undefined;
+  instrument(instrumentations: RouteInstrumentations): void;
+};
+
+type RouteInstrumentations = {
+  lazy?: InstrumentLazyFunction;
+  "lazy.loader"?: InstrumentLazyFunction;
+  "lazy.action"?: InstrumentLazyFunction;
+  "lazy.middleware"?: InstrumentLazyFunction;
+  middleware?: InstrumentRouteHandlerFunction;
+  loader?: InstrumentRouteHandlerFunction;
+  action?: InstrumentRouteHandlerFunction;
+};
+
 type RouteHandlerInstrumentationInfo = Readonly<{
   request: {
     method: string;
@@ -26,58 +72,26 @@ type RouteHandlerInstrumentationInfo = Readonly<{
   context: Pick<RouterContextProvider, "get">;
 }>;
 
-interface GenericInstrumentFunction {
-  (handler: () => Promise<void>, info: unknown): Promise<void>;
-}
-
 interface InstrumentLazyFunction extends GenericInstrumentFunction {
   (handler: () => Promise<void>): Promise<void>;
 }
 
-interface InstrumentHandlerFunction extends GenericInstrumentFunction {
+interface InstrumentRouteHandlerFunction extends GenericInstrumentFunction {
   (
     handler: () => Promise<void>,
     info: RouteHandlerInstrumentationInfo,
   ): Promise<void>;
 }
 
-type RouteInstrumentations = {
-  lazy?: InstrumentLazyFunction;
-  "lazy.loader"?: InstrumentLazyFunction;
-  "lazy.action"?: InstrumentLazyFunction;
-  "lazy.middleware"?: InstrumentLazyFunction;
-  middleware?: InstrumentHandlerFunction;
-  loader?: InstrumentHandlerFunction;
-  action?: InstrumentHandlerFunction;
+// Router Instrumentation
+type InstrumentableRouter = {
+  instrument(instrumentations: RouterInstrumentations): void;
 };
 
-type InstrumentableRoute = {
-  id: string;
-  index: boolean | undefined;
-  path: string | undefined;
-  instrument(instrumentations: RouteInstrumentations): void;
+type RouterInstrumentations = {
+  navigate?: InstrumentNavigateFunction;
+  fetch?: InstrumentFetchFunction;
 };
-
-interface InstrumentNavigateFunction extends GenericInstrumentFunction {
-  (
-    handler: () => Promise<void>,
-    info: RouterNavigationInstrumentationInfo,
-  ): MaybePromise<void>;
-}
-
-interface InstrumentFetchFunction extends GenericInstrumentFunction {
-  (
-    handler: () => Promise<void>,
-    info: RouterFetchInstrumentationInfo,
-  ): MaybePromise<void>;
-}
-
-interface InstrumentRequestFunction extends GenericInstrumentFunction {
-  (
-    handler: () => Promise<void>,
-    info: HandlerRequestInstrumentationInfo,
-  ): MaybePromise<void>;
-}
 
 type RouterNavigationInstrumentationInfo = Readonly<{
   to: string | number;
@@ -98,7 +112,30 @@ type RouterFetchInstrumentationInfo = Readonly<{
   body?: any;
 }>;
 
-type HandlerRequestInstrumentationInfo = Readonly<{
+interface InstrumentNavigateFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: RouterNavigationInstrumentationInfo,
+  ): MaybePromise<void>;
+}
+
+interface InstrumentFetchFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: RouterFetchInstrumentationInfo,
+  ): MaybePromise<void>;
+}
+
+// Request Handler Instrumentation
+type InstrumentableRequestHandler = {
+  instrument(instrumentations: RequestHandlerInstrumentations): void;
+};
+
+type RequestHandlerInstrumentations = {
+  request?: InstrumentRequestHandlerFunction;
+};
+
+type RequestHandlerInstrumentationInfo = Readonly<{
   request: {
     method: string;
     url: string;
@@ -108,34 +145,12 @@ type HandlerRequestInstrumentationInfo = Readonly<{
   context: Pick<RouterContextProvider, "get">;
 }>;
 
-type RouterInstrumentations = {
-  navigate?: InstrumentNavigateFunction;
-  fetch?: InstrumentFetchFunction;
-};
-
-type HandlerInstrumentations = {
-  request?: InstrumentRequestFunction;
-};
-
-type InstrumentableRouter = {
-  instrument(instrumentations: RouterInstrumentations): void;
-};
-
-type InstrumentableHandler = {
-  instrument(instrumentations: HandlerInstrumentations): void;
-};
-
-export type unstable_InstrumentRouteFunction = (
-  route: InstrumentableRoute,
-) => void;
-
-export type unstable_InstrumentRouterFunction = (
-  router: InstrumentableRouter,
-) => void;
-
-export type unstable_InstrumentHandlerFunction = (
-  handler: InstrumentableHandler,
-) => void;
+interface InstrumentRequestHandlerFunction extends GenericInstrumentFunction {
+  (
+    handler: () => Promise<void>,
+    info: RequestHandlerInstrumentationInfo,
+  ): MaybePromise<void>;
+}
 
 const UninstrumentedSymbol = Symbol("Uninstrumented");
 
@@ -205,7 +220,7 @@ function getInstrumentationsByType<
   T extends
     | RouteInstrumentations
     | RouterInstrumentations
-    | HandlerInstrumentations,
+    | RequestHandlerInstrumentations,
   K extends keyof T,
 >(instrumentations: T[], key: K): GenericInstrumentFunction[] {
   let value: GenericInstrumentFunction[] = [];
@@ -219,18 +234,20 @@ function getInstrumentationsByType<
 }
 
 export function getInstrumentationUpdates(
-  unstable_instrumentRoute: unstable_InstrumentRouteFunction,
+  fns: unstable_InstrumentRouteFunction[],
   route: Readonly<AgnosticDataRouteObject>,
 ) {
   let instrumentations: RouteInstrumentations[] = [];
-  unstable_instrumentRoute({
-    id: route.id,
-    index: route.index,
-    path: route.path,
-    instrument(i) {
-      instrumentations.push(i);
-    },
-  });
+  fns.forEach((fn) =>
+    fn({
+      id: route.id,
+      index: route.index,
+      path: route.path,
+      instrument(i) {
+        instrumentations.push(i);
+      },
+    }),
+  );
 
   let updates: {
     middleware?: AgnosticDataRouteObject["middleware"];
@@ -310,14 +327,16 @@ export function getInstrumentationUpdates(
 
 export function instrumentClientSideRouter(
   router: Router,
-  unstable_instrumentRouter: unstable_InstrumentRouterFunction,
+  fns: unstable_InstrumentRouterFunction[],
 ): Router {
   let instrumentations: RouterInstrumentations[] = [];
-  unstable_instrumentRouter({
-    instrument(i) {
-      instrumentations.push(i);
-    },
-  });
+  fns.forEach((fn) =>
+    fn({
+      instrument(i) {
+        instrumentations.push(i);
+      },
+    }),
+  );
 
   if (instrumentations.length > 0) {
     // @ts-expect-error
@@ -382,24 +401,27 @@ export function instrumentClientSideRouter(
 
 export function instrumentHandler(
   handler: RequestHandler,
-  unstable_instrumentHandler: unstable_InstrumentHandlerFunction,
+  fns: unstable_InstrumentRequestHandlerFunction[],
 ): RequestHandler {
-  let instrumentations: HandlerInstrumentations[] = [];
-  unstable_instrumentHandler({
-    instrument(i) {
-      instrumentations.push(i);
-    },
-  });
+  let instrumentations: RequestHandlerInstrumentations[] = [];
+  fns.forEach((fn) =>
+    fn({
+      instrument(i) {
+        instrumentations.push(i);
+      },
+    }),
+  );
 
   if (instrumentations.length === 0) {
     return handler;
   }
+
   let instrumentedHandler = getInstrumentedImplementation(
     getInstrumentationsByType(instrumentations, "request"),
     handler,
     (...args) => {
       let [request, context] = args as Parameters<RequestHandler>;
-      let info: HandlerRequestInstrumentationInfo = {
+      let info: RequestHandlerInstrumentationInfo = {
         request: {
           method: request.method,
           url: request.url,

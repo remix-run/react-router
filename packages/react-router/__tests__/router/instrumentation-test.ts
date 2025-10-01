@@ -38,15 +38,19 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async middleware(middleware) {
-              spy("start");
-              await middleware();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async middleware(middleware) {
+                  spy("start");
+                  await middleware();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page");
@@ -78,15 +82,19 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async loader(loader) {
-              spy("start");
-              await loader();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("start");
+                  await loader();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page");
@@ -113,15 +121,19 @@ describe("instrumentation", () => {
             action: true,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async action(action) {
-              spy("start");
-              await action();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async action(action) {
+                  spy("start");
+                  await action();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page", {
@@ -152,15 +164,19 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async lazy(lazy) {
-              spy("start");
-              await lazy();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async lazy(lazy) {
+                  spy("start");
+                  await lazy();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page");
@@ -192,15 +208,19 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async loader(loader) {
-              spy("start");
-              await loader();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("start");
+                  await loader();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page");
@@ -236,15 +256,19 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async action(action) {
-              spy("start");
-              await action();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async action(action) {
+                  spy("start");
+                  await action();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -284,15 +308,19 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async loader(loader) {
-              spy("start");
-              await loader();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("start");
+                  await loader();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page");
@@ -339,15 +367,19 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async action(action) {
-              spy("start");
-              await action();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async action(action) {
+                  spy("start");
+                  await action();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page", {
@@ -400,15 +432,19 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            "lazy.middleware": async (middleware) => {
-              spy("start");
-              await middleware();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                "lazy.middleware": async (middleware) => {
+                  spy("start");
+                  await middleware();
+                  spy("end");
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page");
@@ -460,20 +496,24 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            "lazy.loader": async (load) => {
-              spy("start");
-              await load();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                "lazy.loader": async (load) => {
+                  spy("start");
+                  await load();
+                  spy("end");
+                },
+                loader: async (loader) => {
+                  spy("loader start");
+                  await loader();
+                  spy("loader end");
+                },
+              });
             },
-            loader: async (loader) => {
-              spy("loader start");
-              await loader();
-              spy("loader end");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page");
@@ -518,20 +558,24 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            "lazy.action": async (load) => {
-              spy("start");
-              await load();
-              spy("end");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                "lazy.action": async (load) => {
+                  spy("start");
+                  await load();
+                  spy("end");
+                },
+                action: async (action) => {
+                  spy("action start");
+                  await action();
+                  spy("action end");
+                },
+              });
             },
-            action: async (action) => {
-              spy("action start");
-              await action();
-              spy("action end");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -583,25 +627,29 @@ describe("instrumentation", () => {
             action: true,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            middleware: async (impl) => {
-              spy("start middleware");
-              await impl();
-              spy("end middleware");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                middleware: async (impl) => {
+                  spy("start middleware");
+                  await impl();
+                  spy("end middleware");
+                },
+                action: async (impl) => {
+                  spy("start action");
+                  await impl();
+                  spy("end action");
+                },
+                loader: async (impl) => {
+                  spy("start loader");
+                  await impl();
+                  spy("end loader");
+                },
+              });
             },
-            action: async (impl) => {
-              spy("start action");
-              await impl();
-              spy("end action");
-            },
-            loader: async (impl) => {
-              spy("start loader");
-              await impl();
-              spy("end loader");
-            },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page", {
@@ -660,25 +708,29 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            middleware: async (impl) => {
-              spy("start middleware");
-              await impl();
-              spy("end middleware");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                middleware: async (impl) => {
+                  spy("start middleware");
+                  await impl();
+                  spy("end middleware");
+                },
+                action: async (impl) => {
+                  spy("start action");
+                  await impl();
+                  spy("end action");
+                },
+                loader: async (impl) => {
+                  spy("start loader");
+                  await impl();
+                  spy("end loader");
+                },
+              });
             },
-            action: async (impl) => {
-              spy("start action");
-              await impl();
-              spy("end action");
-            },
-            loader: async (impl) => {
-              spy("start loader");
-              await impl();
-              spy("end loader");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -731,25 +783,29 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            middleware: async (impl) => {
-              spy("start middleware");
-              await impl();
-              spy("end middleware");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                middleware: async (impl) => {
+                  spy("start middleware");
+                  await impl();
+                  spy("end middleware");
+                },
+                action: async (impl) => {
+                  spy("start action");
+                  await impl();
+                  spy("end action");
+                },
+                loader: async (impl) => {
+                  spy("start loader");
+                  await impl();
+                  spy("end loader");
+                },
+              });
             },
-            action: async (impl) => {
-              spy("start action");
-              await impl();
-              spy("end action");
-            },
-            loader: async (impl) => {
-              spy("start loader");
-              await impl();
-              spy("end loader");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -818,25 +874,29 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            middleware: async (impl) => {
-              spy("start middleware");
-              await impl();
-              spy("end middleware");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                middleware: async (impl) => {
+                  spy("start middleware");
+                  await impl();
+                  spy("end middleware");
+                },
+                action: async (impl) => {
+                  spy("start action");
+                  await impl();
+                  spy("end action");
+                },
+                loader: async (impl) => {
+                  spy("start loader");
+                  await impl();
+                  spy("end loader");
+                },
+              });
             },
-            action: async (impl) => {
-              spy("start action");
-              await impl();
-              spy("end action");
-            },
-            loader: async (impl) => {
-              spy("start loader");
-              await impl();
-              spy("end loader");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -890,25 +950,29 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            middleware: async (impl) => {
-              spy("start middleware");
-              await impl();
-              spy("end middleware");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                middleware: async (impl) => {
+                  spy("start middleware");
+                  await impl();
+                  spy("end middleware");
+                },
+                action: async (impl) => {
+                  spy("start action");
+                  await impl();
+                  spy("end action");
+                },
+                loader: async (impl) => {
+                  spy("start loader");
+                  await impl();
+                  spy("end loader");
+                },
+              });
             },
-            action: async (impl) => {
-              spy("start action");
-              await impl();
-              spy("end action");
-            },
-            loader: async (impl) => {
-              spy("start loader");
-              await impl();
-              spy("end loader");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -967,25 +1031,29 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            middleware: async (impl) => {
-              spy("start middleware");
-              await impl();
-              spy("end middleware");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                middleware: async (impl) => {
+                  spy("start middleware");
+                  await impl();
+                  spy("end middleware");
+                },
+                action: async (impl) => {
+                  spy("start action");
+                  await impl();
+                  spy("end action");
+                },
+                loader: async (impl) => {
+                  spy("start loader");
+                  await impl();
+                  spy("end loader");
+                },
+              });
             },
-            action: async (impl) => {
-              spy("start action");
-              await impl();
-              spy("end action");
-            },
-            loader: async (impl) => {
-              spy("start loader");
-              await impl();
-              spy("end loader");
-            },
-          });
-        },
+          },
+        ],
       });
 
       await t.navigate("/page", {
@@ -1040,15 +1108,19 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async loader(loader, info) {
-              spy(info);
-              Object.assign(info.params, { extra: "extra" });
-              await loader();
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader, info) {
+                  spy(info);
+                  Object.assign(info.params, { extra: "extra" });
+                  await loader();
+                },
+              });
             },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/a");
@@ -1079,22 +1151,26 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentRoute: (route) => {
-          route.instrument({
-            async loader(loader) {
-              spy("start inner");
-              await loader();
-              spy("end inner");
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("start inner");
+                  await loader();
+                  spy("end inner");
+                },
+              });
+              route.instrument({
+                async loader(loader) {
+                  spy("start outer");
+                  await loader();
+                  spy("end outer");
+                },
+              });
             },
-          });
-          route.instrument({
-            async loader(loader) {
-              spy("start outer");
-              await loader();
-              spy("end outer");
-            },
-          });
-        },
+          },
+        ],
       });
 
       let A = await t.navigate("/page");
@@ -1126,15 +1202,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRouter: (router) => {
-            router.instrument({
-              async navigate(navigate, info) {
-                spy("start", info);
-                await navigate();
-                spy("end", info);
+          unstable_instrumentations: [
+            {
+              router(router) {
+                router.instrument({
+                  async navigate(navigate, info) {
+                    spy("start", info);
+                    await navigate();
+                    spy("end", info);
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
 
@@ -1164,15 +1244,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRouter: (router) => {
-            router.instrument({
-              async fetch(fetch, info) {
-                spy("start", info);
-                await fetch();
-                spy("end", info);
+          unstable_instrumentations: [
+            {
+              router(router) {
+                router.instrument({
+                  async fetch(fetch, info) {
+                    spy("start", info);
+                    await fetch();
+                    spy("end", info);
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
 
@@ -1213,15 +1297,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async lazy(loader) {
-                spy("start");
-                await loader();
-                spy("end");
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async lazy(loader) {
+                    spy("start");
+                    await loader();
+                    spy("end");
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
 
@@ -1256,15 +1344,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async lazy(loader) {
-                spy("start");
-                await loader();
-                spy("end");
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async lazy(loader) {
+                    spy("start");
+                    await loader();
+                    spy("end");
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
       let response = await queryRoute(new Request("http://localhost/"));
@@ -1297,15 +1389,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async middleware(middleware) {
-                spy("start");
-                await middleware();
-                spy("end");
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async middleware(middleware) {
+                    spy("start");
+                    await middleware();
+                    spy("end");
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
 
@@ -1361,15 +1457,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async loader(loader) {
-                spy("start");
-                await loader();
-                spy("end");
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async loader(loader) {
+                    spy("start");
+                    await loader();
+                    spy("end");
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
 
@@ -1400,15 +1500,19 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async action(action) {
-                spy("start");
-                await action();
-                spy("end");
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async action(action) {
+                    spy("start");
+                    await action();
+                    spy("end");
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
 
@@ -1448,15 +1552,19 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentHandler: (handler) => {
-            handler.instrument({
-              async request(handler, info) {
-                spy("start", info);
-                await handler();
-                spy("end", info);
+          unstable_instrumentations: [
+            {
+              handler(handler) {
+                handler.instrument({
+                  async request(handler, info) {
+                    spy("start", info);
+                    await handler();
+                    spy("end", info);
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
       let handler = createRequestHandler(build);
@@ -1524,15 +1632,19 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async middleware(middleware, info) {
-                spy("start", info);
-                await middleware();
-                spy("end", info);
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async middleware(middleware, info) {
+                    spy("start", info);
+                    await middleware();
+                    spy("end", info);
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
       let handler = createRequestHandler(build);
@@ -1596,15 +1708,19 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async loader(loader, info) {
-                spy("start", info);
-                await loader();
-                spy("end", info);
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async loader(loader, info) {
+                    spy("start", info);
+                    await loader();
+                    spy("end", info);
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
       let handler = createRequestHandler(build);
@@ -1667,15 +1783,19 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentRoute: (route) => {
-            route.instrument({
-              async action(action, info) {
-                spy("start", info);
-                await action();
-                spy("end", info);
+          unstable_instrumentations: [
+            {
+              route(route) {
+                route.instrument({
+                  async action(action, info) {
+                    spy("start", info);
+                    await action();
+                    spy("end", info);
+                  },
+                });
               },
-            });
-          },
+            },
+          ],
         },
       );
       let handler = createRequestHandler(build);

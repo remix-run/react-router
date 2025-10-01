@@ -15,10 +15,7 @@ import type {
   LoaderFunction,
   MiddlewareFunction,
 } from "../../lib/router/utils";
-import type {
-  unstable_InstrumentHandlerFunction,
-  unstable_InstrumentRouteFunction,
-} from "../../lib/router/instrumentation";
+import type { unstable_ServerInstrumentation } from "../../lib/router/instrumentation";
 
 export function mockServerBuild(
   routes: Record<
@@ -39,8 +36,7 @@ export function mockServerBuild(
     future?: Partial<FutureConfig>;
     handleError?: HandleErrorFunction;
     handleDocumentRequest?: HandleDocumentRequestFunction;
-    unstable_instrumentRoute?: unstable_InstrumentRouteFunction;
-    unstable_instrumentHandler?: unstable_InstrumentHandlerFunction;
+    unstable_instrumentations?: unstable_ServerInstrumentation[];
   } = {},
 ): ServerBuild {
   return {
@@ -102,8 +98,7 @@ export function mockServerBuild(
           ),
         handleDataRequest: jest.fn(async (response) => response),
         handleError: opts.handleError,
-        unstable_instrumentRoute: opts.unstable_instrumentRoute,
-        unstable_instrumentHandler: opts.unstable_instrumentHandler,
+        unstable_instrumentations: opts.unstable_instrumentations,
       },
     },
     routes: Object.entries(routes).reduce<ServerRouteManifest>(
