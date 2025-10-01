@@ -144,6 +144,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  useRoute,
 } from "./lib/hooks";
 
 // Expose old RR DOM API
