@@ -89,7 +89,7 @@
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
     "tinyglobby": "^0.2.14",
-    "valibot": "^1.1.0",
+    "valibot": "^0.41.0",
     "vite-node": "^3.2.2"
   },
   "devDependencies": {
