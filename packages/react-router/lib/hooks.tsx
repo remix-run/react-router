@@ -1845,28 +1845,34 @@ function warningOnce(key: string, cond: boolean, message: string) {
   }
 }
 
-type UseRoute<RouteId extends keyof RouteModules> =
-  | {
-      loaderData: GetLoaderData<RouteModules[RouteId]>;
-      actionData: GetActionData<RouteModules[RouteId]>;
-    }
-  | (RouteId extends "root" ? never : undefined);
+type UseRouteArgs = [] | [routeId: keyof RouteModules];
 
-export function useRoute<RouteId extends keyof RouteModules>(
-  routeId?: RouteId,
-): UseRoute<RouteId> {
-  const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
+// prettier-ignore
+type UseRouteResult<Args extends UseRouteArgs> =
+  Args extends [] ? unknown :
+  Args extends ["root"] ? UseRoute<"root"> :
+  Args extends [infer RouteId extends keyof RouteModules] ? UseRoute<RouteId> | undefined :
+  never;
 
+type UseRoute<RouteId extends keyof RouteModules> = {
+  loaderData: GetLoaderData<RouteModules[RouteId]>;
+  actionData: GetActionData<RouteModules[RouteId]>;
+};
+
+export function useRoute<Args extends UseRouteArgs>(
+  ...args: Args
+): UseRouteResult<Args> {
   const currentRouteId: keyof RouteModules = useCurrentRouteId(
     DataRouterStateHook.UseRoute,
   );
-  const id: keyof RouteModules = routeId ?? currentRouteId;
+  const id: keyof RouteModules = args[0] ?? currentRouteId;
 
+  const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
   const route = state.matches.find(({ route }) => route.id === id);
 
-  if (route === undefined) return undefined as UseRoute<RouteId>;
+  if (route === undefined) return undefined as UseRouteResult<Args>;
   return {
     loaderData: state.loaderData[id],
     actionData: state.actionData?.[id],
-  };
+  } as UseRouteResult<Args>;
 }
