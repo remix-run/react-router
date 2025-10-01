@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Update valibot to 1.1.0
+Update `valibot` dependency to `^1.1.0`
