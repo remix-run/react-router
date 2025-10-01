@@ -1849,14 +1849,18 @@ type UseRouteArgs = [] | [routeId: keyof RouteModules];
 
 // prettier-ignore
 type UseRouteResult<Args extends UseRouteArgs> =
-  Args extends [] ? unknown :
+  Args extends [] ? UseRoute<unknown> :
   Args extends ["root"] ? UseRoute<"root"> :
   Args extends [infer RouteId extends keyof RouteModules] ? UseRoute<RouteId> | undefined :
   never;
 
-type UseRoute<RouteId extends keyof RouteModules> = {
-  loaderData: GetLoaderData<RouteModules[RouteId]>;
-  actionData: GetActionData<RouteModules[RouteId]>;
+type UseRoute<RouteId extends keyof RouteModules | unknown> = {
+  loaderData: RouteId extends keyof RouteModules
+    ? GetLoaderData<RouteModules[RouteId]>
+    : unknown;
+  actionData: RouteId extends keyof RouteModules
+    ? GetActionData<RouteModules[RouteId]> | undefined
+    : unknown;
 };
 
 export function useRoute<Args extends UseRouteArgs>(
