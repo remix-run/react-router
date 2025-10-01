@@ -1,31 +1,16 @@
-import { spawnSync } from "node:child_process";
-import { mkdirSync, renameSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
-import * as path from "node:path";
+import fs from "node:fs/promises";
 
-import { expect, test } from "@playwright/test";
-import dedent from "dedent";
+import tsx from "dedent";
+import * as Path from "pathe";
 
-import { createProject } from "./helpers/vite";
+import { test } from "./helpers/fixtures";
 
-const tsx = dedent;
-
-const nodeBin = process.argv[0];
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
-const tscBin = "node_modules/typescript/bin/tsc";
-
-function typecheck(cwd: string) {
-  const typegen = spawnSync(nodeBin, [reactRouterBin, "typegen"], { cwd });
-  expect(typegen.stdout.toString()).toBe("");
-  expect(typegen.stderr.toString()).toBe("");
-  expect(typegen.status).toBe(0);
-
-  return spawnSync(nodeBin, [tscBin], { cwd });
-}
-
-const viteConfig = ({ rsc }: { rsc: boolean } = { rsc: false }) => {
+const viteConfig = ({ rsc }: { rsc: boolean }) => {
+  const reactRouterImportSpecifier = rsc
+    ? "unstable_reactRouterRSC as reactRouter"
+    : "reactRouter";
   return tsx`
-    import { ${rsc ? "unstable_reactRouterRSC as reactRouter" : "reactRouter"} } from "@react-router/dev/vite";
+    import { ${reactRouterImportSpecifier} } from "@react-router/dev/vite";
 
     export default {
       plugins: [reactRouter()],
@@ -33,19 +18,22 @@ const viteConfig = ({ rsc }: { rsc: boolean } = { rsc: false }) => {
   `;
 };
 
-const expectType = tsx`
-  export type Expect<T extends true> = T
+test.use({
+  files: {
+    "vite.config.ts": viteConfig({ rsc: false }),
+    "app/expect-type.ts": tsx`
+      export type Expect<T extends true> = T
 
-  export type Equal<X, Y> =
-    (<T>() => T extends X ? 1 : 2) extends
-    (<T>() => T extends Y ? 1 : 2) ? true : false
-`;
+      export type Equal<X, Y> =
+        (<T>() => T extends X ? 1 : 2) extends
+        (<T>() => T extends Y ? 1 : 2) ? true : false
+    `,
+  },
+});
 
 test.describe("typegen", () => {
-  test("basic", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("basic", async ({ edit, $ }) => {
+    await edit({
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
@@ -68,237 +56,208 @@ test.describe("typegen", () => {
         }
       `,
     });
-
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await $("pnpm typecheck");
   });
 
-  test.describe("params", () => {
-    test("repeated", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/expect-type.ts": expectType,
-        "app/routes.ts": tsx`
-          import { type RouteConfig, route } from "@react-router/dev/routes";
+  test("repeated params", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export default [
-            route("only-required/:id/:id", "routes/only-required.tsx"),
-            route("only-optional/:id?/:id?", "routes/only-optional.tsx"),
-            route("optional-then-required/:id?/:id", "routes/optional-then-required.tsx"),
-            route("required-then-optional/:id/:id?", "routes/required-then-optional.tsx"),
-          ] satisfies RouteConfig;
-        `,
-        "app/routes/only-required.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/only-required"
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id: string }>>
-            return null
-          }
-        `,
-        "app/routes/only-optional.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/only-optional"
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params.id, string | undefined>>
-            return null
-          }
-        `,
-        "app/routes/optional-then-required.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/optional-then-required"
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params.id,  string>>
-            return null
-          }
-        `,
-        "app/routes/required-then-optional.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/required-then-optional"
+        export default [
+          route("only-required/:id/:id", "routes/only-required.tsx"),
+          route("only-optional/:id?/:id?", "routes/only-optional.tsx"),
+          route("optional-then-required/:id?/:id", "routes/optional-then-required.tsx"),
+          route("required-then-optional/:id/:id?", "routes/required-then-optional.tsx"),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/only-required.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/only-required"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string }>>
+          return null
+        }
+      `,
+      "app/routes/only-optional.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/only-optional"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params.id, string | undefined>>
+          return null
+        }
+      `,
+      "app/routes/optional-then-required.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/optional-then-required"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params.id,  string>>
+          return null
+        }
+      `,
+      "app/routes/required-then-optional.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/required-then-optional"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params.id, string>>
-            return null
-          }
-        `,
-      });
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params.id, string>>
+          return null
+        }
+      `,
     });
+    await $("pnpm typecheck");
+  });
 
-    test("splat", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/expect-type.ts": expectType,
-        "app/routes.ts": tsx`
-          import { type RouteConfig, route } from "@react-router/dev/routes";
+  test("params with extension", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export default [
-            route("splat/*", "routes/splat.tsx")
-          ] satisfies RouteConfig;
-        `,
-        "app/routes/splat.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/splat"
+        export default [
+          route(":lang.xml", "routes/param-with-ext.tsx"),
+          route(":user?.pdf", "routes/optional-param-with-ext.tsx"),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/param-with-ext.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/param-with-ext"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { "*": string }>>
-            return null
-          }
-        `,
-      });
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { lang: string }>>
+          return null
+        }
+      `,
+      "app/routes/optional-param-with-ext.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/optional-param-with-ext"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { user?: string }>>
+          return null
+        }
+      `,
     });
+    await $("pnpm typecheck");
+  });
 
-    test("with extension", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/expect-type.ts": expectType,
-        "app/routes.ts": tsx`
-          import { type RouteConfig, route } from "@react-router/dev/routes";
+  test("normalized param", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route, layout } from "@react-router/dev/routes";
 
-          export default [
-            route(":lang.xml", "routes/param-with-ext.tsx"),
-            route(":user?.pdf", "routes/optional-param-with-ext.tsx"),
-          ] satisfies RouteConfig;
-        `,
-        "app/routes/param-with-ext.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/param-with-ext"
-
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { lang: string }>>
-            return null
-          }
-        `,
-        "app/routes/optional-param-with-ext.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/optional-param-with-ext"
-
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { user?: string }>>
-            return null
-          }
-        `,
-      });
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
-    });
-
-    test("normalized params", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/expect-type.ts": expectType,
-        "app/routes.ts": tsx`
-          import { type RouteConfig, route, layout } from "@react-router/dev/routes";
-
-          export default [
-            route("parent/:p", "routes/parent.tsx", [
-              route("route/:r", "routes/route.tsx", [
-                route("child1/:c1a/:c1b", "routes/child1.tsx"),
-                route("child2/:c2a/:c2b", "routes/child2.tsx")
-              ]),
+        export default [
+          route("parent/:p", "routes/parent.tsx", [
+            route("route/:r", "routes/route.tsx", [
+              route("child1/:c1a/:c1b", "routes/child1.tsx"),
+              route("child2/:c2a/:c2b", "routes/child2.tsx")
             ]),
-            layout("routes/layout.tsx", [
-              route("in-layout1/:id", "routes/in-layout1.tsx"),
-              route("in-layout2/:id/:other", "routes/in-layout2.tsx")
-            ])
-          ] satisfies RouteConfig;
-        `,
-        "app/routes/parent.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/parent"
+          ]),
+          layout("routes/layout.tsx", [
+            route("in-layout1/:id", "routes/in-layout1.tsx"),
+            route("in-layout2/:id/:other", "routes/in-layout2.tsx")
+          ])
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/parent.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/parent"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params,
-              | { p: string, r?: undefined, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
-              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
-              | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
-              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
-            >>
-            return null
-          }
-        `,
-        "app/routes/route.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/route"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params,
+            | { p: string, r?: undefined, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+            | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+            | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
+            | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
+          >>
+          return null
+        }
+      `,
+      "app/routes/route.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/route"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params,
-              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
-              | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
-              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
-            >>
-            return null
-          }
-        `,
-        "app/routes/child1.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/child1"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params,
+            | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+            | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
+            | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
+          >>
+          return null
+        }
+      `,
+      "app/routes/child1.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/child1"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { p: string, r: string, c1a: string,  c1b: string }>>
-            return null
-          }
-        `,
-        "app/routes/child2.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/child2"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { p: string, r: string, c1a: string,  c1b: string }>>
+          return null
+        }
+      `,
+      "app/routes/child2.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/child2"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { p: string, r: string, c2a: string, c2b: string }>>
-            return null
-          }
-        `,
-        "app/routes/layout.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/layout"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { p: string, r: string, c2a: string, c2b: string }>>
+          return null
+        }
+      `,
+      "app/routes/layout.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/layout"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id: string, other?: undefined } | { id: string, other: string } >>
-            return null
-          }
-        `,
-        "app/routes/in-layout1.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/in-layout1"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string, other?: undefined } | { id: string, other: string } >>
+          return null
+        }
+      `,
+      "app/routes/in-layout1.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/in-layout1"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id: string }>>
-            return null
-          }
-        `,
-        "app/routes/in-layout2.tsx": tsx`
-          import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/in-layout2"
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string }>>
+          return null
+        }
+      `,
+      "app/routes/in-layout2.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/in-layout2"
 
-          export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id: string, other: string }>>
-            return null
-          }
-        `,
-      });
-
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string, other: string }>>
+          return null
+        }
+      `,
     });
+    await $("pnpm typecheck");
   });
 
-  test("clientLoader.hydrate = true", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("splat", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("splat/*", "routes/splat.tsx")
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/splat.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/splat"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { "*": string }>>
+          return null
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
+  test("clientLoader.hydrate = true", async ({ edit, $ }) => {
+    await edit({
       "app/routes/_index.tsx": tsx`
         import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/_index"
@@ -322,16 +281,11 @@ test.describe("typegen", () => {
         }
       `,
     });
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await $("pnpm typecheck");
   });
 
-  test("clientLoader data should not be serialized", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("clientLoader data should not be serialized", async ({ edit, $ }) => {
+    await edit({
       "app/routes/_index.tsx": tsx`
         import { useRouteLoaderData } from "react-router"
 
@@ -352,303 +306,16 @@ test.describe("typegen", () => {
         }
       `,
     });
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await $("pnpm typecheck");
   });
 
-  test.describe("server-first route component detection", async () => {
-    test.describe("ServerComponent export", async () => {
-      test("when RSC Framework Mode plugin is present", async () => {
-        const cwd = await await createProject({
-          "vite.config.ts": viteConfig({ rsc: true }),
-          "app/expect-type.ts": expectType,
-          "app/routes.ts": tsx`
-            import { type RouteConfig, route } from "@react-router/dev/routes";
-
-            export default [
-              route("server-component/:id", "routes/server-component.tsx")
-            ] satisfies RouteConfig;
-          `,
-          "app/routes/server-component.tsx": tsx`
-            import type { Expect, Equal } from "../expect-type"
-            import type { Route } from "./+types/server-component"
-
-            export function loader({ params }: Route.LoaderArgs) {
-              type Test = Expect<Equal<typeof params, { id: string} >>
-              return { server: "server" }
-            }
-
-            export function clientLoader() {
-              return { client: "client" }
-            }
-
-            export function action() {
-              return { server: "server" }
-            }
-
-            export function clientAction() {
-              return { client: "client" }
-            }
-
-            export function ServerComponent({ 
-              loaderData, 
-              actionData 
-            }: Route.ComponentProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string }>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ServerComponent</h1>
-                  <p>Loader data: {loaderData.server}</p>
-                  <p>Action data: {actionData?.server}</p>
-                </>
-              )
-            }
-
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ErrorBoundary</h1>
-                  <p>Loader data: {loaderData?.server}</p>
-                  <p>Action data: {actionData?.server}</p>
-                </>
-              )
-            }
-
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
-
-              return (
-                <>
-                  <h1>HydrateFallback</h1>
-                  <p>Loader data: {loaderData?.server}</p>
-                  <p>Action data: {actionData?.server}</p>
-                </>
-              )
-            }
-          `,
-        });
-        const proc = typecheck(cwd);
-        expect(proc.stdout.toString()).toBe("");
-        expect(proc.stderr.toString()).toBe("");
-        expect(proc.status).toBe(0);
-      });
-
-      test("when RSC Framework Mode plugin is not present", async () => {
-        const cwd = await await createProject({
-          "vite.config.ts": viteConfig({ rsc: false }),
-          "app/expect-type.ts": expectType,
-          "app/routes.ts": tsx`
-            import { type RouteConfig, route } from "@react-router/dev/routes";
-
-            export default [
-              route("server-component/:id", "routes/server-component.tsx")
-            ] satisfies RouteConfig;
-          `,
-          "app/routes/server-component.tsx": tsx`
-            import type { Expect, Equal } from "../expect-type"
-            import type { Route } from "./+types/server-component"
-
-            export function loader({ params }: Route.LoaderArgs) {
-              type Test = Expect<Equal<typeof params, { id: string} >>
-              return { server: "server" }
-            }
-
-            export function clientLoader() {
-              return { client: "client" }
-            }
-
-            export function action() {
-              return { server: "server" }
-            }
-
-            export function clientAction() {
-              return { client: "client" }
-            }
-
-            // This export is not used in standard Framework Mode. This is just
-            // to test that the typegen is unaffected by this export outside of
-            // RSC Framework Mode.
-            export function ServerComponent({ 
-              loaderData, 
-              actionData 
-            }: Route.ComponentProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string }>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ServerComponent (unused)</h1>
-                  <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ErrorBoundary</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>HydrateFallback</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-          `,
-        });
-        const proc = typecheck(cwd);
-        expect(proc.stdout.toString()).toBe("");
-        expect(proc.stderr.toString()).toBe("");
-        expect(proc.status).toBe(0);
-      });
-    });
-
-    test.describe("default export", async () => {
-      async function createClientFirstRouteProject({ rsc }: { rsc: boolean }) {
-        return await await createProject({
-          "vite.config.ts": viteConfig({ rsc }),
-          "app/expect-type.ts": expectType,
-          "app/routes.ts": tsx`
-            import { type RouteConfig, route } from "@react-router/dev/routes";
-
-            export default [
-              route("client-component/:id", "routes/client-component.tsx")
-            ] satisfies RouteConfig;
-          `,
-          "app/routes/client-component.tsx": tsx`
-            import type { Expect, Equal } from "../expect-type"
-            import type { Route } from "./+types/client-component"
-
-            export function loader({ params }: Route.LoaderArgs) {
-              type Test = Expect<Equal<typeof params, { id: string} >>
-              return { server: "server" }
-            }
-
-            export function clientLoader() {
-              return { client: "client" }
-            }
-
-            export function action() {
-              return { server: "server" }
-            }
-
-            export function clientAction() {
-              return { client: "client" }
-            }
-
-            export default function ClientComponent({ 
-              loaderData, 
-              actionData 
-            }: Route.ComponentProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string }>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>default (Component)</h1>
-                  <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ErrorBoundary</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>HydrateFallback</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-          `,
-        });
-      }
-
-      test("when RSC Framework Mode plugin is present", async () => {
-        const cwd = await createClientFirstRouteProject({ rsc: true });
-        const proc = typecheck(cwd);
-        expect(proc.stdout.toString()).toBe("");
-        expect(proc.stderr.toString()).toBe("");
-        expect(proc.status).toBe(0);
-      });
-
-      test("when RSC Framework Mode plugin is not present", async () => {
-        const cwd = await createClientFirstRouteProject({ rsc: false });
-        const proc = typecheck(cwd);
-        expect(proc.stdout.toString()).toBe("");
-        expect(proc.stderr.toString()).toBe("");
-        expect(proc.status).toBe(0);
-      });
-    });
-  });
-
-  test("custom app dir", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
+  test("custom app dir", async ({ cwd, edit, $ }) => {
+    await edit({
       "react-router.config.ts": tsx`
         export default {
           appDirectory: "src/myapp",
         }
       `,
-      "app/expect-type.ts": expectType,
       "app/routes/products.$id.tsx": tsx`
         import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/products.$id"
@@ -664,19 +331,13 @@ test.describe("typegen", () => {
         }
       `,
     });
-    mkdirSync(path.join(cwd, "src"));
-    renameSync(path.join(cwd, "app"), path.join(cwd, "src/myapp"));
-
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await fs.mkdir(Path.join(cwd, "src"));
+    await fs.rename(Path.join(cwd, "app"), Path.join(cwd, "src/myapp"));
+    await $("pnpm typecheck");
   });
 
-  test("matches", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("matches", async ({ edit, $ }) => {
+    await edit({
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
@@ -764,16 +425,11 @@ test.describe("typegen", () => {
         }
       `,
     });
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await $("pnpm typecheck");
   });
 
-  test("route files with absolute paths", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("route files with absolute paths", async ({ edit, $ }) => {
+    await edit({
       "app/routes.ts": tsx`
         import path from "node:path";
         import { type RouteConfig, route } from "@react-router/dev/routes";
@@ -797,17 +453,11 @@ test.describe("typegen", () => {
         }
       `,
     });
-
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await $("pnpm typecheck");
   });
 
-  test("href", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("href", async ({ edit, $ }) => {
+    await edit({
       "app/routes.ts": tsx`
         import path from "node:path";
         import { type RouteConfig, route } from "@react-router/dev/routes";
@@ -867,89 +517,11 @@ test.describe("typegen", () => {
         export default function Component() {}
       `,
     });
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+    await $("pnpm typecheck");
   });
 
-  test.describe("virtual:react-router/server-build", async () => {
-    test("static import matches 'createRequestHandler' argument type", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/routes.ts": tsx`
-          import { type RouteConfig } from "@react-router/dev/routes";
-          export default [] satisfies RouteConfig;
-        `,
-        "app/handler.ts": tsx`
-          import { createRequestHandler } from "react-router";
-          import * as serverBuild from "virtual:react-router/server-build";
-          export default createRequestHandler(serverBuild);
-        `,
-      });
-
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
-    });
-
-    test("works with tsconfig 'moduleDetection' set to 'force'", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/routes.ts": tsx`
-          import { type RouteConfig } from "@react-router/dev/routes";
-          export default [] satisfies RouteConfig;
-        `,
-        "app/handler.ts": tsx`
-          import { createRequestHandler } from "react-router";
-          import * as serverBuild from "virtual:react-router/server-build";
-          export default createRequestHandler(serverBuild);
-        `,
-      });
-
-      const tsconfig = JSON.parse(
-        await readFile(path.join(cwd, "tsconfig.json"), "utf-8"),
-      );
-      tsconfig.compilerOptions.moduleDetection = "force";
-      await writeFile(
-        path.join(cwd, "tsconfig.json"),
-        JSON.stringify(tsconfig),
-        "utf-8",
-      );
-
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
-    });
-
-    test("dynamic import matches 'createRequestHandler' function argument type", async () => {
-      const cwd = await createProject({
-        "vite.config.ts": viteConfig(),
-        "app/routes.ts": tsx`
-          import { type RouteConfig } from "@react-router/dev/routes";
-          export default [] satisfies RouteConfig;
-        `,
-        "app/handler.ts": tsx`
-          import { createRequestHandler } from "react-router";
-          export default createRequestHandler(
-            () => import("virtual:react-router/server-build")
-          );
-        `,
-      });
-
-      const proc = typecheck(cwd);
-      expect(proc.stdout.toString()).toBe("");
-      expect(proc.stderr.toString()).toBe("");
-      expect(proc.status).toBe(0);
-    });
-  });
-
-  test("reuse route file at multiple paths", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig(),
-      "app/expect-type.ts": expectType,
+  test("reuse route file at multiple paths", async ({ edit, $ }) => {
+    await edit({
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
         export default [
@@ -1021,10 +593,344 @@ test.describe("typegen", () => {
         }
       `,
     });
+    await $("pnpm typecheck");
+  });
 
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+  test.describe("virtual:react-router/server-build", async () => {
+    test("static import matches 'createRequestHandler' argument type", async ({
+      edit,
+      $,
+    }) => {
+      await edit({
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          import * as serverBuild from "virtual:react-router/server-build";
+          export default createRequestHandler(serverBuild);
+        `,
+      });
+      await $("pnpm typecheck");
+    });
+
+    test("works with tsconfig 'moduleDetection' set to 'force'", async ({
+      edit,
+      $,
+    }) => {
+      await edit({
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          import * as serverBuild from "virtual:react-router/server-build";
+          export default createRequestHandler(serverBuild);
+        `,
+        "tsconfig.json": (contents) => {
+          const tsconfig = JSON.parse(contents);
+          tsconfig.compilerOptions.moduleDetection = "force";
+          return JSON.stringify(tsconfig, null, 2);
+        },
+      });
+      await $("pnpm typecheck");
+    });
+
+    test("dynamic import matches 'createRequestHandler' function argument type", async ({
+      edit,
+      $,
+    }) => {
+      await edit({
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          export default createRequestHandler(
+            () => import("virtual:react-router/server-build")
+          );
+        `,
+      });
+      await $("pnpm typecheck");
+    });
+  });
+
+  test.describe("server-first route component detection", () => {
+    test.describe("ServerComponent export", () => {
+      test("when RSC Framework Mode plugin is present", async ({ edit, $ }) => {
+        await edit({
+          "vite.config.ts": viteConfig({ rsc: true }),
+          "app/routes.ts": tsx`
+            import { type RouteConfig, route } from "@react-router/dev/routes";
+
+            export default [
+              route("server-component/:id", "routes/server-component.tsx")
+            ] satisfies RouteConfig;
+          `,
+          "app/routes/server-component.tsx": tsx`
+            import type { Expect, Equal } from "../expect-type"
+            import type { Route } from "./+types/server-component"
+
+            export function loader({ params }: Route.LoaderArgs) {
+              type Test = Expect<Equal<typeof params, { id: string} >>
+              return { server: "server" }
+            }
+
+            export function clientLoader() {
+              return { client: "client" }
+            }
+
+            export function action() {
+              return { server: "server" }
+            }
+
+            export function clientAction() {
+              return { client: "client" }
+            }
+
+            export function ServerComponent({ 
+              loaderData, 
+              actionData 
+            }: Route.ComponentProps) {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string }>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
+
+              return (
+                <>
+                  <h1>ServerComponent</h1>
+                  <p>Loader data: {loaderData.server}</p>
+                  <p>Action data: {actionData?.server}</p>
+                </>
+              )
+            }
+
+            export function ErrorBoundary({ 
+              loaderData, 
+              actionData 
+            }: Route.ErrorBoundaryProps) {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
+
+              return (
+                <>
+                  <h1>ErrorBoundary</h1>
+                  <p>Loader data: {loaderData?.server}</p>
+                  <p>Action data: {actionData?.server}</p>
+                </>
+              )
+            }
+
+            export function HydrateFallback({ 
+              loaderData, 
+              actionData 
+            }: Route.HydrateFallbackProps) {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
+
+              return (
+                <>
+                  <h1>HydrateFallback</h1>
+                  <p>Loader data: {loaderData?.server}</p>
+                  <p>Action data: {actionData?.server}</p>
+                </>
+              )
+            }
+          `,
+        });
+        await $("pnpm typecheck");
+      });
+
+      test("when RSC Framework Mode plugin is not present", async ({
+        edit,
+        $,
+      }) => {
+        await edit({
+          "vite.config.ts": viteConfig({ rsc: false }),
+          "app/routes.ts": tsx`
+            import { type RouteConfig, route } from "@react-router/dev/routes";
+
+            export default [
+              route("server-component/:id", "routes/server-component.tsx")
+            ] satisfies RouteConfig;
+          `,
+          "app/routes/server-component.tsx": tsx`
+            import type { Expect, Equal } from "../expect-type"
+            import type { Route } from "./+types/server-component"
+
+            export function loader({ params }: Route.LoaderArgs) {
+              type Test = Expect<Equal<typeof params, { id: string} >>
+              return { server: "server" }
+            }
+
+            export function clientLoader() {
+              return { client: "client" }
+            }
+
+            export function action() {
+              return { server: "server" }
+            }
+
+            export function clientAction() {
+              return { client: "client" }
+            }
+
+            // This export is not used in standard Framework Mode. This is just
+            // to test that the typegen is unaffected by this export outside of
+            // RSC Framework Mode.
+            export function ServerComponent({ 
+              loaderData, 
+              actionData 
+            }: Route.ComponentProps) {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string }>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
+
+              return (
+                <>
+                  <h1>ServerComponent (unused)</h1>
+                  <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>
+                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
+                </>
+              )
+            }
+
+            export function ErrorBoundary({ 
+              loaderData, 
+              actionData 
+            }: Route.ErrorBoundaryProps) {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
+
+              return (
+                <>
+                  <h1>ErrorBoundary</h1>
+                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
+                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
+                </>
+              )
+            }
+
+            export function HydrateFallback({ 
+              loaderData, 
+              actionData 
+            }: Route.HydrateFallbackProps) {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
+
+              return (
+                <>
+                  <h1>HydrateFallback</h1>
+                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
+                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
+                </>
+              )
+            }
+          `,
+        });
+        await $("pnpm typecheck");
+      });
+    });
+
+    test.describe("default export", () => {
+      const clientFirstRouteFiles = {
+        "app/routes.ts": tsx`
+          import { type RouteConfig, route } from "@react-router/dev/routes";
+
+          export default [
+            route("client-component/:id", "routes/client-component.tsx")
+          ] satisfies RouteConfig;
+        `,
+        "app/routes/client-component.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/client-component"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string} >>
+            return { server: "server" }
+          }
+
+          export function clientLoader() {
+            return { client: "client" }
+          }
+
+          export function action() {
+            return { server: "server" }
+          }
+
+          export function clientAction() {
+            return { client: "client" }
+          }
+
+          export default function ClientComponent({ 
+            loaderData, 
+            actionData 
+          }: Route.ComponentProps) {
+            type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string }>>
+            type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
+
+            return (
+              <>
+                <h1>default (Component)</h1>
+                <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>
+                {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
+              </>
+            )
+          }
+
+          export function ErrorBoundary({ 
+            loaderData, 
+            actionData 
+          }: Route.ErrorBoundaryProps) {
+            type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
+            type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
+
+            return (
+              <>
+                <h1>ErrorBoundary</h1>
+                {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
+                {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
+              </>
+            )
+          }
+
+          export function HydrateFallback({ 
+            loaderData, 
+            actionData 
+          }: Route.HydrateFallbackProps) {
+            type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
+            type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
+
+            return (
+              <>
+                <h1>HydrateFallback</h1>
+                {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
+                {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
+              </>
+            )
+          }
+        `,
+      };
+
+      test("when RSC Framework Mode plugin is present", async ({ edit, $ }) => {
+        await edit({
+          "vite.config.ts": viteConfig({ rsc: true }),
+          ...clientFirstRouteFiles,
+        });
+        await $("pnpm typecheck");
+      });
+
+      test("when RSC Framework Mode plugin is not present", async ({
+        edit,
+        $,
+      }) => {
+        await edit({
+          "vite.config.ts": viteConfig({ rsc: false }),
+          ...clientFirstRouteFiles,
+        });
+        await $("pnpm typecheck");
+      });
+    });
   });
 });

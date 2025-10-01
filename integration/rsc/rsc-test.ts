@@ -436,6 +436,17 @@ implementations.forEach((implementation) => {
                       ]
                     },
                     {
+                      id: "throw-external-redirect-server-action",
+                      path: "throw-external-redirect-server-action",
+                      children: [
+                        {
+                          id: "throw-external-redirect-server-action.home",
+                          index: true,
+                          lazy: () => import("./routes/throw-external-redirect-server-action/home"),
+                        }
+                      ]
+                    },
+                    {
                       id: "side-effect-redirect-server-action",
                       path: "side-effect-redirect-server-action",
                       children: [
@@ -443,6 +454,17 @@ implementations.forEach((implementation) => {
                           id: "side-effect-redirect-server-action.home",
                           index: true,
                           lazy: () => import("./routes/side-effect-redirect-server-action/home"),
+                        }
+                      ]
+                    },
+                    {
+                      id: "side-effect-external-redirect-server-action",
+                      path: "side-effect-external-redirect-server-action",
+                      children: [
+                        {
+                          id: "side-effect-external-redirect-server-action.home",
+                          index: true,
+                          lazy: () => import("./routes/side-effect-external-redirect-server-action/home"),
                         }
                       ]
                     },
@@ -508,6 +530,11 @@ implementations.forEach((implementation) => {
                       path: "ssr-error",
                       lazy: () => import("./routes/ssr-error/ssr-error"),
                     },
+                    {
+                      id: "action-transition-state",
+                      path: "action-transition-state",
+                      lazy: () => import("./routes/action-transition-state/home"),
+                    }
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -981,6 +1008,82 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+            "src/routes/throw-external-redirect-server-action/home.actions.ts": js`
+              "use server";
+              import { redirect } from "react-router";
+
+              export async function redirectAction(formData: FormData) {
+                // Throw a redirect to an external URL
+                throw redirect("https://example.com/");
+              }
+            `,
+            "src/routes/throw-external-redirect-server-action/home.client.tsx": js`
+              "use client";
+
+              import { useState } from "react";
+
+              export function Counter() {
+                const [count, setCount] = useState(0);
+                return <button type="button" onClick={() => setCount(c => c + 1)} data-count>Count: {count}</button>;
+              }
+            `,
+            "src/routes/throw-external-redirect-server-action/home.tsx": js`
+              import { redirectAction } from "./home.actions";
+              import { Counter } from "./home.client";
+
+              export default function HomeRoute(props) {
+                return (
+                  <div>
+                    <form action={redirectAction}>
+                      <button type="submit" data-submit>
+                        Redirect via Server Function
+                      </button>
+                    </form>
+                    <Counter />
+                  </div>
+                );
+              }
+            `,
+            "src/routes/side-effect-external-redirect-server-action/home.actions.ts": js`
+              "use server";
+              import { redirect } from "react-router";
+
+              export async function redirectAction() {
+                // Perform a side-effect redirect to an external URL
+                redirect("https://example.com/", { headers: { "x-test": "test" } });
+                return "redirected";
+              }
+            `,
+            "src/routes/side-effect-external-redirect-server-action/home.client.tsx": js`
+              "use client";
+              import { useState } from "react";
+
+              export function Counter() {
+                const [count, setCount] = useState(0);
+                return <button type="button" onClick={() => setCount(c => c + 1)} data-count>Count: {count}</button>;
+              }
+            `,
+            "src/routes/side-effect-external-redirect-server-action/home.tsx": js`
+              "use client";
+              import {useActionState} from "react";
+              import { redirectAction } from "./home.actions";
+              import { Counter } from "./home.client";
+
+              export default function HomeRoute(props) {
+                const [state, action] = useActionState(redirectAction, null);
+                return (
+                  <div>
+                    <form action={action}>
+                      <button type="submit" data-submit>
+                        Redirect via Server Function
+                      </button>
+                    </form>
+                    {state && <div data-testid="state">{state}</div>}
+                    <Counter />
+                  </div>
+                );
+              }
+            `,
 
             "src/routes/server-function-reference/home.actions.ts": js`
               "use server";
@@ -1312,6 +1415,49 @@ implementations.forEach((implementation) => {
 
               export default function SSRError() {
                 throw new Error("Error from SSR component");
+              }
+            `,
+
+            "src/routes/action-transition-state/home.tsx": js`
+              import { Suspense } from "react";
+              import { IncrementButton } from "./client";
+              let count = 0;
+
+              export default function ActionTransitionState() {
+                return (
+                  <div>
+                    <form
+                      action={async () => {
+                        "use server";
+                        await new Promise((r) => setTimeout(r, 1000));
+                        count++;
+                      }}
+                    >
+                      <IncrementButton count={count} />
+                    </form>
+                    <Suspense>
+                      <AsyncComponent count={count} />
+                    </Suspense>
+                  </div>
+                );
+              }
+
+              async function AsyncComponent({ count }) {
+                await new Promise((r) => setTimeout(r, 1000));
+                return <div data-testid="async-count">AsyncCount: {count}</div>;
+              }
+            `,
+            "src/routes/action-transition-state/client.tsx": js`
+              "use client";
+              import { useFormStatus } from "react-dom";
+
+              export function IncrementButton({ count }: { count: number }) {
+                const { pending } = useFormStatus();
+                return (
+                  <button data-testid="increment-button" type="submit" disabled={pending}>
+                    IncrementCount: {pending ? count + 1 : count}
+                  </button>
+                );
               }
             `,
           },
@@ -1688,6 +1834,33 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
+        test("Supports React Server Functions thrown external redirects", async ({
+          page,
+        }) => {
+          // Test is expected to fail currently — skip running it
+          // test.skip(true, "Known failing test for external redirect behavior");
+
+          await page.goto(
+            `http://localhost:${port}/throw-external-redirect-server-action/`,
+          );
+
+          // Verify initial server render
+          await page.waitForSelector("[data-count]");
+          expect(await page.locator("[data-count]").textContent()).toBe(
+            "Count: 0",
+          );
+          await page.click("[data-count]");
+          expect(await page.locator("[data-count]").textContent()).toBe(
+            "Count: 1",
+          );
+
+          // Submit the form to trigger server function redirect to external URL
+          await page.click("[data-submit]");
+
+          // We expect the browser to navigate to the external site (example.com)
+          await expect(page).toHaveURL(`https://example.com/`);
+        });
+
         test("Supports React Server Functions side-effect redirects", async ({
           page,
         }) => {
@@ -1739,6 +1912,46 @@ implementations.forEach((implementation) => {
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
+        });
+
+        test("Supports React Server Functions side-effect external redirects", async ({
+          page,
+        }) => {
+          // Test is expected to fail currently — skip running it
+          test.skip(implementation.name === "parcel", "Not working in parcel?");
+
+          await page.goto(
+            `http://localhost:${port}/side-effect-external-redirect-server-action`,
+          );
+
+          // Verify initial server render
+          await page.waitForSelector("[data-count]");
+          expect(await page.locator("[data-count]").textContent()).toBe(
+            "Count: 0",
+          );
+          await page.click("[data-count]");
+          expect(await page.locator("[data-count]").textContent()).toBe(
+            "Count: 1",
+          );
+
+          const responseHeadersPromise = new Promise<Record<string, string>>(
+            (resolve) => {
+              page.addListener("response", (response) => {
+                if (response.request().method() === "POST") {
+                  resolve(response.headers());
+                }
+              });
+            },
+          );
+
+          // Submit the form to trigger server function redirect to external URL
+          await page.click("[data-submit]");
+
+          // We expect the browser to navigate to the external site (example.com)
+          await expect(page).toHaveURL(`https://example.com/`);
+
+          // Optionally assert that the server sent the header
+          expect((await responseHeadersPromise)["x-test"]).toBe("test");
         });
 
         test("Supports React Server Function References", async ({ page }) => {
@@ -1795,6 +2008,44 @@ implementations.forEach((implementation) => {
 
           const actionResponse = await actionResponsePromise;
           expect(await actionResponse.headerValue("x-test")).toBe("test");
+        });
+
+        test("Supports transition state throughout the revalidation lifecycle", async ({
+          page,
+        }) => {
+          test.skip(
+            implementation.name === "parcel",
+            "Uses inline server actions which parcel doesn't support yet",
+          );
+
+          await page.goto(`http://localhost:${port}/action-transition-state`, {
+            waitUntil: "networkidle",
+          });
+
+          const count0Button = page.getByText("IncrementCount: 0");
+          await expect(count0Button).toBeEnabled();
+          await count0Button.click();
+
+          const count1Button = page.getByText("IncrementCount: 1");
+          await expect(count1Button).toBeDisabled();
+
+          expect(await page.getByTestId("async-count").textContent()).toBe(
+            "AsyncCount: 0",
+          );
+
+          await page.waitForFunction(
+            () =>
+              !(
+                document.querySelector(
+                  '[data-testid="increment-button"]',
+                ) as HTMLButtonElement
+              )?.disabled,
+          );
+          await expect(count1Button).toBeEnabled();
+
+          await expect(page.getByTestId("async-count")).toHaveText(
+            "AsyncCount: 1",
+          );
         });
       });
 

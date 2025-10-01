@@ -1,5 +1,40 @@
 # `react-router`
 
+## 7.9.3
+
+### Patch Changes
+
+- Do not try to use `turbo-stream` to decode CDN errors that never reached the server ([#14385](https://github.com/remix-run/react-router/pull/14385))
+  - We used to do this but lost this check with the adoption of single fetch
+
+- Fix Data Mode regression causing a 404 during initial load in when `middleware` exists without any `loader` functions ([#14393](https://github.com/remix-run/react-router/pull/14393))
+
+## 7.9.2
+
+### Patch Changes
+
+- - Update client-side router to run client `middleware` on initial load even if no loaders exist ([#14348](https://github.com/remix-run/react-router/pull/14348))
+  - Update `createRoutesStub` to run route middleware
+    - You will need to set the `<RoutesStub future={{ v8_middleware: true }} />` flag to enable the proper `context` type
+
+- Update Lazy Route Discovery manifest requests to use a singular comma-separated `paths` query param instead of repeated `p` query params ([#14321](https://github.com/remix-run/react-router/pull/14321))
+  - This is because Cloudflare has a hard limit of 100 URL search param key/value pairs when used as a key for caching purposes
+  - If more that 100 paths were included, the cache key would be incomplete and could produce false-positive cache hits
+
+- \[UNSTABLE] Add `fetcher.unstable_reset()` API ([#14206](https://github.com/remix-run/react-router/pull/14206))
+
+- Made useOutlet element reference have stable identity in-between route chages ([#13382](https://github.com/remix-run/react-router/pull/13382))
+
+- feat: enable full transition support for the rsc router ([#14362](https://github.com/remix-run/react-router/pull/14362))
+
+- In RSC Data Mode, handle SSR'd client errors and re-try in the browser ([#14342](https://github.com/remix-run/react-router/pull/14342))
+
+- Support `middleware` prop on `<Route>` for usage with a data router via `createRoutesFromElements` ([#14357](https://github.com/remix-run/react-router/pull/14357))
+
+- Handle encoded question mark and hash characters in ancestor splat routes ([#14249](https://github.com/remix-run/react-router/pull/14249))
+
+- Fail gracefully on manifest version mismatch logic if `sessionStorage` access is blocked ([#14335](https://github.com/remix-run/react-router/pull/14335))
+
 ## 7.9.1
 
 ### Patch Changes

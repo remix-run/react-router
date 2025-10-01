@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { RouterProvider } from "../components";
+import { UNSTABLE_TransitionEnabledRouterProvider as RouterProvider } from "../components";
 import {
   RSCRouterContext,
   type DataRouteMatch,
@@ -118,7 +118,7 @@ export function createCallServer({
       (globalVar.__routerActionID ??= 0) + 1);
 
     const temporaryReferences = createTemporaryReferenceSet();
-    const response = await fetchImplementation(
+    const payloadPromise = fetchImplementation(
       new Request(location.href, {
         body: await encodeReply(args, { temporaryReferences }),
         method: "POST",
@@ -127,71 +127,64 @@ export function createCallServer({
           "rsc-action-id": id,
         },
       }),
-    );
-    if (!response.body) {
-      throw new Error("No response body");
-    }
-    const payload = (await createFromReadableStream(response.body, {
-      temporaryReferences,
-    })) as RSCPayload;
-
-    if (payload.type === "redirect") {
-      if (payload.reload) {
-        window.location.href = payload.location;
-        return;
+    ).then((response) => {
+      if (!response.body) {
+        throw new Error("No response body");
       }
+      return createFromReadableStream(response.body, {
+        temporaryReferences,
+      }) as Promise<RSCPayload>;
+    });
 
-      globalVar.__reactRouterDataRouter.navigate(payload.location, {
-        replace: payload.replace,
-      });
+    (globalVar.__reactRouterDataRouter as any).__setPendingRerender(
+      Promise.resolve(payloadPromise)
+        .then(async (payload) => {
+          if (payload.type === "redirect") {
+            if (payload.reload || isExternalLocation(payload.location)) {
+              window.location.href = payload.location;
+              return () => {};
+            }
 
-      return payload.actionResult;
-    }
+            return () => {
+              globalVar.__reactRouterDataRouter.navigate(payload.location, {
+                replace: payload.replace,
+              });
+            };
+          }
 
-    if (payload.type !== "action") {
-      throw new Error("Unexpected payload type");
-    }
+          if (payload.type !== "action") {
+            throw new Error("Unexpected payload type");
+          }
 
-    if (payload.rerender) {
-      React.startTransition(
-        // @ts-expect-error - We have old react types that don't know this can be async
-        async () => {
           const rerender = await payload.rerender;
-          if (!rerender) return;
-
           if (
+            rerender &&
             landedActionId < actionId &&
             globalVar.__routerActionID <= actionId
           ) {
-            landedActionId = actionId;
-
             if (rerender.type === "redirect") {
-              if (rerender.reload) {
+              if (rerender.reload || isExternalLocation(rerender.location)) {
                 window.location.href = rerender.location;
                 return;
               }
-              globalVar.__reactRouterDataRouter.navigate(rerender.location, {
-                replace: rerender.replace,
-              });
-              return;
+              return () => {
+                globalVar.__reactRouterDataRouter.navigate(rerender.location, {
+                  replace: rerender.replace,
+                });
+              };
             }
 
-            let lastMatch: RSCRouteManifest | undefined;
-            for (const match of rerender.matches) {
-              globalVar.__reactRouterDataRouter.patchRoutes(
-                lastMatch?.id ?? null,
-                [createRouteFromServerManifest(match)],
-                true,
-              );
-              lastMatch = match;
-            }
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
-              {},
-            );
+            return () => {
+              let lastMatch: RSCRouteManifest | undefined;
+              for (const match of rerender.matches) {
+                globalVar.__reactRouterDataRouter.patchRoutes(
+                  lastMatch?.id ?? null,
+                  [createRouteFromServerManifest(match)],
+                  true,
+                );
+                lastMatch = match;
+              }
 
-            React.startTransition(() => {
               (
                 window as WindowWithRouterGlobals
               ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
@@ -210,13 +203,21 @@ export function createCallServer({
                     : null,
                 },
               );
-            });
+            };
           }
-        },
-      );
-    }
 
-    return payload.actionResult;
+          return () => {};
+        })
+        .catch(() => {}),
+    );
+
+    return payloadPromise.then((payload) => {
+      if (payload.type !== "action" && payload.type !== "redirect") {
+        throw new Error("Unexpected payload type");
+      }
+
+      return payload.actionResult;
+    });
   };
 }
 
@@ -529,10 +530,14 @@ function getFetchAndDecodeViaRSC(
       new Request(url, await createRequestInit(request)),
     );
 
-    // If this 404'd without hitting the running server (most likely in a
-    // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
-    if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
-      throw new ErrorResponseImpl(404, "Not Found", true);
+    // If this error'd without hitting the running server, then bubble a normal
+    // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
+    //
+    // This could be triggered by a few scenarios:
+    // - `.data` request 404 on a pre-rendered app using a CDN
+    // - 429 error returned from a CDN on a SSR app
+    if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
+      throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
     }
 
     invariant(res.body, "No response body to decode");
@@ -1041,4 +1046,9 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
     window.clearTimeout(timeoutId);
     timeoutId = window.setTimeout(() => callback(...args), wait);
   };
+}
+
+function isExternalLocation(location: string) {
+  const newLocation = new URL(location, window.location.href);
+  return newLocation.origin !== window.location.origin;
 }
