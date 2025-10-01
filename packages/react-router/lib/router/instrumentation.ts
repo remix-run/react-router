@@ -220,7 +220,7 @@ function getInstrumentationsByType<
 
 export function getInstrumentationUpdates(
   unstable_instrumentRoute: unstable_InstrumentRouteFunction,
-  route: AgnosticDataRouteObject,
+  route: Readonly<AgnosticDataRouteObject>,
 ) {
   let instrumentations: RouteInstrumentations[] = [];
   unstable_instrumentRoute({
@@ -233,6 +233,7 @@ export function getInstrumentationUpdates(
   });
 
   let updates: {
+    middleware?: AgnosticDataRouteObject["middleware"];
     loader?: AgnosticDataRouteObject["loader"];
     action?: AgnosticDataRouteObject["action"];
     lazy?: AgnosticDataRouteObject["lazy"];
@@ -265,7 +266,7 @@ export function getInstrumentationUpdates(
 
     // Instrument middleware functions
     if (route.middleware && route.middleware.length > 0) {
-      route.middleware = route.middleware.map((middleware) => {
+      updates.middleware = route.middleware.map((middleware) => {
         // @ts-expect-error
         let original = middleware[UninstrumentedSymbol] ?? middleware;
         let instrumented = getInstrumentedImplementation(
