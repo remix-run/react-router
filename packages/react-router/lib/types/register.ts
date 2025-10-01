@@ -1,3 +1,5 @@
+import type { RouteModule } from "./route-module";
+
 /**
  * Apps can use this interface to "register" app-wide types for React Router via interface declaration merging and module augmentation.
  * React Router should handle this for you via type generation.
@@ -7,6 +9,7 @@
 export interface Register {
   // pages
   // routeFiles
+  // routeModules
 }
 
 // pages
@@ -25,3 +28,10 @@ export type RouteFiles = Register extends {
 }
   ? Registered
   : AnyRouteFiles;
+
+type AnyRouteModules = Record<string, RouteModule>;
+export type RouteModules = Register extends {
+  routeModules: infer Registered extends AnyRouteModules;
+}
+  ? Registered
+  : AnyRouteModules;

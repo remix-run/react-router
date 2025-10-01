@@ -50,8 +50,13 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types/route-data";
+import type {
+  GetActionData,
+  GetLoaderData,
+  SerializeFrom,
+} from "./types/route-data";
 import type { unstable_ClientOnErrorFunction } from "./components";
+import type { RouteModules } from "./types/register";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -1837,4 +1842,20 @@ function warningOnce(key: string, cond: boolean, message: string) {
     alreadyWarned[key] = true;
     warning(false, message);
   }
+}
+
+type UseRoute<T extends keyof RouteModules> = {
+  loaderData: GetLoaderData<RouteModules[T]>;
+  actionData: GetActionData<RouteModules[T]>;
+};
+export function useRoute<T extends keyof RouteModules>(
+  routeId: T,
+): UseRoute<T> | undefined {
+  const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
+  const route = state.matches.find(({ route }) => route.id === routeId);
+  if (route === undefined) return undefined;
+  return {
+    loaderData: state.loaderData[routeId],
+    actionData: state.actionData?.[routeId],
+  };
 }
