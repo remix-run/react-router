@@ -212,36 +212,38 @@ test("allows users to instrument the client side router via HydratedRouter", asy
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_instrumentRouter={(router) => {
-                  router.instrument({
-                    async navigate(impl, info) {
-                      console.log("start navigate", JSON.stringify(info));
-                      await impl();
-                      console.log("end navigate", JSON.stringify(info));
-                    },
-                    async fetch(impl, info) {
-                      console.log("start fetch", JSON.stringify(info));
-                      await impl();
-                      console.log("end fetch", JSON.stringify(info));
-                    }
-                  })
-                }}
-                unstable_instrumentRoute={(route) => {
-                  route.instrument({
-                    async loader(impl, info) {
-                      let path = new URL(info.request.url).pathname;
-                      console.log("start loader", route.id, path);
-                      await impl();
-                      console.log("end loader", route.id, path);
-                    },
-                    async action(impl, info) {
-                      let path = new URL(info.request.url).pathname;
-                      console.log("start action", route.id, path);
-                      await impl();
-                      console.log("end action", route.id, path);
-                    }
-                  })
-                }}
+                unstable_instrumentations={[{
+                  router(router) {
+                    router.instrument({
+                      async navigate(impl, info) {
+                        console.log("start navigate", JSON.stringify(info));
+                        await impl();
+                        console.log("end navigate", JSON.stringify(info));
+                      },
+                      async fetch(impl, info) {
+                        console.log("start fetch", JSON.stringify(info));
+                        await impl();
+                        console.log("end fetch", JSON.stringify(info));
+                      }
+                    })
+                  },
+                  route(route) {
+                    route.instrument({
+                      async loader(impl, info) {
+                        let path = new URL(info.request.url).pathname;
+                        console.log("start loader", route.id, path);
+                        await impl();
+                        console.log("end loader", route.id, path);
+                      },
+                      async action(impl, info) {
+                        let path = new URL(info.request.url).pathname;
+                        console.log("start action", route.id, path);
+                        await impl();
+                        console.log("end action", route.id, path);
+                      }
+                    })
+                  }
+                }]}
               />
             </StrictMode>
           );
