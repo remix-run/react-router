@@ -1287,6 +1287,7 @@ enum DataRouterStateHook {
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
   UseRouteId = "useRouteId",
+  UseRoute = "useRoute",
 }
 
 function getDataRouterConsoleError(
@@ -1844,18 +1845,28 @@ function warningOnce(key: string, cond: boolean, message: string) {
   }
 }
 
-type UseRoute<T extends keyof RouteModules> = {
-  loaderData: GetLoaderData<RouteModules[T]>;
-  actionData: GetActionData<RouteModules[T]>;
-};
-export function useRoute<T extends keyof RouteModules>(
-  routeId: T,
-): UseRoute<T> | undefined {
+type UseRoute<RouteId extends keyof RouteModules> =
+  | {
+      loaderData: GetLoaderData<RouteModules[RouteId]>;
+      actionData: GetActionData<RouteModules[RouteId]>;
+    }
+  | (RouteId extends "root" ? never : undefined);
+
+export function useRoute<RouteId extends keyof RouteModules>(
+  routeId?: RouteId,
+): UseRoute<RouteId> {
   const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
-  const route = state.matches.find(({ route }) => route.id === routeId);
-  if (route === undefined) return undefined;
+
+  const currentRouteId: keyof RouteModules = useCurrentRouteId(
+    DataRouterStateHook.UseRoute,
+  );
+  const id: keyof RouteModules = routeId ?? currentRouteId;
+
+  const route = state.matches.find(({ route }) => route.id === id);
+
+  if (route === undefined) return undefined as UseRoute<RouteId>;
   return {
-    loaderData: state.loaderData[routeId],
-    actionData: state.actionData?.[routeId],
+    loaderData: state.loaderData[id],
+    actionData: state.actionData?.[id],
   };
 }
