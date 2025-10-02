@@ -1321,8 +1321,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
           optimizeDeps: {
             entries: getOptimizeDepsEntries({
-              entryClientFilePath: ctx.entryClientFilePath,
+              entryFilePath: ctx.entryClientFilePath,
               reactRouterConfig: ctx.reactRouterConfig,
+              isClientEnvironment: true,
             }),
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
@@ -1437,8 +1438,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ? isSsrBundleEnvironmentName(name)
             : name === "ssr")
         ) {
-          const vite = getVite();
-
           return {
             resolve: {
               external:
@@ -1453,16 +1452,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             optimizeDeps:
               options.optimizeDeps?.noDiscovery === false
                 ? {
-                    entries: [
-                      vite.normalizePath(ctx.entryServerFilePath),
-                      ...Object.values(ctx.reactRouterConfig.routes).map(
-                        (route) =>
-                          resolveRelativeRouteFilePath(
-                            route,
-                            ctx.reactRouterConfig,
-                          ),
-                      ),
-                    ],
+                    entries: getOptimizeDepsEntries({
+                      entryFilePath: ctx.entryServerFilePath,
+                      reactRouterConfig: ctx.reactRouterConfig,
+                      isClientEnvironment: false,
+                    }),
                     include: [
                       "react",
                       "react/jsx-dev-runtime",

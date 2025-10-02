@@ -4,13 +4,15 @@ import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path
 import { getVite } from "./vite";
 
 export function getOptimizeDepsEntries({
-  entryClientFilePath,
+  entryFilePath,
   reactRouterConfig,
+  isClientEnvironment,
 }: {
-  entryClientFilePath: string;
+  entryFilePath: string;
   reactRouterConfig: ResolvedReactRouterConfig;
+  isClientEnvironment: boolean;
 }) {
-  if (!reactRouterConfig.future.unstable_optimizeDeps) {
+  if (isClientEnvironment && !reactRouterConfig.future.unstable_optimizeDeps) {
     return [];
   }
 
@@ -18,7 +20,7 @@ export function getOptimizeDepsEntries({
   const viteMajorVersion = parseInt(vite.version.split(".")[0], 10);
 
   return [
-    vite.normalizePath(entryClientFilePath),
+    vite.normalizePath(entryFilePath),
     ...Object.values(reactRouterConfig.routes).map((route) =>
       resolveRelativeRouteFilePath(route, reactRouterConfig),
     ),
