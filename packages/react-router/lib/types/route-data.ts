@@ -96,7 +96,7 @@ export type ClientDataFunctionArgs<Params> = {
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  pattern: string;
+  unstable_pattern: string;
   /**
    * When `future.v8_middleware` is not enabled, this is undefined.
    *
@@ -130,7 +130,7 @@ export type ServerDataFunctionArgs<Params> = {
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  pattern: string;
+  unstable_pattern: string;
   /**
    * Without `future.v8_middleware` enabled, this is the context passed in
    * to your server adapter's `getLoadContext` function. It's a way to bridge the

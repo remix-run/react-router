@@ -67,7 +67,7 @@ type RouteHandlerInstrumentationInfo = Readonly<{
     headers: Pick<Headers, "get">;
   };
   params: LoaderFunctionArgs["params"];
-  pattern: string;
+  unstable_pattern: string;
   // TODO: Fix for non-middleware
   context: Pick<RouterContextProvider, "get">;
 }>;
@@ -196,7 +196,7 @@ async function recurseRight(
 function getInstrumentationInfo(
   args: LoaderFunctionArgs,
 ): RouteHandlerInstrumentationInfo {
-  let { request, context, params, pattern } = args;
+  let { request, context, params, unstable_pattern } = args;
   return {
     // pseudo "Request" with the info they may want to read from
     request: {
@@ -208,7 +208,7 @@ function getInstrumentationInfo(
       },
     },
     params: { ...params },
-    pattern,
+    unstable_pattern,
     context: {
       get: (...args: Parameters<RouterContextProvider["get"]>) =>
         context.get(...args),

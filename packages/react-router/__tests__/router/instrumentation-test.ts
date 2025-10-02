@@ -1132,7 +1132,7 @@ describe("instrumentation", () => {
       expect(args.request.headers.get).toBeDefined();
       expect(args.request.headers.set).not.toBeDefined();
       expect(args.params).toEqual({ slug: "a", extra: "extra" });
-      expect(args.pattern).toBe("/:slug");
+      expect(args.unstable_pattern).toBe("/:slug");
       expect(args.context.get).toBeDefined();
       expect(args.context.set).not.toBeDefined();
       expect(t.router.state.matches[0].params).toEqual({ slug: "a" });
@@ -1663,7 +1663,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            pattern: "/",
+            unstable_pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -1682,7 +1682,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            pattern: "/",
+            unstable_pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -1739,7 +1739,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            pattern: "/",
+            unstable_pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -1757,7 +1757,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            pattern: "/",
+            unstable_pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -1816,7 +1816,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            pattern: "/",
+            unstable_pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -1834,7 +1834,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            pattern: "/",
+            unstable_pattern: "/",
             context: {
               get: expect.any(Function),
             },

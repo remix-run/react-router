@@ -3720,7 +3720,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            pattern: getRoutePattern(matches.map((m) => m.route.path)),
+            unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
             matches,
             params: matches[0].params,
             // If we're calling middleware then it must be enabled so we can cast
@@ -3952,7 +3952,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          pattern: getRoutePattern(matches.map((m) => m.route.path)),
+          unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
           matches,
           params: matches[0].params,
           // If we're calling middleware then it must be enabled so we can cast
@@ -4818,6 +4818,9 @@ function getMatchesToLoad(
     actionStatus,
   };
 
+  let pattern = getRoutePattern(matches.map((m) => m.route.path));
+  console.log(pattern, matches);
+
   let dsMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
 
@@ -4851,7 +4854,7 @@ function getMatchesToLoad(
         mapRouteProperties,
         manifest,
         request,
-        getRoutePattern(matches.map((m) => m.route.path)),
+        pattern,
         match,
         lazyRoutePropertiesToSkip,
         scopedContext,
@@ -4881,7 +4884,7 @@ function getMatchesToLoad(
       mapRouteProperties,
       manifest,
       request,
-      getRoutePattern(matches.map((m) => m.route.path)),
+      pattern,
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
@@ -5653,7 +5656,7 @@ async function runMiddlewarePipeline<Result>(
       request,
       params,
       context,
-      pattern: getRoutePattern(matches.map((m) => m.route.path)),
+      unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
     },
     tuples,
     handler,
@@ -5776,7 +5779,7 @@ function getDataStrategyMatch(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
   request: Request,
-  pattern: string,
+  unstable_pattern: string,
   match: DataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
@@ -5834,7 +5837,7 @@ function getDataStrategyMatch(
       if (callHandler && !isMiddlewareOnlyRoute) {
         return callLoaderOrAction({
           request,
-          pattern,
+          unstable_pattern,
           match,
           lazyHandlerPromise: _lazyPromises?.handler,
           lazyRoutePromise: _lazyPromises?.route,
@@ -5909,7 +5912,7 @@ async function callDataStrategyImpl(
   // back out below.
   let dataStrategyArgs = {
     request,
-    pattern: getRoutePattern(matches.map((m) => m.route.path)),
+    unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
     params: matches[0].params,
     context: scopedContext,
     matches,
@@ -5967,7 +5970,7 @@ async function callDataStrategyImpl(
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
 async function callLoaderOrAction({
   request,
-  pattern,
+  unstable_pattern,
   match,
   lazyHandlerPromise,
   lazyRoutePromise,
@@ -5975,7 +5978,7 @@ async function callLoaderOrAction({
   scopedContext,
 }: {
   request: Request;
-  pattern: string;
+  unstable_pattern: string;
   match: AgnosticDataRouteMatch;
   lazyHandlerPromise: Promise<void> | undefined;
   lazyRoutePromise: Promise<void> | undefined;
@@ -6009,7 +6012,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
-          pattern,
+          unstable_pattern,
           params: match.params,
           context: scopedContext,
         },
