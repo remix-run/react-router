@@ -131,7 +131,6 @@ type HasServerComponent<
 
 type CreateHydrateFallbackProps<T extends RouteInfo> = {
   params: T["params"];
-} & {
   /** The data returned from the `loader` or `clientLoader` */
   loaderData?: T["loaderData"];
   /** The data returned from the `action` or `clientAction` following an action submission. */
@@ -203,7 +202,6 @@ type CreateErrorBoundaryProps<T extends RouteInfo> = {
    **/
   params: T["params"];
   error: unknown;
-} & {
   /** The data returned from the `loader` or `clientLoader` */
   loaderData?: T["loaderData"];
   /** The data returned from the `action` or `clientAction` following an action submission. */
