@@ -27,7 +27,7 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
-import { unstable_ClientInstrumentation } from "../router/instrumentation";
+import type { unstable_ClientInstrumentation } from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;

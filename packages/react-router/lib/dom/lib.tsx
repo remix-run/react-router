@@ -95,12 +95,7 @@ import {
   useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
-import {
-  instrumentClientSideRouter,
-  unstable_ClientInstrumentation,
-  type unstable_InstrumentRouteFunction,
-  type unstable_InstrumentRouterFunction,
-} from "../router/instrumentation";
+import type { unstable_ClientInstrumentation } from "../router/instrumentation";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
