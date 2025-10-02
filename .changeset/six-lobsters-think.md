@@ -5,77 +5,100 @@
 
 New (unstable) `useRoute` hook for accessing data from specific routes
 
-`useRouteLoaderData` has many shortcomings:
+For example, let's say you have an `admin` route somewhere in your app and you want any child routes of `admin` to all have access to the `loaderData` and `actionData` from `admin.`
 
-1. Its `routeId` arg is typed as `string`, so TS won't complain if you pass in a non-existent route ID
-2. Type-safety was limited to a `typeof loader` generic that required you to manually import and pass in the type for the corresponding `loader`
-3. Even with `typeof loader`, the types were not aware of `clientLoader`, `HydrateFallback`, and `clientLoader.hydrate = true`, which all affect the type for `loaderData`
-4. It is limited solely to `loader` data, but does not provide `action` data
-5. It introduced confusion about when to use `useLoaderData` and when to use `useRouteLoaderData`
-
-```ts
+```tsx
 // app/routes/admin.tsx
+import { Outlet } from "react-router";
+
 export const loader = () => ({ message: "Hello, loader!" });
 
-export const action = () => ({ message: "Hello, action!" });
-```
+export const action = () => ({ count: 1 });
 
-```ts
-import { type loader } from "../routes/admin";
-
-export function Widget() {
-  const loaderData = useRouteLoaderData<typeof loader>("routes/admin");
-  // ...
+export default function Component() {
+  return (
+    <div>
+      {/* ... */}
+      <Outlet />
+      {/* ... */}
+    </div>
+  );
 }
 ```
 
-With `useRoute`, all of these concerns have been fixed:
+You might even want to create a reusable widget that all of the routes nested under `admin` could use:
 
-```ts
+```tsx
 import { unstable_useRoute as useRoute } from "react-router";
 
-export function Widget() {
+export function AdminWidget() {
+  // How to get `message` and `count` from `admin` route?
+}
+```
+
+In framework mode, `useRoute` knows all your app's routes and gives you TS errors when invalid route IDs are passed in:
+
+```tsx
+export function AdminWidget() {
+  const admin = useRoute("routes/dmin");
+  //                      ^^^^^^^^^^^
+}
+```
+
+`useRoute` returns `undefined` if the route is not part of the current page:
+
+```tsx
+export function AdminWidget() {
   const admin = useRoute("routes/admin");
-  console.log(admin?.loaderData?.message);
-  console.log(admin?.actionData?.message);
-  // ...
+  if (!admin) {
+    throw new Error(`AdminWidget used outside of "routes/admin"`);
+  }
 }
 ```
 
-Note: `useRoute` returns `undefined` if the route is not part of the current page.
+Note: the `root` route is the exception since it is guaranteed to be part of the current page.
+As a result, `useRoute` never returns `undefined` for `root`.
 
-The `root` route is special because it is guaranteed to be part of the current page, so no need to use `?.` or any other `undefined` checks:
+`loaderData` and `actionData` are marked as optional since they could be accessed before the `action` is triggered or after the `loader` threw an error:
 
-```ts
-export function Widget() {
-  const root = useRoute("root");
-  console.log(root.loaderData?.message, root.actionData?.message);
-  // ...
-}
-```
-
-You may have noticed that `loaderData` and `actionData` are marked as optional.
-This is intentional as there's no guarantee that `loaderData` nor `actionData` exists when called in certain contexts like within an `ErrorBoundary`:
-
-```ts
-export function ErrorBoundary() {
+```tsx
+export function AdminWidget() {
   const admin = useRoute("routes/admin");
-  console.log(admin?.loaderData?.message);
-  //                           ^^
-  // `loader` for itself could have thrown an error,
-  // so you need to check if `loaderData` exists!
+  if (!admin) {
+    throw new Error(`AdminWidget used outside of "routes/admin"`);
+  }
+  const { loaderData, actionData } = admin;
+  console.log(loaderData);
+  //          ^? { message: string } | undefined
+  console.log(actionData);
+  //          ^? { count: number } | undefined
 }
 ```
 
-In an effort to consolidate on fewer, more intuitive hooks, `useRoute` can be called without arguments as a replacement for `useLoaderData` and `useActionData`:
+If instead of a specific route, you wanted access to the _current_ route's `loaderData` and `actionData`, you can call `useRoute` without arguments:
 
-```ts
-export function Widget() {
+```tsx
+export function AdminWidget() {
   const currentRoute = useRoute();
   currentRoute.loaderData;
   currentRoute.actionData;
 }
 ```
 
-Since `Widget` is a reusable component that could be within any route, we have no guarantees about the types for `loaderData` nor `actionData`.
-As a result, they are both typed as `unknown` and it is up to you to narrow the type to what your reusable component needs (for example, via `zod`).
+This usage is equivalent to calling `useLoaderData` and `useActionData`, but consolidates all route data access into one hook: `useRoute`.
+
+Note: when calling `useRoute()` (without a route ID), TS has no way to know which route is the current route.
+As a result, `loaderData` and `actionData` are typed as `unknown`.
+If you want more type-safety, you can either narrow the type yourself with something like `zod` or you can refactor your app to pass down typed props to your `AdminWidget`:
+
+```tsx
+export function AdminWidget({
+  message,
+  count,
+}: {
+  message: string;
+  count: number;
+}) {
+  /* ... */
+}
+```
