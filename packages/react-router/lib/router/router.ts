@@ -16,7 +16,7 @@ import type {
   unstable_ServerInstrumentation,
 } from "./instrumentation";
 import {
-  getInstrumentationUpdates,
+  getRouteInstrumentationUpdates,
   instrumentClientSideRouter,
 } from "./instrumentation";
 import type {
@@ -889,7 +889,7 @@ export function createRouter(init: RouterInit): Router {
     mapRouteProperties = (route: AgnosticDataRouteObject) => {
       return {
         ..._mapRouteProperties(route),
-        ...getInstrumentationUpdates(
+        ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)
             .filter(Boolean) as unstable_InstrumentRouteFunction[],
@@ -3585,7 +3585,7 @@ export function createStaticHandler(
     mapRouteProperties = (route: AgnosticDataRouteObject) => {
       return {
         ..._mapRouteProperties(route),
-        ...getInstrumentationUpdates(
+        ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)
             .filter(Boolean) as unstable_InstrumentRouteFunction[],
@@ -4345,13 +4345,14 @@ export function createStaticHandler(
             matches.findIndex((m) => m.route.id === pendingActionResult[0]) - 1
           : undefined;
 
+      let pattern = getRoutePattern(matches.map((m) => m.route.path));
       dsMatches = matches.map((match, index) => {
         if (maxIdx != null && index > maxIdx) {
           return getDataStrategyMatch(
             mapRouteProperties,
             manifest,
             request,
-            getRoutePattern(matches.map((m) => m.route.path)),
+            pattern,
             match,
             [],
             requestContext,
@@ -4363,7 +4364,7 @@ export function createStaticHandler(
           mapRouteProperties,
           manifest,
           request,
-          getRoutePattern(matches.map((m) => m.route.path)),
+          pattern,
           match,
           [],
           requestContext,
@@ -4819,8 +4820,6 @@ function getMatchesToLoad(
   };
 
   let pattern = getRoutePattern(matches.map((m) => m.route.path));
-  console.log(pattern, matches);
-
   let dsMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
 
@@ -5646,7 +5645,7 @@ async function runMiddlewarePipeline<Result>(
     nextResult: { value: Result } | undefined,
   ) => Promise<Result>,
 ): Promise<Result> {
-  let { matches, request, params, context } = args;
+  let { matches, request, params, context, unstable_pattern } = args;
   let tuples = matches.flatMap((m) =>
     m.route.middleware ? m.route.middleware.map((fn) => [m.route.id, fn]) : [],
   ) as [string, MiddlewareFunction<Result>][];
@@ -5656,7 +5655,7 @@ async function runMiddlewarePipeline<Result>(
       request,
       params,
       context,
-      unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+      unstable_pattern,
     },
     tuples,
     handler,
