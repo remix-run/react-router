@@ -1856,7 +1856,7 @@ type UseRouteResult<Args extends UseRouteArgs> =
 
 type UseRoute<RouteId extends keyof RouteModules | unknown> = {
   loaderData: RouteId extends keyof RouteModules
-    ? GetLoaderData<RouteModules[RouteId]>
+    ? GetLoaderData<RouteModules[RouteId]> | undefined
     : unknown;
   actionData: RouteId extends keyof RouteModules
     ? GetActionData<RouteModules[RouteId]> | undefined
