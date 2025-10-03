@@ -61,6 +61,13 @@ export {
   createPath,
   parsePath,
 } from "./lib/router/history";
+export type {
+  unstable_ServerInstrumentation,
+  unstable_ClientInstrumentation,
+  unstable_InstrumentRequestHandlerFunction,
+  unstable_InstrumentRouterFunction,
+  unstable_InstrumentRouteFunction,
+} from "./lib/router/instrumentation";
 export {
   IDLE_NAVIGATION,
   IDLE_FETCHER,
