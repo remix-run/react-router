@@ -256,13 +256,20 @@ export interface LinksProps {
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
+// Persistent set of hrefs so that CSS/JS links are not removed when
+// routes unmount. This ensures lazy-loaded CSS persists across route changes.
+const persistentHrefs = new Set<string>();
+
 export function Links({ nonce }: LinksProps): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
+  // Get the active route matches (slice matches on error boundaries, etc.)
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
 
+  // Compute the keyed links for all active matches. These include CSS modules,
+  // prefetch links, and other assets. Memoized to avoid unnecessary recalculations.
   let keyedLinks = React.useMemo(
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
     [matches, routeModules, manifest],
@@ -270,12 +277,15 @@ export function Links({ nonce }: LinksProps): React.JSX.Element {
 
   return (
     <>
+      {/* Inject critical CSS as <style> if available */}
       {typeof criticalCss === "string" ? (
         <style
           {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
           dangerouslySetInnerHTML={{ __html: criticalCss }}
         />
       ) : null}
+
+      {/* Inject critical CSS as <link> if object form */}
       {typeof criticalCss === "object" ? (
         <link
           {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
@@ -284,13 +294,21 @@ export function Links({ nonce }: LinksProps): React.JSX.Element {
           nonce={nonce}
         />
       ) : null}
-      {keyedLinks.map(({ key, link }) =>
-        isPageLinkDescriptor(link) ? (
+
+      {/* Render all keyed links (CSS, prefetch, etc.) */}
+      {keyedLinks.map(({ key, link }) => {
+        // If this href has already been injected, skip it to avoid duplicates.
+        // This preserves lazy-loaded route CSS even when the route unmounts.
+        if (!link.href || persistentHrefs.has(link.href)) return null;
+
+        persistentHrefs.add(link.href);
+
+        return isPageLinkDescriptor(link) ? (
           <PrefetchPageLinks key={key} nonce={nonce} {...link} />
         ) : (
           <link key={key} nonce={nonce} {...link} />
-        ),
-      )}
+        );
+      })}
     </>
   );
 }
