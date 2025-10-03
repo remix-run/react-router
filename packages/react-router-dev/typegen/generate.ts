@@ -105,13 +105,16 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
           interface Register {
             pages: Pages
             routeFiles: RouteFiles
+            routeModules: RouteModules
           }
         }
       ` +
       "\n\n" +
       Babel.generate(pagesType(allPages)).code +
       "\n\n" +
-      Babel.generate(routeFilesType({ fileToRoutes, routeToPages })).code,
+      Babel.generate(routeFilesType({ fileToRoutes, routeToPages })).code +
+      "\n\n" +
+      Babel.generate(routeModulesType(ctx)).code,
   };
 
   // **/+types/*.ts
@@ -185,6 +188,29 @@ function routeFilesType({
                   ),
                 ]);
               }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+function routeModulesType(ctx: Context) {
+  return t.tsTypeAliasDeclaration(
+    t.identifier("RouteModules"),
+    null,
+    t.tsTypeLiteral(
+      Object.values(ctx.config.routes).map((route) =>
+        t.tsPropertySignature(
+          t.stringLiteral(route.id),
+          t.tsTypeAnnotation(
+            t.tsTypeQuery(
+              t.tsImportType(
+                t.stringLiteral(
+                  `./${Path.relative(ctx.rootDirectory, ctx.config.appDirectory)}/${route.file}`,
+                ),
+              ),
             ),
           ),
         ),
