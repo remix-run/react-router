@@ -1,11 +1,8 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from "tsdown";
+import { createBanner } from "../../build.utils.mts";
+import pkg from "./package.json" with { type: "json" };
 
-// @ts-ignore - out of scope
-import { createBanner } from "../../build.utils.js";
-
-import pkg from "./package.json";
-
-const entry = ["index.ts"];
+const entry = ["cli.ts"];
 
 export default defineConfig([
   {

@@ -37,10 +37,11 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "sessions/**",
         "*.ts",
+        "*.mts",
         "tsconfig.json",
         "package.json"
       ],
@@ -54,7 +55,7 @@
   },
   "devDependencies": {
     "react-router": "workspace:*",
-    "tsup": "^8.3.0",
+    "tsdown": "^0.15.6",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

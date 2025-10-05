@@ -29,7 +29,6 @@ node_modules/
 .eslintcache
 .parcel-cache
 .tmp
-tsup.config.bundled_*.mjs
 build.utils.d.ts
 worker-configuration.d.ts
 /.env

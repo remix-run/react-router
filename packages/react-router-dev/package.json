@@ -46,7 +46,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "cli/**",
         "config/**",
@@ -54,6 +54,7 @@
         "typegen/**",
         "vite/**",
         "*.ts",
+        "*.mts",
         "bin.js",
         "tsconfig.json",
         "package.json"
@@ -111,7 +112,7 @@
     "express": "^4.19.2",
     "fast-glob": "3.2.11",
     "react-router": "workspace:^",
-    "tsup": "^8.3.0",
+    "tsdown": "^0.15.6",
     "typescript": "^5.1.6",
     "vite": "^6.3.0",
     "wireit": "0.14.9",

@@ -1,11 +1,8 @@
 import * as fsp from "fs/promises";
 
-import { defineConfig } from "tsup";
-
-// @ts-ignore - out of scope
-import { createBanner } from "../../build.utils.js";
-
-import pkg from "./package.json";
+import { defineConfig } from "tsdown";
+import { createBanner } from "../../build.utils.mts";
+import pkg from "./package.json" with { type: "json" };
 
 const entry = [
   "cli/index.ts",
@@ -24,25 +21,17 @@ const external = [
 
 export default defineConfig([
   {
-    clean: true,
     entry,
     format: ["cjs"],
-    outDir: "dist",
-    dts: true,
     external,
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },
+    dts: true,
     plugins: [
       {
         name: "copy",
         async buildEnd() {
-          await fsp.mkdir("dist/static", { recursive: true });
-          await fsp.copyFile(
-            "vite/static/refresh-utils.mjs",
-            "dist/static/refresh-utils.mjs",
-          );
-
           await fsp.mkdir("dist/static", { recursive: true });
           await fsp.copyFile(
             "vite/static/refresh-utils.mjs",
