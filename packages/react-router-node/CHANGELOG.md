@@ -1,5 +1,13 @@
 # `@react-router/node`
 
+## 7.9.4-pre.0
+
+### Patch Changes
+
+- Validate format of incoming session ids ([#14426](https://github.com/remix-run/react-router/pull/14426))
+- Updated dependencies:
+  - `react-router@7.9.4-pre.0`
+
 ## 7.9.3
 
 ### Patch Changes
