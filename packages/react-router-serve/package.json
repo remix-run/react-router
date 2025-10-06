@@ -23,9 +23,10 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "*.ts",
+        "*.mts",
         "bin.js",
         "tsconfig.json",
         "package.json"
@@ -53,7 +54,7 @@
     "@types/express": "^4.17.9",
     "@types/morgan": "^1.9.2",
     "@types/source-map-support": "^0.5.6",
-    "tsup": "^8.3.0",
+    "tsdown": "^0.15.6",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

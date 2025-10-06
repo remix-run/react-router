@@ -24,9 +24,10 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "*.ts",
+        "*.mts",
         "tsconfig.json",
         "package.json"
       ],
@@ -58,7 +59,7 @@
     "esbuild-register": "^3.6.0",
     "msw": "^2.7.5",
     "tiny-invariant": "^1.2.0",
-    "tsup": "^8.3.0",
+    "tsdown": "^0.15.6",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

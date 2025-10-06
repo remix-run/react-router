@@ -105,15 +105,16 @@
   },
   "scripts": {
     "build": "wireit",
-    "watch": "tsup --watch & tsup --config tsup.config.rsc.ts --watch",
+    "watch": "tsdown --watch",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
+      "command": "tsdown",
       "files": [
         "lib/**",
         "*.ts",
+        "*.mts",
         "tsconfig.json",
         "package.json"
       ],
@@ -132,11 +133,10 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/set-cookie-parser": "^2.4.1",
     "jest-environment-jsdom": "^29.6.2",
-    "premove": "^4.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-test-renderer": "^19.1.0",
-    "tsup": "^8.3.0",
+    "tsdown": "^0.15.6",
     "typescript": "^5.1.6",
     "undici": "^6.19.2",
     "wireit": "0.14.9"
