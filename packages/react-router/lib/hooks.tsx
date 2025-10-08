@@ -50,8 +50,13 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types/route-data";
+import type {
+  GetActionData,
+  GetLoaderData,
+  SerializeFrom,
+} from "./types/route-data";
 import type { unstable_ClientOnErrorFunction } from "./components";
+import type { RouteModules } from "./types/register";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -1282,6 +1287,7 @@ enum DataRouterStateHook {
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
   UseRouteId = "useRouteId",
+  UseRoute = "useRoute",
 }
 
 function getDataRouterConsoleError(
@@ -1837,4 +1843,40 @@ function warningOnce(key: string, cond: boolean, message: string) {
     alreadyWarned[key] = true;
     warning(false, message);
   }
+}
+
+type UseRouteArgs = [] | [routeId: keyof RouteModules];
+
+// prettier-ignore
+type UseRouteResult<Args extends UseRouteArgs> =
+  Args extends [] ? UseRoute<unknown> :
+  Args extends ["root"] ? UseRoute<"root"> :
+  Args extends [infer RouteId extends keyof RouteModules] ? UseRoute<RouteId> | undefined :
+  never;
+
+type UseRoute<RouteId extends keyof RouteModules | unknown> = {
+  loaderData: RouteId extends keyof RouteModules
+    ? GetLoaderData<RouteModules[RouteId]> | undefined
+    : unknown;
+  actionData: RouteId extends keyof RouteModules
+    ? GetActionData<RouteModules[RouteId]> | undefined
+    : unknown;
+};
+
+export function useRoute<Args extends UseRouteArgs>(
+  ...args: Args
+): UseRouteResult<Args> {
+  const currentRouteId: keyof RouteModules = useCurrentRouteId(
+    DataRouterStateHook.UseRoute,
+  );
+  const id: keyof RouteModules = args[0] ?? currentRouteId;
+
+  const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
+  const route = state.matches.find(({ route }) => route.id === id);
+
+  if (route === undefined) return undefined as UseRouteResult<Args>;
+  return {
+    loaderData: state.loaderData[id],
+    actionData: state.actionData?.[id],
+  } as UseRouteResult<Args>;
 }
