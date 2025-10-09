@@ -32,8 +32,8 @@ The quickest way to get started is with one of our templates.
 
 These templates come with React Router RSC APIs already configured, offering you out of the box features such as:
 
-- Server Component Routes
 - Server Side Rendering (SSR)
+- Server Components
 - Client Components (via [`"use client"`][use-client-docs] directive)
 - Server Functions (via [`"use server"`][use-server-docs] directive)
 
@@ -177,9 +177,9 @@ export default function Route({
 }
 ```
 
-### Server Component Routes
+### Route Server Components
 
-If a route exports a `ServerComponent` instead of the typical `default` component export, this component along with other route components (`ErrorBoundary`, `HydrateFallback`, `Layout`) will be server components rather than the usual client components.
+If a route exports a `ServerComponent` instead of the typical `default` component export, this will be a server component rather than the usual client component.
 
 ```tsx
 import type { Route } from "./+types/route";
