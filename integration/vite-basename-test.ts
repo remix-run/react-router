@@ -101,7 +101,7 @@ const customServerFile = ({
 
   if (templateName.includes("rsc")) {
     return js`
-      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import { createRequestListener } from "@remix-run/node-fetch-server";
       import express from "express";
 
       const viteDevServer =
@@ -516,7 +516,7 @@ test.describe("Vite base + React Router basename", () => {
               // Slim server that only serves basename (route) requests from the React Router handler
               "server.mjs": templateName.includes("rsc")
                 ? String.raw`
-                  import { createRequestListener } from "@mjackson/node-fetch-server";
+                  import { createRequestListener } from "@remix-run/node-fetch-server";
                   import express from "express";
           
                   const app = express();

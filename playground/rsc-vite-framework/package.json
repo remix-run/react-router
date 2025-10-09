@@ -28,7 +28,7 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
-    "@mjackson/node-fetch-server": "0.6.1",
+    "@remix-run/node-fetch-server": "^0.10.0",
     "compression": "^1.8.0",
     "express": "^4.21.2",
     "react": "^19.0.0",

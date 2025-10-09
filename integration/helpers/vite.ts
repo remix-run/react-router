@@ -174,7 +174,7 @@ export const EXPRESS_SERVER = (args: {
 }) => {
   if (args.templateName?.includes("rsc")) {
     return String.raw`
-      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import { createRequestListener } from "@remix-run/node-fetch-server";
       import express from "express";
 
       const viteDevServer =

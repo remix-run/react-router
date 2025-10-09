@@ -50,7 +50,7 @@
     }
   },
   "dependencies": {
-    "@mjackson/node-fetch-server": "^0.2.0"
+    "@remix-run/node-fetch-server": "^0.10.0"
   },
   "devDependencies": {
     "react-router": "workspace:*",

@@ -73,7 +73,7 @@
     "@babel/types": "^7.27.7",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.9.0",
+    "@remix-run/node-fetch-server": "^0.10.0",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
     "chokidar": "^4.0.0",
