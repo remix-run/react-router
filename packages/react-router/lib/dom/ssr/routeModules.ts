@@ -119,7 +119,7 @@ export type LayoutComponent = ComponentType<{
  * A function that defines `<link>` tags to be inserted into the `<head>` of
  * the document on route transitions.
  *
- * @see https://remix.run/route/meta
+ * @see https://reactrouter.com/start/framework/route-module#meta
  */
 export interface LinksFunction {
   (): LinkDescriptor[];
@@ -267,7 +267,7 @@ export type RouteComponent = ComponentType<{}>;
 /**
  * An arbitrary object that is associated with a route.
  *
- * @see https://remix.run/route/handle
+ * @see https://reactrouter.com/how-to/using-handle
  */
 export type RouteHandle = unknown;
 

@@ -146,7 +146,7 @@ test.describe("Vite / route / server-only module referenced by client", () => {
 
         `  But other route exports in 'app/routes/_index.tsx' depend on '${specifier}'.`,
 
-        "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
+        "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
       ].forEach(expect(stderr).toMatch);
     });
   }
@@ -206,7 +206,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 
         `    '${specifier}' imported by 'app/reexport-server-only.ts'`,
 
-        "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
+        "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
       ].forEach(expect(stderr).toMatch);
     });
   }
