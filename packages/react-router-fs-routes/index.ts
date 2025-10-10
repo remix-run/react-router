@@ -12,7 +12,7 @@ import { normalizeSlashes } from "./normalizeSlashes";
 /**
  * Creates route config from the file system using a convention that matches
  * [Remix v2's route file
- * naming](https://remix.run/docs/en/v2/file-conventions/routes-files), for use
+ * naming](https://v2.remix.run/docs/file-conventions/routes), for use
  * within `routes.ts`.
  */
 export async function flatRoutes(
