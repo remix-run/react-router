@@ -477,6 +477,71 @@ describe("context/middleware", () => {
         ]);
       });
 
+      it("runs middleware even if no loader exists but an action is present", async () => {
+        let snapshot;
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              middleware: [
+                async ({ context }, next) => {
+                  await next();
+                  // Grab a snapshot at the end of the upwards middleware chain
+                  snapshot = context.get(orderContext);
+                },
+                getOrderMiddleware(orderContext, "a"),
+                getOrderMiddleware(orderContext, "b"),
+              ],
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  middleware: [
+                    getOrderMiddleware(orderContext, "c"),
+                    getOrderMiddleware(orderContext, "d"),
+                  ],
+                  action({ context }) {
+                    context.get(orderContext).push("child action");
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+
+        expect(snapshot).toEqual([
+          // Action
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "child action",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+          // Revalidation
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+      });
+
       it("returns result of middleware in client side routers", async () => {
         let values: unknown[] = [];
         let consoleSpy = jest
