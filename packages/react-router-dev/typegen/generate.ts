@@ -205,13 +205,15 @@ function routeModulesType(ctx: Context) {
         t.tsPropertySignature(
           t.stringLiteral(route.id),
           t.tsTypeAnnotation(
-            t.tsTypeQuery(
-              t.tsImportType(
-                t.stringLiteral(
-                  `./${Path.relative(ctx.rootDirectory, ctx.config.appDirectory)}/${route.file}`,
-                ),
-              ),
-            ),
+            isInAppDirectory(ctx, route.file)
+              ? t.tsTypeQuery(
+                  t.tsImportType(
+                    t.stringLiteral(
+                      `./${Path.relative(ctx.rootDirectory, ctx.config.appDirectory)}/${route.file}`,
+                    ),
+                  ),
+                )
+              : t.tsUnknownKeyword(),
           ),
         ),
       ),
