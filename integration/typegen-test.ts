@@ -456,6 +456,31 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
+  test("route files with paths outside of app directory", async ({
+    cwd,
+    edit,
+    $,
+  }) => {
+    await fs.mkdir(Path.join(cwd, "node_modules/external_dependency"), {
+      recursive: true,
+    });
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("outside/:id", "../node_modules/external_dependency/index.js"),
+        ] satisfies RouteConfig;
+      `,
+      "node_modules/external_dependency/index.js": tsx`
+        export default function Component() {
+          return <div>External Dependency</div>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
   test("href", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`
