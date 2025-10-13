@@ -1207,6 +1207,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           });
         }
 
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
+
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
           mode,
@@ -1214,12 +1220,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         await updatePluginContext();
-
-        await loadDotenv({
-          rootDirectory,
-          viteUserConfig,
-          mode,
-        });
 
         let environments = await getEnvironmentsOptions(ctx, viteCommand, {
           viteUserConfig,
