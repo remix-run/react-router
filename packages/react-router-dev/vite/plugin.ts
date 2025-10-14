@@ -394,7 +394,7 @@ const getReactRouterManifestBuildAssets = (
           : null,
         chunks
           .flatMap((e) => e.css ?? [])
-          .map((href) => `${ctx.publicPath}${href}`),
+          .map((href) => `${ctx.publicPath}${href}#route=true`),
       ]
         .flat(1)
         .filter(isNonNullable),
