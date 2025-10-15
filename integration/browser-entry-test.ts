@@ -216,14 +216,14 @@ test("allows users to instrument the client side router via HydratedRouter", asy
                   router(router) {
                     router.instrument({
                       async navigate(impl, info) {
-                        console.log("start navigate", JSON.stringify(info));
+                        console.log("start navigate", JSON.stringify(Object.entries(info).sort()));
                         await impl();
-                        console.log("end navigate", JSON.stringify(info));
+                        console.log("end navigate", JSON.stringify(Object.entries(info).sort()));
                       },
                       async fetch(impl, info) {
-                        console.log("start fetch", JSON.stringify(info));
+                        console.log("start fetch", JSON.stringify(Object.entries(info).sort()));
                         await impl();
-                        console.log("end fetch", JSON.stringify(info));
+                        console.log("end fetch", JSON.stringify(Object.entries(info).sort()));
                       }
                     })
                   },
@@ -294,12 +294,12 @@ test("allows users to instrument the client side router via HydratedRouter", asy
 
   expect(await app.getHtml()).toContain("hello world");
   expect(logs).toEqual([
-    'start navigate {"to":"/page","currentUrl":"/"}',
+    'start navigate [["currentUrl","/"],["to","/page"]]',
     "start loader root /page",
     "start loader routes/page /page",
     "end loader root /page",
     "end loader routes/page /page",
-    'end navigate {"to":"/page","currentUrl":"/"}',
+    'end navigate [["currentUrl","/"],["to","/page"]]',
   ]);
   logs.splice(0);
 
@@ -307,14 +307,14 @@ test("allows users to instrument the client side router via HydratedRouter", asy
   await page.waitForSelector("[data-fetcher-data]");
   await expect(page.locator("[data-fetcher-data]")).toContainText("OK");
   expect(logs).toEqual([
-    'start fetch {"href":"/page","currentUrl":"/page","fetcherKey":"a","formMethod":"post","formEncType":"application/x-www-form-urlencoded","body":{"key":"value"}}',
+    'start fetch [["body",{"key":"value"}],["currentUrl","/page"],["fetcherKey","a"],["formData",null],["formEncType","application/x-www-form-urlencoded"],["formMethod","post"],["href","/page"]]',
     "start action routes/page /page",
     "end action routes/page /page",
     "start loader root /page",
     "start loader routes/page /page",
     "end loader root /page",
     "end loader routes/page /page",
-    'end fetch {"href":"/page","currentUrl":"/page","fetcherKey":"a","formMethod":"post","formEncType":"application/x-www-form-urlencoded","body":{"key":"value"}}',
+    'end fetch [["body",{"key":"value"}],["currentUrl","/page"],["fetcherKey","a"],["formData",null],["formEncType","application/x-www-form-urlencoded"],["formMethod","post"],["href","/page"]]',
   ]);
 
   appFixture.close();
