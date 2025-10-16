@@ -318,6 +318,8 @@ export { route, index, layout, prefix };
  * splitting route config into multiple files within different directories.
  */
 export function relative(directory: string): typeof helpers {
+  let appDirectory = getAppDirectory();
+  
   return {
     /**
      * Helper function for creating a route config entry, for use within
@@ -326,7 +328,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     route: (path, file, ...rest) => {
-      return route(path, Path.resolve(directory, file), ...(rest as any));
+      return route(path, Path.relative(appDirectory, Path.resolve(directory, file)), ...(rest as any));
     },
     /**
      * Helper function for creating a route config entry for an index route, for
@@ -335,7 +337,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     index: (file, ...rest) => {
-      return index(Path.resolve(directory, file), ...(rest as any));
+      return index(Path.relative(appDirectory, Path.resolve(directory, file)), ...(rest as any));
     },
     /**
      * Helper function for creating a route config entry for a layout route, for
@@ -344,7 +346,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     layout: (file, ...rest) => {
-      return layout(Path.resolve(directory, file), ...(rest as any));
+      return layout(Path.relative(appDirectory, Path.resolve(directory, file)), ...(rest as any));
     },
 
     // Passthrough of helper functions that don't need relative scoping so that
