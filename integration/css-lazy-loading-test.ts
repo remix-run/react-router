@@ -166,8 +166,6 @@ test("should preserve the CSS from the lazy loaded component even when it's in t
   await expect(page.getByText("Loading...")).toHaveCount(0);
   expect(await page.getByTestId("icon").all()).toHaveLength(2);
 
-  await app.poke(60);
-
   await app.clickLink("/company/publishers");
 
   expect(await page.getByTestId("icon").all()).toHaveLength(1);
