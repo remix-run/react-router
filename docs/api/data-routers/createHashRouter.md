@@ -23,7 +23,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createHashRouter.html)
 
 Create a new [data router](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application
-path via the URL [`hash`]https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
+path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
 
 ## Signature
 
