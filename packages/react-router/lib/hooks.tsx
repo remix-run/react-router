@@ -1871,7 +1871,7 @@ export function useRoute<Args extends UseRouteArgs>(
   );
   const id: keyof RouteModules = args[0] ?? currentRouteId;
 
-  const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
+  const state = useDataRouterState(DataRouterStateHook.UseRoute);
   const route = state.matches.find(({ route }) => route.id === id);
 
   if (route === undefined) return undefined as UseRouteResult<Args>;
