@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-use only in directory routes on +routes RouteModules
+Typegen: only register route module types for routes within the app directory
