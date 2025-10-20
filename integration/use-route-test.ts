@@ -27,6 +27,7 @@ test.use({
     "app/root.tsx": tsx`
       import { Outlet } from "react-router"
 
+      export const handle = { rootHandle: "root/handle" }
       export const loader = () => ({ rootLoader: "root/loader" })
       export const action = () => ({ rootAction: "root/action" })
 
@@ -42,6 +43,7 @@ test.use({
     "app/routes/parent.tsx": tsx`
       import { Outlet } from "react-router"
 
+      export const handle = { parentHandle: "parent/handle" }
       export const loader = () => ({ parentLoader: "parent/loader" })
       export const action = () => ({ parentAction: "parent/action" })
 
@@ -59,21 +61,38 @@ test.use({
 
       import type { Expect, Equal } from "../expect-type"
 
+      export const handle = { currentHandle: "current/handle" }
       export const loader = () => ({ currentLoader: "current/loader" })
       export const action = () => ({ currentAction: "current/action" })
 
       export default function Component() {
         const current = useRoute()
-        type Test1 = Expect<Equal<typeof current, { loaderData: unknown, actionData: unknown }>>
+        type Test1 = Expect<Equal<typeof current, {
+          handle: unknown,
+          loaderData: unknown,
+          actionData: unknown,
+        }>>
 
         const root = useRoute("root")
-        type Test2 = Expect<Equal<typeof root, { loaderData: { rootLoader: string } | undefined, actionData: { rootAction: string } | undefined }>>
+        type Test2 = Expect<Equal<typeof root, {
+          handle: { rootHandle: string },
+          loaderData: { rootLoader: string } | undefined,
+          actionData: { rootAction: string } | undefined,
+        }>>
 
         const parent = useRoute("routes/parent")
-        type Test3 = Expect<Equal<typeof parent, { loaderData: { parentLoader: string } | undefined, actionData: { parentAction: string } | undefined } | undefined>>
+        type Test3 = Expect<Equal<typeof parent, {
+          handle: { parentHandle: string },
+          loaderData: { parentLoader: string } | undefined,
+          actionData: { parentAction: string } | undefined
+        } | undefined>>
 
         const other = useRoute("routes/other")
-        type Test4 = Expect<Equal<typeof other, { loaderData: { otherLoader: string } | undefined, actionData: { otherAction: string } | undefined } | undefined>>
+        type Test4 = Expect<Equal<typeof other, {
+          handle: { otherHandle: string },
+          loaderData: { otherLoader: string } | undefined,
+          actionData: { otherAction: string } | undefined,
+        } | undefined>>
 
         return (
           <>
@@ -87,6 +106,7 @@ test.use({
       }
     `,
     "app/routes/other.tsx": tsx`
+      export const handle = { otherHandle: "other/handle" }
       export const loader = () => ({ otherLoader: "other/loader" })
       export const action = () => ({ otherAction: "other/action" })
 
