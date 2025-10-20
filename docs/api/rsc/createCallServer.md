@@ -28,8 +28,6 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_createCallServer.html)
-
 Create a React `callServer` implementation for React Router.
 
 ```tsx
