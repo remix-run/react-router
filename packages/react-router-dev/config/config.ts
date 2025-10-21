@@ -110,6 +110,13 @@ type BuildEndHook = (args: {
   viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
 
+export type PrerenderPaths =
+  | boolean
+  | Array<string>
+  | ((args: {
+      getStaticPaths: () => string[];
+    }) => Array<string> | Promise<Array<string>>);
+
 /**
  * Config to be exported via the default export from `react-router.config.ts`.
  */
@@ -149,13 +156,19 @@ export type ReactRouterConfig = {
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
+   *
+   * `unstable_concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
+   * Setting it to a value more than 1 enables concurrent prerendering.
+   * Setting it to a value higher than one can increase the speed of the build,
+   * but may consume more resources, and send more concurrent requests to the
+   * server/CMS.
    */
   prerender?:
-    | boolean
-    | Array<string>
-    | ((args: {
-        getStaticPaths: () => string[];
-      }) => Array<string> | Promise<Array<string>>);
+    | PrerenderPaths
+    | {
+        paths: PrerenderPaths;
+        unstable_concurrency?: number;
+      };
   /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
@@ -462,17 +475,35 @@ async function resolveConfig({
     serverBundles = undefined;
   }
 
-  let isValidPrerenderConfig =
-    prerender == null ||
-    typeof prerender === "boolean" ||
-    Array.isArray(prerender) ||
-    typeof prerender === "function";
+  if (prerender) {
+    let isValidPrerenderPathsConfig = (p: unknown) =>
+      typeof p === "boolean" || typeof p === "function" || Array.isArray(p);
 
-  if (!isValidPrerenderConfig) {
-    return err(
-      "The `prerender` config must be a boolean, an array of string paths, " +
-        "or a function returning a boolean or array of string paths",
-    );
+    let isValidPrerenderConfig =
+      isValidPrerenderPathsConfig(prerender) ||
+      (typeof prerender === "object" &&
+        "paths" in prerender &&
+        isValidPrerenderPathsConfig(prerender.paths));
+
+    if (!isValidPrerenderConfig) {
+      return err(
+        "The `prerender`/`prerender.paths` config must be a boolean, an array " +
+          "of string paths, or a function returning a boolean or array of string paths.",
+      );
+    }
+
+    let isValidConcurrencyConfig =
+      typeof prerender != "object" ||
+      !("unstable_concurrency" in prerender) ||
+      (typeof prerender.unstable_concurrency === "number" &&
+        Number.isInteger(prerender.unstable_concurrency) &&
+        prerender.unstable_concurrency > 0);
+
+    if (!isValidConcurrencyConfig) {
+      return err(
+        "The `prerender.unstable_concurrency` config must be a positive integer if specified.",
+      );
+    }
   }
 
   let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];

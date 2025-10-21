@@ -36,6 +36,7 @@ import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
 import kebabCase from "lodash/kebabCase";
+import pMap from "p-map";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -79,6 +80,7 @@ import {
   createConfigLoader,
   resolveEntryFiles,
   configRouteToBranchRoute,
+  type PrerenderPaths,
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
@@ -2658,11 +2660,12 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  for (let path of build.prerender) {
+
+  let prerenderSinglePath = async (path: string) => {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
     if (!matches) {
-      continue;
+      return;
     }
     // When prerendering a resource route, we don't want to pass along the
     // `.data` file since we want to prerender the raw Response returned from
@@ -2731,7 +2734,15 @@ async function handlePrerender(
           : undefined,
       );
     }
+  };
+
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+    concurrency = prerender.unstable_concurrency ?? 1;
   }
+
+  await pMap(build.prerender, prerenderSinglePath, { concurrency });
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
@@ -2916,33 +2927,49 @@ export async function getPrerenderPaths(
   routes: GenericRouteManifest,
   logWarning = false,
 ): Promise<string[]> {
-  let prerenderPaths: string[] = [];
-  if (prerender != null && prerender !== false) {
-    let prerenderRoutes = createPrerenderRoutes(routes);
-    if (prerender === true) {
-      let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
-      if (logWarning && !ssr && paramRoutes.length > 0) {
-        console.warn(
-          colors.yellow(
-            [
-              "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
-                "using `prerender: true`. You may want to use the `prerender()` " +
-                "API to prerender the following paths:",
-              ...paramRoutes.map((p) => "  - " + p),
-            ].join("\n"),
-          ),
-        );
-      }
-      prerenderPaths = paths;
-    } else if (typeof prerender === "function") {
-      prerenderPaths = await prerender({
-        getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
-      });
-    } else {
-      prerenderPaths = prerender || ["/"];
-    }
+  if (prerender == null || prerender === false) {
+    return [];
   }
-  return prerenderPaths;
+
+  let pathsConfig: PrerenderPaths;
+
+  if (typeof prerender === "object" && "paths" in prerender) {
+    pathsConfig = prerender.paths;
+  } else {
+    pathsConfig = prerender;
+  }
+
+  if (pathsConfig === false) {
+    return [];
+  }
+
+  let prerenderRoutes = createPrerenderRoutes(routes);
+
+  if (pathsConfig === true) {
+    let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
+    if (logWarning && !ssr && paramRoutes.length > 0) {
+      console.warn(
+        colors.yellow(
+          [
+            "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
+              "using `prerender: true`. You may want to use the `prerender()` " +
+              "API to prerender the following paths:",
+            ...paramRoutes.map((p) => "  - " + p),
+          ].join("\n"),
+        ),
+      );
+    }
+    return paths;
+  }
+
+  if (typeof pathsConfig === "function") {
+    let paths = await pathsConfig({
+      getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
+    });
+    return paths;
+  }
+
+  return pathsConfig;
 }
 
 // Note: Duplicated from react-router/lib/server-runtime
