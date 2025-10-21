@@ -8,7 +8,7 @@ Status: proposed
 
 We want it to be easy to add observability to production React Router applications. This involves the ability to add logging, error reporting, and performance tracing to your application on both the server and the client.
 
-We always had a good story for user-facing error handling via `ErrorBoundary`, but until recently we only had a server-side error-reporting solution via the `entry.server` `handleError` export. In `7.8.2`, we shipped an `onError` client-side equivalent so it should now be possible to report on errors on the server and client pretty easily.
+We always had a good story for user-facing error _display_ via `ErrorBoundary`, but until recently we only had a server-side error _reporting_ solution via the `entry.server` `handleError` export. In `7.8.2`, we shipped an `unstable_onError` client-side equivalent so it should now be possible to report on errors on the server and client pretty easily.
 
 We have not historically had great recommendations for the other 2 facets of observability - logging and performance tracing. Middleware, shipped in `7.3.0` and stabilized in `7.9.0` gave us a way to "wrap" request handlers at any level of the tree, which provides a good solution for logging and _some_ high-level performance tracing. But it's too coarse-grained and does not allow folks to drill down into their applications.
 
@@ -24,31 +24,54 @@ Adopt instrumentation as a first class API and the recommended way to implement 
 
 There are 2 levels in which we want to instrument:
 
-- "router" level - ability to track the start and end of a router operation
-  - requests on the server handler
-  - navigations and fetchers on the client router
+- handler (server) and router (client) level
+  - instrument the request handler on the server
+  - instrument navigations and fetcher calls on the client
+  - singular instrumentation per operation
 - route level
-  - loaders, actions, middlewares, lazy
+  - instrument loaders, actions, middlewares, lazy
+  - multiple instrumentations per operation - multiple routes, multiple middlewares etc.
 
-On the server, if you are using a custom server, this is already possible by wrapping the react router handler and walking the `build.routes` tree and wrapping the route handlers.
+On the server, if you are using a custom server, this is already possible by wrapping the react router request handler and walking the `build.routes` tree and wrapping the route handlers.
 
-To provide the same functionality when using `@react-router/serve` we need to open up a new API. Currently, I am proposing a new `instrumentations` export from `entry.server`. This will be run on the server build in `createRequestHandler` and that way can work without a custom server. This will also allow custom-server users today to move some more code from their custom server into React Router by leveraging these new exports.
+To provide the same functionality when using `@react-router/serve` we need to open up a new API. Currently, I am proposing a new `instrumentations` export from `entry.server`. This will be applied to the server build in `createRequestHandler` and that way can work without a custom server. This will also allow custom-server users today to move some more code from their custom server into React Router by leveraging these new exports.
+
+A singular instrumentation function has the following shape:
+
+```tsx
+function intrumentationFunction(doTheActualThing, info) {
+  // Do some stuff before starting the thing
+
+  // Do the the thing
+  await doTheActualThing();
+
+  // Do some stuff after the thing finishes
+}
+```
+
+This API allows for a few things:
+
+- Consistent API for instrumenting any async action - from a handler, to a navigation, to a loader, or a middleware
+- By passing no arguments to `doTheActualThing()` and returning no data, this restricts the ability for instrumentation code to alter the actual runtime behavior of the app. I.e., you cannot modify arguments to loaders, nor change data returned from loaders. You can only report on the execution of loaders.
+- The `info` parameter allows us to pass relevant read-only information, such as the `request`, `context`, `routeId`, etc.
+- Nesting the call within a singular scope allows for contextual execution (i.e, `AsyncLocalStorage`) which enables things like nested OTEL traces to work properly
+
+Here's an example of this API on the server:
 
 ```tsx
 // entry.server.tsx
 
 export const instrumentations = [
   {
-    // Wrap incoming request handlers.  Currently applies to _all_ requests handled
-    // by the RR handler, including:
-    // - manifest reqeusts
+    // Wrap the request handler - applies to _all_ requests handled by RR, including:
+    // - manifest requests
     // - document requests
     // - `.data` requests
     // - resource route requests
     handler({ instrument }) {
       // Calling instrument performs the actual instrumentation
       instrument({
-        // Provide the instrumentation implementation for the equest handler
+        // Provide the instrumentation implementation for the request handler
         async request(handleRequest, { request }) {
           let start = Date.now();
           console.log(`Request start: ${request.method} ${request.url}`);
@@ -131,9 +154,48 @@ let router = createBrowserRouter(routes, { instrumentations })
 
 In both of these cases, we'll handle the instrumentation at the router creation level. And by passing `instrumentRoute` into the router, we can properly instrument future routes discovered via `route.lazy` or `patchRouteOnNavigation`
 
+### Error Handling
+
+It's important to note that the "handler" function will never throw. If the underlying loader/action throws, React Router will catch the error and return it out to you in case you need to perform some conditional logic in your instrumentation function - but your entire instrumentation function is thus guaranteed to run to completion even if the underlying application code errors.
+
+```tsx
+function intrumentationFunction(doTheActualThing, info) {
+  let { error } = await doTheActualThing();
+  // error will be undefined if the underlying handler succeeded,
+  // or contain the error if it threw
+
+  if (error) {
+    // ...
+  } else {
+    // ...
+  }
+}
+```
+
+You should not be using the instrumentation logic to report errors though, that's better served by `entry.server.tsx`'s `handleError` and `HydratedRouter`/`RouterProvider` `unstable_onError` props.
+
+If your throw from your instrumentation function, we do not want that to impact runtime application behavior so React Router will gracefully swallow that error with a console warning and continue running as if you had returned successfully.
+
+In both of these examples, the handlers and all other instrumentation functions will still run:
+
+```tsx
+// Throwing before calling the handler - we will detect this and still call the
+// handler internally
+function intrumentationFunction(doTheActualThing, info) {
+  somethingThatThrows();
+  await doTheActualThing();
+}
+
+// Throwing after calling the handler - error will be caught internally
+function intrumentationFunction2(doTheActualThing, info) {
+  await doTheActualThing();
+  somethingThatThrows();
+}
+```
+
 ### Composition
 
-Instrumentations is an aray so that you can compose together multiple independent instrumentations easily:
+Instrumentations is an array so that you can compose together multiple independent instrumentations easily:
 
 ```tsx
 let router = createBrowserRouter(routes, {

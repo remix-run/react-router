@@ -39,7 +39,7 @@ export type unstable_InstrumentRouteFunction = (
 
 // Shared
 interface InstrumentFunction<T> {
-  (handler: () => Promise<void>, info: T): Promise<void>;
+  (handler: () => Promise<{ error?: unknown }>, info: T): Promise<void>;
 }
 
 type InstrumentationInfo =
@@ -362,17 +362,16 @@ function wrapImpl<T extends InstrumentationInfo>(
     return null;
   }
   return async (...args: unknown[]) => {
-    let value: unknown;
-    let info = getInfo(...args);
-    await recurseRight(
+    let result = await recurseRight(
       impls,
-      info,
-      async () => {
-        value = await handler(...args);
-      },
+      getInfo(...args),
+      () => handler(...args),
       impls.length - 1,
     );
-    return value;
+    if (result.type === "error") {
+      throw result.value;
+    }
+    return result.value;
   };
 }
 
@@ -381,15 +380,45 @@ async function recurseRight<T extends InstrumentationInfo>(
   info: T,
   handler: () => MaybePromise<void>,
   index: number,
-): Promise<void> {
+): Promise<{ type: "success" | "error"; value: unknown }> {
   let impl = impls[index];
+  let result: { type: "success" | "error"; value: unknown } | undefined;
   if (!impl) {
-    await handler();
+    try {
+      let value = await handler();
+      result = { type: "success", value };
+    } catch (e) {
+      result = { type: "error", value: e };
+    }
   } else {
-    await impl(async () => {
-      await recurseRight(impls, info, handler, index - 1);
-    }, info);
+    // If they forget to call the handler, or if they throw before calling the
+    // handler, we need to ensure the handlers still gets called
+    let handlerCalled = false;
+    let callHandler = async () => {
+      handlerCalled = true;
+      result = await recurseRight(impls, info, handler, index - 1);
+      return result.type === "error" ? { error: result.value } : {};
+    };
+
+    try {
+      await impl(callHandler, info);
+    } catch (e) {
+      console.warn("An instrumentation function threw an error:", e);
+    }
+
+    if (!handlerCalled) {
+      await callHandler();
+    }
   }
+
+  if (result) {
+    return result;
+  }
+
+  return {
+    type: "error",
+    value: new Error("No result assigned in instrumentation chain."),
+  };
 }
 
 function getHandlerInfo(

@@ -1095,6 +1095,152 @@ describe("instrumentation", () => {
       });
     });
 
+    it("returns errors out to instrumentation implementations", async () => {
+      let spy = jest.fn();
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("inner-start");
+                  let { error } = await loader();
+                  spy("inner-end:" + (error as Error).message);
+                },
+              });
+            },
+          },
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("outer-start");
+                  let { error } = await loader();
+                  spy("outer-end:" + (error as Error).message);
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy).toHaveBeenNthCalledWith(1, "outer-start");
+      expect(spy).toHaveBeenNthCalledWith(2, "inner-start");
+      await A.loaders.page.reject(new Error("broken!"));
+      expect(spy).toHaveBeenNthCalledWith(3, "inner-end:broken!");
+      expect(spy).toHaveBeenNthCalledWith(4, "outer-end:broken!");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: {},
+        errors: {
+          page: new Error("broken!"),
+        },
+      });
+    });
+
+    it("swallows and warns if an instrumentation function throws before calling the handler", async () => {
+      let spy = jest.fn();
+      let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader() {
+                  throw new Error("broken!");
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy).not.toHaveBeenCalled();
+      await A.loaders.page.resolve("PAGE");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: { page: "PAGE" },
+        errors: null,
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        "An instrumentation function threw an error:",
+        new Error("broken!"),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("swallows and warns if an instrumentation function throws after calling the handler", async () => {
+      let spy = jest.fn();
+      let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("start");
+                  await loader();
+                  throw new Error("broken!");
+                },
+              });
+            },
+          },
+        ],
+        unstable_onError(e) {
+          console.warn("An instrumentation function threw an error:", e);
+        },
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy).toHaveBeenNthCalledWith(1, "start");
+      await A.loaders.page.resolve("PAGE");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: { page: "PAGE" },
+        errors: null,
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        "An instrumentation function threw an error:",
+        new Error("broken!"),
+      );
+      warnSpy.mockRestore();
+    });
+
     it("provides read-only information to instrumentation wrappers", async () => {
       let spy = jest.fn();
       let t = setup({
