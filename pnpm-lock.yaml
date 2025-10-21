@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-d15d7fd7-20250929(eslint@8.57.0)
+        version: 7.0.0-canary-71b3a03c-20251021(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -6262,8 +6262,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-d15d7fd7-20250929:
-    resolution: {integrity: sha512-BeJu8hPQW+FjteWcCVdVezI2ogQs2mrHSOznrk00dbXztd8NqnyHlB7Z1wx3ZwkUVVAVHmmxrBCrRMn6UP15FA==}
+  eslint-plugin-react-hooks@7.0.0-canary-71b3a03c-20251021:
+    resolution: {integrity: sha512-7EwZO7Drxeeq1g1ZNcIu93EEm0BvfBXZmUE+psxQCvpyyVfs7096NVcTuiuxY5aQwCGFdrVrSsgrSMHAFA6TUA==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9950,17 +9950,20 @@ packages:
   zimmerframe@1.1.2:
     resolution: {integrity: sha512-rAbqEGa8ovJy4pyBxZM70hg4pE6gDgaQ0Sl9M3enG3I0d6H4XSAM3GeNGLKnsBpuijUow064sf7ww1nutC5/3w==}
 
-  zod-validation-error@3.4.0:
-    resolution: {integrity: sha512-ZOPR9SVY6Pb2qqO5XHt+MkkTRxGXb4EVtnjc9JpXUOtUB1T9Ru7mZOT361AN3MsetVe7R0a1KZshJDZdgp9miQ==}
+  zod-validation-error@4.0.2:
+    resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: ^3.18.0
+      zod: ^3.25.0 || ^4.0.0
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -15142,15 +15145,14 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-d15d7fd7-20250929(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.0.0-canary-71b3a03c-20251021(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
-      '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.27.7)
       eslint: 8.57.0
       hermes-parser: 0.25.1
-      zod: 3.24.2
-      zod-validation-error: 3.4.0(zod@3.24.2)
+      zod: 4.1.12
+      zod-validation-error: 4.0.2(zod@4.1.12)
     transitivePeerDependencies:
       - supports-color
 
@@ -19839,12 +19841,15 @@ snapshots:
 
   zimmerframe@1.1.2: {}
 
-  zod-validation-error@3.4.0(zod@3.24.2):
+  zod-validation-error@4.0.2(zod@4.1.12):
     dependencies:
-      zod: 3.24.2
+      zod: 4.1.12
 
   zod@3.22.3: {}
 
-  zod@3.24.2: {}
+  zod@3.24.2:
+    optional: true
+
+  zod@4.1.12: {}
 
   zwitch@2.0.4: {}
