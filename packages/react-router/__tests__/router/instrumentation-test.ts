@@ -2,6 +2,9 @@ import { createMemoryRouter } from "../../lib/components";
 import type { StaticHandlerContext } from "../../lib/router/router";
 import { createStaticHandler } from "../../lib/router/router";
 import {
+  ErrorResponseImpl,
+  data,
+  redirect,
   type ActionFunction,
   type LoaderFunction,
   type MiddlewareFunction,
@@ -1095,7 +1098,7 @@ describe("instrumentation", () => {
       });
     });
 
-    it("returns errors out to instrumentation implementations", async () => {
+    it("returns handler-thrown errors out to instrumentation implementations", async () => {
       let spy = jest.fn();
       let t = setup({
         routes: [
@@ -1114,8 +1117,8 @@ describe("instrumentation", () => {
               route.instrument({
                 async loader(loader) {
                   spy("inner-start");
-                  let { error } = await loader();
-                  spy("inner-end:" + (error as Error).message);
+                  let { type, error } = await loader();
+                  spy(`inner-end:${type}:${(error as Error).message}`);
                 },
               });
             },
@@ -1125,8 +1128,8 @@ describe("instrumentation", () => {
               route.instrument({
                 async loader(loader) {
                   spy("outer-start");
-                  let { error } = await loader();
-                  spy("outer-end:" + (error as Error).message);
+                  let { type, error } = await loader();
+                  spy(`outer-end:${type}:${(error as Error).message}`);
                 },
               });
             },
@@ -1138,8 +1141,8 @@ describe("instrumentation", () => {
       expect(spy).toHaveBeenNthCalledWith(1, "outer-start");
       expect(spy).toHaveBeenNthCalledWith(2, "inner-start");
       await A.loaders.page.reject(new Error("broken!"));
-      expect(spy).toHaveBeenNthCalledWith(3, "inner-end:broken!");
-      expect(spy).toHaveBeenNthCalledWith(4, "outer-end:broken!");
+      expect(spy).toHaveBeenNthCalledWith(3, "inner-end:error:broken!");
+      expect(spy).toHaveBeenNthCalledWith(4, "outer-end:error:broken!");
       expect(t.router.state).toMatchObject({
         navigation: { state: "idle" },
         location: { pathname: "/page" },
@@ -1150,9 +1153,145 @@ describe("instrumentation", () => {
       });
     });
 
-    it("swallows and warns if an instrumentation function throws before calling the handler", async () => {
+    it("does not return handler-thrown Responses out to instrumentation implementations", async () => {
       let spy = jest.fn();
-      let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+          {
+            id: "target",
+            path: "/target",
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("inner-start");
+                  let { error } = await loader();
+                  // Go back to discriminated union
+                  // thrown responses should not be exposed out here
+                  if (error) {
+                    spy("BROKEN");
+                  } else {
+                    spy("inner-end");
+                  }
+                },
+              });
+            },
+          },
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("outer-start");
+                  let { error } = await loader();
+                  if (error) {
+                    spy("BROKEN");
+                  } else {
+                    spy("outer-end");
+                  }
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy).toHaveBeenNthCalledWith(1, "outer-start");
+      expect(spy).toHaveBeenNthCalledWith(2, "inner-start");
+      await A.loaders.page.reject(redirect("/target"));
+      expect(spy).toHaveBeenNthCalledWith(3, "inner-end");
+      expect(spy).toHaveBeenNthCalledWith(4, "outer-end");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/target" },
+        loaderData: {},
+        errors: null,
+      });
+    });
+
+    it("does not return handler-thrown data() out to instrumentation implementations", async () => {
+      let spy = jest.fn();
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+          {
+            id: "target",
+            path: "/target",
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("inner-start");
+                  let { error } = await loader();
+                  // Go back to discriminated union
+                  // thrown responses should not be exposed out here
+                  if (error) {
+                    spy("BROKEN");
+                  } else {
+                    spy("inner-end");
+                  }
+                },
+              });
+            },
+          },
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("outer-start");
+                  let { error } = await loader();
+                  if (error) {
+                    spy("BROKEN");
+                  } else {
+                    spy("outer-end");
+                  }
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy).toHaveBeenNthCalledWith(1, "outer-start");
+      expect(spy).toHaveBeenNthCalledWith(2, "inner-start");
+      await A.loaders.page.reject(data({ message: "hello" }, { status: 418 }));
+      expect(spy).toHaveBeenNthCalledWith(3, "inner-end");
+      expect(spy).toHaveBeenNthCalledWith(4, "outer-end");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: {},
+        errors: {
+          page: new ErrorResponseImpl(418, "", { message: "hello" }),
+        },
+      });
+    });
+
+    it("swallows and console.errors if an instrumentation function throws before calling the handler", async () => {
+      let spy = jest.fn();
+      let errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
       let t = setup({
         routes: [
           {
@@ -1186,16 +1325,16 @@ describe("instrumentation", () => {
         loaderData: { page: "PAGE" },
         errors: null,
       });
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(errorSpy).toHaveBeenCalledWith(
         "An instrumentation function threw an error:",
         new Error("broken!"),
       );
-      warnSpy.mockRestore();
+      errorSpy.mockRestore();
     });
 
     it("swallows and warns if an instrumentation function throws after calling the handler", async () => {
       let spy = jest.fn();
-      let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      let errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
       let t = setup({
         routes: [
           {
@@ -1220,9 +1359,6 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_onError(e) {
-          console.warn("An instrumentation function threw an error:", e);
-        },
       });
 
       let A = await t.navigate("/page");
@@ -1234,11 +1370,53 @@ describe("instrumentation", () => {
         loaderData: { page: "PAGE" },
         errors: null,
       });
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(errorSpy).toHaveBeenCalledWith(
         "An instrumentation function threw an error:",
         new Error("broken!"),
       );
-      warnSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
+
+    it("does not let you call handlers more than once", async () => {
+      let errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  await loader();
+                  await loader();
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      await A.loaders.page.resolve("PAGE");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: { page: "PAGE" },
+        errors: null,
+      });
+      expect(A.loaders.page.stub).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(
+        "You cannot call instrumented handlers more than once",
+      );
+      errorSpy.mockRestore();
     });
 
     it("provides read-only information to instrumentation wrappers", async () => {

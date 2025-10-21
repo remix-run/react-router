@@ -1,5 +1,5 @@
 import type { RequestHandler } from "../server-runtime/server";
-import { createPath } from "./history";
+import { createPath, invariant } from "./history";
 import type { Router } from "./router";
 import type {
   ActionFunctionArgs,
@@ -39,7 +39,12 @@ export type unstable_InstrumentRouteFunction = (
 
 // Shared
 interface InstrumentFunction<T> {
-  (handler: () => Promise<{ error?: unknown }>, info: T): Promise<void>;
+  (
+    handler: () => Promise<
+      { type: "success" } | { type: "error"; error: unknown }
+    >,
+    info: T,
+  ): Promise<void>;
 }
 
 type InstrumentationInfo =
@@ -380,7 +385,9 @@ async function recurseRight<T extends InstrumentationInfo>(
   info: T,
   handler: () => MaybePromise<void>,
   index: number,
-): Promise<{ type: "success" | "error"; value: unknown }> {
+): Promise<
+  { type: "success"; value: unknown } | { type: "error"; value: unknown }
+> {
   let impl = impls[index];
   let result: { type: "success" | "error"; value: unknown } | undefined;
   if (!impl) {
@@ -394,16 +401,26 @@ async function recurseRight<T extends InstrumentationInfo>(
     // If they forget to call the handler, or if they throw before calling the
     // handler, we need to ensure the handlers still gets called
     let handlerCalled = false;
-    let callHandler = async () => {
-      handlerCalled = true;
-      result = await recurseRight(impls, info, handler, index - 1);
-      return result.type === "error" ? { error: result.value } : {};
+    let callHandler = async (): Promise<
+      { type: "success" } | { type: "error"; error: unknown }
+    > => {
+      if (handlerCalled) {
+        console.error("You cannot call instrumented handlers more than once");
+      } else {
+        handlerCalled = true;
+        result = await recurseRight(impls, info, handler, index - 1);
+      }
+      invariant(result, "Expected a result");
+      if (result.type === "error" && result.value instanceof Error) {
+        return { type: "error", error: result.value };
+      }
+      return { type: "success" };
     };
 
     try {
       await impl(callHandler, info);
     } catch (e) {
-      console.warn("An instrumentation function threw an error:", e);
+      console.error("An instrumentation function threw an error:", e);
     }
 
     if (!handlerCalled) {
