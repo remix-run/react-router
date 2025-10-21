@@ -113,7 +113,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-128abcfa-20250917(eslint@8.57.0)
+        version: 7.0.0-canary-2bcbf254-20251020(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -1098,6 +1098,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      p-map:
+        specifier: ^7.0.3
+        version: 7.0.3
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -6252,8 +6255,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-128abcfa-20250917:
-    resolution: {integrity: sha512-cR/EftrsVDqCbmfq6IEsLaPqMhkLFgoiJvnSF6nArECbchE8ZQJyGQv7sXGwsf1sKYXr7N9vaB45iDmZAx4Ecw==}
+  eslint-plugin-react-hooks@7.0.0-canary-2bcbf254-20251020:
+    resolution: {integrity: sha512-AXtzy40dVKKvYvx94lieAzh9J4zRtk5vduZz1bA0aX45ZqUroaJW/Mnb2wK1O/XZhAozHXIiBNWIrQDB+vwF0Q==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -8112,6 +8115,10 @@ packages:
     resolution: {integrity: sha512-y3b8Kpd8OAN444hxfBbFfj1FY/RjtTd8tzYwhUqNYXx0fXx2iX4maP4Qr6qhIKbQXI02wTLAda4fYUbDagTUFw==}
     engines: {node: '>=6'}
 
+  p-map@7.0.3:
+    resolution: {integrity: sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==}
+    engines: {node: '>=18'}
+
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
     engines: {node: '>=6'}
@@ -9884,17 +9891,20 @@ packages:
   zimmerframe@1.1.2:
     resolution: {integrity: sha512-rAbqEGa8ovJy4pyBxZM70hg4pE6gDgaQ0Sl9M3enG3I0d6H4XSAM3GeNGLKnsBpuijUow064sf7ww1nutC5/3w==}
 
-  zod-validation-error@3.4.0:
-    resolution: {integrity: sha512-ZOPR9SVY6Pb2qqO5XHt+MkkTRxGXb4EVtnjc9JpXUOtUB1T9Ru7mZOT361AN3MsetVe7R0a1KZshJDZdgp9miQ==}
+  zod-validation-error@4.0.2:
+    resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: ^3.18.0
+      zod: ^3.25.0 || ^4.0.0
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -15065,15 +15075,14 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-128abcfa-20250917(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.0.0-canary-2bcbf254-20251020(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
-      '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.27.7)
       eslint: 8.57.0
       hermes-parser: 0.25.1
-      zod: 3.24.2
-      zod-validation-error: 3.4.0(zod@3.24.2)
+      zod: 4.1.12
+      zod-validation-error: 4.0.2(zod@4.1.12)
     transitivePeerDependencies:
       - supports-color
 
@@ -17654,6 +17663,8 @@ snapshots:
 
   p-map@2.1.0: {}
 
+  p-map@7.0.3: {}
+
   p-try@2.2.0: {}
 
   pac-proxy-agent@7.0.2:
@@ -18925,7 +18936,7 @@ snapshots:
 
   tsx@4.19.3:
     dependencies:
-      esbuild: 0.25.0
+      esbuild: 0.25.4
       get-tsconfig: 4.10.0
     optionalDependencies:
       fsevents: 2.3.3
@@ -19711,12 +19722,15 @@ snapshots:
 
   zimmerframe@1.1.2: {}
 
-  zod-validation-error@3.4.0(zod@3.24.2):
+  zod-validation-error@4.0.2(zod@4.1.12):
     dependencies:
-      zod: 3.24.2
+      zod: 4.1.12
 
   zod@3.22.3: {}
 
-  zod@3.24.2: {}
+  zod@3.24.2:
+    optional: true
+
+  zod@4.1.12: {}
 
   zwitch@2.0.4: {}
