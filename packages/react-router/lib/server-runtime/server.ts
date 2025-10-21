@@ -661,9 +661,6 @@ async function handleResourceRequest(
 
   function handleQueryRouteError(error: unknown) {
     if (isResponse(error)) {
-      // Note: Not functionally required but ensures that our response headers
-      // match identically to what Remix returns
-      error.headers.set("X-Remix-Catch", "yes");
       return error;
     }
 
@@ -701,9 +698,6 @@ function errorResponseToJson(
     {
       status: errorResponse.status,
       statusText: errorResponse.statusText,
-      headers: {
-        "X-Remix-Error": "yes",
-      },
     },
   );
 }

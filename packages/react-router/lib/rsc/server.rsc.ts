@@ -455,8 +455,8 @@ export async function matchRSCServerRequest({
     generateResponse,
     temporaryReferences,
   );
-  // The front end uses this to know whether a 404 status came from app code
-  // or 404'd and never reached the origin server
+  // The front end uses this to know whether a 4xx/5xx status came from app code
+  // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
   return response;
 }

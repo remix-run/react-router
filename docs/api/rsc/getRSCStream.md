@@ -28,8 +28,6 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_getRSCStream.html)
-
 Get the prerendered [RSC](https://react.dev/reference/rsc/server-components)
 stream for hydration. Usually passed directly to your
 `react-server-dom-xyz/client`'s `createFromReadableStream`.

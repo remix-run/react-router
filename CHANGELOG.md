@@ -13,114 +13,127 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v7.9.1](#v791)
-    - [Patch Changes](#patch-changes)
-  - [v7.9.0](#v790)
+  - [v7.9.4](#v794)
     - [What's Changed](#whats-changed)
-      - [Stable Middleware and Context APIs](#stable-middleware-and-context-apis)
-    - [Minor Changes](#minor-changes)
-    - [Patch Changes](#patch-changes-1)
+      - [`useRoute()` (unstable)](#useroute-unstable)
+    - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
-  - [v7.8.2](#v782)
+  - [v7.9.3](#v793)
+    - [Patch Changes](#patch-changes-1)
+  - [v7.9.2](#v792)
+    - [What's Changed](#whats-changed-1)
+      - [RSC Framework Mode (unstable)](#rsc-framework-mode-unstable)
+      - [Fetcher Reset (unstable)](#fetcher-reset-unstable)
     - [Patch Changes](#patch-changes-2)
     - [Unstable Changes](#unstable-changes-1)
-  - [v7.8.1](#v781)
+  - [v7.9.1](#v791)
     - [Patch Changes](#patch-changes-3)
+  - [v7.9.0](#v790)
+    - [What's Changed](#whats-changed-2)
+      - [Stable Middleware and Context APIs](#stable-middleware-and-context-apis)
+    - [Minor Changes](#minor-changes)
+    - [Patch Changes](#patch-changes-4)
     - [Unstable Changes](#unstable-changes-2)
+  - [v7.8.2](#v782)
+    - [Patch Changes](#patch-changes-5)
+    - [Unstable Changes](#unstable-changes-3)
+  - [v7.8.1](#v781)
+    - [Patch Changes](#patch-changes-6)
+    - [Unstable Changes](#unstable-changes-4)
   - [v7.8.0](#v780)
-    - [What's Changed](#whats-changed-1)
+    - [What's Changed](#whats-changed-3)
       - [Consistently named `loaderData` values](#consistently-named-loaderdata-values)
       - [Improvements/fixes to the middleware APIs (unstable)](#improvementsfixes-to-the-middleware-apis-unstable)
     - [Minor Changes](#minor-changes-1)
-    - [Patch Changes](#patch-changes-4)
-    - [Unstable Changes](#unstable-changes-3)
+    - [Patch Changes](#patch-changes-7)
+    - [Unstable Changes](#unstable-changes-5)
     - [Changes by Package](#changes-by-package)
   - [v7.7.1](#v771)
-    - [Patch Changes](#patch-changes-5)
-    - [Unstable Changes](#unstable-changes-4)
+    - [Patch Changes](#patch-changes-8)
+    - [Unstable Changes](#unstable-changes-6)
   - [v7.7.0](#v770)
-    - [What's Changed](#whats-changed-2)
+    - [What's Changed](#whats-changed-4)
       - [Unstable RSC APIs](#unstable-rsc-apis)
     - [Minor Changes](#minor-changes-2)
-    - [Patch Changes](#patch-changes-6)
-    - [Unstable Changes](#unstable-changes-5)
+    - [Patch Changes](#patch-changes-9)
+    - [Unstable Changes](#unstable-changes-7)
     - [Changes by Package](#changes-by-package-1)
   - [v7.6.3](#v763)
-    - [Patch Changes](#patch-changes-7)
+    - [Patch Changes](#patch-changes-10)
   - [v7.6.2](#v762)
-    - [Patch Changes](#patch-changes-8)
+    - [Patch Changes](#patch-changes-11)
   - [v7.6.1](#v761)
-    - [Patch Changes](#patch-changes-9)
-    - [Unstable Changes](#unstable-changes-6)
+    - [Patch Changes](#patch-changes-12)
+    - [Unstable Changes](#unstable-changes-8)
   - [v7.6.0](#v760)
-    - [What's Changed](#whats-changed-3)
+    - [What's Changed](#whats-changed-5)
       - [`routeDiscovery` Config Option](#routediscovery-config-option)
       - [Automatic Types for Future Flags](#automatic-types-for-future-flags)
     - [Minor Changes](#minor-changes-3)
-    - [Patch Changes](#patch-changes-10)
-    - [Unstable Changes](#unstable-changes-7)
+    - [Patch Changes](#patch-changes-13)
+    - [Unstable Changes](#unstable-changes-9)
     - [Changes by Package](#changes-by-package-2)
   - [v7.5.3](#v753)
-    - [Patch Changes](#patch-changes-11)
+    - [Patch Changes](#patch-changes-14)
   - [v7.5.2](#v752)
     - [Security Notice](#security-notice)
-    - [Patch Changes](#patch-changes-12)
+    - [Patch Changes](#patch-changes-15)
   - [v7.5.1](#v751)
-    - [Patch Changes](#patch-changes-13)
-    - [Unstable Changes](#unstable-changes-8)
+    - [Patch Changes](#patch-changes-16)
+    - [Unstable Changes](#unstable-changes-10)
   - [v7.5.0](#v750)
-    - [What's Changed](#whats-changed-4)
+    - [What's Changed](#whats-changed-6)
       - [`route.lazy` Object API](#routelazy-object-api)
     - [Minor Changes](#minor-changes-4)
-    - [Patch Changes](#patch-changes-14)
-    - [Unstable Changes](#unstable-changes-9)
+    - [Patch Changes](#patch-changes-17)
+    - [Unstable Changes](#unstable-changes-11)
     - [Changes by Package](#changes-by-package-3)
   - [v7.4.1](#v741)
     - [Security Notice](#security-notice-1)
-    - [Patch Changes](#patch-changes-15)
-    - [Unstable Changes](#unstable-changes-10)
+    - [Patch Changes](#patch-changes-18)
+    - [Unstable Changes](#unstable-changes-12)
   - [v7.4.0](#v740)
     - [Minor Changes](#minor-changes-5)
-    - [Patch Changes](#patch-changes-16)
-    - [Unstable Changes](#unstable-changes-11)
+    - [Patch Changes](#patch-changes-19)
+    - [Unstable Changes](#unstable-changes-13)
     - [Changes by Package](#changes-by-package-4)
   - [v7.3.0](#v730)
     - [Minor Changes](#minor-changes-6)
-    - [Patch Changes](#patch-changes-17)
-    - [Unstable Changes](#unstable-changes-12)
+    - [Patch Changes](#patch-changes-20)
+    - [Unstable Changes](#unstable-changes-14)
       - [Client-side `context` (unstable)](#client-side-context-unstable)
       - [Middleware (unstable)](#middleware-unstable)
         - [Middleware `context` parameter](#middleware-context-parameter)
       - [`unstable_SerializesTo`](#unstable_serializesto)
     - [Changes by Package](#changes-by-package-5)
   - [v7.2.0](#v720)
-    - [What's Changed](#whats-changed-5)
+    - [What's Changed](#whats-changed-7)
       - [Type-safe `href` utility](#type-safe-href-utility)
       - [Prerendering with a SPA Fallback](#prerendering-with-a-spa-fallback)
       - [Allow a root `loader` in SPA Mode](#allow-a-root-loader-in-spa-mode)
     - [Minor Changes](#minor-changes-7)
-    - [Patch Changes](#patch-changes-18)
-    - [Unstable Changes](#unstable-changes-13)
+    - [Patch Changes](#patch-changes-21)
+    - [Unstable Changes](#unstable-changes-15)
       - [Split Route Modules (unstable)](#split-route-modules-unstable)
     - [Changes by Package](#changes-by-package-6)
   - [v7.1.5](#v715)
-    - [Patch Changes](#patch-changes-19)
-  - [v7.1.4](#v714)
-    - [Patch Changes](#patch-changes-20)
-  - [v7.1.3](#v713)
-    - [Patch Changes](#patch-changes-21)
-  - [v7.1.2](#v712)
     - [Patch Changes](#patch-changes-22)
-  - [v7.1.1](#v711)
+  - [v7.1.4](#v714)
     - [Patch Changes](#patch-changes-23)
+  - [v7.1.3](#v713)
+    - [Patch Changes](#patch-changes-24)
+  - [v7.1.2](#v712)
+    - [Patch Changes](#patch-changes-25)
+  - [v7.1.1](#v711)
+    - [Patch Changes](#patch-changes-26)
   - [v7.1.0](#v710)
     - [Minor Changes](#minor-changes-8)
-    - [Patch Changes](#patch-changes-24)
+    - [Patch Changes](#patch-changes-27)
     - [Changes by Package](#changes-by-package-7)
   - [v7.0.2](#v702)
-    - [Patch Changes](#patch-changes-25)
+    - [Patch Changes](#patch-changes-28)
   - [v7.0.1](#v701)
-    - [Patch Changes](#patch-changes-26)
+    - [Patch Changes](#patch-changes-29)
   - [v7.0.0](#v700)
     - [Breaking Changes](#breaking-changes)
       - [Package Restructuring](#package-restructuring)
@@ -137,201 +150,201 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Major Changes (`react-router`)](#major-changes-react-router)
     - [Major Changes (`@react-router/*`)](#major-changes-react-router-1)
     - [Minor Changes](#minor-changes-9)
-    - [Patch Changes](#patch-changes-27)
+    - [Patch Changes](#patch-changes-30)
     - [Changes by Package](#changes-by-package-8)
 - [React Router v6 Releases](#react-router-v6-releases)
   - [v6.30.1](#v6301)
-    - [Patch Changes](#patch-changes-28)
+    - [Patch Changes](#patch-changes-31)
   - [v6.30.0](#v6300)
     - [Minor Changes](#minor-changes-10)
-    - [Patch Changes](#patch-changes-29)
+    - [Patch Changes](#patch-changes-32)
   - [v6.29.0](#v6290)
     - [Minor Changes](#minor-changes-11)
-    - [Patch Changes](#patch-changes-30)
-  - [v6.28.2](#v6282)
-    - [Patch Changes](#patch-changes-31)
-  - [v6.28.1](#v6281)
-    - [Patch Changes](#patch-changes-32)
-  - [v6.28.0](#v6280)
-    - [What's Changed](#whats-changed-6)
-    - [Minor Changes](#minor-changes-12)
     - [Patch Changes](#patch-changes-33)
+  - [v6.28.2](#v6282)
+    - [Patch Changes](#patch-changes-34)
+  - [v6.28.1](#v6281)
+    - [Patch Changes](#patch-changes-35)
+  - [v6.28.0](#v6280)
+    - [What's Changed](#whats-changed-8)
+    - [Minor Changes](#minor-changes-12)
+    - [Patch Changes](#patch-changes-36)
   - [v6.27.0](#v6270)
-    - [What's Changed](#whats-changed-7)
+    - [What's Changed](#whats-changed-9)
       - [Stabilized APIs](#stabilized-apis)
     - [Minor Changes](#minor-changes-13)
-    - [Patch Changes](#patch-changes-34)
+    - [Patch Changes](#patch-changes-37)
   - [v6.26.2](#v6262)
-    - [Patch Changes](#patch-changes-35)
+    - [Patch Changes](#patch-changes-38)
   - [v6.26.1](#v6261)
-    - [Patch Changes](#patch-changes-36)
+    - [Patch Changes](#patch-changes-39)
   - [v6.26.0](#v6260)
     - [Minor Changes](#minor-changes-14)
-    - [Patch Changes](#patch-changes-37)
+    - [Patch Changes](#patch-changes-40)
   - [v6.25.1](#v6251)
-    - [Patch Changes](#patch-changes-38)
+    - [Patch Changes](#patch-changes-41)
   - [v6.25.0](#v6250)
-    - [What's Changed](#whats-changed-8)
+    - [What's Changed](#whats-changed-10)
       - [Stabilized `v7_skipActionErrorRevalidation`](#stabilized-v7_skipactionerrorrevalidation)
     - [Minor Changes](#minor-changes-15)
-    - [Patch Changes](#patch-changes-39)
+    - [Patch Changes](#patch-changes-42)
   - [v6.24.1](#v6241)
-    - [Patch Changes](#patch-changes-40)
+    - [Patch Changes](#patch-changes-43)
   - [v6.24.0](#v6240)
-    - [What's Changed](#whats-changed-9)
+    - [What's Changed](#whats-changed-11)
       - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
     - [Minor Changes](#minor-changes-16)
-    - [Patch Changes](#patch-changes-41)
+    - [Patch Changes](#patch-changes-44)
   - [v6.23.1](#v6231)
-    - [Patch Changes](#patch-changes-42)
+    - [Patch Changes](#patch-changes-45)
   - [v6.23.0](#v6230)
-    - [What's Changed](#whats-changed-10)
+    - [What's Changed](#whats-changed-12)
       - [Data Strategy (unstable)](#data-strategy-unstable)
       - [Skip Action Error Revalidation (unstable)](#skip-action-error-revalidation-unstable)
     - [Minor Changes](#minor-changes-17)
   - [v6.22.3](#v6223)
-    - [Patch Changes](#patch-changes-43)
+    - [Patch Changes](#patch-changes-46)
   - [v6.22.2](#v6222)
-    - [Patch Changes](#patch-changes-44)
+    - [Patch Changes](#patch-changes-47)
   - [v6.22.1](#v6221)
-    - [Patch Changes](#patch-changes-45)
+    - [Patch Changes](#patch-changes-48)
   - [v6.22.0](#v6220)
-    - [What's Changed](#whats-changed-11)
+    - [What's Changed](#whats-changed-13)
       - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
     - [Minor Changes](#minor-changes-18)
-    - [Patch Changes](#patch-changes-46)
-  - [v6.21.3](#v6213)
-    - [Patch Changes](#patch-changes-47)
-  - [v6.21.2](#v6212)
-    - [Patch Changes](#patch-changes-48)
-  - [v6.21.1](#v6211)
     - [Patch Changes](#patch-changes-49)
+  - [v6.21.3](#v6213)
+    - [Patch Changes](#patch-changes-50)
+  - [v6.21.2](#v6212)
+    - [Patch Changes](#patch-changes-51)
+  - [v6.21.1](#v6211)
+    - [Patch Changes](#patch-changes-52)
   - [v6.21.0](#v6210)
-    - [What's Changed](#whats-changed-12)
+    - [What's Changed](#whats-changed-14)
       - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
       - [Partial Hydration](#partial-hydration)
     - [Minor Changes](#minor-changes-19)
-    - [Patch Changes](#patch-changes-50)
+    - [Patch Changes](#patch-changes-53)
   - [v6.20.1](#v6201)
-    - [Patch Changes](#patch-changes-51)
+    - [Patch Changes](#patch-changes-54)
   - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-20)
-    - [Patch Changes](#patch-changes-52)
+    - [Patch Changes](#patch-changes-55)
   - [v6.19.0](#v6190)
-    - [What's Changed](#whats-changed-13)
+    - [What's Changed](#whats-changed-15)
       - [`unstable_flushSync` API](#unstable_flushsync-api)
     - [Minor Changes](#minor-changes-21)
-    - [Patch Changes](#patch-changes-53)
+    - [Patch Changes](#patch-changes-56)
   - [v6.18.0](#v6180)
-    - [What's Changed](#whats-changed-14)
+    - [What's Changed](#whats-changed-16)
       - [New Fetcher APIs](#new-fetcher-apis)
       - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
     - [Minor Changes](#minor-changes-22)
-    - [Patch Changes](#patch-changes-54)
+    - [Patch Changes](#patch-changes-57)
   - [v6.17.0](#v6170)
-    - [What's Changed](#whats-changed-15)
+    - [What's Changed](#whats-changed-17)
       - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-23)
-    - [Patch Changes](#patch-changes-55)
+    - [Patch Changes](#patch-changes-58)
   - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-24)
-    - [Patch Changes](#patch-changes-56)
+    - [Patch Changes](#patch-changes-59)
   - [v6.15.0](#v6150)
     - [Minor Changes](#minor-changes-25)
-    - [Patch Changes](#patch-changes-57)
+    - [Patch Changes](#patch-changes-60)
   - [v6.14.2](#v6142)
-    - [Patch Changes](#patch-changes-58)
+    - [Patch Changes](#patch-changes-61)
   - [v6.14.1](#v6141)
-    - [Patch Changes](#patch-changes-59)
+    - [Patch Changes](#patch-changes-62)
   - [v6.14.0](#v6140)
-    - [What's Changed](#whats-changed-16)
+    - [What's Changed](#whats-changed-18)
       - [JSON/Text Submissions](#jsontext-submissions)
     - [Minor Changes](#minor-changes-26)
-    - [Patch Changes](#patch-changes-60)
+    - [Patch Changes](#patch-changes-63)
   - [v6.13.0](#v6130)
-    - [What's Changed](#whats-changed-17)
+    - [What's Changed](#whats-changed-19)
       - [`future.v7_startTransition`](#futurev7_starttransition)
     - [Minor Changes](#minor-changes-27)
-    - [Patch Changes](#patch-changes-61)
+    - [Patch Changes](#patch-changes-64)
   - [v6.12.1](#v6121)
-    - [Patch Changes](#patch-changes-62)
+    - [Patch Changes](#patch-changes-65)
   - [v6.12.0](#v6120)
-    - [What's Changed](#whats-changed-18)
+    - [What's Changed](#whats-changed-20)
       - [`React.startTransition` support](#reactstarttransition-support)
     - [Minor Changes](#minor-changes-28)
-    - [Patch Changes](#patch-changes-63)
+    - [Patch Changes](#patch-changes-66)
   - [v6.11.2](#v6112)
-    - [Patch Changes](#patch-changes-64)
+    - [Patch Changes](#patch-changes-67)
   - [v6.11.1](#v6111)
-    - [Patch Changes](#patch-changes-65)
+    - [Patch Changes](#patch-changes-68)
   - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-29)
-    - [Patch Changes](#patch-changes-66)
+    - [Patch Changes](#patch-changes-69)
   - [v6.10.0](#v6100)
-    - [What's Changed](#whats-changed-19)
+    - [What's Changed](#whats-changed-21)
     - [Minor Changes](#minor-changes-30)
       - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
-    - [Patch Changes](#patch-changes-67)
+    - [Patch Changes](#patch-changes-70)
   - [v6.9.0](#v690)
-    - [What's Changed](#whats-changed-20)
+    - [What's Changed](#whats-changed-22)
       - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
       - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
     - [Minor Changes](#minor-changes-31)
-    - [Patch Changes](#patch-changes-68)
+    - [Patch Changes](#patch-changes-71)
   - [v6.8.2](#v682)
-    - [Patch Changes](#patch-changes-69)
+    - [Patch Changes](#patch-changes-72)
   - [v6.8.1](#v681)
-    - [Patch Changes](#patch-changes-70)
+    - [Patch Changes](#patch-changes-73)
   - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-32)
-    - [Patch Changes](#patch-changes-71)
+    - [Patch Changes](#patch-changes-74)
   - [v6.7.0](#v670)
     - [Minor Changes](#minor-changes-33)
-    - [Patch Changes](#patch-changes-72)
-  - [v6.6.2](#v662)
-    - [Patch Changes](#patch-changes-73)
-  - [v6.6.1](#v661)
-    - [Patch Changes](#patch-changes-74)
-  - [v6.6.0](#v660)
-    - [What's Changed](#whats-changed-21)
-    - [Minor Changes](#minor-changes-34)
     - [Patch Changes](#patch-changes-75)
-  - [v6.5.0](#v650)
-    - [What's Changed](#whats-changed-22)
-    - [Minor Changes](#minor-changes-35)
+  - [v6.6.2](#v662)
     - [Patch Changes](#patch-changes-76)
-  - [v6.4.5](#v645)
+  - [v6.6.1](#v661)
     - [Patch Changes](#patch-changes-77)
-  - [v6.4.4](#v644)
-    - [Patch Changes](#patch-changes-78)
-  - [v6.4.3](#v643)
-    - [Patch Changes](#patch-changes-79)
-  - [v6.4.2](#v642)
-    - [Patch Changes](#patch-changes-80)
-  - [v6.4.1](#v641)
-    - [Patch Changes](#patch-changes-81)
-  - [v6.4.0](#v640)
+  - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-23)
-      - [Remix Data APIs](#remix-data-apis)
+    - [Minor Changes](#minor-changes-34)
+    - [Patch Changes](#patch-changes-78)
+  - [v6.5.0](#v650)
+    - [What's Changed](#whats-changed-24)
+    - [Minor Changes](#minor-changes-35)
+    - [Patch Changes](#patch-changes-79)
+  - [v6.4.5](#v645)
+    - [Patch Changes](#patch-changes-80)
+  - [v6.4.4](#v644)
+    - [Patch Changes](#patch-changes-81)
+  - [v6.4.3](#v643)
     - [Patch Changes](#patch-changes-82)
+  - [v6.4.2](#v642)
+    - [Patch Changes](#patch-changes-83)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-84)
+  - [v6.4.0](#v640)
+    - [What's Changed](#whats-changed-25)
+      - [Remix Data APIs](#remix-data-apis)
+    - [Patch Changes](#patch-changes-85)
   - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-36)
   - [v6.2.2](#v622)
-    - [Patch Changes](#patch-changes-83)
+    - [Patch Changes](#patch-changes-86)
   - [v6.2.1](#v621)
-    - [Patch Changes](#patch-changes-84)
+    - [Patch Changes](#patch-changes-87)
   - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-37)
-    - [Patch Changes](#patch-changes-85)
+    - [Patch Changes](#patch-changes-88)
   - [v6.1.1](#v611)
-    - [Patch Changes](#patch-changes-86)
+    - [Patch Changes](#patch-changes-89)
   - [v6.1.0](#v610)
     - [Minor Changes](#minor-changes-38)
-    - [Patch Changes](#patch-changes-87)
+    - [Patch Changes](#patch-changes-90)
   - [v6.0.2](#v602)
-    - [Patch Changes](#patch-changes-88)
+    - [Patch Changes](#patch-changes-91)
   - [v6.0.1](#v601)
-    - [Patch Changes](#patch-changes-89)
+    - [Patch Changes](#patch-changes-92)
   - [v6.0.0](#v600)
 
 </details>
@@ -358,6 +371,184 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
+
+## v7.9.4
+
+Date: 2025-10-08
+
+### What's Changed
+
+#### `useRoute()` (unstable)
+
+This release includes a new `unstable_useRoute()` hook that provides a type-safe way to access route `loaderData`/`actionData` from a specific route in Framework Mode. Think if it like a better version of `useRouteLoaderData` that works with the typegen system and also supports `actionData`. Check out the changelog entry below for more information.
+
+### Patch Changes
+
+- `@react-router/dev` - Update `valibot` dependency to `^1.1.0` ([#14379](https://github.com/remix-run/react-router/pull/14379))
+- `@react-router/node` - Validate format of incoming session ids ([#14426](https://github.com/remix-run/react-router/pull/14426))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - handle external redirects in from server actions ([#14400](https://github.com/remix-run/react-router/pull/14400))
+- `react-router` - New (unstable) `useRoute` hook for accessing data from specific routes ([#14407](https://github.com/remix-run/react-router/pull/14407))
+
+  For example, let's say you have an `admin` route somewhere in your app and you want any child routes of `admin` to all have access to the `loaderData` and `actionData` from `admin.`
+
+  ```tsx
+  // app/routes/admin.tsx
+  import { Outlet } from "react-router";
+
+  export const loader = () => ({ message: "Hello, loader!" });
+
+  export const action = () => ({ count: 1 });
+
+  export default function Component() {
+    return (
+      <div>
+        {/* ... */}
+        <Outlet />
+        {/* ... */}
+      </div>
+    );
+  }
+  ```
+
+  You might even want to create a reusable widget that all of the routes nested under `admin` could use:
+
+  ```tsx
+  import { unstable_useRoute as useRoute } from "react-router";
+
+  export function AdminWidget() {
+    // How to get `message` and `count` from `admin` route?
+  }
+  ```
+
+  In framework mode, `useRoute` knows all your app's routes and gives you TS errors when invalid route IDs are passed in:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/dmin");
+    //                      ^^^^^^^^^^^
+  }
+  ```
+
+  `useRoute` returns `undefined` if the route is not part of the current page:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+  }
+  ```
+
+  Note: the `root` route is the exception since it is guaranteed to be part of the current page.
+  As a result, `useRoute` never returns `undefined` for `root`.
+
+  `loaderData` and `actionData` are marked as optional since they could be accessed before the `action` is triggered or after the `loader` threw an error:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+    const { loaderData, actionData } = admin;
+    console.log(loaderData);
+    //          ^? { message: string } | undefined
+    console.log(actionData);
+    //          ^? { count: number } | undefined
+  }
+  ```
+
+  If instead of a specific route, you wanted access to the _current_ route's `loaderData` and `actionData`, you can call `useRoute` without arguments:
+
+  ```tsx
+  export function AdminWidget() {
+    const currentRoute = useRoute();
+    currentRoute.loaderData;
+    currentRoute.actionData;
+  }
+  ```
+
+  This usage is equivalent to calling `useLoaderData` and `useActionData`, but consolidates all route data access into one hook: `useRoute`.
+
+  Note: when calling `useRoute()` (without a route ID), TS has no way to know which route is the current route.
+  As a result, `loaderData` and `actionData` are typed as `unknown`.
+  If you want more type-safety, you can either narrow the type yourself with something like `zod` or you can refactor your app to pass down typed props to your `AdminWidget`:
+
+  ```tsx
+  export function AdminWidget({
+    message,
+    count,
+  }: {
+    message: string;
+    count: number;
+  }) {
+    /* ... */
+  }
+  ```
+
+**Full Changelog**: [`v7.9.3...v7.9.4`](https://github.com/remix-run/react-router/compare/react-router@7.9.3...react-router@7.9.4)
+
+## v7.9.3
+
+Date: 2025-09-26
+
+### Patch Changes
+
+- `react-router` - Fix Data Mode regression causing a 404 during initial load in when `middleware` exists without any `loader` functions ([#14393](https://github.com/remix-run/react-router/pull/14393))
+- `react-router` - Do not try to use `turbo-stream` to decode CDN errors that never reached the server ([#14385](https://github.com/remix-run/react-router/pull/14385))
+  - This was logic we used to have in Remix v2 that got lost in the adoption of Single Fetch
+  - This permits the actual CDN error to bubble to the `ErrorBoundary` instead of a generic _"Unable to decode turbo-stream response"_ error
+
+**Full Changelog**: [`v7.9.2...v7.9.3`](https://github.com/remix-run/react-router/compare/react-router@7.9.2...react-router@7.9.3)
+
+## v7.9.2
+
+Date: 2025-09-24
+
+### What's Changed
+
+This release contains a handful of bug fixes, but we think you'll be most excited about the new unstable stuff 😉.
+
+#### RSC Framework Mode (unstable)
+
+This release includes our first release of unstable support for RSC in Framework Mode! You can read more about it in our [blog post](https://remix.run/blog/rsc-framework-mode-preview) and the [docs](https://reactrouter.com/how-to/react-server-components#rsc-framework-mode).
+
+#### Fetcher Reset (unstable)
+
+This release also includes a new (long-requested) `fetcher.unstable_reset()` API to reset fetchers back to their initial `idle` state.
+
+### Patch Changes
+
+- `react-router` - Ensure client-side router runs client `middleware` during initialization data load (if required) even if no loaders exist ([#14348](https://github.com/remix-run/react-router/pull/14348))
+- `react-router` - Fix `middleware` prop not being supported on `<Route>` when used with a data router via `createRoutesFromElements` ([#14357](https://github.com/remix-run/react-router/pull/14357))
+- `react-router` - Update `createRoutesStub` to work with `middleware` ([#14348](https://github.com/remix-run/react-router/pull/14348))
+  - You will need to set the `<RoutesStub future={{ v8_middleware: true }} />` flag to enable the proper `context` type
+- `react-router` - Update Lazy Route Discovery manifest requests to use a singular comma-separated `paths` query param instead of repeated `p` query params ([#14321](https://github.com/remix-run/react-router/pull/14321))
+  - This is because Cloudflare has a hard limit of 100 URL search param key/value pairs when used as a key for caching purposes
+  - If more that 100 paths were included, the cache key would be incomplete and could produce false-positive cache hits
+- `react-router` - Fail gracefully on manifest version mismatch logic if `sessionStorage` access is blocked ([#14335](https://github.com/remix-run/react-router/pull/14335))
+- `react-router` - Update `useOutlet` returned element to have a stable identity in-between route changes ([#13382](https://github.com/remix-run/react-router/pull/13382))
+- `react-router` - Handle encoded question mark and hash characters in ancestor splat routes ([#14249](https://github.com/remix-run/react-router/pull/14249))
+- `@react-router/dev` - Switch internal vite plugin Response logic to use `@remix-run/node-fetch-server` ([#13927](https://github.com/remix-run/react-router/pull/13927))
+- `@react-router/dev` - Fix `presets` `future` flags being ignored during config resolution ([#14369](https://github.com/remix-run/react-router/pull/14369))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - Add `fetcher.unstable_reset()` API ([#14206](https://github.com/remix-run/react-router/pull/14206))
+- `react-router` - In RSC Data Mode, handle SSR'd client errors and re-try in the browser ([#14342](https://github.com/remix-run/react-router/pull/14342))
+- `react-router` - Enable full transition support for the RSC router ([#14362](https://github.com/remix-run/react-router/pull/14362))
+- `@react-router/dev` - Add unstable support for RSC Framework Mode ([#14336](https://github.com/remix-run/react-router/pull/14336))
+- `@react-router/serve` - Disable `compression()` middleware in RSC framework mode ([#14381](https://github.com/remix-run/react-router/pull/14381))
+
+**Full Changelog**: [`v7.9.1...v7.9.2`](https://github.com/remix-run/react-router/compare/react-router@7.9.1...react-router@7.9.2)
 
 ## v7.9.1
 

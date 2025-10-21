@@ -196,7 +196,7 @@ export async function routeRSCServerRequest({
       headers.delete("Content-Encoding");
       headers.delete("Content-Length");
       headers.delete("Content-Type");
-      headers.delete("x-remix-response");
+      headers.delete("X-Remix-Response");
       headers.set("Location", payload.location);
 
       return new Response(serverResponseB?.body || "", {

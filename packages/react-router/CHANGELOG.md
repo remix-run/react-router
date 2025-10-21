@@ -1,5 +1,145 @@
 # `react-router`
 
+## 7.9.4
+
+### Patch Changes
+
+- handle external redirects in from server actions ([#14400](https://github.com/remix-run/react-router/pull/14400))
+- New (unstable) `useRoute` hook for accessing data from specific routes ([#14407](https://github.com/remix-run/react-router/pull/14407))
+
+  For example, let's say you have an `admin` route somewhere in your app and you want any child routes of `admin` to all have access to the `loaderData` and `actionData` from `admin.`
+
+  ```tsx
+  // app/routes/admin.tsx
+  import { Outlet } from "react-router";
+
+  export const loader = () => ({ message: "Hello, loader!" });
+
+  export const action = () => ({ count: 1 });
+
+  export default function Component() {
+    return (
+      <div>
+        {/* ... */}
+        <Outlet />
+        {/* ... */}
+      </div>
+    );
+  }
+  ```
+
+  You might even want to create a reusable widget that all of the routes nested under `admin` could use:
+
+  ```tsx
+  import { unstable_useRoute as useRoute } from "react-router";
+
+  export function AdminWidget() {
+    // How to get `message` and `count` from `admin` route?
+  }
+  ```
+
+  In framework mode, `useRoute` knows all your app's routes and gives you TS errors when invalid route IDs are passed in:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/dmin");
+    //                      ^^^^^^^^^^^
+  }
+  ```
+
+  `useRoute` returns `undefined` if the route is not part of the current page:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+  }
+  ```
+
+  Note: the `root` route is the exception since it is guaranteed to be part of the current page.
+  As a result, `useRoute` never returns `undefined` for `root`.
+
+  `loaderData` and `actionData` are marked as optional since they could be accessed before the `action` is triggered or after the `loader` threw an error:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+    const { loaderData, actionData } = admin;
+    console.log(loaderData);
+    //          ^? { message: string } | undefined
+    console.log(actionData);
+    //          ^? { count: number } | undefined
+  }
+  ```
+
+  If instead of a specific route, you wanted access to the _current_ route's `loaderData` and `actionData`, you can call `useRoute` without arguments:
+
+  ```tsx
+  export function AdminWidget() {
+    const currentRoute = useRoute();
+    currentRoute.loaderData;
+    currentRoute.actionData;
+  }
+  ```
+
+  This usage is equivalent to calling `useLoaderData` and `useActionData`, but consolidates all route data access into one hook: `useRoute`.
+
+  Note: when calling `useRoute()` (without a route ID), TS has no way to know which route is the current route.
+  As a result, `loaderData` and `actionData` are typed as `unknown`.
+  If you want more type-safety, you can either narrow the type yourself with something like `zod` or you can refactor your app to pass down typed props to your `AdminWidget`:
+
+  ```tsx
+  export function AdminWidget({
+    message,
+    count,
+  }: {
+    message: string;
+    count: number;
+  }) {
+    /* ... */
+  }
+  ```
+
+## 7.9.3
+
+### Patch Changes
+
+- Do not try to use `turbo-stream` to decode CDN errors that never reached the server ([#14385](https://github.com/remix-run/react-router/pull/14385))
+  - We used to do this but lost this check with the adoption of single fetch
+
+- Fix Data Mode regression causing a 404 during initial load in when `middleware` exists without any `loader` functions ([#14393](https://github.com/remix-run/react-router/pull/14393))
+
+## 7.9.2
+
+### Patch Changes
+
+- - Update client-side router to run client `middleware` on initial load even if no loaders exist ([#14348](https://github.com/remix-run/react-router/pull/14348))
+  - Update `createRoutesStub` to run route middleware
+    - You will need to set the `<RoutesStub future={{ v8_middleware: true }} />` flag to enable the proper `context` type
+
+- Update Lazy Route Discovery manifest requests to use a singular comma-separated `paths` query param instead of repeated `p` query params ([#14321](https://github.com/remix-run/react-router/pull/14321))
+  - This is because Cloudflare has a hard limit of 100 URL search param key/value pairs when used as a key for caching purposes
+  - If more that 100 paths were included, the cache key would be incomplete and could produce false-positive cache hits
+
+- \[UNSTABLE] Add `fetcher.unstable_reset()` API ([#14206](https://github.com/remix-run/react-router/pull/14206))
+
+- Made useOutlet element reference have stable identity in-between route chages ([#13382](https://github.com/remix-run/react-router/pull/13382))
+
+- feat: enable full transition support for the rsc router ([#14362](https://github.com/remix-run/react-router/pull/14362))
+
+- In RSC Data Mode, handle SSR'd client errors and re-try in the browser ([#14342](https://github.com/remix-run/react-router/pull/14342))
+
+- Support `middleware` prop on `<Route>` for usage with a data router via `createRoutesFromElements` ([#14357](https://github.com/remix-run/react-router/pull/14357))
+
+- Handle encoded question mark and hash characters in ancestor splat routes ([#14249](https://github.com/remix-run/react-router/pull/14249))
+
+- Fail gracefully on manifest version mismatch logic if `sessionStorage` access is blocked ([#14335](https://github.com/remix-run/react-router/pull/14335))
+
 ## 7.9.1
 
 ### Patch Changes

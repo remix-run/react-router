@@ -618,15 +618,15 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
-    v8_middleware: reactRouterUserConfig.future?.v8_middleware ?? false,
+    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
-      reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
+      userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:
-      reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
+      userAndPresetConfigs.future?.unstable_splitRouteModules ?? false,
     unstable_subResourceIntegrity:
-      reactRouterUserConfig.future?.unstable_subResourceIntegrity ?? false,
+      userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
     unstable_viteEnvironmentApi:
-      reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
+      userAndPresetConfigs.future?.unstable_viteEnvironmentApi ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({

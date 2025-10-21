@@ -1,5 +1,144 @@
 # `@react-router/dev`
 
+## 7.9.4
+
+### Patch Changes
+
+- Update `valibot` dependency to `^1.1.0` ([#14379](https://github.com/remix-run/react-router/pull/14379))
+
+- New (unstable) `useRoute` hook for accessing data from specific routes ([#14407](https://github.com/remix-run/react-router/pull/14407))
+
+  For example, let's say you have an `admin` route somewhere in your app and you want any child routes of `admin` to all have access to the `loaderData` and `actionData` from `admin.`
+
+  ```tsx
+  // app/routes/admin.tsx
+  import { Outlet } from "react-router";
+
+  export const loader = () => ({ message: "Hello, loader!" });
+
+  export const action = () => ({ count: 1 });
+
+  export default function Component() {
+    return (
+      <div>
+        {/* ... */}
+        <Outlet />
+        {/* ... */}
+      </div>
+    );
+  }
+  ```
+
+  You might even want to create a reusable widget that all of the routes nested under `admin` could use:
+
+  ```tsx
+  import { unstable_useRoute as useRoute } from "react-router";
+
+  export function AdminWidget() {
+    // How to get `message` and `count` from `admin` route?
+  }
+  ```
+
+  In framework mode, `useRoute` knows all your app's routes and gives you TS errors when invalid route IDs are passed in:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/dmin");
+    //                      ^^^^^^^^^^^
+  }
+  ```
+
+  `useRoute` returns `undefined` if the route is not part of the current page:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+  }
+  ```
+
+  Note: the `root` route is the exception since it is guaranteed to be part of the current page.
+  As a result, `useRoute` never returns `undefined` for `root`.
+
+  `loaderData` and `actionData` are marked as optional since they could be accessed before the `action` is triggered or after the `loader` threw an error:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+    const { loaderData, actionData } = admin;
+    console.log(loaderData);
+    //          ^? { message: string } | undefined
+    console.log(actionData);
+    //          ^? { count: number } | undefined
+  }
+  ```
+
+  If instead of a specific route, you wanted access to the _current_ route's `loaderData` and `actionData`, you can call `useRoute` without arguments:
+
+  ```tsx
+  export function AdminWidget() {
+    const currentRoute = useRoute();
+    currentRoute.loaderData;
+    currentRoute.actionData;
+  }
+  ```
+
+  This usage is equivalent to calling `useLoaderData` and `useActionData`, but consolidates all route data access into one hook: `useRoute`.
+
+  Note: when calling `useRoute()` (without a route ID), TS has no way to know which route is the current route.
+  As a result, `loaderData` and `actionData` are typed as `unknown`.
+  If you want more type-safety, you can either narrow the type yourself with something like `zod` or you can refactor your app to pass down typed props to your `AdminWidget`:
+
+  ```tsx
+  export function AdminWidget({
+    message,
+    count,
+  }: {
+    message: string;
+    count: number;
+  }) {
+    /* ... */
+  }
+  ```
+
+- Updated dependencies:
+  - `react-router@7.9.4`
+  - `@react-router/node@7.9.4`
+  - `@react-router/serve@7.9.4`
+
+## 7.9.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.3`
+  - `@react-router/node@7.9.3`
+  - `@react-router/serve@7.9.3`
+
+## 7.9.2
+
+### Patch Changes
+
+- Fix preset future flags being ignored during config resolution ([#14369](https://github.com/remix-run/react-router/pull/14369))
+
+  Fixes a bug where future flags defined by presets were completely ignored. The config resolution was incorrectly reading from `reactRouterUserConfig.future` instead of the merged `userAndPresetConfigs.future`, causing all preset-defined future flags to be lost.
+
+  This fix ensures presets can properly enable experimental features as intended by the preset system design.
+
+- Add unstable support for RSC Framework Mode ([#14336](https://github.com/remix-run/react-router/pull/14336))
+
+- Switch internal vite plugin Response logic to use `@remix-run/node-fetch-server` ([#13927](https://github.com/remix-run/react-router/pull/13927))
+
+- Updated dependencies:
+  - `react-router@7.9.2`
+  - `@react-router/serve@7.9.2`
+  - `@react-router/node@7.9.2`
+
 ## 7.9.1
 
 ### Patch Changes

@@ -144,6 +144,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  useRoute as unstable_useRoute,
 } from "./lib/hooks";
 
 // Expose old RR DOM API
@@ -296,10 +297,6 @@ export type {
   EncodeReplyFunction as unstable_EncodeReplyFunction,
   RSCHydratedRouterProps as unstable_RSCHydratedRouterProps,
 } from "./lib/rsc/browser";
-export {
-  createCallServer as unstable_createCallServer,
-  RSCHydratedRouter as unstable_RSCHydratedRouter,
-} from "./lib/rsc/browser";
 export type {
   SSRCreateFromReadableStreamFunction as unstable_SSRCreateFromReadableStreamFunction,
   RSCStaticRouterProps as unstable_RSCStaticRouterProps,
@@ -308,7 +305,6 @@ export {
   routeRSCServerRequest as unstable_routeRSCServerRequest,
   RSCStaticRouter as unstable_RSCStaticRouter,
 } from "./lib/rsc/server.ssr";
-export { getRSCStream as unstable_getRSCStream } from "./lib/rsc/html-stream/browser";
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 // Re-export of RSC types
