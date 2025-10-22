@@ -18,6 +18,7 @@ const ROUTE_CSS_LINK_SELECTOR = `${ANY_CSS_LINK_SELECTOR}[href$='#']`;
 function getCssComponentColor(page: Page) {
   return page
     .locator("[data-css-component]")
+    .first()
     .evaluate((el) => window.getComputedStyle(el).color);
 }
 
@@ -69,10 +70,10 @@ test.describe("Vite CSS lazy loading", () => {
                       <Link to="/">Home</Link>
                     </li>
                     <li>
-                      <Link to="/parent-child/with-css-component">Parent / Route with CSS Component</Link>
+                      <Link to="/parent-child/with-css-component">Parent + Child / Route with CSS Component</Link>
                     </li>
                     <li>
-                      <Link to="/parent-child/without-css-component">Parent / Route Without CSS Component</Link>
+                      <Link to="/parent-child/without-css-component">Parent + Child / Route Without CSS Component</Link>
                     </li>
                     <li>
                       <Link to="/siblings/with-css-component">Siblings / Route with CSS Component</Link>
@@ -97,10 +98,10 @@ test.describe("Vite CSS lazy loading", () => {
         "app/routes/_layout.parent-child.tsx": js`
           import { Outlet } from "react-router";
           import { LoadLazyCssComponent } from "../components/load-lazy-css-component";
-          export default function Parent() {
+          export default function ParentChild() {
             return (
               <>
-                <h2 data-route-parent>Parent / Child</h2>
+                <h2 data-route-parent>Parent + Child</h2>
                 <LoadLazyCssComponent />
                 <Outlet />
               </>
@@ -113,7 +114,7 @@ test.describe("Vite CSS lazy loading", () => {
           export default function RouteWithCssComponent() {
             return (
               <>
-                <h2 data-route-child-with-css-component>Route with CSS Component</h2>
+                <h2 data-child-route-with-css-component>Route with CSS Component</h2>
                 <CssComponent />
               </>
             );
@@ -122,7 +123,7 @@ test.describe("Vite CSS lazy loading", () => {
 
         "app/routes/_layout.parent-child.without-css-component.tsx": js`
           export default function RouteWithoutCssComponent() {
-            return <h2 data-route-child-without-css-component>Route Without CSS Component</h2>;
+            return <h2 data-child-route-without-css-component>Route Without CSS Component</h2>;
           }
         `,
 
@@ -131,7 +132,7 @@ test.describe("Vite CSS lazy loading", () => {
           export default function Siblings() {
             return (
               <>
-                <h2 data-route-siblings>Siblings</h2>
+                <h2 data-sibling-route>Siblings</h2>
                 <Outlet />
               </>
             );
@@ -143,7 +144,7 @@ test.describe("Vite CSS lazy loading", () => {
           export default function SiblingsWithCssComponent() {
             return (
               <>
-                <h2 data-route-siblings-with-css-component>Siblings / Route with CSS Component</h2>
+                <h2 data-sibling-route-with-css-component>Route with CSS Component</h2>
                 <CssComponent />
               </>
             );
@@ -155,7 +156,7 @@ test.describe("Vite CSS lazy loading", () => {
           export default function SiblingsWithLazyCssComponent() {
             return (
               <>
-                <h2 data-route-siblings-with-lazy-css-component>Siblings / Route with Lazy CSS Component</h2>
+                <h2 data-sibling-route-with-lazy-css-component>Route with Lazy CSS Component</h2>
                 <LazyCssComponent />
               </>
             );
@@ -177,24 +178,23 @@ test.describe("Vite CSS lazy loading", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.goto("/parent-child/with-css-component");
-    await page.waitForSelector("[data-route-child-with-css-component]");
+    await page.waitForSelector("[data-child-route-with-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
     expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
     expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(1);
-
     expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
 
     await page.locator("[data-load-lazy-css-component]").click();
     await page.waitForSelector("[data-css-component]");
     expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(2);
     expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(1);
+    expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
 
     await app.clickLink("/parent-child/without-css-component");
-    await page.waitForSelector("[data-route-child-without-css-component]");
+    await page.waitForSelector("[data-child-route-without-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
     expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
     expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(0);
-
     expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
   });
 
@@ -204,20 +204,17 @@ test.describe("Vite CSS lazy loading", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.goto("/siblings/with-css-component");
-    await page.waitForSelector("[data-route-siblings-with-css-component]");
+    await page.waitForSelector("[data-sibling-route-with-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
     expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
     expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(1);
     expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
 
     await app.clickLink("/siblings/with-lazy-css-component");
-    await page.waitForSelector("[data-route-siblings-with-lazy-css-component]");
-
+    await page.waitForSelector("[data-sibling-route-with-lazy-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
-
     expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
     expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(0);
-
     expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
   });
 });
