@@ -10,12 +10,14 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 
-const CSS_LINK_SELECTOR = "link[rel='stylesheet']";
-const CSS_COMPONENT_LINK_SELECTOR = `${CSS_LINK_SELECTOR}[href*='css-component']`;
 // Link hrefs with a trailing hash are only ever managed by React Router, to
 // ensure they're forcibly unique from the Vite-injected links
-const ANY_FORCIBLY_UNIQUE_CSS_LINK_SELECTOR = `${CSS_LINK_SELECTOR}[href$='#']`;
-const CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR = `${CSS_COMPONENT_LINK_SELECTOR}[href$='#']`;
+const FORCIBLY_UNIQUE_HREF_SELECTOR = "[href$='#']";
+const CSS_LINK_SELECTOR = "link[rel='stylesheet']";
+const ANY_FORCIBLY_UNIQUE_CSS_LINK_SELECTOR = `link[rel='stylesheet']${FORCIBLY_UNIQUE_HREF_SELECTOR}`;
+const CSS_COMPONENT_LINK_SELECTOR =
+  "link[rel='stylesheet'][href*='css-component']";
+const CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR = `link[rel='stylesheet'][href*='css-component']${FORCIBLY_UNIQUE_HREF_SELECTOR}`;
 
 function getColor(page: Page, selector: string) {
   return page
