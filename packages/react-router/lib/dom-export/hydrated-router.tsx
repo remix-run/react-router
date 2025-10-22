@@ -27,6 +27,7 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
+import type { unstable_ClientInstrumentation } from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -78,8 +79,10 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   getContext,
+  unstable_instrumentations,
 }: {
   getContext?: RouterInit["getContext"];
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
 }): DataRouter {
   initSsrInfo();
 
@@ -172,6 +175,7 @@ function createHydratedRouter({
     getContext,
     hydrationData,
     hydrationRouteProperties,
+    unstable_instrumentations,
     mapRouteProperties,
     future: {
       middleware: ssrInfo.context.future.v8_middleware,
@@ -192,6 +196,7 @@ function createHydratedRouter({
       ssrInfo.context.basename,
     ),
   });
+
   ssrInfo.router = router;
 
   // We can call initialize() immediately if the router doesn't have any
@@ -217,12 +222,64 @@ function createHydratedRouter({
  */
 export interface HydratedRouterProps {
   /**
-   * Context object to be passed through to {@link createBrowserRouter} and made
-   * available to
+   * Context factory function to be passed through to {@link createBrowserRouter}.
+   * This function will be called to create a fresh `context` instance on each
+   * navigation/fetch and made available to
    * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
-   * functions
+   * functions.
    */
   getContext?: RouterInit["getContext"];
+  /**
+   * Array of instrumentation objects allowing you to instrument the router and
+   * individual routes prior to router initialization (and on any subsequently
+   * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
+   * mostly useful for observability such as wrapping navigations, fetches,
+   * as well as route loaders/actions/middlewares with logging and/or performance
+   * tracing.
+   *
+   * ```tsx
+   * startTransition(() => {
+   *   hydrateRoot(
+   *     document,
+   *     <HydratedRouter unstable_instrumentations={[logging]} />
+   *   );
+   * });
+   *
+   * const logging = {
+   *   router({ instrument }) {
+   *     instrument({
+   *       navigate: (impl, { to }) => logExecution(`navigate ${to}`, impl),
+   *       fetch: (impl, { to }) => logExecution(`fetch ${to}`, impl)
+   *     });
+   *   },
+   *   route({ instrument, id }) {
+   *     instrument({
+   *       middleware: (impl, { request }) => logExecution(
+   *         `middleware ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       loader: (impl, { request }) => logExecution(
+   *         `loader ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       action: (impl, { request }) => logExecution(
+   *         `action ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *     })
+   *   }
+   * };
+   *
+   * async function logExecution(label: string, impl: () => Promise<void>) {
+   *   let start = performance.now();
+   *   console.log(`start ${label}`);
+   *   await impl();
+   *   let duration = Math.round(performance.now() - start);
+   *   console.log(`end ${label} (${duration}ms)`);
+   * }
+   * ```
+   */
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
    * An error handler function that will be called for any loader/action/render
    * errors that are encountered in your application.  This is useful for
@@ -259,6 +316,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       getContext: props.getContext,
+      unstable_instrumentations: props.unstable_instrumentations,
     });
   }
 

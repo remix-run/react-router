@@ -68,6 +68,12 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
+import type {
+  unstable_ClientInstrumentation,
+  unstable_InstrumentRouteFunction,
+  unstable_InstrumentRouterFunction,
+} from "./router/instrumentation";
+import { instrumentClientSideRouter } from "./router/instrumentation";
 
 export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
@@ -169,6 +175,55 @@ export interface MemoryRouterOpts {
    */
   initialIndex?: number;
   /**
+   * Array of instrumentation objects allowing you to instrument the router and
+   * individual routes prior to router initialization (and on any subsequently
+   * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
+   * mostly useful for observability such as wrapping navigations, fetches,
+   * as well as route loaders/actions/middlewares with logging and/or performance
+   * tracing.
+   *
+   * ```tsx
+   * let router = createBrowserRouter(routes, {
+   *   unstable_instrumentations: [logging]
+   * });
+   *
+   *
+   * let logging = {
+   *   router({ instrument }) {
+   *     instrument({
+   *       navigate: (impl, info) => logExecution(`navigate ${info.to}`, impl),
+   *       fetch: (impl, info) => logExecution(`fetch ${info.to}`, impl)
+   *     });
+   *   },
+   *   route({ instrument, id }) {
+   *     instrument({
+   *       middleware: (impl, info) => logExecution(
+   *         `middleware ${info.request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       loader: (impl, info) => logExecution(
+   *         `loader ${info.request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       action: (impl, info) => logExecution(
+   *         `action ${info.request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *     })
+   *   }
+   * };
+   *
+   * async function logExecution(label: string, impl: () => Promise<void>) {
+   *   let start = performance.now();
+   *   console.log(`start ${label}`);
+   *   await impl();
+   *   let duration = Math.round(performance.now() - start);
+   *   console.log(`end ${label} (${duration}ms)`);
+   * }
+   * ```
+   */
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  /**
    * Override the default data strategy of loading in parallel.
    * Only intended for advanced usage.
    */
@@ -196,6 +251,7 @@ export interface MemoryRouterOpts {
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
+ * @param {MemoryRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
  * @param {MemoryRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @returns An initialized {@link DataRouter} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
@@ -217,6 +273,7 @@ export function createMemoryRouter(
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
+    unstable_instrumentations: opts?.unstable_instrumentations,
   }).initialize();
 }
 

@@ -95,6 +95,7 @@ import {
   useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
+import type { unstable_ClientInstrumentation } from "../router/instrumentation";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -235,6 +236,55 @@ export interface DOMRouterOpts {
    * ```
    */
   hydrationData?: HydrationState;
+  /**
+   * Array of instrumentation objects allowing you to instrument the router and
+   * individual routes prior to router initialization (and on any subsequently
+   * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
+   * mostly useful for observability such as wrapping navigations, fetches,
+   * as well as route loaders/actions/middlewares with logging and/or performance
+   * tracing.
+   *
+   * ```tsx
+   * let router = createBrowserRouter(routes, {
+   *   unstable_instrumentations: [logging]
+   * });
+   *
+   *
+   * let logging = {
+   *   router({ instrument }) {
+   *     instrument({
+   *       navigate: (impl, info) => logExecution(`navigate ${info.to}`, impl),
+   *       fetch: (impl, info) => logExecution(`fetch ${info.to}`, impl)
+   *     });
+   *   },
+   *   route({ instrument, id }) {
+   *     instrument({
+   *       middleware: (impl, info) => logExecution(
+   *         `middleware ${info.request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       loader: (impl, info) => logExecution(
+   *         `loader ${info.request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       action: (impl, info) => logExecution(
+   *         `action ${info.request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *     })
+   *   }
+   * };
+   *
+   * async function logExecution(label: string, impl: () => Promise<void>) {
+   *   let start = performance.now();
+   *   console.log(`start ${label}`);
+   *   await impl();
+   *   let duration = Math.round(performance.now() - start);
+   *   console.log(`end ${label} (${duration}ms)`);
+   * }
+   * ```
+   */
+  unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
    * Override the default data strategy of running loaders in parallel.
    * See {@link DataStrategyFunction}.
@@ -741,6 +791,7 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {DOMRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
  * @returns An initialized {@link DataRouter| data router} to pass to {@link RouterProvider | `<RouterProvider>`}
@@ -761,6 +812,7 @@ export function createBrowserRouter(
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
+    unstable_instrumentations: opts?.unstable_instrumentations,
   }).initialize();
 }
 
@@ -777,6 +829,7 @@ export function createBrowserRouter(
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {DOMRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
@@ -798,6 +851,7 @@ export function createHashRouter(
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
+    unstable_instrumentations: opts?.unstable_instrumentations,
   }).initialize();
 }
 

@@ -26,6 +26,7 @@ export async function callRouteHandler(
     request: stripRoutesParam(stripIndexParam(args.request)),
     params: args.params,
     context: args.context,
+    unstable_pattern: args.unstable_pattern,
   });
 
   // If they returned a redirect via data(), re-throw it as a Response
