@@ -273,12 +273,9 @@ export interface HydratedRouterProps {
    * async function logExecution(label: string, impl: () => Promise<void>) {
    *   let start = performance.now();
    *   console.log(`start ${label}`);
-   *   try {
-   *     await impl();
-   *   } finally {
-   *     let end = performance.now();
-   *     console.log(`end ${label} (${Math.round(end - start)}ms)`);
-   *   }
+   *   await impl();
+   *   let duration = Math.round(performance.now() - start);
+   *   console.log(`end ${label} (${duration}ms)`);
    * }
    * ```
    */

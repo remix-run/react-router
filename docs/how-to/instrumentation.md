@@ -332,9 +332,9 @@ This ensures that instrumentation is safe to add to production applications and 
 
 ### Error Handling
 
-To ensure that instrumentation code doesn't impact the runtime application, errors are caught internally and prevented from propagated outward. This design choice shows up in 2 aspects.
+To ensure that instrumentation code doesn't impact the runtime application, errors are caught internally and prevented from propagating outward. This design choice shows up in 2 aspects.
 
-First, if a handler function throws an error, that error will not bubble out of the `call*` method invoked from your instrumentation. Instead, the `call*` function returns a discriminated union result of type `{ type: "success", error: undefined } | { type: "error", error: unknown }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
+First, if a "handler" function (loader, action, request handler, navigation, etc.) throws an error, that error will not bubble out of the `callHandler` function invoked from your instrumentation. Instead, the `callHandler` function returns a discriminated union result of type `{ type: "success", error: undefined } | { type: "error", error: unknown }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
 
 ```tsx
 export const unstable_instrumentations = [

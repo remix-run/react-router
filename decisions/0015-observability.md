@@ -257,7 +257,7 @@ Originally we wanted to add an [Events API](https://github.com/remix-run/react-r
 
 ### patchRoutes
 
-Client side, we also considered whether this could be done via `patchRoutes`, but that's currently intended mostly to add new routes and doesn't work for `route.lazy` routes. In some RSC-use cases it can update parts of an existing route, but it sonly allows updates for the server-rendered RSC "elements," and doesn't walk the entire child tree to update children routes so it's not an ideal solution for updating loaders in the entire tree.
+Client side, we also considered whether this could be done via `patchRoutes`, but that's currently intended mostly to add new routes and doesn't work for `route.lazy` routes. In some RSC-use cases it can update parts of an existing route, but it only allows updates for the server-rendered RSC "elements," and doesn't walk the entire child tree to update children routes so it's not an ideal solution for updating loaders in the entire tree.
 
 ### Naive Function wrapping
 

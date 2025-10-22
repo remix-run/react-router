@@ -3,12 +3,12 @@ import type { StaticHandlerContext } from "../../lib/router/router";
 import { createStaticHandler } from "../../lib/router/router";
 import {
   ErrorResponseImpl,
-  MiddlewareNextFunction,
   data,
   redirect,
   type ActionFunction,
   type LoaderFunction,
   type MiddlewareFunction,
+  type MiddlewareNextFunction,
 } from "../../lib/router/utils";
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { mockServerBuild } from "../server-runtime/utils";
