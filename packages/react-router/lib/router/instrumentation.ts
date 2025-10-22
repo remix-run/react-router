@@ -13,8 +13,8 @@ import type {
   MaybePromise,
   MiddlewareFunction,
   RouterContext,
+  RouterContextProvider,
 } from "./utils";
-import { RouterContextProvider } from "./utils";
 
 // Public APIs
 export type unstable_ServerInstrumentation = {
@@ -141,7 +141,6 @@ const UninstrumentedSymbol = Symbol("Uninstrumented");
 export function getRouteInstrumentationUpdates(
   fns: unstable_InstrumentRouteFunction[],
   route: Readonly<AgnosticDataRouteObject>,
-  middlewareEnabled: boolean,
 ) {
   let aggregated: {
     lazy: InstrumentFunction<RouteLazyInstrumentationInfo>[];
@@ -216,10 +215,7 @@ export function getRouteInstrumentationUpdates(
       // @ts-expect-error
       let original = handler[UninstrumentedSymbol] ?? handler;
       let instrumented = wrapImpl(aggregated[key], original, (...args) =>
-        getHandlerInfo(
-          args[0] as LoaderFunctionArgs | ActionFunctionArgs,
-          middlewareEnabled,
-        ),
+        getHandlerInfo(args[0] as LoaderFunctionArgs | ActionFunctionArgs),
       );
       if (instrumented) {
         // @ts-expect-error
@@ -239,10 +235,7 @@ export function getRouteInstrumentationUpdates(
       // @ts-expect-error
       let original = middleware[UninstrumentedSymbol] ?? middleware;
       let instrumented = wrapImpl(aggregated.middleware, original, (...args) =>
-        getHandlerInfo(
-          args[0] as Parameters<MiddlewareFunction>[0],
-          middlewareEnabled,
-        ),
+        getHandlerInfo(args[0] as Parameters<MiddlewareFunction>[0]),
       );
       if (instrumented) {
         // @ts-expect-error
@@ -331,7 +324,6 @@ export function instrumentClientSideRouter(
 export function instrumentHandler(
   handler: RequestHandler,
   fns: unstable_InstrumentRequestHandlerFunction[],
-  middlewareEnabled: boolean,
 ): RequestHandler {
   let aggregated: {
     request: InstrumentFunction<RequestHandlerInstrumentationInfo>[];
@@ -359,7 +351,7 @@ export function instrumentHandler(
       let [request, context] = args as Parameters<RequestHandler>;
       return {
         request: getReadonlyRequest(request),
-        context: getReadonlyContext(context, middlewareEnabled),
+        context: getReadonlyContext(context),
       } satisfies RequestHandlerInstrumentationInfo;
     }) as RequestHandler;
   }
@@ -450,14 +442,13 @@ function getHandlerInfo(
     | LoaderFunctionArgs
     | ActionFunctionArgs
     | Parameters<MiddlewareFunction>[0],
-  middlewareEnabled: boolean,
 ): RouteHandlerInstrumentationInfo {
   let { request, context, params, unstable_pattern } = args;
   return {
     request: getReadonlyRequest(request),
     params: { ...params },
     unstable_pattern,
-    context: getReadonlyContext(context, middlewareEnabled),
+    context: getReadonlyContext(context),
   };
 }
 
@@ -497,25 +488,37 @@ function getReadonlyContext(
     // Context can be undefined in the request handler instrumentation case
     | null
     | undefined,
-  middlewareEnabled: boolean,
 ): MiddlewareEnabled extends true
   ? Pick<RouterContextProvider, "get">
   : Readonly<AppLoadContext> {
-  if (middlewareEnabled) {
-    if (!context) {
-      // @ts-expect-error
-      context = new RouterContextProvider();
-    }
-    return {
-      get: <T>(ctx: RouterContext<T>) =>
-        (context as unknown as RouterContextProvider).get(ctx),
-    };
-  } else {
-    if (!context) {
-      context = {};
-    }
-    let frozen = { ...context };
+  if (isPlainObject(context)) {
+    let frozen = context ? { ...context } : {};
     Object.freeze(frozen);
     return frozen;
+  } else {
+    return context
+      ? {
+          get: <T>(ctx: RouterContext<T>) =>
+            (context as unknown as RouterContextProvider).get(ctx),
+        }
+      : {
+          get: () => undefined,
+        };
   }
+}
+
+// From turbo-stream-v2/flatten.ts
+const objectProtoNames = Object.getOwnPropertyNames(Object.prototype)
+  .sort()
+  .join("\0");
+
+function isPlainObject(
+  thing: unknown,
+): thing is Record<string | number | symbol, unknown> {
+  const proto = Object.getPrototypeOf(thing);
+  return (
+    proto === Object.prototype ||
+    proto === null ||
+    Object.getOwnPropertyNames(proto).sort().join("\0") === objectProtoNames
+  );
 }
