@@ -1899,7 +1899,7 @@ describe("instrumentation", () => {
         },
       );
       let handler = createRequestHandler(build);
-      let response = await handler(new Request("http://localhost/"));
+      let response = await handler(new Request("http://localhost/"), {});
 
       expect(await response.text()).toBe("GET http://localhost/ COMPONENT");
       expect(spy.mock.calls).toEqual([
@@ -1913,9 +1913,7 @@ describe("instrumentation", () => {
                 get: expect.any(Function),
               },
             },
-            context: {
-              get: expect.any(Function),
-            },
+            context: {},
           },
         ],
         ["loader"],
@@ -1929,9 +1927,7 @@ describe("instrumentation", () => {
                 get: expect.any(Function),
               },
             },
-            context: {
-              get: expect.any(Function),
-            },
+            context: {},
           },
         ],
       ]);
@@ -2071,9 +2067,7 @@ describe("instrumentation", () => {
             },
             params: {},
             unstable_pattern: "/",
-            context: {
-              get: expect.any(Function),
-            },
+            context: {},
           },
         ],
         ["loader"],
@@ -2089,9 +2083,7 @@ describe("instrumentation", () => {
             },
             params: {},
             unstable_pattern: "/",
-            context: {
-              get: expect.any(Function),
-            },
+            context: {},
           },
         ],
       ]);
@@ -2148,9 +2140,7 @@ describe("instrumentation", () => {
             },
             params: {},
             unstable_pattern: "/",
-            context: {
-              get: expect.any(Function),
-            },
+            context: {},
           },
         ],
         ["action"],
@@ -2166,9 +2156,7 @@ describe("instrumentation", () => {
             },
             params: {},
             unstable_pattern: "/",
-            context: {
-              get: expect.any(Function),
-            },
+            context: {},
           },
         ],
       ]);

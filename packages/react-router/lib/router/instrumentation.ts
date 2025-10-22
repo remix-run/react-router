@@ -133,7 +133,7 @@ type RequestHandlerInstrumentations = {
 
 type RequestHandlerInstrumentationInfo = Readonly<{
   request: ReadonlyRequest;
-  context: ReadonlyContext;
+  context: ReadonlyContext | undefined;
 }>;
 
 const UninstrumentedSymbol = Symbol("Uninstrumented");
@@ -351,7 +351,7 @@ export function instrumentHandler(
       let [request, context] = args as Parameters<RequestHandler>;
       return {
         request: getReadonlyRequest(request),
-        context: getReadonlyContext(context),
+        context: context != null ? getReadonlyContext(context) : context,
       } satisfies RequestHandlerInstrumentationInfo;
     }) as RequestHandler;
   }
@@ -483,27 +483,21 @@ function getReadonlyRequest(request: Request): {
 }
 
 function getReadonlyContext(
-  context:
-    | (MiddlewareEnabled extends true ? RouterContextProvider : AppLoadContext)
-    // Context can be undefined in the request handler instrumentation case
-    | null
-    | undefined,
+  context: MiddlewareEnabled extends true
+    ? RouterContextProvider
+    : AppLoadContext,
 ): MiddlewareEnabled extends true
   ? Pick<RouterContextProvider, "get">
   : Readonly<AppLoadContext> {
   if (isPlainObject(context)) {
-    let frozen = context ? { ...context } : {};
+    let frozen = { ...context };
     Object.freeze(frozen);
     return frozen;
   } else {
-    return context
-      ? {
-          get: <T>(ctx: RouterContext<T>) =>
-            (context as unknown as RouterContextProvider).get(ctx),
-        }
-      : {
-          get: () => undefined,
-        };
+    return {
+      get: <T>(ctx: RouterContext<T>) =>
+        (context as unknown as RouterContextProvider).get(ctx),
+    };
   }
 }
 
@@ -515,6 +509,9 @@ const objectProtoNames = Object.getOwnPropertyNames(Object.prototype)
 function isPlainObject(
   thing: unknown,
 ): thing is Record<string | number | symbol, unknown> {
+  if (thing === null || typeof thing !== "object") {
+    return false;
+  }
   const proto = Object.getPrototypeOf(thing);
   return (
     proto === Object.prototype ||
