@@ -1384,6 +1384,42 @@ describe("instrumentation", () => {
       errorSpy.mockRestore();
     });
 
+    it("waits for handler to finish if you forget to await the handler", async () => {
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: true,
+          },
+        ],
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  loader();
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      await A.loaders.page.resolve("PAGE");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: { page: "PAGE" },
+        errors: null,
+      });
+      expect(A.loaders.page.stub).toHaveBeenCalledTimes(1);
+    });
+
     it("does not let you call handlers more than once", async () => {
       let errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
       let t = setup({

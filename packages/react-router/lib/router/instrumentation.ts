@@ -401,14 +401,14 @@ async function recurseRight<T extends InstrumentationInfo>(
   } else {
     // If they forget to call the handler, or if they throw before calling the
     // handler, we need to ensure the handlers still gets called
-    let handlerCalled = false;
+    let handlerPromise: ReturnType<typeof recurseRight> | undefined = undefined;
     let callHandler = async (): Promise<InstrumentResult> => {
-      if (handlerCalled) {
+      if (handlerPromise) {
         console.error("You cannot call instrumented handlers more than once");
       } else {
-        handlerCalled = true;
-        result = await recurseRight(impls, info, handler, index - 1);
+        handlerPromise = recurseRight(impls, info, handler, index - 1);
       }
+      result = await handlerPromise;
       invariant(result, "Expected a result");
       if (result.type === "error" && result.value instanceof Error) {
         return { status: "error", error: result.value };
@@ -422,9 +422,12 @@ async function recurseRight<T extends InstrumentationInfo>(
       console.error("An instrumentation function threw an error:", e);
     }
 
-    if (!handlerCalled) {
+    if (!handlerPromise) {
       await callHandler();
     }
+
+    // If the user forgot to await the handler, we can wait for it to resolve here
+    await handlerPromise;
   }
 
   if (result) {
