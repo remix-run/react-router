@@ -1,4 +1,6 @@
+import type { AppLoadContext } from "../server-runtime/data";
 import type { RequestHandler } from "../server-runtime/server";
+import type { MiddlewareEnabled } from "../types/future";
 import { createPath, invariant } from "./history";
 import type { Router } from "./router";
 import type {
@@ -11,8 +13,8 @@ import type {
   MaybePromise,
   MiddlewareFunction,
   RouterContext,
-  RouterContextProvider,
 } from "./utils";
+import { RouterContextProvider } from "./utils";
 
 // Public APIs
 export type unstable_ServerInstrumentation = {
@@ -60,8 +62,9 @@ type ReadonlyRequest = {
   headers: Pick<Headers, "get">;
 };
 
-// TODO: Fix for non-middleware
-type ReadonlyContext = Pick<RouterContextProvider, "get">;
+type ReadonlyContext = MiddlewareEnabled extends true
+  ? Pick<RouterContextProvider, "get">
+  : Readonly<AppLoadContext>;
 
 // Route Instrumentation
 type InstrumentableRoute = {
@@ -138,6 +141,7 @@ const UninstrumentedSymbol = Symbol("Uninstrumented");
 export function getRouteInstrumentationUpdates(
   fns: unstable_InstrumentRouteFunction[],
   route: Readonly<AgnosticDataRouteObject>,
+  middlewareEnabled: boolean,
 ) {
   let aggregated: {
     lazy: InstrumentFunction<RouteLazyInstrumentationInfo>[];
@@ -212,7 +216,10 @@ export function getRouteInstrumentationUpdates(
       // @ts-expect-error
       let original = handler[UninstrumentedSymbol] ?? handler;
       let instrumented = wrapImpl(aggregated[key], original, (...args) =>
-        getHandlerInfo(args[0] as LoaderFunctionArgs | ActionFunctionArgs),
+        getHandlerInfo(
+          args[0] as LoaderFunctionArgs | ActionFunctionArgs,
+          middlewareEnabled,
+        ),
       );
       if (instrumented) {
         // @ts-expect-error
@@ -232,7 +239,10 @@ export function getRouteInstrumentationUpdates(
       // @ts-expect-error
       let original = middleware[UninstrumentedSymbol] ?? middleware;
       let instrumented = wrapImpl(aggregated.middleware, original, (...args) =>
-        getHandlerInfo(args[0] as Parameters<MiddlewareFunction>[0]),
+        getHandlerInfo(
+          args[0] as Parameters<MiddlewareFunction>[0],
+          middlewareEnabled,
+        ),
       );
       if (instrumented) {
         // @ts-expect-error
@@ -321,6 +331,7 @@ export function instrumentClientSideRouter(
 export function instrumentHandler(
   handler: RequestHandler,
   fns: unstable_InstrumentRequestHandlerFunction[],
+  middlewareEnabled: boolean,
 ): RequestHandler {
   let aggregated: {
     request: InstrumentFunction<RequestHandlerInstrumentationInfo>[];
@@ -348,9 +359,7 @@ export function instrumentHandler(
       let [request, context] = args as Parameters<RequestHandler>;
       return {
         request: getReadonlyRequest(request),
-        // TODO: Handle non-middleware flows
-        // @ts-expect-error
-        context: getReadonlyContext(context),
+        context: getReadonlyContext(context, middlewareEnabled),
       } satisfies RequestHandlerInstrumentationInfo;
     }) as RequestHandler;
   }
@@ -441,13 +450,14 @@ function getHandlerInfo(
     | LoaderFunctionArgs
     | ActionFunctionArgs
     | Parameters<MiddlewareFunction>[0],
+  middlewareEnabled: boolean,
 ): RouteHandlerInstrumentationInfo {
   let { request, context, params, unstable_pattern } = args;
   return {
     request: getReadonlyRequest(request),
     params: { ...params },
     unstable_pattern,
-    context: getReadonlyContext(context),
+    context: getReadonlyContext(context, middlewareEnabled),
   };
 }
 
@@ -482,9 +492,30 @@ function getReadonlyRequest(request: Request): {
 }
 
 function getReadonlyContext(
-  context: RouterContextProvider,
-): Pick<RouterContextProvider, "get"> {
-  return {
-    get: <T>(ctx: RouterContext<T>) => context.get(ctx),
-  };
+  context:
+    | (MiddlewareEnabled extends true ? RouterContextProvider : AppLoadContext)
+    // Context can be undefined in the request handler instrumentation case
+    | null
+    | undefined,
+  middlewareEnabled: boolean,
+): MiddlewareEnabled extends true
+  ? Pick<RouterContextProvider, "get">
+  : Readonly<AppLoadContext> {
+  if (middlewareEnabled) {
+    if (!context) {
+      // @ts-expect-error
+      context = new RouterContextProvider();
+    }
+    return {
+      get: <T>(ctx: RouterContext<T>) =>
+        (context as unknown as RouterContextProvider).get(ctx),
+    };
+  } else {
+    if (!context) {
+      context = {};
+    }
+    let frozen = { ...context };
+    Object.freeze(frozen);
+    return frozen;
+  }
 }
