@@ -334,7 +334,7 @@ This ensures that instrumentation is safe to add to production applications and 
 
 To ensure that instrumentation code doesn't impact the runtime application, errors are caught internally and prevented from propagated outward. This design choice shows up in 2 aspects.
 
-First, if a handler function throws an error, that error will not bubble out of the `callHandler` method invoked from your instrumentation, but will be returned in an optional error field in case you need to access it. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
+First, if a handler function throws an error, that error will not bubble out of the `call*` method invoked from your instrumentation. Instead, the `call*` function returns a discriminated union result of type `{ type: "success", error: undefined } | { type: "error", error: unknown }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
 
 ```tsx
 export const unstable_instrumentations = [
@@ -342,12 +342,12 @@ export const unstable_instrumentations = [
     route(route) {
       route.instrument({
         async loader(callLoader) {
-          let { error } = await callLoader();
+          let { status, error } = await callLoader();
 
-          if (error) {
-            // error case
+          if (status === "error") {
+            // error case - `error` is defined
           } else {
-            // success case
+            // success case - `error` is undefined
           }
         },
       });

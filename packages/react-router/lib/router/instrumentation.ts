@@ -38,14 +38,14 @@ export type unstable_InstrumentRouteFunction = (
 ) => void;
 
 // Shared
-interface InstrumentFunction<T> {
-  (
-    handler: () => Promise<
-      { type: "success" } | { type: "error"; error: unknown }
-    >,
-    info: T,
-  ): Promise<void>;
-}
+type InstrumentResult =
+  | { status: "success"; error: undefined }
+  | { status: "error"; error: unknown };
+
+type InstrumentFunction<T> = (
+  handler: () => Promise<InstrumentResult>,
+  info: T,
+) => Promise<void>;
 
 type InstrumentationInfo =
   | RouteLazyInstrumentationInfo
@@ -380,16 +380,16 @@ function wrapImpl<T extends InstrumentationInfo>(
   };
 }
 
+type RecurseResult = { type: "success" | "error"; value: unknown };
+
 async function recurseRight<T extends InstrumentationInfo>(
   impls: InstrumentFunction<T>[],
   info: T,
   handler: () => MaybePromise<void>,
   index: number,
-): Promise<
-  { type: "success"; value: unknown } | { type: "error"; value: unknown }
-> {
+): Promise<RecurseResult> {
   let impl = impls[index];
-  let result: { type: "success" | "error"; value: unknown } | undefined;
+  let result: RecurseResult | undefined;
   if (!impl) {
     try {
       let value = await handler();
@@ -401,9 +401,7 @@ async function recurseRight<T extends InstrumentationInfo>(
     // If they forget to call the handler, or if they throw before calling the
     // handler, we need to ensure the handlers still gets called
     let handlerCalled = false;
-    let callHandler = async (): Promise<
-      { type: "success" } | { type: "error"; error: unknown }
-    > => {
+    let callHandler = async (): Promise<InstrumentResult> => {
       if (handlerCalled) {
         console.error("You cannot call instrumented handlers more than once");
       } else {
@@ -412,9 +410,9 @@ async function recurseRight<T extends InstrumentationInfo>(
       }
       invariant(result, "Expected a result");
       if (result.type === "error" && result.value instanceof Error) {
-        return { type: "error", error: result.value };
+        return { status: "error", error: result.value };
       }
-      return { type: "success" };
+      return { status: "success", error: undefined };
     };
 
     try {

@@ -160,11 +160,11 @@ It's important to note that the "handler" function will never throw. If the unde
 
 ```tsx
 function intrumentationFunction(doTheActualThing, info) {
-  let { error } = await doTheActualThing();
-  // error will be undefined if the underlying handler succeeded,
-  // or contain the error if it threw
+  let { status, error } = await doTheActualThing();
+  // status is `"success" | "error"`
+  // `error` will only be defined if status === "error"
 
-  if (error) {
+  if (status === "error") {
     // ...
   } else {
     // ...

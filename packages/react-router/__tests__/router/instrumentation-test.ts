@@ -3,6 +3,7 @@ import type { StaticHandlerContext } from "../../lib/router/router";
 import { createStaticHandler } from "../../lib/router/router";
 import {
   ErrorResponseImpl,
+  MiddlewareNextFunction,
   data,
   redirect,
   type ActionFunction,
@@ -32,7 +33,7 @@ describe("instrumentation", () => {
             id: "page",
             path: "/page",
             middleware: [
-              async (_, next) => {
+              async (_: unknown, next: MiddlewareNextFunction) => {
                 spy("start middleware");
                 await next();
                 spy("end middleware");
@@ -454,7 +455,7 @@ describe("instrumentation", () => {
       expect(spy.mock.calls).toEqual([["start"]]);
 
       await middlewareDfd.resolve([
-        async (_, next) => {
+        async (_: unknown, next: MiddlewareNextFunction) => {
           spy("middleware start");
           await next();
           spy("middleware end");
@@ -621,7 +622,7 @@ describe("instrumentation", () => {
             id: "page",
             path: "/page",
             middleware: [
-              async (_, next) => {
+              async (_: unknown, next: MiddlewareNextFunction) => {
                 await middlewareDfd.promise;
                 return next();
               },
@@ -707,7 +708,7 @@ describe("instrumentation", () => {
             id: "page",
             path: "/page",
             // Middleware can't be returned from lazy()
-            middleware: [(_, next) => next()],
+            middleware: [(_: unknown, next: MiddlewareNextFunction) => next()],
             lazy: () => lazyDfd.promise,
           },
         ],
@@ -817,7 +818,9 @@ describe("instrumentation", () => {
       });
       expect(spy.mock.calls).toEqual([]);
 
-      await middlewareDfd.resolve([(_, next) => next()]);
+      await middlewareDfd.resolve([
+        (_: unknown, next: MiddlewareNextFunction) => next(),
+      ]);
       await tick();
       expect(spy.mock.calls).toEqual([["start middleware"]]);
 
@@ -866,7 +869,7 @@ describe("instrumentation", () => {
                 id: "page",
                 path: "/page",
                 middleware: [
-                  async (_, next) => {
+                  async (_: unknown, next: MiddlewareNextFunction) => {
                     await middlewareDfd.promise;
                     return next();
                   },
@@ -947,7 +950,9 @@ describe("instrumentation", () => {
                 id: "page",
                 path: "/page",
                 // Middleware can't be returned from lazy()
-                middleware: [(_, next) => next()],
+                middleware: [
+                  (_: unknown, next: MiddlewareNextFunction) => next(),
+                ],
                 lazy: () => lazyDfd.promise,
               },
             ]);
@@ -1065,7 +1070,9 @@ describe("instrumentation", () => {
       });
       expect(spy.mock.calls).toEqual([]);
 
-      await middlewareDfd.resolve([(_, next) => next()]);
+      await middlewareDfd.resolve([
+        (_: unknown, next: MiddlewareNextFunction) => next(),
+      ]);
       await tick();
       expect(spy.mock.calls).toEqual([["start middleware"]]);
 
@@ -1117,8 +1124,8 @@ describe("instrumentation", () => {
               route.instrument({
                 async loader(loader) {
                   spy("inner-start");
-                  let { type, error } = await loader();
-                  spy(`inner-end:${type}:${(error as Error).message}`);
+                  let { status, error } = await loader();
+                  spy(`inner-end:${status}:${(error as Error).message}`);
                 },
               });
             },
@@ -1128,8 +1135,8 @@ describe("instrumentation", () => {
               route.instrument({
                 async loader(loader) {
                   spy("outer-start");
-                  let { type, error } = await loader();
-                  spy(`outer-end:${type}:${(error as Error).message}`);
+                  let { status, error } = await loader();
+                  spy(`outer-end:${status}:${(error as Error).message}`);
                 },
               });
             },
@@ -1701,7 +1708,7 @@ describe("instrumentation", () => {
             id: "index",
             index: true,
             middleware: [
-              async (_, next) => {
+              async (_: unknown, next: MiddlewareNextFunction) => {
                 spy("middleware");
                 return await next();
               },
@@ -1937,7 +1944,7 @@ describe("instrumentation", () => {
           root: {
             path: "/",
             middleware: [
-              (_, next) => {
+              (_: unknown, next: MiddlewareNextFunction<Response>) => {
                 spy("middleware");
                 return next();
               },
