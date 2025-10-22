@@ -2023,5 +2023,5 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
 }
 
 export function getRoutePattern(paths: (string | undefined)[]) {
-  return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/");
+  return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/") || "/";
 }

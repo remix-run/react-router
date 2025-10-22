@@ -395,120 +395,6 @@ export const unstable_instrumentations = [
 
 Each instrumentation wraps the previous one, creating a nested execution chain.
 
-## Common Patterns
-
-### Performance Monitoring
-
-```tsx
-export const unstable_instrumentations = [
-  {
-    handler(handler) {
-      handler.instrument({
-        async request(handleRequest, info) {
-          const start = Date.now();
-          await handleRequest();
-          const duration = Date.now() - start;
-          reportPerf(info.request, duration);
-        },
-      });
-    },
-
-    route(route) {
-      route.instrument({
-        async loader(callLoader, info) {
-          const start = Date.now();
-          let { error } = await callLoader();
-          const duration = Date.now() - start;
-          reportPerf(info.request, {
-            routePattern: info.unstable_pattern,
-            routeId: route.id,
-            duration,
-            error,
-          });
-        },
-      });
-    },
-  },
-];
-```
-
-### OpenTelemetry Integration
-
-```tsx
-import { trace, SpanStatusCode } from "@opentelemetry/api";
-
-const tracer = trace.getTracer("my-app");
-
-export const unstable_instrumentations = [
-  {
-    handler(handler) {
-      handler.instrument({
-        async request(handleRequest, { request }) {
-          return tracer.startActiveSpan(
-            "request handler",
-            async (span) => {
-              let { error } = await handleRequest();
-              if (error) {
-                span.recordException(error);
-                span.setStatus({
-                  code: SpanStatusCode.ERROR,
-                });
-              }
-              span.end();
-            },
-          );
-        },
-      });
-    },
-
-    route(route) {
-      route.instrument({
-        async loader(callLoader, { routeId }) {
-          return tracer.startActiveSpan(
-            "route loader",
-            { attributes: { routeId: route.id } },
-            async (span) => {
-              let { error } = await callLoader();
-              if (error) {
-                span.recordException(error);
-                span.setStatus({
-                  code: SpanStatusCode.ERROR,
-                });
-              }
-              span.end();
-            },
-          );
-        },
-      });
-    },
-  },
-];
-```
-
-### Client-side Performance Tracking
-
-```tsx
-const unstable_instrumentations = [
-  {
-    router(router) {
-      router.instrument({
-        async navigate(callNavigate, { to, currentUrl }) {
-          let label = `${currentUrl}->${to}`;
-          performance.mark(`start:${label}`);
-          await callNavigate();
-          performance.mark(`end:${label}`);
-          performance.measure(
-            `navigation:${label}`,
-            `start:${label}`,
-            `end:${label}`,
-          );
-        },
-      });
-    },
-  },
-];
-```
-
 ### Conditional Instrumentation
 
 You can enable instrumentation conditionally based on environment or other factors:
@@ -540,4 +426,138 @@ export const unstable_instrumentations = [
     },
   },
 ];
+```
+
+## Common Patterns
+
+### Request logging (server)
+
+```tsx
+const logging: unstable_ServerInstrumentation = {
+  handler({ instrument }) {
+    instrument({
+      request: (fn, { request }) =>
+        log(`request ${request.url}`, fn),
+    });
+  },
+  route({ instrument, id }) {
+    instrument({
+      middleware: (fn) => log(` middleware (${id})`, fn),
+      loader: (fn) => log(`  loader (${id})`, fn),
+      action: (fn) => log(`  action (${id})`, fn),
+    });
+  },
+};
+
+async function log(
+  label: string,
+  cb: () => Promise<unstable_InstrumentationHandlerResult>,
+) {
+  let start = Date.now();
+  console.log(`➡️ ${label}`);
+  await cb();
+  console.log(`⬅️ ${label} (${Date.now() - start}ms)`);
+}
+
+export const unstable_instrumentations = [logging];
+```
+
+### OpenTelemetry Integration
+
+```tsx
+import { trace, SpanStatusCode } from "@opentelemetry/api";
+
+const tracer = trace.getTracer("my-app");
+
+const otel: unstable_ServerInstrumentation = {
+  handler({ instrument }) {
+    instrument({
+      request: (fn, { request }) =>
+        otelSpan(`request`, { url: request.url }, fn),
+    });
+  },
+  route({ instrument, id }) {
+    instrument({
+      middleware: (fn, { unstable_pattern }) =>
+        otelSpan(
+          "middleware",
+          { routeId: id, pattern: unstable_pattern },
+          fn,
+        ),
+      loader: (fn, { unstable_pattern }) =>
+        otelSpan(
+          "loader",
+          { routeId: id, pattern: unstable_pattern },
+          fn,
+        ),
+      action: (fn, { unstable_pattern }) =>
+        otelSpan(
+          "action",
+          { routeId: id, pattern: unstable_pattern },
+          fn,
+        ),
+    });
+  },
+};
+
+async function otelSpan(
+  label: string,
+  attributes: Record<string, string>,
+  cb: () => Promise<unstable_InstrumentationHandlerResult>,
+) {
+  return tracer.startActiveSpan(
+    label,
+    { attributes },
+    async (span) => {
+      let { error } = await cb();
+      if (error) {
+        span.recordException(error);
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+        });
+      }
+      span.end();
+    },
+  );
+}
+
+export const unstable_instrumentations = [otel];
+```
+
+### Client-side Performance Tracking
+
+```tsx
+const windowPerf: unstable_ClientInstrumentation = {
+  router({ instrument }) {
+    instrument({
+      navigate: (fn, { to, currentUrl }) =>
+        measure(`navigation:${currentUrl}->${to}`, fn),
+      fetch: (fn, { href }) =>
+        measure(`fetcher:${href}`, fn),
+    });
+  },
+  route({ instrument, id }) {
+    instrument({
+      middleware: (fn) => measure(`middleware:${id}`, fn),
+      loader: (fn) => measure(`loader:${id}`, fn),
+      action: (fn) => measure(`action:${id}`, fn),
+    });
+  },
+};
+
+async function measure(
+  label: string,
+  cb: () => Promise<unstable_InstrumentationHandlerResult>,
+) {
+  performance.mark(`start:${label}`);
+  await cb();
+  performance.mark(`end:${label}`);
+  performance.measure(
+    label,
+    `start:${label}`,
+    `end:${label}`,
+  );
+}
+
+<HydratedRouter unstable_instrumentations={[windowPerf]} />;
 ```

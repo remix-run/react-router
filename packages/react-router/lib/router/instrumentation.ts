@@ -39,13 +39,13 @@ export type unstable_InstrumentRouteFunction = (
   route: InstrumentableRoute,
 ) => void;
 
-// Shared
-type InstrumentResult =
+export type unstable_InstrumentationHandlerResult =
   | { status: "success"; error: undefined }
-  | { status: "error"; error: unknown };
+  | { status: "error"; error: Error };
 
+// Shared
 type InstrumentFunction<T> = (
-  handler: () => Promise<InstrumentResult>,
+  handler: () => Promise<unstable_InstrumentationHandlerResult>,
   info: T,
 ) => Promise<void>;
 
@@ -402,19 +402,20 @@ async function recurseRight<T extends InstrumentationInfo>(
     // If they forget to call the handler, or if they throw before calling the
     // handler, we need to ensure the handlers still gets called
     let handlerPromise: ReturnType<typeof recurseRight> | undefined = undefined;
-    let callHandler = async (): Promise<InstrumentResult> => {
-      if (handlerPromise) {
-        console.error("You cannot call instrumented handlers more than once");
-      } else {
-        handlerPromise = recurseRight(impls, info, handler, index - 1);
-      }
-      result = await handlerPromise;
-      invariant(result, "Expected a result");
-      if (result.type === "error" && result.value instanceof Error) {
-        return { status: "error", error: result.value };
-      }
-      return { status: "success", error: undefined };
-    };
+    let callHandler =
+      async (): Promise<unstable_InstrumentationHandlerResult> => {
+        if (handlerPromise) {
+          console.error("You cannot call instrumented handlers more than once");
+        } else {
+          handlerPromise = recurseRight(impls, info, handler, index - 1);
+        }
+        result = await handlerPromise;
+        invariant(result, "Expected a result");
+        if (result.type === "error" && result.value instanceof Error) {
+          return { status: "error", error: result.value };
+        }
+        return { status: "success", error: undefined };
+      };
 
     try {
       await impl(callHandler, info);
