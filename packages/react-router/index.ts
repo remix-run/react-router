@@ -67,6 +67,7 @@ export type {
   unstable_InstrumentRequestHandlerFunction,
   unstable_InstrumentRouterFunction,
   unstable_InstrumentRouteFunction,
+  unstable_InstrumentationHandlerResult,
 } from "./lib/router/instrumentation";
 export {
   IDLE_NAVIGATION,
