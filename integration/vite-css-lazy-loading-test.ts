@@ -10,14 +10,16 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 
-const ANY_CSS_LINK_SELECTOR = "link[rel='stylesheet'][href*='css-component']";
-// Links with a trailing hash are only ever managed by React Router, not
-// Vite's dynamic CSS injection logic
-const ROUTE_CSS_LINK_SELECTOR = `${ANY_CSS_LINK_SELECTOR}[href$='#']`;
+const CSS_LINK_SELECTOR = "link[rel='stylesheet']";
+const CSS_COMPONENT_LINK_SELECTOR = `${CSS_LINK_SELECTOR}[href*='css-component']`;
+// Link hrefs with a trailing hash are only ever managed by React Router, to
+// ensure they're forcibly unique from the Vite-injected links
+const ANY_FORCIBLY_UNIQUE_CSS_LINK_SELECTOR = `${CSS_LINK_SELECTOR}[href$='#']`;
+const CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR = `${CSS_COMPONENT_LINK_SELECTOR}[href$='#']`;
 
-function getCssComponentColor(page: Page) {
+function getColor(page: Page, selector: string) {
   return page
-    .locator("[data-css-component]")
+    .locator(selector)
     .first()
     .evaluate((el) => window.getComputedStyle(el).color);
 }
@@ -29,8 +31,8 @@ test.describe("Vite CSS lazy loading", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/components/css-component.module.css": css`
-          .test {
+        "app/components/css-component.css": css`
+          .css-component {
             color: rgb(0, 128, 0);
             font-family: sans-serif;
             font-weight: bold;
@@ -38,9 +40,24 @@ test.describe("Vite CSS lazy loading", () => {
         `,
 
         "app/components/css-component.tsx": js`
-          import styles from "./css-component.module.css";
+          import "./css-component.css";
           export default function CssComponent() {
-            return <p data-css-component className={styles.test}>This text should be green.</p>;
+            return <p data-css-component className="css-component">This text should be green.</p>;
+          }
+        `,
+
+        "app/components/static-only-css-component.css": css`
+          .static-only-css-component {
+            color: rgb(128, 128, 0);
+            font-family: sans-serif;
+            font-weight: bold;
+          }
+        `,
+
+        "app/components/static-only-css-component.tsx": js`
+          import "./static-only-css-component.css";
+          export default function StaticOnlyCssComponent() {
+            return <p data-static-only-css-component className="static-only-css-component">This text should be olive.</p>;
           }
         `,
 
@@ -80,6 +97,9 @@ test.describe("Vite CSS lazy loading", () => {
                     </li>
                     <li>
                       <Link to="/siblings/with-lazy-css-component">Siblings / Route with Lazy CSS Component</Link>
+                    </li>
+                    <li>
+                      <Link to="/with-static-only-css-component">Route with Static Only CSS Component</Link>
                     </li>
                   </ul>
                 </nav>
@@ -162,6 +182,18 @@ test.describe("Vite CSS lazy loading", () => {
             );
           }
         `,
+
+        "app/routes/_layout.with-static-only-css-component.tsx": js`
+          import StaticOnlyCssComponent from "../components/static-only-css-component";
+          export default function WithStaticOnlyCssComponent() {
+            return (
+              <>
+                <h2 data-route-with-static-only-css-component>Route with Static Only CSS Component</h2>
+                <StaticOnlyCssComponent />
+              </>
+            );
+          }
+        `,
       },
     });
 
@@ -180,22 +212,28 @@ test.describe("Vite CSS lazy loading", () => {
     await app.goto("/parent-child/with-css-component");
     await page.waitForSelector("[data-child-route-with-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
-    expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
+    expect(await page.locator(CSS_COMPONENT_LINK_SELECTOR).count()).toBe(1);
+    expect(
+      await page.locator(CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR).count(),
+    ).toBe(1);
+    expect(await getColor(page, "[data-css-component]")).toBe("rgb(0, 128, 0)");
 
     await page.locator("[data-load-lazy-css-component]").click();
     await page.waitForSelector("[data-css-component]");
-    expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(2);
-    expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
+    expect(await page.locator(CSS_COMPONENT_LINK_SELECTOR).count()).toBe(2);
+    expect(
+      await page.locator(CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR).count(),
+    ).toBe(1);
+    expect(await getColor(page, "[data-css-component]")).toBe("rgb(0, 128, 0)");
 
     await app.clickLink("/parent-child/without-css-component");
     await page.waitForSelector("[data-child-route-without-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
-    expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(0);
-    expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
+    expect(await page.locator(CSS_COMPONENT_LINK_SELECTOR).count()).toBe(1);
+    expect(
+      await page.locator(CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR).count(),
+    ).toBe(0);
+    expect(await getColor(page, "[data-css-component]")).toBe("rgb(0, 128, 0)");
   });
 
   test("supports CSS lazy loading when navigating to a sibling route if the current route has a static dependency on the same CSS", async ({
@@ -206,15 +244,35 @@ test.describe("Vite CSS lazy loading", () => {
     await app.goto("/siblings/with-css-component");
     await page.waitForSelector("[data-sibling-route-with-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
-    expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
+    expect(await page.locator(CSS_COMPONENT_LINK_SELECTOR).count()).toBe(1);
+    expect(
+      await page.locator(CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR).count(),
+    ).toBe(1);
+    expect(await getColor(page, "[data-css-component]")).toBe("rgb(0, 128, 0)");
 
     await app.clickLink("/siblings/with-lazy-css-component");
     await page.waitForSelector("[data-sibling-route-with-lazy-css-component]");
     expect(await page.locator("[data-css-component]").count()).toBe(1);
-    expect(await page.locator(ANY_CSS_LINK_SELECTOR).count()).toBe(1);
-    expect(await page.locator(ROUTE_CSS_LINK_SELECTOR).count()).toBe(0);
-    expect(await getCssComponentColor(page)).toBe("rgb(0, 128, 0)");
+    expect(await page.locator(CSS_COMPONENT_LINK_SELECTOR).count()).toBe(1);
+    expect(
+      await page.locator(CSS_COMPONENT_FORCIBLY_UNIQUE_LINK_SELECTOR).count(),
+    ).toBe(0);
+    expect(await getColor(page, "[data-css-component]")).toBe("rgb(0, 128, 0)");
+  });
+
+  test("does not add a hash to the CSS link if the CSS is only ever statically imported", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/with-static-only-css-component");
+    await page.waitForSelector("[data-route-with-static-only-css-component]");
+    expect(await page.locator(CSS_LINK_SELECTOR).count()).toBe(1);
+    expect(
+      await page.locator(ANY_FORCIBLY_UNIQUE_CSS_LINK_SELECTOR).count(),
+    ).toBe(0);
+    expect(await getColor(page, "[data-static-only-css-component]")).toBe(
+      "rgb(128, 128, 0)",
+    );
   });
 });
