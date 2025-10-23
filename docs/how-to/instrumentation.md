@@ -10,6 +10,10 @@ unstable: true
 <br/>
 <br/>
 
+<docs-warning>The instrumentation APIs are experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
+to release notes for relevant changes.</docs-warning>
+
 Instrumentation allows you to add logging, error reporting, and performance tracing to your React Router application without modifying your actual route handlers. This enables comprehensive observability solutions for production applications on both the server and client.
 
 ## Overview
