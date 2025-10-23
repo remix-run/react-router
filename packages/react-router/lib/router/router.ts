@@ -5744,7 +5744,7 @@ function getDataStrategyMatch(
       return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
     },
     resolve(handlerOverride) {
-      let { lazy, loader, action, middleware } = match.route;
+      let { lazy, loader, middleware } = match.route;
 
       let callHandler =
         isUsingNewApi ||
