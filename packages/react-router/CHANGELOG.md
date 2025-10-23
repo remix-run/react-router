@@ -1,5 +1,39 @@
 # `react-router`
 
+## 7.9.5-pre.0
+
+### Patch Changes
+
+- Move RSCHydratedRouter and utils to `/dom` export. ([#14457](https://github.com/remix-run/react-router/pull/14457))
+- useRoute: return type-safe `handle` ([#14462](https://github.com/remix-run/react-router/pull/14462))
+
+  For example:
+
+  ```ts
+  // app/routes/admin.tsx
+  const handle = { hello: "world" };
+  ```
+
+  ```ts
+  // app/routes/some-other-route.tsx
+  export default function Component() {
+    const admin = useRoute("routes/admin");
+    if (!admin) throw new Error("Not nested within 'routes/admin'");
+    console.log(admin.handle);
+    //                ^? { hello: string }
+  }
+  ```
+
+- Ensure action handlers run for routes with middleware even if no loader is present ([#14443](https://github.com/remix-run/react-router/pull/14443))
+- Add `unstable_instrumentations` API to allow users to add observablity to their apps by instrumenting route loaders, actions, middlewares, lazy, as well as server-side request handlers and client side navigations/fetches ([#14412](https://github.com/remix-run/react-router/pull/14412))
+  - Framework Mode:
+    - `entry.server.tsx`: `export const unstable_instrumentations = [...]`
+    - `entry.client.tsx`: `<HydratedRouter unstable_instrumentations={[...]} />`
+  - Data Mode
+    - `createBrowserRouter(routes, { unstable_instrumentations: [...] })`
+
+  This also adds a new `unstable_pattern` parameter to loaders/actions/middleware which contains the un-interpolated route pattern (i.e., `/blog/:slug`) which is useful for aggregating performance metrics by route
+
 ## 7.9.4
 
 ### Patch Changes

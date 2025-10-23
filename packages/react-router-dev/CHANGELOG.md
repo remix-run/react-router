@@ -1,5 +1,18 @@
 # `@react-router/dev`
 
+## 7.9.5-pre.0
+
+### Patch Changes
+
+- Introduce a `prerender.unstable_concurrency` option, to support running the prerendering concurrently, potentially speeding up the build. ([#14380](https://github.com/remix-run/react-router/pull/14380))
+- Move RSCHydratedRouter and utils to `/dom` export. ([#14457](https://github.com/remix-run/react-router/pull/14457))
+- Ensure route navigation doesn't remove CSS `link` elements used by dynamic imports ([#14463](https://github.com/remix-run/react-router/pull/14463))
+- Typegen: only register route module types for routes within the app directory ([#14439](https://github.com/remix-run/react-router/pull/14439))
+- Updated dependencies:
+  - `react-router@7.9.5-pre.0`
+  - `@react-router/node@7.9.5-pre.0`
+  - `@react-router/serve@7.9.5-pre.0`
+
 ## 7.9.4
 
 ### Patch Changes
