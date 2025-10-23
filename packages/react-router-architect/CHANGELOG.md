@@ -1,5 +1,13 @@
 # `@react-router/architect`
 
+## 7.9.5-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.5-pre.0`
+  - `@react-router/node@7.9.5-pre.0`
+
 ## 7.9.4
 
 ### Patch Changes
