@@ -52,7 +52,7 @@ Function components must be named, not anonymous, for React Fast Refresh to trac
 export default () => {}; // ❌
 export default function () {} // ❌
 
-const ComponentA = () => {};
+const ComponentA = () => {}; ✅
 export default ComponentA; // ✅
 
 export default function ComponentB() {} // ✅
