@@ -63,6 +63,46 @@ type WindowWithRouterGlobals = Window &
     __routerActionID: number;
   };
 
+const patchRoutes = (...args: Parameters<DataRouter["patchRoutes"]>) => {
+  React.startTransition(() => {
+    (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
+      ...args,
+    );
+  });
+};
+
+const navigate = (...args: Parameters<DataRouter["navigate"]>) => {
+  React.startTransition(() => {
+    (window as WindowWithRouterGlobals).__reactRouterDataRouter.navigate(
+      ...args,
+    );
+  });
+};
+
+const internalSetStateDoNotUseOrYouWillBreakYourApp = (
+  ...args: Parameters<
+    DataRouter["_internalSetStateDoNotUseOrYouWillBreakYourApp"]
+  >
+) => {
+  React.startTransition(() => {
+    (
+      window as WindowWithRouterGlobals
+    ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
+      ...args,
+    );
+  });
+};
+
+const internalSetRoutes = (
+  ...args: Parameters<DataRouter["_internalSetRoutes"]>
+) => {
+  React.startTransition(() => {
+    (
+      window as WindowWithRouterGlobals
+    ).__reactRouterDataRouter._internalSetRoutes(...args);
+  });
+};
+
 /**
  * Create a React `callServer` implementation for React Router.
  *
@@ -136,20 +176,21 @@ export function createCallServer({
       }) as Promise<RSCPayload>;
     });
 
-    (globalVar.__reactRouterDataRouter as any).__setPendingRerender(
+    (React.startTransition as (cb: () => void | Promise<void>) => void)(() =>
       Promise.resolve(payloadPromise)
         .then(async (payload) => {
           if (payload.type === "redirect") {
             if (payload.reload || isExternalLocation(payload.location)) {
               window.location.href = payload.location;
-              return () => {};
+              return;
             }
 
-            return () => {
-              globalVar.__reactRouterDataRouter.navigate(payload.location, {
+            React.startTransition(() => {
+              navigate(payload.location, {
                 replace: payload.replace,
               });
-            };
+            });
+            return;
           }
 
           if (payload.type !== "action") {
@@ -167,46 +208,39 @@ export function createCallServer({
                 window.location.href = rerender.location;
                 return;
               }
-              return () => {
-                globalVar.__reactRouterDataRouter.navigate(rerender.location, {
+              React.startTransition(() => {
+                navigate(rerender.location, {
                   replace: rerender.replace,
                 });
-              };
+              });
+              return;
             }
 
-            return () => {
-              let lastMatch: RSCRouteManifest | undefined;
-              for (const match of rerender.matches) {
-                globalVar.__reactRouterDataRouter.patchRoutes(
-                  lastMatch?.id ?? null,
-                  [createRouteFromServerManifest(match)],
-                  true,
-                );
-                lastMatch = match;
-              }
-
-              (
-                window as WindowWithRouterGlobals
-              ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
-                {
-                  loaderData: Object.assign(
-                    {},
-                    globalVar.__reactRouterDataRouter.state.loaderData,
-                    rerender.loaderData,
-                  ),
-                  errors: rerender.errors
-                    ? Object.assign(
-                        {},
-                        globalVar.__reactRouterDataRouter.state.errors,
-                        rerender.errors,
-                      )
-                    : null,
-                },
+            let lastMatch: RSCRouteManifest | undefined;
+            for (const match of rerender.matches) {
+              patchRoutes(
+                lastMatch?.id ?? null,
+                [createRouteFromServerManifest(match)],
+                true,
               );
-            };
-          }
+              lastMatch = match;
+            }
 
-          return () => {};
+            internalSetStateDoNotUseOrYouWillBreakYourApp({
+              loaderData: Object.assign(
+                {},
+                globalVar.__reactRouterDataRouter.state.loaderData,
+                rerender.loaderData,
+              ),
+              errors: rerender.errors
+                ? Object.assign(
+                    {},
+                    globalVar.__reactRouterDataRouter.state.errors,
+                    rerender.errors,
+                  )
+                : null,
+            });
+          }
         })
         .catch(() => {}),
     );
@@ -406,9 +440,7 @@ function createRouterFromPayload({
       ...walkRoutes(oldRoutes as DataRouteObjectWithManifestInfo[], undefined),
     );
 
-    (
-      window as WindowWithRouterGlobals
-    ).__reactRouterDataRouter._internalSetRoutes(newRoutes);
+    internalSetRoutes(newRoutes);
   };
 
   return {
@@ -465,46 +497,54 @@ export function getRSCSingleFetchDataStrategy(
     },
   );
   return async (args) =>
-    args.runClientMiddleware(async () => {
-      // Before we run the dataStrategy, create a place to stick rendered routes
-      // from the payload so we can patch them into the router after all loaders
-      // have completed.  Need to do this since we may have multiple fetch
-      // requests returning multiple server payloads (due to clientLoaders, fine
-      // grained revalidation, etc.).  This lets us stitch them all together and
-      // patch them all at the end
-      // This cast should be fine since this is always run client side and
-      // `context` is always of this type on the client -- unlike on the server
-      // in framework mode when it could be `AppLoadContext`
-      let context = args.context as RouterContextProvider;
-      context.set(renderedRoutesContext, []);
-      let results = await dataStrategy(args);
-      // patch into router from all payloads in map
-      // TODO: Confirm that it's correct for us to have multiple rendered routes
-      // with the same ID. This is currently happening in `clientLoader` cases
-      // where we're calling `fetchAndDecode` multiple times. This may be a
-      // sign of a logical error in how we're handling client loader routes.
-      const renderedRoutesById = new Map<string, RSCRouteManifest[]>();
-      for (const route of context.get(renderedRoutesContext)) {
-        if (!renderedRoutesById.has(route.id)) {
-          renderedRoutesById.set(route.id, []);
+    new Promise((resolve, reject) => {
+      (React.startTransition as any)(async () => {
+        try {
+          resolve(
+            await args.runClientMiddleware(async () => {
+              // Before we run the dataStrategy, create a place to stick rendered routes
+              // from the payload so we can patch them into the router after all loaders
+              // have completed.  Need to do this since we may have multiple fetch
+              // requests returning multiple server payloads (due to clientLoaders, fine
+              // grained revalidation, etc.).  This lets us stitch them all together and
+              // patch them all at the end
+              // This cast should be fine since this is always run client side and
+              // `context` is always of this type on the client -- unlike on the server
+              // in framework mode when it could be `AppLoadContext`
+              let context = args.context as RouterContextProvider;
+              context.set(renderedRoutesContext, []);
+              let results = await dataStrategy(args);
+              // patch into router from all payloads in map
+              // TODO: Confirm that it's correct for us to have multiple rendered routes
+              // with the same ID. This is currently happening in `clientLoader` cases
+              // where we're calling `fetchAndDecode` multiple times. This may be a
+              // sign of a logical error in how we're handling client loader routes.
+              const renderedRoutesById = new Map<string, RSCRouteManifest[]>();
+              for (const route of context.get(renderedRoutesContext)) {
+                if (!renderedRoutesById.has(route.id)) {
+                  renderedRoutesById.set(route.id, []);
+                }
+                renderedRoutesById.get(route.id)!.push(route);
+              }
+              for (const match of args.matches) {
+                const renderedRoutes = renderedRoutesById.get(match.route.id);
+                if (renderedRoutes) {
+                  for (const rendered of renderedRoutes) {
+                    patchRoutes(
+                      rendered.parentId ?? null,
+                      [createRouteFromServerManifest(rendered)],
+                      true,
+                    );
+                  }
+                }
+              }
+              return results;
+            }),
+          );
+        } catch (e) {
+          reject(e);
         }
-        renderedRoutesById.get(route.id)!.push(route);
-      }
-      for (const match of args.matches) {
-        const renderedRoutes = renderedRoutesById.get(match.route.id);
-        if (renderedRoutes) {
-          for (const rendered of renderedRoutes) {
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter.patchRoutes(
-              rendered.parentId ?? null,
-              [createRouteFromServerManifest(rendered)],
-              true,
-            );
-          }
-        }
-      }
-      return results;
+      });
     });
 }
 
@@ -697,7 +737,7 @@ export function RSCHydratedRouter({
     setIsHydrated();
   }, []);
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     // If we had to run clientLoaders on hydration, we delay initialization until
     // after we've hydrated to avoid hydration issues from synchronous client loaders
     const globalVar = window as WindowWithRouterGlobals;
@@ -709,11 +749,13 @@ export function RSCHydratedRouter({
 
   let [location, setLocation] = React.useState(router.state.location);
 
-  React.useLayoutEffect(
+  React.useEffect(
     () =>
       router.subscribe((newState) => {
         if (newState.location !== location) {
-          setLocation(newState.location);
+          React.startTransition(() => {
+            setLocation(newState.location);
+          });
         }
       }),
     [router, location],
@@ -1023,10 +1065,7 @@ async function fetchAndApplyManifestPatches(
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
   payload.patches.forEach((p) => {
-    (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
-      p.parentId ?? null,
-      [createRouteFromServerManifest(p)],
-    );
+    patchRoutes(p.parentId ?? null, [createRouteFromServerManifest(p)]);
   });
 }
 

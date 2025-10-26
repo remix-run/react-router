@@ -373,34 +373,42 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
   let fetcherData = React.useRef<Map<string, any>>(new Map());
   let [revalidating, startRevalidation] = React.useTransition();
   let [state, setState] = React.useState(router.state);
-
-  (router as any).__setPendingRerender = (promise: Promise<() => void>) =>
-    startRevalidation(
-      // @ts-expect-error - need react 19 types for this to be async
-      async () => {
-        const rerender = await promise;
-        startRevalidation(() => {
-          rerender();
-        });
-      },
-    );
+  let [optimisticState, setOptimisticState] = React.useState(state);
 
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
       encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
+      // @ts-expect-error - need react 19 types
+      go: (n) => startRevalidation(() => router.navigate(n)),
       push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
+        opts?.flushSync
+          ? router.navigate(to, {
+              state,
+              preventScrollReset: opts?.preventScrollReset,
+            })
+          : startRevalidation(() =>
+              // @ts-expect-error - need react 19 types
+              router.navigate(to, {
+                state,
+                preventScrollReset: opts?.preventScrollReset,
+              }),
+            ),
       replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
+        opts?.flushSync
+          ? router.navigate(to, {
+              replace: true,
+              state,
+              preventScrollReset: opts?.preventScrollReset,
+            })
+          : startRevalidation(() =>
+              // @ts-expect-error - need react 19 types
+              router.navigate(to, {
+                replace: true,
+                state,
+                preventScrollReset: opts?.preventScrollReset,
+              }),
+            ),
     };
   }, [router]);
 
@@ -417,19 +425,20 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
     [router, navigator, basename, unstable_onError],
   );
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     return router.subscribe(
       (newState, { deletedFetchers, flushSync, viewTransitionOpts }) => {
+        startRevalidation(() => {
+          setOptimisticState(newState);
+        });
+
+        console.log("RouterProvider got update:", newState, new Error());
         newState.fetchers.forEach((fetcher, key) => {
           if (fetcher.data !== undefined) {
             fetcherData.current.set(key, fetcher.data);
           }
         });
         deletedFetchers.forEach((key) => fetcherData.current.delete(key));
-
-        const diff = shallowDiff(state, newState);
-
-        if (!diff) return;
 
         if (flushSync) {
           if (reactDomFlushSyncImpl) {
@@ -438,13 +447,13 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
             setState(newState);
           }
         } else {
-          React.startTransition(() => {
+          startRevalidation(() => {
             setState(newState);
           });
         }
       },
     );
-  }, [router, reactDomFlushSyncImpl, state]);
+  }, [router, reactDomFlushSyncImpl]);
 
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
@@ -457,8 +466,18 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider
           value={{
-            ...state,
-            revalidation: revalidating ? "loading" : state.revalidation,
+            ...optimisticState,
+            navigation:
+              optimisticState.navigation.state === "idle" && revalidating
+                ? ({
+                    ...optimisticState.navigation,
+                    state: "loading",
+                  } as any)
+                : optimisticState.navigation,
+            revalidation:
+              optimisticState.revalidation === "idle" && revalidating
+                ? "loading"
+                : optimisticState.revalidation,
           }}
         >
           <FetchersContext.Provider value={fetcherData.current}>
