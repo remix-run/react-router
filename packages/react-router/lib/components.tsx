@@ -432,7 +432,6 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
           setOptimisticState(newState);
         });
 
-        console.log("RouterProvider got update:", newState, new Error());
         newState.fetchers.forEach((fetcher, key) => {
           if (fetcher.data !== undefined) {
             fetcherData.current.set(key, fetcher.data);
