@@ -233,6 +233,8 @@ export function createCallServer({
         landedActionId < actionId &&
         globalVar.__routerActionID <= actionId
       ) {
+        landedActionId = actionId;
+
         let lastMatch: RSCRouteManifest | undefined;
         for (const match of rerender.matches) {
           patchRoutes(
