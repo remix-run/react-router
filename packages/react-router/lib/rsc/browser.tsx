@@ -16,6 +16,7 @@ import type {
   RSCPayload,
   RSCRouteManifest,
   RSCRenderPayload,
+  RSCRedirectPayload,
 } from "./server.rsc";
 import type {
   DataStrategyFunction,
@@ -63,8 +64,12 @@ type WindowWithRouterGlobals = Window &
     __routerActionID: number;
   };
 
+const startTransition = React.startTransition as (
+  cb: () => Promise<void> | void,
+) => void;
+
 const patchRoutes = (...args: Parameters<DataRouter["patchRoutes"]>) => {
-  React.startTransition(() => {
+  startTransition(() => {
     (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
       ...args,
     );
@@ -72,7 +77,7 @@ const patchRoutes = (...args: Parameters<DataRouter["patchRoutes"]>) => {
 };
 
 const navigate = (...args: Parameters<DataRouter["navigate"]>) => {
-  React.startTransition(() => {
+  startTransition(() => {
     (window as WindowWithRouterGlobals).__reactRouterDataRouter.navigate(
       ...args,
     );
@@ -84,7 +89,7 @@ const internalSetStateDoNotUseOrYouWillBreakYourApp = (
     DataRouter["_internalSetStateDoNotUseOrYouWillBreakYourApp"]
   >
 ) => {
-  React.startTransition(() => {
+  startTransition(() => {
     (
       window as WindowWithRouterGlobals
     ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
@@ -96,7 +101,7 @@ const internalSetStateDoNotUseOrYouWillBreakYourApp = (
 const internalSetRoutes = (
   ...args: Parameters<DataRouter["_internalSetRoutes"]>
 ) => {
-  React.startTransition(() => {
+  startTransition(() => {
     (
       window as WindowWithRouterGlobals
     ).__reactRouterDataRouter._internalSetRoutes(...args);
@@ -153,105 +158,109 @@ export function createCallServer({
   const globalVar = window as WindowWithRouterGlobals;
 
   let landedActionId = 0;
-  return async (id: string, args: unknown[]) => {
+  return async function callServer(id: string, args: unknown[]) {
     let actionId = (globalVar.__routerActionID =
       (globalVar.__routerActionID ??= 0) + 1);
 
     const temporaryReferences = createTemporaryReferenceSet();
-    const payloadPromise = fetchImplementation(
+    const encoded = await encodeReply(args, { temporaryReferences });
+
+    const response = await fetchImplementation(
       new Request(location.href, {
-        body: await encodeReply(args, { temporaryReferences }),
+        body: encoded,
         method: "POST",
         headers: {
           Accept: "text/x-component",
           "rsc-action-id": id,
         },
       }),
-    ).then((response) => {
-      if (!response.body) {
-        throw new Error("No response body");
-      }
-      return createFromReadableStream(response.body, {
-        temporaryReferences,
-      }) as Promise<RSCPayload>;
-    });
-
-    (React.startTransition as (cb: () => void | Promise<void>) => void)(() =>
-      Promise.resolve(payloadPromise)
-        .then(async (payload) => {
-          if (payload.type === "redirect") {
-            if (payload.reload || isExternalLocation(payload.location)) {
-              window.location.href = payload.location;
-              return;
-            }
-
-            React.startTransition(() => {
-              navigate(payload.location, {
-                replace: payload.replace,
-              });
-            });
-            return;
-          }
-
-          if (payload.type !== "action") {
-            throw new Error("Unexpected payload type");
-          }
-
-          const rerender = await payload.rerender;
-          if (
-            rerender &&
-            landedActionId < actionId &&
-            globalVar.__routerActionID <= actionId
-          ) {
-            if (rerender.type === "redirect") {
-              if (rerender.reload || isExternalLocation(rerender.location)) {
-                window.location.href = rerender.location;
-                return;
-              }
-              React.startTransition(() => {
-                navigate(rerender.location, {
-                  replace: rerender.replace,
-                });
-              });
-              return;
-            }
-
-            let lastMatch: RSCRouteManifest | undefined;
-            for (const match of rerender.matches) {
-              patchRoutes(
-                lastMatch?.id ?? null,
-                [createRouteFromServerManifest(match)],
-                true,
-              );
-              lastMatch = match;
-            }
-
-            internalSetStateDoNotUseOrYouWillBreakYourApp({
-              loaderData: Object.assign(
-                {},
-                globalVar.__reactRouterDataRouter.state.loaderData,
-                rerender.loaderData,
-              ),
-              errors: rerender.errors
-                ? Object.assign(
-                    {},
-                    globalVar.__reactRouterDataRouter.state.errors,
-                    rerender.errors,
-                  )
-                : null,
-            });
-          }
-        })
-        .catch(() => {}),
     );
 
-    return payloadPromise.then((payload) => {
-      if (payload.type !== "action" && payload.type !== "redirect") {
-        throw new Error("Unexpected payload type");
-      }
+    if (!response.body) {
+      throw new Error("No response body");
+    }
 
-      return payload.actionResult;
+    const payload = (await Promise.resolve(
+      createFromReadableStream(response.body, {
+        temporaryReferences,
+      }),
+    )) as RSCPayload;
+
+    let redirect: RSCRedirectPayload | undefined;
+    let rerender: RSCRenderPayload | undefined;
+    let actionResult: unknown;
+
+    switch (payload.type) {
+      case "action": {
+        actionResult = payload.actionResult;
+        let rerenderPayload = await payload.rerender;
+        switch (rerenderPayload?.type) {
+          case "redirect": {
+            redirect = rerenderPayload;
+            break;
+          }
+          case "render": {
+            rerender = rerenderPayload;
+          }
+        }
+        break;
+      }
+      case "redirect": {
+        actionResult = payload.actionResult;
+        redirect = payload;
+        break;
+      }
+      case "render": {
+        rerender = payload;
+        break;
+      }
+    }
+
+    startTransition(() => {
+      if (redirect) {
+        if (redirect.reload || isExternalLocation(redirect.location)) {
+          window.location.href = redirect.location;
+          return;
+        }
+
+        navigate(redirect.location, {
+          replace: redirect.replace,
+        });
+        return;
+      }
+      if (
+        rerender &&
+        landedActionId < actionId &&
+        globalVar.__routerActionID <= actionId
+      ) {
+        let lastMatch: RSCRouteManifest | undefined;
+        for (const match of rerender.matches) {
+          patchRoutes(
+            lastMatch?.id ?? null,
+            [createRouteFromServerManifest(match)],
+            true,
+          );
+          lastMatch = match;
+        }
+
+        internalSetStateDoNotUseOrYouWillBreakYourApp({
+          loaderData: Object.assign(
+            {},
+            globalVar.__reactRouterDataRouter.state.loaderData,
+            rerender.loaderData,
+          ),
+          errors: rerender.errors
+            ? Object.assign(
+                {},
+                globalVar.__reactRouterDataRouter.state.errors,
+                rerender.errors,
+              )
+            : null,
+        });
+      }
     });
+
+    return actionResult;
   };
 }
 
