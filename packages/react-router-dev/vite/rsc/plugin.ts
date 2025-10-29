@@ -132,8 +132,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
           optimizeDeps: {
             entries: getOptimizeDepsEntries({
-              entryClientFilePath: defaultEntries.client,
+              entryFilePath: defaultEntries.client,
               reactRouterConfig: config,
+              isClientEnvironment: true,
             }),
             esbuildOptions: {
               jsx: "automatic",
