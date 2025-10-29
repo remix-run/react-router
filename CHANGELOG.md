@@ -385,7 +385,7 @@ Date: 2025-10-27
 
 #### Instrumentation (unstable)
 
-This release adds new `unstable_instrumentation` APIs that will allow you to add runtime instrumentation logic to various aspects of your application (server handler, client navigations/fetches, loaders, actions, middleware, `route.lazy`). For more information, please see the [docs](https://reactrouter.com/dev/how-to/instrumentation).
+This release adds new `unstable_instrumentation` APIs that will allow you to add runtime instrumentation logic to various aspects of your application (server handler, client navigations/fetches, loaders, actions, middleware, `route.lazy`). For more information, please see the [docs](https://reactrouter.com/7.9.5/how-to/instrumentation).
 
 ### Patch Changes
 
