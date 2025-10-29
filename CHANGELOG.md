@@ -385,7 +385,7 @@ This release includes a new `unstable_useRoute()` hook that provides a type-safe
 ### Patch Changes
 
 - `@react-router/dev` - Update `valibot` dependency to `^1.1.0` ([#14379](https://github.com/remix-run/react-router/pull/14379))
-- `@react-router/node` - Validate format of incoming session ids ([#14426](https://github.com/remix-run/react-router/pull/14426))
+- `@react-router/node` - Validate format of incoming session ids in `createFileSessionStorage` ([#14426](https://github.com/remix-run/react-router/pull/14426))
 
 ### Unstable Changes
 

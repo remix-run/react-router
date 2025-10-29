@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Validate format of incoming session ids ([#14426](https://github.com/remix-run/react-router/pull/14426))
+- Validate format of incoming session ids in `createFileSessionStorage` ([#14426](https://github.com/remix-run/react-router/pull/14426))
 - Updated dependencies:
   - `react-router@7.9.4`
 
