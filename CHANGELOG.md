@@ -379,7 +379,7 @@ Date: YYYY-MM-DD
 
 ## v7.9.5
 
-Date: 2025-10-27
+Date: 2025-10-29
 
 ### What's Changed
 
