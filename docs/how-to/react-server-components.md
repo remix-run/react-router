@@ -10,7 +10,9 @@ unstable: true
 <br/>
 <br/>
 
-<docs-warning>React Server Components support is experimental and subject to breaking changes.</docs-warning>
+<docs-warning>React Server Components support is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
+to release notes for relevant changes.</docs-warning>
 
 React Server Components (RSC) refers generally to an architecture and set of APIs provided by React since version 19.
 

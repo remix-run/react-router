@@ -2,12 +2,12 @@
 
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
-import type { unstable_RSCPayload as RSCPayload } from "react-router";
 import {
   unstable_createCallServer as createCallServer,
   unstable_getRSCStream as getRSCStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
-} from "react-router";
+  type unstable_RSCPayload as RSCPayload,
+} from "react-router/dom";
 import {
   createFromReadableStream,
   createTemporaryReferenceSet,

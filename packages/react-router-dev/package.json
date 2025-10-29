@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.9.4",
+  "version": "7.9.5",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -83,6 +83,7 @@
     "isbot": "^5.1.11",
     "jsesc": "3.0.2",
     "lodash": "^4.17.21",
+    "p-map": "^7.0.3",
     "pathe": "^1.1.2",
     "picocolors": "^1.1.1",
     "prettier": "^3.6.2",

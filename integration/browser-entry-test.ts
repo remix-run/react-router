@@ -196,3 +196,126 @@ test("allows users to pass an onError function to HydratedRouter", async ({
 
   appFixture.close();
 });
+
+test("allows users to instrument the client side router via HydratedRouter", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                unstable_instrumentations={[{
+                  router(router) {
+                    router.instrument({
+                      async navigate(impl, info) {
+                        console.log("start navigate", JSON.stringify(Object.entries(info).sort()));
+                        await impl();
+                        console.log("end navigate", JSON.stringify(Object.entries(info).sort()));
+                      },
+                      async fetch(impl, info) {
+                        console.log("start fetch", JSON.stringify(Object.entries(info).sort()));
+                        await impl();
+                        console.log("end fetch", JSON.stringify(Object.entries(info).sort()));
+                      }
+                    })
+                  },
+                  route(route) {
+                    route.instrument({
+                      async loader(impl, info) {
+                        let path = new URL(info.request.url).pathname;
+                        console.log("start loader", route.id, path);
+                        await impl();
+                        console.log("end loader", route.id, path);
+                      },
+                      async action(impl, info) {
+                        let path = new URL(info.request.url).pathname;
+                        console.log("start action", route.id, path);
+                        await impl();
+                        console.log("end action", route.id, path);
+                      }
+                    })
+                  }
+                }]}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+        export default function Index() {
+          return <Link to="/page">Go to Page</Link>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        import { useFetcher } from "react-router";
+        export function loader() {
+          return { data: "hello world" };
+        }
+        export function action() {
+          return "OK";
+        }
+        export default function Page({ loaderData }) {
+          let fetcher = useFetcher({ key: 'a' });
+          return (
+            <>
+              <h1 data-page>{loaderData.data}</h1>;
+              <button data-fetch onClick={() => fetcher.submit({ key: 'value' }, {
+                method: 'post',
+                action: "/page"
+              })}>
+                Fetch
+              </button>
+              {fetcher.data ? <pre data-fetcher-data>{fetcher.data}</pre> : null}
+            </>
+          );
+        }
+      `,
+    },
+  });
+
+  let logs: string[] = [];
+  page.on("console", (msg) => logs.push(msg.text()));
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.goto("/", true);
+  await page.click('a[href="/page"]');
+  await page.waitForSelector("[data-page]");
+
+  expect(await app.getHtml()).toContain("hello world");
+  expect(logs).toEqual([
+    'start navigate [["currentUrl","/"],["to","/page"]]',
+    "start loader root /page",
+    "start loader routes/page /page",
+    "end loader root /page",
+    "end loader routes/page /page",
+    'end navigate [["currentUrl","/"],["to","/page"]]',
+  ]);
+  logs.splice(0);
+
+  await page.click("[data-fetch]");
+  await page.waitForSelector("[data-fetcher-data]");
+  await expect(page.locator("[data-fetcher-data]")).toContainText("OK");
+  expect(logs).toEqual([
+    'start fetch [["body",{"key":"value"}],["currentUrl","/page"],["fetcherKey","a"],["formData",null],["formEncType","application/x-www-form-urlencoded"],["formMethod","post"],["href","/page"]]',
+    "start action routes/page /page",
+    "end action routes/page /page",
+    "start loader root /page",
+    "start loader routes/page /page",
+    "end loader root /page",
+    "end loader routes/page /page",
+    'end fetch [["body",{"key":"value"}],["currentUrl","/page"],["fetcherKey","a"],["formData",null],["formEncType","application/x-www-form-urlencoded"],["formMethod","post"],["href","/page"]]',
+  ]);
+
+  appFixture.close();
+});

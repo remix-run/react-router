@@ -9,43 +9,105 @@ title: Pre-Rendering
 <br/>
 <br/>
 
-Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime. Pre-rendering is enabled via the `prerender` config in `react-router.config.ts` and can be used in two ways based on the `ssr` config value:
+Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime.
 
-- Alongside a runtime SSR server with `ssr:true` (the default value)
-- Deployed to a static file server with `ssr:false`
+## Configuration
 
-## Pre-rendering with `ssr:true`
+Pre-rendering is enabled via the `prerender` config in `react-router.config.ts`.
 
-### Configuration
+The simplest configuration is a boolean `true` which will pre-render all off the applications static paths based on `routes.ts`:
 
-Add the `prerender` option to your config, there are three signatures:
-
-```ts filename=react-router.config.ts lines=[7-8,10-11,13-21]
+```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
 export default {
-  // Can be omitted - defaults to true
-  ssr: true,
-
-  // all static paths (no dynamic segments like "/post/:slug")
   prerender: true,
+} satisfies Config;
+```
 
-  // specific paths
-  prerender: ["/", "/blog", "/blog/popular-post"],
+The boolean `true` will not include any dynamic paths (i.e., `/blog/:slug`) because the parameter values are unknown.
 
-  // async function for dependencies like a CMS
+To configure specific paths including dynamic values, you can specify an array of paths:
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+let slugs = getPostSlugs();
+
+export default {
+  prerender: [
+    "/",
+    "/blog",
+    ...slugs.map((s) => `/blog/${s}`),
+  ],
+} satisfies Config;
+```
+
+If you need to perform more complex and/or asynchronous logic to determine the paths, you can also provide a function that returns an array of paths. This function provides you with a `getStaticPaths` method you can use to avoid manually adding all of the static paths in your application:
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
   async prerender({ getStaticPaths }) {
-    let posts = await fakeGetPostsFromCMS();
+    let slugs = await getPostSlugsFromCMS();
     return [
-      "/",
-      "/blog",
-      ...posts.map((post) => post.href),
+      ...getStaticPaths(), // "/" and "/blog"
+      ...slugs.map((s) => `/blog/${s}`),
     ];
   },
 } satisfies Config;
 ```
 
-### Data Loading and Pre-rendering
+### Concurrency (unstable)
+
+<docs-warning>This API is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
+to release notes for relevant changes.</docs-warning>
+
+By default, pages are pre-rendered one path at a time. You can enable concurrency to pre-render multiple paths in parallel which can speed up build times in many cases. You should experiment with the value that provides the best performance for your app.
+
+To specify concurrency, move your `prerender` config down into a `prerender.paths` field and you can specify the concurrency in `prerender.unstable_concurrency`:
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+let slugs = getPostSlugs();
+
+export default {
+  prerender: {
+    paths: [
+      "/",
+      "/blog",
+      ...slugs.map((s) => `/blog/${s}`),
+    ],
+    unstable_concurrency: 4,
+  },
+} satisfies Config;
+```
+
+## Pre-Rendering with/without a Runtime Server
+
+Pre-Rendering can be used in two ways based on the `ssr` config value:
+
+- Alongside a runtime SSR server with `ssr:true` (the default value)
+- Deployed to a static file server with `ssr:false`
+
+### Pre-rendering with `ssr:true`
+
+When pre-rendering with `ssr:true`, you're indicating you will still have a runtime server but you are choosing to pre-render certain paths for quicker Response times.
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  // Can be omitted - defaults to true
+  ssr: true,
+  prerender: ["/", "/blog", "/blog/popular-post"],
+} satisfies Config;
+```
+
+#### Data Loading and Pre-rendering
 
 There is no extra application API for pre-rendering. Routes being pre-rendered use the same route `loader` functions as server rendering:
 
@@ -64,7 +126,7 @@ Instead of a request coming to your route on a deployed server, the build create
 
 When server rendering, requests to paths that have not been pre-rendered will be server rendered as usual.
 
-### Static File Output
+#### Static File Output
 
 The rendered result will be written out to your `build/client` directory. You'll notice two files for each path:
 
@@ -89,7 +151,7 @@ Prerender: Generated build/client/blog/my-first-post/index.html
 
 During development, pre-rendering doesn't save the rendered results to the public directory, this only happens for `react-router build`.
 
-## Pre-rendering with `ssr:false`
+### Pre-rendering with `ssr:false`
 
 The above examples assume you are deploying a runtime server but are pre-rendering some static pages to avoid hitting the server, resulting in faster loads.
 
@@ -108,7 +170,7 @@ If you specify `ssr:false` without a `prerender` config, React Router refers to 
 
 If you want to pre-render paths with `ssr:false`, those matched routes _can_ have loaders because we'll pre-render all of the matched routes for those paths, not just the root. You cannot include `actions` or `headers` functions in any routes when `ssr:false` is set because there will be no runtime server to run them on.
 
-### Pre-rendering with a SPA Fallback
+#### Pre-rendering with a SPA Fallback
 
 If you want `ssr:false` but don't want to pre-render _all_ of your routes - that's fine too! You may have some paths where you need the performance/SEO benefits of pre-rendering, but other pages where a SPA would be fine.
 
@@ -155,7 +217,7 @@ sirv-cli build/client --single index.html
 sirv-cli build/client --single __spa-fallback.html
 ```
 
-### Invalid Exports
+#### Invalid Exports
 
 When pre-rendering with `ssr:false`, React Router will error at build time if you have invalid exports to help prevent some mistakes that can be easily overlooked.
 

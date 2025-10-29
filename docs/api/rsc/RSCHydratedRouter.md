@@ -28,8 +28,6 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_RSCHydratedRouter.html)
-
 Hydrates a server rendered [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) in the browser.
 
 ```tsx

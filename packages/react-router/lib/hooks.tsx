@@ -1855,6 +1855,9 @@ type UseRouteResult<Args extends UseRouteArgs> =
   never;
 
 type UseRoute<RouteId extends keyof RouteModules | unknown> = {
+  handle: RouteId extends keyof RouteModules
+    ? RouteModules[RouteId]["handle"]
+    : unknown;
   loaderData: RouteId extends keyof RouteModules
     ? GetLoaderData<RouteModules[RouteId]> | undefined
     : unknown;
@@ -1871,11 +1874,12 @@ export function useRoute<Args extends UseRouteArgs>(
   );
   const id: keyof RouteModules = args[0] ?? currentRouteId;
 
-  const state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
+  const state = useDataRouterState(DataRouterStateHook.UseRoute);
   const route = state.matches.find(({ route }) => route.id === id);
 
   if (route === undefined) return undefined as UseRouteResult<Args>;
   return {
+    handle: route.route.handle,
     loaderData: state.loaderData[id],
     actionData: state.actionData?.[id],
   } as UseRouteResult<Args>;

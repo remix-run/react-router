@@ -12,6 +12,11 @@ import type {
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
 import type { MiddlewareEnabled } from "../types/future";
+import type {
+  unstable_InstrumentRequestHandlerFunction,
+  unstable_InstrumentRouteFunction,
+  unstable_ServerInstrumentation,
+} from "../router/instrumentation";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -58,12 +63,23 @@ export interface HandleDocumentRequestFunction {
 export interface HandleDataRequestFunction {
   (
     response: Response,
-    args: LoaderFunctionArgs | ActionFunctionArgs,
+    args: {
+      request: LoaderFunctionArgs["request"] | ActionFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"] | ActionFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
+    },
   ): Promise<Response> | Response;
 }
 
 export interface HandleErrorFunction {
-  (error: unknown, args: LoaderFunctionArgs | ActionFunctionArgs): void;
+  (
+    error: unknown,
+    args: {
+      request: LoaderFunctionArgs["request"] | ActionFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"] | ActionFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
+    },
+  ): void;
 }
 
 /**
@@ -74,5 +90,6 @@ export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
+  unstable_instrumentations?: unstable_ServerInstrumentation[];
   streamTimeout?: number;
 }

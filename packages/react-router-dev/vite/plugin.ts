@@ -36,6 +36,7 @@ import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
 import kebabCase from "lodash/kebabCase";
+import pMap from "p-map";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -79,6 +80,7 @@ import {
   createConfigLoader,
   resolveEntryFiles,
   configRouteToBranchRoute,
+  type PrerenderPaths,
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
@@ -346,6 +348,7 @@ const getReactRouterManifestBuildAssets = (
   ctx: ReactRouterPluginContext,
   viteConfig: Vite.ResolvedConfig,
   viteManifest: Vite.Manifest,
+  allDynamicCssFiles: Set<string>,
   entryFilePath: string,
   route: RouteManifestEntry | null,
 ): ReactRouterManifest["entry"] & { css: string[] } => {
@@ -394,7 +397,22 @@ const getReactRouterManifestBuildAssets = (
           : null,
         chunks
           .flatMap((e) => e.css ?? [])
-          .map((href) => `${ctx.publicPath}${href}`),
+          .map((href) => {
+            let publicHref = `${ctx.publicPath}${href}`;
+            // If this CSS file is also dynamically imported anywhere in the
+            // application, we append a hash to the href so Vite ignores it when
+            // managing dynamic CSS injection. If we don't do this, Vite's
+            // dynamic import logic might hold off on inserting a new `link`
+            // element because it's already in the page, only for React Router
+            // to remove it when navigating to a new route, resulting in missing
+            // styles. By appending a hash, Vite doesn't detect that the CSS is
+            // already in the page and always manages its own `link` element.
+            // This means that Vite's CSS stays in the page even if the
+            // route-level CSS is removed from the document. We use a hash here
+            // because it's a unique `href` value but isn't a unique network
+            // request and only adds a single character.
+            return allDynamicCssFiles.has(href) ? `${publicHref}#` : publicHref;
+          }),
       ]
         .flat(1)
         .filter(isNonNullable),
@@ -427,6 +445,59 @@ function resolveDependantChunks(
   }
 
   return Array.from(chunks);
+}
+
+function getAllDynamicCssFiles(
+  ctx: ReactRouterPluginContext,
+  viteManifest: Vite.Manifest,
+): Set<string> {
+  let allDynamicCssFiles = new Set<string>();
+
+  for (let route of Object.values(ctx.reactRouterConfig.routes)) {
+    let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
+    let entryChunk = resolveChunk(
+      ctx,
+      viteManifest,
+      `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
+    );
+
+    if (entryChunk) {
+      let visitedChunks = new Set<Vite.ManifestChunk>();
+
+      function walk(
+        chunk: Vite.ManifestChunk,
+        isDynamicImportContext: boolean,
+      ) {
+        if (visitedChunks.has(chunk)) {
+          return;
+        }
+
+        visitedChunks.add(chunk);
+
+        if (isDynamicImportContext && chunk.css) {
+          for (let cssFile of chunk.css) {
+            allDynamicCssFiles.add(cssFile);
+          }
+        }
+
+        if (chunk.dynamicImports) {
+          for (let dynamicImportKey of chunk.dynamicImports) {
+            walk(viteManifest[dynamicImportKey], true);
+          }
+        }
+
+        if (chunk.imports) {
+          for (let importKey of chunk.imports) {
+            walk(viteManifest[importKey], isDynamicImportContext);
+          }
+        }
+      }
+
+      walk(entryChunk, false);
+    }
+  }
+
+  return allDynamicCssFiles;
 }
 
 function dedupe<T>(array: T[]): T[] {
@@ -886,10 +957,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       getClientBuildDirectory(ctx.reactRouterConfig),
     );
 
+    let allDynamicCssFiles = getAllDynamicCssFiles(ctx, viteManifest);
+
     let entry = getReactRouterManifestBuildAssets(
       ctx,
       viteConfig,
       viteManifest,
+      allDynamicCssFiles,
       ctx.entryClientFilePath,
       null,
     );
@@ -953,6 +1027,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ctx,
           viteConfig,
           viteManifest,
+          allDynamicCssFiles,
           `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
           route,
         ),
@@ -2658,11 +2733,12 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  for (let path of build.prerender) {
+
+  let prerenderSinglePath = async (path: string) => {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
     if (!matches) {
-      continue;
+      return;
     }
     // When prerendering a resource route, we don't want to pass along the
     // `.data` file since we want to prerender the raw Response returned from
@@ -2731,7 +2807,15 @@ async function handlePrerender(
           : undefined,
       );
     }
+  };
+
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+    concurrency = prerender.unstable_concurrency ?? 1;
   }
+
+  await pMap(build.prerender, prerenderSinglePath, { concurrency });
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
@@ -2916,33 +3000,49 @@ export async function getPrerenderPaths(
   routes: GenericRouteManifest,
   logWarning = false,
 ): Promise<string[]> {
-  let prerenderPaths: string[] = [];
-  if (prerender != null && prerender !== false) {
-    let prerenderRoutes = createPrerenderRoutes(routes);
-    if (prerender === true) {
-      let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
-      if (logWarning && !ssr && paramRoutes.length > 0) {
-        console.warn(
-          colors.yellow(
-            [
-              "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
-                "using `prerender: true`. You may want to use the `prerender()` " +
-                "API to prerender the following paths:",
-              ...paramRoutes.map((p) => "  - " + p),
-            ].join("\n"),
-          ),
-        );
-      }
-      prerenderPaths = paths;
-    } else if (typeof prerender === "function") {
-      prerenderPaths = await prerender({
-        getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
-      });
-    } else {
-      prerenderPaths = prerender || ["/"];
-    }
+  if (prerender == null || prerender === false) {
+    return [];
   }
-  return prerenderPaths;
+
+  let pathsConfig: PrerenderPaths;
+
+  if (typeof prerender === "object" && "paths" in prerender) {
+    pathsConfig = prerender.paths;
+  } else {
+    pathsConfig = prerender;
+  }
+
+  if (pathsConfig === false) {
+    return [];
+  }
+
+  let prerenderRoutes = createPrerenderRoutes(routes);
+
+  if (pathsConfig === true) {
+    let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
+    if (logWarning && !ssr && paramRoutes.length > 0) {
+      console.warn(
+        colors.yellow(
+          [
+            "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
+              "using `prerender: true`. You may want to use the `prerender()` " +
+              "API to prerender the following paths:",
+            ...paramRoutes.map((p) => "  - " + p),
+          ].join("\n"),
+        ),
+      );
+    }
+    return paths;
+  }
+
+  if (typeof pathsConfig === "function") {
+    let paths = await pathsConfig({
+      getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
+    });
+    return paths;
+  }
+
+  return pathsConfig;
 }
 
 // Note: Duplicated from react-router/lib/server-runtime

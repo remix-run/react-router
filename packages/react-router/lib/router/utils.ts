@@ -270,6 +270,11 @@ interface DataFunctionArgs<Context> {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
   /**
+   * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
+   * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
+   */
+  unstable_pattern: string;
+  /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
    * // app/routes.ts
@@ -535,7 +540,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
  * properties from framework-agnostic properties
  */
 export interface MapRoutePropertiesFunction {
-  (route: AgnosticRouteObject): {
+  (route: AgnosticDataRouteObject): {
     hasErrorBoundary: boolean;
   } & Record<string, any>;
 }
@@ -808,19 +813,23 @@ export function convertRoutesToDataRoutes(
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
         ...route,
-        ...mapRouteProperties(route),
         id,
       };
-      manifest[id] = indexRoute;
+      manifest[id] = mergeRouteUpdates(
+        indexRoute,
+        mapRouteProperties(indexRoute),
+      );
       return indexRoute;
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
-        ...mapRouteProperties(route),
         id,
         children: undefined,
       };
-      manifest[id] = pathOrLayoutRoute;
+      manifest[id] = mergeRouteUpdates(
+        pathOrLayoutRoute,
+        mapRouteProperties(pathOrLayoutRoute),
+      );
 
       if (route.children) {
         pathOrLayoutRoute.children = convertRoutesToDataRoutes(
@@ -834,6 +843,23 @@ export function convertRoutesToDataRoutes(
 
       return pathOrLayoutRoute;
     }
+  });
+}
+
+function mergeRouteUpdates<T extends AgnosticDataRouteObject>(
+  route: T,
+  updates: ReturnType<MapRoutePropertiesFunction>,
+): T {
+  return Object.assign(route, {
+    ...updates,
+    ...(typeof updates.lazy === "object" && updates.lazy != null
+      ? {
+          lazy: {
+            ...route.lazy,
+            ...updates.lazy,
+          },
+        }
+      : {}),
   });
 }
 
@@ -1994,4 +2020,8 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.internal === "boolean" &&
     "data" in error
   );
+}
+
+export function getRoutePattern(paths: (string | undefined)[]) {
+  return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/") || "/";
 }

@@ -577,6 +577,58 @@ test.describe("Prerendering", () => {
       expect(html).toMatch('<h2 data-route="true">About</h2>');
       expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
     });
+
+    test("Permits a concurrency option", async () => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          ...files,
+          "react-router.config.ts": js`
+            export default {
+              prerender: {
+                paths: ['/', '/about'],
+                unstable_concurrency: 2,
+              },
+            }
+          `,
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true },
+              plugins: [
+                reactRouter()
+              ],
+            });
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let clientDir = path.join(fixture.projectDir, "build", "client");
+      expect(listAllFiles(clientDir).sort()).toEqual([
+        "_root.data",
+        "about.data",
+        "about/index.html",
+        "favicon.ico",
+        "index.html",
+      ]);
+
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+      expect(html).toMatch("<title>Index Title: Index Loader Data</title>");
+      expect(html).toMatch("<h1>Root</h1>");
+      expect(html).toMatch('<h2 data-route="true">Index</h2>');
+      expect(html).toMatch('<p data-loader-data="true">Index Loader Data</p>');
+
+      res = await fixture.requestDocument("/about");
+      html = await res.text();
+      expect(html).toMatch("<title>About Title: About Loader Data</title>");
+      expect(html).toMatch("<h1>Root</h1>");
+      expect(html).toMatch('<h2 data-route="true">About</h2>');
+      expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
+    });
   });
 
   test.describe("ssr: true", () => {
