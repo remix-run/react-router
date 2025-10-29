@@ -2159,7 +2159,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "",
               `  But other route exports in '${importerShort}' depend on '${id}'.`,
               "",
-              "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
+              "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
               "",
             ].join("\n"),
           );
@@ -2171,7 +2171,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             "",
             `    '${id}' imported by '${importerShort}'`,
             "",
-            "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
+            "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
             "",
           ].join("\n"),
         );

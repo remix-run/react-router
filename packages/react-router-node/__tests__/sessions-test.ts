@@ -73,7 +73,7 @@ describe("File session storage", () => {
     session = await getSession(cookie);
     session.set("user", "mjackson");
     expect(session.get("user")).toBe("mjackson");
-    debugger;
+
     setCookie = await commitSession(session);
     session = await getSession(getCookieFromSetCookie(setCookie));
     expect(session.get("user")).toBeUndefined();

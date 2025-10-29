@@ -818,7 +818,7 @@ export function createBrowserRouter(
 
 /**
  * Create a new {@link DataRouter| data router} that manages the application
- * path via the URL [`hash`]https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
+ * path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
  *
  * @public
  * @category Data Routers
