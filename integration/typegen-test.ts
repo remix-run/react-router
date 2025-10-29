@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 
+import { expect } from "@playwright/test";
 import tsx from "dedent";
 import * as Path from "pathe";
 
@@ -334,6 +335,57 @@ test.describe("typegen", () => {
     await fs.mkdir(Path.join(cwd, "src"));
     await fs.rename(Path.join(cwd, "app"), Path.join(cwd, "src/myapp"));
     await $("pnpm typecheck");
+  });
+
+  test("routes outside app dir", async ({ cwd, edit, $ }) => {
+    // Create the subdirectories
+    await fs.mkdir(Path.join(cwd, "app/router"), { recursive: true });
+    await fs.mkdir(Path.join(cwd, "app/pages"), { recursive: true });
+    
+    await edit({
+      "react-router.config.ts": tsx`
+        export default {
+          appDirectory: "app/router",
+        }
+      `,
+      "app/router/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("products/:id", "../pages/product.tsx")
+        ] satisfies RouteConfig;
+      `,
+      "app/router/root.tsx": tsx`
+        import { Outlet } from "react-router";
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+      "app/pages/product.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/product"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string }>>
+          return { planet: "world" }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          return <h1>Hello, {loaderData.planet}!</h1>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+
+    // Verify that the types file was generated in the correct location
+    const annotationPath = Path.join(
+      cwd,
+      ".react-router/types/app/pages/+types/product.ts",
+    );
+    const annotation = await fs.readFile(annotationPath, "utf8");
+    expect(annotation).toContain("export namespace Route");
   });
 
   test("matches", async ({ edit, $ }) => {
