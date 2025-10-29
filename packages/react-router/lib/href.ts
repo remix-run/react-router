@@ -27,8 +27,7 @@ export function href<Path extends keyof Args>(
   ...args: Args[Path]
 ): string {
   let params = args[0];
-  let result = path
-    .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+  let result = trimEndSplat(path) // Ignore trailing / and /*, we'll handle it below
     .replace(
       /\/:([\w-]+)(\?)?/g, // same regex as in .\router\utils.ts: compilePath().
       (_: string, param: string, questionMark: string | undefined) => {
@@ -53,4 +52,25 @@ export function href<Path extends keyof Args>(
   }
 
   return result || "/";
+}
+
+/**
+  Removes a trailing splat and any number of slashes from the end of the path.
+
+  Benchmarks as running faster than `path.replace(/\/*\*?$/, "")`, which backtracks.
+ */
+function trimEndSplat(path: string): string {
+  let i = path.length - 1;
+  let char = path[i];
+  if (char !== "*" && char !== "/") {
+    return path;
+  }
+  i--;
+  for (; i >= 0; i--) {
+    // for/break benchmarks faster than do/while
+    if (path[i] !== "/") {
+      break;
+    }
+  }
+  return path.slice(0, i + 1);
 }
