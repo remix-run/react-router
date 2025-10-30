@@ -3433,30 +3433,69 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
+      let newPartialMatches: AgnosticDataRouteMatch[] | null = null;
+
       if (newMatches) {
-        return { type: "success", matches: newMatches };
+        if (Object.keys(newMatches[0].params).length === 0) {
+          // Static match - use it
+          return { type: "success", matches: newMatches };
+        } else {
+          // Dynamic match - confirm this is the best match.
+          newPartialMatches = matchRoutesImpl(
+            routesToUse,
+            pathname,
+            basename,
+            true,
+          );
+
+          // If we matched deeper into the same branch of partialMatches we were
+          // already checking, we want to make another pass through
+          // patchRoutesOnNavigation()
+          if (
+            newPartialMatches &&
+            partialMatches.length < newPartialMatches.length &&
+            compareMatches(
+              partialMatches,
+              newPartialMatches.slice(0, partialMatches.length),
+            )
+          ) {
+            // No-op - fall through and call patchRoutesOnNavigation again
+          } else {
+            // Otherwise, use the dynamic matches
+            return { type: "success", matches: newMatches };
+          }
+        }
       }
 
-      let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
-        routesToUse,
-        pathname,
-        basename,
-        true,
-      );
+      // Perform partial matching if we didn't already do it above
+      if (!newPartialMatches) {
+        newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          routesToUse,
+          pathname,
+          basename,
+          true,
+        );
+      }
 
       // Avoid loops if the second pass results in the same partial matches
       if (
         !newPartialMatches ||
-        (partialMatches.length === newPartialMatches.length &&
-          partialMatches.every(
-            (m, i) => m.route.id === newPartialMatches![i].route.id,
-          ))
+        compareMatches(partialMatches, newPartialMatches)
       ) {
         return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
     }
+  }
+
+  function compareMatches(
+    a: AgnosticDataRouteMatch[],
+    b: AgnosticDataRouteMatch[],
+  ) {
+    return (
+      a.length === b.length && a.every((m, i) => m.route.id === b[i].route.id)
+    );
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
