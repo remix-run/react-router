@@ -107,16 +107,17 @@ This table gives a high-level overview of the stages, but please see the individ
 ### Stage 1 — Consideration
 
 - A proposal enters **Stage 1 — Consideration** when 2 SC members indicate interest/support for the idea as a valuable addition to React Router
-- Upon entering this stage, a GitHub Issue will be created for the feature and added to the roadmap
 - These initial supporting SC members will be the champions for the feature and will be loosely responsible for shepherding the feature through the stages of the RFC process
 - At this stage, the proposal is eligible for a sample PR implementation from a core team or community member
 - The SC will indicate at this stage if this is a feature open to a community PR or something the core team would prefer to tackle
+- We will add the `accepting-prs` label to the RFC if we are open to community PRs
 - All PRs at this stage should implement the feature in an "unstable" fashion (usually using an `unstable_` prefix on the future flag or API)
 
 ### Stage 2 — Alpha
 
 - A proposal enters **Stage 2 — Alpha** once a PR has been opened implementing the feature in an `unstable_` state
 - At this stage, we should open an Issue for the Proposal and add it to the [Roadmap](https://github.com/orgs/remix-run/projects/5)
+- We will remove any `accepting-prs` label and add the `🗺️ Roadmap` label to indicate that this RFc is officially on the roadmap
 - At this stage, we are looking for early community testing _before_ merging any work to the React Router repo — so these PRs should provide a mechanism for community members to opt into to alpha testing
   - Maintainers can trigger an alpha release from the PR branch by adding the `alpha-release` label, which will kick off an experimental release and comment it back on the PR
   - Because the alpha release may contain other work committed to `dev` but not yet released in a stable version, it may not be ideal for testing in all cases
