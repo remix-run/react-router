@@ -667,6 +667,16 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  // Track race conditions where we finish initializing prior to the layout
+  // effect above running to register our listener.  If we manually detect a
+  // change in `state.initialized`, automatically sync state.
+  let initialized = state.initialized;
+  React.useLayoutEffect(() => {
+    if (!initialized && router.state.initialized) {
+      logErrorsAndSetState(router.state);
+    }
+  }, [initialized, logErrorsAndSetState, router.state]);
+
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
