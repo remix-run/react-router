@@ -3448,19 +3448,17 @@ export function createRouter(init: RouterInit): Router {
             true,
           );
 
-          // If we matched deeper into the same branch of partialMatches we were
-          // already checking, we want to make another pass through
-          // patchRoutesOnNavigation()
-          if (
+          // If we matched deeper into the same branch of `partialMatches` we were already
+          // checking, we want to make another pass through `patchRoutesOnNavigation()`
+          let matchedDeeper =
             newPartialMatches &&
             partialMatches.length < newPartialMatches.length &&
             compareMatches(
               partialMatches,
               newPartialMatches.slice(0, partialMatches.length),
-            )
-          ) {
-            // No-op - fall through and call patchRoutesOnNavigation again
-          } else {
+            );
+
+          if (!matchedDeeper) {
             // Otherwise, use the dynamic matches
             return { type: "success", matches: newMatches };
           }
