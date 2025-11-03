@@ -18,13 +18,12 @@ export default function handleRequest(
   // If you have middleware enabled:
   // loadContext: RouterContextProvider
 ) {
-
   // https://httpwg.org/specs/rfc9110.html#HEAD
-  if (request.method.toUpperCase() === 'HEAD') {
+  if (request.method.toUpperCase() === "HEAD") {
     return new Response(null, {
       status: responseStatusCode,
       headers: responseHeaders,
-    })
+    });
   }
 
   return new Promise((resolve, reject) => {
