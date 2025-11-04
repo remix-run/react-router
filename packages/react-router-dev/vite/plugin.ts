@@ -1688,6 +1688,44 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         };
       },
+      configurePreviewServer(previewServer) {
+        return () => {
+          // Handle SSR requests in preview mode using the built server bundle
+          previewServer.middlewares.use(async (req, res, next) => {
+            try {
+              let serverBuildDirectory = getServerBuildDirectory(
+                ctx.reactRouterConfig,
+              );
+              let serverBuildFile = path.resolve(
+                serverBuildDirectory,
+                "index.js",
+              );
+
+              // Import the built server bundle using dynamic import
+              // Need to add a cache-busting query parameter to avoid module caching
+              let build = (await import(
+                url.pathToFileURL(serverBuildFile).href
+              )) as ServerBuild;
+
+              let handler = createRequestHandler(build, "production");
+              let nodeHandler: NodeRequestHandler = async (
+                nodeReq,
+                nodeRes,
+              ) => {
+                let req = fromNodeRequest(nodeReq, nodeRes);
+                let res = await handler(
+                  req,
+                  await reactRouterDevLoadContext(req),
+                );
+                await sendResponse(nodeRes, res);
+              };
+              await nodeHandler(req, res);
+            } catch (error) {
+              next(error);
+            }
+          });
+        };
+      },
       writeBundle: {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
