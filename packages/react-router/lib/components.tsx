@@ -521,7 +521,9 @@ export function RouterProvider({
   flushSync: reactDomFlushSyncImpl,
   unstable_onError,
 }: RouterProviderProps): React.ReactElement {
-  let [state, setStateImpl] = React.useState(router.state);
+  let [_state, setStateImpl] = React.useState(router.state);
+  // @ts-expect-error - Needs React 19 types
+  let [state, setOptimisticState] = React.useOptimistic(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -591,7 +593,10 @@ export function RouterProvider({
         if (reactDomFlushSyncImpl && flushSync) {
           reactDomFlushSyncImpl(() => logErrorsAndSetState(newState));
         } else {
-          React.startTransition(() => logErrorsAndSetState(newState));
+          React.startTransition(() => {
+            setOptimisticState(newState);
+            logErrorsAndSetState(newState);
+          });
         }
         return;
       }

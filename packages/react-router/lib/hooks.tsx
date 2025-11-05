@@ -1825,7 +1825,7 @@ function useNavigateStable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        router.navigate(to);
+        await router.navigate(to);
       } else {
         await router.navigate(to, { fromRouteId: id, ...options });
       }
@@ -1833,7 +1833,50 @@ function useNavigateStable(): NavigateFunction {
     [router, id],
   );
 
-  return navigate;
+  let navigateTransition = React.useCallback(
+    (to: To | number, options: NavigateOptions = {}) => {
+      const deferred = new Deferred<void>();
+      // @ts-expect-error - Needs React 19 types
+      React.startTransition(async () => {
+        try {
+          await navigate(to as To, options);
+          deferred.resolve();
+        } catch (e) {
+          deferred.reject(e);
+        }
+      });
+      return deferred.promise;
+    },
+    [navigate],
+  );
+
+  return navigateTransition;
+}
+
+// TODO: Move to a shared location
+class Deferred<T> {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<T>;
+  // @ts-expect-error - no initializer
+  resolve: (value: T) => void;
+  // @ts-expect-error - no initializer
+  reject: (reason?: unknown) => void;
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = (value) => {
+        if (this.status === "pending") {
+          this.status = "resolved";
+          resolve(value);
+        }
+      };
+      this.reject = (reason) => {
+        if (this.status === "pending") {
+          this.status = "rejected";
+          reject(reason);
+        }
+      };
+    });
+  }
 }
 
 const alreadyWarned: Record<string, boolean> = {};
