@@ -983,12 +983,11 @@ const defaultErrorElement = <DefaultErrorComponent />;
 
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
-  params: Params;
   revalidation: RevalidationState;
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
-  unstable_onError: unstable_ClientOnErrorFunction | null;
+  onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -1049,12 +1048,8 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    if (this.props.unstable_onError) {
-      this.props.unstable_onError(error, {
-        location: this.props.location,
-        params: this.props.params,
-        errorInfo,
-      });
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
     } else {
       console.error(
         "React Router caught the following error during render",
@@ -1191,6 +1186,17 @@ export function _renderMatches(
     }
   }
 
+  let onError =
+    dataRouterState && unstable_onError
+      ? (error: unknown, errorInfo?: React.ErrorInfo) => {
+          unstable_onError(error, {
+            location: dataRouterState.location,
+            params: dataRouterState.matches?.[0]?.params ?? {},
+            errorInfo,
+          });
+        }
+      : undefined;
+
   return renderedMatches.reduceRight(
     (outlet, match, index) => {
       // Only data routers handle errors/fallbacks
@@ -1260,13 +1266,12 @@ export function _renderMatches(
           index === 0) ? (
         <RenderErrorBoundary
           location={dataRouterState.location}
-          params={match.params}
           revalidation={dataRouterState.revalidation}
           component={errorElement}
           error={error}
           children={getChildren()}
           routeContext={{ outlet: null, matches, isDataRoute: true }}
-          unstable_onError={unstable_onError}
+          onError={onError}
         />
       ) : (
         getChildren()
