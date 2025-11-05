@@ -1608,15 +1608,30 @@ export function Await<Resolve>({
   resolve,
 }: AwaitProps<Resolve>) {
   let dataRouterContext = React.useContext(DataRouterContext);
-  let location = useLocation();
-  let params = useParams();
+  let dataRouterStateContext = React.useContext(DataRouterStateContext);
+
+  let onError = React.useCallback(
+    (error: unknown, errorInfo?: React.ErrorInfo) => {
+      if (
+        dataRouterContext &&
+        dataRouterContext.unstable_onError &&
+        dataRouterStateContext
+      ) {
+        dataRouterContext.unstable_onError(error, {
+          location: dataRouterStateContext.location,
+          params: dataRouterStateContext.matches?.[0]?.params || {},
+          errorInfo,
+        });
+      }
+    },
+    [dataRouterContext, dataRouterStateContext],
+  );
+
   return (
     <AwaitErrorBoundary
       resolve={resolve}
       errorElement={errorElement}
-      unstable_onError={dataRouterContext?.unstable_onError}
-      location={location}
-      params={params}
+      onError={onError}
     >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
@@ -1625,10 +1640,8 @@ export function Await<Resolve>({
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
-  location: Location;
-  params: Params;
   resolve: TrackedPromise | any;
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
 }>;
 
 type AwaitErrorBoundaryState = {
@@ -1655,13 +1668,9 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    if (this.props.unstable_onError) {
+    if (this.props.onError) {
       // Log render errors
-      this.props.unstable_onError(error, {
-        location: this.props.location,
-        params: this.props.params,
-        errorInfo,
-      });
+      this.props.onError(error, errorInfo);
     } else {
       console.error(
         "<Await> caught the following error during render",
@@ -1708,10 +1717,7 @@ class AwaitErrorBoundary extends React.Component<
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) => {
           // Log promise rejections
-          this.props.unstable_onError?.(error, {
-            location: this.props.location,
-            params: this.props.params,
-          });
+          this.props.onError?.(error);
           Object.defineProperty(resolve, "_error", { get: () => error });
         },
       );
