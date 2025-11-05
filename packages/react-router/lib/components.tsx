@@ -551,7 +551,7 @@ export function RouterProvider({
             if (prevState.errors?.[routeId] !== error) {
               unstable_onError(error, {
                 location: newState.location,
-                params: newState.matches[0].params,
+                params: newState.matches[0]?.params ?? {},
               });
             }
           });
