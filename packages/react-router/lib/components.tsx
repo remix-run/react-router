@@ -26,6 +26,7 @@ import { createRouter } from "./router/router";
 import type {
   DataStrategyFunction,
   LazyRouteFunction,
+  Params,
   TrackedPromise,
 } from "./router/utils";
 import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
@@ -307,7 +308,14 @@ class Deferred<T> {
  * and rendering errors via `componentDidCatch`
  */
 export interface unstable_ClientOnErrorFunction {
-  (error: unknown, errorInfo?: React.ErrorInfo): void;
+  (
+    error: unknown,
+    info: {
+      location: Location;
+      params: Params;
+      errorInfo?: React.ErrorInfo;
+    },
+  ): void;
 }
 
 /**
@@ -541,7 +549,10 @@ export function RouterProvider({
         if (newState.errors && unstable_onError) {
           Object.entries(newState.errors).forEach(([routeId, error]) => {
             if (prevState.errors?.[routeId] !== error) {
-              unstable_onError(error);
+              unstable_onError(error, {
+                location: newState.location,
+                params: newState.matches[0].params,
+              });
             }
           });
         }
@@ -1597,11 +1608,15 @@ export function Await<Resolve>({
   resolve,
 }: AwaitProps<Resolve>) {
   let dataRouterContext = React.useContext(DataRouterContext);
+  let location = useLocation();
+  let params = useParams();
   return (
     <AwaitErrorBoundary
       resolve={resolve}
       errorElement={errorElement}
       unstable_onError={dataRouterContext?.unstable_onError}
+      location={location}
+      params={params}
     >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
@@ -1610,6 +1625,8 @@ export function Await<Resolve>({
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
+  location: Location;
+  params: Params;
   resolve: TrackedPromise | any;
   unstable_onError?: unstable_ClientOnErrorFunction;
 }>;
@@ -1640,7 +1657,11 @@ class AwaitErrorBoundary extends React.Component<
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
     if (this.props.unstable_onError) {
       // Log render errors
-      this.props.unstable_onError(error, errorInfo);
+      this.props.unstable_onError(error, {
+        location: this.props.location,
+        params: this.props.params,
+        errorInfo,
+      });
     } else {
       console.error(
         "<Await> caught the following error during render",
@@ -1687,7 +1708,10 @@ class AwaitErrorBoundary extends React.Component<
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) => {
           // Log promise rejections
-          this.props.unstable_onError?.(error);
+          this.props.unstable_onError?.(error, {
+            location: this.props.location,
+            params: this.props.params,
+          });
           Object.defineProperty(resolve, "_error", { get: () => error });
         },
       );

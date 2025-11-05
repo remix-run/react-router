@@ -983,6 +983,7 @@ const defaultErrorElement = <DefaultErrorComponent />;
 
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
+  params: Params;
   revalidation: RevalidationState;
   error: any;
   component: React.ReactNode;
@@ -1049,7 +1050,11 @@ export class RenderErrorBoundary extends React.Component<
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
     if (this.props.unstable_onError) {
-      this.props.unstable_onError(error, errorInfo);
+      this.props.unstable_onError(error, {
+        location: this.props.location,
+        params: this.props.params,
+        errorInfo,
+      });
     } else {
       console.error(
         "React Router caught the following error during render",
@@ -1255,6 +1260,7 @@ export function _renderMatches(
           index === 0) ? (
         <RenderErrorBoundary
           location={dataRouterState.location}
+          params={match.params}
           revalidation={dataRouterState.revalidation}
           component={errorElement}
           error={error}
