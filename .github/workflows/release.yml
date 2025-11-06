@@ -14,7 +14,7 @@
 #   - Trigger: workflow_dispatch
 #   - jobs: release-experimental
 
-name: Release
+name: 🚢 Release
 on:
   # Changesets-driven prereleases and stable releases
   push:
@@ -125,10 +125,22 @@ jobs:
     name: 📝 Comment on related issues and pull requests
     if: github.repository == 'remix-run/react-router' && github.event_name == 'push' && github.ref_name != 'release-v6' && needs.find_package_version.outputs.package_version != ''
     needs: [release, find_package_version]
+    runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues
       pull-requests: write # enable commenting on released pull requests
-    uses: ./.github/workflows/release-comments.yml
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Comment on related issues and pull requests
+        uses: remix-run/release-comment-action@v0.4.2
+        with:
+          DIRECTORY_TO_CHECK: "./packages"
+          PACKAGE_NAME: "react-router"
+          ISSUE_LABELS_TO_REMOVE: "awaiting release"
 
   # HEADS UP! this "nightly" job will only ever run on the `main` branch due to
   # it being a cron job, and the last commit on main will be what github shows
