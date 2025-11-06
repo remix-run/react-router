@@ -231,7 +231,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version-file: ".nvmrc"
+          node-version: 24
           cache: "pnpm"
 
       - name: 📥 Install deps
