@@ -156,8 +156,8 @@ For an example, please refer to the default [`entry.server.tsx`][node-streaming-
 Note that this does not handle thrown `Response` instances from your `loader`/`action` functions. The intention of this handler is to find bugs in your code which result in unexpected thrown errors. If you are detecting a scenario and throwing a 401/404/etc. `Response` in your `loader`/`action` then it's an expected flow that is handled by your code. If you also wish to log, or send those to an external service, that should be done at the time you throw the response.
 
 [client-entry]: ./entry.client.tsx
-[serverrouter]: ../components/ServerRouter
-[streaming]: ../how-to/suspense
+[serverrouter]: ../framework-routers/ServerRouter
+[streaming]: ../../how-to/suspense
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
 [node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
