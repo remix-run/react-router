@@ -221,7 +221,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch }}
-          # checkout using a custom token so that we can push later on
+          # checkout using a custom token so that we can push later on (test)
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
