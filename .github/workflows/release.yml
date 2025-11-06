@@ -61,7 +61,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version-file: ".nvmrc"
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
           cache: "pnpm"
 
       - name: 📥 Install deps
@@ -103,7 +103,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version-file: ".nvmrc"
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
           cache: "pnpm"
 
       - id: find_package_version
@@ -145,6 +145,9 @@ jobs:
     name: 🌒 Nightly Release
     if: github.repository == 'remix-run/react-router' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
     outputs:
       # will be undefined if there's no release necessary
       NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
@@ -163,7 +166,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version-file: ".nvmrc"
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
           cache: "pnpm"
 
       - name: 📥 Install deps
@@ -231,7 +234,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
           cache: "pnpm"
 
       - name: 📥 Install deps
