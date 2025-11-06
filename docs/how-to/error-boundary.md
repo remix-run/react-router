@@ -22,11 +22,13 @@ All applications should at a minimum export a root error boundary. This one hand
 - Randomly thrown values
 
 ```tsx filename=root.tsx
-import { Route } from "./+types/root";
+import {
+  isRouteErrorResponse,
+  useRouteError,
+} from "react-router-dom";
 
-export function ErrorBoundary({
-  error,
-}: Route.ErrorBoundaryProps) {
+export function ErrorBoundary() {
+  const error = useRouteError();
   if (isRouteErrorResponse(error)) {
     return (
       <>
