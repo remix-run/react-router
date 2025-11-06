@@ -67,11 +67,6 @@ jobs:
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🔐 Setup npm auth
-        run: |
-          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-
         # This action has two responsibilities. The first time the workflow runs
         # (initial push to a `release-*` branch) it will create a new branch and
         # then open a PR with the related changes for the new version. After the
@@ -90,8 +85,6 @@ jobs:
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   find_package_version:
     name: 🦋 Find Package
@@ -212,12 +205,6 @@ jobs:
         if: steps.version.outputs.NEXT_VERSION
         run: pnpm build
 
-      - name: 🔐 Setup npm auth
-        if: steps.version.outputs.NEXT_VERSION
-        run: |
-          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-
       - name: 🚀 Publish
         if: steps.version.outputs.NEXT_VERSION
         run: pnpm run publish
@@ -259,11 +246,6 @@ jobs:
 
       - name: 🏗 Build
         run: pnpm build
-
-      - name: 🔐 Setup npm auth
-        run: |
-          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
       - name: 🚀 Publish
         run: pnpm run publish
