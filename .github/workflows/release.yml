@@ -213,6 +213,9 @@ jobs:
     name: 🧪 Experimental Release
     if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v5
