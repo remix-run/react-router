@@ -5664,7 +5664,13 @@ function runClientMiddlewarePipeline(
   return runMiddlewarePipeline(
     args,
     handler,
-    (r) => r, // No post-processing needed on the client
+    (r) => {
+      // Throw any redirect responses to short circuit
+      if (isRedirectResponse(r)) {
+        throw r;
+      }
+      return r;
+    },
     isDataStrategyResults,
     errorHandler,
   );
