@@ -2465,6 +2465,17 @@ export function createRouter(init: RouterInit): Router {
     );
     let actionResult = actionResults[match.route.id];
 
+    if (!actionResult) {
+      // If this error came from a parent middleware before the action ran,
+      // then it won't be tied to the action route
+      for (let match of fetchMatches) {
+        if (actionResults[match.route.id]) {
+          actionResult = actionResults[match.route.id];
+          break;
+        }
+      }
+    }
+
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
