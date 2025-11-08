@@ -23,6 +23,7 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
+import pathStartsWith from "./path-starts-with";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -747,7 +748,7 @@ export async function createConfigLoader({
             let dirname = Path.dirname(path);
 
             return (
-              !dirname.startsWith(appDirectory) &&
+              !pathStartsWith(dirname, appDirectory) &&
               // Ensure we're only watching files outside of the app directory
               // that are at the root level, not nested in subdirectories
               path !== root && // Watch the root directory itself
