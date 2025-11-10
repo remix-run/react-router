@@ -2408,10 +2408,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return;
         }
 
-        let clientModules = uniqueNodes(
-          modules.flatMap((mod) =>
-            getParentClientNodes(server.environments.client.moduleGraph, mod),
-          ),
+        let clientModules = modules.flatMap((mod) =>
+          getParentClientNodes(server.environments.client.moduleGraph, mod),
         );
 
         for (let clientModule of clientModules) {
@@ -2427,10 +2425,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 function getParentClientNodes(
   clientModuleGraph: Vite.EnvironmentModuleGraph,
   module: Vite.EnvironmentModuleNode,
+  seenNodes: Set<string> = new Set(),
 ): Vite.EnvironmentModuleNode[] {
   if (!module.id) {
     return [];
   }
+  if (seenNodes.has(module.url)) {
+    return [];
+  }
+  seenNodes.add(module.url);
 
   let clientModule = clientModuleGraph.getModuleById(module.id);
   if (clientModule) {
@@ -2438,23 +2441,8 @@ function getParentClientNodes(
   }
 
   return [...module.importers].flatMap((importer) =>
-    getParentClientNodes(clientModuleGraph, importer),
+    getParentClientNodes(clientModuleGraph, importer, seenNodes),
   );
-}
-
-function uniqueNodes(
-  nodes: Vite.EnvironmentModuleNode[],
-): Vite.EnvironmentModuleNode[] {
-  let nodeUrls = new Set<string>();
-  let unique: Vite.EnvironmentModuleNode[] = [];
-  for (let node of nodes) {
-    if (nodeUrls.has(node.url)) {
-      continue;
-    }
-    nodeUrls.add(node.url);
-    unique.push(node);
-  }
-  return unique;
 }
 
 function addRefreshWrapper(
