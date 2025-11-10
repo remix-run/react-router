@@ -85,10 +85,14 @@ export type PatchRoutesOnNavigationFunctionArgs =
 export type PatchRoutesOnNavigationFunction =
   AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
 
+// TODO: Does this need to extend?  We can probably just leverage the stuff on
+// NavigationContext and add a few invariants for hooks that must be used in a
+// data router
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
-  // `NavigationContext` needs future since it doesn't have a `router` in all cases
-  extends Omit<NavigationContextObject, "future"> {
+  // `NavigationContext` needs `future`/`unstable_transitions` since it doesn't
+  // have a `router` in all cases
+  extends Omit<NavigationContextObject, "future" | "unstable_transitions"> {
   router: Router;
   staticContext?: StaticHandlerContext;
   unstable_onError?: unstable_ClientOnErrorFunction;
@@ -178,6 +182,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
+  unstable_transitions: boolean;
   // TODO: Re-introduce a singular `FutureConfig` once we land our first
   // future.unstable_ or future.v8_ flag
   future: {};

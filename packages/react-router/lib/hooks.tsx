@@ -382,7 +382,8 @@ function useNavigateUnstable(): NavigateFunction {
   );
 
   let dataRouterContext = React.useContext(DataRouterContext);
-  let { basename, navigator } = React.useContext(NavigationContext);
+  let { basename, navigator, unstable_transitions } =
+    React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
@@ -402,7 +403,11 @@ function useNavigateUnstable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        navigator.go(to);
+        if (unstable_transitions) {
+          React.startTransition(() => navigator.go(to));
+        } else {
+          navigator.go(to);
+        }
         return;
       }
 
@@ -426,11 +431,21 @@ function useNavigateUnstable(): NavigateFunction {
             : joinPaths([basename, path.pathname]);
       }
 
-      (!!options.replace ? navigator.replace : navigator.push)(
-        path,
-        options.state,
-        options,
-      );
+      if (unstable_transitions) {
+        React.startTransition(() => {
+          if (options.replace === true) {
+            navigator.replace(path, options.state, options);
+          } else {
+            navigator.push(path, options.state, options);
+          }
+        });
+      } else {
+        if (options.replace === true) {
+          navigator.replace(path, options.state, options);
+        } else {
+          navigator.push(path, options.state, options);
+        }
+      }
     },
     [
       basename,
@@ -438,6 +453,7 @@ function useNavigateUnstable(): NavigateFunction {
       routePathnamesJson,
       locationPathname,
       dataRouterContext,
+      unstable_transitions,
     ],
   );
 
@@ -1820,6 +1836,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
 // a RouterProvider.
 function useNavigateStable(): NavigateFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
+  let { unstable_transitions } = React.useContext(NavigationContext);
   let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
 
   let activeRef = React.useRef(false);
@@ -1835,13 +1852,32 @@ function useNavigateStable(): NavigateFunction {
       // is useless because we haven't wired up our router subscriber yet
       if (!activeRef.current) return;
 
+      if (unstable_transitions) {
+        await new Promise<void>((resolve, reject) => {
+          // @ts-expect-error Needs React 19 types
+          React.startTransition(async () => {
+            try {
+              if (typeof to === "number") {
+                // TODO: I don't think go navigations are promise-aware currently
+                await router.navigate(to);
+              } else {
+                await router.navigate(to, { fromRouteId: id, ...options });
+              }
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
+      }
+
       if (typeof to === "number") {
         router.navigate(to);
       } else {
         await router.navigate(to, { fromRouteId: id, ...options });
       }
     },
-    [router, id],
+    [router, id, unstable_transitions],
   );
 
   return navigate;

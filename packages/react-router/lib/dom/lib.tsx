@@ -933,6 +933,12 @@ export interface BrowserRouterProps {
    */
   children?: React.ReactNode;
   /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   * Enabled by default.
+   */
+  unstable_transitions?: boolean;
+  /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
    */
@@ -949,6 +955,7 @@ export interface BrowserRouterProps {
  * @param props Props
  * @param {BrowserRouterProps.basename} props.basename n/a
  * @param {BrowserRouterProps.children} props.children n/a
+ * @param {BrowserRouterProps.unstable_transitions} props.unstable_transitions n/a
  * @param {BrowserRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * API for client-side routing.
@@ -956,6 +963,7 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
+  unstable_transitions,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -970,9 +978,13 @@ export function BrowserRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_transitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_transitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -984,6 +996,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_transitions={unstable_transitions === true}
     />
   );
 }
@@ -1000,6 +1013,12 @@ export interface HashRouterProps {
    * {@link Route | `<Route>`} components describing your route configuration
    */
   children?: React.ReactNode;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   * Enabled by default.
+   */
+  unstable_transitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -1018,11 +1037,17 @@ export interface HashRouterProps {
  * @param props Props
  * @param {HashRouterProps.basename} props.basename n/a
  * @param {HashRouterProps.children} props.children n/a
+ * @param {HashRouterProps.unstable_transitions} props.unstable_transitions n/a
  * @param {HashRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
  * for client-side routing.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename,
+  children,
+  unstable_transitions,
+  window,
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
@@ -1035,9 +1060,13 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_transitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_transitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1049,6 +1078,7 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_transitions={unstable_transitions === true}
     />
   );
 }
@@ -1069,6 +1099,12 @@ export interface HistoryRouterProps {
    *  A {@link History} implementation for use by the router
    */
   history: History;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   * Enabled by default.
+   */
+  unstable_transitions?: boolean;
 }
 
 /**
@@ -1086,6 +1122,7 @@ export interface HistoryRouterProps {
  * @param {HistoryRouterProps.basename} props.basename n/a
  * @param {HistoryRouterProps.children} props.children n/a
  * @param {HistoryRouterProps.history} props.history n/a
+ * @param {HistoryRouterProps.unstable_transitions} props.unstable_transitions n/a
  * @returns A declarative {@link Router | `<Router>`} using the provided history
  * implementation for client-side routing.
  */
@@ -1093,6 +1130,7 @@ export function HistoryRouter({
   basename,
   children,
   history,
+  unstable_transitions,
 }: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
@@ -1100,9 +1138,13 @@ export function HistoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_transitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_transitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1114,6 +1156,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_transitions={unstable_transitions === true}
     />
   );
 }
@@ -2536,7 +2579,7 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  */
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
-  let { basename } = React.useContext(NavigationContext);
+  let { basename, unstable_transitions } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
   return React.useCallback<SubmitFunction>(
@@ -2556,6 +2599,29 @@ export function useSubmit(): SubmitFunction {
           formEncType: options.encType || (encType as FormEncType),
           flushSync: options.flushSync,
         });
+      } else if (unstable_transitions) {
+        await new Promise<void>((resolve, reject) => {
+          // @ts-expect-error Needs React 19 types
+          React.startTransition(async () => {
+            try {
+              await router.navigate(options.action || action, {
+                preventScrollReset: options.preventScrollReset,
+                formData,
+                body,
+                formMethod: options.method || (method as HTMLFormMethod),
+                formEncType: options.encType || (encType as FormEncType),
+                replace: options.replace,
+                state: options.state,
+                fromRouteId: currentRouteId,
+                flushSync: options.flushSync,
+                viewTransition: options.viewTransition,
+              });
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
       } else {
         await router.navigate(options.action || action, {
           preventScrollReset: options.preventScrollReset,
@@ -2571,7 +2637,7 @@ export function useSubmit(): SubmitFunction {
         });
       }
     },
-    [router, basename, currentRouteId],
+    [router, basename, currentRouteId, unstable_transitions],
   );
 }
 

@@ -298,6 +298,21 @@ export interface HydratedRouterProps {
    * ```
    */
   unstable_onError?: unstable_ClientOnErrorFunction;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined` `undefined`, all state updates are wrapped in
+   *   `React.startTransition`. This can lead to buggy behaviors if you are
+   *   wrapping your own navigations/fetchers in `React.startTransition`.
+   * - When set to true, all router navigations and state changes will be wrapped
+   *   in `React.startTransition` and state change swill also be sent through
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on navigations or state changes.
+   */
+  unstable_transitions?: boolean;
 }
 
 /**
@@ -404,6 +419,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
         <RemixErrorBoundary location={location}>
           <RouterProvider
             router={router}
+            unstable_transitions={props.unstable_transitions}
             unstable_onError={props.unstable_onError}
           />
         </RemixErrorBoundary>

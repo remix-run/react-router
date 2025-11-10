@@ -354,6 +354,21 @@ export interface RouterProviderProps {
    * ```
    */
   unstable_onError?: unstable_ClientOnErrorFunction;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined` `undefined`, all state updates are wrapped in
+   *   `React.startTransition`. This can lead to buggy behaviors if you are
+   *   wrapping your own navigations/fetchers in `React.startTransition`.
+   * - When set to true, all router navigations and state changes will be wrapped
+   *   in `React.startTransition` and state change swill also be sent through
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on navigations or state changes.
+   */
+  unstable_transitions?: boolean;
 }
 
 function shallowDiff(a: any, b: any) {
@@ -377,7 +392,7 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
   unstable_onError,
-}: RouterProviderProps) {
+}: Omit<RouterProviderProps, "unstable_transitions">): React.ReactElement {
   let fetcherData = React.useRef<Map<string, any>>(new Map());
   let [revalidating, startRevalidation] = React.useTransition();
   let [state, setState] = React.useState(router.state);
@@ -476,6 +491,7 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
               location={state.location}
               navigationType={state.historyAction}
               navigator={navigator}
+              unstable_transitions={true}
             >
               <MemoizedDataRoutes
                 routes={router.routes}
@@ -522,14 +538,18 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
  * @param {RouterProviderProps.flushSync} props.flushSync n/a
  * @param {RouterProviderProps.unstable_onError} props.unstable_onError n/a
  * @param {RouterProviderProps.router} props.router n/a
+ * @param {RouterProviderProps.unstable_transitions} props.unstable_transitions n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
   unstable_onError,
+  unstable_transitions,
 }: RouterProviderProps): React.ReactElement {
-  let [state, setStateImpl] = React.useState(router.state);
+  let [_state, setStateImpl] = React.useState(router.state);
+  // @ts-expect-error - Needs React 19 types
+  let [state, setOptimisticState] = React.useOptimistic(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -601,7 +621,12 @@ export function RouterProvider({
       if (!viewTransitionOpts || !isViewTransitionAvailable) {
         if (reactDomFlushSyncImpl && flushSync) {
           reactDomFlushSyncImpl(() => logErrorsAndSetState(newState));
+        } else if (unstable_transitions === false) {
+          logErrorsAndSetState(newState);
         } else {
+          if (unstable_transitions === true) {
+            setOptimisticState(newState);
+          }
           React.startTransition(() => logErrorsAndSetState(newState));
         }
         return;
@@ -671,6 +696,8 @@ export function RouterProvider({
       transition,
       renderDfd,
       logErrorsAndSetState,
+      unstable_transitions,
+      setOptimisticState,
     ],
   );
 
@@ -694,7 +721,11 @@ export function RouterProvider({
       let newState = pendingState;
       let renderPromise = renderDfd.promise;
       let transition = router.window.document.startViewTransition(async () => {
-        React.startTransition(() => logErrorsAndSetState(newState));
+        if (unstable_transitions === false) {
+          logErrorsAndSetState(newState);
+        } else {
+          React.startTransition(() => logErrorsAndSetState(newState));
+        }
         await renderPromise;
       });
       transition.finished.finally(() => {
@@ -705,7 +736,14 @@ export function RouterProvider({
       });
       setTransition(transition);
     }
-  }, [pendingState, renderDfd, router.window, logErrorsAndSetState]);
+  }, [
+    pendingState,
+    renderDfd,
+    router.window,
+    logErrorsAndSetState,
+    unstable_transitions,
+    setOptimisticState,
+  ]);
 
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition
@@ -783,6 +821,7 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
+                unstable_transitions={unstable_transitions === true}
               >
                 <MemoizedDataRoutes
                   routes={router.routes}
@@ -837,6 +876,12 @@ export interface MemoryRouterProps {
    * Index of `initialEntries` the application should initialize to
    */
   initialIndex?: number;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   * Enabled by default.
+   */
+  unstable_transitions?: boolean;
 }
 
 /**
@@ -850,6 +895,7 @@ export interface MemoryRouterProps {
  * @param {MemoryRouterProps.children} props.children n/a
  * @param {MemoryRouterProps.initialEntries} props.initialEntries n/a
  * @param {MemoryRouterProps.initialIndex} props.initialIndex n/a
+ * @param {MemoryRouterProps.unstable_transitions} props.unstable_transitions n/a
  * @returns A declarative in-memory {@link Router | `<Router>`} for client-side
  * routing.
  */
@@ -858,6 +904,7 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
+  unstable_transitions,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -875,9 +922,13 @@ export function MemoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_transitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_transitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -889,6 +940,7 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_transitions={unstable_transitions === true}
     />
   );
 }
@@ -1302,6 +1354,10 @@ export interface RouterProps {
    * will not be reactive to location changes.
    */
   static?: boolean;
+  /**
+   * Whether this router should wrap navigations in `React.startTransition()`
+   */
+  unstable_transitions: boolean;
 }
 
 /**
@@ -1321,6 +1377,7 @@ export interface RouterProps {
  * @param {RouterProps.navigationType} props.navigationType n/a
  * @param {RouterProps.navigator} props.navigator n/a
  * @param {RouterProps.static} props.static n/a
+ * @param {RouterProps.unstable_transitions} props.unstable_transitions n/a
  * @returns React element for the rendered router or `null` if the location does
  * not match the {@link props.basename}
  */
@@ -1331,6 +1388,7 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
+  unstable_transitions,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -1346,9 +1404,10 @@ export function Router({
       basename,
       navigator,
       static: staticProp,
+      unstable_transitions,
       future: {},
     }),
-    [basename, navigator, staticProp],
+    [basename, navigator, staticProp, unstable_transitions],
   );
 
   if (typeof locationProp === "string") {

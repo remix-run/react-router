@@ -94,6 +94,7 @@ export function StaticRouter({
       navigationType={action}
       navigator={staticNavigator}
       static={true}
+      unstable_transitions={false}
     />
   );
 }
@@ -204,6 +205,7 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
+                unstable_transitions={false}
               >
                 <DataRoutes
                   routes={router.routes}
