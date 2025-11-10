@@ -76,8 +76,6 @@ Resource Routes are flexible when it comes to the return type - you can return [
   - Keeps things consistent with the loaders/actions in your UI routes
   - Allows you to stream promises down to your UI through `data()`/[`Await`][await]
 
-While we don't recommend it, you _can_ return plain JS objects from a resource route and they will be converted into an appropriate `Response` based on to the HTTP Request (a single-fetch response for `.data` requests or a JSON response for other external HTTP requests). We don't prefer this pattern because `new Response()`/`data()` calls keep the code explicit for API-only/non-UI routes.
-
 ## Error Handling
 
 Throwing an `Error` from Resource route (or anything other than a `Response`/`data()`) will trigger [`handleError`][handleError] and result in a 500 HTTP Response:
