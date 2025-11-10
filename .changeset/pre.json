@@ -36,5 +36,11 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "big-rings-protect",
+    "curly-balloons-fry",
+    "forty-bugs-turn",
+    "loud-mirrors-sneeze",
+    "tame-moons-train"
+  ]
 }
