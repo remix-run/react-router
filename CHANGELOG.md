@@ -395,7 +395,7 @@ Date: 2025-11-12
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- Add `location`/`params` as arguments to client-side `unstable_onError` to permit enhanced error reporting ([#14509](https://github.com/remix-run/react-router/pull/14509))
+- `react-router` - Add `location`/`params` as arguments to client-side `unstable_onError` to permit enhanced error reporting ([#14509](https://github.com/remix-run/react-router/pull/14509))
   - ⚠️ This is a breaking change if you've already adopted `unstable_onError`
   - The second parameter has changed to an object including `errorInfo`, `location`, and `params`:
 
