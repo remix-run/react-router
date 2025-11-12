@@ -1588,11 +1588,22 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
     hash = "",
   } = typeof to === "string" ? parsePath(to) : to;
 
-  let pathname = toPathname
-    ? toPathname.startsWith("/")
-      ? toPathname
-      : resolvePathname(toPathname, fromPathname)
-    : fromPathname;
+  let pathname: string;
+  if (toPathname) {
+    if (toPathname.startsWith("//")) {
+      pathname = toPathname;
+    } else {
+      // Normalize double-slashes
+      toPathname = toPathname.replace(/\/\/+/g, "/");
+      if (toPathname.startsWith("/")) {
+        pathname = resolvePathname(toPathname.substring(1), "/");
+      } else {
+        pathname = resolvePathname(toPathname, fromPathname);
+      }
+    }
+  } else {
+    pathname = fromPathname;
+  }
 
   return {
     pathname,

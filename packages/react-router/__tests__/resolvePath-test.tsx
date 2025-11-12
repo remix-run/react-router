@@ -1,9 +1,37 @@
 import { resolvePath } from "react-router";
 
 describe("resolvePath", () => {
+  it("does not touch with protocol-less absolute paths", () => {
+    expect(resolvePath("//google.com")).toMatchObject({
+      pathname: "//google.com",
+    });
+
+    expect(resolvePath("//google.com/../../path")).toMatchObject({
+      pathname: "//google.com/../../path",
+    });
+
+    expect(resolvePath("//google.com?q=query#hash")).toMatchObject({
+      pathname: "//google.com",
+      search: "?q=query",
+      hash: "#hash",
+    });
+  });
+
   it('resolves absolute paths irrespective of the "from" pathname', () => {
     expect(resolvePath("/search", "/inbox")).toMatchObject({
       pathname: "/search",
+    });
+
+    expect(resolvePath("/search/../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+
+    expect(resolvePath("/search/../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+
+    expect(resolvePath("/search/user/../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
     });
   });
 
@@ -22,6 +50,27 @@ describe("resolvePath", () => {
 
     expect(resolvePath("search", "/inbox")).toMatchObject({
       pathname: "/inbox/search",
+    });
+
+    expect(resolvePath("search/../123", "/inbox")).toMatchObject({
+      pathname: "/inbox/123",
+    });
+
+    expect(resolvePath("search/../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+
+    expect(resolvePath("search/../../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+  });
+
+  it("normalizes any mid-path double-slashes", () => {
+    expect(resolvePath("/search/../..//foo")).toMatchObject({
+      pathname: "/foo",
+    });
+    expect(resolvePath("search/../..//foo", "/inbox")).toMatchObject({
+      pathname: "/foo",
     });
   });
 
