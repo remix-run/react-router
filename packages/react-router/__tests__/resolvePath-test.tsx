@@ -66,12 +66,17 @@ describe("resolvePath", () => {
   });
 
   it("normalizes any mid-path double-slashes", () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     expect(resolvePath("/search/../..//foo")).toMatchObject({
       pathname: "/foo",
     });
+
     expect(resolvePath("search/../..//foo", "/inbox")).toMatchObject({
       pathname: "/foo",
     });
+
+    spy.mockRestore();
   });
 
   it('ignores trailing slashes on the "from" pathname when resolving relative paths', () => {

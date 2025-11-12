@@ -58,6 +58,7 @@ import {
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   getResolveToMatches,
+  isAbsoluteUrl,
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
@@ -837,9 +838,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   reset: undefined,
   location: undefined,
 };
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),

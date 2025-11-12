@@ -12,7 +12,6 @@ import type {
 import { type Location } from "../router/history";
 import {
   createStaticHandler,
-  isAbsoluteUrl,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
@@ -26,6 +25,7 @@ import {
   type ShouldRevalidateFunction,
   type RouterContextProvider,
   type TrackedPromise,
+  isAbsoluteUrl,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
