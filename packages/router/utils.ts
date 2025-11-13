@@ -1128,6 +1128,9 @@ export function stripBasename(
   return pathname.slice(startIndex) || "/";
 }
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
+
 /**
  * Returns a resolved path object relative to the given pathname.
  *
@@ -1140,11 +1143,29 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
     hash = "",
   } = typeof to === "string" ? parsePath(to) : to;
 
-  let pathname = toPathname
-    ? toPathname.startsWith("/")
-      ? toPathname
-      : resolvePathname(toPathname, fromPathname)
-    : fromPathname;
+  let pathname: string;
+  if (toPathname) {
+    if (isAbsoluteUrl(toPathname)) {
+      pathname = toPathname;
+    } else {
+      if (toPathname.includes("//")) {
+        let oldPathname = toPathname;
+        toPathname = toPathname.replace(/\/\/+/g, "/");
+        warning(
+          false,
+          `Pathnames cannot have embedded double slashes - normalizing ` +
+            `${oldPathname} -> ${toPathname}`
+        );
+      }
+      if (toPathname.startsWith("/")) {
+        pathname = resolvePathname(toPathname.substring(1), "/");
+      } else {
+        pathname = resolvePathname(toPathname, fromPathname);
+      }
+    }
+  } else {
+    pathname = fromPathname;
+  }
 
   return {
     pathname,
