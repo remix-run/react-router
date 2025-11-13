@@ -2539,7 +2539,7 @@ export function useSubmit(): SubmitFunction {
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
-  return React.useCallback<SubmitFunction>(
+  const submit = React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
@@ -2573,6 +2573,49 @@ export function useSubmit(): SubmitFunction {
     },
     [router, basename, currentRouteId],
   );
+
+  return React.useCallback<SubmitFunction>(
+    (target, options) => {
+      const deferred = new Deferred<void>();
+      // @ts-expect-error - Needs React 19 types
+      React.startTransition(async () => {
+        try {
+          await submit(target, options);
+          deferred.resolve();
+        } catch (error) {
+          deferred.reject(error);
+        }
+      });
+      return deferred.promise;
+    },
+    [submit],
+  );
+}
+
+// TODO: Move to a shared location
+class Deferred<T> {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<T>;
+  // @ts-expect-error - no initializer
+  resolve: (value: T) => void;
+  // @ts-expect-error - no initializer
+  reject: (reason?: unknown) => void;
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = (value) => {
+        if (this.status === "pending") {
+          this.status = "resolved";
+          resolve(value);
+        }
+      };
+      this.reject = (reason) => {
+        if (this.status === "pending") {
+          this.status = "rejected";
+          reject(reason);
+        }
+      };
+    });
+  }
 }
 
 // v7: Eventually we should deprecate this entirely in favor of using the

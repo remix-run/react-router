@@ -1,6 +1,7 @@
 import type { Route } from "./+types/_index";
 
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   return { planet: "world", date: new Date(), fn: () => 1 };
 }
 
