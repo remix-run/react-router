@@ -116,6 +116,7 @@ export default function Transitions() {
             <li>
               <button
                 onClick={() =>
+                  // @ts-expect-error Needs React 19 types
                   startTransition(() => navigate("/transitions/slow"))
                 }
               >
@@ -177,6 +178,7 @@ export default function Transitions() {
             <br />
             <br />
             <button
+              // @ts-expect-error Needs React 19 types
               onClick={() => startTransition(() => fetcher.load("/api/random"))}
             >
               startTransition(() =&gt; fetcher.load("/api/random"))
