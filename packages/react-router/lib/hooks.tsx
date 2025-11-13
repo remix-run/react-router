@@ -1869,12 +1869,12 @@ function useNavigateStable(): NavigateFunction {
             }
           });
         });
-      }
-
-      if (typeof to === "number") {
-        router.navigate(to);
       } else {
-        await router.navigate(to, { fromRouteId: id, ...options });
+        if (typeof to === "number") {
+          router.navigate(to);
+        } else {
+          await router.navigate(to, { fromRouteId: id, ...options });
+        }
       }
     },
     [router, id, unstable_transitions],

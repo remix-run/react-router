@@ -624,10 +624,12 @@ export function RouterProvider({
         } else if (unstable_transitions === false) {
           logErrorsAndSetState(newState);
         } else {
-          if (unstable_transitions === true) {
-            setOptimisticState(newState);
-          }
-          React.startTransition(() => logErrorsAndSetState(newState));
+          React.startTransition(() => {
+            if (unstable_transitions === true) {
+              setOptimisticState(newState);
+            }
+            logErrorsAndSetState(newState);
+          });
         }
         return;
       }
@@ -724,7 +726,12 @@ export function RouterProvider({
         if (unstable_transitions === false) {
           logErrorsAndSetState(newState);
         } else {
-          React.startTransition(() => logErrorsAndSetState(newState));
+          React.startTransition(() => {
+            if (unstable_transitions === true) {
+              setOptimisticState(newState);
+            }
+            logErrorsAndSetState(newState);
+          });
         }
         await renderPromise;
       });
