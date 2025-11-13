@@ -415,6 +415,24 @@ export const createDev =
 export const dev = createDev([reactRouterBin, "dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
+export const vitePreview = async ({
+  cwd,
+  port,
+}: {
+  cwd: string;
+  port: number;
+}) => {
+  let nodeBin = process.argv[0];
+  let viteBin = path.join(cwd, "node_modules", "vite", "bin", "vite.js");
+  let proc = spawn(nodeBin, [viteBin, "preview", "--port", String(port), "--strict-port"], {
+    cwd,
+    stdio: "pipe",
+    env: { NODE_ENV: "production" },
+  });
+  await waitForServer(proc, { port });
+  return () => proc.kill();
+};
+
 // Used for testing errors thrown on build when we don't want to start and
 // wait for the server
 export const viteDevCmd = ({ cwd }: { cwd: string }) => {
@@ -449,6 +467,13 @@ type Fixtures = {
     cwd: string;
   }>;
   reactRouterServe: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  vitePreview: (
+    files: Files,
+    templateName?: TemplateName,
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -495,6 +520,18 @@ export const test = base.extend<Fixtures>({
       let { status } = build({ cwd });
       expect(status).toBe(0);
       stop = await reactRouterServe({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  vitePreview: async (_, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files, template) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }), template);
+      let { status } = build({ cwd });
+      expect(status).toBe(0);
+      stop = await vitePreview({ cwd, port });
       return { port, cwd };
     });
     stop?.();
