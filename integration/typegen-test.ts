@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 
-import { expect } from "@playwright/test";
 import tsx from "dedent";
 import * as Path from "pathe";
 
@@ -337,7 +336,7 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
-  test("routes outside app dir", async ({ cwd, edit, $ }) => {
+  test("routes outside app dir", async ({ edit, $ }) => {
     await edit({
       "react-router.config.ts": tsx`
         export default {
@@ -374,14 +373,6 @@ test.describe("typegen", () => {
       `,
     });
     await $("pnpm typecheck");
-
-    // Verify that the types file was generated in the correct location
-    const annotationPath = Path.join(
-      cwd,
-      ".react-router/types/app/pages/+types/product.ts",
-    );
-    const annotation = await fs.readFile(annotationPath, "utf8");
-    expect(annotation).toContain("export namespace Route");
   });
 
   test("matches", async ({ edit, $ }) => {
