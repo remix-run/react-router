@@ -164,6 +164,7 @@ export const clientMiddleware = [loggingMiddleware];
 See also:
 
 - [Middleware][middleware]
+- [Client Data][client-data]
 
 ## `loader`
 
@@ -217,6 +218,7 @@ That way, React Router can derive types for `loaderData` based on the value of `
 See also:
 
 - [`clientLoader` params][client-loader-params]
+- [Client Data][client-data]
 
 ## `action`
 
@@ -275,6 +277,7 @@ export async function clientAction({ serverAction }) {
 See also:
 
 - [`clientAction` params][client-action-params]
+- [Client Data][client-data]
 
 ## `ErrorBoundary`
 
@@ -519,3 +522,4 @@ Next: [Rendering Strategies](./rendering)
 [meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
 [data-mode-should-revalidate]: ../data/route-object#shouldrevalidate
 [spa-mode]: ../../how-to/spa
+[client-data]: ../../how-to/client-data

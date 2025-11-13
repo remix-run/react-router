@@ -1984,7 +1984,8 @@ export class ErrorResponseImpl implements ErrorResponse {
 /**
  * Check if the given error is an {@link ErrorResponse} generated from a 4xx/5xx
  * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
- * thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
+ * thrown from an [`action`](../../start/framework/route-module#action) or
+ * [`loader`](../../start/framework/route-module#loader) function.
  *
  * @example
  * import { isRouteErrorResponse } from "react-router";
@@ -2010,7 +2011,6 @@ export class ErrorResponseImpl implements ErrorResponse {
  * @mode data
  * @param error The error to check.
  * @returns `true` if the error is an {@link ErrorResponse}, `false` otherwise.
- *
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (
@@ -2021,6 +2021,12 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     "data" in error
   );
 }
+
+/*
+lol - this comment is needed because the JSDoc parser for `docs.ts` gets confused
+by the star-slash in the `getRoutePattern` regex and messes up the parsed comment
+for `isRouteErrorResponse` above.  This comment seems to reset the parser.
+*/
 
 export function getRoutePattern(paths: (string | undefined)[]) {
   return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/") || "/";
