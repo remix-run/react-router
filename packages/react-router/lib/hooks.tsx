@@ -403,7 +403,7 @@ function useNavigateUnstable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        if (unstable_transitions) {
+        if (unstable_transitions && !options.flushSync) {
           React.startTransition(() => navigator.go(to));
         } else {
           navigator.go(to);
@@ -431,7 +431,7 @@ function useNavigateUnstable(): NavigateFunction {
             : joinPaths([basename, path.pathname]);
       }
 
-      if (unstable_transitions) {
+      if (unstable_transitions && !options.flushSync) {
         React.startTransition(() => {
           if (options.replace === true) {
             navigator.replace(path, options.state, options);
@@ -1852,7 +1852,7 @@ function useNavigateStable(): NavigateFunction {
       // is useless because we haven't wired up our router subscriber yet
       if (!activeRef.current) return;
 
-      if (unstable_transitions) {
+      if (unstable_transitions && !options.flushSync) {
         await new Promise<void>((resolve, reject) => {
           // @ts-expect-error Needs React 19 types
           React.startTransition(async () => {
