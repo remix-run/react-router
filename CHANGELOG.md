@@ -382,7 +382,7 @@ Date: YYYY-MM-DD
 
 ## v7.9.6
 
-Date: 2025-11-12
+Date: 2025-11-13
 
 ### Patch Changes
 
