@@ -1,4 +1,4 @@
-To align with our new [Open Governance](https://remix.run/blog/rr-governance) model, we are now asking that all new features go through the [Proposal/RFC process](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process) and that we don't open PRs until a proposal has been been accepted and advanced to Stage 1.
+To align with our new [Open Governance](https://remix.run/blog/rr-governance) model, we are now asking that all new features go through the [Proposal/RFC process](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process) and that we don't open PRs until a proposal has been accepted and advanced to Stage 1.
 
 If this feature doesn't have a Proposal, please [open one](https://github.com/remix-run/react-router/discussions/new?category=proposals) so we can evaluate/discuss the proposed feature. You can link to this PR as an example of a potential implementation and we can re-open it if the proposal advances.
 

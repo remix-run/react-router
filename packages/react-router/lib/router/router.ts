@@ -58,6 +58,7 @@ import {
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   getResolveToMatches,
+  isAbsoluteUrl,
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
@@ -837,9 +838,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   reset: undefined,
   location: undefined,
 };
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
@@ -2465,6 +2463,17 @@ export function createRouter(init: RouterInit): Router {
     );
     let actionResult = actionResults[match.route.id];
 
+    if (!actionResult) {
+      // If this error came from a parent middleware before the action ran,
+      // then it won't be tied to the action route
+      for (let match of fetchMatches) {
+        if (actionResults[match.route.id]) {
+          actionResult = actionResults[match.route.id];
+          break;
+        }
+      }
+    }
+
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
@@ -3433,30 +3442,67 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
+      let newPartialMatches: AgnosticDataRouteMatch[] | null = null;
+
       if (newMatches) {
-        return { type: "success", matches: newMatches };
+        if (Object.keys(newMatches[0].params).length === 0) {
+          // Static match - use it
+          return { type: "success", matches: newMatches };
+        } else {
+          // Dynamic match - confirm this is the best match.
+          newPartialMatches = matchRoutesImpl(
+            routesToUse,
+            pathname,
+            basename,
+            true,
+          );
+
+          // If we matched deeper into the same branch of `partialMatches` we were already
+          // checking, we want to make another pass through `patchRoutesOnNavigation()`
+          let matchedDeeper =
+            newPartialMatches &&
+            partialMatches.length < newPartialMatches.length &&
+            compareMatches(
+              partialMatches,
+              newPartialMatches.slice(0, partialMatches.length),
+            );
+
+          if (!matchedDeeper) {
+            // Otherwise, use the dynamic matches
+            return { type: "success", matches: newMatches };
+          }
+        }
       }
 
-      let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
-        routesToUse,
-        pathname,
-        basename,
-        true,
-      );
+      // Perform partial matching if we didn't already do it above
+      if (!newPartialMatches) {
+        newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          routesToUse,
+          pathname,
+          basename,
+          true,
+        );
+      }
 
       // Avoid loops if the second pass results in the same partial matches
       if (
         !newPartialMatches ||
-        (partialMatches.length === newPartialMatches.length &&
-          partialMatches.every(
-            (m, i) => m.route.id === newPartialMatches![i].route.id,
-          ))
+        compareMatches(partialMatches, newPartialMatches)
       ) {
         return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
     }
+  }
+
+  function compareMatches(
+    a: AgnosticDataRouteMatch[],
+    b: AgnosticDataRouteMatch[],
+  ) {
+    return (
+      a.length === b.length && a.every((m, i) => m.route.id === b[i].route.id)
+    );
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
