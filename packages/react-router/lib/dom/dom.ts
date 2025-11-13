@@ -192,6 +192,11 @@ interface SharedSubmitOptions {
    * Enable flushSync for this submission's state updates
    */
   flushSync?: boolean;
+
+  /**
+   * Determine if revalidation should occur post-submission.
+   */
+  shouldRevalidate?: boolean | (() => boolean);
 }
 
 /**
