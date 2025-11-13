@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.23.1
+
+### Patch Changes
+
+- Normalize double-slashes in `resolvePath` ([#14537](https://github.com/remix-run/react-router/pull/14537))
+
 ## 1.23.0
 
 ### Minor Changes
