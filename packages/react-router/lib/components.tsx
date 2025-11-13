@@ -69,12 +69,32 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
-import type {
-  unstable_ClientInstrumentation,
-  unstable_InstrumentRouteFunction,
-  unstable_InstrumentRouterFunction,
-} from "./router/instrumentation";
-import { instrumentClientSideRouter } from "./router/instrumentation";
+import type { unstable_ClientInstrumentation } from "./router/instrumentation";
+
+/**
+  Webpack can fail to compile on against react versions without this export
+  complains that `startTransition` doesn't exist in `React`.
+
+  Using the string constant directly at runtime fixes the webpack build issue
+  but can result in terser stripping the actual call at minification time.
+
+  Grabbing an exported reference once up front resolves that issue.
+
+  See https://github.com/remix-run/react-router/issues/10579
+*/
+const USE_OPTIMISTIC = "useOptimistic";
+// @ts-expect-error Needs React 19 types but we develop against 18
+const useOptimisticImpl = React[USE_OPTIMISTIC];
+
+function useOptimisticSafe(val: unknown) {
+  if (useOptimisticImpl) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useOptimisticImpl(val);
+  } else {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return React.useState(val);
+  }
+}
 
 export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
@@ -548,8 +568,7 @@ export function RouterProvider({
   unstable_transitions,
 }: RouterProviderProps): React.ReactElement {
   let [_state, setStateImpl] = React.useState(router.state);
-  // @ts-expect-error - Needs React 19 types
-  let [state, setOptimisticState] = React.useOptimistic(_state);
+  let [state, setOptimisticState] = useOptimisticSafe(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,

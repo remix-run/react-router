@@ -1,12 +1,29 @@
 import * as React from "react";
-import { Link, Outlet, useNavigate, useNavigation } from "react-router";
+import {
+  Link,
+  Outlet,
+  useFetcher,
+  useNavigate,
+  useNavigation,
+} from "react-router";
+import type { loader as randomNumberLoader } from "./api.random";
 
 export default function Transitions() {
   let navigate = useNavigate();
+  let fetcher = useFetcher<typeof randomNumberLoader>();
   let navigation = useNavigation();
   let [pending, startTransition] = React.useTransition();
   let [count, setCount] = React.useState(0);
   let [count2, setCount2] = React.useState(0);
+  let [random, setRandom] = React.useState(0);
+
+  React.useEffect(() => {
+    if (fetcher.data) {
+      let { randomNumber } = fetcher.data;
+      startTransition(() => setRandom(randomNumber));
+    }
+  }, [fetcher.data]);
+
   return (
     <>
       <h1>Transitions</h1>
@@ -24,116 +41,196 @@ export default function Transitions() {
           <code>unstable_transitions=false</code>
         </a>
       </nav>
-      <ul style={{ maxWidth: "600px" }}>
-        <li>
-          <button onClick={() => navigate("/transitions/slow")}>
-            Slow navigation with <code>navigate</code>
-          </button>
-          <ul>
-            <li>
-              In the current state, <code>useNavigate</code> navigations are not
-              wrapped in <code>startTransition</code>, so they don't play nice
-              with other transition-aware state updates
-            </li>
-            <li>
-              Fixed by{" "}
-              <code>
-                &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
-              </code>
-            </li>
-          </ul>
-        </li>
 
-        <li>
-          <button
-            onClick={() => navigate("/transitions/slow", { flushSync: true })}
-          >
-            Slow navigation with <code>navigate + flushSync</code>
-          </button>
-          <ul>
-            <li>
-              With the new flag, useNavigate automatically wraps the navigation
-              in <code>React.startTransition</code>. Passing the{" "}
-              <code>flushSync</code> option will opt out of that and apply
-              <code>React.flushSync</code> to the underlying state update
-            </li>
-          </ul>
-        </li>
-
-        <li>
-          <button
-            onClick={() => startTransition(() => navigate("/transitions/slow"))}
-          >
-            Slow navigation with local <code>startTransition + navigate</code>
-          </button>
-          <ul>
-            <li>
-              Once you wrap them in <code>startTransition</code>, they play
-              nicely with those updates but they prevent our internal
-              mid-navigation state updates from surfacing
-            </li>
-            <li>
-              Fixed by{" "}
-              <code>
-                &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
-              </code>
-            </li>
-          </ul>
-        </li>
-
-        <li>
-          <Link to="/transitions/slow">Slow Navigation via &lt;Link&gt;</Link>
-          <ul>
-            <li>
-              In the current state, <code>&lt;Link&gt;</code> navigations are
-              not wrapped in startTransition, so they don't play nice with other
-              transition-aware state updates
-            </li>
-            <li>
-              Fixed by{" "}
-              <code>
-                &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
-              </code>
-            </li>
-          </ul>
-        </li>
-
-        <li>
-          <Link to="/transitions/parent">/transitions/parent</Link>
-        </li>
-        <li>
-          <Link to="/transitions/parent/child">/transitions/parent/child</Link>
-        </li>
-      </ul>
-      <div>
-        <p
-          style={{
-            color: pending ? "green" : "black",
-            fontWeight: pending ? "bold" : "normal",
-          }}
-        >
-          React Transition: {pending ? "Pending" : "Idle"}
-        </p>
-        <p
-          style={{
-            color: navigation.state !== "idle" ? "green" : "black",
-            fontWeight: navigation.state !== "idle" ? "bold" : "normal",
-          }}
-        >
-          React Router Navigation State: {navigation.state}
-        </p>
-      </div>
-      <button onClick={() => setCount((c) => c + 1)}>
-        Increment counter w/o transition {count}
-      </button>{" "}
-      <button
-        onClick={() => React.startTransition(() => setCount2((c) => c + 1))}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 0,
+          marginTop: "1rem",
+          border: "1px solid #ccc",
+        }}
       >
-        Increment counter w/transition {count2}
-      </button>
+        <div style={{ padding: "1rem" }}>
+          <h2>Navigations</h2>
+
+          <div>
+            <p
+              style={{
+                color: pending ? "green" : "lightgrey",
+                fontWeight: pending ? "bold" : "normal",
+              }}
+            >
+              Local React Transition: {pending ? "Pending" : "Idle"}
+            </p>
+            <p
+              style={{
+                color: navigation.state !== "idle" ? "green" : "lightgrey",
+                fontWeight: navigation.state !== "idle" ? "bold" : "normal",
+              }}
+            >
+              React Router Navigation State: {navigation.state}
+            </p>
+          </div>
+
+          <ul style={{ maxWidth: "600px" }}>
+            <li>
+              <button onClick={() => navigate("/transitions/slow")}>
+                <code>navigate("/transitions/slow")</code>
+              </button>
+              <ul>
+                <li>
+                  In the current state, <code>useNavigate</code> navigations are
+                  not wrapped in <code>startTransition</code>, so they don't
+                  play nice with other transition-aware state updates
+                </li>
+                <li>
+                  Fixed by{" "}
+                  <code>
+                    &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
+                  </code>
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <button
+                onClick={() =>
+                  navigate("/transitions/slow", { flushSync: true })
+                }
+              >
+                <code>
+                  navigate("/transitions/slow", {"{"} flushSync: true {"}"})
+                </code>
+              </button>
+              <ul>
+                <li>
+                  With the new flag, useNavigate automatically wraps the
+                  navigation in <code>React.startTransition</code>. Passing the{" "}
+                  <code>flushSync</code> option will opt out of that and apply
+                  <code>React.flushSync</code> to the underlying state update
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <button
+                onClick={() =>
+                  startTransition(() => navigate("/transitions/slow"))
+                }
+              >
+                <code>
+                  startTransition(() =&gt; navigate("/transitions/slow")
+                </code>
+              </button>
+              <ul>
+                <li>
+                  Once you wrap them in <code>startTransition</code>, they play
+                  nicely with those updates but they prevent our internal
+                  mid-navigation state updates from surfacing
+                </li>
+                <li>
+                  Fixed by{" "}
+                  <code>
+                    &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
+                  </code>
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <Link to="/transitions/slow">
+                &lt;Link to="/transitions/slow" /&gt;
+              </Link>
+              <ul>
+                <li>
+                  In the current state, <code>&lt;Link&gt;</code> navigations
+                  are not wrapped in startTransition, so they don't play nice
+                  with other transition-aware state updates
+                </li>
+                <li>
+                  Fixed by{" "}
+                  <code>
+                    &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
+                  </code>
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <Link to="/transitions/parent">/transitions/parent</Link>
+            </li>
+            <li>
+              <Link to="/transitions/parent/child">
+                /transitions/parent/child
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div style={{ padding: "1rem" }}>
+          <div>
+            <h2>Fetchers</h2>
+            <button onClick={() => fetcher.load("/api/random")}>
+              fetcher.load("/api/random")
+            </button>
+            <br />
+            <br />
+            <button
+              onClick={() => startTransition(() => fetcher.load("/api/random"))}
+            >
+              startTransition(() =&gt; fetcher.load("/api/random"))
+            </button>
+            <p
+              style={{
+                color: fetcher.state !== "idle" ? "green" : "lightgrey",
+                fontWeight: fetcher.state !== "idle" ? "bold" : "normal",
+              }}
+            >
+              Fetcher State: <strong>{fetcher.state}</strong>
+            </p>
+            <p
+              style={{
+                color: fetcher.data != null ? "green" : "lightgrey",
+                fontWeight: fetcher.data != null ? "bold" : "normal",
+              }}
+            >
+              Fetcher Data:{" "}
+              {fetcher.data ? JSON.stringify(fetcher.data) : "null"}
+            </p>
+            <p
+              style={{
+                color: random !== 0 ? "green" : "lightgrey",
+                fontWeight: random !== 0 ? "bold" : "normal",
+              }}
+            >
+              Transition-aware fetcher data: {random}
+            </p>
+          </div>
+
+          <div>
+            <h2>Counters</h2>
+            <button onClick={() => setCount((c) => c + 1)}>
+              <code>setCount(c =&gt; c + 1)</code>
+            </button>{" "}
+            <span>Count = {count}</span>
+            <br />
+            <br />
+            <button
+              onClick={() =>
+                React.startTransition(() => setCount2((c) => c + 1))
+              }
+            >
+              <code>startTransition(() =&gt; setCount2(c =&gt; c + 1))</code>
+            </button>{" "}
+            <span>Count2 = {count2}</span>
+          </div>
+        </div>
+      </div>
+
       <Outlet />
       <p>
-        TODO: Is it possible to demonstrate the issue with
+        TODO: Is it possible to demonstrate the issue with{" "}
         <code>React.useSyncExternalStore</code> where the global opt-out is
         needed?
       </p>
