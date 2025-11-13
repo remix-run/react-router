@@ -24,7 +24,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 Check if the given error is an [`ErrorResponse`](https://api.reactrouter.com/v7/types/react_router.ErrorResponse.html) generated from a 4xx/5xx
 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
+thrown from an [`action`](../../start/framework/route-module#action) or
+[`loader`](../../start/framework/route-module#loader) function.
 
 ```tsx
 import { isRouteErrorResponse } from "react-router";
