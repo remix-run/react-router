@@ -31,13 +31,17 @@ export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
 
 clientLoader.hydrate = true;
 
+export function HydrateFallback() {
+  return <div>Loading about route loader data...</div>;
+}
+
 export default function AboutRoute() {
   const loaderData = useLoaderData<typeof clientLoader>();
   const actionData = useActionData<typeof clientAction>();
 
   return (
     <div style={{ border: "1px solid black", padding: "10px" }}>
-      <h2>About Route</h2>
+      <p>About Route</p>
       <p>Loader data: {loaderData.message}</p>
       <Counter />
       <Form method="post">
@@ -52,7 +56,7 @@ export function ErrorBoundary() {
   let error = useRouteError();
   return (
     <>
-      <h1>Oooops</h1>
+      <p>Oooops</p>
       {isRouteErrorResponse(error) ? (
         <p>
           {error.status} {error.statusText} {error.data}

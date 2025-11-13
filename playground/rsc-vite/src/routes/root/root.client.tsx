@@ -1,9 +1,11 @@
 "use client";
 
+import { useTransition } from "react";
 import {
   useRouteError,
   useNavigation,
   isRouteErrorResponse,
+  useNavigate,
 } from "react-router";
 
 export function ErrorReporter() {
@@ -16,7 +18,7 @@ export function ErrorReporter() {
   if (isRouteErrorResponse(error)) {
     return (
       <div>
-        <h2>Error Response</h2>
+        <p>Error Response</p>
         <p>Status: {error.status}</p>
         <p>Data: {JSON.stringify(error.data)}</p>
       </div>
@@ -25,7 +27,7 @@ export function ErrorReporter() {
 
   return (
     <div>
-      <h2>Error</h2>
+      <p>Error</p>
       <p>{error instanceof Error ? error.message : String(error)}</p>
     </div>
   );
@@ -33,13 +35,30 @@ export function ErrorReporter() {
 
 export function NavigationState() {
   let navigation = useNavigation();
-  return <p>Navigation state: {navigation.state}</p>;
+  let navigate = useNavigate();
+  let [pending, startTransition] = useTransition();
+  return (
+    <>
+      <p>Navigation state: {navigation.state}</p>
+      <p>Pending: {pending ? "Yes" : "No"}</p>
+      <p>
+        <button onClick={() => startTransition(() => navigate("/"))}>
+          Go Home
+        </button>
+      </p>
+      <p>
+        <button onClick={() => startTransition(() => navigate("/parent"))}>
+          Go Parent
+        </button>
+      </p>
+    </>
+  );
 }
 
 export function ErrorBoundary() {
   return (
     <>
-      <h1>Something went wrong!</h1>
+      <p>Something went wrong!</p>
       <ErrorReporter />
     </>
   );

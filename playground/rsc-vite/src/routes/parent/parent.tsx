@@ -1,4 +1,6 @@
 import { Outlet } from "react-router";
+import { Square } from "../../square";
+import { Suspense } from "react";
 
 export function loader() {
   return {
@@ -13,9 +15,12 @@ export default function ParentRoute({
 }) {
   return (
     <div style={{ border: "1px solid black", padding: "10px" }}>
-      <h2>Parent Route</h2>
+      <p>Parent Route</p>
       <p>Loader data: {loaderData.message}</p>
-      <Outlet />
+      <Square />
+      <Suspense fallback={<p>Loading...</p>}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }

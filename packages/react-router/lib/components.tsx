@@ -371,144 +371,6 @@ export interface RouterProviderProps {
   unstable_transitions?: boolean;
 }
 
-function shallowDiff(a: any, b: any) {
-  if (a === b) {
-    return false;
-  }
-  let aKeys = Object.keys(a);
-  let bKeys = Object.keys(b);
-  if (aKeys.length !== bKeys.length) {
-    return true;
-  }
-  for (let key of aKeys) {
-    if (a[key] !== b[key]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function UNSTABLE_TransitionEnabledRouterProvider({
-  router,
-  flushSync: reactDomFlushSyncImpl,
-  unstable_onError,
-}: Omit<RouterProviderProps, "unstable_transitions">): React.ReactElement {
-  let fetcherData = React.useRef<Map<string, any>>(new Map());
-  let [revalidating, startRevalidation] = React.useTransition();
-  let [state, setState] = React.useState(router.state);
-
-  (router as any).__setPendingRerender = (promise: Promise<() => void>) =>
-    startRevalidation(
-      // @ts-expect-error - need react 19 types for this to be async
-      async () => {
-        const rerender = await promise;
-        startRevalidation(() => {
-          rerender();
-        });
-      },
-    );
-
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-    };
-  }, [router]);
-
-  let basename = router.basename || "/";
-
-  let dataRouterContext = React.useMemo(
-    () => ({
-      router,
-      navigator,
-      static: false,
-      basename,
-      unstable_onError,
-    }),
-    [router, navigator, basename, unstable_onError],
-  );
-
-  React.useLayoutEffect(() => {
-    return router.subscribe(
-      (newState, { deletedFetchers, flushSync, viewTransitionOpts }) => {
-        newState.fetchers.forEach((fetcher, key) => {
-          if (fetcher.data !== undefined) {
-            fetcherData.current.set(key, fetcher.data);
-          }
-        });
-        deletedFetchers.forEach((key) => fetcherData.current.delete(key));
-
-        const diff = shallowDiff(state, newState);
-
-        if (!diff) return;
-
-        if (flushSync) {
-          if (reactDomFlushSyncImpl) {
-            reactDomFlushSyncImpl(() => setState(newState));
-          } else {
-            setState(newState);
-          }
-        } else {
-          React.startTransition(() => {
-            setState(newState);
-          });
-        }
-      },
-    );
-  }, [router, reactDomFlushSyncImpl, state]);
-
-  // The fragment and {null} here are important!  We need them to keep React 18's
-  // useId happy when we are server-rendering since we may have a <script> here
-  // containing the hydrated server-side staticContext (from StaticRouterProvider).
-  // useId relies on the component tree structure to generate deterministic id's
-  // so we need to ensure it remains the same on the client even though
-  // we don't need the <script> tag
-  return (
-    <>
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider
-          value={{
-            ...state,
-            revalidation: revalidating ? "loading" : state.revalidation,
-          }}
-        >
-          <FetchersContext.Provider value={fetcherData.current}>
-            {/* <ViewTransitionContext.Provider value={vtContext}> */}
-            <Router
-              basename={basename}
-              location={state.location}
-              navigationType={state.historyAction}
-              navigator={navigator}
-              unstable_transitions={true}
-            >
-              <MemoizedDataRoutes
-                routes={router.routes}
-                future={router.future}
-                state={state}
-                unstable_onError={unstable_onError}
-              />
-            </Router>
-            {/* </ViewTransitionContext.Provider> */}
-          </FetchersContext.Provider>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>
-      {null}
-    </>
-  );
-}
-
 /**
  * Render the UI for the given {@link DataRouter}. This component should
  * typically be at the top of an app's element tree.
@@ -548,6 +410,8 @@ export function RouterProvider({
   unstable_transitions,
 }: RouterProviderProps): React.ReactElement {
   let [_state, setStateImpl] = React.useState(router.state);
+  let navigationRef = React.useRef(_state.navigation);
+  let [pending, startTransition] = React.useTransition();
   // @ts-expect-error - Needs React 19 types
   let [state, setOptimisticState] = React.useOptimistic(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
@@ -624,9 +488,16 @@ export function RouterProvider({
         } else if (unstable_transitions === false) {
           logErrorsAndSetState(newState);
         } else {
-          React.startTransition(() => {
+          startTransition(() => {
             if (unstable_transitions === true) {
-              setOptimisticState(newState);
+              if (newState.navigation.state !== "idle") {
+                navigationRef.current = newState.navigation;
+              }
+              setOptimisticState((state: any) => ({
+                ...state,
+                navigation: navigationRef.current,
+                revalidation: newState.revalidation,
+              }));
             }
             logErrorsAndSetState(newState);
           });
@@ -726,9 +597,16 @@ export function RouterProvider({
         if (unstable_transitions === false) {
           logErrorsAndSetState(newState);
         } else {
-          React.startTransition(() => {
+          startTransition(() => {
             if (unstable_transitions === true) {
-              setOptimisticState(newState);
+              if (newState.navigation.state !== "idle") {
+                navigationRef.current = newState.navigation;
+              }
+              setOptimisticState((state: any) => ({
+                ...state,
+                navigation: newState.navigation,
+                revalidation: newState.revalidation,
+              }));
             }
             logErrorsAndSetState(newState);
           });
@@ -783,18 +661,59 @@ export function RouterProvider({
     return {
       createHref: router.createHref,
       encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
+      go: (n) => {
+        if (unstable_transitions === true) {
+          const resolver = new Deferred<void>();
+          // @ts-expect-error - Needs React 19 types
+          startTransition(() => {
+            return router.navigate(n).then(resolver.resolve, resolver.reject);
+          });
+          return resolver.promise;
+        }
+        return router.navigate(n);
+      },
+      push: (to, state, opts) => {
+        if (unstable_transitions === true) {
+          const resolver = new Deferred<void>();
+          // @ts-expect-error - Needs React 19 types
+          startTransition(() => {
+            return router
+              .navigate(to, {
+                state,
+                preventScrollReset: opts?.preventScrollReset,
+              })
+              .then(resolver.resolve, resolver.reject);
+          });
+          return resolver.promise;
+        }
+
+        return router.navigate(to, {
           state,
           preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
+        });
+      },
+      replace: (to, state, opts) => {
+        if (unstable_transitions === true) {
+          const resolver = new Deferred<void>();
+          // @ts-expect-error - Needs React 19 types
+          startTransition(() => {
+            return router
+              .navigate(to, {
+                replace: true,
+                state,
+                preventScrollReset: opts?.preventScrollReset,
+              })
+              .then(resolver.resolve, resolver.reject);
+          });
+          return resolver.promise;
+        }
+
+        return router.navigate(to, {
           replace: true,
           state,
           preventScrollReset: opts?.preventScrollReset,
-        }),
+        });
+      },
     };
   }, [router]);
 
@@ -833,7 +752,14 @@ export function RouterProvider({
                 <MemoizedDataRoutes
                   routes={router.routes}
                   future={router.future}
-                  state={state}
+                  state={
+                    pending
+                      ? {
+                          ...state,
+                          navigation: navigationRef.current,
+                        }
+                      : state
+                  }
                   unstable_onError={unstable_onError}
                 />
               </Router>
