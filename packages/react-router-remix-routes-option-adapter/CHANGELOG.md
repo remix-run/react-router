@@ -1,18 +1,11 @@
 # `@react-router/remix-config-routes-adapter`
 
-## 7.9.6-pre.1
+## 7.9.6
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@react-router/dev@7.9.6-pre.1`
-
-## 7.9.6-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@react-router/dev@7.9.6-pre.0`
+  - `@react-router/dev@7.9.6`
 
 ## 7.9.5
 
