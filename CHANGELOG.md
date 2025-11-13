@@ -388,6 +388,7 @@ Date: 2025-11-12
 
 - `react-router` - Properly handle ancestor thrown middleware errors before `next()` on fetcher submissions ([#14517](https://github.com/remix-run/react-router/pull/14517))
 - `react-router` - Fix issue with splat routes interfering with multiple calls to `patchRoutesOnNavigation` ([#14487](https://github.com/remix-run/react-router/pull/14487))
+- `react-router` - Normalize double-slashes in `resolvePath` ([#14529](https://github.com/remix-run/react-router/pull/14529))
 - `@react-router/dev` - Use a dynamic `import()` to load ESM-only `p-map` dependency to avoid issues on Node 20.18 and below ([#14492](https://github.com/remix-run/react-router/pull/14492))
 - `@react-router/dev` - Short circuit `HEAD` document requests before calling `renderToPipeableStream` in the default `entry.server.tsx` to more closely align with the [spec](https://httpwg.org/specs/rfc9110.html#HEAD) ([#14488](https://github.com/remix-run/react-router/pull/14488))
 
