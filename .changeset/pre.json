@@ -8,5 +8,7 @@
     "react-router-native": "6.30.1",
     "@remix-run/router": "1.23.0"
   },
-  "changesets": []
+  "changesets": [
+    "forty-tips-admire"
+  ]
 }
