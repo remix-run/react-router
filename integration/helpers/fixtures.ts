@@ -31,6 +31,7 @@ type Edits = Record<string, string | ((contents: string) => string)>;
 async function applyEdits(cwd: string, edits: Edits) {
   const promises = Object.entries(edits).map(async ([file, transform]) => {
     const filepath = Path.join(cwd, file);
+    await fs.mkdir(Path.dirname(filepath), { recursive: true });
     await fs.writeFile(
       filepath,
       typeof transform === "function"

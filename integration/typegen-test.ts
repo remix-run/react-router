@@ -338,10 +338,6 @@ test.describe("typegen", () => {
   });
 
   test("routes outside app dir", async ({ cwd, edit, $ }) => {
-    // Create the subdirectories
-    await fs.mkdir(Path.join(cwd, "app/router"), { recursive: true });
-    await fs.mkdir(Path.join(cwd, "app/pages"), { recursive: true });
-    
     await edit({
       "react-router.config.ts": tsx`
         export default {
