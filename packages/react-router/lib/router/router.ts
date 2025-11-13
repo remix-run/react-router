@@ -525,6 +525,7 @@ type BaseNavigateOrFetchOptions = {
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   flushSync?: boolean;
+  shouldRevalidate?: boolean | (() => boolean);
 };
 
 // Only allowed for navigations
@@ -1546,6 +1547,14 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    let shouldRevalidate =
+      opts && "shouldRevalidate" in opts
+        ? typeof opts.shouldRevalidate === "function"
+          ? opts.shouldRevalidate()
+          : // undefined should eval to true
+            opts.shouldRevalidate !== false
+        : true;
+
     await startNavigation(historyAction, nextLocation, {
       submission,
       // Send through the formData serialization error if we have one so we can
@@ -1554,6 +1563,7 @@ export function createRouter(init: RouterInit): Router {
       preventScrollReset,
       replace: opts && opts.replace,
       enableViewTransition: opts && opts.viewTransition,
+      shouldRevalidate,
       flushSync,
     });
   }
@@ -1630,6 +1640,7 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
       enableViewTransition?: boolean;
       flushSync?: boolean;
+      shouldRevalidate?: boolean;
     },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1769,6 +1780,15 @@ export function createRouter(init: RouterInit): Router {
 
       matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
+
+      if (opts.shouldRevalidate === false) {
+        completeNavigation(location, {
+          matches,
+          ...getActionDataForCommit(pendingActionResult),
+        });
+        return;
+      }
+
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
       // No need to do fog of war matching again on loader execution
@@ -2344,6 +2364,13 @@ export function createRouter(init: RouterInit): Router {
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
+      let shouldRevalidate =
+        opts && "shouldRevalidate" in opts
+          ? typeof opts.shouldRevalidate === "function"
+            ? opts.shouldRevalidate()
+            : // undefined should eval to true
+              opts.shouldRevalidate !== false
+          : true;
       await handleFetcherAction(
         key,
         routeId,
@@ -2354,6 +2381,7 @@ export function createRouter(init: RouterInit): Router {
         flushSync,
         preventScrollReset,
         submission,
+        shouldRevalidate,
       );
       return;
     }
@@ -2386,6 +2414,7 @@ export function createRouter(init: RouterInit): Router {
     flushSync: boolean,
     preventScrollReset: boolean,
     submission: Submission,
+    shouldRevalidate: boolean,
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -2561,6 +2590,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       init.patchRoutesOnNavigation != null,
       [match.route.id, actionResult],
+      shouldRevalidate,
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -2591,6 +2621,15 @@ export function createRouter(init: RouterInit): Router {
       "abort",
       abortPendingFetchRevalidations,
     );
+
+    if (!shouldRevalidate) {
+      if (state.fetchers.has(key)) {
+        let doneFetcher = getDoneFetcher(actionResult.data);
+        state.fetchers.set(key, doneFetcher);
+      }
+      fetchControllers.delete(key);
+      return;
+    }
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -4818,6 +4857,7 @@ function getMatchesToLoad(
   basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
   pendingActionResult?: PendingActionResult,
+  shouldRevalidate?: boolean,
 ): {
   dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
@@ -4853,7 +4893,8 @@ function getMatchesToLoad(
   let actionStatus = pendingActionResult
     ? pendingActionResult[1].statusCode
     : undefined;
-  let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
+  let shouldSkipRevalidation =
+    (actionStatus && actionStatus >= 400) || shouldRevalidate === false;
 
   let baseShouldRevalidateArgs = {
     currentUrl,
