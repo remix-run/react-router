@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Fix typegen support for routes outside appDirectory
+Include all routes within the React Router root directory when performing typegen, not just routes within the app directory.

@@ -336,7 +336,7 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
-  test("routes outside app dir", async ({ edit, $ }) => {
+  test("routes within root dir, but outside app dir", async ({ edit, $ }) => {
     await edit({
       "react-router.config.ts": tsx`
         export default {
