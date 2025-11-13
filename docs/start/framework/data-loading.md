@@ -106,7 +106,7 @@ export default function Product({
 }
 ```
 
-The URLs to pre-render are specified in react-router.config.ts:
+The URLs to pre-render are specified in `react-router.config.ts`:
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
