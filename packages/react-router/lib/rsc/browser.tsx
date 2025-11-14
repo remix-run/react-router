@@ -746,37 +746,35 @@ export function RSCHydratedRouter({
     }
   }, []);
 
-  let [{ routes, state }, setState] = React.useState(() => ({
+  let [{ fetchers, routes, state }, setState] = React.useState(() => ({
+    fetchers: new Map(router.state.fetchers),
     routes: cloneRoutes(router.routes),
     state: router.state,
   }));
-
-  // const [cachedRoutes, setCachedRoutes] = React.useState(() =>
-  //   cloneRoutes(router.routes),
-  // );
-  // const [cachedState, setCachedState] = React.useState(router.state);
 
   React.useLayoutEffect(
     () =>
       router.subscribe((newState) => {
         React.startTransition(() => {
           setState({
+            fetchers: new Map(newState.fetchers),
             routes: cloneRoutes(router.routes),
             state: newState,
           });
         });
       }),
-    [router, location],
+    [router.subscribe],
   );
 
   const transitionEnabledRouter = React.useMemo(
     () =>
       ({
         ...router,
+        fetchers,
         state,
         routes,
       }) as typeof router,
-    [router, routes, state],
+    [router, fetchers, routes, state],
   );
 
   React.useEffect(() => {

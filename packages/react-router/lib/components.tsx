@@ -410,7 +410,6 @@ export function RouterProvider({
   unstable_transitions,
 }: RouterProviderProps): React.ReactElement {
   let [_state, setStateImpl] = React.useState(router.state);
-  let [pending, startTransition] = React.useTransition();
   // @ts-expect-error - Needs React 19 types
   let [state, setOptimisticState] = React.useOptimistic(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
@@ -424,7 +423,10 @@ export function RouterProvider({
     currentLocation: Location;
     nextLocation: Location;
   }>();
-  let fetcherData = React.useRef<Map<string, any>>(new Map());
+  // let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let [fetcherData, setFetcherData] = React.useState<Map<string, any>>(
+    new Map(),
+  );
   let logErrorsAndSetState = React.useCallback(
     (newState: RouterState) => {
       setStateImpl((prevState) => {
@@ -450,12 +452,24 @@ export function RouterProvider({
       newState: RouterState,
       { deletedFetchers, flushSync, viewTransitionOpts },
     ) => {
-      newState.fetchers.forEach((fetcher, key) => {
-        if (fetcher.data !== undefined) {
-          fetcherData.current.set(key, fetcher.data);
-        }
+      setFetcherData((prev) => {
+        const newFetchers = new Map(prev);
+
+        newState.fetchers.forEach((fetcher, key) => {
+          if (fetcher.data !== undefined) {
+            newFetchers.set(key, fetcher.data);
+          }
+        });
+        deletedFetchers.forEach((key) => newFetchers.delete(key));
+
+        return newFetchers;
       });
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
+      // newState.fetchers.forEach((fetcher, key) => {
+      //   if (fetcher.data !== undefined) {
+      //     fetcherData.current.set(key, fetcher.data);
+      //   }
+      // });
+      // deletedFetchers.forEach((key) => fetcherData.current.delete(key));
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
@@ -487,7 +501,7 @@ export function RouterProvider({
         } else if (unstable_transitions === false) {
           logErrorsAndSetState(newState);
         } else {
-          startTransition(() => {
+          React.startTransition(() => {
             if (unstable_transitions === true) {
               // @ts-expect-error - Needs React 19 types
               setOptimisticState((state) => ({
@@ -600,7 +614,7 @@ export function RouterProvider({
         if (unstable_transitions === false) {
           logErrorsAndSetState(newState);
         } else {
-          startTransition(() => {
+          React.startTransition(() => {
             if (unstable_transitions === true) {
               setOptimisticState((state: any) => ({
                 ...state,
@@ -743,7 +757,7 @@ export function RouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetcherData.current}>
+          <FetchersContext.Provider value={fetcherData}>
             <ViewTransitionContext.Provider value={vtContext}>
               <Router
                 basename={basename}
