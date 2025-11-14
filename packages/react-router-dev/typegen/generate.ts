@@ -119,7 +119,7 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
 
   // **/+types/*.ts
   const allAnnotations: Array<VirtualFile> = Array.from(fileToRoutes.entries())
-    .filter(([file]) => isInAppDirectory(ctx, file))
+    .filter(([file]) => isInRootDirectory(ctx, file))
     .map(([file, routeIds]) =>
       getRouteAnnotations({ ctx, file, routeIds, lineages }),
     );
@@ -221,9 +221,9 @@ function routeModulesType(ctx: Context) {
   );
 }
 
-function isInAppDirectory(ctx: Context, routeFile: string): boolean {
+function isInRootDirectory(ctx: Context, routeFile: string): boolean {
   const path = Path.resolve(ctx.config.appDirectory, routeFile);
-  return path.startsWith(ctx.config.appDirectory);
+  return path.startsWith(ctx.rootDirectory);
 }
 
 function getRouteAnnotations({

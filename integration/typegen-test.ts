@@ -336,6 +336,45 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
+  test("routes within root dir, but outside app dir", async ({ edit, $ }) => {
+    await edit({
+      "react-router.config.ts": tsx`
+        export default {
+          appDirectory: "app/router",
+        }
+      `,
+      "app/router/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("products/:id", "../pages/product.tsx")
+        ] satisfies RouteConfig;
+      `,
+      "app/router/root.tsx": tsx`
+        import { Outlet } from "react-router";
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+      "app/pages/product.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/product"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string }>>
+          return { planet: "world" }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          return <h1>Hello, {loaderData.planet}!</h1>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
   test("matches", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`
