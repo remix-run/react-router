@@ -6,7 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -291,13 +291,13 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter unstable_onError={(error, errorInfo) => {
+   * <HydratedRouter onError={(error, errorInfo) => {
    *   console.error(error, errorInfo);
    *   reportToErrorService(error, errorInfo);
    * }} />
    * ```
    */
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: ClientOnErrorFunction;
   /**
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -328,7 +328,7 @@ export interface HydratedRouterProps {
  * @mode framework
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
- * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
+ * @param {dom.HydratedRouterProps.onError} props.onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
@@ -424,7 +424,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
           <RouterProvider
             router={router}
             unstable_useTransitions={props.unstable_useTransitions}
-            unstable_onError={props.unstable_onError}
+            onError={props.onError}
           />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>
