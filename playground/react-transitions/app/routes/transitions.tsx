@@ -75,19 +75,37 @@ export default function Transitions() {
 
           <ul style={{ maxWidth: "600px" }}>
             <li>
+              <Link to="/transitions/slow">
+                &lt;Link to="/transitions/slow" /&gt;
+              </Link>
+              <ul>
+                <li>
+                  In the current state, <code>&lt;Link&gt;</code> navigations
+                  are not wrapped in <code>startTransition</code>, so they don't
+                  play nice with other transition-aware state updates
+                </li>
+                <li>
+                  Navigate and increment the transition-enabled counter during
+                  the navigation. We should not see the counter updates
+                  reflected until the navigation ends in a "suspense enabled"
+                  router
+                </li>
+                <li>
+                  With the new flag, they are wrapped in{" "}
+                  <code>startTransition</code> and the count syncs up properly
+                </li>
+              </ul>
+            </li>
+
+            <li>
               <button onClick={() => navigate("/transitions/slow")}>
                 <code>navigate("/transitions/slow")</code>
               </button>
               <ul>
                 <li>
-                  In the current state, <code>useNavigate</code> doesn't wrap
-                  the navigation in <code>startTransition</code>, so they don't
-                  play nice with other transition-aware state updates (try
-                  updating the transition-aware counter mid-navigation)
-                </li>
-                <li>
-                  With the new flag, they are wrapped in{" "}
-                  <code>startTransition</code>
+                  <code>useNavigate</code> is is not wrapped in startTransitoion
+                  with or without the enw flag, so it should never sync with the
+                  transition-enabled counter
                 </li>
               </ul>
             </li>
@@ -105,51 +123,15 @@ export default function Transitions() {
               </button>
               <ul>
                 <li>
-                  If you wrap them in <code>startTransition</code> manually,
-                  they play nicely with those updates but they prevent our
-                  internal mid-navigation state updates from surfacing
+                  If you wrap <code>useNavigate</code> in{" "}
+                  <code>startTransition</code> manually, then it syncs with the
+                  counter.
                 </li>
                 <li>
-                  That can be fixed by enabling <code>useOptimistic</code>{" "}
-                  inside <code>&lt;RouterProvider&gt;</code>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <button
-                onClick={() =>
-                  navigate("/transitions/slow", { flushSync: true })
-                }
-              >
-                <code>
-                  navigate("/transitions/slow", {"{"} flushSync: true {"}"})
-                </code>
-              </button>
-              <ul>
-                <li>
-                  Once <code>useNavigate</code> is wrapped automatically,
-                  passing the
-                  <code>flushSync</code> option will opt out of{" "}
-                  <code>startTransition</code> and apply
-                  <code>React.flushSync</code> to the underlying state update
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <Link to="/transitions/slow">
-                &lt;Link to="/transitions/slow" /&gt;
-              </Link>
-              <ul>
-                <li>
-                  In the current state, <code>&lt;Link&gt;</code> navigations
-                  are not wrapped in <code>startTransition</code>, so they don't
-                  play nice with other transition-aware state updates
-                </li>
-                <li>
-                  With the new flag, they are wrapped in{" "}
-                  <code>startTransition</code>
+                  Without the flag, our router state updates don't surface
+                  during the navigation. Enabling the flag wraps out internal
+                  updates with <code>useOptimistic</code> to allow them to
+                  surface
                 </li>
               </ul>
             </li>

@@ -1381,7 +1381,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     forwardedRef,
   ) {
-    let { basename } = React.useContext(NavigationContext);
+    let { basename, unstable_transitions } =
+      React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
     // Rendered into <a href> for absolute URLs
@@ -1432,6 +1433,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_transitions,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -1975,6 +1977,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     },
     forwardedRef,
   ) => {
+    let { unstable_transitions } = React.useContext(NavigationContext);
     let submit = useSubmit();
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
@@ -1994,16 +1997,24 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         (submitter?.getAttribute("formmethod") as HTMLFormMethod | undefined) ||
         method;
 
-      submit(submitter || event.currentTarget, {
-        fetcherKey,
-        method: submitMethod,
-        navigate,
-        replace,
-        state,
-        relative,
-        preventScrollReset,
-        viewTransition,
-      });
+      let doSubmit = () =>
+        submit(submitter || event.currentTarget, {
+          fetcherKey,
+          method: submitMethod,
+          navigate,
+          replace,
+          state,
+          relative,
+          preventScrollReset,
+          viewTransition,
+        });
+
+      if (unstable_transitions && navigate === true) {
+        // @ts-expect-error Needs React 19 types
+        React.startTransition(() => doSubmit());
+      } else {
+        doSubmit();
+      }
     };
 
     return (
@@ -2218,6 +2229,9 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.unstable_transitions Wraps the navigation in
+ * [`React.startTransition`](https://react.dev/reference/react/startTransition)
+ * for concurrent rendering. Defaults to `false`.
  * @returns A click handler function that can be used in a custom {@link Link} component.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
@@ -2229,6 +2243,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
+    unstable_transitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -2236,6 +2251,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    unstable_transitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -2254,13 +2270,21 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, {
-          replace,
-          state,
-          preventScrollReset,
-          relative,
-          viewTransition,
-        });
+        let doNavigate = () =>
+          navigate(to, {
+            replace,
+            state,
+            preventScrollReset,
+            relative,
+            viewTransition,
+          });
+
+        if (unstable_transitions) {
+          // @ts-expect-error Needs React 19 types
+          React.startTransition(() => doNavigate());
+        } else {
+          doNavigate();
+        }
       }
     },
     [
@@ -2274,6 +2298,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_transitions,
     ],
   );
 }
@@ -2579,7 +2604,7 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  */
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
-  let { basename, unstable_transitions } = React.useContext(NavigationContext);
+  let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
   return React.useCallback<SubmitFunction>(
@@ -2599,29 +2624,6 @@ export function useSubmit(): SubmitFunction {
           formEncType: options.encType || (encType as FormEncType),
           flushSync: options.flushSync,
         });
-      } else if (unstable_transitions) {
-        await new Promise<void>((resolve, reject) => {
-          // @ts-expect-error Needs React 19 types
-          React.startTransition(async () => {
-            try {
-              await router.navigate(options.action || action, {
-                preventScrollReset: options.preventScrollReset,
-                formData,
-                body,
-                formMethod: options.method || (method as HTMLFormMethod),
-                formEncType: options.encType || (encType as FormEncType),
-                replace: options.replace,
-                state: options.state,
-                fromRouteId: currentRouteId,
-                flushSync: options.flushSync,
-                viewTransition: options.viewTransition,
-              });
-              resolve();
-            } catch (e) {
-              reject(e);
-            }
-          });
-        });
       } else {
         await router.navigate(options.action || action, {
           preventScrollReset: options.preventScrollReset,
@@ -2637,7 +2639,7 @@ export function useSubmit(): SubmitFunction {
         });
       }
     },
-    [router, basename, currentRouteId, unstable_transitions],
+    [router, basename, currentRouteId],
   );
 }
 
