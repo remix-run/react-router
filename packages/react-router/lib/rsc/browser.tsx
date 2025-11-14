@@ -138,7 +138,7 @@ export function createCallServer({
     });
 
     React.startTransition((): any =>
-      Promise.resolve(payloadPromise)
+      payloadPromise
         .then(async (payload) => {
           if (payload.type === "redirect") {
             if (payload.reload || isExternalLocation(payload.location)) {
@@ -178,14 +178,14 @@ export function createCallServer({
             }
 
             React.startTransition(() => {
-              let lastMatch: RSCRouteManifest | undefined;
               for (const match of rerender.matches) {
-                globalVar.__reactRouterDataRouter.patchRoutes(
-                  lastMatch?.id ?? null,
+                (
+                  window as WindowWithRouterGlobals
+                ).__reactRouterDataRouter.patchRoutes(
+                  match.parentId ?? null,
                   [createRouteFromServerManifest(match)],
                   true,
                 );
-                lastMatch = match;
               }
 
               (
@@ -746,32 +746,38 @@ export function RSCHydratedRouter({
     }
   }, []);
 
-  let [location, setLocation] = React.useState(router.state.location);
+  let [{ routes, state }, setState] = React.useState(() => ({
+    routes: cloneRoutes(router.routes),
+    state: router.state,
+  }));
 
-  const [cachedRoutes, setCachedRoutes] = React.useState(() =>
-    cloneRoutes(router.routes),
-  );
+  // const [cachedRoutes, setCachedRoutes] = React.useState(() =>
+  //   cloneRoutes(router.routes),
+  // );
   // const [cachedState, setCachedState] = React.useState(router.state);
 
   React.useLayoutEffect(
     () =>
       router.subscribe((newState) => {
         React.startTransition(() => {
-          setCachedRoutes(cloneRoutes(router.routes));
-          // setCachedState(newState);
-          if (newState.location !== location) {
-            setLocation(newState.location);
-          }
+          setState({
+            routes: cloneRoutes(router.routes),
+            state: newState,
+          });
         });
       }),
-    [router, location, cachedRoutes],
+    [router, location],
   );
 
-  const transitionEnabledRouter = {
-    ...router,
-    // state: cachedState,
-    routes: cachedRoutes,
-  } as typeof router;
+  const transitionEnabledRouter = React.useMemo(
+    () =>
+      ({
+        ...router,
+        state,
+        routes,
+      }) as typeof router,
+    [router, routes, state],
+  );
 
   React.useEffect(() => {
     if (
@@ -871,7 +877,7 @@ export function RSCHydratedRouter({
 
   return (
     <RSCRouterContext.Provider value={true}>
-      <RSCRouterGlobalErrorBoundary location={location}>
+      <RSCRouterGlobalErrorBoundary location={state.location}>
         <FrameworkContext.Provider value={frameworkContext}>
           <RouterProvider
             router={transitionEnabledRouter}

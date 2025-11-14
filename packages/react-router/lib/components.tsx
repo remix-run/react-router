@@ -410,7 +410,6 @@ export function RouterProvider({
   unstable_transitions,
 }: RouterProviderProps): React.ReactElement {
   let [_state, setStateImpl] = React.useState(router.state);
-  let navigationRef = React.useRef(_state.navigation);
   let [pending, startTransition] = React.useTransition();
   // @ts-expect-error - Needs React 19 types
   let [state, setOptimisticState] = React.useOptimistic(_state);
@@ -490,13 +489,17 @@ export function RouterProvider({
         } else {
           startTransition(() => {
             if (unstable_transitions === true) {
-              if (newState.navigation.state !== "idle") {
-                navigationRef.current = newState.navigation;
-              }
-              setOptimisticState((state: any) => ({
+              // @ts-expect-error - Needs React 19 types
+              setOptimisticState((state) => ({
                 ...state,
-                navigation: navigationRef.current,
-                revalidation: newState.revalidation,
+                navigation:
+                  newState.navigation.state !== "idle"
+                    ? newState.navigation
+                    : state.navigation,
+                revalidation:
+                  newState.revalidation !== "idle"
+                    ? newState.revalidation
+                    : state.revalidation,
               }));
             }
             logErrorsAndSetState(newState);
@@ -599,9 +602,6 @@ export function RouterProvider({
         } else {
           startTransition(() => {
             if (unstable_transitions === true) {
-              if (newState.navigation.state !== "idle") {
-                navigationRef.current = newState.navigation;
-              }
               setOptimisticState((state: any) => ({
                 ...state,
                 navigation: newState.navigation,
@@ -666,7 +666,10 @@ export function RouterProvider({
           const resolver = new Deferred<void>();
           // @ts-expect-error - Needs React 19 types
           startTransition(() => {
-            return router.navigate(n).then(resolver.resolve, resolver.reject);
+            return router
+              .navigate(n)
+              .then(resolver.resolve)
+              .catch(resolver.reject);
           });
           return resolver.promise;
         }
@@ -752,14 +755,7 @@ export function RouterProvider({
                 <MemoizedDataRoutes
                   routes={router.routes}
                   future={router.future}
-                  state={
-                    pending
-                      ? {
-                          ...state,
-                          navigation: navigationRef.current,
-                        }
-                      : state
-                  }
+                  state={state}
                   unstable_onError={unstable_onError}
                 />
               </Router>

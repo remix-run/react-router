@@ -5,14 +5,14 @@ export function Square() {
   const left = Math.random() * 100;
 
   return (
-    <ViewTransition name="red-square">
-      <div
-        style={{
-          position: "relative",
-          height: "200px",
-          width: "100%",
-        }}
-      >
+    <div
+      style={{
+        position: "relative",
+        height: "200px",
+        width: "100%",
+      }}
+    >
+      <ViewTransition name="red-square">
         <div
           style={{
             position: "absolute",
@@ -24,7 +24,7 @@ export function Square() {
             transform: "translate(-50%, -50%)",
           }}
         />
-      </div>
-    </ViewTransition>
+      </ViewTransition>
+    </div>
   );
 }
