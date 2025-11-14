@@ -371,7 +371,7 @@ describe("react transitions", () => {
       ]);
 
       let { container } = render(
-        <RouterProvider router={router} unstable_transitions={false} />,
+        <RouterProvider router={router} unstable_useTransitions={false} />,
       );
 
       await waitFor(() => screen.getByText("Go to page"));
@@ -525,7 +525,7 @@ describe("react transitions", () => {
       ]);
 
       let { container } = render(
-        <RouterProvider router={router} unstable_transitions={true} />,
+        <RouterProvider router={router} unstable_useTransitions={true} />,
       );
 
       await waitFor(() => screen.getByText("Go to page"));
@@ -604,7 +604,7 @@ describe("react transitions", () => {
       ]);
 
       let { container } = render(
-        <RouterProvider router={router} unstable_transitions={true} />,
+        <RouterProvider router={router} unstable_useTransitions={true} />,
       );
 
       await waitFor(() => screen.getByText("Go to page"));

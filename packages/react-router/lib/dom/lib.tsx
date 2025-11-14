@@ -937,7 +937,7 @@ export interface BrowserRouterProps {
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    * Enabled by default.
    */
-  unstable_transitions?: boolean;
+  unstable_useTransitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -955,7 +955,7 @@ export interface BrowserRouterProps {
  * @param props Props
  * @param {BrowserRouterProps.basename} props.basename n/a
  * @param {BrowserRouterProps.children} props.children n/a
- * @param {BrowserRouterProps.unstable_transitions} props.unstable_transitions n/a
+ * @param {BrowserRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @param {BrowserRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * API for client-side routing.
@@ -963,7 +963,7 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
-  unstable_transitions,
+  unstable_useTransitions,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -978,13 +978,13 @@ export function BrowserRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_transitions === false) {
+      if (unstable_useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_transitions],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -996,7 +996,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_transitions={unstable_transitions === true}
+      unstable_useTransitions={unstable_useTransitions === true}
     />
   );
 }
@@ -1018,7 +1018,7 @@ export interface HashRouterProps {
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    * Enabled by default.
    */
-  unstable_transitions?: boolean;
+  unstable_useTransitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -1037,7 +1037,7 @@ export interface HashRouterProps {
  * @param props Props
  * @param {HashRouterProps.basename} props.basename n/a
  * @param {HashRouterProps.children} props.children n/a
- * @param {HashRouterProps.unstable_transitions} props.unstable_transitions n/a
+ * @param {HashRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @param {HashRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
  * for client-side routing.
@@ -1045,7 +1045,7 @@ export interface HashRouterProps {
 export function HashRouter({
   basename,
   children,
-  unstable_transitions,
+  unstable_useTransitions,
   window,
 }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
@@ -1060,13 +1060,13 @@ export function HashRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_transitions === false) {
+      if (unstable_useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_transitions],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1078,7 +1078,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_transitions={unstable_transitions === true}
+      unstable_useTransitions={unstable_useTransitions === true}
     />
   );
 }
@@ -1104,7 +1104,7 @@ export interface HistoryRouterProps {
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    * Enabled by default.
    */
-  unstable_transitions?: boolean;
+  unstable_useTransitions?: boolean;
 }
 
 /**
@@ -1122,7 +1122,7 @@ export interface HistoryRouterProps {
  * @param {HistoryRouterProps.basename} props.basename n/a
  * @param {HistoryRouterProps.children} props.children n/a
  * @param {HistoryRouterProps.history} props.history n/a
- * @param {HistoryRouterProps.unstable_transitions} props.unstable_transitions n/a
+ * @param {HistoryRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @returns A declarative {@link Router | `<Router>`} using the provided history
  * implementation for client-side routing.
  */
@@ -1130,7 +1130,7 @@ export function HistoryRouter({
   basename,
   children,
   history,
-  unstable_transitions,
+  unstable_useTransitions,
 }: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
@@ -1138,13 +1138,13 @@ export function HistoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_transitions === false) {
+      if (unstable_useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_transitions],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1156,7 +1156,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_transitions={unstable_transitions === true}
+      unstable_useTransitions={unstable_useTransitions === true}
     />
   );
 }
@@ -1381,7 +1381,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     forwardedRef,
   ) {
-    let { basename, unstable_transitions } =
+    let { basename, unstable_useTransitions } =
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
@@ -1433,7 +1433,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       preventScrollReset,
       relative,
       viewTransition,
-      unstable_transitions,
+      unstable_useTransitions,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -1977,7 +1977,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     },
     forwardedRef,
   ) => {
-    let { unstable_transitions } = React.useContext(NavigationContext);
+    let { unstable_useTransitions } = React.useContext(NavigationContext);
     let submit = useSubmit();
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
@@ -2009,7 +2009,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
           viewTransition,
         });
 
-      if (unstable_transitions && navigate === true) {
+      if (unstable_useTransitions && navigate === true) {
         // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
@@ -2229,7 +2229,7 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
- * @param options.unstable_transitions Wraps the navigation in
+ * @param options.unstable_useTransitions Wraps the navigation in
  * [`React.startTransition`](https://react.dev/reference/react/startTransition)
  * for concurrent rendering. Defaults to `false`.
  * @returns A click handler function that can be used in a custom {@link Link} component.
@@ -2243,7 +2243,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
-    unstable_transitions,
+    unstable_useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -2251,7 +2251,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
-    unstable_transitions?: boolean;
+    unstable_useTransitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -2279,7 +2279,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             viewTransition,
           });
 
-        if (unstable_transitions) {
+        if (unstable_useTransitions) {
           // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
@@ -2298,7 +2298,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       preventScrollReset,
       relative,
       viewTransition,
-      unstable_transitions,
+      unstable_useTransitions,
     ],
   );
 }

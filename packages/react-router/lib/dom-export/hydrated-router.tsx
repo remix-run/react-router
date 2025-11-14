@@ -312,7 +312,7 @@ export interface HydratedRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition` or
    *   `React.useOptimistic` on navigations or state changes.
    */
-  unstable_transitions?: boolean;
+  unstable_useTransitions?: boolean;
 }
 
 /**
@@ -419,7 +419,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
         <RemixErrorBoundary location={location}>
           <RouterProvider
             router={router}
-            unstable_transitions={props.unstable_transitions}
+            unstable_useTransitions={props.unstable_useTransitions}
             unstable_onError={props.unstable_onError}
           />
         </RemixErrorBoundary>

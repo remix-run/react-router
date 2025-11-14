@@ -30,15 +30,15 @@ export default function Transitions() {
       <nav>
         Start Over:{" "}
         <a href="/transitions">
-          <code>unstable_transitions=undefined</code>
+          <code>unstable_useTransitions=undefined</code>
         </a>
         {" | "}
         <a href="/transitions?transitions=true">
-          <code>unstable_transitions=true</code>
+          <code>unstable_useTransitions=true</code>
         </a>
         {" | "}
         <a href="/transitions?transitions=false">
-          <code>unstable_transitions=false</code>
+          <code>unstable_useTransitions=false</code>
         </a>
       </nav>
 

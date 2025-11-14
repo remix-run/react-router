@@ -90,9 +90,9 @@ export type PatchRoutesOnNavigationFunction =
 // data router
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
-  // `NavigationContext` needs `future`/`unstable_transitions` since it doesn't
+  // `NavigationContext` needs `future`/`unstable_useTransitions` since it doesn't
   // have a `router` in all cases
-  extends Omit<NavigationContextObject, "future" | "unstable_transitions"> {
+  extends Omit<NavigationContextObject, "future" | "unstable_useTransitions"> {
   router: Router;
   staticContext?: StaticHandlerContext;
   unstable_onError?: unstable_ClientOnErrorFunction;
@@ -182,7 +182,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  unstable_transitions: boolean;
+  unstable_useTransitions: boolean;
   // TODO: Re-introduce a singular `FutureConfig` once we land our first
   // future.unstable_ or future.v8_ flag
   future: {};

@@ -11,7 +11,7 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <HydratedRouter unstable_transitions={transitions} />
+      <HydratedRouter unstable_useTransitions={transitions} />
     </StrictMode>,
   );
 });
