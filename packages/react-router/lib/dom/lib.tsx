@@ -2938,7 +2938,7 @@ export function useFetcher<T = any>({
   React.useEffect(() => {
     router.getFetcher(fetcherKey);
     return () => router.deleteFetcher(fetcherKey);
-  }, [router, fetcherKey]);
+  }, [router.getFetcher, router.deleteFetcher, fetcherKey]);
 
   // Fetcher additions
   let load = React.useCallback(

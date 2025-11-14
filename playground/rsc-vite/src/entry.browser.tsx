@@ -33,6 +33,7 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
         <RSCHydratedRouter
           payload={payload}
           createFromReadableStream={createFromReadableStream}
+          routeDiscovery="eager"
         />
       </StrictMode>,
       {

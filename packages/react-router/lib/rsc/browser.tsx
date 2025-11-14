@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { UNSTABLE_TransitionEnabledRouterProvider as RouterProvider } from "../components";
+import { RouterProvider } from "../components";
 import {
   RSCRouterContext,
   type DataRouteMatch,
@@ -18,6 +18,7 @@ import type {
   RSCRenderPayload,
 } from "./server.rsc";
 import type {
+  AgnosticDataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   RouterContextProvider,
@@ -136,20 +137,21 @@ export function createCallServer({
       }) as Promise<RSCPayload>;
     });
 
-    (globalVar.__reactRouterDataRouter as any).__setPendingRerender(
-      Promise.resolve(payloadPromise)
+    React.startTransition((): any =>
+      payloadPromise
         .then(async (payload) => {
           if (payload.type === "redirect") {
             if (payload.reload || isExternalLocation(payload.location)) {
               window.location.href = payload.location;
-              return () => {};
+              return;
             }
 
-            return () => {
+            React.startTransition(() => {
               globalVar.__reactRouterDataRouter.navigate(payload.location, {
                 replace: payload.replace,
               });
-            };
+            });
+            return;
           }
 
           if (payload.type !== "action") {
@@ -167,22 +169,23 @@ export function createCallServer({
                 window.location.href = rerender.location;
                 return;
               }
-              return () => {
+              React.startTransition(() => {
                 globalVar.__reactRouterDataRouter.navigate(rerender.location, {
                   replace: rerender.replace,
                 });
-              };
+              });
+              return;
             }
 
-            return () => {
-              let lastMatch: RSCRouteManifest | undefined;
+            React.startTransition(() => {
               for (const match of rerender.matches) {
-                globalVar.__reactRouterDataRouter.patchRoutes(
-                  lastMatch?.id ?? null,
+                (
+                  window as WindowWithRouterGlobals
+                ).__reactRouterDataRouter.patchRoutes(
+                  match.parentId ?? null,
                   [createRouteFromServerManifest(match)],
                   true,
                 );
-                lastMatch = match;
               }
 
               (
@@ -203,10 +206,8 @@ export function createCallServer({
                     : null,
                 },
               );
-            };
+            });
           }
-
-          return () => {};
         })
         .catch(() => {}),
     );
@@ -490,20 +491,22 @@ export function getRSCSingleFetchDataStrategy(
         }
         renderedRoutesById.get(route.id)!.push(route);
       }
-      for (const match of args.matches) {
-        const renderedRoutes = renderedRoutesById.get(match.route.id);
-        if (renderedRoutes) {
-          for (const rendered of renderedRoutes) {
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter.patchRoutes(
-              rendered.parentId ?? null,
-              [createRouteFromServerManifest(rendered)],
-              true,
-            );
+      React.startTransition(() => {
+        for (const match of args.matches) {
+          const renderedRoutes = renderedRoutesById.get(match.route.id);
+          if (renderedRoutes) {
+            for (const rendered of renderedRoutes) {
+              (
+                window as WindowWithRouterGlobals
+              ).__reactRouterDataRouter.patchRoutes(
+                rendered.parentId ?? null,
+                [createRouteFromServerManifest(rendered)],
+                true,
+              );
+            }
           }
         }
-      }
+      });
       return results;
     });
 }
@@ -633,6 +636,42 @@ export interface RSCHydratedRouterProps {
   getContext?: RouterInit["getContext"];
 }
 
+function cloneRoutes(
+  routes: AgnosticDataRouteObject[] | undefined,
+): AgnosticDataRouteObject[] {
+  if (!routes) return undefined as any;
+  return routes.map((route) => ({
+    ...route,
+    children: cloneRoutes(route.children),
+  })) as any;
+}
+
+function diffRoutes(
+  a: AgnosticDataRouteObject[],
+  b: AgnosticDataRouteObject[],
+): boolean {
+  if (a.length !== b.length) return true;
+  return a.some((route, index) => {
+    if ((route as any).element !== (b[index] as any).element) return true;
+    if ((route as any).errorElement !== (b[index] as any).errorElement)
+      return true;
+    if (
+      (route as any).hydrateFallbackElement !==
+      (b[index] as any).hydrateFallbackElement
+    )
+      return true;
+    if ((route as any).hasErrorBoundary !== (b[index] as any).hasErrorBoundary)
+      return true;
+    if ((route as any).hasLoader !== (b[index] as any).hasLoader) return true;
+    if ((route as any).hasClientLoader !== (b[index] as any).hasClientLoader)
+      return true;
+    if ((route as any).hasAction !== (b[index] as any).hasAction) return true;
+    if ((route as any).hasClientAction !== (b[index] as any).hasClientAction)
+      return true;
+    return diffRoutes(route.children || [], b[index].children || []);
+  });
+}
+
 /**
  * Hydrates a server rendered {@link unstable_RSCPayload} in the browser.
  *
@@ -707,16 +746,32 @@ export function RSCHydratedRouter({
     }
   }, []);
 
-  let [location, setLocation] = React.useState(router.state.location);
+  let [{ routes, state }, setState] = React.useState(() => ({
+    routes: cloneRoutes(router.routes),
+    state: router.state,
+  }));
 
   React.useLayoutEffect(
     () =>
       router.subscribe((newState) => {
-        if (newState.location !== location) {
-          setLocation(newState.location);
-        }
+        React.startTransition(() => {
+          setState({
+            routes: cloneRoutes(router.routes),
+            state: newState,
+          });
+        });
       }),
-    [router, location],
+    [router.subscribe],
+  );
+
+  const transitionEnabledRouter = React.useMemo(
+    () =>
+      ({
+        ...router,
+        state,
+        routes,
+      }) as typeof router,
+    [router, routes, state],
   );
 
   React.useEffect(() => {
@@ -817,9 +872,13 @@ export function RSCHydratedRouter({
 
   return (
     <RSCRouterContext.Provider value={true}>
-      <RSCRouterGlobalErrorBoundary location={location}>
+      <RSCRouterGlobalErrorBoundary location={state.location}>
         <FrameworkContext.Provider value={frameworkContext}>
-          <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
+          <RouterProvider
+            router={transitionEnabledRouter}
+            flushSync={ReactDOM.flushSync}
+            unstable_transitions={true}
+          />
         </FrameworkContext.Provider>
       </RSCRouterGlobalErrorBoundary>
     </RSCRouterContext.Provider>
@@ -1022,11 +1081,14 @@ async function fetchAndApplyManifestPatches(
 
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
-  payload.patches.forEach((p) => {
-    (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
-      p.parentId ?? null,
-      [createRouteFromServerManifest(p)],
-    );
+
+  React.startTransition(() => {
+    payload.patches.forEach((p) => {
+      (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
+        p.parentId ?? null,
+        [createRouteFromServerManifest(p)],
+      );
+    });
   });
 }
 

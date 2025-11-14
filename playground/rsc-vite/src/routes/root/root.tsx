@@ -4,6 +4,7 @@ import { type MiddlewareFunction } from "react-router";
 import { Counter } from "../../counter";
 import { ErrorReporter, NavigationState } from "./root.client";
 import "./root.css";
+import { Suspense } from "react";
 
 export { shouldRevalidate } from "./root.client";
 
@@ -35,7 +36,7 @@ export default function RootRoute({
 }) {
   return (
     <div style={{ border: "1px solid black", padding: "10px" }}>
-      <h1>Root Route</h1>
+      <p>Root Route</p>
       <p>Loader data: {loaderData.message}</p>
       {loaderData.counter}
       <Outlet />
@@ -44,13 +45,13 @@ export default function RootRoute({
 }
 
 export function HydrateFallback() {
-  return <h1>Loading...</h1>;
+  return <p>Loading...</p>;
 }
 
 export function ErrorBoundary() {
   return (
     <>
-      <h1>Root - Something went wrong!</h1>
+      <p>Root - Something went wrong!</p>
       <ErrorReporter />
     </>
   );
@@ -78,10 +79,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {" | "}
             <Link to="/redirect">Redirect</Link>
           </header>
-          <h1>Root Layout</h1>
+          <p>Root Layout</p>
           <NavigationState />
           <Counter />
-          {children}
+          <Suspense>{children}</Suspense>
         </div>
         <ScrollRestoration />
       </body>

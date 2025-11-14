@@ -24,8 +24,8 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.0",
     "express": "^4.21.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "canary",
+    "react-dom": "canary",
     "react-router": "workspace:*"
   }
 }

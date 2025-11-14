@@ -6,6 +6,7 @@ export {
   clientLoader,
   clientAction,
   default,
+  HydrateFallback
 } from "./about.client";
 
 export function headers({

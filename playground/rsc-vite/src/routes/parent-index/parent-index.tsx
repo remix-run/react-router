@@ -12,7 +12,7 @@ export default function ParentIndexRoute({
 }) {
   return (
     <div style={{ border: "1px solid black", padding: "10px" }}>
-      <h3>Parent Index Route</h3>
+      <p>Parent Index Route</p>
       <p>Loader data: {loaderData.message}</p>
     </div>
   );
