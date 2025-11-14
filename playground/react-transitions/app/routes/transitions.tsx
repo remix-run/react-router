@@ -161,11 +161,6 @@ export default function Transitions() {
                   Should not re-fallback when going from parent -&gt; child
                 </li>
                 <li>
-                  <span style={{ color: "red" }}>
-                    But for some reason they are when we enable the flag?
-                  </span>
-                </li>
-                <li>
                   <Link to="/transitions/parent">/transitions/parent</Link>
                 </li>
                 <li>

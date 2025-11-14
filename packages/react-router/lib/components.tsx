@@ -72,16 +72,16 @@ import { warnOnce } from "./server-runtime/warnings";
 import type { unstable_ClientInstrumentation } from "./router/instrumentation";
 
 /**
-  Webpack can fail to compile on against react versions without this export
-  complains that `startTransition` doesn't exist in `React`.
-
-  Using the string constant directly at runtime fixes the webpack build issue
-  but can result in terser stripping the actual call at minification time.
-
-  Grabbing an exported reference once up front resolves that issue.
-
-  See https://github.com/remix-run/react-router/issues/10579
-*/
+ * Webpack can fail to compile on against react versions without this export
+ * complains that `startTransition` doesn't exist in `React`.
+ *
+ * Using the string constant directly at runtime fixes the webpack build issue
+ * but can result in terser stripping the actual call at minification time.
+ *
+ * Grabbing an exported reference once up front resolves that issue.
+ *
+ * See https://github.com/remix-run/react-router/issues/10579
+ */
 const USE_OPTIMISTIC = "useOptimistic";
 // @ts-expect-error Needs React 19 types but we develop against 18
 const useOptimisticImpl = React[USE_OPTIMISTIC];
