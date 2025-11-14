@@ -423,10 +423,7 @@ export function RouterProvider({
     currentLocation: Location;
     nextLocation: Location;
   }>();
-  // let fetcherData = React.useRef<Map<string, any>>(new Map());
-  let [fetcherData, setFetcherData] = React.useState<Map<string, any>>(
-    new Map(),
-  );
+  let fetcherData = React.useRef<Map<string, any>>(new Map());
   let logErrorsAndSetState = React.useCallback(
     (newState: RouterState) => {
       setStateImpl((prevState) => {
@@ -452,24 +449,12 @@ export function RouterProvider({
       newState: RouterState,
       { deletedFetchers, flushSync, viewTransitionOpts },
     ) => {
-      setFetcherData((prev) => {
-        const newFetchers = new Map(prev);
-
-        newState.fetchers.forEach((fetcher, key) => {
-          if (fetcher.data !== undefined) {
-            newFetchers.set(key, fetcher.data);
-          }
-        });
-        deletedFetchers.forEach((key) => newFetchers.delete(key));
-
-        return newFetchers;
+      newState.fetchers.forEach((fetcher, key) => {
+        if (fetcher.data !== undefined) {
+          fetcherData.current.set(key, fetcher.data);
+        }
       });
-      // newState.fetchers.forEach((fetcher, key) => {
-      //   if (fetcher.data !== undefined) {
-      //     fetcherData.current.set(key, fetcher.data);
-      //   }
-      // });
-      // deletedFetchers.forEach((key) => fetcherData.current.delete(key));
+      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
@@ -757,7 +742,7 @@ export function RouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetcherData}>
+          <FetchersContext.Provider value={fetcherData.current}>
             <ViewTransitionContext.Provider value={vtContext}>
               <Router
                 basename={basename}

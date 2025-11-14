@@ -746,8 +746,7 @@ export function RSCHydratedRouter({
     }
   }, []);
 
-  let [{ fetchers, routes, state }, setState] = React.useState(() => ({
-    fetchers: new Map(router.state.fetchers),
+  let [{ routes, state }, setState] = React.useState(() => ({
     routes: cloneRoutes(router.routes),
     state: router.state,
   }));
@@ -757,7 +756,6 @@ export function RSCHydratedRouter({
       router.subscribe((newState) => {
         React.startTransition(() => {
           setState({
-            fetchers: new Map(newState.fetchers),
             routes: cloneRoutes(router.routes),
             state: newState,
           });
@@ -770,11 +768,10 @@ export function RSCHydratedRouter({
     () =>
       ({
         ...router,
-        fetchers,
         state,
         routes,
       }) as typeof router,
-    [router, fetchers, routes, state],
+    [router, routes, state],
   );
 
   React.useEffect(() => {
