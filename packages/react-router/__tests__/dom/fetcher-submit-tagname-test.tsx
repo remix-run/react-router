@@ -1,11 +1,7 @@
 import * as React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import {
-  RouterProvider,
-  createBrowserRouter,
-  useFetcher,
-} from "../../index";
+import { RouterProvider, createBrowserRouter, useFetcher } from "../../index";
 import getWindow from "../utils/getWindow";
 
 describe("fetcher.submit with tagName property", () => {
@@ -25,7 +21,7 @@ describe("fetcher.submit with tagName property", () => {
                 onClick={() =>
                   fetcher.submit(
                     { tagName: "div", data: "test" },
-                    { method: "post" }
+                    { method: "post" },
                   )
                 }
               >
@@ -37,7 +33,7 @@ describe("fetcher.submit with tagName property", () => {
       ],
       {
         window: getWindow("/"),
-      }
+      },
     );
 
     render(<RouterProvider router={router} />);
@@ -70,7 +66,7 @@ describe("fetcher.submit with tagName property", () => {
                       id: "test-id",
                       value: "test-value",
                     },
-                    { method: "post" }
+                    { method: "post" },
                   )
                 }
               >
@@ -82,7 +78,7 @@ describe("fetcher.submit with tagName property", () => {
       ],
       {
         window: getWindow("/"),
-      }
+      },
     );
 
     render(<RouterProvider router={router} />);
