@@ -2722,7 +2722,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
    * @param reason Optional `reason` to provide to [`AbortController.abort()`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
    * @returns void
    */
-  unstable_reset: (opts?: { reason?: unknown }) => void;
+  reset: (opts?: { reason?: unknown }) => void;
 
   /**
    *  Submits form data to a route. While multiple nested routes can match a URL, only the leaf route will be called.
@@ -2813,7 +2813,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  *   })
  *
  *   // reset fetcher
- *   fetcher.unstable_reset()
+ *   fetcher.reset()
  * }
  *
  * @public
@@ -2895,9 +2895,10 @@ export function useFetcher<T = any>({
     [fetcherKey, submitImpl],
   );
 
-  let unstable_reset = React.useCallback<
-    FetcherWithComponents<T>["unstable_reset"]
-  >((opts) => router.resetFetcher(fetcherKey, opts), [router, fetcherKey]);
+  let reset = React.useCallback<FetcherWithComponents<T>["reset"]>(
+    (opts) => router.resetFetcher(fetcherKey, opts),
+    [router, fetcherKey],
+  );
 
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
@@ -2919,11 +2920,11 @@ export function useFetcher<T = any>({
       Form: FetcherForm,
       submit,
       load,
-      unstable_reset,
+      reset,
       ...fetcher,
       data,
     }),
-    [FetcherForm, submit, load, unstable_reset, fetcher, data],
+    [FetcherForm, submit, load, reset, fetcher, data],
   );
 
   return fetcherWithComponents;
