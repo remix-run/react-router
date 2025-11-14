@@ -291,13 +291,13 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter unstable_onError={(error, errorInfo) => {
+   * <HydratedRouter onError={(error, errorInfo) => {
    *   console.error(error, errorInfo);
    *   reportToErrorService(error, errorInfo);
    * }} />
    * ```
    */
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: unstable_ClientOnErrorFunction;
 }
 
 /**
@@ -309,7 +309,7 @@ export interface HydratedRouterProps {
  * @mode framework
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
- * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
+ * @param {dom.HydratedRouterProps.onError} props.onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
@@ -402,10 +402,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
         }}
       >
         <RemixErrorBoundary location={location}>
-          <RouterProvider
-            router={router}
-            unstable_onError={props.unstable_onError}
-          />
+          <RouterProvider router={router} onError={props.onError} />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>
       {/*

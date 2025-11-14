@@ -91,7 +91,7 @@ export interface DataRouterContextObject
   extends Omit<NavigationContextObject, "future"> {
   router: Router;
   staticContext?: StaticHandlerContext;
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: unstable_ClientOnErrorFunction;
 }
 
 export const DataRouterContext =

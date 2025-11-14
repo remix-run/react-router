@@ -754,7 +754,7 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  unstable_onError?: unstable_ClientOnErrorFunction,
+  onError?: unstable_ClientOnErrorFunction,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -908,7 +908,7 @@ export function useRoutesImpl(
       ),
     parentMatches,
     dataRouterState,
-    unstable_onError,
+    onError,
     future,
   );
 
@@ -1103,7 +1103,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  unstable_onError: unstable_ClientOnErrorFunction | null = null,
+  onErrorHandler: unstable_ClientOnErrorFunction | null = null,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
@@ -1187,9 +1187,9 @@ export function _renderMatches(
   }
 
   let onError =
-    dataRouterState && unstable_onError
+    dataRouterState && onErrorHandler
       ? (error: unknown, errorInfo?: React.ErrorInfo) => {
-          unstable_onError(error, {
+          onErrorHandler(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
             errorInfo,

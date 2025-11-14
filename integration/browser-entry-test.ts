@@ -146,7 +146,7 @@ test("allows users to pass an onError function to HydratedRouter", async ({
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_onError={(error, errorInfo) => {
+                onError={(error, errorInfo) => {
                   console.log(error.message, JSON.stringify(errorInfo))
                 }}
               />

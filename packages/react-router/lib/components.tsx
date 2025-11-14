@@ -347,13 +347,13 @@ export interface RouterProviderProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <RouterProvider unstable_onError=(error, errorInfo) => {
+   * <RouterProvider onError=(error, errorInfo) => {
    *   console.error(error, errorInfo);
    *   reportToErrorService(error, errorInfo);
    * }} />
    * ```
    */
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: unstable_ClientOnErrorFunction;
 }
 
 function shallowDiff(a: any, b: any) {
@@ -376,7 +376,7 @@ function shallowDiff(a: any, b: any) {
 export function UNSTABLE_TransitionEnabledRouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
-  unstable_onError,
+  onError,
 }: RouterProviderProps) {
   let fetcherData = React.useRef<Map<string, any>>(new Map());
   let [revalidating, startRevalidation] = React.useTransition();
@@ -420,9 +420,9 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
       navigator,
       static: false,
       basename,
-      unstable_onError,
+      onError,
     }),
-    [router, navigator, basename, unstable_onError],
+    [router, navigator, basename, onError],
   );
 
   React.useLayoutEffect(() => {
@@ -481,7 +481,7 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
                 routes={router.routes}
                 future={router.future}
                 state={state}
-                unstable_onError={unstable_onError}
+                onError={onError}
               />
             </Router>
             {/* </ViewTransitionContext.Provider> */}
@@ -520,14 +520,14 @@ export function UNSTABLE_TransitionEnabledRouterProvider({
  * @mode data
  * @param props Props
  * @param {RouterProviderProps.flushSync} props.flushSync n/a
- * @param {RouterProviderProps.unstable_onError} props.unstable_onError n/a
+ * @param {RouterProviderProps.onError} props.onError n/a
  * @param {RouterProviderProps.router} props.router n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
-  unstable_onError,
+  onError,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
@@ -546,10 +546,10 @@ export function RouterProvider({
     (newState: RouterState) => {
       setStateImpl((prevState) => {
         // Send loader/action errors through handleError
-        if (newState.errors && unstable_onError) {
+        if (newState.errors && onError) {
           Object.entries(newState.errors).forEach(([routeId, error]) => {
             if (prevState.errors?.[routeId] !== error) {
-              unstable_onError(error, {
+              onError(error, {
                 location: newState.location,
                 params: newState.matches[0]?.params ?? {},
               });
@@ -559,7 +559,7 @@ export function RouterProvider({
         return newState;
       });
     },
-    [unstable_onError],
+    [onError],
   );
 
   let setState = React.useCallback<RouterSubscriber>(
@@ -761,9 +761,9 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
-      unstable_onError,
+      onError,
     }),
-    [router, navigator, basename, unstable_onError],
+    [router, navigator, basename, onError],
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
@@ -788,7 +788,7 @@ export function RouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
-                  unstable_onError={unstable_onError}
+                  onError={onError}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -807,14 +807,14 @@ function DataRoutes({
   routes,
   future,
   state,
-  unstable_onError,
+  onError,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
-  unstable_onError: unstable_ClientOnErrorFunction | undefined;
+  onError: unstable_ClientOnErrorFunction | undefined;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, unstable_onError, future);
+  return useRoutesImpl(routes, undefined, state, onError, future);
 }
 
 /**
@@ -1614,10 +1614,10 @@ export function Await<Resolve>({
     (error: unknown, errorInfo?: React.ErrorInfo) => {
       if (
         dataRouterContext &&
-        dataRouterContext.unstable_onError &&
+        dataRouterContext.onError &&
         dataRouterStateContext
       ) {
-        dataRouterContext.unstable_onError(error, {
+        dataRouterContext.onError(error, {
           location: dataRouterStateContext.location,
           params: dataRouterStateContext.matches?.[0]?.params || {},
           errorInfo,
