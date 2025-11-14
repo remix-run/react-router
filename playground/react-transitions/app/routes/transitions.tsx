@@ -80,35 +80,14 @@ export default function Transitions() {
               </button>
               <ul>
                 <li>
-                  In the current state, <code>useNavigate</code> navigations are
-                  not wrapped in <code>startTransition</code>, so they don't
-                  play nice with other transition-aware state updates
+                  In the current state, <code>useNavigate</code> doesn't wrap
+                  the navigation in <code>startTransition</code>, so they don't
+                  play nice with other transition-aware state updates (try
+                  updating the transition-aware counter mid-navigation)
                 </li>
                 <li>
-                  Fixed by{" "}
-                  <code>
-                    &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
-                  </code>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <button
-                onClick={() =>
-                  navigate("/transitions/slow", { flushSync: true })
-                }
-              >
-                <code>
-                  navigate("/transitions/slow", {"{"} flushSync: true {"}"})
-                </code>
-              </button>
-              <ul>
-                <li>
-                  With the new flag, useNavigate automatically wraps the
-                  navigation in <code>React.startTransition</code>. Passing the{" "}
-                  <code>flushSync</code> option will opt out of that and apply
-                  <code>React.flushSync</code> to the underlying state update
+                  With the new flag, they are wrapped in{" "}
+                  <code>startTransition</code>
                 </li>
               </ul>
             </li>
@@ -126,15 +105,34 @@ export default function Transitions() {
               </button>
               <ul>
                 <li>
-                  Once you wrap them in <code>startTransition</code>, they play
-                  nicely with those updates but they prevent our internal
-                  mid-navigation state updates from surfacing
+                  If you wrap them in <code>startTransition</code> manually,
+                  they play nicely with those updates but they prevent our
+                  internal mid-navigation state updates from surfacing
                 </li>
                 <li>
-                  Fixed by{" "}
-                  <code>
-                    &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
-                  </code>
+                  That can be fixed by enabling <code>useOptimistic</code>{" "}
+                  inside <code>&lt;RouterProvider&gt;</code>
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <button
+                onClick={() =>
+                  navigate("/transitions/slow", { flushSync: true })
+                }
+              >
+                <code>
+                  navigate("/transitions/slow", {"{"} flushSync: true {"}"})
+                </code>
+              </button>
+              <ul>
+                <li>
+                  Once <code>useNavigate</code> is wrapped automatically,
+                  passing the
+                  <code>flushSync</code> option will opt out of{" "}
+                  <code>startTransition</code> and apply
+                  <code>React.flushSync</code> to the underlying state update
                 </li>
               </ul>
             </li>
@@ -146,25 +144,36 @@ export default function Transitions() {
               <ul>
                 <li>
                   In the current state, <code>&lt;Link&gt;</code> navigations
-                  are not wrapped in startTransition, so they don't play nice
-                  with other transition-aware state updates
+                  are not wrapped in <code>startTransition</code>, so they don't
+                  play nice with other transition-aware state updates
                 </li>
                 <li>
-                  Fixed by{" "}
-                  <code>
-                    &lt;HydrateRouter unstable_transitions={"{"}true{"}"} /&gt;
-                  </code>
+                  With the new flag, they are wrapped in{" "}
+                  <code>startTransition</code>
                 </li>
               </ul>
             </li>
 
             <li>
-              <Link to="/transitions/parent">/transitions/parent</Link>
-            </li>
-            <li>
-              <Link to="/transitions/parent/child">
-                /transitions/parent/child
-              </Link>
+              Nested Parent/Child Await:
+              <ul>
+                <li>
+                  Should not re-fallback when going from parent -&gt; child
+                </li>
+                <li>
+                  <span style={{ color: "red" }}>
+                    But for some reason they are when we enable the flag?
+                  </span>
+                </li>
+                <li>
+                  <Link to="/transitions/parent">/transitions/parent</Link>
+                </li>
+                <li>
+                  <Link to="/transitions/parent/child">
+                    /transitions/parent/child
+                  </Link>
+                </li>
+              </ul>
             </li>
           </ul>
         </div>

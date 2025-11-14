@@ -86,13 +86,14 @@ const USE_OPTIMISTIC = "useOptimistic";
 // @ts-expect-error Needs React 19 types but we develop against 18
 const useOptimisticImpl = React[USE_OPTIMISTIC];
 
-function useOptimisticSafe(val: unknown) {
+function useOptimisticSafe<T>(
+  val: T,
+): [T, React.Dispatch<React.SetStateAction<T>>] {
   if (useOptimisticImpl) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useOptimisticImpl(val);
   } else {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return React.useState(val);
+    return [val, () => undefined];
   }
 }
 
@@ -645,7 +646,7 @@ export function RouterProvider({
         } else {
           React.startTransition(() => {
             if (unstable_transitions === true) {
-              setOptimisticState(newState);
+              setOptimisticState((s) => getOptimisticRouterState(s, newState));
             }
             logErrorsAndSetState(newState);
           });
@@ -747,7 +748,7 @@ export function RouterProvider({
         } else {
           React.startTransition(() => {
             if (unstable_transitions === true) {
-              setOptimisticState(newState);
+              setOptimisticState((s) => getOptimisticRouterState(s, newState));
             }
             logErrorsAndSetState(newState);
           });
@@ -863,6 +864,33 @@ export function RouterProvider({
       {null}
     </>
   );
+}
+
+function getOptimisticRouterState(
+  currentState: RouterState,
+  newState: RouterState,
+): RouterState {
+  return {
+    // Don't surface "current location specific" stuff mid-navigation
+    // (historyAction, location, matches, loaderData, errors, initialized,
+    // restoreScroll, preventScrollReset, blockers, etc.)
+    ...currentState,
+    // Only surface "pending/in-flight stuff"
+    // (navigation, revalidation, actionData, fetchers, )
+    navigation:
+      newState.navigation.state !== "idle"
+        ? newState.navigation
+        : currentState.navigation,
+    revalidation:
+      newState.revalidation !== "idle"
+        ? newState.revalidation
+        : currentState.revalidation,
+    actionData:
+      newState.navigation.state !== "submitting"
+        ? newState.actionData
+        : currentState.actionData,
+    fetchers: newState.fetchers,
+  };
 }
 
 // Memoize to avoid re-renders when updating `ViewTransitionContext`
