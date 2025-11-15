@@ -1380,7 +1380,7 @@ When the user clicks the submit button:
 2. The `<Form action="destroy">` matches the new route at `contacts/:contactId/destroy` and sends it the request
 3. After the `action` redirects, React Router calls all the `loader`s for the data on the page to get the latest values (this is "revalidation"). `loaderData` in `routes/contact.tsx` now has new values and causes the components to update!
 
-Add a `Form`, add an `action`, React Router does the rest.
+Add a `Form`, add an `action`, and React Router does the rest.
 
 ## Cancel Button
 
