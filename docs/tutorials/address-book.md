@@ -894,6 +894,10 @@ export default function Contact({
   loaderData,
 }: Route.ComponentProps) {
   const { contact } = loaderData;
+  /* const contact = {
+    ...
+  };
+  */
 
   // existing code
 }
