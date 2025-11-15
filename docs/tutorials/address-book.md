@@ -933,7 +933,7 @@ Now, if the user isn't found, code execution down this path stops and React Rout
 
 We'll create our first contact in a second, but first let's talk about HTML.
 
-React Router emulates HTML Form navigation as the data mutation primitive, which used to be the only way prior to the JavaScript cambrian explosion. Don't be fooled by the simplicity! Forms in React Router give you the UX capabilities of client rendered apps with the simplicity of the "old school" web model.
+React Router emulates HTML Form navigation as the data mutation primitive, which used to be the only way prior to the JavaScript cambrian explosion. Don't be fooled by the simplicity! Forms in React Router give you the UX capabilities of client-rendered apps with the simplicity of the "old school" web model.
 
 While unfamiliar to some web developers, HTML `form`s actually cause a navigation in the browser, just like clicking a link. The only difference is in the request: links can only change the URL while `form`s can also change the request method (`GET` vs. `POST`) and the request body (`POST` form data).
 
@@ -1096,11 +1096,12 @@ The edit route we just created already renders a `form`. All we need to do is ad
 
 👉 **Add an `action` function to the edit route**
 
-```tsx filename=app/routes/edit-contact.tsx lines=[1,4,8,6-15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,4,7-15]
 import { Form, redirect } from "react-router";
+// import { Form } from "react-router";
 // existing imports
-
 import { getContact, updateContact } from "../data";
+// import { getContact } from "../data";
 
 export async function action({
   params,
