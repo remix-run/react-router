@@ -1468,14 +1468,14 @@ This also means it's a normal page navigation. You can click the back button to 
 
 There are a couple of UX issues here that we can take care of quickly.
 
-1. If you click back after a search, the form field still has the value you entered even though the list is no longer filtered.
-2. If you refresh the page after searching, the form field no longer has the value in it, even though the list is filtered
+1. If you click back after a search, the form field will still have the value you entered even though the list is no longer filtered.
+2. If you refresh the page after searching, the form field will no longer have the value in it, even though the list is filtered.
 
-In other words, the URL and our input's state are out of sync.
+In other words, the URL's and our input's states are out of sync.
 
-Let's solve (2) first and start the input with the value from the URL.
+Let's solve (2) first and initialize the input with the value from the URL.
 
-👉 **Return `q` from your `loader`, set it as the input's default value**
+👉 **Return `q` from your `loader` and set it as the input's default value**
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[9,15,26]
 // existing imports & exports
