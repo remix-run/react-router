@@ -408,11 +408,9 @@ First we'll create and export a [`clientLoader`][client-loader] function in the 
 
 <docs-info>The following code has a type error in it, we'll fix it in the next section</docs-info>
 
-```tsx filename=app/root.tsx lines=[2,6-9,11-12,19-42]
+```tsx filename=app/root.tsx lines=[2,4-7,9-11,17-40]
 // existing imports
 import { getContacts } from "./data";
-
-// existing exports
 
 export async function clientLoader() {
   const contacts = await getContacts();
