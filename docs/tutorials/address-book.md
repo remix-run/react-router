@@ -811,7 +811,7 @@ If you refresh the about page, you still see the loading spinner for just a spli
 
 Inside of `react-router.config.ts`, we can add a [`prerender`][pre-rendering] array to the config to tell React Router to pre-render certain urls at build time. In this case we just want to pre-render the about page.
 
-```ts filename=app/react-router.config.ts lines=[5]
+```ts filename=react-router.config.ts lines=[5]
 import { type Config } from "@react-router/dev/config";
 
 export default {
@@ -836,7 +836,7 @@ If you ever do want to introduce server-side rendering into your React Router ap
 
 👉 **Enable server-side rendering**
 
-```ts filename=app/react-router.config.ts lines=[2]
+```ts filename=react-router.config.ts lines=[2]
 export default {
   ssr: true,
   prerender: ["/about"],
