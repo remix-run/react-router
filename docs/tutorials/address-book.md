@@ -1390,9 +1390,10 @@ We'll need a click handler on the button as well as [`useNavigate`][use-navigate
 
 👉 **Add the cancel button click handler with `useNavigate`**
 
-```tsx filename=app/routes/edit-contact.tsx lines=[1,8,15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,9,16]
 import { Form, redirect, useNavigate } from "react-router";
-// existing imports & exports
+//import { Form, redirect } from "react-router";
+// existing imports, and existing exports except for `EditContact`
 
 export default function EditContact({
   loaderData,
@@ -1405,9 +1406,7 @@ export default function EditContact({
       {/* existing elements */}
       <p>
         <button type="submit">Save</button>
-        <button onClick={() => navigate(-1)} type="button">
-          Cancel
-        </button>
+        <button onClick={() => navigate(-1)} type="button">Cancel</button>
       </p>
     </Form>
   );
