@@ -644,7 +644,7 @@ export default function About() {
 }
 ```
 
-👉 **Add a link to the about page in the sidebar**
+👉 **Transform the text inside the h1-tags into a link to the about page in the sidebar**
 
 ```tsx filename=app/root.tsx lines=[5-7]
 export default function App() {
