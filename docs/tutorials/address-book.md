@@ -1353,7 +1353,6 @@ export default [
     "contacts/:contactId/destroy",
     "routes/destroy-contact.tsx",
   ),
-  // existing routes
 ] satisfies RouteConfig;
 ```
 
