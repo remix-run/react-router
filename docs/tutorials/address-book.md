@@ -1460,7 +1460,7 @@ export async function loader({
 
 <img class="tutorial" loading="lazy" src="/_docs/v7_address_book_tutorial/19.webp" />
 
-Because this is a `GET`, not a `POST`, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
+Because this is a `GET` request and not a `POST` request, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
 
 This also means it's a normal page navigation. You can click the back button to get back to where you were.
 
