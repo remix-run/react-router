@@ -1523,15 +1523,13 @@ export default function SidebarLayout({
 
 The input field will show the query if you refresh the page after a search now.
 
-Now for problem (1), clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the input's value in the DOM directly.
+Now for problem (1): clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the input's value in the DOM directly.
 
 👉 **Synchronize input value with the `URLSearchParams`**
 
-```tsx filename=app/layouts/sidebar.tsx lines=[2,12-17]
+```tsx filename=app/layouts/sidebar.tsx lines=[2,10-15]
 // existing imports
 import { useEffect } from "react";
-
-// existing imports & exports
 
 export default function SidebarLayout({
   loaderData,
