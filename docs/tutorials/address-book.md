@@ -1617,7 +1617,7 @@ We've got a product decision to make here. Sometimes you want the user to submit
 
 We've seen `useNavigate` already, we'll use its cousin, [`useSubmit`][use-submit], for this.
 
-```tsx filename=app/layouts/sidebar.tsx lines=[7,16,27-29]
+```tsx filename=app/layouts/sidebar.tsx lines=[7,16,25-29]
 import {
   Form,
   Link,
@@ -1626,7 +1626,7 @@ import {
   useNavigation,
   useSubmit,
 } from "react-router";
-// existing imports & exports
+// existing imports, and existing exports except for `SidebarLayout`
 
 export default function SidebarLayout({
   loaderData,
