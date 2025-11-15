@@ -1550,7 +1550,7 @@ export default function SidebarLayout({
 
 > 🤔 Shouldn't you use a controlled component and React State for this?
 
-You could certainly do this as a controlled component. You will have more synchronization points, but it's up to you.
+You certainly could implement this using a controlled component. You will have more synchronization points, but it's up to you.
 
 <details>
 
