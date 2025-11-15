@@ -1191,8 +1191,10 @@ Now that we know how to redirect, let's update the action that creates new conta
 
 👉 **Redirect to the new record's edit page**
 
-```tsx filename=app/root.tsx lines=[6,12]
+```tsx filename=app/root.tsx lines=[8,14]
 import {
+  Form, // not really needed anymore
+  Link, // not really needed anymore
   Outlet,
   Scripts,
   ScrollRestoration,
