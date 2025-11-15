@@ -1866,7 +1866,7 @@ function Favorite({
 }
 ```
 
-This form will no longer cause a navigation, but simply fetch to the `action`. Speaking of which ... this won't work until we create the `action`.
+This form will no longer cause a navigation, but simply send a `fetch` request to `action`. Speaking of which ... this won't work until we create the `action`.
 
 👉 **Create the `action`**
 
