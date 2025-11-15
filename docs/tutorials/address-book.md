@@ -1821,7 +1821,7 @@ export default function SidebarLayout({
 }
 ```
 
-After a quick check if this is the first search or not, we decide to replace. Now the first search will add a new entry, but every keystroke after that will replace the current entry. Instead of clicking back 7 times to remove the search, users only have to click back once.
+After a quick check to see if this is the first search or not, we decide to replace. Now the first search will add a new entry, but every keystroke after that will replace the current entry. Instead of clicking back 7 times to remove the search, users only have to click back once.
 
 ## `Form`s Without Navigation
 
@@ -1833,9 +1833,9 @@ The ★ button on the contact page makes sense for this. We aren't creating or d
 
 👉 **Change the `<Favorite>` form to a fetcher form**
 
-```tsx filename=app/routes/contact.tsx lines=[1,10,14,26]
+```tsx filename=app/routes/contact.tsx lines=[1,10,15,27]
 import { Form, useFetcher } from "react-router";
-
+// import { Form } from "react-router";
 // existing imports & exports
 
 function Favorite({
@@ -1847,6 +1847,7 @@ function Favorite({
   const favorite = contact.favorite;
 
   return (
+    {/* <Form method="post"> */}
     <fetcher.Form method="post">
       <button
         aria-label={
@@ -1860,6 +1861,7 @@ function Favorite({
         {favorite ? "★" : "☆"}
       </button>
     </fetcher.Form>
+    {/* </Form> */}
   );
 }
 ```
