@@ -1870,9 +1870,7 @@ This form will no longer cause a navigation, but simply send a `fetch` request t
 
 👉 **Create the `action`**
 
-```tsx filename=app/routes/contact.tsx lines=[2,5-13]
-// existing imports
-import { getContact, updateContact } from "../data";
+```tsx filename=app/routes/contact.tsx lines=[3-11]
 // existing imports
 
 export async function action({
