@@ -1442,7 +1442,7 @@ Since it's not `<Form method="post">`, React Router emulates the browser by seri
 👉 **Filter the list if there are `URLSearchParams`**
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[3-8]
-// existing imports & exports
+// existing imports, and the existing exports except for `loader`
 
 export async function loader({
   request,
@@ -1450,6 +1450,8 @@ export async function loader({
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
   const contacts = await getContacts(q);
+//export async function loader() {
+  //const contacts = await getContacts();
   return { contacts };
 }
 
