@@ -1267,7 +1267,7 @@ Note that we are passing a function to `className`. When the user is at the URL 
 
 ## Global Pending UI
 
-As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app feels a little unresponsive as you click between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
+As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app seemed a little unresponsive as you clicked between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
 
 React Router is managing all the state behind the scenes and reveals the pieces you need to build dynamic web apps. In this case, we'll use the [`useNavigation`][use-navigation] hook.
 
@@ -1898,11 +1898,11 @@ There is one key difference though, it's not a navigation, so the URL doesn't ch
 
 ## Optimistic UI
 
-You probably noticed the app felt kind of unresponsive when we clicked the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world.
+You probably noticed the app seemed kind of unresponsive when you clicked the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world.
 
 To give the user some feedback, we could put the star into a loading state with `fetcher.state` (a lot like `navigation.state` from before), but we can do something even better this time. We can use a strategy called "Optimistic UI".
 
-The fetcher knows the [`FormData`][form-data] being submitted to the `action`, so it's available to you on `fetcher.formData`. We'll use that to immediately update the star's state, even though the network hasn't finished. If the update eventually fails, the UI will revert to the real data.
+The fetcher knows the [`FormData`][form-data] is being submitted to the `action`, so it's available to you on `fetcher.formData`. We'll leverage that to immediately update the star's state, even though the network hasn't finished. If the update eventually fails, the UI will revert to the real data.
 
 👉 **Read the optimistic value from `fetcher.formData`**
 
@@ -1941,7 +1941,7 @@ Now the star _immediately_ changes to the new state when you click it.
 
 ---
 
-That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do, so make sure to check out all the [APIs][react-router-apis] 😀
+That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do, so make sure to check out the full documentation for the [React Router API][react-router-apis] 😀
 
 [http-localhost-5173]: http://localhost:5173
 [root-route]: ../explanation/special-files#roottsx
