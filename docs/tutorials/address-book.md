@@ -1096,12 +1096,12 @@ The edit route we just created already renders a `form`. All we need to do is ad
 
 👉 **Add an `action` function to the edit route**
 
-```tsx filename=app/routes/edit-contact.tsx lines=[1,4,7-15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,5,7-15]
 import { Form, redirect } from "react-router";
 // import { Form } from "react-router";
 // existing imports
-import { getContact, updateContact } from "../data";
 // import { getContact } from "../data";
+import { getContact, updateContact } from "../data";
 
 export async function action({
   params,
