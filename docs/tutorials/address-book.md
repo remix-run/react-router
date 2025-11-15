@@ -1306,7 +1306,7 @@ export default function SidebarLayout({
 
 [`useNavigation`][use-navigation] returns the current navigation state: it can be one of `"idle"`, `"loading"` or `"submitting"`.
 
-In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
+In our case, we add a `"loading"` class to the main part of the app if it's not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
 <img class="tutorial" loading="lazy" src="/_docs/v7_address_book_tutorial/18.webp" />
 
