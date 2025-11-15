@@ -137,7 +137,7 @@ See also:
 
 ## `clientMiddleware`
 
-This is the client-side equivalent of `middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because they're not wrapping an HTTP request on the server.
+This is the client-side equivalent of `middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because it's not wrapping an HTTP request on the server.
 
 Here's an example middleware to log requests on the client:
 
