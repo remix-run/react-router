@@ -1663,17 +1663,17 @@ export default function SidebarLayout({
 
 As you type, the `form` is automatically submitted now!
 
-Note the argument to [`submit`][use-submit]. The `submit` function will serialize and submit any form you pass to it. We're passing in `event.currentTarget`. The `currentTarget` is the DOM node the event is attached to (the `form`).
+Note the argument to [`submit`][use-submit]. The `submit` function will serialize and submit any form you pass to it. We're passing in `event.currentTarget`. The `currentTarget` is the DOM node the event is attached to (i.e., the `form`).
 
-## Adding Search Spinner
+## Adding a Search Spinner
 
-In a production app, it's likely this search will be looking for records in a database that is too large to send all at once and filter client side. That's why this demo has some faked network latency.
+In a production app, a given search of a database will likely return a set of records that is too large to send all at once to a client and be filtered client-side. This is why this demo has some faked network latency.
 
-Without any loading indicator, the search feels kinda sluggish. Even if we could make our database faster, we'll always have the user's network latency in the way and out of our control.
+Without any loading indicator, the search will seem a bit sluggish. Even if we could make our database faster, the the user's network latency will always be in the way and out of our control.
 
 For a better user experience, let's add some immediate UI feedback for the search. We'll use [`useNavigation`][use-navigation] again.
 
-👉 **Add a variable to know if we're searching**
+👉 **Add a variable to track the status of a search operation**
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[9-13]
 // existing imports & exports
