@@ -1168,7 +1168,7 @@ export async function action({
   params,
   request,
 }: Route.ActionArgs) {
-  invariant(params.contactId, "Missing contactId param");
+  //invariant(params.contactId, "Missing contactId param"); // What is this?
   const formData = await request.formData();
   const updates = Object.fromEntries(formData);
   await updateContact(params.contactId, updates);
