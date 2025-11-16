@@ -6214,7 +6214,7 @@ async function convertDataStrategyResultToDataResult(
         type: ResultType.error,
         error: new ErrorResponseImpl(
           result.init?.status || 500,
-          undefined,
+          result.init?.statusText,
           result.data,
         ),
         statusCode: isRouteErrorResponse(result) ? result.status : undefined,
