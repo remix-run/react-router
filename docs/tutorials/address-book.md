@@ -646,7 +646,7 @@ export default function About() {
 }
 ```
 
-👉 **Add a link to the about page in the sidebar**
+👉 **Transform the text inside the h1-tags into a link to the about page in the sidebar**
 
 ```tsx filename=app/root.tsx lines=[5-7]
 export default function App() {
@@ -862,7 +862,7 @@ export async function loader() {
 }
 ```
 
-Whether you set `ssr` to `true` or `false` depends on you and your users needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
+Whether you set `ssr` to `true` or `false` depends on you and your users' needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
 
 ## URL Params in Loaders
 
@@ -1262,7 +1262,7 @@ Note that we are passing a function to `className`. When the user is at the URL 
 
 ## Global Pending UI
 
-As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app feels a little unresponsive as you click between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
+As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app seemed a little unresponsive as you clicked between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
 
 React Router is managing all the state behind the scenes and reveals the pieces you need to build dynamic web apps. In this case, we'll use the [`useNavigation`][use-navigation] hook.
 
@@ -1301,7 +1301,7 @@ export default function SidebarLayout({
 
 [`useNavigation`][use-navigation] returns the current navigation state: it can be one of `"idle"`, `"loading"` or `"submitting"`.
 
-In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
+In our case, we add a `"loading"` class to the main part of the app if it's not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
 <img class="tutorial" loading="lazy" src="/_docs/v7_address_book_tutorial/18.webp" />
 
@@ -1376,7 +1376,7 @@ When the user clicks the submit button:
 2. The `<Form action="destroy">` matches the new route at `contacts/:contactId/destroy` and sends it the request
 3. After the `action` redirects, React Router calls all the `loader`s for the data on the page to get the latest values (this is "revalidation"). `loaderData` in `routes/contact.tsx` now has new values and causes the components to update!
 
-Add a `Form`, add an `action`, React Router does the rest.
+Add a `Form`, add an `action`, and React Router does the rest.
 
 ## Cancel Button
 
@@ -1455,7 +1455,7 @@ export async function loader({
 
 <img class="tutorial" loading="lazy" src="/_docs/v7_address_book_tutorial/19.webp" />
 
-Because this is a `GET`, not a `POST`, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
+Because this is a `GET` request and not a `POST` request, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
 
 This also means it's a normal page navigation. You can click the back button to get back to where you were.
 
@@ -1463,14 +1463,14 @@ This also means it's a normal page navigation. You can click the back button to 
 
 There are a couple of UX issues here that we can take care of quickly.
 
-1. If you click back after a search, the form field still has the value you entered even though the list is no longer filtered.
-2. If you refresh the page after searching, the form field no longer has the value in it, even though the list is filtered
+1. If you click back after a search, the form field will still have the value you entered even though the list is no longer filtered.
+2. If you refresh the page after searching, the form field will no longer have the value in it, even though the list is filtered.
 
-In other words, the URL and our input's state are out of sync.
+In other words, the URL's and our input's states are out of sync.
 
-Let's solve (2) first and start the input with the value from the URL.
+Let's solve (2) first and initialize the input with the value from the URL.
 
-👉 **Return `q` from your `loader`, set it as the input's default value**
+👉 **Return `q` from your `loader` and set it as the input's default value**
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[9,15,26]
 // existing imports & exports
@@ -1547,7 +1547,7 @@ export default function SidebarLayout({
 
 > 🤔 Shouldn't you use a controlled component and React State for this?
 
-You could certainly do this as a controlled component. You will have more synchronization points, but it's up to you.
+You certainly could implement this using a controlled component. You will have more synchronization points, but it's up to you.
 
 <details>
 
@@ -1660,17 +1660,17 @@ export default function SidebarLayout({
 
 As you type, the `form` is automatically submitted now!
 
-Note the argument to [`submit`][use-submit]. The `submit` function will serialize and submit any form you pass to it. We're passing in `event.currentTarget`. The `currentTarget` is the DOM node the event is attached to (the `form`).
+Note the argument to [`submit`][use-submit]. The `submit` function will serialize and submit any form you pass to it. We're passing in `event.currentTarget`. The `currentTarget` is the DOM node the event is attached to (i.e., the `form`).
 
-## Adding Search Spinner
+## Adding a Search Spinner
 
-In a production app, it's likely this search will be looking for records in a database that is too large to send all at once and filter client side. That's why this demo has some faked network latency.
+In a production app, a given search of a database will likely return a set of records that is too large to send all at once to a client and be filtered client-side. This is why this demo has some faked network latency.
 
-Without any loading indicator, the search feels kinda sluggish. Even if we could make our database faster, we'll always have the user's network latency in the way and out of our control.
+Without any loading indicator, the search will seem a bit sluggish. Even if we could make our database faster, the the user's network latency will always be in the way and out of our control.
 
 For a better user experience, let's add some immediate UI feedback for the search. We'll use [`useNavigation`][use-navigation] again.
 
-👉 **Add a variable to know if we're searching**
+👉 **Add a variable to track the status of a search operation**
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[9-13]
 // existing imports & exports
@@ -1861,7 +1861,7 @@ function Favorite({
 }
 ```
 
-This form will no longer cause a navigation, but simply fetch to the `action`. Speaking of which ... this won't work until we create the `action`.
+This form will no longer cause a navigation, but simply send a `fetch` request to `action`. Speaking of which ... this won't work until we create the `action`.
 
 👉 **Create the `action`**
 
@@ -1893,11 +1893,11 @@ There is one key difference though, it's not a navigation, so the URL doesn't ch
 
 ## Optimistic UI
 
-You probably noticed the app felt kind of unresponsive when we clicked the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world.
+You probably noticed the app seemed kind of unresponsive when you clicked the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world.
 
 To give the user some feedback, we could put the star into a loading state with `fetcher.state` (a lot like `navigation.state` from before), but we can do something even better this time. We can use a strategy called "Optimistic UI".
 
-The fetcher knows the [`FormData`][form-data] being submitted to the `action`, so it's available to you on `fetcher.formData`. We'll use that to immediately update the star's state, even though the network hasn't finished. If the update eventually fails, the UI will revert to the real data.
+The fetcher knows the [`FormData`][form-data] is being submitted to the `action`, so it's available to you on `fetcher.formData`. We'll leverage that to immediately update the star's state, even though the network hasn't finished. If the update eventually fails, the UI will revert to the real data.
 
 👉 **Read the optimistic value from `fetcher.formData`**
 
@@ -1936,7 +1936,7 @@ Now the star _immediately_ changes to the new state when you click it.
 
 ---
 
-That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do, so make sure to check out all the [APIs][react-router-apis] 😀
+That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do, so make sure to check out the full documentation for the [React Router API][react-router-apis] 😀
 
 [http-localhost-5173]: http://localhost:5173
 [root-route]: ../explanation/special-files#roottsx
