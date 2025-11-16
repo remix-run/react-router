@@ -226,3 +226,24 @@ Matt Brophy, Bryan Ross (rossipedia), Mark Dalgleish, and Pedro Cattori discusse
 - Matt Brophy will try to pick up the [`<Link onPrefetch>`](https://github.com/remix-run/react-router/discussions/12375) task soon
 - Matt Brophy and Pedro Cattori will sync up offline to figure out what parts of the consolidated hook can be done better with typegen and decide on the requirements ([RFC](https://github.com/remix-run/react-router/issues/13073))
 </details>
+
+<details>
+  <summary>2025-11-04 Meeting Notes</summary>
+
+The SC reviewed items on the open Proposal for React Router v8
+
+- Confirmed the plan to drop CJS builds for ESM-only builds
+  - We will plan RR v8 for Q2 2026 which aligns nicely with the EOL for Node 20
+  - v8 will have a minimum Node version of 22.12 so that the `require(esm)` feature is not behind an [experimental flag](https://nodejs.org/docs/latest-v22.x/api/modules.html#loading-ecmascript-modules-using-require)
+- Going forward we will aim for a yearly major release in the same Q2 timeframe
+- We would like to try to get `useRouterState` into v8 as the other half of the `unstable_useRoute` coin
+- We think Subresource Integrity (SRI) is ready for stabilization but we would like to ping a few existing users and/or SME's to confirm the implementation is valid
+- Discussed the `unstable_optimizedDeps` feature, confirming it will remain unstable in V8 and then be pseudo-deprecated in favor of RollDown
+  - There are some concerns about RollDown's full bundle mode limiting scalability so we may need to wait until rolldown is ready for testing
+- Decided against making "type-safe matches" an immediate V8 necessity due to the API churn
+- RSC implementation will not have a stable API ready for V8 but will be released in a minor version later
+  - We will not be deprecating existing APIs at that time because not everyone should have to use RSC
+- `Vite environment API` and `split route modules` are nearing stabilization
+- Reviewed a new RFC to stop URL normalization in loaders
+
+</details>

@@ -36,7 +36,6 @@ import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
 import kebabCase from "lodash/kebabCase";
-import pMap from "p-map";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -2815,7 +2814,8 @@ async function handlePrerender(
     concurrency = prerender.unstable_concurrency ?? 1;
   }
 
-  await pMap(build.prerender, prerenderSinglePath, { concurrency });
+  const pMap = await import("p-map");
+  await pMap.default(build.prerender, prerenderSinglePath, { concurrency });
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {

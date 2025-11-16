@@ -166,7 +166,7 @@ If the user clicks "leave" then `blocker.proceed()` will proceed with the naviga
 
 ## 5. Reset the blocker when the action resolves
 
-If the user doesn't click either "leave" or "stay here", then then submits the form, the blocker will still be active. Let's reset the blocker when the action resolves with an effect.
+If the user doesn't click either "leave" or "stay here", then submits the form, the blocker will still be active. Let's reset the blocker when the action resolves with an effect.
 
 ```tsx filename=routes/contact.tsx
 useEffect(() => {
