@@ -408,11 +408,9 @@ First we'll create and export a [`clientLoader`][client-loader] function in the 
 
 <docs-info>The following code has a type error in it, we'll fix it in the next section</docs-info>
 
-```tsx filename=app/root.tsx lines=[2,6-9,11-12,19-42]
+```tsx filename=app/root.tsx lines=[2,4-7,9-11,17-40]
 // existing imports
 import { getContacts } from "./data";
-
-// existing exports
 
 export async function clientLoader() {
   const contacts = await getContacts();
@@ -896,6 +894,10 @@ export default function Contact({
   loaderData,
 }: Route.ComponentProps) {
   const { contact } = loaderData;
+  /* const contact = {
+    ...
+  };
+  */
 
   // existing code
 }
@@ -931,7 +933,7 @@ Now, if the user isn't found, code execution down this path stops and React Rout
 
 We'll create our first contact in a second, but first let's talk about HTML.
 
-React Router emulates HTML Form navigation as the data mutation primitive, which used to be the only way prior to the JavaScript cambrian explosion. Don't be fooled by the simplicity! Forms in React Router give you the UX capabilities of client rendered apps with the simplicity of the "old school" web model.
+React Router emulates HTML Form navigation as the data mutation primitive, which used to be the only way prior to the JavaScript cambrian explosion. Don't be fooled by the simplicity! Forms in React Router give you the UX capabilities of client-rendered apps with the simplicity of the "old school" web model.
 
 While unfamiliar to some web developers, HTML `form`s actually cause a navigation in the browser, just like clicking a link. The only difference is in the request: links can only change the URL while `form`s can also change the request method (`GET` vs. `POST`) and the request body (`POST` form data).
 
@@ -1094,11 +1096,12 @@ The edit route we just created already renders a `form`. All we need to do is ad
 
 👉 **Add an `action` function to the edit route**
 
-```tsx filename=app/routes/edit-contact.tsx lines=[1,4,8,6-15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,4,7-15]
 import { Form, redirect } from "react-router";
+// import { Form } from "react-router";
 // existing imports
-
 import { getContact, updateContact } from "../data";
+// import { getContact } from "../data";
 
 export async function action({
   params,
@@ -1188,8 +1191,10 @@ Now that we know how to redirect, let's update the action that creates new conta
 
 👉 **Redirect to the new record's edit page**
 
-```tsx filename=app/root.tsx lines=[6,12]
+```tsx filename=app/root.tsx lines=[8,14]
 import {
+  Form, // not really needed anymore
+  Link, // not really needed anymore
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -1218,7 +1223,7 @@ Now that we have a bunch of records, it's not clear which one we're looking at i
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[1,17-26,28]
 import { Form, Link, NavLink, Outlet } from "react-router";
-
+//import { Form, Link, Outlet } from "react-router";
 // existing imports and exports
 
 export default function SidebarLayout({
@@ -1348,7 +1353,6 @@ export default [
     "contacts/:contactId/destroy",
     "routes/destroy-contact.tsx",
   ),
-  // existing routes
 ] satisfies RouteConfig;
 ```
 
@@ -1386,9 +1390,10 @@ We'll need a click handler on the button as well as [`useNavigate`][use-navigate
 
 👉 **Add the cancel button click handler with `useNavigate`**
 
-```tsx filename=app/routes/edit-contact.tsx lines=[1,8,15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,9,16]
 import { Form, redirect, useNavigate } from "react-router";
-// existing imports & exports
+//import { Form, redirect } from "react-router";
+// existing imports, and existing exports except for `EditContact`
 
 export default function EditContact({
   loaderData,
@@ -1401,9 +1406,7 @@ export default function EditContact({
       {/* existing elements */}
       <p>
         <button type="submit">Save</button>
-        <button onClick={() => navigate(-1)} type="button">
-          Cancel
-        </button>
+        <button onClick={() => navigate(-1)} type="button">Cancel</button>
       </p>
     </Form>
   );
@@ -1439,7 +1442,7 @@ Since it's not `<Form method="post">`, React Router emulates the browser by seri
 👉 **Filter the list if there are `URLSearchParams`**
 
 ```tsx filename=app/layouts/sidebar.tsx lines=[3-8]
-// existing imports & exports
+// existing imports, and the existing exports except for `loader`
 
 export async function loader({
   request,
@@ -1447,6 +1450,8 @@ export async function loader({
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
   const contacts = await getContacts(q);
+//export async function loader() {
+  //const contacts = await getContacts();
   return { contacts };
 }
 
@@ -1518,15 +1523,13 @@ export default function SidebarLayout({
 
 The input field will show the query if you refresh the page after a search now.
 
-Now for problem (1), clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the input's value in the DOM directly.
+Now for problem (1): clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the input's value in the DOM directly.
 
 👉 **Synchronize input value with the `URLSearchParams`**
 
-```tsx filename=app/layouts/sidebar.tsx lines=[2,12-17]
+```tsx filename=app/layouts/sidebar.tsx lines=[2,10-15]
 // existing imports
 import { useEffect } from "react";
-
-// existing imports & exports
 
 export default function SidebarLayout({
   loaderData,
@@ -1614,7 +1617,7 @@ We've got a product decision to make here. Sometimes you want the user to submit
 
 We've seen `useNavigate` already, we'll use its cousin, [`useSubmit`][use-submit], for this.
 
-```tsx filename=app/layouts/sidebar.tsx lines=[7,16,27-29]
+```tsx filename=app/layouts/sidebar.tsx lines=[7,16,25-29]
 import {
   Form,
   Link,
@@ -1623,7 +1626,7 @@ import {
   useNavigation,
   useSubmit,
 } from "react-router";
-// existing imports & exports
+// existing imports, and existing exports except for `SidebarLayout`
 
 export default function SidebarLayout({
   loaderData,
@@ -1818,7 +1821,7 @@ export default function SidebarLayout({
 }
 ```
 
-After a quick check if this is the first search or not, we decide to replace. Now the first search will add a new entry, but every keystroke after that will replace the current entry. Instead of clicking back 7 times to remove the search, users only have to click back once.
+After a quick check to see if this is the first search or not, we decide to replace. Now the first search will add a new entry, but every keystroke after that will replace the current entry. Instead of clicking back 7 times to remove the search, users only have to click back once.
 
 ## `Form`s Without Navigation
 
@@ -1830,9 +1833,9 @@ The ★ button on the contact page makes sense for this. We aren't creating or d
 
 👉 **Change the `<Favorite>` form to a fetcher form**
 
-```tsx filename=app/routes/contact.tsx lines=[1,10,14,26]
+```tsx filename=app/routes/contact.tsx lines=[1,10,15,27]
 import { Form, useFetcher } from "react-router";
-
+// import { Form } from "react-router";
 // existing imports & exports
 
 function Favorite({
@@ -1844,6 +1847,7 @@ function Favorite({
   const favorite = contact.favorite;
 
   return (
+    {/* <Form method="post"> */}
     <fetcher.Form method="post">
       <button
         aria-label={
@@ -1857,6 +1861,7 @@ function Favorite({
         {favorite ? "★" : "☆"}
       </button>
     </fetcher.Form>
+    {/* </Form> */}
   );
 }
 ```
@@ -1865,10 +1870,10 @@ This form will no longer cause a navigation, but simply fetch to the `action`. S
 
 👉 **Create the `action`**
 
-```tsx filename=app/routes/contact.tsx lines=[2,5-13]
+```tsx filename=app/routes/contact.tsx lines=[3,5-13]
 // existing imports
+//import { getContact } from "../data";
 import { getContact, updateContact } from "../data";
-// existing imports
 
 export async function action({
   params,
