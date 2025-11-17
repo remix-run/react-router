@@ -2603,7 +2603,9 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  * @returns A function that can be called to submit a {@link Form} imperatively.
  */
 export function useSubmit(): SubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
+  let {
+    router: { fetch: routerFetch, navigate },
+  } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
@@ -2616,7 +2618,7 @@ export function useSubmit(): SubmitFunction {
 
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
-        await router.fetch(key, currentRouteId, options.action || action, {
+        await routerFetch(key, currentRouteId, options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2625,7 +2627,7 @@ export function useSubmit(): SubmitFunction {
           flushSync: options.flushSync,
         });
       } else {
-        await router.navigate(options.action || action, {
+        await navigate(options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2639,7 +2641,7 @@ export function useSubmit(): SubmitFunction {
         });
       }
     },
-    [router, basename, currentRouteId],
+    [routerFetch, navigate, basename, currentRouteId],
   );
 }
 
@@ -2916,7 +2918,9 @@ export function useFetcher<T = any>({
 }: {
   key?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let {
+    router: { deleteFetcher, getFetcher, resetFetcher, fetch: routerFetch },
+  } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetcherData = React.useContext(FetchersContext);
   let route = React.useContext(RouteContext);
@@ -2938,17 +2942,17 @@ export function useFetcher<T = any>({
 
   // Registration/cleanup
   React.useEffect(() => {
-    router.getFetcher(fetcherKey);
-    return () => router.deleteFetcher(fetcherKey);
-  }, [router, fetcherKey]);
+    getFetcher(fetcherKey);
+    return () => deleteFetcher(fetcherKey);
+  }, [deleteFetcher, getFetcher, fetcherKey]);
 
   // Fetcher additions
   let load = React.useCallback(
     async (href: string, opts?: { flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      await router.fetch(fetcherKey, routeId, href, opts);
+      await routerFetch(fetcherKey, routeId, href, opts);
     },
-    [fetcherKey, routeId, router],
+    [fetcherKey, routeId, routerFetch],
   );
 
   let submitImpl = useSubmit();
@@ -2965,7 +2969,7 @@ export function useFetcher<T = any>({
 
   let unstable_reset = React.useCallback<
     FetcherWithComponents<T>["unstable_reset"]
-  >((opts) => router.resetFetcher(fetcherKey, opts), [router, fetcherKey]);
+  >((opts) => resetFetcher(fetcherKey, opts), [resetFetcher, fetcherKey]);
 
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
