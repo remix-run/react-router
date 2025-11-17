@@ -1,0 +1,18 @@
+#Here we are Creating a Simple React app and adding React Router V7
+
+npx create-react-app my-router-tutorial
+cd my-router-tutorial
+npm install react-router react-router-dom
+
+---
+##Our File structure will be as followed bellow
+
+src/
+ ├─ App.jsx
+ ├─ routes.jsx
+ ├─ pages/
+ │   ├─ Home.jsx
+ │   ├─ About.jsx
+ │   └─ UserProfile.jsx
+ └─ components/
+     └─ Layout.jsx
