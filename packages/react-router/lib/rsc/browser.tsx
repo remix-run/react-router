@@ -720,14 +720,15 @@ export function RSCHydratedRouter({
   React.useLayoutEffect(
     () =>
       router.subscribe((newState) => {
-        React.startTransition(() => {
-          setState({
-            routes: cloneRoutes(router.routes),
-            state: newState,
+        if (diffRoutes(router.routes, routes))
+          React.startTransition(() => {
+            setState({
+              routes: cloneRoutes(router.routes),
+              state: newState,
+            });
           });
-        });
       }),
-    [router.subscribe],
+    [router.subscribe, routes, router],
   );
 
   const transitionEnabledRouter = React.useMemo(
