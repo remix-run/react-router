@@ -5,7 +5,7 @@ import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
 } from "../../lib/router/utils";
-import { ErrorResponseImpl } from "../../lib/router/utils";
+import { data, ErrorResponseImpl } from "../../lib/router/utils";
 
 import { urlMatch } from "./utils/custom-matchers";
 import {
@@ -1911,6 +1911,33 @@ describe("a router", () => {
         actionData: null,
         errors: {
           tasks: new ErrorResponseImpl(400, "Bad Request", { key: "value" }),
+        },
+      });
+    });
+
+    it("handles thrown data() values as ErrorResponse's", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let nav = await t.navigate("/tasks");
+      await nav.loaders.tasks.reject(
+        data("broken", { status: 400, statusText: "Bad Request" }),
+      );
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        errors: {
+          tasks: new ErrorResponseImpl(400, "Bad Request", "broken"),
         },
       });
     });

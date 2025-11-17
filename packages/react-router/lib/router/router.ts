@@ -6212,11 +6212,7 @@ async function convertDataStrategyResultToDataResult(
       // Convert thrown data() to ErrorResponse instances
       return {
         type: ResultType.error,
-        error: new ErrorResponseImpl(
-          result.init?.status || 500,
-          undefined,
-          result.data,
-        ),
+        error: dataWithResponseInitToErrorResponse(result),
         statusCode: isRouteErrorResponse(result) ? result.status : undefined,
         headers: result.init?.headers
           ? new Headers(result.init.headers)
