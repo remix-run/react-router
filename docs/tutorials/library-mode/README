@@ -1,12 +1,15 @@
-#Here we are Creating a Simple React app and adding React Router V7
+# Simple React App with React Router v7 Using Library Mode
 
+## 1. Create the App
 npx create-react-app my-router-tutorial
 cd my-router-tutorial
+
+## 2. Install React router
 npm install react-router react-router-dom
 
 ---
-##Our File structure will be as followed bellow
-
+## 3. Our File structure will be as follows:
+```
 src/
  ├─ App.jsx
  ├─ routes.jsx
@@ -16,3 +19,178 @@ src/
  │   └─ UserProfile.jsx
  └─ components/
      └─ Layout.jsx
+```
+
+- Pages will be small and focus on routing, Layout.jsx will be handling the navigation and nested routes
+
+## 4. Layout.jsx
+- This file is the "shell" of the App; it remains always displayed on the screen and is the parent of all other components inside the App
+```jsx
+import {NavLink, Outlet} from 'react-router-dom'
+
+export default function Layout(){
+    return(
+        <div>
+            <nav>
+                <NavLink to="/">Home</NavLink>
+                <NavLink to="/about">About</NavLink>
+                <NavLink to="/user/profile">Profile</NavLink>
+            </nav>
+
+            <Outlet/> {/* Nested route will render here */}
+        </div>
+    )
+}
+```
+#### NavLink
+- `NavLink` works like `Link`, but it can apply styles or class names when the link is active.  
+- Example: underline the active link:
+
+```jsx
+const activeStyle = { textDecoration: "underline" };
+
+<NavLink to="/" style={({ isActive }) => (isActive ? activeStyle : null)}>
+  Home
+</NavLink>
+```
+
+#### Outlet
+- Outlet is a placeholder in a layout component where child routes render.
+
+- Simplified version is that Outlet = a Placeholder for child route
+
+- Whenever a route matches a child of this layout, React Router injects it here.
+
+<Layout>
+  <Outlet /> {/* Child pages like Home or About will appear here */}
+</Layout>
+
+## 5. Pages
+
+```jsx
+// Home.jsx
+export default function Home() {
+  return <h1>Home Page</h1>;
+}
+
+// About.jsx
+export default function About() {
+  return <h1>About Page</h1>;
+}
+
+// UserProfile.jsx
+export default function UserProfile() {
+  return <h1>User Profile</h1>;
+}
+```
+- Simple Components for now to demonstrate routing
+- Can be replaced with more complex content later
+
+## 6. routes.jsx (library Mode)
+- This file defines all the routes of the app in a central place.
+
+- Uses React Router v7’s createBrowserRouter to handle nested routes and lazy loading.
+
+- can be treated as a library-style module that exports the router configuration for use in App.jsx.
+
+```jsx
+import React from 'react';
+import { createBrowserRouter } from 'react-router-dom';
+import Layout from './components/Layout';
+
+// Lazy-loaded pages for code splitting
+const Home = React.lazy(() => import('./pages/Home'));
+const About = React.lazy(() => import('./pages/About'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+
+// Create the router configuration
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    Component: Layout, // Parent layout always visible
+    children: [
+      { path: '/', Component: Home },           // Home page
+      { path: '/about', Component: About },     // About page
+      { path: '/user/profile', Component: UserProfile }, // Profile page
+    ],
+  },
+]);
+
+```
+#### Imports 
+```jsx
+import React from 'react';
+import { createBrowserRouter } from 'react-router-dom';
+import Layout from './components/Layout';
+```
+- import React to be able to use React.lazy
+
+- `createBrowserRouter` sets up the router using a route tree object instead of JSX
+
+- We import the layout component since it is the parent of all nested pages of the app
+
+#### Lazy-Loaded pages
+```jsx
+const Home = React.lazy(() => import('./pages/Home'));
+const About = React.lazy(() => import('./pages/About'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+```
+- Each page component is dynamically imported only when needed
+
+- This splits the code and reduces the initial bundle size
+
+- As a result, this improves the performance of the App
+
+#### Create the router Configuration
+```jsx
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    Component: Layout, // Parent layout always visible
+    children: [
+      { path: '/', Component: Home },           // Home page
+      { path: '/about', Component: About },     // About page
+      { path: '/user/profile', Component: UserProfile }, // Profile page
+    ],
+  },
+]);
+```
+1. root route(path: `/`)
+    - uses `Layout` as the parent route
+    - Layout remains visible for all nested paths
+2. Children Array
+    - Defines nested routes/paths inside the parent route
+    - Each of these objects has:
+        - `path`: The URL for this route
+        - `Component`: The React Component to render inside <Outlet/>
+3. How Rendering works
+    - When the URL matches a child route;
+        - `Layout` renders first
+        - Then the child page(`Home`,`About`,`UserProfile`) component is injected into <Outlet/>
+    - Example:
+        - URL ends with /about → `Layout` renders → <Outlet /> renders `About`.
+
+## 7. App.jsx
+```jsx
+import React, { Suspense } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
+
+export default function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RouterProvider router={router} />
+    </Suspense>
+  );
+}
+```
+ - `RouterProvider` takes the route tree from `routes.jsx` and renders the correct route based on the URL
+
+ - `Suspense` wraps lazy-loaded components to show a fallback while loading
+    - Technically not needed more for UX than functionality, but still nice to have!
+
+## 8. Run the App
+`npm start`
+- Open your browser at http://localhost:3000
+
+- Click the navigation links to see routing and nested routes in action
