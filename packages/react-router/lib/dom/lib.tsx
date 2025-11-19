@@ -935,7 +935,20 @@ export interface BrowserRouterProps {
   /**
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
-   * Enabled by default.
+   *
+   * - When left `undefined`, all state updates are wrapped in
+   *   `React.startTransition`. This can lead to buggy behaviors if you are
+   *   wrapping your own navigations/fetchers in `startTransition`.
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and router state changes will be set via
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI.
+   *   - Because navigations are synchronous in Declarative Mode, this
+   *     `useOptimistic` aspect shouldn't have any impact on the UI
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
   unstable_useTransitions?: boolean;
   /**
@@ -1016,7 +1029,20 @@ export interface HashRouterProps {
   /**
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
-   * Enabled by default.
+   *
+   * - When left `undefined`, all state updates are wrapped in
+   *   `React.startTransition`. This can lead to buggy behaviors if you are
+   *   wrapping your own navigations/fetchers in `startTransition`.
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and router state changes will be set via
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI.
+   *   - Because navigations are synchronous in Declarative Mode, this
+   *     `useOptimistic` aspect shouldn't have any impact on the UI
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
   unstable_useTransitions?: boolean;
   /**
@@ -1102,7 +1128,20 @@ export interface HistoryRouterProps {
   /**
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
-   * Enabled by default.
+   *
+   * - When left `undefined`, all state updates are wrapped in
+   *   `React.startTransition`. This can lead to buggy behaviors if you are
+   *   wrapping your own navigations/fetchers in `startTransition`.
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and router state changes will be set via
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI.
+   *   - Because navigations are synchronous in Declarative Mode, this
+   *     `useOptimistic` aspect shouldn't have any impact on the UI
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
   unstable_useTransitions?: boolean;
 }
