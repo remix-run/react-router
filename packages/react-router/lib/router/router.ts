@@ -1181,6 +1181,11 @@ export function createRouter(init: RouterInit): Router {
               updateState({ blockers });
             },
           });
+
+          // Resolve the promise for the blocked popstate
+          pendingPopstateNavigationDfd?.resolve();
+          pendingPopstateNavigationDfd = null;
+
           return;
         }
 
@@ -1477,6 +1482,7 @@ export function createRouter(init: RouterInit): Router {
       // out through useNNavigate.  This will be resolved in one of the following
       // places:
       //  - completeNavigation if we are not interrupted
+      //  - history listener if this navigation is blocked
       //  - this function if another navigation is triggered that interrupts us
       //  - startRedirectNavigation if we are interrupted by a fetcher-driven
       //    redirect
