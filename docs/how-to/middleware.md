@@ -687,9 +687,9 @@ const sharedDataContext = createContext<any>();
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    // Set data if it doens't exist
+    // Set data if it doesn't exist
     // This will only run once for document requests
-    // It will run twice (action request + loader request) in SPA navigations
+    // It will run twice (action request + loader request) in SPA submissions
     if (!context.get(sharedDataContext)) {
       context.set(
         sharedDataContext,
