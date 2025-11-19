@@ -1283,7 +1283,9 @@ describe("instrumentation", () => {
       let A = await t.navigate("/page");
       expect(spy).toHaveBeenNthCalledWith(1, "outer-start");
       expect(spy).toHaveBeenNthCalledWith(2, "inner-start");
-      await A.loaders.page.reject(data({ message: "hello" }, { status: 418 }));
+      await A.loaders.page.reject(
+        data({ message: "hello" }, { status: 418, statusText: "I'm a teapot" }),
+      );
       expect(spy).toHaveBeenNthCalledWith(3, "inner-end");
       expect(spy).toHaveBeenNthCalledWith(4, "outer-end");
       expect(t.router.state).toMatchObject({
@@ -1291,7 +1293,9 @@ describe("instrumentation", () => {
         location: { pathname: "/page" },
         loaderData: {},
         errors: {
-          page: new ErrorResponseImpl(418, "", { message: "hello" }),
+          page: new ErrorResponseImpl(418, "I'm a teapot", {
+            message: "hello",
+          }),
         },
       });
     });

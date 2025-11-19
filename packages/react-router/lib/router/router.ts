@@ -58,6 +58,7 @@ import {
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   getResolveToMatches,
+  isAbsoluteUrl,
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
@@ -837,9 +838,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   reset: undefined,
   location: undefined,
 };
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
@@ -2499,6 +2497,17 @@ export function createRouter(init: RouterInit): Router {
       key,
     );
     let actionResult = actionResults[match.route.id];
+
+    if (!actionResult) {
+      // If this error came from a parent middleware before the action ran,
+      // then it won't be tied to the action route
+      for (let match of fetchMatches) {
+        if (actionResults[match.route.id]) {
+          actionResult = actionResults[match.route.id];
+          break;
+        }
+      }
+    }
 
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
@@ -6246,11 +6255,7 @@ async function convertDataStrategyResultToDataResult(
       // Convert thrown data() to ErrorResponse instances
       return {
         type: ResultType.error,
-        error: new ErrorResponseImpl(
-          result.init?.status || 500,
-          undefined,
-          result.data,
-        ),
+        error: dataWithResponseInitToErrorResponse(result),
         statusCode: isRouteErrorResponse(result) ? result.status : undefined,
         headers: result.init?.headers
           ? new Headers(result.init.headers)

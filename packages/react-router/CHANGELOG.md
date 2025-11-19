@@ -1,5 +1,38 @@
 # `react-router`
 
+## 7.9.6
+
+### Patch Changes
+
+- \[UNSTABLE] Add `location`/`params` as arguments to client-side `unstable_onError` to permit enhanced error reporting. ([#14509](https://github.com/remix-run/react-router/pull/14509))
+
+  ⚠️ This is a breaking change if you've already adopted `unstable_onError`. The second `errorInfo` parameter is now an object with `location` and `params`:
+
+  ```tsx
+  // Before
+  function errorHandler(error: unknown, errorInfo?: React.errorInfo) {
+    /*...*/
+  }
+
+  // After
+  function errorHandler(
+    error: unknown,
+    info: {
+      location: Location;
+      params: Params;
+      errorInfo?: React.ErrorInfo;
+    },
+  ) {
+    /*...*/
+  }
+  ```
+
+- Properly handle ancestor thrown middleware errors before `next()` on fetcher submissions ([#14517](https://github.com/remix-run/react-router/pull/14517))
+
+- Fix issue with splat routes interfering with multiple calls to patchRoutesOnNavigation ([#14487](https://github.com/remix-run/react-router/pull/14487))
+
+- Normalize double-slashes in `resolvePath` ([#14529](https://github.com/remix-run/react-router/pull/14529))
+
 ## 7.9.5
 
 ### Patch Changes

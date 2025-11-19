@@ -480,7 +480,7 @@ The meta of the last matching route is used, allowing you to override parent rou
 
 ## `shouldRevalidate`
 
-In framework mode with SSR, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode][data-mode-should-revalidate]). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
+In framework mode with SSR, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode][data-mode-should-revalidate]). This enables middleware and loaders to share a request context and optimize in different ways than they would in Data Mode.
 
 Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
 
