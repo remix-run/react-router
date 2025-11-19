@@ -115,7 +115,7 @@ fetcher.submit(data, { method: "post", action: "/path" });
 
 #### `popstate` navigations
 
-Due to limitations in React itself, `popstate` navigations cannot be transition-enabled. Any state updates during a `popstate` event are [automatically][popstate-sync-pr] [flushed][bsky-ricky-popstate] synchronously so that the browser can properly restore scroll position and form data.
+Due to limitations in React itself, [`popstate`][popstate] navigations cannot be transition-enabled. Any state updates during a `popstate` event are [automatically][popstate-sync-pr] [flushed][bsky-ricky-popstate] synchronously so that the browser can properly restore scroll position and form data.
 
 However, the browser can only do this if the navigation is instant. If React Router needs to run loaders on a back navigation, the browser will not be able to restore scroll position or form data ([`<ScrollRestoration>`][scroll-restoration] can handle scroll position for you).
 
@@ -163,3 +163,4 @@ window.addEventListener(
 [popstate-sync-pr]: https://github.com/facebook/react/pull/26025
 [scroll-restoration]: ../api/components/ScrollRestoration
 [ricky-bsky-event-hack]: https://bsky.app/profile/ricky.fm/post/3m5wgqw3swc26
+[popstate]: https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event
