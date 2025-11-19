@@ -680,13 +680,17 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 ### Sharing Context Between `action` and `loader`
 
+<docs-info>On the server, this approach only works for document POST requests because `context` is scoped to a request.  SPA navigation submissions use separate POST/GET requests so you cannot share `context` between them.  This pattern always works in `clientMiddleware`/`clientLoader`/`clientAction` because there's no separate HTTP requests.</docs-info>
+
 ```tsx
 const sharedDataContext = createContext<any>();
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    if (request.method === "POST") {
-      // Set data during action phase
+    // Set data if it doens't exist
+    // This will only run once for document requests
+    // It will run twice (action request + loader request) in SPA navigations
+    if (!context.get(sharedDataContext)) {
       context.set(
         sharedDataContext,
         await getExpensiveData(),
