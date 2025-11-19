@@ -2009,7 +2009,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
           viewTransition,
         });
 
-      if (unstable_useTransitions && navigate === true) {
+      if (unstable_useTransitions && navigate !== false) {
         // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
