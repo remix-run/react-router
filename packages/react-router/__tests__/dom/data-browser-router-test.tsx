@@ -2527,6 +2527,75 @@ function testDomRouter(
       `);
     });
 
+    it("exposes promise from useNavigate (popstate)", async () => {
+      let sequence: string[] = [];
+      let router = createTestRouter(
+        [
+          {
+            id: "home",
+            path: "/",
+            async loader() {
+              sequence.push("loader start");
+              await new Promise((r) => setTimeout(r, 100));
+              sequence.push("loader end");
+              return null;
+            },
+            Component() {
+              sequence.push("render");
+              return (
+                <>
+                  <h1>Home</h1>
+                  <Link to="/page">Go to page</Link>
+                </>
+              );
+            },
+          },
+          {
+            path: "/page",
+            Component: () => {
+              let navigate = useNavigate();
+              return (
+                <>
+                  <h1>Page</h1>
+                  <button
+                    onClick={async () => {
+                      sequence.push("call navigate");
+                      await navigate(-1);
+                      sequence.push("navigate resolved");
+                    }}
+                  >
+                    Back
+                  </button>
+                </>
+              );
+            },
+          },
+        ],
+        {
+          hydrationData: { loaderData: { home: null } },
+          window: getWindow("/"),
+        },
+      );
+
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toContain("Home");
+      fireEvent.click(screen.getByText("Go to page"));
+      await waitFor(() => screen.getByText("Page"));
+      sequence.splice(0); // clear sequence
+
+      fireEvent.click(screen.getByText("Back"));
+      await waitFor(() => screen.getByText("Home"));
+
+      expect(sequence).toEqual([
+        "call navigate",
+        "loader start",
+        "loader end",
+        "navigate resolved",
+        "render",
+      ]);
+    });
+
     describe("<Form action>", () => {
       function NoActionComponent() {
         return (

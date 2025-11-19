@@ -1836,7 +1836,7 @@ function useNavigateStable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        router.navigate(to);
+        await router.navigate(to);
       } else {
         await router.navigate(to, { fromRouteId: id, ...options });
       }

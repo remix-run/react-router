@@ -1043,6 +1043,11 @@ export function createRouter(init: RouterInit): Router {
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: NavigationType = NavigationType.Pop;
 
+  // Deferred to use for tracking popstate navigations
+  let pendingPopstateNavigationDfd: ReturnType<
+    typeof createDeferred<void>
+  > | null = null;
+
   // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
   let pendingPreventScrollReset = false;
@@ -1111,6 +1116,7 @@ export function createRouter(init: RouterInit): Router {
   // a POP navigation that was blocked by the user without touching router state
   let unblockBlockerHistoryUpdate: (() => void) | undefined = undefined;
 
+  // Revalidation deferred to be resolved next time we land through completeNavigation
   let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
     null;
 
@@ -1449,6 +1455,8 @@ export function createRouter(init: RouterInit): Router {
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
+    pendingPopstateNavigationDfd?.resolve();
+    pendingPopstateNavigationDfd = null;
     pendingRevalidationDfd?.resolve();
     pendingRevalidationDfd = null;
   }
@@ -1459,9 +1467,30 @@ export function createRouter(init: RouterInit): Router {
     to: number | To | null,
     opts?: RouterNavigateOptions,
   ) {
+    // If another popstate is pending and we're about to interrupt it, resolve
+    // the promise since we'll never reach completeNavigation for *that* popstate
+    pendingPopstateNavigationDfd?.resolve();
+    pendingPopstateNavigationDfd = null;
+
     if (typeof to === "number") {
+      // Track this popstate with a deferred so we can expose the promise back
+      // out through useNNavigate.  This will be resolved in one of the following
+      // places:
+      //  - completeNavigation if we are not interrupted
+      //  - this function if another navigation is triggered that interrupts us
+      //  - startRedirectNavigation if we are interrupted by a fetcher-driven
+      //    redirect
+      if (!pendingPopstateNavigationDfd) {
+        pendingPopstateNavigationDfd = createDeferred<void>();
+      }
+
+      let promise = pendingPopstateNavigationDfd.promise;
       init.history.go(to);
-      return;
+
+      // Use a local copy here because memory router popstates can be fully synchronous
+      // so it's possible completeNavigation has already cleared out the pending
+      // variable by now
+      return promise;
     }
 
     let normalizedPath = normalizeTo(
@@ -2837,6 +2866,14 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
     } = {},
   ) {
+    // If we are interrupting a popstate navigation from a fetcher call that
+    // redirected, resolve the pending promise since we won't reach completeNavigation
+    // for that popstate navigation
+    if (!isNavigation) {
+      pendingPopstateNavigationDfd?.resolve();
+      pendingPopstateNavigationDfd = null;
+    }
+
     if (redirect.response.headers.has("X-Remix-Revalidate")) {
       isRevalidationRequired = true;
     }
