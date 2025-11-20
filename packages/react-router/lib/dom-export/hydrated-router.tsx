@@ -303,10 +303,12 @@ export interface HydratedRouterProps {
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    *
    * - When left `undefined`, all state updates are wrapped in
-   *   `React.startTransition`. This can lead to buggy behaviors if you are
-   *   wrapping your own navigations/fetchers in `startTransition`.
+   *   `React.startTransition`
+   *   - This can lead to buggy behaviors if you are wrapping your own
+   *     navigations/fetchers in `startTransition`.
    * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
-   *   in `React.startTransition` and router state changes will be set via
+   *   in `React.startTransition` and router state changes will be wrapped in
+   *   `React.startTransition` and also sent through
    *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
    *   surface mid-navigation router state changes to the UI.
    * - When set to `false`, the router will not leverage `React.startTransition` or

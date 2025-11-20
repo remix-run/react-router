@@ -23,7 +23,7 @@ unstable: true
 
 The introduction of transitions in React makes the story of how React Router manages your navigations and router state a bit more complicated. These are powerful APIs but they don't come without some nuance and added complexity. We aim to make React Router work seamlessly with the new React features, but in some cases there may exist some tension between the new React ways to do things and some patterns you are already using in your React Router apps (i.e., pending states, optimistic UI).
 
-To ensure a smooth adoption story, we've introduced changes related to transitions behind an opt-in `unstable_useTransitions` flag in React Router 7.10.0 (<span style="color: red; font-weight: bold;">FIXME: Confirm before release!</span>) so that you can upgrade in a non-breaking fashion.
+To ensure a smooth adoption story, we've introduced changes related to transitions behind an opt-in `unstable_useTransitions` flag so that you can upgrade in a non-breaking fashion.
 
 ### Current Behavior
 
@@ -59,6 +59,8 @@ This will stop the router from wrapping internal state updates in `startTransiti
 <docs-warning>We do not recommend this as a long-term solution because opting out of transitions means that your application will not be fully compatible with the modern features of React, including `Suspense`, `use`, `startTransition`, `useOptimistic`, `<ViewTransition>`, etc.</docs-warning>
 
 ### Opt-in via `unstable_useTransitions=true`
+
+<docs-info>Opting into this feature in Framework or Data Mode requires that you are using React 19 because it needs access to [`React.useOptimistic`][use-optimistic]</docs-info>
 
 If you want to make your application play nicely with all of the new React 19 features that rely on concurrent mode and transitions, then you can opt-in via the new prop:
 
@@ -111,6 +113,35 @@ navigate("/path");
 submit(data, { method: 'post', action: "/path" });
 fetcher.load("/path");
 fetcher.submit(data, { method: "post", action: "/path" });
+```
+
+**Important:** You must always `return` or `await` the `navigate` promise inside `startTransition` so that the transition encompasses the full duration of the navigation. If you forget to `return` or `await` the promise, the transition will end prematurely and things won't work as expected.
+
+```tsx
+// ✅ Returned promise
+startTransition(() => navigate("/path"));
+startTransition(() => {
+  setOptimistic(something);
+  return navigate("/path"));
+});
+
+// ✅ Awaited promise
+startTransition(async () => {
+  setOptimistic(something);
+  await navigate("/path"));
+});
+
+// ❌ Non-returned promise
+startTransition(() => {
+  setOptimistic(something);
+  navigate("/path"));
+});
+
+// ❌ Non-Awaited promise
+startTransition(async () => {
+  setOptimistic(something);
+  navigate("/path"));
+});
 ```
 
 #### `popstate` navigations

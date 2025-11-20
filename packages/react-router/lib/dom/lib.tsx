@@ -936,17 +936,13 @@ export interface BrowserRouterProps {
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    *
-   * - When left `undefined`, all state updates are wrapped in
-   *   `React.startTransition`. This can lead to buggy behaviors if you are
-   *   wrapping your own navigations/fetchers in `startTransition`.
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
    * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
-   *   in `React.startTransition` and router state changes will be set via
-   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
-   *   surface mid-navigation router state changes to the UI.
-   *   - Because navigations are synchronous in Declarative Mode, this
-   *     `useOptimistic` aspect shouldn't have any impact on the UI
-   * - When set to `false`, the router will not leverage `React.startTransition` or
-   *   `React.useOptimistic` on any navigations or state changes.
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
    *
    * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
@@ -1030,17 +1026,13 @@ export interface HashRouterProps {
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    *
-   * - When left `undefined`, all state updates are wrapped in
-   *   `React.startTransition`. This can lead to buggy behaviors if you are
-   *   wrapping your own navigations/fetchers in `startTransition`.
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
    * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
-   *   in `React.startTransition` and router state changes will be set via
-   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
-   *   surface mid-navigation router state changes to the UI.
-   *   - Because navigations are synchronous in Declarative Mode, this
-   *     `useOptimistic` aspect shouldn't have any impact on the UI
-   * - When set to `false`, the router will not leverage `React.startTransition` or
-   *   `React.useOptimistic` on any navigations or state changes.
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
    *
    * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
@@ -1129,17 +1121,13 @@ export interface HistoryRouterProps {
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
    *
-   * - When left `undefined`, all state updates are wrapped in
-   *   `React.startTransition`. This can lead to buggy behaviors if you are
-   *   wrapping your own navigations/fetchers in `startTransition`.
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
    * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
-   *   in `React.startTransition` and router state changes will be set via
-   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
-   *   surface mid-navigation router state changes to the UI.
-   *   - Because navigations are synchronous in Declarative Mode, this
-   *     `useOptimistic` aspect shouldn't have any impact on the UI
-   * - When set to `false`, the router will not leverage `React.startTransition` or
-   *   `React.useOptimistic` on any navigations or state changes.
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
    *
    * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
@@ -2642,11 +2630,12 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  * @returns A function that can be called to submit a {@link Form} imperatively.
  */
 export function useSubmit(): SubmitFunction {
-  let {
-    router: { fetch: routerFetch, navigate },
-  } = useDataRouterContext(DataRouterHook.UseSubmit);
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
+
+  let routerFetch = router.fetch;
+  let routerNavigate = router.navigate;
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
@@ -2666,7 +2655,7 @@ export function useSubmit(): SubmitFunction {
           flushSync: options.flushSync,
         });
       } else {
-        await navigate(options.action || action, {
+        await routerNavigate(options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2680,7 +2669,7 @@ export function useSubmit(): SubmitFunction {
         });
       }
     },
-    [routerFetch, navigate, basename, currentRouteId],
+    [routerFetch, routerNavigate, basename, currentRouteId],
   );
 }
 
@@ -2957,9 +2946,7 @@ export function useFetcher<T = any>({
 }: {
   key?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
-  let {
-    router: { deleteFetcher, getFetcher, resetFetcher, fetch: routerFetch },
-  } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetcherData = React.useContext(FetchersContext);
   let route = React.useContext(RouteContext);
@@ -2978,6 +2965,8 @@ export function useFetcher<T = any>({
   if (key && key !== fetcherKey) {
     setFetcherKey(key);
   }
+
+  let { deleteFetcher, getFetcher, resetFetcher, fetch: routerFetch } = router;
 
   // Registration/cleanup
   React.useEffect(() => {

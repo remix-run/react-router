@@ -85,9 +85,6 @@ export type PatchRoutesOnNavigationFunctionArgs =
 export type PatchRoutesOnNavigationFunction =
   AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
 
-// TODO: Does this need to extend?  We can probably just leverage the stuff on
-// NavigationContext and add a few invariants for hooks that must be used in a
-// data router
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
   // `NavigationContext` needs `future`/`unstable_useTransitions` since it doesn't
