@@ -2436,7 +2436,7 @@ describe("fetchers", () => {
       let C = await t.fetch("/tasks", actionKey, {
         formMethod: "post",
         formData: createFormData({}),
-        shouldRevalidate: false,
+        defaultShouldRevalidate: false,
       });
 
       expect(t.fetchers[actionKey]).toMatchObject({ state: "submitting" });

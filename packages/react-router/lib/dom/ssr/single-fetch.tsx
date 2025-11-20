@@ -385,9 +385,10 @@ async function singleFetchLoaderNavigationStrategy(
           getRouteInfo(m);
 
         let defaultShouldRevalidate =
-          !m.unstable_shouldRevalidateArgs ||
-          m.unstable_shouldRevalidateArgs.actionStatus == null ||
-          m.unstable_shouldRevalidateArgs.actionStatus < 400;
+          m.unstable_shouldRevalidateArgs?.defaultShouldRevalidate !== false &&
+          (!m.unstable_shouldRevalidateArgs ||
+            m.unstable_shouldRevalidateArgs.actionStatus == null ||
+            m.unstable_shouldRevalidateArgs.actionStatus < 400);
         let shouldCall = m.unstable_shouldCallHandler(defaultShouldRevalidate);
 
         if (!shouldCall) {

@@ -1792,7 +1792,7 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * Determine if revalidation should occur post-submission.
    */
-  shouldRevalidate?: boolean | (() => boolean);
+  defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -1916,7 +1916,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.replace} replace n/a
  * @param {FormProps.state} state n/a
  * @param {FormProps.viewTransition} viewTransition n/a
- * @param {FormProps.shouldRevalidate} shouldRevalidate n/a
+ * @param {FormProps.defaultShouldRevalidate} defaultShouldRevalidate n/a
  * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
@@ -1934,7 +1934,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       relative,
       preventScrollReset,
       viewTransition,
-      shouldRevalidate,
+      defaultShouldRevalidate,
       ...props
     },
     forwardedRef,
@@ -1967,7 +1967,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         relative,
         preventScrollReset,
         viewTransition,
-        shouldRevalidate,
+        defaultShouldRevalidate,
       });
     };
 
@@ -2549,6 +2549,8 @@ export function useSubmit(): SubmitFunction {
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
+      debugger;
+      console.log("useSubmit", target, options);
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
         basename,
@@ -2557,7 +2559,7 @@ export function useSubmit(): SubmitFunction {
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
         await router.fetch(key, currentRouteId, options.action || action, {
-          shouldRevalidate: options.shouldRevalidate,
+          defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2567,7 +2569,7 @@ export function useSubmit(): SubmitFunction {
         });
       } else {
         await router.navigate(options.action || action, {
-          shouldRevalidate: options.shouldRevalidate,
+          defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,

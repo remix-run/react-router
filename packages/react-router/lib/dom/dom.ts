@@ -196,7 +196,7 @@ interface SharedSubmitOptions {
   /**
    * Determine if revalidation should occur post-submission.
    */
-  shouldRevalidate?: boolean | (() => boolean);
+  defaultShouldRevalidate?: boolean;
 }
 
 /**

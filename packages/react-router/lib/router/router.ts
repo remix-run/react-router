@@ -524,7 +524,7 @@ type BaseNavigateOrFetchOptions = {
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   flushSync?: boolean;
-  shouldRevalidate?: boolean | (() => boolean);
+  defaultShouldRevalidate?: boolean;
 };
 
 // Only allowed for navigations
@@ -2366,13 +2366,8 @@ export function createRouter(init: RouterInit): Router {
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      let shouldRevalidate =
-        opts && "shouldRevalidate" in opts
-          ? typeof opts.shouldRevalidate === "function"
-            ? opts.shouldRevalidate()
-            : // undefined should eval to true
-              opts.shouldRevalidate !== false
-          : true;
+      let callSiteDefaultShouldRevalidate =
+        opts?.defaultShouldRevalidate !== false;
       await handleFetcherAction(
         key,
         routeId,
@@ -2383,7 +2378,7 @@ export function createRouter(init: RouterInit): Router {
         flushSync,
         preventScrollReset,
         submission,
-        shouldRevalidate,
+        callSiteDefaultShouldRevalidate,
       );
       return;
     }
@@ -2401,6 +2396,7 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
       preventScrollReset,
       submission,
+      // defaultShouldRevalidate, // todo
     );
   }
 
@@ -2416,7 +2412,7 @@ export function createRouter(init: RouterInit): Router {
     flushSync: boolean,
     preventScrollReset: boolean,
     submission: Submission,
-    shouldRevalidate: boolean,
+    callSiteDefaultShouldRevalidate: boolean,
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -2592,7 +2588,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       init.patchRoutesOnNavigation != null,
       [match.route.id, actionResult],
-      shouldRevalidate,
+      callSiteDefaultShouldRevalidate,
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -2623,15 +2619,6 @@ export function createRouter(init: RouterInit): Router {
       "abort",
       abortPendingFetchRevalidations,
     );
-
-    if (!shouldRevalidate) {
-      if (state.fetchers.has(key)) {
-        let doneFetcher = getDoneFetcher(actionResult.data);
-        state.fetchers.set(key, doneFetcher);
-      }
-      fetchControllers.delete(key);
-      return;
-    }
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -4859,7 +4846,7 @@ function getMatchesToLoad(
   basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
   pendingActionResult?: PendingActionResult,
-  shouldRevalidate?: boolean,
+  callSiteDefaultShouldRevalidate?: boolean,
 ): {
   dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
@@ -4896,7 +4883,8 @@ function getMatchesToLoad(
     ? pendingActionResult[1].statusCode
     : undefined;
   let shouldSkipRevalidation =
-    (actionStatus && actionStatus >= 400) || shouldRevalidate === false;
+    (actionStatus && actionStatus >= 400) ||
+    callSiteDefaultShouldRevalidate === false;
 
   let baseShouldRevalidateArgs = {
     currentUrl,
@@ -4949,7 +4937,6 @@ function getMatchesToLoad(
         forceShouldLoad,
       );
     }
-
     // This is the default implementation for when we revalidate.  If the route
     // provides it's own implementation, then we give them full control but
     // provide this value so they can leverage it if needed after they check
