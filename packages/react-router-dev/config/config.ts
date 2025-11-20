@@ -935,11 +935,11 @@ export async function resolveEntryFiles({
         "adding `isbot@5` to your package.json, you should commit this change",
       );
 
-      await updatePackage(packageJsonPath,pkg =>{
-          (pkg.dependencies??={}).isbot = "^5";
-
-          sortPackage(pkg)
-      })
+      await updatePackage(packageJsonPath, (pkg) => {
+        pkg.dependencies ??= {};
+        pkg.dependencies.isbot = "^5";
+        sortPackage(pkg);
+      });
 
       let packageManager = detectPackageManager() ?? "npm";
 
