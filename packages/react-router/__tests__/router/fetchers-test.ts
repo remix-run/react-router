@@ -2415,7 +2415,7 @@ describe("fetchers", () => {
       });
     });
 
-    it("skips all revalidation when shouldRevalidate is false", async () => {
+    it("skips all revalidation when callsite defaultShouldRevalidate is false", async () => {
       let key = "key";
       let actionKey = "actionKey";
       let t = setup({

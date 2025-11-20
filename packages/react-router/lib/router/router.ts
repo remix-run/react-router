@@ -1511,6 +1511,8 @@ export function createRouter(init: RouterInit): Router {
       // action/loader this will be ignored and the redirect will be a PUSH
       historyAction = NavigationType.Replace;
     }
+    let callSiteDefaultShouldRevalidate =
+      opts?.defaultShouldRevalidate !== false;
 
     let preventScrollReset =
       opts && "preventScrollReset" in opts
@@ -1549,14 +1551,6 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let shouldRevalidate =
-      opts && "shouldRevalidate" in opts
-        ? typeof opts.shouldRevalidate === "function"
-          ? opts.shouldRevalidate()
-          : // undefined should eval to true
-            opts.shouldRevalidate !== false
-        : true;
-
     await startNavigation(historyAction, nextLocation, {
       submission,
       // Send through the formData serialization error if we have one so we can
@@ -1565,8 +1559,8 @@ export function createRouter(init: RouterInit): Router {
       preventScrollReset,
       replace: opts && opts.replace,
       enableViewTransition: opts && opts.viewTransition,
-      shouldRevalidate,
       flushSync,
+      callSiteDefaultShouldRevalidate,
     });
   }
 
@@ -1642,7 +1636,7 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
       enableViewTransition?: boolean;
       flushSync?: boolean;
-      shouldRevalidate?: boolean;
+      callSiteDefaultShouldRevalidate?: boolean;
     },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1782,15 +1776,6 @@ export function createRouter(init: RouterInit): Router {
 
       matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
-
-      if (opts.shouldRevalidate === false) {
-        completeNavigation(location, {
-          matches,
-          ...getActionDataForCommit(pendingActionResult),
-        });
-        return;
-      }
-
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
       // No need to do fog of war matching again on loader execution
@@ -1823,6 +1808,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.initialHydration === true,
       flushSync,
       pendingActionResult,
+      opts && opts.callSiteDefaultShouldRevalidate !== false,
     );
 
     if (shortCircuited) {
@@ -2028,6 +2014,7 @@ export function createRouter(init: RouterInit): Router {
     initialHydration?: boolean,
     flushSync?: boolean,
     pendingActionResult?: PendingActionResult,
+    callSiteDefaultShouldRevalidate?: boolean,
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
@@ -2135,6 +2122,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       init.patchRoutesOnNavigation != null,
       pendingActionResult,
+      callSiteDefaultShouldRevalidate,
     );
 
     pendingNavigationLoadId = ++incrementingLoadId;
@@ -2396,7 +2384,6 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
       preventScrollReset,
       submission,
-      // defaultShouldRevalidate, // todo
     );
   }
 
@@ -4937,6 +4924,7 @@ function getMatchesToLoad(
         forceShouldLoad,
       );
     }
+
     // This is the default implementation for when we revalidate.  If the route
     // provides it's own implementation, then we give them full control but
     // provide this value so they can leverage it if needed after they check

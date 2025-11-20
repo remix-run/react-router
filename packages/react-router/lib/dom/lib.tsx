@@ -1287,6 +1287,22 @@ export interface LinkProps
    * To apply specific styles for the transition, see {@link useViewTransitionState}
    */
   viewTransition?: boolean;
+
+  /**
+   * Controls whether loaders should revalidate when this link is clicked.
+   *
+   * ```tsx
+   * <Link to="/some/path" defaultShouldRevalidate={false} />
+   * ```
+   *
+   * When set to `false`, prevents the default revalidation behavior after navigation,
+   * keeping the current loader data without refetching. This can be useful when updating
+   * search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the framework's
+   * standard revalidation behavior.
+   */
+  defaultShouldRevalidate?: boolean;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1319,6 +1335,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
+ * @param {LinkProps.defaultShouldRevalidate} props.defaultShouldRevalidate n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1334,6 +1351,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       to,
       preventScrollReset,
       viewTransition,
+      defaultShouldRevalidate,
       ...rest
     },
     forwardedRef,
@@ -1389,6 +1407,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       preventScrollReset,
       relative,
       viewTransition,
+      defaultShouldRevalidate,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -2183,6 +2202,7 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.defaultShouldRevalidate Defaults to `true`
  * @returns A click handler function that can be used in a custom {@link Link} component.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
@@ -2194,6 +2214,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
+    defaultShouldRevalidate,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -2201,6 +2222,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    defaultShouldRevalidate?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -2225,6 +2247,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           preventScrollReset,
           relative,
           viewTransition,
+          defaultShouldRevalidate,
         });
       }
     },
@@ -2239,6 +2262,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       preventScrollReset,
       relative,
       viewTransition,
+      defaultShouldRevalidate,
     ],
   );
 }
@@ -2549,8 +2573,6 @@ export function useSubmit(): SubmitFunction {
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
-      debugger;
-      console.log("useSubmit", target, options);
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
         basename,
