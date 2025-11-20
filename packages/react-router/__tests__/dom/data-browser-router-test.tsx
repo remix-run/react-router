@@ -5567,9 +5567,7 @@ function testDomRouter(
                   <>
                     <p id="output">{`${fetcher.state}-${fetcher.data}`}</p>
                     <button onClick={() => fetcher.load("/")}>load</button>
-                    <button onClick={() => fetcher.unstable_reset()}>
-                      reset
-                    </button>
+                    <button onClick={() => fetcher.reset()}>reset</button>
                   </>
                 );
               },
