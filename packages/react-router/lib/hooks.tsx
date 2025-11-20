@@ -43,6 +43,7 @@ import {
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,
+  getRoutePattern,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
@@ -233,12 +234,14 @@ function useIsomorphicLayoutEffect(
  *
  * * `to` can be a string path, a {@link To} object, or a number (delta)
  * * `options` contains options for modifying the navigation
- *   * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
- *   * `preventScrollReset`: Do not scroll back to the top of the page after navigation
- *   * `relative`: `"route"` or `"path"` to control relative routing logic
- *   * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
- *   * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new {@link Location}
- *   * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
+ *   * These options work in all modes (Framework, Data, and Declarative):
+ *     * `relative`: `"route"` or `"path"` to control relative routing logic
+ *     * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
+ *     * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new {@link Location}
+ *   * These options only work in Framework and Data modes:
+ *     * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
+ *     * `preventScrollReset`: Do not scroll back to the top of the page after navigation
+ *     * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
  *
  * @example
  * import { useNavigate } from "react-router";
@@ -1192,6 +1195,7 @@ export function _renderMatches(
           unstable_onError(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
+            unstable_pattern: getRoutePattern(dataRouterState.matches),
             errorInfo,
           });
         }

@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
 import Path from "pathe";
@@ -9,6 +8,7 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
+import { readPackageJSON, sortPackage, updatePackage } from "pkg-types";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
 import cloneDeep from "lodash/cloneDeep";
@@ -921,8 +921,8 @@ export async function resolveEntryFiles({
     }
 
     let packageJsonDirectory = Path.dirname(packageJsonPath);
-    let pkgJson = await PackageJson.load(packageJsonDirectory);
-    let deps = pkgJson.content.dependencies ?? {};
+    let pkgJson = await readPackageJSON(packageJsonDirectory);
+    let deps = pkgJson.dependencies ?? {};
 
     if (!deps["@react-router/node"]) {
       throw new Error(
@@ -935,14 +935,11 @@ export async function resolveEntryFiles({
         "adding `isbot@5` to your package.json, you should commit this change",
       );
 
-      pkgJson.update({
-        dependencies: {
-          ...pkgJson.content.dependencies,
-          isbot: "^5",
-        },
+      await updatePackage(packageJsonPath, (pkg) => {
+        pkg.dependencies ??= {};
+        pkg.dependencies.isbot = "^5";
+        sortPackage(pkg);
       });
-
-      await pkgJson.save();
 
       let packageManager = detectPackageManager() ?? "npm";
 
