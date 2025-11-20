@@ -4869,9 +4869,7 @@ function getMatchesToLoad(
   let actionStatus = pendingActionResult
     ? pendingActionResult[1].statusCode
     : undefined;
-  let shouldSkipRevalidation =
-    (actionStatus && actionStatus >= 400) ||
-    callSiteDefaultShouldRevalidate === false;
+  let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
   let baseShouldRevalidateArgs = {
     currentUrl,
@@ -4929,15 +4927,28 @@ function getMatchesToLoad(
     // provides it's own implementation, then we give them full control but
     // provide this value so they can leverage it if needed after they check
     // their own specific use cases
-    let defaultShouldRevalidate = shouldSkipRevalidation
-      ? false
-      : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-        isRevalidationRequired ||
-        currentUrl.pathname + currentUrl.search ===
-          nextUrl.pathname + nextUrl.search ||
-        // Search params affect all loaders
-        currentUrl.search !== nextUrl.search ||
-        isNewRouteInstance(state.matches[index], match);
+    let defaultShouldRevalidate = false;
+    if (callSiteDefaultShouldRevalidate != null) {
+      // Use callsite value verbatim if provided
+      defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
+    } else if (shouldSkipRevalidation) {
+      // Skip due to 4xx/5xx action result
+      defaultShouldRevalidate = false;
+    } else if (isRevalidationRequired) {
+      // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
+      defaultShouldRevalidate = true;
+    } else if (
+      currentUrl.pathname + currentUrl.search ===
+      nextUrl.pathname + nextUrl.search
+    ) {
+      // Same URL - mimic a hard reload
+      defaultShouldRevalidate = true;
+    } else if (currentUrl.search !== nextUrl.search) {
+      // Search params affect all loaders
+      defaultShouldRevalidate = true;
+    } else if (isNewRouteInstance(state.matches[index], match)) {
+      defaultShouldRevalidate = true;
+    }
     let shouldRevalidateArgs = {
       ...baseShouldRevalidateArgs,
       defaultShouldRevalidate,
@@ -4953,6 +4964,7 @@ function getMatchesToLoad(
       scopedContext,
       shouldLoad,
       shouldRevalidateArgs,
+      callSiteDefaultShouldRevalidate,
     );
   });
 
@@ -5848,6 +5860,7 @@ function getDataStrategyMatch(
   scopedContext: unknown,
   shouldLoad: boolean,
   unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
+  callSiteDefaultShouldRevalidate?: boolean,
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
   // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
@@ -5871,6 +5884,13 @@ function getDataStrategyMatch(
       isUsingNewApi = true;
       if (!unstable_shouldRevalidateArgs) {
         return shouldLoad;
+      }
+
+      if (typeof callSiteDefaultShouldRevalidate === "boolean") {
+        return shouldRevalidateLoader(match, {
+          ...unstable_shouldRevalidateArgs,
+          defaultShouldRevalidate: callSiteDefaultShouldRevalidate,
+        });
       }
 
       if (typeof defaultShouldRevalidate === "boolean") {
