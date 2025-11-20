@@ -501,6 +501,60 @@ function testDomRouter(
       `);
     });
 
+    it("renders hydrateFallbackElement while first data fetch happens when it is only middleware", async () => {
+      let middlewareDfd = createDeferred();
+      let router = createTestRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Outlet />}
+            hydrateFallbackElement={<FallbackElement />}
+          >
+            <Route
+              path="foo"
+              middleware={[() => middlewareDfd.promise]}
+              element={<Foo />}
+            />
+            <Route path="bar" element={<Bar />} />
+          </Route>,
+        ),
+        {
+          window: getWindow("/foo"),
+        },
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function FallbackElement() {
+        return <p>Loading...</p>;
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+
+      function Bar() {
+        return <h1>Bar Heading</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      middlewareDfd.resolve();
+      await waitFor(() => screen.getByText("Foo"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+    });
+
     it("does not render fallbackElement if no data fetch or lazy loading is required", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(

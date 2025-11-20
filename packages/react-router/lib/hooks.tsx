@@ -1158,7 +1158,7 @@ export function _renderMatches(
   // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (dataRouterState) {
+  if (dataRouterState && !dataRouterState.initialized) {
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
@@ -1168,11 +1168,15 @@ export function _renderMatches(
 
       if (match.route.id) {
         let { loaderData, errors } = dataRouterState;
+        let needsToRunSpaMiddleware =
+          match.route.middleware &&
+          match.route.middleware.length > 0 &&
+          !match.route.loader;
         let needsToRunLoader =
           match.route.loader &&
           !loaderData.hasOwnProperty(match.route.id) &&
           (!errors || errors[match.route.id] === undefined);
-        if (match.route.lazy || needsToRunLoader) {
+        if (match.route.lazy || needsToRunSpaMiddleware || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
           // lazy, or has a loader that hasn't run yet).  Flag that we need to
           // render a fallback and render up until the appropriate fallback
