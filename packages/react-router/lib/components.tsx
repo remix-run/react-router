@@ -29,7 +29,12 @@ import type {
   Params,
   TrackedPromise,
 } from "./router/utils";
-import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
+import {
+  getResolveToMatches,
+  getRoutePattern,
+  resolveTo,
+  stripBasename,
+} from "./router/utils";
 
 import type {
   DataRouteObject,
@@ -313,6 +318,7 @@ export interface unstable_ClientOnErrorFunction {
     info: {
       location: Location;
       params: Params;
+      unstable_pattern: string;
       errorInfo?: React.ErrorInfo;
     },
   ): void;
@@ -554,6 +560,7 @@ export function RouterProvider({
           unstable_onError(error, {
             location: newState.location,
             params: newState.matches[0]?.params ?? {},
+            unstable_pattern: getRoutePattern(newState.matches),
           }),
         );
       }
@@ -1610,7 +1617,8 @@ export function Await<Resolve>({
       ) {
         dataRouterContext.unstable_onError(error, {
           location: dataRouterStateContext.location,
-          params: dataRouterStateContext.matches?.[0]?.params || {},
+          params: dataRouterStateContext.matches[0]?.params || {},
+          unstable_pattern: getRoutePattern(dataRouterStateContext.matches),
           errorInfo,
         });
       }
