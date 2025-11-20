@@ -43,6 +43,7 @@ import {
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,
+  getRoutePattern,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
@@ -1194,6 +1195,7 @@ export function _renderMatches(
           unstable_onError(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
+            unstable_pattern: getRoutePattern(dataRouterState.matches),
             errorInfo,
           });
         }
