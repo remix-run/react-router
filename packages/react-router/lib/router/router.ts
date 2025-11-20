@@ -489,6 +489,7 @@ export interface RouterSubscriber {
     state: RouterState,
     opts: {
       deletedFetchers: string[];
+      newErrors: RouteData | null;
       viewTransitionOpts?: ViewTransitionOpts;
       flushSync: boolean;
     },
@@ -1292,6 +1293,7 @@ export function createRouter(init: RouterInit): Router {
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
         deletedFetchers: unmountedFetchers,
+        newErrors: newState.errors ?? null,
         viewTransitionOpts: opts.viewTransitionOpts,
         flushSync: opts.flushSync === true,
       }),
@@ -3766,7 +3768,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+            unstable_pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
             // If we're calling middleware then it must be enabled so we can cast
@@ -3998,7 +4000,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+          unstable_pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
           // If we're calling middleware then it must be enabled so we can cast
@@ -4391,7 +4393,7 @@ export function createStaticHandler(
             matches.findIndex((m) => m.route.id === pendingActionResult[0]) - 1
           : undefined;
 
-      let pattern = getRoutePattern(matches.map((m) => m.route.path));
+      let pattern = getRoutePattern(matches);
       dsMatches = matches.map((match, index) => {
         if (maxIdx != null && index > maxIdx) {
           return getDataStrategyMatch(
@@ -4865,7 +4867,7 @@ function getMatchesToLoad(
     actionStatus,
   };
 
-  let pattern = getRoutePattern(matches.map((m) => m.route.path));
+  let pattern = getRoutePattern(matches);
   let dsMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
 
@@ -5932,7 +5934,7 @@ function getTargetedDataStrategyMatches(
       mapRouteProperties,
       manifest,
       request,
-      getRoutePattern(matches.map((m) => m.route.path)),
+      getRoutePattern(matches),
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
@@ -5960,7 +5962,7 @@ async function callDataStrategyImpl(
   // back out below.
   let dataStrategyArgs = {
     request,
-    unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+    unstable_pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
     matches,

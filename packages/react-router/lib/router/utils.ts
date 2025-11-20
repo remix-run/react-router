@@ -2049,6 +2049,12 @@ by the star-slash in the `getRoutePattern` regex and messes up the parsed commen
 for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 */
 
-export function getRoutePattern(paths: (string | undefined)[]) {
-  return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/") || "/";
+export function getRoutePattern(matches: AgnosticRouteMatch[]) {
+  return (
+    matches
+      .map((m) => m.route.path)
+      .filter(Boolean)
+      .join("/")
+      .replace(/\/\/*/g, "/") || "/"
+  );
 }
