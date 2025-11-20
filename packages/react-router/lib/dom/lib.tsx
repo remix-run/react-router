@@ -933,6 +933,21 @@ export interface BrowserRouterProps {
    */
   children?: React.ReactNode;
   /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
+  /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
    */
@@ -949,6 +964,7 @@ export interface BrowserRouterProps {
  * @param props Props
  * @param {BrowserRouterProps.basename} props.basename n/a
  * @param {BrowserRouterProps.children} props.children n/a
+ * @param {BrowserRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @param {BrowserRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * API for client-side routing.
@@ -956,6 +972,7 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
+  unstable_useTransitions,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -970,9 +987,13 @@ export function BrowserRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_useTransitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -984,6 +1005,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_useTransitions={unstable_useTransitions === true}
     />
   );
 }
@@ -1000,6 +1022,21 @@ export interface HashRouterProps {
    * {@link Route | `<Route>`} components describing your route configuration
    */
   children?: React.ReactNode;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -1018,11 +1055,17 @@ export interface HashRouterProps {
  * @param props Props
  * @param {HashRouterProps.basename} props.basename n/a
  * @param {HashRouterProps.children} props.children n/a
+ * @param {HashRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @param {HashRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
  * for client-side routing.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename,
+  children,
+  unstable_useTransitions,
+  window,
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
@@ -1035,9 +1078,13 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_useTransitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1049,6 +1096,7 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_useTransitions={unstable_useTransitions === true}
     />
   );
 }
@@ -1069,6 +1117,21 @@ export interface HistoryRouterProps {
    *  A {@link History} implementation for use by the router
    */
   history: History;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
 }
 
 /**
@@ -1086,6 +1149,7 @@ export interface HistoryRouterProps {
  * @param {HistoryRouterProps.basename} props.basename n/a
  * @param {HistoryRouterProps.children} props.children n/a
  * @param {HistoryRouterProps.history} props.history n/a
+ * @param {HistoryRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @returns A declarative {@link Router | `<Router>`} using the provided history
  * implementation for client-side routing.
  */
@@ -1093,6 +1157,7 @@ export function HistoryRouter({
   basename,
   children,
   history,
+  unstable_useTransitions,
 }: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
@@ -1100,9 +1165,13 @@ export function HistoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_useTransitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1114,6 +1183,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_useTransitions={unstable_useTransitions === true}
     />
   );
 }
@@ -1338,7 +1408,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     forwardedRef,
   ) {
-    let { basename } = React.useContext(NavigationContext);
+    let { basename, unstable_useTransitions } =
+      React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
     // Rendered into <a href> for absolute URLs
@@ -1389,6 +1460,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_useTransitions,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -1932,6 +2004,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     },
     forwardedRef,
   ) => {
+    let { unstable_useTransitions } = React.useContext(NavigationContext);
     let submit = useSubmit();
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
@@ -1951,16 +2024,24 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         (submitter?.getAttribute("formmethod") as HTMLFormMethod | undefined) ||
         method;
 
-      submit(submitter || event.currentTarget, {
-        fetcherKey,
-        method: submitMethod,
-        navigate,
-        replace,
-        state,
-        relative,
-        preventScrollReset,
-        viewTransition,
-      });
+      let doSubmit = () =>
+        submit(submitter || event.currentTarget, {
+          fetcherKey,
+          method: submitMethod,
+          navigate,
+          replace,
+          state,
+          relative,
+          preventScrollReset,
+          viewTransition,
+        });
+
+      if (unstable_useTransitions && navigate !== false) {
+        // @ts-expect-error Needs React 19 types
+        React.startTransition(() => doSubmit());
+      } else {
+        doSubmit();
+      }
     };
 
     return (
@@ -2175,6 +2256,9 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.unstable_useTransitions Wraps the navigation in
+ * [`React.startTransition`](https://react.dev/reference/react/startTransition)
+ * for concurrent rendering. Defaults to `false`.
  * @returns A click handler function that can be used in a custom {@link Link} component.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
@@ -2186,6 +2270,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
+    unstable_useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -2193,6 +2278,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    unstable_useTransitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -2211,13 +2297,21 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, {
-          replace,
-          state,
-          preventScrollReset,
-          relative,
-          viewTransition,
-        });
+        let doNavigate = () =>
+          navigate(to, {
+            replace,
+            state,
+            preventScrollReset,
+            relative,
+            viewTransition,
+          });
+
+        if (unstable_useTransitions) {
+          // @ts-expect-error Needs React 19 types
+          React.startTransition(() => doNavigate());
+        } else {
+          doNavigate();
+        }
       }
     },
     [
@@ -2231,6 +2325,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_useTransitions,
     ],
   );
 }
@@ -2539,6 +2634,9 @@ export function useSubmit(): SubmitFunction {
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
+  let routerFetch = router.fetch;
+  let routerNavigate = router.navigate;
+
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
@@ -2548,7 +2646,7 @@ export function useSubmit(): SubmitFunction {
 
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
-        await router.fetch(key, currentRouteId, options.action || action, {
+        await routerFetch(key, currentRouteId, options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2557,7 +2655,7 @@ export function useSubmit(): SubmitFunction {
           flushSync: options.flushSync,
         });
       } else {
-        await router.navigate(options.action || action, {
+        await routerNavigate(options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2571,7 +2669,7 @@ export function useSubmit(): SubmitFunction {
         });
       }
     },
-    [router, basename, currentRouteId],
+    [routerFetch, routerNavigate, basename, currentRouteId],
   );
 }
 
@@ -2868,19 +2966,21 @@ export function useFetcher<T = any>({
     setFetcherKey(key);
   }
 
+  let { deleteFetcher, getFetcher, resetFetcher, fetch: routerFetch } = router;
+
   // Registration/cleanup
   React.useEffect(() => {
-    router.getFetcher(fetcherKey);
-    return () => router.deleteFetcher(fetcherKey);
-  }, [router, fetcherKey]);
+    getFetcher(fetcherKey);
+    return () => deleteFetcher(fetcherKey);
+  }, [deleteFetcher, getFetcher, fetcherKey]);
 
   // Fetcher additions
   let load = React.useCallback(
     async (href: string, opts?: { flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      await router.fetch(fetcherKey, routeId, href, opts);
+      await routerFetch(fetcherKey, routeId, href, opts);
     },
-    [fetcherKey, routeId, router],
+    [fetcherKey, routeId, routerFetch],
   );
 
   let submitImpl = useSubmit();
@@ -2896,8 +2996,8 @@ export function useFetcher<T = any>({
   );
 
   let reset = React.useCallback<FetcherWithComponents<T>["reset"]>(
-    (opts) => router.resetFetcher(fetcherKey, opts),
-    [router, fetcherKey],
+    (opts) => resetFetcher(fetcherKey, opts),
+    [resetFetcher, fetcherKey],
   );
 
   let FetcherForm = React.useMemo(() => {
