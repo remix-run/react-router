@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-[UNSTABLE] Internal refactor to how `unstable_onError` is called by `RouterProvider`
+[UNSTABLE] Add `unstable_pattern` to the parameters for client side `unstable_onError`, refactor how it's called by `RouterProvider` to avoid potential strict mode issues
