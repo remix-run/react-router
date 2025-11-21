@@ -1289,17 +1289,18 @@ export interface LinkProps
   viewTransition?: boolean;
 
   /**
-   * Controls whether loaders should revalidate when this link is clicked.
+   * Specify the default revalidation behavior for the navigation.
    *
    * ```tsx
    * <Link to="/some/path" defaultShouldRevalidate={false} />
    * ```
    *
-   * When set to `false`, prevents the default revalidation behavior after navigation,
-   * keeping the current loader data without refetching. This can be useful when updating
-   * search params and you don't want to trigger a revalidation.
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
    *
-   * By default (when not specified), loaders will revalidate according to the framework's
+   * By default (when not specified), loaders will revalidate according to the routers
    * standard revalidation behavior.
    */
   defaultShouldRevalidate?: boolean;
@@ -1809,7 +1810,15 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 
   /**
-   * Determine if revalidation should occur post-submission.
+   * Specify the default revalidation behavior after this submission
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
    */
   defaultShouldRevalidate?: boolean;
 }

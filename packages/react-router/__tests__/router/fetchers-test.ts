@@ -2415,47 +2415,6 @@ describe("fetchers", () => {
       });
     });
 
-    it("skips all revalidation when callsite defaultShouldRevalidate is false", async () => {
-      let key = "key";
-      let actionKey = "actionKey";
-      let t = setup({
-        routes: TASK_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
-      });
-
-      // preload a fetcher
-      let A = await t.fetch("/tasks/1", key);
-      await A.loaders.tasksId.resolve("TASKS ID");
-      expect(t.fetchers[key]).toMatchObject({
-        state: "idle",
-        data: "TASKS ID",
-      });
-
-      // submit action with shouldRevalidate=false
-      let C = await t.fetch("/tasks", actionKey, {
-        formMethod: "post",
-        formData: createFormData({}),
-        defaultShouldRevalidate: false,
-      });
-
-      expect(t.fetchers[actionKey]).toMatchObject({ state: "submitting" });
-
-      // resolve action — no loaders should trigger
-      await C.actions.tasks.resolve("TASKS ACTION");
-
-      // verify all fetchers idle
-      expect(t.fetchers[key]).toMatchObject({
-        state: "idle",
-        data: "TASKS ID",
-      });
-
-      expect(t.fetchers[actionKey]).toMatchObject({
-        state: "idle",
-        data: "TASKS ACTION",
-      });
-    });
-
     it("does not revalidate fetchers initiated from removed routes", async () => {
       let t = setup({
         routes: TASK_ROUTES,

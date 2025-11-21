@@ -154,7 +154,7 @@ export interface NavigateOptions {
   flushSync?: boolean;
   /** Enables a {@link https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API View Transition} for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the {@link https://api.reactrouter.com/v7/functions/react_router.useViewTransitionState.html useViewTransitionState()} hook.  */
   viewTransition?: boolean;
-  /** When false, suppresses loader revalidation triggered by this navigation **/
+  /** Specifies the default revalidation behavior after this submission */
   defaultShouldRevalidate?: boolean;
 }
 

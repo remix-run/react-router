@@ -1511,9 +1511,6 @@ export function createRouter(init: RouterInit): Router {
       // action/loader this will be ignored and the redirect will be a PUSH
       historyAction = NavigationType.Replace;
     }
-    let callSiteDefaultShouldRevalidate =
-      opts?.defaultShouldRevalidate !== false;
-
     let preventScrollReset =
       opts && "preventScrollReset" in opts
         ? opts.preventScrollReset === true
@@ -1560,7 +1557,7 @@ export function createRouter(init: RouterInit): Router {
       replace: opts && opts.replace,
       enableViewTransition: opts && opts.viewTransition,
       flushSync,
-      callSiteDefaultShouldRevalidate,
+      callSiteDefaultShouldRevalidate: opts && opts.defaultShouldRevalidate,
     });
   }
 
@@ -1808,7 +1805,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.initialHydration === true,
       flushSync,
       pendingActionResult,
-      opts && opts.callSiteDefaultShouldRevalidate !== false,
+      opts && opts.callSiteDefaultShouldRevalidate,
     );
 
     if (shortCircuited) {
@@ -2354,8 +2351,6 @@ export function createRouter(init: RouterInit): Router {
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      let callSiteDefaultShouldRevalidate =
-        opts?.defaultShouldRevalidate !== false;
       await handleFetcherAction(
         key,
         routeId,
@@ -2366,7 +2361,7 @@ export function createRouter(init: RouterInit): Router {
         flushSync,
         preventScrollReset,
         submission,
-        callSiteDefaultShouldRevalidate,
+        opts && opts.defaultShouldRevalidate,
       );
       return;
     }
@@ -2399,7 +2394,7 @@ export function createRouter(init: RouterInit): Router {
     flushSync: boolean,
     preventScrollReset: boolean,
     submission: Submission,
-    callSiteDefaultShouldRevalidate: boolean,
+    callSiteDefaultShouldRevalidate: boolean | undefined,
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -4928,8 +4923,8 @@ function getMatchesToLoad(
     // provide this value so they can leverage it if needed after they check
     // their own specific use cases
     let defaultShouldRevalidate = false;
-    if (callSiteDefaultShouldRevalidate != null) {
-      // Use callsite value verbatim if provided
+    if (typeof callSiteDefaultShouldRevalidate === "boolean") {
+      // Use call-site value verbatim if provided
       defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
     } else if (shouldSkipRevalidation) {
       // Skip due to 4xx/5xx action result
@@ -4949,6 +4944,7 @@ function getMatchesToLoad(
     } else if (isNewRouteInstance(state.matches[index], match)) {
       defaultShouldRevalidate = true;
     }
+
     let shouldRevalidateArgs = {
       ...baseShouldRevalidateArgs,
       defaultShouldRevalidate,
@@ -5062,11 +5058,19 @@ function getMatchesToLoad(
     } else {
       // Otherwise fall back on any user-defined shouldRevalidate, defaulting
       // to explicit revalidations only
+      let defaultShouldRevalidate: boolean;
+      if (typeof callSiteDefaultShouldRevalidate === "boolean") {
+        // Use call-site value verbatim if provided
+        defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
+      } else if (shouldSkipRevalidation) {
+        defaultShouldRevalidate = false;
+      } else {
+        defaultShouldRevalidate = isRevalidationRequired;
+      }
+
       let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
         ...baseShouldRevalidateArgs,
-        defaultShouldRevalidate: shouldSkipRevalidation
-          ? false
-          : isRevalidationRequired,
+        defaultShouldRevalidate,
       };
       if (shouldRevalidateLoader(fetcherMatch, shouldRevalidateArgs)) {
         fetcherDsMatches = getTargetedDataStrategyMatches(
@@ -5899,6 +5903,7 @@ function getDataStrategyMatch(
           defaultShouldRevalidate,
         });
       }
+
       return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
     },
     resolve(handlerOverride) {
