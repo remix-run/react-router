@@ -1292,7 +1292,7 @@ export interface LinkProps
    * Specify the default revalidation behavior for the navigation.
    *
    * ```tsx
-   * <Link to="/some/path" defaultShouldRevalidate={false} />
+   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
    * ```
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
@@ -1336,7 +1336,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
- * @param {LinkProps.defaultShouldRevalidate} props.defaultShouldRevalidate n/a
+ * @param {LinkProps.unstable_defaultShouldRevalidate} props.unstable_defaultShouldRevalidate n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(

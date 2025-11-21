@@ -1511,6 +1511,7 @@ export function createRouter(init: RouterInit): Router {
       // action/loader this will be ignored and the redirect will be a PUSH
       historyAction = NavigationType.Replace;
     }
+
     let preventScrollReset =
       opts && "preventScrollReset" in opts
         ? opts.preventScrollReset === true
