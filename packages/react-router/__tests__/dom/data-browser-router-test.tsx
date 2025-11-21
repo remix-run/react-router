@@ -18,11 +18,9 @@ import {
   Form,
   Link,
   Outlet,
-  Route,
   RouterProvider,
   createBrowserRouter,
   createHashRouter,
-  createRoutesFromElements,
   isRouteErrorResponse,
   matchRoutes,
   redirect,
@@ -88,9 +86,7 @@ function testDomRouter(
     });
 
     it("renders the first route that matches the URL", () => {
-      let router = createTestRouter(
-        createRoutesFromElements(<Route path="/" element={<h1>Home</h1>} />),
-      );
+      let router = createTestRouter([{ path: "/", element: <h1>Home</h1> }]);
       let { container } = render(<RouterProvider router={router} />);
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -104,13 +100,17 @@ function testDomRouter(
 
     it("renders the first route that matches the URL when wrapped in a root Route", () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/my/base/path">
-            <Route element={<Outlet />}>
-              <Route path="thing" element={<h1>Heyooo</h1>} />
-            </Route>
-          </Route>,
-        ),
+        [
+          {
+            path: "/my/base/path",
+            children: [
+              {
+                element: <Outlet />,
+                children: [{ path: "thing", element: <h1>Heyooo</h1> }],
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/my/base/path/thing"),
         },
@@ -128,9 +128,7 @@ function testDomRouter(
 
     it("supports a basename prop", () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="thing" element={<h1>Heyooo</h1>} />,
-        ),
+        [{ path: "thing", element: <h1>Heyooo</h1> }],
         {
           basename: "/my/base/path",
           window: getWindow("/my/base/path/thing"),
@@ -149,11 +147,13 @@ function testDomRouter(
 
     it("renders with hydration data", async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Comp />}>
-            <Route path="child" element={<Comp />} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Comp />,
+            children: [{ path: "child", element: <Comp /> }],
+          },
+        ],
         {
           window: getWindow("/child"),
           hydrationData: {
@@ -209,11 +209,13 @@ function testDomRouter(
         },
       };
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Comp />}>
-            <Route path="child" element={<Comp />} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Comp />,
+            children: [{ path: "child", element: <Comp /> }],
+          },
+        ],
         {
           window: getWindow("/child"),
         },
@@ -263,15 +265,13 @@ function testDomRouter(
           },
         },
       };
-      let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<h1>Nope</h1>}
-            errorElement={<Boundary />}
-          />,
-        ),
-      );
+      let router = createTestRouter([
+        {
+          path: "/",
+          element: <h1>Nope</h1>,
+          errorElement: <Boundary />,
+        },
+      ]);
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
@@ -303,15 +303,13 @@ function testDomRouter(
           },
         },
       };
-      let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<h1>Nope</h1>}
-            errorElement={<Boundary />}
-          />,
-        ),
-      );
+      let router = createTestRouter([
+        {
+          path: "/",
+          element: <h1>Nope</h1>,
+          errorElement: <Boundary />,
+        },
+      ]);
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
@@ -350,15 +348,13 @@ function testDomRouter(
           },
         },
       };
-      let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<h1>Nope</h1>}
-            errorElement={<Boundary />}
-          />,
-        ),
-      );
+      let router = createTestRouter([
+        {
+          path: "/",
+          element: <h1>Nope</h1>,
+          errorElement: <Boundary />,
+        },
+      ]);
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
@@ -388,20 +384,21 @@ function testDomRouter(
     it("renders hydrateFallbackElement while first data fetch happens", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<Outlet />}
-            hydrateFallbackElement={<FallbackElement />}
-          >
-            <Route
-              path="foo"
-              loader={() => fooDefer.promise}
-              element={<Foo />}
-            />
-            <Route path="bar" element={<Bar />} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Outlet />,
+            hydrateFallbackElement: <FallbackElement />,
+            children: [
+              {
+                path: "foo",
+                loader: () => fooDefer.promise,
+                element: <Foo />,
+              },
+              { path: "bar", element: <Bar /> },
+            ],
+          },
+        ],
         {
           window: getWindow("/foo"),
         },
@@ -444,24 +441,25 @@ function testDomRouter(
     it("renders hydrateFallbackElement while first data fetch and lazy route load happens", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<Outlet />}
-            hydrateFallbackElement={<FallbackElement />}
-          >
-            <Route
-              path="foo"
-              lazy={async () => {
-                return {
-                  loader: () => fooDefer.promise,
-                  element: <Foo />,
-                };
-              }}
-            />
-            <Route path="bar" element={<Bar />} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Outlet />,
+            hydrateFallbackElement: <FallbackElement />,
+            children: [
+              {
+                path: "foo",
+                lazy: async () => {
+                  return {
+                    loader: () => fooDefer.promise,
+                    element: <Foo />,
+                  };
+                },
+              },
+              { path: "bar", element: <Bar /> },
+            ],
+          },
+        ],
         {
           window: getWindow("/foo"),
         },
@@ -504,16 +502,20 @@ function testDomRouter(
     it("does not render fallbackElement if no data fetch or lazy loading is required", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Outlet />}>
-            <Route
-              path="foo"
-              loader={() => fooDefer.promise}
-              element={<Foo />}
-            />
-            <Route path="bar" element={<Bar />} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Outlet />,
+            children: [
+              {
+                path: "foo",
+                loader: () => fooDefer.promise,
+                element: <Foo />,
+              },
+              { path: "bar", element: <Bar /> },
+            ],
+          },
+        ],
         {
           window: getWindow("/bar"),
         },
@@ -550,19 +552,20 @@ function testDomRouter(
     it("renders hydrateFallbackElement within router contexts", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<Outlet />}
-            hydrateFallbackElement={<FallbackElement />}
-          >
-            <Route
-              path="foo"
-              loader={() => fooDefer.promise}
-              element={<Foo />}
-            />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Outlet />,
+            hydrateFallbackElement: <FallbackElement />,
+            children: [
+              {
+                path: "foo",
+                loader: () => fooDefer.promise,
+                element: <Foo />,
+              },
+            ],
+          },
+        ],
         { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -600,12 +603,16 @@ function testDomRouter(
 
     it("handles link navigations", async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<h1>Foo Heading</h1>} />
-            <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              { path: "foo", element: <h1>Foo Heading</h1> },
+              { path: "bar", element: <h1>Bar Heading</h1> },
+            ],
+          },
+        ],
         { window: getWindow("/foo") },
       );
       render(<RouterProvider router={router} />);
@@ -631,12 +638,16 @@ function testDomRouter(
     it("handles link navigations when using a basename", async () => {
       let testWindow = getWindow("/base/name/foo");
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<h1>Foo Heading</h1>} />
-            <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              { path: "foo", element: <h1>Foo Heading</h1> },
+              { path: "bar", element: <h1>Bar Heading</h1> },
+            ],
+          },
+        ],
         {
           window: testWindow,
           basename: "/base/name",
@@ -672,16 +683,20 @@ function testDomRouter(
       let barDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
-            <Route
-              path="bar"
-              loader={() => barDefer.promise}
-              element={<Bar />}
-            />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              { path: "foo", element: <Foo /> },
+              {
+                path: "bar",
+                loader: () => barDefer.promise,
+                element: <Bar />,
+              },
+            ],
+          },
+        ],
         { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -757,18 +772,22 @@ function testDomRouter(
       let barDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
-            <Route
-              path="bar"
-              lazy={async () => ({
-                loader: () => barDefer.promise,
-                element: <Bar />,
-              })}
-            />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              { path: "foo", element: <Foo /> },
+              {
+                path: "bar",
+                lazy: async () => ({
+                  loader: () => barDefer.promise,
+                  element: <Bar />,
+                }),
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/foo"),
         },
@@ -844,12 +863,16 @@ function testDomRouter(
 
     it("handles link navigations with preventScrollReset", async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<h1>Foo Heading</h1>} />
-            <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              { path: "foo", element: <h1>Foo Heading</h1> },
+              { path: "bar", element: <h1>Bar Heading</h1> },
+            ],
+          },
+        ],
         { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -893,12 +916,16 @@ function testDomRouter(
 
     it("handles link navigations with preventScrollReset={true}", async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<h1>Foo Heading</h1>} />
-            <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              { path: "foo", element: <h1>Foo Heading</h1> },
+              { path: "bar", element: <h1>Bar Heading</h1> },
+            ],
+          },
+        ],
         { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -945,14 +972,14 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            action={() => actionDefer.promise}
-            loader={() => loaderDefer.promise}
-            element={<Home />}
-          />,
-        ),
+        [
+          {
+            path: "/",
+            action: () => actionDefer.promise,
+            loader: () => loaderDefer.promise,
+            element: <Home />,
+          },
+        ],
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
@@ -1054,29 +1081,33 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Home />}>
-            <Route index element={<h1>Home</h1>} />
-            <Route
-              path="action"
-              lazy={async () => ({
-                action: () => actionDefer.promise,
-                loader: () => loaderDefer.promise,
-                Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
-                  return (
-                    <>
-                      <h1>Action</h1>
-                      <p>{data}</p>
-                      <p>{actionData}</p>
-                    </>
-                  );
-                },
-              })}
-            />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Home />,
+            children: [
+              { index: true, element: <h1>Home</h1> },
+              {
+                path: "action",
+                lazy: async () => ({
+                  action: () => actionDefer.promise,
+                  loader: () => loaderDefer.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    let actionData = useActionData() as string | undefined;
+                    return (
+                      <>
+                        <h1>Action</h1>
+                        <p>{data}</p>
+                        <p>{actionData}</p>
+                      </>
+                    );
+                  },
+                }),
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/"),
         },
@@ -1176,20 +1207,20 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            action={() => actionDefer.promise}
-            loader={async ({ request }) => {
+        [
+          {
+            path: "/",
+            action: () => actionDefer.promise,
+            loader: async ({ request }) => {
               let resolvedValue = await loaderDefer.promise;
               let urlParam = new URL(
                 `https://remix.run${request.url}`,
               ).searchParams.get("test");
               return `${resolvedValue}:${urlParam}`;
-            }}
-            element={<Home />}
-          />,
-        ),
+            },
+            element: <Home />,
+          },
+        ],
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
@@ -1268,35 +1299,39 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Home />}>
-            <Route index element={<h1>Home</h1>} />
-            <Route
-              path="path"
-              lazy={async () => ({
-                action: () => actionDefer.promise,
-                loader: async ({ request }) => {
-                  let resolvedValue = await loaderDefer.promise;
-                  let urlParam = new URL(
-                    `https://remix.run${request.url}`,
-                  ).searchParams.get("test");
-                  return `${resolvedValue}:${urlParam}`;
-                },
-                Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
-                  return (
-                    <>
-                      <h1>Path</h1>
-                      <p>{data}</p>
-                      <p>{actionData}</p>
-                    </>
-                  );
-                },
-              })}
-            />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Home />,
+            children: [
+              { index: true, element: <h1>Home</h1> },
+              {
+                path: "path",
+                lazy: async () => ({
+                  action: () => actionDefer.promise,
+                  loader: async ({ request }) => {
+                    let resolvedValue = await loaderDefer.promise;
+                    let urlParam = new URL(
+                      `https://remix.run${request.url}`,
+                    ).searchParams.get("test");
+                    return `${resolvedValue}:${urlParam}`;
+                  },
+                  Component() {
+                    let data = useLoaderData() as string;
+                    let actionData = useActionData() as string | undefined;
+                    return (
+                      <>
+                        <h1>Path</h1>
+                        <p>{data}</p>
+                        <p>{actionData}</p>
+                      </>
+                    );
+                  },
+                }),
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/"),
         },
@@ -1376,18 +1411,18 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            action={async ({ request }) => {
+        [
+          {
+            path: "/",
+            action: async ({ request }) => {
               let resolvedValue = await actionDefer.promise;
               let formData = await request.formData();
               return `${resolvedValue}:${formData.get("test")}`;
-            }}
-            loader={() => loaderDefer.promise}
-            element={<Home />}
-          />,
-        ),
+            },
+            loader: () => loaderDefer.promise,
+            element: <Home />,
+          },
+        ],
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
@@ -1485,33 +1520,37 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Home />}>
-            <Route index element={<h1>Home</h1>} />
-            <Route
-              path="action"
-              lazy={async () => ({
-                action: async ({ request }) => {
-                  let resolvedValue = await actionDefer.promise;
-                  let formData = await request.formData();
-                  return `${resolvedValue}:${formData.get("test")}`;
-                },
-                loader: () => loaderDefer.promise,
-                Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
-                  return (
-                    <>
-                      <h1>Action</h1>
-                      <p>{data}</p>
-                      <p>{actionData}</p>
-                    </>
-                  );
-                },
-              })}
-            />
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            element: <Home />,
+            children: [
+              { index: true, element: <h1>Home</h1> },
+              {
+                path: "action",
+                lazy: async () => ({
+                  action: async ({ request }) => {
+                    let resolvedValue = await actionDefer.promise;
+                    let formData = await request.formData();
+                    return `${resolvedValue}:${formData.get("test")}`;
+                  },
+                  loader: () => loaderDefer.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    let actionData = useActionData() as string | undefined;
+                    return (
+                      <>
+                        <h1>Action</h1>
+                        <p>{data}</p>
+                        <p>{actionData}</p>
+                      </>
+                    );
+                  },
+                }),
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
@@ -1647,11 +1686,9 @@ function testDomRouter(
 
     it("supports <Form reloadDocument={true}>", async () => {
       let actionSpy = jest.fn();
-      let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/" action={actionSpy} element={<Home />} />,
-        ),
-      );
+      let router = createTestRouter([
+        { path: "/", action: actionSpy, element: <Home /> },
+      ]);
       render(<RouterProvider router={router} />);
 
       let handlerCalled;
@@ -1681,13 +1718,16 @@ function testDomRouter(
 
     it('defaults <Form method="get"> to be a PUSH navigation', async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route element={<Layout />}>
-            <Route index element={<h1>index</h1>} />
-            <Route path="1" element={<h1>Page 1</h1>} />
-            <Route path="2" element={<h1>Page 2</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            element: <Layout />,
+            children: [
+              { index: true, element: <h1>index</h1> },
+              { path: "1", element: <h1>Page 1</h1> },
+              { path: "2", element: <h1>Page 2</h1> },
+            ],
+          },
+        ],
         {},
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -1748,17 +1788,20 @@ function testDomRouter(
 
     it('defaults <Form method="post"> to be a REPLACE navigation', async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route element={<Layout />}>
-            <Route index element={<h1>Index Page</h1>} />
-            <Route
-              path="form"
-              action={() => "action data"}
-              element={<FormPage />}
-            />
-            <Route path="result" element={<h1>Result Page</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            element: <Layout />,
+            children: [
+              { index: true, element: <h1>Index Page</h1> },
+              {
+                path: "form",
+                action: () => "action data",
+                element: <FormPage />,
+              },
+              { path: "result", element: <h1>Result Page</h1> },
+            ],
+          },
+        ],
         {},
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -1811,22 +1854,24 @@ function testDomRouter(
 
     it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route element={<Layout />}>
-            <Route index element={<h1>Index Page</h1>} />
-            <Route
-              path="form"
-              action={() =>
-                new Response(null, {
-                  status: 302,
-                  headers: { Location: "/result" },
-                })
-              }
-              element={<FormPage />}
-            />
-            <Route path="result" element={<h1>Result Page</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            element: <Layout />,
+            children: [
+              { index: true, element: <h1>Index Page</h1> },
+              {
+                path: "form",
+                action: () =>
+                  new Response(null, {
+                    status: 302,
+                    headers: { Location: "/result" },
+                  }),
+                element: <FormPage />,
+              },
+              { path: "result", element: <h1>Result Page</h1> },
+            ],
+          },
+        ],
         { hydrationData: {} },
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -1876,13 +1921,16 @@ function testDomRouter(
 
     it('defaults useSubmit({ method: "get" }) to be a PUSH navigation', async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route element={<Layout />}>
-            <Route index element={<h1>index</h1>} />
-            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
-            <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            element: <Layout />,
+            children: [
+              { index: true, element: <h1>index</h1> },
+              { path: "1", loader: () => "1", element: <h1>Page 1</h1> },
+              { path: "2", loader: () => "2", element: <h1>Page 2</h1> },
+            ],
+          },
+        ],
         {
           window: getWindow("/"),
         },
@@ -1949,13 +1997,16 @@ function testDomRouter(
 
     it('defaults useSubmit({ method: "post" }) to a new location to be a PUSH navigation', async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route element={<Layout />}>
-            <Route index element={<h1>index</h1>} />
-            <Route path="1" element={<h1>Page 1</h1>} />
-            <Route path="2" action={() => "action"} element={<h1>Page 2</h1>} />
-          </Route>,
-        ),
+        [
+          {
+            element: <Layout />,
+            children: [
+              { index: true, element: <h1>index</h1> },
+              { path: "1", element: <h1>Page 1</h1> },
+              { path: "2", action: () => "action", element: <h1>Page 2</h1> },
+            ],
+          },
+        ],
         {
           window: getWindow("/"),
         },
@@ -2038,17 +2089,20 @@ function testDomRouter(
 
     it('defaults useSubmit({ method: "post" }) to the same location to be a REPLACE navigation', async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route element={<Layout />}>
-            <Route index element={<h1>index</h1>} />
-            <Route
-              path="1"
-              action={() => "action"}
-              loader={() => "1"}
-              element={<Page />}
-            />
-          </Route>,
-        ),
+        [
+          {
+            element: <Layout />,
+            children: [
+              { index: true, element: <h1>index</h1> },
+              {
+                path: "1",
+                action: () => "action",
+                loader: () => "1",
+                element: <Page />,
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/"),
         },
@@ -2145,10 +2199,10 @@ function testDomRouter(
 
     it('supports a basename on <Form method="get">', async () => {
       let testWindow = getWindow("/base/path");
-      let router = createTestRouter(
-        createRoutesFromElements(<Route path="path" element={<Comp />} />),
-        { basename: "/base", window: testWindow },
-      );
+      let router = createTestRouter([{ path: "path", element: <Comp /> }], {
+        basename: "/base",
+        window: testWindow,
+      });
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
@@ -2221,9 +2275,7 @@ function testDomRouter(
     it('supports a basename on <Form method="post">', async () => {
       let testWindow = getWindow("/base/path");
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="path" action={() => "action data"} element={<Comp />} />,
-        ),
+        [{ path: "path", action: () => "action data", element: <Comp /> }],
         {
           basename: "/base",
 
@@ -2309,17 +2361,17 @@ function testDomRouter(
       let loaderDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            id="index"
-            path="/"
-            action={async () => {
+        [
+          {
+            id: "index",
+            path: "/",
+            action: async () => {
               throw new Error("Should not hit this");
-            }}
-            loader={() => loaderDefer.promise}
-            element={<Home />}
-          />,
-        ),
+            },
+            loader: () => loaderDefer.promise,
+            element: <Home />,
+          },
+        ],
         {
           hydrationData: { loaderData: { index: "Initial Data" } },
           window: getWindow("/"),
@@ -2396,32 +2448,36 @@ function testDomRouter(
 
     it("allows a button to override the <form action>", async () => {
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route path="/">
-            <Route
-              path="foo"
-              action={() => {
-                throw new Error("No");
-              }}
-            >
-              <Route
-                path="bar"
-                action={() => "Yes"}
-                Component={() => {
-                  let actionData = useActionData() as string | undefined;
-                  return (
-                    <Form method="post" action="/foo">
-                      <p>{actionData || "No"}</p>
-                      <button type="submit" formAction="/foo/bar">
-                        Submit
-                      </button>
-                    </Form>
-                  );
-                }}
-              />
-            </Route>
-          </Route>,
-        ),
+        [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                action: () => {
+                  throw new Error("No");
+                },
+                children: [
+                  {
+                    path: "bar",
+                    action: () => "Yes",
+                    Component: () => {
+                      let actionData = useActionData() as string | undefined;
+                      return (
+                        <Form method="post" action="/foo">
+                          <p>{actionData || "No"}</p>
+                          <button type="submit" formAction="/foo/bar">
+                            Submit
+                          </button>
+                        </Form>
+                      );
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
         {
           window: getWindow("/foo/bar"),
         },
@@ -2463,19 +2519,19 @@ function testDomRouter(
       let actionDefer = createDeferred();
 
       let router = createTestRouter(
-        createRoutesFromElements(
-          <Route
-            id="index"
-            path="/"
-            action={async ({ request }) => {
+        [
+          {
+            id: "index",
+            path: "/",
+            action: async ({ request }) => {
               let resolvedValue = await actionDefer.promise;
               let formData = await request.formData();
               return `${resolvedValue}:${formData.get("test")}`;
-            }}
-            loader={() => loaderDefer.promise}
-            element={<Home />}
-          />,
-        ),
+            },
+            loader: () => loaderDefer.promise,
+            element: <Home />,
+          },
+        ],
         {
           hydrationData: { loaderData: { index: "Initial Data" } },
           window: getWindow("/"),
@@ -2627,13 +2683,17 @@ function testDomRouter(
       describe("static routes", () => {
         it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<NoActionComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [{ path: "bar", element: <NoActionComponent /> }],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2647,13 +2707,19 @@ function testDomRouter(
 
         it("does not include search params when action='.'", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<ActionDotComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      { path: "bar", element: <ActionDotComponent /> },
+                    ],
+                  },
+                ],
+              },
+            ],
             { window: getWindow("/foo/bar?a=1#hash") },
           );
           let { container } = render(<RouterProvider router={router} />);
@@ -2665,13 +2731,19 @@ function testDomRouter(
 
         it("does not include search params when action=''", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<ActionEmptyComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      { path: "bar", element: <ActionEmptyComponent /> },
+                    ],
+                  },
+                ],
+              },
+            ],
             { window: getWindow("/foo/bar?a=1#hash") },
           );
           let { container } = render(<RouterProvider router={router} />);
@@ -2685,15 +2757,23 @@ function testDomRouter(
       describe("layout routes", () => {
         it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<NoActionComponent />}>
-                    <Route index={true} element={<h1>Index</h1>} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        element: <NoActionComponent />,
+                        children: [{ index: true, element: <h1>Index</h1> }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2707,15 +2787,23 @@ function testDomRouter(
 
         it("does not include search params when action='.'", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<ActionDotComponent />}>
-                    <Route index={true} element={<h1>Index</h1>} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        element: <ActionDotComponent />,
+                        children: [{ index: true, element: <h1>Index</h1> }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2729,15 +2817,23 @@ function testDomRouter(
 
         it("does not include search params when action=''", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<ActionEmptyComponent />}>
-                    <Route index={true} element={<h1>Index</h1>} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        element: <ActionEmptyComponent />,
+                        children: [{ index: true, element: <h1>Index</h1> }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2751,13 +2847,18 @@ function testDomRouter(
 
         it("does not include dynamic parameters from a parent layout route", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo" element={<ActionEmptyComponent />}>
-                  <Route path=":param" element={<h1>Param</h1>} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    element: <ActionEmptyComponent />,
+                    children: [{ path: ":param", element: <h1>Param</h1> }],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar"),
             },
@@ -2771,13 +2872,18 @@ function testDomRouter(
 
         it("does not include splat parameters from a parent layout route", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo" element={<ActionEmptyComponent />}>
-                  <Route path="*" element={<h1>Splat</h1>} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    element: <ActionEmptyComponent />,
+                    children: [{ path: "*", element: <h1>Splat</h1> }],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar/baz/qux"),
             },
@@ -2791,15 +2897,23 @@ function testDomRouter(
 
         it("does not include the index parameter if we've submitted to a child index route", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar" element={<NoActionComponent />}>
-                    <Route index={true} element={<h1>Index</h1>} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        element: <NoActionComponent />,
+                        children: [{ index: true, element: <h1>Index</h1> }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?index&a=1"),
             },
@@ -2815,15 +2929,24 @@ function testDomRouter(
       describe("index routes", () => {
         it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar">
-                    <Route index={true} element={<NoActionComponent />} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        children: [
+                          { index: true, element: <NoActionComponent /> },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2837,15 +2960,24 @@ function testDomRouter(
 
         it("does not include search params action='.'", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar">
-                    <Route index={true} element={<ActionDotComponent />} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        children: [
+                          { index: true, element: <ActionDotComponent /> },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2859,15 +2991,24 @@ function testDomRouter(
 
         it("does not include search params action=''", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="bar">
-                    <Route index={true} element={<ActionEmptyComponent />} />
-                  </Route>
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        path: "bar",
+                        children: [
+                          { index: true, element: <ActionEmptyComponent /> },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2883,23 +3024,29 @@ function testDomRouter(
         it("does not repeatedly add ?index params on submissions", async () => {
           let testWindow = getWindow("/form");
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="form">
-                  <Route
-                    index={true}
-                    action={() => ({})}
-                    element={
-                      <Form method="post">
-                        <button type="submit" name="name" value="value">
-                          Submit
-                        </button>
-                      </Form>
-                    }
-                  />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "form",
+                    children: [
+                      {
+                        index: true,
+                        action: () => ({}),
+                        element: (
+                          <Form method="post">
+                            <button type="submit" name="name" value="value">
+                              Submit
+                            </button>
+                          </Form>
+                        ),
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: testWindow,
             },
@@ -2919,17 +3066,23 @@ function testDomRouter(
 
         it("handles index routes with a path", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route
-                    index={true}
-                    path="bar"
-                    element={<NoActionComponent />}
-                  />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      {
+                        index: true,
+                        path: "bar",
+                        element: <NoActionComponent />,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             { window: getWindow("/foo/bar?a=1#hash") },
           );
           let { container } = render(<RouterProvider router={router} />);
@@ -2943,22 +3096,28 @@ function testDomRouter(
         it('does not put ?index param in final URL for <Form method="get"', async () => {
           let testWindow = getWindow("/form");
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="form">
-                  <Route
-                    index={true}
-                    element={
-                      <Form>
-                        <button type="submit" name="name" value="value">
-                          Submit
-                        </button>
-                      </Form>
-                    }
-                  />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "form",
+                    children: [
+                      {
+                        index: true,
+                        element: (
+                          <Form>
+                            <button type="submit" name="name" value="value">
+                              Submit
+                            </button>
+                          </Form>
+                        ),
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: testWindow,
             },
@@ -2976,13 +3135,19 @@ function testDomRouter(
       describe("dynamic routes", () => {
         it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path=":param" element={<NoActionComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      { path: ":param", element: <NoActionComponent /> },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -2996,13 +3161,19 @@ function testDomRouter(
 
         it("does not include search params action='.'", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path=":param" element={<ActionDotComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      { path: ":param", element: <ActionDotComponent /> },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -3016,13 +3187,19 @@ function testDomRouter(
 
         it("does not include search params when action=''", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path=":param" element={<ActionEmptyComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      { path: ":param", element: <ActionEmptyComponent /> },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -3038,13 +3215,17 @@ function testDomRouter(
       describe("splat routes", () => {
         it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="*" element={<NoActionComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [{ path: "*", element: <NoActionComponent /> }],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -3058,13 +3239,17 @@ function testDomRouter(
 
         it("does not include search params when action='.'", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="*" element={<ActionDotComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [{ path: "*", element: <ActionDotComponent /> }],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -3078,13 +3263,19 @@ function testDomRouter(
 
         it("does not include search params when action=''", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path="*" element={<ActionEmptyComponent />} />
-                </Route>
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "foo",
+                    children: [
+                      { path: "*", element: <ActionEmptyComponent /> },
+                    ],
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/foo/bar?a=1#hash"),
             },
@@ -3100,21 +3291,22 @@ function testDomRouter(
       describe("submitting to self from parent/index when ?index param exists", () => {
         it("useSubmit", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route
-                id="parent"
-                path="/parent"
-                element={<Parent />}
-                action={({ request }) => "PARENT ACTION: " + request.url}
-              >
-                <Route
-                  id="index"
-                  index
-                  element={<Index />}
-                  action={({ request }) => "INDEX ACTION: " + request.url}
-                />
-              </Route>,
-            ),
+            [
+              {
+                id: "parent",
+                path: "/parent",
+                element: <Parent />,
+                action: ({ request }) => "PARENT ACTION: " + request.url,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    element: <Index />,
+                    action: ({ request }) => "INDEX ACTION: " + request.url,
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/parent?index&index=keep"),
             },
@@ -3165,21 +3357,22 @@ function testDomRouter(
 
         it("Form", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route
-                id="parent"
-                path="/parent"
-                element={<Parent />}
-                action={({ request }) => "PARENT ACTION: " + request.url}
-              >
-                <Route
-                  id="index"
-                  index
-                  element={<Index />}
-                  action={({ request }) => "INDEX ACTION: " + request.url}
-                />
-              </Route>,
-            ),
+            [
+              {
+                id: "parent",
+                path: "/parent",
+                element: <Parent />,
+                action: ({ request }) => "PARENT ACTION: " + request.url,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    element: <Index />,
+                    action: ({ request }) => "INDEX ACTION: " + request.url,
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/parent?index&index=keep"),
             },
@@ -3235,21 +3428,22 @@ function testDomRouter(
 
         it("fetcher.submit", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route
-                id="parent"
-                path="/parent"
-                element={<Parent />}
-                action={({ request }) => "PARENT ACTION: " + request.url}
-              >
-                <Route
-                  id="index"
-                  index
-                  element={<Index />}
-                  action={({ request }) => "INDEX ACTION: " + request.url}
-                />
-              </Route>,
-            ),
+            [
+              {
+                id: "parent",
+                path: "/parent",
+                element: <Parent />,
+                action: ({ request }) => "PARENT ACTION: " + request.url,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    element: <Index />,
+                    action: ({ request }) => "INDEX ACTION: " + request.url,
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/parent?index&index=keep"),
             },
@@ -3300,21 +3494,22 @@ function testDomRouter(
 
         it("fetcher.Form", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route
-                id="parent"
-                path="/parent"
-                element={<Parent />}
-                action={({ request }) => "PARENT ACTION: " + request.url}
-              >
-                <Route
-                  id="index"
-                  index
-                  element={<Index />}
-                  action={({ request }) => "INDEX ACTION: " + request.url}
-                />
-              </Route>,
-            ),
+            [
+              {
+                id: "parent",
+                path: "/parent",
+                element: <Parent />,
+                action: ({ request }) => "PARENT ACTION: " + request.url,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    element: <Index />,
+                    action: ({ request }) => "INDEX ACTION: " + request.url,
+                  },
+                ],
+              },
+            ],
             {
               window: getWindow("/parent?index&index=keep"),
             },
@@ -3373,13 +3568,19 @@ function testDomRouter(
 
       it("allows user to specify search params and hash", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/">
-              <Route path="foo">
-                <Route path="bar" element={<Form action=".?a=1#newhash" />} />
-              </Route>
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              children: [
+                {
+                  path: "foo",
+                  children: [
+                    { path: "bar", element: <Form action=".?a=1#newhash" /> },
+                  ],
+                },
+              ],
+            },
+          ],
           { window: getWindow("/foo/bar?a=1#hash") },
         );
         let { container } = render(<RouterProvider router={router} />);
@@ -3393,15 +3594,18 @@ function testDomRouter(
     describe('<Form action relative="path">', () => {
       it("navigates relative to the URL for static routes", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="inbox">
-              <Route path="messages" />
-              <Route
-                path="messages/edit"
-                element={<Form action=".." relative="path" />}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "inbox",
+              children: [
+                { path: "messages" },
+                {
+                  path: "messages/edit",
+                  element: <Form action=".." relative="path" />,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/inbox/messages/edit"),
           },
@@ -3415,15 +3619,18 @@ function testDomRouter(
 
       it("navigates relative to the URL for dynamic routes", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="inbox">
-              <Route path="messages" />
-              <Route
-                path="messages/:id"
-                element={<Form action=".." relative="path" />}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "inbox",
+              children: [
+                { path: "messages" },
+                {
+                  path: "messages/:id",
+                  element: <Form action=".." relative="path" />,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/inbox/messages/1"),
           },
@@ -3437,22 +3644,24 @@ function testDomRouter(
 
       it("navigates relative to the URL for layout routes", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="inbox">
-              <Route path="messages" />
-              <Route
-                path="messages/:id"
-                element={
-                  <>
-                    <Form action=".." relative="path" />
-                    <Outlet />
-                  </>
-                }
-              >
-                <Route index element={<h1>Form</h1>} />
-              </Route>
-            </Route>,
-          ),
+          [
+            {
+              path: "inbox",
+              children: [
+                { path: "messages" },
+                {
+                  path: "messages/:id",
+                  element: (
+                    <>
+                      <Form action=".." relative="path" />
+                      <Outlet />
+                    </>
+                  ),
+                  children: [{ index: true, element: <h1>Form</h1> }],
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/inbox/messages/1"),
           },
@@ -3466,14 +3675,23 @@ function testDomRouter(
 
       it("navigates relative to the URL for index routes", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="inbox">
-              <Route path="messages" />
-              <Route path="messages/:id">
-                <Route index element={<Form action=".." relative="path" />} />
-              </Route>
-            </Route>,
-          ),
+          [
+            {
+              path: "inbox",
+              children: [
+                { path: "messages" },
+                {
+                  path: "messages/:id",
+                  children: [
+                    {
+                      index: true,
+                      element: <Form action=".." relative="path" />,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/inbox/messages/1"),
           },
@@ -3487,12 +3705,12 @@ function testDomRouter(
 
       it("navigates relative to the URL for splat routes", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="inbox/messages/*"
-              element={<Form action=".." relative="path" />}
-            />,
-          ),
+          [
+            {
+              path: "inbox/messages/*",
+              element: <Form action=".." relative="path" />,
+            },
+          ],
           {
             window: getWindow("/inbox/messages/1/2/3"),
           },
@@ -3509,9 +3727,7 @@ function testDomRouter(
       it("gathers form data on <Form> submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3535,9 +3751,7 @@ function testDomRouter(
       it("gathers form data on submit(form) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3565,9 +3779,7 @@ function testDomRouter(
       it("gathers form data on submit(button) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3601,9 +3813,7 @@ function testDomRouter(
       it("gathers form data on submit(input[type=submit]) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3637,9 +3847,7 @@ function testDomRouter(
       it("gathers form data on submit(FormData) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3842,9 +4050,7 @@ function testDomRouter(
       it('serializes into text on <Form encType="text/plain" submissions', async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3871,9 +4077,7 @@ function testDomRouter(
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3900,9 +4104,7 @@ function testDomRouter(
       it("includes submit button name/value on button submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3937,9 +4139,7 @@ function testDomRouter(
       it("appends button name/value and doesn't overwrite inputs with same name (form)", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3965,9 +4165,7 @@ function testDomRouter(
       it("appends button name/value and doesn't overwrite inputs with same name (button)", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4010,9 +4208,7 @@ function testDomRouter(
         }
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />,
-          ),
+          [{ path: "/", action: actionSpy, element: <FormPage /> }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4077,16 +4273,16 @@ function testDomRouter(
       it("handles fetcher.load and fetcher.submit", async () => {
         let count = 0;
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              action={async ({ request }) => {
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              action: async ({ request }) => {
                 let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
                 return { count };
-              }}
-              loader={async ({ request }) => {
+              },
+              loader: async ({ request }) => {
                 // Need to add a domain on here in node unit testing so it's a
                 // valid URL. When running in the browser the domain is
                 // automatically added in new Request()
@@ -4096,9 +4292,9 @@ function testDomRouter(
                   ) || "1";
                 count = count + parseInt(increment, 10);
                 return { count };
-              }}
-            />,
-          ),
+              },
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4204,23 +4400,24 @@ function testDomRouter(
 
       it("handles fetcher ?index params", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              id="parent"
-              path="/parent"
-              element={<Outlet />}
-              action={() => "PARENT ACTION"}
-              loader={() => "PARENT LOADER"}
-            >
-              <Route
-                id="index"
-                index
-                element={<Index />}
-                action={() => "INDEX ACTION"}
-                loader={() => "INDEX LOADER"}
-              />
-            </Route>,
-          ),
+          [
+            {
+              id: "parent",
+              path: "/parent",
+              element: <Outlet />,
+              action: () => "PARENT ACTION",
+              loader: () => "PARENT LOADER",
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  element: <Index />,
+                  action: () => "INDEX ACTION",
+                  loader: () => "INDEX LOADER",
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/parent"),
             hydrationData: { loaderData: { parent: null, index: null } },
@@ -4296,16 +4493,16 @@ function testDomRouter(
 
       it("handles fetcher.load errors", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              errorElement={<ErrorElement />}
-              loader={async () => {
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              errorElement: <ErrorElement />,
+              loader: async () => {
                 throw new Error("Kaboom!");
-              }}
-            />,
-          ),
+              },
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4367,14 +4564,14 @@ function testDomRouter(
       it("handles fetcher.load errors (defer)", async () => {
         let dfd = createDeferred();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              errorElement={<ErrorElement />}
-              loader={() => ({ value: dfd.promise })}
-            />,
-          ),
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              errorElement: <ErrorElement />,
+              loader: () => ({ value: dfd.promise }),
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4472,16 +4669,16 @@ function testDomRouter(
 
       it("handles fetcher.submit errors", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              errorElement={<ErrorElement />}
-              action={async () => {
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              errorElement: <ErrorElement />,
+              action: async () => {
                 throw new Error("Kaboom!");
-              }}
-            />,
-          ),
+              },
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4549,16 +4746,16 @@ function testDomRouter(
       it("handles fetcher.Form", async () => {
         let count = 0;
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              action={async ({ request }) => {
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              action: async ({ request }) => {
                 let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
                 return { count };
-              }}
-              loader={async ({ request }) => {
+              },
+              loader: async ({ request }) => {
                 // Need to add a domain on here in node unit testing so it's a
                 // valid URL. When running in the browser the domain is
                 // automatically added in new Request()
@@ -4568,9 +4765,9 @@ function testDomRouter(
                   ) || "1";
                 count = count + parseInt(increment, 10);
                 return { count };
-              }}
-            />,
-          ),
+              },
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4653,16 +4850,16 @@ function testDomRouter(
 
       it("handles fetcher.Form get errors", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              errorElement={<ErrorElement />}
-              loader={async () => {
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              errorElement: <ErrorElement />,
+              loader: async () => {
                 throw new Error("Kaboom!");
-              }}
-            />,
-          ),
+              },
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4721,16 +4918,16 @@ function testDomRouter(
 
       it("handles fetcher.Form post errors", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              element={<Comp />}
-              errorElement={<ErrorElement />}
-              action={async () => {
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              errorElement: <ErrorElement />,
+              action: async () => {
                 throw new Error("Kaboom!");
-              }}
-            />,
-          ),
+              },
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -4961,18 +5158,22 @@ function testDomRouter(
         let fetchDfd1 = createDeferred();
         let fetchDfd2 = createDeferred();
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Parent />}>
-              <Route path="/1" element={<Comp1 />} />
-              <Route
-                path="/2"
-                loader={() => navDfd.promise}
-                element={<Comp2 />}
-              />
-              <Route path="/fetch-1" loader={() => fetchDfd1.promise} />
-              <Route path="/fetch-2" loader={() => fetchDfd2.promise} />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Parent />,
+              children: [
+                { path: "/1", element: <Comp1 /> },
+                {
+                  path: "/2",
+                  loader: () => navDfd.promise,
+                  element: <Comp2 />,
+                },
+                { path: "/fetch-1", loader: () => fetchDfd1.promise },
+                { path: "/fetch-2", loader: () => fetchDfd2.promise },
+              ],
+            },
+          ],
           {
             window: getWindow("/1"),
             hydrationData: { loaderData: { "0": null, "0-0": null } },
@@ -5174,26 +5375,23 @@ function testDomRouter(
         let count = 0;
         let fetchCount = 0;
         let router = createTestRouter(
-          createRoutesFromElements(
-            <>
-              <Route
-                id="index"
-                path="/"
-                element={<Comp />}
-                action={async ({ request }) => {
-                  let formData = await request.formData();
-                  count =
-                    count + parseInt(String(formData.get("increment")), 10);
-                  return { count };
-                }}
-                loader={async () => ({ count: ++count })}
-              />
-              <Route
-                path="/fetch"
-                loader={async () => ({ fetchCount: ++fetchCount })}
-              />
-            </>,
-          ),
+          [
+            {
+              id: "index",
+              path: "/",
+              element: <Comp />,
+              action: async ({ request }) => {
+                let formData = await request.formData();
+                count = count + parseInt(String(formData.get("increment")), 10);
+                return { count };
+              },
+              loader: async () => ({ count: ++count }),
+            },
+            {
+              path: "/fetch",
+              loader: async () => ({ fetchCount: ++fetchCount }),
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { index: null } },
@@ -5261,15 +5459,20 @@ function testDomRouter(
 
       it("handles fetcher 404 errors at the correct spot in the route hierarchy", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
-              <Route
-                path="child"
-                element={<Comp />}
-                errorElement={<ErrorElement />}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Outlet />,
+              errorElement: <p>Not I!</p>,
+              children: [
+                {
+                  path: "child",
+                  element: <Comp />,
+                  errorElement: <ErrorElement />,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
@@ -5311,22 +5514,27 @@ function testDomRouter(
 
       it("handles fetcher.load errors at the correct spot in the route hierarchy", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
-              <Route
-                path="child"
-                element={<Comp />}
-                errorElement={<ErrorElement />}
-              />
-              <Route
-                path="fetch"
-                loader={() => {
-                  throw new Error("Kaboom!");
-                }}
-                errorElement={<p>Not I!</p>}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Outlet />,
+              errorElement: <p>Not I!</p>,
+              children: [
+                {
+                  path: "child",
+                  element: <Comp />,
+                  errorElement: <ErrorElement />,
+                },
+                {
+                  path: "fetch",
+                  loader: () => {
+                    throw new Error("Kaboom!");
+                  },
+                  errorElement: <p>Not I!</p>,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
@@ -5366,22 +5574,27 @@ function testDomRouter(
 
       it("handles fetcher.submit errors at the correct spot in the route hierarchy", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
-              <Route
-                path="child"
-                element={<Comp />}
-                errorElement={<ErrorElement />}
-              />
-              <Route
-                path="fetch"
-                action={() => {
-                  throw new Error("Kaboom!");
-                }}
-                errorElement={<p>Not I!</p>}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Outlet />,
+              errorElement: <p>Not I!</p>,
+              children: [
+                {
+                  path: "child",
+                  element: <Comp />,
+                  errorElement: <ErrorElement />,
+                },
+                {
+                  path: "fetch",
+                  action: () => {
+                    throw new Error("Kaboom!");
+                  },
+                  errorElement: <p>Not I!</p>,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
@@ -5432,22 +5645,27 @@ function testDomRouter(
 
       it("handles fetcher.Form errors at the correct spot in the route hierarchy", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
-              <Route
-                path="child"
-                element={<Comp />}
-                errorElement={<ErrorElement />}
-              />
-              <Route
-                path="fetch"
-                action={() => {
-                  throw new Error("Kaboom!");
-                }}
-                errorElement={<p>Not I!</p>}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Outlet />,
+              errorElement: <p>Not I!</p>,
+              children: [
+                {
+                  path: "child",
+                  element: <Comp />,
+                  errorElement: <ErrorElement />,
+                },
+                {
+                  path: "fetch",
+                  action: () => {
+                    throw new Error("Kaboom!");
+                  },
+                  errorElement: <p>Not I!</p>,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
@@ -7002,11 +7220,13 @@ function testDomRouter(
       describe("with a basename", () => {
         it("prepends the basename to fetcher.load paths", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/" element={<Comp />}>
-                <Route path="fetch" loader={() => "FETCH"} />
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                element: <Comp />,
+                children: [{ path: "fetch", loader: () => "FETCH" }],
+              },
+            ],
             {
               basename: "/base",
               window: getWindow("/base"),
@@ -7051,11 +7271,13 @@ function testDomRouter(
 
         it('prepends the basename to fetcher.submit({ method: "get" }) paths', async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/" element={<Comp />}>
-                <Route path="fetch" loader={() => "FETCH"} />
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                element: <Comp />,
+                children: [{ path: "fetch", loader: () => "FETCH" }],
+              },
+            ],
             {
               basename: "/base",
               window: getWindow("/base"),
@@ -7106,11 +7328,13 @@ function testDomRouter(
 
         it('prepends the basename to fetcher.submit({ method: "post" }) paths', async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/" element={<Comp />}>
-                <Route path="fetch" action={() => "FETCH"} />
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                element: <Comp />,
+                children: [{ path: "fetch", action: () => "FETCH" }],
+              },
+            ],
             {
               basename: "/base",
               window: getWindow("/base"),
@@ -7160,11 +7384,13 @@ function testDomRouter(
         });
         it("prepends the basename to fetcher.Form paths", async () => {
           let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/" element={<Comp />}>
-                <Route path="fetch" action={() => "FETCH"} />
-              </Route>,
-            ),
+            [
+              {
+                path: "/",
+                element: <Comp />,
+                children: [{ path: "fetch", action: () => "FETCH" }],
+              },
+            ],
             {
               basename: "/base",
               window: getWindow("/base"),
@@ -7230,15 +7456,19 @@ function testDomRouter(
     describe("errors", () => {
       it("renders hydration errors on leaf elements", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Comp />}>
-              <Route
-                path="child"
-                element={<Comp />}
-                errorElement={<ErrorBoundary />}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              children: [
+                {
+                  path: "child",
+                  element: <Comp />,
+                  errorElement: <ErrorBoundary />,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/child"),
             hydrationData: {
@@ -7290,17 +7520,21 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy leaf elements with preloading", async () => {
-        let routes = createRoutesFromElements(
-          <Route path="/" element={<Comp />}>
-            <Route
-              path="child"
-              lazy={async () => ({
-                element: <Comp />,
-                errorElement: <ErrorBoundary />,
-              })}
-            />
-          </Route>,
-        );
+        let routes = [
+          {
+            path: "/",
+            element: <Comp />,
+            children: [
+              {
+                path: "child",
+                lazy: async () => ({
+                  element: <Comp />,
+                  errorElement: <ErrorBoundary />,
+                }),
+              },
+            ],
+          },
+        ];
 
         let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
           (m) => m.route.lazy,
@@ -7367,11 +7601,14 @@ function testDomRouter(
 
       it("renders hydration errors on parent elements", async () => {
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
-              <Route path="child" element={<Comp />} />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Comp />,
+              errorElement: <ErrorBoundary />,
+              children: [{ path: "child", element: <Comp /> }],
+            },
+          ],
           {
             window: getWindow("/child"),
             hydrationData: {
@@ -7414,17 +7651,16 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy parent elements with preloading", async () => {
-        let routes = createRoutesFromElements(
-          <Route
-            path="/"
-            lazy={async () => ({
+        let routes = [
+          {
+            path: "/",
+            lazy: async () => ({
               element: <Comp />,
               errorElement: <ErrorBoundary />,
-            })}
-          >
-            <Route path="child" element={<Comp />} />
-          </Route>,
-        );
+            }),
+            children: [{ path: "child", element: <Comp /> }],
+          },
+        ];
 
         let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
           (m) => m.route.lazy,
@@ -7485,22 +7721,26 @@ function testDomRouter(
         let barDefer = createDeferred();
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Layout />}>
-              <Route
-                path="foo"
-                loader={() => fooDefer.promise}
-                element={<Foo />}
-                errorElement={<FooError />}
-              />
-              <Route
-                path="bar"
-                loader={() => barDefer.promise}
-                element={<Bar />}
-                errorElement={<BarError />}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Layout />,
+              children: [
+                {
+                  path: "foo",
+                  loader: () => fooDefer.promise,
+                  element: <Foo />,
+                  errorElement: <FooError />,
+                },
+                {
+                  path: "bar",
+                  loader: () => barDefer.promise,
+                  element: <Bar />,
+                  errorElement: <BarError />,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/foo"),
             hydrationData: {
@@ -7602,21 +7842,26 @@ function testDomRouter(
         let barDefer = createDeferred();
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Layout />} errorElement={<LayoutError />}>
-              <Route
-                path="foo"
-                loader={() => fooDefer.promise}
-                element={<Foo />}
-                errorElement={<FooError />}
-              />
-              <Route
-                path="bar"
-                loader={() => barDefer.promise}
-                element={<Bar />}
-              />
-            </Route>,
-          ),
+          [
+            {
+              path: "/",
+              element: <Layout />,
+              errorElement: <LayoutError />,
+              children: [
+                {
+                  path: "foo",
+                  loader: () => fooDefer.promise,
+                  element: <Foo />,
+                  errorElement: <FooError />,
+                },
+                {
+                  path: "bar",
+                  loader: () => barDefer.promise,
+                  element: <Bar />,
+                },
+              ],
+            },
+          ],
           {
             window: getWindow("/foo"),
             hydrationData: {
