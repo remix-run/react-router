@@ -391,14 +391,17 @@ function testDomRouter(
           {
             path: "/",
             Component: () => <Outlet />,
-            HydrateFallback: () => <FallbackElement />,
+            HydrateFallback: () => <p>Loading...</p>,
             children: [
               {
                 path: "foo",
                 loader: () => fooDefer.promise,
-                Component: () => <Foo />,
+                Component: () => {
+                  let data = useLoaderData() as { message: string };
+                  return <h1>Foo:{data.message}</h1>;
+                },
               },
-              { path: "bar", Component: () => <Bar /> },
+              { path: "bar", Component: () => <h1>Bar Heading</h1> },
             ],
           },
         ],
@@ -407,19 +410,6 @@ function testDomRouter(
         },
       );
       let { container } = render(<RouterProvider router={router} />);
-
-      function FallbackElement() {
-        return <p>Loading...</p>;
-      }
-
-      function Foo() {
-        let data = useLoaderData() as { message: string };
-        return <h1>Foo:{data.message}</h1>;
-      }
-
-      function Bar() {
-        return <h1>Bar Heading</h1>;
-      }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -448,18 +438,21 @@ function testDomRouter(
           {
             path: "/",
             Component: () => <Outlet />,
-            HydrateFallback: () => <FallbackElement />,
+            HydrateFallback: () => <p>Loading...</p>,
             children: [
               {
                 path: "foo",
                 lazy: async () => {
                   return {
                     loader: () => fooDefer.promise,
-                    Component: () => <Foo />,
+                    Component: () => {
+                      let data = useLoaderData() as { message: string };
+                      return <h1>Foo:{data.message}</h1>;
+                    },
                   };
                 },
               },
-              { path: "bar", Component: () => <Bar /> },
+              { path: "bar", Component: () => <h1>Bar Heading</h1> },
             ],
           },
         ],
@@ -468,19 +461,6 @@ function testDomRouter(
         },
       );
       let { container } = render(<RouterProvider router={router} />);
-
-      function FallbackElement() {
-        return <p>Loading...</p>;
-      }
-
-      function Foo() {
-        let data = useLoaderData() as { message: string };
-        return <h1>Foo:{data.message}</h1>;
-      }
-
-      function Bar() {
-        return <h1>Bar Heading</h1>;
-      }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -513,9 +493,13 @@ function testDomRouter(
               {
                 path: "foo",
                 loader: () => fooDefer.promise,
-                Component: () => <Foo />,
+                HydrateFallback: () => <p>Loading...</p>,
+                Component: () => {
+                  let data = useLoaderData() as { message: string };
+                  return <h1>Foo:{data.message}</h1>;
+                },
               },
-              { path: "bar", Component: () => <Bar /> },
+              { path: "bar", Component: () => <h1>Bar Heading</h1> },
             ],
           },
         ],
@@ -523,25 +507,7 @@ function testDomRouter(
           window: getWindow("/bar"),
         },
       );
-      let { container } = render(
-        <RouterProvider
-          router={router}
-          fallbackElement={<FallbackElement />}
-        />,
-      );
-
-      function FallbackElement() {
-        return <p>Loading...</p>;
-      }
-
-      function Foo() {
-        let data = useLoaderData() as { message: string };
-        return <h1>Foo:{data.message}</h1>;
-      }
-
-      function Bar() {
-        return <h1>Bar Heading</h1>;
-      }
+      let { container } = render(<RouterProvider router={router} />);
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -564,7 +530,10 @@ function testDomRouter(
               {
                 path: "foo",
                 loader: () => fooDefer.promise,
-                Component: () => <Foo />,
+                Component: () => {
+                  let data = useLoaderData() as { message: string };
+                  return <h1>Foo:{data.message}</h1>;
+                },
               },
             ],
           },
@@ -576,11 +545,6 @@ function testDomRouter(
       function FallbackElement() {
         let location = useLocation();
         return <p>Loading{location.pathname}</p>;
-      }
-
-      function Foo() {
-        let data = useLoaderData() as { message: string };
-        return <h1>Foo:{data.message}</h1>;
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -691,11 +655,14 @@ function testDomRouter(
             path: "/",
             Component: () => <Layout />,
             children: [
-              { path: "foo", Component: () => <Foo /> },
+              { path: "foo", Component: () => <h1>Foo</h1> },
               {
                 path: "bar",
                 loader: () => barDefer.promise,
-                Component: () => <Bar />,
+                Component: () => {
+                  let data = useLoaderData() as { message: string };
+                  return <h1>{data.message}</h1>;
+                },
               },
             ],
           },
@@ -715,14 +682,6 @@ function testDomRouter(
             </div>
           </div>
         );
-      }
-
-      function Foo() {
-        return <h1>Foo</h1>;
-      }
-      function Bar() {
-        let data = useLoaderData() as { message: string };
-        return <h1>{data.message}</h1>;
       }
 
       expect(getHtml(container.querySelector("#output")!))
@@ -780,12 +739,15 @@ function testDomRouter(
             path: "/",
             Component: () => <Layout />,
             children: [
-              { path: "foo", Component: () => <Foo /> },
+              { path: "foo", Component: () => <h1>Foo</h1> },
               {
                 path: "bar",
                 lazy: async () => ({
                   loader: () => barDefer.promise,
-                  Component: () => <Bar />,
+                  Component: () => {
+                    let data = useLoaderData() as { message: string };
+                    return <h1>{data.message}</h1>;
+                  },
                 }),
               },
             ],
@@ -808,14 +770,6 @@ function testDomRouter(
             </div>
           </div>
         );
-      }
-
-      function Foo() {
-        return <h1>Foo</h1>;
-      }
-      function Bar() {
-        let data = useLoaderData() as { message: string };
-        return <h1>{data.message}</h1>;
       }
 
       expect(getHtml(container.querySelector("#output")!))
@@ -7799,13 +7753,19 @@ function testDomRouter(
                 {
                   path: "foo",
                   loader: () => fooDefer.promise,
-                  Component: () => <Foo />,
+                  Component: () => {
+                    let data = useLoaderData() as { message: string };
+                    return <h1>Foo:{data.message}</h1>;
+                  },
                   ErrorBoundary: () => <FooError />,
                 },
                 {
                   path: "bar",
                   loader: () => barDefer.promise,
-                  Component: () => <Bar />,
+                  Component: () => {
+                    let data = useLoaderData() as { message: string };
+                    return <h1>Bar:{data.message}</h1>;
+                  },
                   ErrorBoundary: () => <BarError />,
                 },
               ],
@@ -7837,18 +7797,9 @@ function testDomRouter(
             </div>
           );
         }
-
-        function Foo() {
-          let data = useLoaderData() as { message: string };
-          return <h1>Foo:{data.message}</h1>;
-        }
         function FooError() {
           let error = useRouteError() as Error;
           return <p>Foo Error:{error.message}</p>;
-        }
-        function Bar() {
-          let data = useLoaderData() as { message: string };
-          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
           let error = useRouteError() as Error;
@@ -7921,13 +7872,19 @@ function testDomRouter(
                 {
                   path: "foo",
                   loader: () => fooDefer.promise,
-                  Component: () => <Foo />,
+                  Component: () => {
+                    let data = useLoaderData() as { message: string };
+                    return <h1>Foo:{data.message}</h1>;
+                  },
                   ErrorBoundary: () => <FooError />,
                 },
                 {
                   path: "bar",
                   loader: () => barDefer.promise,
-                  Component: () => <Bar />,
+                  Component: () => {
+                    let data = useLoaderData() as { message: string };
+                    return <h1>Bar:{data.message}</h1>;
+                  },
                 },
               ],
             },
@@ -7962,17 +7919,9 @@ function testDomRouter(
           let error = useRouteError() as Error;
           return <p>Layout Error:{error.message}</p>;
         }
-        function Foo() {
-          let data = useLoaderData() as { message: string };
-          return <h1>Foo:{data.message}</h1>;
-        }
         function FooError() {
           let error = useRouteError() as Error;
           return <p>Foo Error:{error.message}</p>;
-        }
-        function Bar() {
-          let data = useLoaderData() as { message: string };
-          return <h1>Bar:{data.message}</h1>;
         }
 
         expect(getHtml(container.querySelector("#output")!))
@@ -8019,7 +7968,10 @@ function testDomRouter(
               {
                 path: "bar",
                 loader: () => barDefer.promise,
-                Component: () => <Bar />,
+                Component: () => {
+                  let data = useLoaderData() as { message: string };
+                  return <h1>Bar:{data.message}</h1>;
+                },
                 ErrorBoundary: () => <BarError />,
               },
             ],
@@ -8040,11 +7992,6 @@ function testDomRouter(
               </div>
             </div>
           );
-        }
-
-        function Bar() {
-          let data = useLoaderData() as { message: string };
-          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
           let error = useRouteError() as Error;
