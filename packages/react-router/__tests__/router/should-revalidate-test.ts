@@ -1251,7 +1251,7 @@ describe("shouldRevalidate", () => {
       });
 
       let A = await t.navigate("/?foo=bar", {
-        defaultShouldRevalidate: false,
+        unstable_defaultShouldRevalidate: false,
       });
 
       A.loaders.index.resolve("SHOULD NOT BE CALLED");
@@ -1290,7 +1290,7 @@ describe("shouldRevalidate", () => {
       });
 
       let A = await t.navigate("/?foo=bar", {
-        defaultShouldRevalidate: false,
+        unstable_defaultShouldRevalidate: false,
       });
 
       A.loaders.index.resolve("SHOULD NOT BE CALLED");
@@ -1345,7 +1345,7 @@ describe("shouldRevalidate", () => {
         {
           formMethod: "post",
           formData: createFormData({}),
-          defaultShouldRevalidate: false,
+          unstable_defaultShouldRevalidate: false,
         },
         ["fetch"],
       );
@@ -1418,7 +1418,7 @@ describe("shouldRevalidate", () => {
         {
           formMethod: "post",
           formData: createFormData({}),
-          defaultShouldRevalidate: false,
+          unstable_defaultShouldRevalidate: false,
         },
         ["fetch"],
       );
@@ -1483,7 +1483,7 @@ describe("shouldRevalidate", () => {
       let B = await t.fetch("/fetch", actionKey, "index", {
         formMethod: "post",
         formData: createFormData({}),
-        defaultShouldRevalidate: false,
+        unstable_defaultShouldRevalidate: false,
       });
       t.shimHelper(B.loaders, "fetch", "loader", "fetch");
 
@@ -1552,7 +1552,7 @@ describe("shouldRevalidate", () => {
       let B = await t.fetch("/fetch", actionKey, "index", {
         formMethod: "post",
         formData: createFormData({}),
-        defaultShouldRevalidate: false,
+        unstable_defaultShouldRevalidate: false,
       });
       t.shimHelper(B.loaders, "fetch", "loader", "fetch");
 
@@ -1623,7 +1623,7 @@ describe("shouldRevalidate", () => {
       let B = await t.fetch("/fetch", actionKey, "index", {
         formMethod: "post",
         formData: createFormData({}),
-        defaultShouldRevalidate: false,
+        unstable_defaultShouldRevalidate: false,
       });
       t.shimHelper(B.loaders, "fetch", "loader", "fetch");
 

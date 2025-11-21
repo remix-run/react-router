@@ -204,7 +204,7 @@ interface SharedSubmitOptions {
    * By default (when not specified), loaders will revalidate according to the routers
    * standard revalidation behavior.
    */
-  defaultShouldRevalidate?: boolean;
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 /**
