@@ -717,7 +717,7 @@ export function setup({
     history,
     router: currentRouter,
     get fetchers() {
-      let fetchers = {};
+      let fetchers: Record<string, Fetcher> = {};
       currentRouter?.state.fetchers.forEach((f, key) => {
         fetchers[key] = {
           ...f,
