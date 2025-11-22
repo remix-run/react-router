@@ -92,7 +92,7 @@
     "typescript": "^5.4.5",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
-    "vite": "^6.1.0"
+    "vite": "^6.3.0"
   },
   "engines": {
     "node": ">=20.0.0"
