@@ -7,11 +7,11 @@ import {
 } from "@testing-library/react";
 import * as React from "react";
 import type {
-  RouteObject,
   ErrorResponse,
   Fetcher,
-  RouterState,
+  Location,
   Navigation,
+  RouteObject,
 } from "../../index";
 import {
   Await,
@@ -37,10 +37,9 @@ import {
   useSearchParams,
   useSubmit,
 } from "../../index";
-
+import { createDeferred, tick } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
 import getWindow from "../utils/getWindow";
-import { createDeferred, tick } from "../router/utils/utils";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindow(url, false),
@@ -482,7 +481,7 @@ function testDomRouter(
       `);
     });
 
-    it("does not render fallbackElement if no data fetch or lazy loading is required", async () => {
+    it("does not render hydrateFallback if no data fetch or lazy loading is required", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
         [
@@ -6997,7 +6996,11 @@ function testDomRouter(
             { window: getWindow("/") },
           );
 
-          function FetcherComponent({ onClose }) {
+          function FetcherComponent({
+            onClose,
+          }: {
+            onClose: (data: any) => void;
+          }) {
             let fetcher = useFetcher();
 
             React.useEffect(() => {
@@ -7544,7 +7547,7 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy leaf elements with preloading", async () => {
-        let routes = [
+        let routes: RouteObject[] = [
           {
             path: "/",
             Component: () => <Comp />,
@@ -7567,7 +7570,7 @@ function testDomRouter(
         if (lazyMatches && lazyMatches?.length > 0) {
           await Promise.all(
             lazyMatches.map(async (m) => {
-              let routeModule = await m.route.lazy!();
+              let routeModule = await (m.route.lazy as Function)();
               Object.assign(m.route, { ...routeModule, lazy: undefined });
             }),
           );
@@ -7675,7 +7678,7 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy parent elements with preloading", async () => {
-        let routes = [
+        let routes: RouteObject[] = [
           {
             path: "/",
             lazy: async () => ({
@@ -7693,7 +7696,7 @@ function testDomRouter(
         if (lazyMatches && lazyMatches?.length > 0) {
           await Promise.all(
             lazyMatches.map(async (m) => {
-              let routeModule = await m.route.lazy!();
+              let routeModule = await (m.route.lazy as Function)();
               Object.assign(m.route, { ...routeModule, lazy: undefined });
             }),
           );
@@ -8213,7 +8216,7 @@ function testDomRouter(
           };
         };
 
-        let renders: RouterState[] = [];
+        let renders: [Location, Navigation][] = [];
         let router = createTestRouter(
           [
             {
@@ -8236,7 +8239,7 @@ function testDomRouter(
                     return "INDEX";
                   },
                   Component() {
-                    renders.push(useLocation(), useNavigation());
+                    renders.push([useLocation(), useNavigation()]);
                     return <h1>{useLoaderData()}</h1>;
                   },
                 },
@@ -8247,7 +8250,7 @@ function testDomRouter(
                     return "PAGE";
                   },
                   Component() {
-                    renders.push(useLocation(), useNavigation());
+                    renders.push([useLocation(), useNavigation()]);
                     return <h1>{useLoaderData()}</h1>;
                   },
                 },
@@ -8265,14 +8268,15 @@ function testDomRouter(
 
         expect(renders).toMatchObject([
           // Re-render of current location with navigation.state = "loading"
-          { pathname: "/" },
-          {
-            state: "loading",
-            location: { pathname: "/page" },
-          },
+          [
+            { pathname: "/" },
+            {
+              state: "loading",
+              location: { pathname: "/page" },
+            },
+          ],
           // Render of new location with navigation.state = "idle"
-          { pathname: "/page" },
-          { state: "idle" },
+          [{ pathname: "/page" }, { state: "idle" }],
         ]);
       });
     });
