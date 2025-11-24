@@ -107,7 +107,7 @@ function testDomRouter(
             path: "/my/base/path",
             children: [
               {
-                Component: () => <Outlet />,
+                Component: Outlet,
                 children: [{ path: "thing", Component: () => <h1>Heyooo</h1> }],
               },
             ],
@@ -152,8 +152,8 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Comp />,
-            children: [{ path: "child", Component: () => <Comp /> }],
+            Component: Comp,
+            children: [{ path: "child", Component: Comp }],
           },
         ],
         {
@@ -214,8 +214,8 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Comp />,
-            children: [{ path: "child", Component: () => <Comp /> }],
+            Component: Comp,
+            children: [{ path: "child", Component: Comp }],
           },
         ],
         {
@@ -383,13 +383,13 @@ function testDomRouter(
       `);
     });
 
-    it("renders hydrateFallbackElement while first data fetch happens", async () => {
+    it("renders HydrateFallback while first data fetch happens", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
         [
           {
             path: "/",
-            Component: () => <Outlet />,
+            Component: Outlet,
             HydrateFallback: () => <p>Loading...</p>,
             children: [
               {
@@ -436,7 +436,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Outlet />,
+            Component: Outlet,
             HydrateFallback: () => <p>Loading...</p>,
             children: [
               {
@@ -487,7 +487,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Outlet />,
+            Component: Outlet,
             children: [
               {
                 path: "foo",
@@ -517,13 +517,13 @@ function testDomRouter(
       `);
     });
 
-    it("renders hydrateFallbackElement within router contexts", async () => {
+    it("renders HydrateFallback within router contexts", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
         [
           {
             path: "/",
-            Component: () => <Outlet />,
+            Component: Outlet,
             HydrateFallback: () => <FallbackElement />,
             children: [
               {
@@ -572,7 +572,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { path: "foo", Component: () => <h1>Foo Heading</h1> },
               { path: "bar", Component: () => <h1>Bar Heading</h1> },
@@ -607,7 +607,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { path: "foo", Component: () => <h1>Foo Heading</h1> },
               { path: "bar", Component: () => <h1>Bar Heading</h1> },
@@ -652,7 +652,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { path: "foo", Component: () => <h1>Foo</h1> },
               {
@@ -736,7 +736,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { path: "foo", Component: () => <h1>Foo</h1> },
               {
@@ -822,7 +822,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { path: "foo", Component: () => <h1>Foo Heading</h1> },
               { path: "bar", Component: () => <h1>Bar Heading</h1> },
@@ -875,7 +875,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { path: "foo", Component: () => <h1>Foo Heading</h1> },
               { path: "bar", Component: () => <h1>Bar Heading</h1> },
@@ -933,7 +933,7 @@ function testDomRouter(
             path: "/",
             action: () => actionDefer.promise,
             loader: () => loaderDefer.promise,
-            Component: () => <Home />,
+            Component: Home,
           },
         ],
         {
@@ -1040,7 +1040,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Home />,
+            Component: Home,
             children: [
               { index: true, Component: () => <h1>Home</h1> },
               {
@@ -1174,7 +1174,7 @@ function testDomRouter(
               ).searchParams.get("test");
               return `${resolvedValue}:${urlParam}`;
             },
-            Component: () => <Home />,
+            Component: Home,
           },
         ],
         {
@@ -1258,7 +1258,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Home />,
+            Component: Home,
             children: [
               { index: true, Component: () => <h1>Home</h1> },
               {
@@ -1376,7 +1376,7 @@ function testDomRouter(
               return `${resolvedValue}:${formData.get("test")}`;
             },
             loader: () => loaderDefer.promise,
-            Component: () => <Home />,
+            Component: Home,
           },
         ],
         {
@@ -1479,7 +1479,7 @@ function testDomRouter(
         [
           {
             path: "/",
-            Component: () => <Home />,
+            Component: Home,
             children: [
               { index: true, Component: () => <h1>Home</h1> },
               {
@@ -1643,7 +1643,7 @@ function testDomRouter(
     it("supports <Form reloadDocument={true}>", async () => {
       let actionSpy = jest.fn();
       let router = createTestRouter([
-        { path: "/", action: actionSpy, Component: () => <Home /> },
+        { path: "/", action: actionSpy, Component: Home },
       ]);
       render(<RouterProvider router={router} />);
 
@@ -1676,7 +1676,7 @@ function testDomRouter(
       let router = createTestRouter(
         [
           {
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { index: true, Component: () => <h1>index</h1> },
               { path: "1", Component: () => <h1>Page 1</h1> },
@@ -1746,13 +1746,13 @@ function testDomRouter(
       let router = createTestRouter(
         [
           {
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { index: true, Component: () => <h1>Index Page</h1> },
               {
                 path: "form",
                 action: () => "action data",
-                Component: () => <FormPage />,
+                Component: FormPage,
               },
               { path: "result", Component: () => <h1>Result Page</h1> },
             ],
@@ -1812,7 +1812,7 @@ function testDomRouter(
       let router = createTestRouter(
         [
           {
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { index: true, Component: () => <h1>Index Page</h1> },
               {
@@ -1822,7 +1822,7 @@ function testDomRouter(
                     status: 302,
                     headers: { Location: "/result" },
                   }),
-                Component: () => <FormPage />,
+                Component: FormPage,
               },
               { path: "result", Component: () => <h1>Result Page</h1> },
             ],
@@ -1879,7 +1879,7 @@ function testDomRouter(
       let router = createTestRouter(
         [
           {
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { index: true, Component: () => <h1>index</h1> },
               {
@@ -1963,7 +1963,7 @@ function testDomRouter(
       let router = createTestRouter(
         [
           {
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { index: true, Component: () => <h1>index</h1> },
               { path: "1", Component: () => <h1>Page 1</h1> },
@@ -2059,14 +2059,14 @@ function testDomRouter(
       let router = createTestRouter(
         [
           {
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               { index: true, Component: () => <h1>index</h1> },
               {
                 path: "1",
                 action: () => "action",
                 loader: () => "1",
-                Component: () => <Page />,
+                Component: Page,
               },
             ],
           },
@@ -2167,13 +2167,10 @@ function testDomRouter(
 
     it('supports a basename on <Form method="get">', async () => {
       let testWindow = getWindow("/base/path");
-      let router = createTestRouter(
-        [{ path: "path", Component: () => <Comp /> }],
-        {
-          basename: "/base",
-          window: testWindow,
-        },
-      );
+      let router = createTestRouter([{ path: "path", Component: Comp }], {
+        basename: "/base",
+        window: testWindow,
+      });
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
@@ -2250,7 +2247,7 @@ function testDomRouter(
           {
             path: "path",
             action: () => "action data",
-            Component: () => <Comp />,
+            Component: Comp,
           },
         ],
         {
@@ -2346,7 +2343,7 @@ function testDomRouter(
               throw new Error("Should not hit this");
             },
             loader: () => loaderDefer.promise,
-            Component: () => <Home />,
+            Component: Home,
           },
         ],
         {
@@ -2506,7 +2503,7 @@ function testDomRouter(
               return `${resolvedValue}:${formData.get("test")}`;
             },
             loader: () => loaderDefer.promise,
-            Component: () => <Home />,
+            Component: Home,
           },
         ],
         {
@@ -2666,9 +2663,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    children: [
-                      { path: "bar", Component: () => <NoActionComponent /> },
-                    ],
+                    children: [{ path: "bar", Component: NoActionComponent }],
                   },
                 ],
               },
@@ -2692,9 +2687,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    children: [
-                      { path: "bar", Component: () => <ActionDotComponent /> },
-                    ],
+                    children: [{ path: "bar", Component: ActionDotComponent }],
                   },
                 ],
               },
@@ -2719,7 +2712,7 @@ function testDomRouter(
                     children: [
                       {
                         path: "bar",
-                        Component: () => <ActionEmptyComponent />,
+                        Component: ActionEmptyComponent,
                       },
                     ],
                   },
@@ -2748,7 +2741,7 @@ function testDomRouter(
                     children: [
                       {
                         path: "bar",
-                        Component: () => <NoActionComponent />,
+                        Component: NoActionComponent,
                         children: [
                           { index: true, Component: () => <h1>Index</h1> },
                         ],
@@ -2780,7 +2773,7 @@ function testDomRouter(
                     children: [
                       {
                         path: "bar",
-                        Component: () => <ActionDotComponent />,
+                        Component: ActionDotComponent,
                         children: [
                           { index: true, Component: () => <h1>Index</h1> },
                         ],
@@ -2812,7 +2805,7 @@ function testDomRouter(
                     children: [
                       {
                         path: "bar",
-                        Component: () => <ActionEmptyComponent />,
+                        Component: ActionEmptyComponent,
                         children: [
                           { index: true, Component: () => <h1>Index</h1> },
                         ],
@@ -2841,7 +2834,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    Component: () => <ActionEmptyComponent />,
+                    Component: ActionEmptyComponent,
                     children: [
                       { path: ":param", Component: () => <h1>Param</h1> },
                     ],
@@ -2868,7 +2861,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    Component: () => <ActionEmptyComponent />,
+                    Component: ActionEmptyComponent,
                     children: [{ path: "*", Component: () => <h1>Splat</h1> }],
                   },
                 ],
@@ -2896,7 +2889,7 @@ function testDomRouter(
                     children: [
                       {
                         path: "bar",
-                        Component: () => <NoActionComponent />,
+                        Component: NoActionComponent,
                         children: [
                           { index: true, Component: () => <h1>Index</h1> },
                         ],
@@ -2933,7 +2926,7 @@ function testDomRouter(
                         children: [
                           {
                             index: true,
-                            Component: () => <NoActionComponent />,
+                            Component: NoActionComponent,
                           },
                         ],
                       },
@@ -2967,7 +2960,7 @@ function testDomRouter(
                         children: [
                           {
                             index: true,
-                            Component: () => <ActionDotComponent />,
+                            Component: ActionDotComponent,
                           },
                         ],
                       },
@@ -3001,7 +2994,7 @@ function testDomRouter(
                         children: [
                           {
                             index: true,
-                            Component: () => <ActionEmptyComponent />,
+                            Component: ActionEmptyComponent,
                           },
                         ],
                       },
@@ -3079,7 +3072,7 @@ function testDomRouter(
                       {
                         index: true,
                         path: "bar",
-                        Component: () => <NoActionComponent />,
+                        Component: NoActionComponent,
                       },
                     ],
                   },
@@ -3149,7 +3142,7 @@ function testDomRouter(
                     children: [
                       {
                         path: ":param",
-                        Component: () => <NoActionComponent />,
+                        Component: NoActionComponent,
                       },
                     ],
                   },
@@ -3178,7 +3171,7 @@ function testDomRouter(
                     children: [
                       {
                         path: ":param",
-                        Component: () => <ActionDotComponent />,
+                        Component: ActionDotComponent,
                       },
                     ],
                   },
@@ -3207,7 +3200,7 @@ function testDomRouter(
                     children: [
                       {
                         path: ":param",
-                        Component: () => <ActionEmptyComponent />,
+                        Component: ActionEmptyComponent,
                       },
                     ],
                   },
@@ -3235,9 +3228,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    children: [
-                      { path: "*", Component: () => <NoActionComponent /> },
-                    ],
+                    children: [{ path: "*", Component: NoActionComponent }],
                   },
                 ],
               },
@@ -3261,9 +3252,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    children: [
-                      { path: "*", Component: () => <ActionDotComponent /> },
-                    ],
+                    children: [{ path: "*", Component: ActionDotComponent }],
                   },
                 ],
               },
@@ -3287,9 +3276,7 @@ function testDomRouter(
                 children: [
                   {
                     path: "foo",
-                    children: [
-                      { path: "*", Component: () => <ActionEmptyComponent /> },
-                    ],
+                    children: [{ path: "*", Component: ActionEmptyComponent }],
                   },
                 ],
               },
@@ -3313,13 +3300,13 @@ function testDomRouter(
               {
                 id: "parent",
                 path: "/parent",
-                Component: () => <Parent />,
+                Component: Parent,
                 action: ({ request }) => "PARENT ACTION: " + request.url,
                 children: [
                   {
                     id: "index",
                     index: true,
-                    Component: () => <Index />,
+                    Component: Index,
                     action: ({ request }) => "INDEX ACTION: " + request.url,
                   },
                 ],
@@ -3379,13 +3366,13 @@ function testDomRouter(
               {
                 id: "parent",
                 path: "/parent",
-                Component: () => <Parent />,
+                Component: Parent,
                 action: ({ request }) => "PARENT ACTION: " + request.url,
                 children: [
                   {
                     id: "index",
                     index: true,
-                    Component: () => <Index />,
+                    Component: Index,
                     action: ({ request }) => "INDEX ACTION: " + request.url,
                   },
                 ],
@@ -3450,13 +3437,13 @@ function testDomRouter(
               {
                 id: "parent",
                 path: "/parent",
-                Component: () => <Parent />,
+                Component: Parent,
                 action: ({ request }) => "PARENT ACTION: " + request.url,
                 children: [
                   {
                     id: "index",
                     index: true,
-                    Component: () => <Index />,
+                    Component: Index,
                     action: ({ request }) => "INDEX ACTION: " + request.url,
                   },
                 ],
@@ -3516,13 +3503,13 @@ function testDomRouter(
               {
                 id: "parent",
                 path: "/parent",
-                Component: () => <Parent />,
+                Component: Parent,
                 action: ({ request }) => "PARENT ACTION: " + request.url,
                 children: [
                   {
                     id: "index",
                     index: true,
-                    Component: () => <Index />,
+                    Component: Index,
                     action: ({ request }) => "INDEX ACTION: " + request.url,
                   },
                 ],
@@ -3750,7 +3737,7 @@ function testDomRouter(
       it("gathers form data on <Form> submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3774,7 +3761,7 @@ function testDomRouter(
       it("gathers form data on submit(form) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3802,7 +3789,7 @@ function testDomRouter(
       it("gathers form data on submit(button) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3836,7 +3823,7 @@ function testDomRouter(
       it("gathers form data on submit(input[type=submit]) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -3870,7 +3857,7 @@ function testDomRouter(
       it("gathers form data on submit(FormData) submissions", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4073,7 +4060,7 @@ function testDomRouter(
       it('serializes into text on <Form encType="text/plain" submissions', async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4100,7 +4087,7 @@ function testDomRouter(
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4127,7 +4114,7 @@ function testDomRouter(
       it("includes submit button name/value on button submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4162,7 +4149,7 @@ function testDomRouter(
       it("appends button name/value and doesn't overwrite inputs with same name (form)", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4188,7 +4175,7 @@ function testDomRouter(
       it("appends button name/value and doesn't overwrite inputs with same name (button)", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4231,7 +4218,7 @@ function testDomRouter(
         }
 
         let router = createTestRouter(
-          [{ path: "/", action: actionSpy, Component: () => <FormPage /> }],
+          [{ path: "/", action: actionSpy, Component: FormPage }],
           { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
@@ -4299,7 +4286,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               action: async ({ request }) => {
                 let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
@@ -4427,14 +4414,14 @@ function testDomRouter(
             {
               id: "parent",
               path: "/parent",
-              Component: () => <Outlet />,
+              Component: Outlet,
               action: () => "PARENT ACTION",
               loader: () => "PARENT LOADER",
               children: [
                 {
                   id: "index",
                   index: true,
-                  Component: () => <Index />,
+                  Component: Index,
                   action: () => "INDEX ACTION",
                   loader: () => "INDEX LOADER",
                 },
@@ -4519,7 +4506,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorElement />,
               loader: async () => {
                 throw new Error("Kaboom!");
@@ -4590,7 +4577,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorElement />,
               loader: () => ({ value: dfd.promise }),
             },
@@ -4695,7 +4682,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorElement />,
               action: async () => {
                 throw new Error("Kaboom!");
@@ -4772,7 +4759,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               action: async ({ request }) => {
                 let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
@@ -4876,7 +4863,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorElement />,
               loader: async () => {
                 throw new Error("Kaboom!");
@@ -4944,7 +4931,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorElement />,
               action: async () => {
                 throw new Error("Kaboom!");
@@ -5184,13 +5171,13 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Parent />,
+              Component: Parent,
               children: [
-                { path: "/1", Component: () => <Comp1 /> },
+                { path: "/1", Component: Comp1 },
                 {
                   path: "/2",
                   loader: () => navDfd.promise,
-                  Component: () => <Comp2 />,
+                  Component: Comp2,
                 },
                 { path: "/fetch-1", loader: () => fetchDfd1.promise },
                 { path: "/fetch-2", loader: () => fetchDfd2.promise },
@@ -5402,7 +5389,7 @@ function testDomRouter(
             {
               id: "index",
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               action: async ({ request }) => {
                 let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
@@ -5485,12 +5472,12 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Outlet />,
+              Component: Outlet,
               ErrorBoundary: () => <p>Not I!</p>,
               children: [
                 {
                   path: "child",
-                  Component: () => <Comp />,
+                  Component: Comp,
                   ErrorBoundary: () => <ErrorElement />,
                 },
               ],
@@ -5540,12 +5527,12 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Outlet />,
+              Component: Outlet,
               ErrorBoundary: () => <p>Not I!</p>,
               children: [
                 {
                   path: "child",
-                  Component: () => <Comp />,
+                  Component: Comp,
                   ErrorBoundary: () => <ErrorElement />,
                 },
                 {
@@ -5600,12 +5587,12 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Outlet />,
+              Component: Outlet,
               ErrorBoundary: () => <p>Not I!</p>,
               children: [
                 {
                   path: "child",
-                  Component: () => <Comp />,
+                  Component: Comp,
                   ErrorBoundary: () => <ErrorElement />,
                 },
                 {
@@ -5671,12 +5658,12 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Outlet />,
+              Component: Outlet,
               ErrorBoundary: () => <p>Not I!</p>,
               children: [
                 {
                   path: "child",
-                  Component: () => <Comp />,
+                  Component: Comp,
                   ErrorBoundary: () => <ErrorElement />,
                 },
                 {
@@ -7250,7 +7237,7 @@ function testDomRouter(
             [
               {
                 path: "/",
-                Component: () => <Comp />,
+                Component: Comp,
                 children: [{ path: "fetch", loader: () => "FETCH" }],
               },
             ],
@@ -7301,7 +7288,7 @@ function testDomRouter(
             [
               {
                 path: "/",
-                Component: () => <Comp />,
+                Component: Comp,
                 children: [{ path: "fetch", loader: () => "FETCH" }],
               },
             ],
@@ -7358,7 +7345,7 @@ function testDomRouter(
             [
               {
                 path: "/",
-                Component: () => <Comp />,
+                Component: Comp,
                 children: [{ path: "fetch", action: () => "FETCH" }],
               },
             ],
@@ -7414,7 +7401,7 @@ function testDomRouter(
             [
               {
                 path: "/",
-                Component: () => <Comp />,
+                Component: Comp,
                 children: [{ path: "fetch", action: () => "FETCH" }],
               },
             ],
@@ -7486,11 +7473,11 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               children: [
                 {
                   path: "child",
-                  Component: () => <Comp />,
+                  Component: Comp,
                   ErrorBoundary: () => <ErrorBoundary />,
                 },
               ],
@@ -7550,12 +7537,12 @@ function testDomRouter(
         let routes: RouteObject[] = [
           {
             path: "/",
-            Component: () => <Comp />,
+            Component: Comp,
             children: [
               {
                 path: "child",
                 lazy: async () => ({
-                  Component: () => <Comp />,
+                  Component: Comp,
                   ErrorBoundary: () => <ErrorBoundary />,
                 }),
               },
@@ -7631,9 +7618,9 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorBoundary />,
-              children: [{ path: "child", Component: () => <Comp /> }],
+              children: [{ path: "child", Component: Comp }],
             },
           ],
           {
@@ -7682,10 +7669,10 @@ function testDomRouter(
           {
             path: "/",
             lazy: async () => ({
-              Component: () => <Comp />,
+              Component: Comp,
               ErrorBoundary: () => <ErrorBoundary />,
             }),
-            children: [{ path: "child", Component: () => <Comp /> }],
+            children: [{ path: "child", Component: Comp }],
           },
         ];
 
@@ -7751,7 +7738,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Layout />,
+              Component: Layout,
               children: [
                 {
                   path: "foo",
@@ -7869,7 +7856,7 @@ function testDomRouter(
           [
             {
               path: "/",
-              Component: () => <Layout />,
+              Component: Layout,
               ErrorBoundary: () => <LayoutError />,
               children: [
                 {
@@ -7962,7 +7949,7 @@ function testDomRouter(
         let routes = [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               {
                 path: "foo",
@@ -8047,7 +8034,7 @@ function testDomRouter(
         let routes: RouteObject[] = [
           {
             path: "/",
-            Component: () => <Layout />,
+            Component: Layout,
             children: [
               {
                 path: "foo",
