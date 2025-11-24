@@ -93,12 +93,12 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
-         "<div>
-           <h1>
-             Home
-           </h1>
-         </div>"
-       `);
+          "<div>
+            <h1>
+              Home
+            </h1>
+          </div>"
+        `);
       });
 
       it("renders the first route that matches the URL when wrapped in a root Route", () => {
@@ -412,13 +412,13 @@ function testDomRouter(
         fooDefer.resolve({ message: "From Foo Loader" });
         await waitFor(() => screen.getByText("Foo:From Foo Loader"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h1>
-            Foo:
-            From Foo Loader
-          </h1>
-        </div>"
-      `);
+          "<div>
+            <h1>
+              Foo:
+              From Foo Loader
+            </h1>
+          </div>"
+        `);
       });
     });
 
@@ -600,17 +600,17 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Link to Bar"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <h1>
+                Foo
+              </h1>
+            </div>"
+          `);
 
         barDefer.resolve({ message: "Bar Loader" });
         await waitFor(() => screen.getByText("idle"));
@@ -677,31 +677,31 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <p />
-            <p />
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p />
+              <p />
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("loading"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              loading
-            </p>
-            <p />
-            <p />
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <p />
+              <p />
+            </div>"
+          `);
 
         loaderDefer.resolve("Loader Data");
         await waitFor(() => screen.getByText("idle"));
@@ -816,21 +816,21 @@ function testDomRouter(
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <h1>
-            Path
-          </h1>
-          <p>
-            Loader Data:value
-          </p>
-          <p />
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Path
+              </h1>
+              <p>
+                Loader Data:value
+              </p>
+              <p />
+            </div>"
+          `);
       });
     });
 
@@ -881,67 +881,67 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p />
-          <p />
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p />
+              <p />
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("submitting"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            submitting
-          </p>
-          <p />
-          <p />
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                submitting
+              </p>
+              <p />
+              <p />
+            </div>"
+          `);
 
         actionDefer.resolve("Action Data");
         await waitFor(() => screen.getByText("loading"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            loading
-          </p>
-          <p />
-          <p>
-            Action Data
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <p />
+              <p>
+                Action Data
+              </p>
+            </div>"
+          `);
 
         loaderDefer.resolve("Loader Data");
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p>
-            Loader Data
-          </p>
-          <p>
-            Action Data
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Loader Data
+              </p>
+              <p>
+                Action Data
+              </p>
+            </div>"
+          `);
       });
 
       it("executes lazy route actions/loaders on useSubmit navigations", async () => {
@@ -1005,71 +1005,71 @@ function testDomRouter(
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <h1>
-            Home
-          </h1>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Home
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("submitting"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            submitting
-          </p>
-          <h1>
-            Home
-          </h1>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                submitting
+              </p>
+              <h1>
+                Home
+              </h1>
+            </div>"
+          `);
 
         actionDefer.resolve("Action Data");
         await waitFor(() => screen.getByText("loading"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            loading
-          </p>
-          <h1>
-            Home
-          </h1>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <h1>
+                Home
+              </h1>
+            </div>"
+          `);
 
         loaderDefer.resolve("Loader Data");
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <h1>
-            Action
-          </h1>
-          <p>
-            Loader Data
-          </p>
-          <p>
-            Action Data
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Action
+              </h1>
+              <p>
+                Loader Data
+              </p>
+              <p>
+                Action Data
+              </p>
+            </div>"
+          `);
       });
 
       it("executes route actions/loaders on <Form method=post> navigations", async () => {
@@ -1118,67 +1118,67 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p />
-          <p />
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p />
+              <p />
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("submitting"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            submitting
-          </p>
-          <p />
-          <p />
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                submitting
+              </p>
+              <p />
+              <p />
+            </div>"
+          `);
 
         actionDefer.resolve("Action Data");
         await waitFor(() => screen.getByText("loading"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            loading
-          </p>
-          <p />
-          <p>
-            Action Data:value
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <p />
+              <p>
+                Action Data:value
+              </p>
+            </div>"
+          `);
 
         loaderDefer.resolve("Loader Data");
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p>
-            Loader Data
-          </p>
-          <p>
-            Action Data:value
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Loader Data
+              </p>
+              <p>
+                Action Data:value
+              </p>
+            </div>"
+          `);
       });
 
       it("executes lazy route actions/loaders on <Form method=post> navigations", async () => {
@@ -1243,71 +1243,71 @@ function testDomRouter(
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <h1>
-            Home
-          </h1>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Home
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("submitting"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            submitting
-          </p>
-          <h1>
-            Home
-          </h1>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                submitting
+              </p>
+              <h1>
+                Home
+              </h1>
+            </div>"
+          `);
 
         actionDefer.resolve("Action Data");
         await waitFor(() => screen.getByText("loading"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            loading
-          </p>
-          <h1>
-            Home
-          </h1>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <h1>
+                Home
+              </h1>
+            </div>"
+          `);
 
         loaderDefer.resolve("Loader Data");
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <h1>
-            Action
-          </h1>
-          <p>
-            Loader Data
-          </p>
-          <p>
-            Action Data:value
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Action
+              </h1>
+              <p>
+                Loader Data
+              </p>
+              <p>
+                Action Data:value
+              </p>
+            </div>"
+          `);
       });
 
       it("supports <Form state>", async () => {
@@ -1341,12 +1341,12 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         await waitFor(() => screen.getByText('{"key":"value"}'));
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <p>
-            {"key":"value"}
-          </p>
-        </div>"
-      `);
+          "<div>
+            <p>
+              {"key":"value"}
+            </p>
+          </div>"
+        `);
         expect(testWindow.history.state.usr).toEqual({ key: "value" });
       });
 
@@ -1426,49 +1426,49 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p>
-            Initial Data
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Initial Data
+              </p>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("loading"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            loading
-          </p>
-          <p>
-            Initial Data
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                loading
+              </p>
+              <p>
+                Initial Data
+              </p>
+            </div>"
+          `);
 
         loaderDefer.resolve("Loader Data");
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p>
-            Loader Data
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Loader Data
+              </p>
+            </div>"
+          `);
       });
 
       it("allows a button to override the <form action>", async () => {
@@ -1519,24 +1519,24 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         await waitFor(() => screen.getByText("Yes"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <form
-            action="/foo"
-            data-discover="true"
-            method="post"
-          >
-            <p>
-              Yes
-            </p>
-            <button
-              formaction="/foo/bar"
-              type="submit"
+          "<div>
+            <form
+              action="/foo"
+              data-discover="true"
+              method="post"
             >
-              Submit
-            </button>
-          </form>
-        </div>"
-      `);
+              <p>
+                Yes
+              </p>
+              <button
+                formaction="/foo/bar"
+                type="submit"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
       });
 
       it("supports uppercase form method attributes", async () => {
@@ -1592,20 +1592,20 @@ function testDomRouter(
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          id="output"
-        >
-          <p>
-            idle
-          </p>
-          <p>
-            Loader Data
-          </p>
-          <p>
-            Action Data:value
-          </p>
-        </div>"
-      `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Loader Data
+              </p>
+              <p>
+                Action Data:value
+              </p>
+            </div>"
+          `);
       });
     });
 
@@ -1715,40 +1715,40 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit Form"));
         await waitFor(() => screen.getByText("Page 1"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 1
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 1
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Go back"));
         await waitFor(() => screen.getByText("index"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
       });
 
       it('defaults <Form method="post"> to be a REPLACE navigation', async () => {
@@ -1932,40 +1932,40 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit"));
         await waitFor(() => screen.getByText("Page 1"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 1
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 1
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Go back"));
         await waitFor(() => screen.getByText("index"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
       });
 
       it('defaults useSubmit({ method: "post" }) to a new location to be a PUSH navigation', async () => {
@@ -2015,53 +2015,53 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Go to 1"));
         await waitFor(() => screen.getByText("Page 1"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 1
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 1
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit"));
         await waitFor(() => screen.getByText("Page 2"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 2
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 2
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Go back"));
         await waitFor(() => screen.getByText("Page 1"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 1
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 1
+              </h1>
+            </div>"
+          `);
       });
 
       it('defaults useSubmit({ method: "post" }) to the same location to be a REPLACE navigation', async () => {
@@ -2121,57 +2121,57 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Go to 1"));
         await waitFor(() => screen.getByText("Page 1"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 1
-          </h1>
-          <p />
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 1
+              </h1>
+              <p />
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Submit"));
         await waitFor(() => screen.getByText("action"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            Page 1
-          </h1>
-          <p>
-            action
-          </p>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                Page 1
+              </h1>
+              <p>
+                action
+              </p>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Go back"));
         await waitFor(() => screen.getByText("index"));
         expect(getHtml(container.querySelector(".output")!))
           .toMatchInlineSnapshot(`
-        "<div
-          class="output"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+            "<div
+              class="output"
+            >
+              <h1>
+                index
+              </h1>
+            </div>"
+          `);
       });
     });
 
@@ -2210,23 +2210,23 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Bar Heading"));
         expect(getHtml(container.querySelector("#preventScrollReset")!))
           .toMatchInlineSnapshot(`
-        "<p
-          id="preventScrollReset"
-        >
-          false
-        </p>"
-      `);
+            "<p
+              id="preventScrollReset"
+            >
+              false
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Foo"));
         await waitFor(() => screen.getByText("Foo Heading"));
         expect(getHtml(container.querySelector("#preventScrollReset")!))
           .toMatchInlineSnapshot(`
-        "<p
-          id="preventScrollReset"
-        >
-          true
-        </p>"
-      `);
+            "<p
+              id="preventScrollReset"
+            >
+              true
+            </p>"
+          `);
       });
 
       it("handles link navigations with preventScrollReset={true}", async () => {
@@ -2263,23 +2263,23 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Bar Heading"));
         expect(getHtml(container.querySelector("#preventScrollReset")!))
           .toMatchInlineSnapshot(`
-        "<p
-          id="preventScrollReset"
-        >
-          false
-        </p>"
-      `);
+            "<p
+              id="preventScrollReset"
+            >
+              false
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Foo"));
         await waitFor(() => screen.getByText("Foo Heading"));
         expect(getHtml(container.querySelector("#preventScrollReset")!))
           .toMatchInlineSnapshot(`
-        "<p
-          id="preventScrollReset"
-        >
-          true
-        </p>"
-      `);
+            "<p
+              id="preventScrollReset"
+            >
+              true
+            </p>"
+          `);
       });
     });
 
@@ -2295,12 +2295,12 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h1>
-            Heyooo
-          </h1>
-        </div>"
-      `);
+          "<div>
+            <h1>
+              Heyooo
+            </h1>
+          </div>"
+        `);
       });
       it("handles link navigations when using a basename", async () => {
         let testWindow = getWindow("/base/name/foo");
@@ -2369,56 +2369,56 @@ function testDomRouter(
 
         assertLocation(testWindow, "/base/path");
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <form
-            action="/base/path"
-            data-discover="true"
-            method="get"
-          >
-            <p>
-              /path
-            </p>
-            <input
-              name="a"
-              value="1"
-            />
-            <button
-              name="b"
-              type="submit"
-              value="2"
+          "<div>
+            <form
+              action="/base/path"
+              data-discover="true"
+              method="get"
             >
-              Submit
-            </button>
-          </form>
-        </div>"
-      `);
+              <p>
+                /path
+              </p>
+              <input
+                name="a"
+                value="1"
+              />
+              <button
+                name="b"
+                type="submit"
+                value="2"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
 
         fireEvent.click(screen.getByText("Submit"));
         assertLocation(testWindow, "/base/path", "?a=1&b=2");
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <form
-            action="/base/path?a=1&b=2"
-            data-discover="true"
-            method="get"
-          >
-            <p>
-              /path?a=1&b=2
-            </p>
-            <input
-              name="a"
-              value="1"
-            />
-            <button
-              name="b"
-              type="submit"
-              value="2"
+          "<div>
+            <form
+              action="/base/path?a=1&b=2"
+              data-discover="true"
+              method="get"
             >
-              Submit
-            </button>
-          </form>
-        </div>"
-      `);
+              <p>
+                /path?a=1&b=2
+              </p>
+              <input
+                name="a"
+                value="1"
+              />
+              <button
+                name="b"
+                type="submit"
+                value="2"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
       });
 
       it('supports a basename on <Form method="post">', async () => {
@@ -2456,60 +2456,60 @@ function testDomRouter(
 
         assertLocation(testWindow, "/base/path");
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <form
-            action="/base/path"
-            data-discover="true"
-            method="post"
-          >
-            <p>
-              /path
-            </p>
-            <input
-              name="a"
-              value="1"
-            />
-            <button
-              name="b"
-              type="submit"
-              value="2"
+          "<div>
+            <form
+              action="/base/path"
+              data-discover="true"
+              method="post"
             >
-              Submit
-            </button>
-          </form>
-        </div>"
-      `);
+              <p>
+                /path
+              </p>
+              <input
+                name="a"
+                value="1"
+              />
+              <button
+                name="b"
+                type="submit"
+                value="2"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
 
         fireEvent.click(screen.getByText("Submit"));
         await waitFor(() => screen.getByText("action data"));
         assertLocation(testWindow, "/base/path");
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <form
-            action="/base/path"
-            data-discover="true"
-            method="post"
-          >
-            <p>
-              /path
-            </p>
-            <p>
-              action data
-            </p>
-            <input
-              name="a"
-              value="1"
-            />
-            <button
-              name="b"
-              type="submit"
-              value="2"
+          "<div>
+            <form
+              action="/base/path"
+              data-discover="true"
+              method="post"
             >
-              Submit
-            </button>
-          </form>
-        </div>"
-      `);
+              <p>
+                /path
+              </p>
+              <p>
+                action data
+              </p>
+              <input
+                name="a"
+                value="1"
+              />
+              <button
+                name="b"
+                type="submit"
+                value="2"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
       });
     });
 
@@ -3965,10 +3965,10 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         expect(await actionSpy.mock.calls[0][0].request.text())
           .toMatchInlineSnapshot(`
-          "a=1
-          b=2
-          "
-        `);
+            "a=1
+            b=2
+            "
+          `);
       });
 
       it("includes submit button name/value on form submission", async () => {
@@ -4222,77 +4222,77 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("load 1"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            loading
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              loading
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"count":1}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"count":1}
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("load 5"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            loading
-            {"count":1}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              loading
+              {"count":1}
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"count":6}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"count":6}
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("submit 10"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            submitting
-            {"count":6}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              submitting
+              {"count":6}
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"count":16}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"count":16}
+            </p>"
+          `);
       });
 
       it("handles fetcher ?index params", async () => {
@@ -4694,55 +4694,55 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("submit get 1"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            loading
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              loading
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"count":1}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"count":1}
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("submit post 10"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            submitting
-            {"count":1}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              submitting
+              {"count":1}
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"count":11}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"count":11}
+            </p>"
+          `);
       });
 
       it("handles fetcher.Form get errors", async () => {
@@ -4786,22 +4786,22 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("submit"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            loading
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              loading
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText("Kaboom!"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4854,22 +4854,22 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("submit"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            submitting
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              submitting
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText("Kaboom!"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -5121,151 +5121,151 @@ function testDomRouter(
         // Initial state - no useFetchers reflected yet
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              []
-            </p>
-            <p>
-              1
-              idle
-              null
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                []
+              </p>
+              <p>
+                1
+                idle
+                null
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
 
         // Activate Comp1 fetcher
         fireEvent.click(screen.getByText("load"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              ["loading"]
-            </p>
-            <p>
-              1
-              loading
-              null
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                ["loading"]
+              </p>
+              <p>
+                1
+                loading
+                null
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
 
         // Resolve Comp1 fetcher - UI updates
         fetchDfd1.resolve("data 1");
         await waitFor(() => screen.getByText(/data 1/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              []
-            </p>
-            <p>
-              1
-              idle
-              data 1
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                []
+              </p>
+              <p>
+                1
+                idle
+                data 1
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
 
         // Link to Comp2 - loaders run
         fireEvent.click(screen.getByText("Link to 2"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              []
-            </p>
-            <p>
-              1
-              idle
-              data 1
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                []
+              </p>
+              <p>
+                1
+                idle
+                data 1
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
 
         // Resolve Comp2 loader and complete navigation
         navDfd.resolve("nav data");
         await waitFor(() => screen.getByText(/2.*idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              []
-            </p>
-            <p>
-              2
-              idle
-              null
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                []
+              </p>
+              <p>
+                2
+                idle
+                null
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
 
         // Activate Comp2 fetcher
         fireEvent.click(screen.getByText("load"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              ["loading"]
-            </p>
-            <p>
-              2
-              loading
-              null
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                ["loading"]
+              </p>
+              <p>
+                2
+                loading
+                null
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
 
         // Comp2 loader resolves with the same data, useFetchers reflects idle-done
         fetchDfd2.resolve("data 2");
         await waitFor(() => screen.getByText(/data 2/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              []
-            </p>
-            <p>
-              2
-              idle
-              data 2
-            </p>
-            <button>
-              load
-            </button>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                []
+              </p>
+              <p>
+                2
+                idle
+                data 2
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
       });
 
       it("handles revalidating fetchers", async () => {
@@ -5318,12 +5318,12 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+            </p>"
+          `);
 
         await act(async () => {
           fireEvent.click(screen.getByText("load fetcher"));
@@ -5331,13 +5331,13 @@ function testDomRouter(
         });
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"fetchCount":1}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"fetchCount":1}
+            </p>"
+          `);
 
         await act(async () => {
           fireEvent.click(screen.getByText("submit"));
@@ -5345,13 +5345,13 @@ function testDomRouter(
         });
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle
-            {"fetchCount":2}
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle
+              {"fetchCount":2}
+            </p>"
+          `);
       });
 
       it("handles fetcher 404 errors at the correct spot in the route hierarchy", async () => {
@@ -5521,23 +5521,23 @@ function testDomRouter(
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <button>
-                submit
-              </button>
-            </div>"
-          `);
+          "<div>
+            <button>
+              submit
+            </button>
+          </div>"
+        `);
 
         fireEvent.click(screen.getByText("submit"));
         await waitFor(() => screen.getByText(/Kaboom!/));
         expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <p>
-                contextual error:
-                Kaboom!
-              </p>
-            </div>"
-          `);
+          "<div>
+            <p>
+              contextual error:
+              Kaboom!
+            </p>
+          </div>"
+        `);
       });
 
       it("handles fetcher.Form errors at the correct spot in the route hierarchy", async () => {
@@ -5700,43 +5700,43 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle-undefined
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle-undefined
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("load"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            loading-undefined
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              loading-undefined
+            </p>"
+          `);
 
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle-FETCH
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle-FETCH
+            </p>"
+          `);
 
         fireEvent.click(screen.getByText("reset"));
         await waitFor(() => screen.getByText(/idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<p
-            id="output"
-          >
-            idle-null
-          </p>"
-        `);
+            "<p
+              id="output"
+            >
+              idle-null
+            </p>"
+          `);
       });
 
       describe("useFetcher({ key })", () => {
@@ -7388,12 +7388,12 @@ function testDomRouter(
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <pre>
-            {"status":404,"statusText":"Not Found","internal":false,"data":{"not":"found"}}
-          </pre>
-        </div>"
-      `);
+          "<div>
+            <pre>
+              {"status":404,"statusText":"Not Found","internal":false,"data":{"not":"found"}}
+            </pre>
+          </div>"
+        `);
       });
 
       it("deserializes Error instances from the window", async () => {
@@ -7429,15 +7429,15 @@ function testDomRouter(
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <pre>
-            Error: error message
-          </pre>
-          <pre>
-            stack:
-          </pre>
-        </div>"
-      `);
+          "<div>
+            <pre>
+              Error: error message
+            </pre>
+            <pre>
+              stack:
+            </pre>
+          </div>"
+        `);
       });
 
       it("deserializes Error subclass instances from the window", async () => {
@@ -7474,15 +7474,15 @@ function testDomRouter(
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <pre>
-            ReferenceError: error message
-          </pre>
-          <pre>
-            stack:
-          </pre>
-        </div>"
-      `);
+          "<div>
+            <pre>
+              ReferenceError: error message
+            </pre>
+            <pre>
+              stack:
+            </pre>
+          </div>"
+        `);
       });
 
       it("renders hydration errors on leaf elements", async () => {
@@ -7815,54 +7815,54 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <h1>
-              Foo:
-              hydrated from foo
-            </h1>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Foo:
+                hydrated from foo
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <p>
-              Bar Error:
-              Kaboom!
-            </p>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Bar Error:
+                Kaboom!
+              </p>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Foo"));
         fooDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <p>
-              Foo Error:
-              Kaboom!
-            </p>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Foo Error:
+                Kaboom!
+              </p>
+            </div>"
+          `);
       });
 
       it("renders navigation errors on parent elements", async () => {
@@ -7933,18 +7933,18 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <h1>
-              Foo:
-              hydrated from foo
-            </h1>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Foo:
+                hydrated from foo
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
@@ -8007,35 +8007,35 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Foo
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <p>
-              Bar Error:
-              Kaboom!
-            </p>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Bar Error:
+                Kaboom!
+              </p>
+            </div>"
+          `);
       });
 
       // This test ensures that when manual routes are used, we add hasErrorBoundary
@@ -8092,17 +8092,17 @@ function testDomRouter(
 
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <h1>
+                Foo
+              </h1>
+            </div>"
+          `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         await lazyDefer.resolve(lazyRouteModule);
@@ -8110,18 +8110,18 @@ function testDomRouter(
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
-          "<div
-            id="output"
-          >
-            <p>
-              idle
-            </p>
-            <p>
-              Bar Error:
-              Kaboom!
-            </p>
-          </div>"
-        `);
+            "<div
+              id="output"
+            >
+              <p>
+                idle
+              </p>
+              <p>
+                Bar Error:
+                Kaboom!
+              </p>
+            </div>"
+          `);
       });
     });
 
