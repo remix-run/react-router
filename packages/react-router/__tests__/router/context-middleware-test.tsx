@@ -749,6 +749,57 @@ describe("context/middleware", () => {
 
         unsub();
       });
+
+      it("works with createRoutesFromElements", async () => {
+        let context = new RouterContextProvider();
+        router = createRouter({
+          history: createMemoryHistory(),
+          getContext: () => context,
+          routes: createRoutesFromElements(
+            <>
+              <Route path="/" />
+              <Route
+                id="parent"
+                path="/parent"
+                middleware={[
+                  getOrderMiddleware(orderContext, "a"),
+                  getOrderMiddleware(orderContext, "b"),
+                ]}
+                loader={({ context }) => {
+                  context.get(orderContext).push("parent loader");
+                }}
+              >
+                <Route
+                  id="child"
+                  path="child"
+                  middleware={[
+                    getOrderMiddleware(orderContext, "c"),
+                    getOrderMiddleware(orderContext, "d"),
+                  ]}
+                  loader={({ context }) => {
+                    context.get(orderContext).push("child loader");
+                  }}
+                />
+              </Route>
+            </>,
+          ),
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(context.get(orderContext)).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "parent loader",
+          "child loader",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+      });
     });
 
     describe("lazy", () => {
