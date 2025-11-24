@@ -43,6 +43,7 @@ import {
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,
+  getRoutePattern,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
@@ -1198,6 +1199,7 @@ export function _renderMatches(
           unstable_onError(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
+            unstable_pattern: getRoutePattern(dataRouterState.matches),
             errorInfo,
           });
         }
@@ -1842,7 +1844,7 @@ function useNavigateStable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        router.navigate(to);
+        await router.navigate(to);
       } else {
         await router.navigate(to, { fromRouteId: id, ...options });
       }
@@ -1871,16 +1873,20 @@ type UseRouteResult<Args extends UseRouteArgs> =
   Args extends [infer RouteId extends keyof RouteModules] ? UseRoute<RouteId> | undefined :
   never;
 
+// prettier-ignore
 type UseRoute<RouteId extends keyof RouteModules | unknown> = {
-  handle: RouteId extends keyof RouteModules
-    ? RouteModules[RouteId]["handle"]
-    : unknown;
-  loaderData: RouteId extends keyof RouteModules
-    ? GetLoaderData<RouteModules[RouteId]> | undefined
-    : unknown;
-  actionData: RouteId extends keyof RouteModules
-    ? GetActionData<RouteModules[RouteId]> | undefined
-    : unknown;
+  handle:
+    RouteId extends keyof RouteModules ?
+      RouteModules[RouteId] extends { handle: infer handle } ? handle :
+      unknown
+    :
+    unknown;
+  loaderData:
+    RouteId extends keyof RouteModules ? GetLoaderData<RouteModules[RouteId]> | undefined :
+    unknown;
+  actionData:
+    RouteId extends keyof RouteModules ? GetActionData<RouteModules[RouteId]> | undefined :
+    unknown;
 };
 
 export function useRoute<Args extends UseRouteArgs>(
