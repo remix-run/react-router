@@ -736,6 +736,107 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([]);
   });
 
+  test("provides proper defaultShouldRevalidate value on 4xx/5xx action responses", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/action.tsx": js`
+          import { Form, Link, useActionData, useLoaderData, useNavigation, data } from 'react-router';
+
+          export async function action({ request }) {
+            let fd = await request.formData();
+            if (fd.get('throw') === "5xx") {
+              throw data("Thrown 500", { status: 500 });
+            }
+            if (fd.get('throw') === "4xx") {
+              throw data("Thrown 400", { status: 400 });
+            }
+            if (fd.get('return') === "5xx") {
+              return data("Returned 500", { status: 500 });
+            }
+            if (fd.get('return') === "4xx") {
+              return data("Returned 400", { status: 400 });
+            }
+            return null;
+          }
+
+          let count = 0;
+          export function loader() {
+            return { count: ++count };
+          }
+
+          export function shouldRevalidate({ defaultShouldRevalidate }) {
+            return defaultShouldRevalidate;
+          }
+
+          export default function Comp() {
+            let navigation = useNavigation();
+            let data = useLoaderData();
+            return (
+              <Form method="post">
+                <button type="submit" name="throw" value="5xx">Throw 5xx</button>
+                <button type="submit" name="throw" value="4xx">Throw 4xx</button>
+                <button type="submit" name="return" value="5xx">Return 5xx</button>
+                <button type="submit" name="return" value="4xx">Return 4xx</button>
+                <p id="data">{data.count}</p>
+                {navigation.state === "idle" ? <p id="idle">idle</p> : null}
+              </Form>
+            );
+          }
+
+          export function ErrorBoundary() {
+            return (
+              <div>
+                <h1 id="error">Error</h1>
+                <Link to="/action">Back</Link>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "GET" && req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/action");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="return"][value="5xx"]');
+    await page.waitForSelector("#idle");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="return"][value="4xx"]');
+    await page.waitForSelector("#idle");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="throw"][value="5xx"]');
+    await page.waitForSelector("#error");
+    expect(urls).toEqual([]);
+
+    await app.clickLink("/action");
+    await page.waitForSelector("#data");
+    expect(await app.getHtml("#data")).toContain("2");
+    urls = [];
+
+    await page.click('button[name="throw"][value="4xx"]');
+    await page.waitForSelector("#error");
+    expect(urls).toEqual([]);
+  });
+
   test("returns headers correctly for singular loader and action calls", async () => {
     let fixture = await createFixture({
       files: {

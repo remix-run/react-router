@@ -5695,7 +5695,7 @@ function runClientMiddlewarePipeline(
         ),
         // or the shallowest route that needs to load data
         Math.max(
-          matches.findIndex((m) => m.unstable_shouldCallHandler()),
+          matches.findIndex((m) => m.shouldCallHandler()),
           0,
         ),
       );
@@ -5874,10 +5874,10 @@ function getDataStrategyMatch(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldLoad: boolean,
-  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
+  shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
-  // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
+  // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
   // around when resolve calls through to the handler
   let isUsingNewApi = false;
 
@@ -5893,20 +5893,20 @@ function getDataStrategyMatch(
     ...match,
     _lazyPromises,
     shouldLoad,
-    unstable_shouldRevalidateArgs,
-    unstable_shouldCallHandler(defaultShouldRevalidate) {
+    shouldRevalidateArgs,
+    shouldCallHandler(defaultShouldRevalidate) {
       isUsingNewApi = true;
-      if (!unstable_shouldRevalidateArgs) {
+      if (!shouldRevalidateArgs) {
         return shouldLoad;
       }
 
       if (typeof defaultShouldRevalidate === "boolean") {
         return shouldRevalidateLoader(match, {
-          ...unstable_shouldRevalidateArgs,
+          ...shouldRevalidateArgs,
           defaultShouldRevalidate,
         });
       }
-      return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
+      return shouldRevalidateLoader(match, shouldRevalidateArgs);
     },
     resolve(handlerOverride) {
       let { lazy, loader, middleware } = match.route;
@@ -5951,7 +5951,7 @@ function getTargetedDataStrategyMatches(
   targetMatch: AgnosticDataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
-  shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
+  shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
 ): DataStrategyMatch[] {
   return matches.map((match) => {
     if (match.route.id !== targetMatch.route.id) {
@@ -5960,8 +5960,8 @@ function getTargetedDataStrategyMatches(
       return {
         ...match,
         shouldLoad: false,
-        unstable_shouldRevalidateArgs: shouldRevalidateArgs,
-        unstable_shouldCallHandler: () => false,
+        shouldRevalidateArgs: shouldRevalidateArgs,
+        shouldCallHandler: () => false,
         _lazyPromises: getDataStrategyMatchLazyPromises(
           mapRouteProperties,
           manifest,
