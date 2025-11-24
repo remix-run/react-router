@@ -219,7 +219,7 @@ export function getSingleFetchDataStrategyImpl(
 
     let foundRevalidatingServerLoader = matches.some((m) => {
       let { hasLoader, hasClientLoader } = getRouteInfo(m);
-      return m.unstable_shouldCallHandler() && hasLoader && !hasClientLoader;
+      return m.shouldCallHandler() && hasLoader && !hasClientLoader;
     });
     if (!ssr && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
@@ -282,7 +282,7 @@ async function singleFetchActionStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined,
 ) {
-  let actionMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
+  let actionMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
@@ -321,9 +321,7 @@ async function nonSsrStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined,
 ) {
-  let matchesToLoad = args.matches.filter((m) =>
-    m.unstable_shouldCallHandler(),
-  );
+  let matchesToLoad = args.matches.filter((m) => m.shouldCallHandler());
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
     matchesToLoad.map((m) =>
@@ -385,15 +383,15 @@ async function singleFetchLoaderNavigationStrategy(
           getRouteInfo(m);
 
         let defaultShouldRevalidate =
-          !m.unstable_shouldRevalidateArgs ||
-          m.unstable_shouldRevalidateArgs.actionStatus == null ||
-          m.unstable_shouldRevalidateArgs.actionStatus < 400;
-        let shouldCall = m.unstable_shouldCallHandler(defaultShouldRevalidate);
+          !m.shouldRevalidateArgs ||
+          m.shouldRevalidateArgs.actionStatus == null ||
+          m.shouldRevalidateArgs.actionStatus < 400;
+        let shouldCall = m.shouldCallHandler(defaultShouldRevalidate);
 
         if (!shouldCall) {
           // If this route opted out, don't include in the .data request
           foundOptOutRoute ||=
-            m.unstable_shouldRevalidateArgs != null && // This is a revalidation,
+            m.shouldRevalidateArgs != null && // This is a revalidation,
             hasLoader && // for a route with a server loader,
             hasShouldRevalidate === true; // and a shouldRevalidate function
           return;
@@ -538,7 +536,7 @@ async function singleFetchLoaderFetcherStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined,
 ) {
-  let fetcherMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
+  let fetcherMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
   let routeId = fetcherMatch.route.id;
   let result = await fetcherMatch.resolve(async (handler) =>
