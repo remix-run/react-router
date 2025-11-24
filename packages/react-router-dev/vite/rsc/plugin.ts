@@ -60,6 +60,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
 
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
+
         configLoader = await createConfigLoader({
           rootDirectory,
           mode,
@@ -103,12 +109,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "Vite dev server.",
           );
         }
-
-        await loadDotenv({
-          rootDirectory,
-          viteUserConfig,
-          mode,
-        });
 
         const vite = await import("vite");
         logger = vite.createLogger(viteUserConfig.logLevel, {
