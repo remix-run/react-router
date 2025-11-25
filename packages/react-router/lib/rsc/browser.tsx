@@ -844,7 +844,7 @@ export function RSCHydratedRouter({
           <RouterProvider
             router={transitionEnabledRouter}
             flushSync={ReactDOM.flushSync}
-            unstable_useTransitions
+            unstable_rsc
           />
         </FrameworkContext.Provider>
       </RSCRouterGlobalErrorBoundary>
@@ -1061,7 +1061,7 @@ async function fetchAndApplyManifestPatches(
 function addToFifoQueue(path: string, queue: Set<string>) {
   if (queue.size >= discoveredPathsMaxSize) {
     let first = queue.values().next().value;
-    queue.delete(first);
+    if (typeof first === "string") queue.delete(first);
   }
   queue.add(path);
 }

@@ -534,7 +534,12 @@ implementations.forEach((implementation) => {
                       id: "action-transition-state",
                       path: "action-transition-state",
                       lazy: () => import("./routes/action-transition-state/home"),
-                    }
+                    },
+                    {
+                      id: "render-redirect",
+                      path: "/render-redirect/:id?",
+                      lazy: () => import("./routes/render-redirect/home"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1460,6 +1465,23 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+
+            "src/routes/render-redirect/home.tsx": js`
+              import { Link, redirect } from "react-router";
+
+              export default function RenderRedirect({ params: { id } }) {
+                if (id === "redirect") {
+                  throw redirect("/render-redirect/redirected");
+                }
+
+                return (
+                  <>
+                    <h1>{id || "home"}</h1>
+                    <Link to="/render-redirect/redirect">Redirect</Link>
+                  </>
+                )
+              }
+            `,
           },
         });
       });
@@ -1737,6 +1759,14 @@ implementations.forEach((implementation) => {
           expect(await rejected.innerText()).toContain(
             "An error occurred in the Server Components render.",
           );
+        });
+
+        test.only("Suppport throwing redirect Response from render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect`);
+          await page.click("a");
+          await expect(page.getByText("redirected")).toBeAttached();
         });
       });
 

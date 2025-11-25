@@ -10,6 +10,7 @@ import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
 import { isRouteErrorResponse } from "../router/utils";
+import { decodeRedirectErrorDigest } from "../errors";
 
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
@@ -95,6 +96,10 @@ export async function routeRSCServerRequest({
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
     getPayload: () => DecodedPayload,
+    options: {
+      onError(error: unknown): string | undefined;
+      onHeaders(headers: Headers): void;
+    },
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }): Promise<Response> {
@@ -181,6 +186,7 @@ export async function routeRSCServerRequest({
     }) as DecodedPayload;
   };
 
+  let renderRedirect: { status: number; location: string } | undefined;
   try {
     if (!detectRedirectResponse.body) {
       throw new Error("Failed to clone server response");
@@ -206,10 +212,41 @@ export async function routeRSCServerRequest({
       });
     }
 
-    const html = await renderHTML(getPayload);
+    let reactHeaders = new Headers();
+    let html = await renderHTML(getPayload, {
+      onError(error: unknown) {
+        if (
+          typeof error === "object" &&
+          error &&
+          "digest" in error &&
+          typeof error.digest === "string"
+        ) {
+          renderRedirect = decodeRedirectErrorDigest(error.digest);
+          if (renderRedirect) {
+            return error.digest;
+          }
+        }
+      },
+      onHeaders(headers) {
+        for (const [key, value] of headers) {
+          reactHeaders.append(key, value);
+        }
+      },
+    });
 
-    const headers = new Headers(serverResponse.headers);
+    const headers = new Headers(reactHeaders);
+    for (const [key, value] of serverResponse.headers) {
+      headers.append(key, value);
+    }
     headers.set("Content-Type", "text/html; charset=utf-8");
+
+    if (renderRedirect) {
+      headers.set("Location", renderRedirect.location);
+      return new Response(html, {
+        status: renderRedirect.status,
+        headers,
+      });
+    }
 
     if (!hydrate) {
       return new Response(html, {
@@ -232,46 +269,90 @@ export async function routeRSCServerRequest({
       return reason;
     }
 
+    if (renderRedirect) {
+      return new Response(`Redirect: ${renderRedirect.location}`, {
+        status: renderRedirect.status,
+        headers: {
+          Location: renderRedirect.location,
+        },
+      });
+    }
+
     try {
       const status = isRouteErrorResponse(reason) ? reason.status : 500;
 
-      const html = await renderHTML(() => {
-        const decoded = Promise.resolve(
-          createFromReadableStream(createStream()),
-        ) as Promise<RSCPayload>;
+      let retryRedirect: { status: number; location: string } | undefined;
+      let reactHeaders = new Headers();
+      const html = await renderHTML(
+        () => {
+          const decoded = Promise.resolve(
+            createFromReadableStream(createStream()),
+          ) as Promise<RSCPayload>;
 
-        const payloadPromise = decoded.then((payload) =>
-          Object.assign(payload, {
-            status,
-            errors: deepestRenderedBoundaryId
-              ? {
-                  [deepestRenderedBoundaryId]: reason,
-                }
-              : {},
-          }),
-        );
+          const payloadPromise = decoded.then((payload) =>
+            Object.assign(payload, {
+              status,
+              errors: deepestRenderedBoundaryId
+                ? {
+                    [deepestRenderedBoundaryId]: reason,
+                  }
+                : {},
+            }),
+          );
 
-        return Object.defineProperties(payloadPromise, {
-          _deepestRenderedBoundaryId: {
-            get() {
-              return deepestRenderedBoundaryId;
+          return Object.defineProperties(payloadPromise, {
+            _deepestRenderedBoundaryId: {
+              get() {
+                return deepestRenderedBoundaryId;
+              },
+              set(boundaryId: string | null) {
+                deepestRenderedBoundaryId = boundaryId;
+              },
             },
-            set(boundaryId: string | null) {
-              deepestRenderedBoundaryId = boundaryId;
+            formState: {
+              get() {
+                return payloadPromise.then((payload) =>
+                  payload.type === "render" ? payload.formState : undefined,
+                );
+              },
             },
+          }) as unknown as DecodedPayload;
+        },
+        {
+          onError(error: unknown) {
+            if (
+              typeof error === "object" &&
+              error &&
+              "digest" in error &&
+              typeof error.digest === "string"
+            ) {
+              retryRedirect = decodeRedirectErrorDigest(error.digest);
+              if (retryRedirect) {
+                return error.digest;
+              }
+            }
           },
-          formState: {
-            get() {
-              return payloadPromise.then((payload) =>
-                payload.type === "render" ? payload.formState : undefined,
-              );
-            },
+          onHeaders(headers) {
+            for (const [key, value] of headers) {
+              reactHeaders.append(key, value);
+            }
           },
-        }) as unknown as DecodedPayload;
-      });
+        },
+      );
 
-      const headers = new Headers(serverResponse.headers);
-      headers.set("Content-Type", "text/html");
+      const headers = new Headers(reactHeaders);
+      for (const [key, value] of serverResponse.headers) {
+        headers.append(key, value);
+      }
+      headers.set("Content-Type", "text/html; charset=utf-8");
+
+      if (retryRedirect) {
+        headers.set("Location", retryRedirect.location);
+        return new Response(html, {
+          status: retryRedirect.status,
+          headers,
+        });
+      }
 
       if (!hydrate) {
         return new Response(html, {

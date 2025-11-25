@@ -58,6 +58,7 @@ import type {
 } from "./types/route-data";
 import type { unstable_ClientOnErrorFunction } from "./components";
 import type { RouteModules } from "./types/register";
+import { decodeRedirectErrorDigest } from "./errors";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -758,6 +759,7 @@ export function useRoutesImpl(
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
   unstable_onError?: unstable_ClientOnErrorFunction,
+  unstable_rsc?: boolean,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -912,6 +914,7 @@ export function useRoutesImpl(
     parentMatches,
     dataRouterState,
     unstable_onError,
+    unstable_rsc,
     future,
   );
 
@@ -991,6 +994,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   component: React.ReactNode;
   routeContext: RouteContextObject;
   onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
+  unstable_rsc?: boolean;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -1062,17 +1066,56 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
-    return this.state.error !== undefined ? (
-      <RouteContext.Provider value={this.props.routeContext}>
-        <RouteErrorContext.Provider
-          value={this.state.error}
-          children={this.props.component}
-        />
-      </RouteContext.Provider>
-    ) : (
-      this.props.children
-    );
+    let result =
+      this.state.error !== undefined ? (
+        <RouteContext.Provider value={this.props.routeContext}>
+          <RouteErrorContext.Provider
+            value={this.state.error}
+            children={this.props.component}
+          />
+        </RouteContext.Provider>
+      ) : (
+        this.props.children
+      );
+
+    if (this.props.unstable_rsc) {
+      return (
+        <RSCErrorHandler error={this.state.error}>{result}</RSCErrorHandler>
+      );
+    }
+
+    return result;
   }
+}
+
+const errorRedirectPromises = new WeakMap<any, Promise<void>>();
+function RSCErrorHandler({
+  children,
+  error,
+}: {
+  children: React.ReactNode;
+  error: unknown;
+}) {
+  if (
+    typeof error === "object" &&
+    error &&
+    "digest" in error &&
+    typeof error.digest === "string"
+  ) {
+    let redirect = decodeRedirectErrorDigest(error.digest);
+    if (redirect) {
+      let promise = errorRedirectPromises.get(error);
+      if (!promise) {
+        // TODO: Handle external redirects?
+        promise = window.__reactRouterDataRouter!.navigate(redirect.location, {
+          replace: true,
+        });
+        errorRedirectPromises.set(error, promise);
+      }
+      throw promise;
+    }
+  }
+  return children;
 }
 
 interface RenderedRouteProps {
@@ -1107,6 +1150,7 @@ export function _renderMatches(
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
   unstable_onError: unstable_ClientOnErrorFunction | null = null,
+  unstable_rsc: boolean | undefined = undefined,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
@@ -1275,6 +1319,7 @@ export function _renderMatches(
           error={error}
           children={getChildren()}
           routeContext={{ outlet: null, matches, isDataRoute: true }}
+          unstable_rsc={unstable_rsc}
           onError={onError}
         />
       ) : (

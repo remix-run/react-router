@@ -232,12 +232,21 @@ function DataRoutes({
   routes,
   future,
   state,
+  unstable_rsc,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
+  unstable_rsc?: boolean;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, undefined, future);
+  return useRoutesImpl(
+    routes,
+    undefined,
+    state,
+    undefined,
+    unstable_rsc,
+    future,
+  );
 }
 
 function serializeErrors(
