@@ -6,7 +6,7 @@ unstable: true
 # unstable_routeRSCServerRequest
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
 
 Thank you for helping improve our documentation!
 
@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 <br />
 <br />
 
-<docs-warning>This API is experimental and subject to breaking changes in 
-minor/patch releases. Please use with caution and pay **very** close attention 
+<docs-warning>This API is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
@@ -45,7 +45,7 @@ import {
 
 routeRSCServerRequest({
   request,
-  fetchServer,
+  serverResponse,
   createFromReadableStream,
   async renderHTML(getPayload) {
     const payload = getPayload();
@@ -55,7 +55,7 @@ routeRSCServerRequest({
       {
         bootstrapScriptContent,
         formState: await payload.formState,
-      }
+      },
     );
   },
 });
@@ -66,19 +66,21 @@ routeRSCServerRequest({
 ```tsx
 async function routeRSCServerRequest({
   request,
-  fetchServer,
+  serverResponse,
   createFromReadableStream,
   renderHTML,
   hydrate = true,
 }: {
   request: Request;
-  fetchServer: (request: Request) => Promise<Response>;
+  serverResponse: Response;
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
     getPayload: () => DecodedPayload,
-  ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
+  ) =>
+    | ReadableStream<Uint8Array>
+    | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
-}): Promise<Response>
+}): Promise<Response>;
 ```
 
 ## Params
@@ -109,4 +111,3 @@ The request to route.
 A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 that either contains the [RSC](https://react.dev/reference/rsc/server-components)
 payload for data requests, or renders the HTML for document requests.
-
