@@ -1761,7 +1761,7 @@ implementations.forEach((implementation) => {
           );
         });
 
-        test.only("Suppport throwing redirect Response from render", async ({
+        test("Suppport throwing redirect Response from render", async ({
           page,
         }) => {
           await page.goto(`http://localhost:${port}/render-redirect`);
