@@ -144,34 +144,7 @@ startTransition(async () => {
 
 #### `popstate` navigations
 
-Due to limitations in React itself, [`popstate`][popstate] navigations cannot be Transition-enabled. Any state updates during a `popstate` event are [automatically][popstate-sync-pr] [flushed][bsky-ricky-popstate] synchronously so that the browser can properly restore scroll position and form data.
-
-However, the browser can only do this if the navigation is instant. If React Router needs to run loaders on a back navigation, the browser will not be able to restore scroll position or form data ([`<ScrollRestoration>`][scroll-restoration] can handle scroll position for you).
-
-It is therefore not recommended to wrap `navigate(n)` navigations in `React.startTransition`
-unless you can manage your pending UI with local Transition state (`React.useTransition`).
-
-```tsx
-// ❌ This won't work correctly
-startTransition(() => navigate(-1));
-```
-
-If you _need_ programmatic back-navigations to be Transition-friendly in your app, you can introduce a small hack to prevent React from detecting the event and letting the Transition work as expected. React checks `window.event` to determine if the state updates are part of a `popstate` event, so if you clear that out in your own listener you can trick React into treating it like any other state update:
-
-```tsx
-// Add this to the top of your browser entry file
-window.addEventListener(
-  "popstate",
-  () => {
-    window.event = null;
-  },
-  {
-    capture: true,
-  },
-);
-```
-
-<docs-warning>Please be aware this is a hack, has not been thoroughly tested, and may not continue to work if React changes their underlying implementation. We did get their [permission][ricky-bsky-event-hack] to mention it though 😉</docs-warning>
+There is currently a bug with optimistic states and `popstate`. If you need to read the current route during a back navigation, which cannot complete synchronously (e.g. Suspends on uncached data), you can set the optimistic state before navigating back or defer the optimistic update in a timer or microtask.
 
 [react-18]: https://react.dev/blog/2022/03/29/react-v18
 [concurrent]: https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react
@@ -183,13 +156,6 @@ window.addEventListener(
 [use-optimistic-blog]: https://react.dev/blog/2024/12/05/react-19#new-hook-optimistic-updates
 [use-optimistic]: https://react.dev/reference/react/useOptimistic
 [flush-sync]: https://react.dev/reference/react-dom/flushSync
-[dan-issue]: https://github.com/remix-run/remix/issues/5763
-[startTransition-pr]: https://github.com/remix-run/react-router/pull/10438
 [rr-6-13-0]: https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v6130
 [uses-transition-issue]: https://github.com/facebook/react/issues/26382
 [uses-transition-tweet]: https://x.com/rickhanlonii/status/1683636856808775682
-[bsky-ricky-popstate]: https://bsky.app/profile/ricky.fm/post/3m5ujj6tuks2e
-[popstate-sync-pr]: https://github.com/facebook/react/pull/26025
-[scroll-restoration]: ../api/components/ScrollRestoration
-[ricky-bsky-event-hack]: https://bsky.app/profile/ricky.fm/post/3m5wgqw3swc26
-[popstate]: https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event
