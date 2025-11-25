@@ -1,9 +1,4 @@
 ---
-"react-router": major
----
-
-MM
----
 "react-router": patch
 ---
 
