@@ -15,8 +15,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v7.10.0](#v7100)
     - [What's Changed](#whats-changed)
-      - [Big New Feature 1](#big-new-feature-1)
-      - [Big New Feature 2](#big-new-feature-2)
+      - [Stabilized APIs](#stabilized-apis)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -188,7 +187,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-40)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-11)
-      - [Stabilized APIs](#stabilized-apis)
+      - [Stabilized APIs](#stabilized-apis-1)
     - [Minor Changes](#minor-changes-14)
     - [Patch Changes](#patch-changes-41)
   - [v6.26.2](#v6262)
@@ -395,9 +394,9 @@ Date: 2025-12-2
 
 ### What's Changed
 
-#### Big New Feature 1
+#### Stabilized APIs
 
-#### Big New Feature 2
+⚠️ TODO...
 
 ### Minor Changes
 
