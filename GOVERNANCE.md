@@ -187,7 +187,7 @@ Brooks Lybrand announced the planned release of unstable framework RSC support i
   - [Per-route Layout component](https://github.com/remix-run/react-router/discussions/13818)
 - Matt Brophy will comment back on the ESLint issue to get it closed out and point to the OpenTelemetry issue to the new instrumentation approach
 - Pedro Cattori will start on the route stuff and try to get a PR up for it, once a PR is opened we will also get an issue on the roadmap
-- Jacob Ebey will check in with Zach about his interest in the [current work w.r.t. module imoports](https://github.com/remix-run/react-router/pull/12638), and Matt Brophy will add a comment to the issue asking if it is needed and close it if there is no response in a week.
+- Jacob Ebey will check in with Zach about his interest in the [current work w.r.t. module imports](https://github.com/remix-run/react-router/pull/12638), and Matt Brophy will add a comment to the issue asking if it is needed and close it if there is no response in a week.
 
 </details>
 
