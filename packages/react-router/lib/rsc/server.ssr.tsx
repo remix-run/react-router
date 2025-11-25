@@ -11,6 +11,7 @@ import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
 import { isRouteErrorResponse } from "../router/utils";
 import { decodeRedirectErrorDigest } from "../errors";
+import { escapeHtml } from "../dom/ssr/markup";
 
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
@@ -248,8 +249,20 @@ export async function routeRSCServerRequest({
       });
     }
 
+    const redirectTransform = new TransformStream({
+      flush(controller) {
+        if (renderRedirect) {
+          controller.enqueue(
+            new TextEncoder().encode(
+              `<meta http-equiv="refresh" content="0;url=${escapeHtml(renderRedirect.location)}"/>`,
+            ),
+          );
+        }
+      },
+    });
+
     if (!hydrate) {
-      return new Response(html, {
+      return new Response(html.pipeThrough(redirectTransform), {
         status: serverResponse.status,
         headers,
       });
@@ -259,7 +272,9 @@ export async function routeRSCServerRequest({
       throw new Error("Failed to clone server response");
     }
 
-    const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
+    const body = html
+      .pipeThrough(injectRSCPayload(serverResponseB.body))
+      .pipeThrough(redirectTransform);
     return new Response(body, {
       status: serverResponse.status,
       headers,
@@ -354,8 +369,20 @@ export async function routeRSCServerRequest({
         });
       }
 
+      const retryRedirectTransform = new TransformStream({
+        flush(controller) {
+          if (retryRedirect) {
+            controller.enqueue(
+              new TextEncoder().encode(
+                `<meta http-equiv="refresh" content="0;url=${escapeHtml(retryRedirect.location)}"/>`,
+              ),
+            );
+          }
+        },
+      });
+
       if (!hydrate) {
-        return new Response(html, {
+        return new Response(html.pipeThrough(retryRedirectTransform), {
           status: status,
           headers,
         });
@@ -365,7 +392,9 @@ export async function routeRSCServerRequest({
         throw new Error("Failed to clone server response");
       }
 
-      const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
+      const body = html
+        .pipeThrough(injectRSCPayload(serverResponseB.body))
+        .pipeThrough(retryRedirectTransform);
       return new Response(body, {
         status,
         headers,

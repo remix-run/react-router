@@ -1088,7 +1088,7 @@ export class RenderErrorBoundary extends React.Component<
   }
 }
 
-const errorRedirectPromises = new WeakMap<any, Promise<void>>();
+const errorRedirectHandledMap = new WeakMap<any, boolean>();
 function RSCErrorHandler({
   children,
   error,
@@ -1104,15 +1104,22 @@ function RSCErrorHandler({
   ) {
     let redirect = decodeRedirectErrorDigest(error.digest);
     if (redirect) {
-      let promise = errorRedirectPromises.get(error);
-      if (!promise) {
+      if (
+        typeof window !== "undefined" &&
+        window.__reactRouterDataRouter &&
+        !errorRedirectHandledMap.get(error)
+      ) {
         // TODO: Handle external redirects?
-        promise = window.__reactRouterDataRouter!.navigate(redirect.location, {
-          replace: true,
-        });
-        errorRedirectPromises.set(error, promise);
+        setTimeout(() => {
+          window.__reactRouterDataRouter!.navigate(redirect.location, {
+            replace: true,
+          });
+        }, 0);
+        errorRedirectHandledMap.set(error, true);
       }
-      throw promise;
+      return (
+        <meta httpEquiv="refresh" content={`0;url=${redirect.location}`} />
+      );
     }
   }
   return children;
