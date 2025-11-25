@@ -284,7 +284,7 @@ For the initial unstable release, the following options from `react-router.confi
 - `routeDiscovery`
 - `serverBundles`
 - `ssr: false` (SPA Mode)
-- `future.unstable_splitRouteModules`
+- `future.v8_splitRouteModules`
 - `future.unstable_subResourceIntegrity`
 
 Custom build entry files are also not yet supported.
