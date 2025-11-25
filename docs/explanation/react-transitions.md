@@ -32,8 +32,8 @@ We first leveraged `React.startTransition` to make React Router more Suspense-fr
 This default behavior has 2 potential issues that `unstable_useTransitions` is designed to solve:
 
 - There are some valid use cases where you _don't_ want your updates wrapped in `startTransition`
-  - One specific issue is that `React.useSyncExternalStore` is incompatible with Transitions ([^1][uses-transition-issue], [^2][uses-transition-tweet]) so if you are using that in your application, you can run into tearing issues when combined with `React.startTransition`
-  - React Router has a `flushSync` option on navigations to use [`React.flushSync`][flush-sync] for the state updates instead, but that's not always the proper solution
+  - One specific issue is that `React.useSyncExternalStore` updates can't be Transitions ([^1][uses-transition-issue], [^2][uses-transition-tweet]). `useSyncExternalStore` forces a sync update, which means fallbacks can be shown in update transitions that would otherwise avoid showing the fallback.
+  - React Router has a `flushSync` option on navigations to use [`React.flushSync`][flush-sync] for state updates instead, but that's not always a proper solution
 - React 19 has added a new `startTransition(() => Promise))` API as well as a new `useOptimistic` hook to surface updates during Transitions
   - Without some updates to React Router, `startTransition(() => navigate(path))` doesn't work as you might expect, because we are not using `useOptimistic` internally so router state updates don't surface during the navigation, which breaks hooks like `useNavigation`
 
@@ -55,8 +55,6 @@ If your application is not "Transition-friendly" due to the usage of `useSyncExt
 ```
 
 This will stop the router from wrapping internal state updates in `startTransition`.
-
-<docs-warning>We do not recommend this as a long-term solution because opting out of Transitions means that your application will not be fully compatible with the modern features of React, including `Suspense`, `use`, `startTransition`, `useOptimistic`, `<ViewTransition>`, etc.</docs-warning>
 
 ### Opt-in via `unstable_useTransitions=true`
 
