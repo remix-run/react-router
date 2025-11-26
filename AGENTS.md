@@ -3,8 +3,8 @@
 ## Commands
 
 - **Build**: `pnpm build` (all packages) or `pnpm run --filter <package> build` (single package)
-- **Test**: `pnpm test` (unit tests, all packages) or `pnpm test packages/<package>/` (single package)
-- **Integration tests**: `pnpm test:integration` (build + test) or `pnpm test:integration:run` (test only)
+- **Test (Jest)**: `pnpm test` (all packages), `pnpm test packages/<package>/` (single package), `pnpm test packages/react-router/__tests__/router/fetchers-test.ts` (single file), or `pnpm test -- -t "action fetch"` (tests matching name)
+- **Integration tests (Playwright)**: `pnpm test:integration --project chromium` (build + test all), `pnpm test:integration:run --project chromium` (test only, all), `pnpm test:integration:run --project chromium integration/middleware-test.ts` (single file), or `pnpm test:integration:run --project chromium -g "middleware"` (tests matching name)
 - **Typecheck**: `pnpm run typecheck`
 - **Lint**: `pnpm run lint`
 - **Docs generation**: `pnpm run docs` (regenerates API docs from JSDoc)
@@ -46,8 +46,8 @@ Use Jest for pure routing logic, pure server runtime behavior, router state, Rea
 ```bash
 pnpm test                                                          # All packages
 pnpm test packages/react-router/                                   # Single package
-pnpm test packages/react-router/__tests__/router/fetchers-test.ts # Single test file
-pnpm test -- -t "fetcher"                                          # Tests matching name
+pnpm test packages/react-router/__tests__/router/fetchers-test.ts  # Single file
+pnpm test -- -t "action fetch"                                     # Tests matching name
 ```
 
 ### Integration Tests (`integration/`)
@@ -55,11 +55,13 @@ pnpm test -- -t "fetcher"                                          # Tests match
 Use Playwright for Vite plugin, build pipeline, SSR/hydration, RSC, type generation.
 
 ```bash
-pnpm test:integration                                              # Build + run
-pnpm test:integration:run                                          # Run (no build)
-pnpm test:integration:run --project=chromium                       # Single browser (local dev)
-pnpm test:integration:run --project=chromium integration/middleware-test.ts  # Single test
+pnpm test:integration --project chromium                                     # Build + test all
+pnpm test:integration:run --project chromium                                 # Test only, all
+pnpm test:integration:run --project chromium integration/middleware-test.ts  # Single file
+pnpm test:integration:run --project chromium -g "middleware"                 # Tests matching name
 ```
+
+**Project**: Always use `chromium` for integration tests, unless explicitly stated otherwise.
 
 **Rebuild when**: First run, after changing `packages/` (not needed for test-only changes)
 
