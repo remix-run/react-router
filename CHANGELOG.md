@@ -15,7 +15,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v7.10.0](#v7100)
     - [What's Changed](#whats-changed)
-      - [Stabilized APIs](#stabilized-apis)
+      - [Stabilized `fetcher.reset()`](#stabilized-fetcherreset)
+      - [Stabilized `future.v8_splitRouteModules`](#stabilized-futurev8_splitroutemodules)
+      - [Stabilized `future.v8_viteEnvironmentApi`](#stabilized-futurev8_viteenvironmentapi)
+      - [Stabilized `DataStrategyMatch.shouldCallHandler()`](#stabilized-datastrategymatchshouldcallhandler)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -187,7 +190,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-40)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-11)
-      - [Stabilized APIs](#stabilized-apis-1)
+      - [Stabilized APIs](#stabilized-apis)
     - [Minor Changes](#minor-changes-14)
     - [Patch Changes](#patch-changes-41)
   - [v6.26.2](#v6262)
@@ -394,9 +397,23 @@ Date: 2025-12-2
 
 ### What's Changed
 
-#### Stabilized APIs
+We've stabilized a handful of existing APIs and future flags in this release, please make the appropriate changes if you'd adopted any of these APIs in their unstable state!
 
-⚠️ TODO...
+#### Stabilized `future.v8_splitRouteModules`
+
+The existing `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules` in `react-router.config.ts`. Please see the [docs](https://reactrouter.com/7.10.0/upgrading/future#futurev8_splitroutemodules) for more information on adopting this flag.
+
+#### Stabilized `future.v8_viteEnvironmentApi`
+
+The existing `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi` in `react-router.config.ts`. Please see the [docs](https://reactrouter.com/7.10.0/upgrading/future#futurev8_viteenvironmentapi) for more information on adopting this flag.
+
+#### Stabilized `fetcher.reset()`
+
+The existing `fetcher.unstable_reset()` API has been stabilized as `fetcher.reset()`.
+
+#### Stabilized `DataStrategyMatch.shouldCallHandler()`
+
+The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStrategyMatch.unstable_shouldRevalidateArgs` APIs have been stabilized as `DataStrategyMatch.shouldCallHandler()`/`DataStrategyMatch.shouldRevalidateArgs`. Please see the [docs](https://reactrouter.com/dev/how-to/data-strategy) for information about using a custom `dataStrategy` and how to migrate away from the deprecated `DataStrategyMatch.shouldLoad` API if you sre using that today.
 
 ### Minor Changes
 
@@ -404,29 +421,6 @@ Date: 2025-12-2
   - ⚠️ This is a breaking change if you have begun using `fetcher.unstable_reset()`
 - `react-router` - Stabilize the `dataStrategy` `match.shouldRevalidateArgs`/`match.shouldCallHandler()` APIs. ([#14592](https://github.com/remix-run/react-router/pull/14592))
   - The `match.shouldLoad` API is now marked deprecated in favor of these more powerful alternatives
-  - If you're using this API in a custom `dataStrategy` today, you can swap to the new API at your convenience:
-
-    ```tsx
-    // Before
-    const matchesToLoad = matches.filter((m) => m.shouldLoad);
-
-    // After
-    const matchesToLoad = matches.filter((m) => m.shouldCallHandler());
-    ```
-
-  - `match.shouldRevalidateArgs` is the argument that will be passed to the route `shouldRevaliate` function
-  - Combined with the parameter accepted by `match.shouldCallHandler`, you can define a custom revalidation behavior for your `dataStrategy`:
-
-    ```tsx
-    const matchesToLoad = matches.filter((m) => {
-      const defaultShouldRevalidate = customRevalidationBehavior(
-        match.shouldRevalidateArgs,
-      );
-      return m.shouldCallHandler(defaultShouldRevalidate);
-      // The argument here will override the internal `defaultShouldRevalidate` value
-    });
-    ```
-
 - `@react-router/dev` - Stabilize `future.v8_splitRouteModules`, replacing `future.unstable_splitRouteModules` ([#14595](https://github.com/remix-run/react-router/pull/14595))
   - ⚠️ This is a breaking change if you have begun using `future.unstable_splitRouteModules`. Please update your `react-router.config.ts`.
 - `@react-router/dev` - Stabilize `future.v8_viteEnvironmentApi`, replacing `future.unstable_viteEnvironmentApi` ([#14595](https://github.com/remix-run/react-router/pull/14595))
