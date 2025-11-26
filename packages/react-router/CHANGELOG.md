@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.10.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] Update source code docs ([`1f8fee408`](https://github.com/remix-run/react-router/commit/1f8fee408db2f74dcc4b04eeb51009da5d51d8a6))
+
 ## 7.10.0-pre.0
 
 ### Minor Changes
