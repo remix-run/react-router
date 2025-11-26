@@ -15,7 +15,7 @@
 
 **Five distinct modes**: Declarative, Data, Framework, RSC Data (unstable), RSC Framework (unstable). **Always identify which mode(s) a feature applies to.**
 
-1. **Declarative**: `<BrowserRouter>`, `<Route>`, `<Link>` - no data loading
+1. **Declarative**: `<BrowserRouter>`, `<Routes>`, `<Route>`
 2. **Data**: `createBrowserRouter()` with `loader`/`action`
 3. **Framework**: Vite plugin + `routes.ts` + Route Module API (route exports like `loader`, `action`, `default`) + type generation + SSR/SPA
 4. **RSC Data** (unstable): RSC runtime APIs, manual bundler setup, runtime route config
