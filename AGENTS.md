@@ -7,7 +7,7 @@
 - **Integration tests**: `pnpm test:integration` (build + test) or `pnpm test:integration:run` (test only)
 - **Typecheck**: `pnpm run typecheck`
 - **Lint**: `pnpm run lint`
-- **Docs generation**: `pnpm docs` (regenerates API docs from JSDoc)
+- **Docs generation**: `pnpm run docs` (regenerates API docs from JSDoc)
 - **Type generation**: `pnpm run typegen` (Framework Mode only)
 - **Clean**: `pnpm run clean` (git clean -fdX)
 
