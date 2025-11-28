@@ -1777,8 +1777,12 @@ export function resolveTo(
   return path;
 }
 
-export const joinPaths = (paths: string[]): string =>
-  paths.join("/").replace(/\/\/+/g, "/");
+export const joinPaths = (paths: string[]): string => {
+  return paths
+    .map(path => path.replace(/\/\/+/g, "/")) // Normalize double slashes within each path
+    .join("/")
+    .replace(/\/\/+/g, "/"); // Normalize any double slashes created by joining
+};
 
 export const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");

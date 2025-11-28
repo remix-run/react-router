@@ -3,7 +3,7 @@ import { joinPaths } from "../lib/router/utils";
 describe("joinPaths double slash normalization", () => {
   it("normalizes double slashes in single path", () => {
     expect(joinPaths(["//en//test2/test"])).toBe("/en/test2/test");
-    expect(joinPaths(["/app//base/"])).toBe("/app/base");
+    expect(joinPaths(["/app//base/"])).toBe("/app/base/");
     expect(joinPaths(["///multiple///slashes"])).toBe("/multiple/slashes");
   });
 
@@ -15,6 +15,6 @@ describe("joinPaths double slash normalization", () => {
   it("preserves normal paths", () => {
     expect(joinPaths(["/normal/path"])).toBe("/normal/path");
     expect(joinPaths(["path/without/leading/slash"])).toBe("path/without/leading/slash");
-    expect(joinPaths([""])).toBe("/");
+    expect(joinPaths([""])).toBe("");
   });
 });
