@@ -1363,6 +1363,19 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
+    // Transition any fetchers that were kept in loading state (with formData) to idle
+    // now that we're committing the loaderData. This ensures the fetcher state change
+    // and loaderData update happen atomically in the same updateState() call.
+    let fetchers = newState.fetchers ? new Map(newState.fetchers) : new Map(state.fetchers);
+    let updatedFetchers = false;
+    fetchers.forEach((fetcher, key) => {
+      if (fetcher.state === "loading" && fetcher.formData) {
+        // Transition to idle now that loaderData is being committed
+        fetchers.set(key, getDoneFetcher(fetcher.data));
+        updatedFetchers = true;
+      }
+    });
+
     // On a successful navigation we can assume we got through all blockers
     // so we can start fresh
     let blockers = state.blockers;
@@ -1436,7 +1449,7 @@ export function createRouter(init: RouterInit): Router {
 
     updateState(
       {
-        ...newState, // matches, errors, fetchers go through as-is
+        ...newState, // matches, errors go through as-is
         actionData,
         loaderData,
         historyAction: pendingAction,
@@ -1447,6 +1460,8 @@ export function createRouter(init: RouterInit): Router {
         restoreScrollPosition,
         preventScrollReset,
         blockers,
+        // Use updated fetchers if we transitioned any from loading to idle
+        ...(updatedFetchers ? { fetchers } : {}),
       },
       {
         viewTransitionOpts,
@@ -6549,8 +6564,22 @@ function processLoaderData(
         // keep this to type narrow to a success result in the else
         invariant(false, "Unhandled fetcher revalidation redirect");
       } else {
+        // Get the current fetcher state to check if it has formData
+        let existingFetcher = state.fetchers.get(key);
         let doneFetcher = getDoneFetcher(result.data);
-        state.fetchers.set(key, doneFetcher);
+        
+        // If the fetcher currently has formData, keep it
+        // in loading state with the new data until completeNavigation commits both
+        // the fetcher state and loaderData together. This prevents a flicker where
+        // fetcher.formData becomes undefined before new loaderData is available.
+        if (existingFetcher && existingFetcher.formData) {
+          state.fetchers.set(key, {
+            ...existingFetcher,
+            data: result.data,
+          });
+        } else {
+          state.fetchers.set(key, doneFetcher);
+        }
       }
     });
 
