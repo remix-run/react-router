@@ -418,13 +418,14 @@ The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStr
 ### Minor Changes
 
 - `react-router` - Stabilize `fetcher.reset()` ([#14545](https://github.com/remix-run/react-router/pull/14545))
-  - ⚠️ This is a breaking change if you have begun using `fetcher.unstable_reset()`
-- `react-router` - Stabilize the `dataStrategy` `match.shouldRevalidateArgs`/`match.shouldCallHandler()` APIs. ([#14592](https://github.com/remix-run/react-router/pull/14592))
+  - ⚠️ This is a breaking change if you have begun using `fetcher.unstable_reset()` - please update your code to use `fetcher.reset()`
+- `react-router` - Stabilize the `dataStrategy` `match.shouldCallHandler()`/`match.shouldRevalidateArgs` APIs ([#14592](https://github.com/remix-run/react-router/pull/14592))
   - The `match.shouldLoad` API is now marked deprecated in favor of these more powerful alternatives
+  - ⚠️ This is a breaking change if you have begun using `match.unstable_shouldCallHandler()`/`match.unstable_shouldRevalidateArgs` - please update your code to use `match.shouldCallHandler()`/`match.shouldRevalidateArgs`
 - `@react-router/dev` - Stabilize `future.v8_splitRouteModules`, replacing `future.unstable_splitRouteModules` ([#14595](https://github.com/remix-run/react-router/pull/14595))
-  - ⚠️ This is a breaking change if you have begun using `future.unstable_splitRouteModules`. Please update your `react-router.config.ts`.
+  - ⚠️ This is a breaking change if you have begun using `future.unstable_splitRouteModules` - please update your `react-router.config.ts`
 - `@react-router/dev` - Stabilize `future.v8_viteEnvironmentApi`, replacing `future.unstable_viteEnvironmentApi` ([#14595](https://github.com/remix-run/react-router/pull/14595))
-  - ⚠️ This is a breaking change if you have begun using `future.unstable_viteEnvironmentApi`. Please update your `react-router.config.ts`.
+  - ⚠️ This is a breaking change if you have begun using `future.unstable_viteEnvironmentApi` - please update your `react-router.config.ts`
 
 ### Patch Changes
 
