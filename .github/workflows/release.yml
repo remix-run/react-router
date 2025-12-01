@@ -129,11 +129,12 @@ jobs:
           fetch-depth: 0
 
       - name: 📝 Comment on related issues and pull requests
-        uses: remix-run/release-comment-action@v0.4.3
+        uses: remix-run/release-comment-action@v0.5.0
         with:
           DIRECTORY_TO_CHECK: "./packages"
           PACKAGE_NAME: "react-router"
           ISSUE_LABELS_TO_REMOVE: "awaiting release"
+          ISSUE_LABELS_TO_KEEP_OPEN: "🗺 Roadmap"
 
   # HEADS UP! this "nightly" job will only ever run on the `main` branch due to
   # it being a cron job, and the last commit on main will be what github shows
