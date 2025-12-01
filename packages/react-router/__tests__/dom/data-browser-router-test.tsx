@@ -2518,13 +2518,7 @@ function testDomRouter(
         let loaderDefer = createDeferred();
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              loader={() => loaderDefer.promise}
-              element={<Home />}
-            />,
-          ),
+          [{ path: "/", loader: () => loaderDefer.promise, Component: Home }],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -2588,13 +2582,7 @@ function testDomRouter(
         let loaderDefer = createDeferred();
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              loader={() => loaderDefer.promise}
-              element={<Home />}
-            />,
-          ),
+          [{ path: "/", loader: () => loaderDefer.promise, Component: Home }],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -2666,14 +2654,14 @@ function testDomRouter(
         let actionDefer = createDeferred();
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              action={() => actionDefer.promise}
-              loader={() => loaderDefer.promise}
-              element={<Home />}
-            />,
-          ),
+          [
+            {
+              path: "/",
+              loader: () => loaderDefer.promise,
+              action: () => actionDefer.promise,
+              Component: Home,
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
@@ -2739,14 +2727,14 @@ function testDomRouter(
         let actionDefer = createDeferred();
 
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              action={() => actionDefer.promise}
-              loader={() => loaderDefer.promise}
-              element={<Home />}
-            />,
-          ),
+          [
+            {
+              path: "/",
+              loader: () => loaderDefer.promise,
+              action: () => actionDefer.promise,
+              Component: Home,
+            },
+          ],
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
