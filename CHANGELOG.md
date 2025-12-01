@@ -458,7 +458,8 @@ The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStr
 
 - `react-router` - Add `unstable_pattern` to the parameters for client side `unstable_onError` ([#14573](https://github.com/remix-run/react-router/pull/14573))
 - `react-router` - Refactor how `unstable_onError` is called internally by `RouterProvider` to avoid potential strict mode issues ([#14573](https://github.com/remix-run/react-router/pull/14573))
-- `react-router` - Add new `unstable_useTransitions` flag to routers to give users control over the usage of [`React.startTransition`](https://react.dev/reference/react/startTransition) and [`React.useOptimistic`](https://react.dev/reference/react/useOptimistic). ([#14524](https://github.com/remix-run/react-router/pull/14524))
+- `react-router` - Add new `unstable_useTransitions` flag to routers to give users control over the usage of [`React.startTransition`](https://react.dev/reference/react/startTransition) and [`React.useOptimistic`](https://react.dev/reference/react/useOptimistic) ([#14524](https://github.com/remix-run/react-router/pull/14524))
+  - Please see the [docs](https://reactrouter.com/7.10.0/explanation/react-transitions) for more information
   - Framework Mode + Data Mode:
     - `<HydratedRouter unstable_transition>`/`<RouterProvider unstable_transition>`
     - When left unset (current default behavior)
@@ -468,6 +469,7 @@ The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStr
     - When set to `true`
       - Router state updates remain wrapped in `React.startTransition` (as they are without the flag)
       - `Link`/`Form` navigations will be wrapped in `React.startTransition`
+        - You can drop down to `useNavigate`/`useSubmit` if you wish to opt out of this outer `React.startTransition` call for the navigation
       - A subset of router state info will be surfaced to the UI _during_ navigations via `React.useOptimistic` (i.e., `useNavigation()`, `useFetchers()`, etc.)
         - ⚠️ This is a React 19 API so you must also be React 19 to opt into this flag for Framework/Data Mode
     - When set to `false`
