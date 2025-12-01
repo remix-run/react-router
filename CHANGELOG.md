@@ -413,7 +413,7 @@ The existing `fetcher.unstable_reset()` API has been stabilized as `fetcher.rese
 
 #### Stabilized `DataStrategyMatch.shouldCallHandler()`
 
-The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStrategyMatch.unstable_shouldRevalidateArgs` APIs have been stabilized as `DataStrategyMatch.shouldCallHandler()`/`DataStrategyMatch.shouldRevalidateArgs`. Please see the [docs](https://reactrouter.com/dev/how-to/data-strategy) for information about using a custom `dataStrategy` and how to migrate away from the deprecated `DataStrategyMatch.shouldLoad` API if you sre using that today.
+The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStrategyMatch.unstable_shouldRevalidateArgs` APIs have been stabilized as `DataStrategyMatch.shouldCallHandler()`/`DataStrategyMatch.shouldRevalidateArgs`. Please see the [docs](https://reactrouter.com/7.10.0/how-to/data-strategy) for information about using a custom `dataStrategy` and how to migrate away from the deprecated `DataStrategyMatch.shouldLoad` API if you are using that today.
 
 ### Minor Changes
 
@@ -480,7 +480,7 @@ The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStr
       - Router state updates remain wrapped in `React.startTransition` (as they are without the flag)
       - `Link`/`Form` navigations will be wrapped in `React.startTransition`
     - When set to `false`
-      - the router will not leverage `React.startTransition` on any navigations or state changes
+      - The router will not leverage `React.startTransition` on any navigations or state changes
 
 **Full Changelog**: [`v7.9.6...v7.10.0`](https://github.com/remix-run/react-router/compare/react-router@7.9.6...react-router@7.10.0)
 
