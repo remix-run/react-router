@@ -95,7 +95,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       };
     },
     configEnvironment: async (name, options) => {
-      if (!future.unstable_viteEnvironmentApi) {
+      if (!future.v8_viteEnvironmentApi) {
         return;
       }
 

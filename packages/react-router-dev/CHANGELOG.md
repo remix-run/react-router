@@ -1,5 +1,16 @@
 # `@react-router/dev`
 
+## 7.9.6
+
+### Patch Changes
+
+- Use a dynamic `import()` to load ESM-only `p-map` dependency to avoid issues on Node 20.18 and below ([#14492](https://github.com/remix-run/react-router/pull/14492))
+- Short circuit `HEAD` document requests before calling `renderToPipeableStream` in the default `entry.server.tsx` to more closely align with the [spec](https://httpwg.org/specs/rfc9110.html#HEAD) ([#14488](https://github.com/remix-run/react-router/pull/14488))
+- Updated dependencies:
+  - `react-router@7.9.6`
+  - `@react-router/node@7.9.6`
+  - `@react-router/serve@7.9.6`
+
 ## 7.9.5
 
 ### Patch Changes

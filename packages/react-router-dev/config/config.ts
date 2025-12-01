@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
 import Path from "pathe";
@@ -9,6 +8,7 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
+import { readPackageJSON, sortPackage, updatePackage } from "pkg-types";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
 import cloneDeep from "lodash/cloneDeep";
@@ -86,20 +86,20 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_optimizeDeps: boolean;
+  unstable_subResourceIntegrity: boolean;
   /**
    * Enable route middleware
    */
   v8_middleware: boolean;
-  unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
    */
-  unstable_splitRouteModules: boolean | "enforce";
-  unstable_subResourceIntegrity: boolean;
+  v8_splitRouteModules: boolean | "enforce";
   /**
-   * Use Vite Environment API (experimental)
+   * Use Vite Environment API
    */
-  unstable_viteEnvironmentApi: boolean;
+  v8_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -617,16 +617,29 @@ async function resolveConfig({
     }
   }
 
+  // Check for renamed flags and provide helpful error messages
+  let futureConfig = userAndPresetConfigs.future as any;
+  if (futureConfig?.unstable_splitRouteModules !== undefined) {
+    return err(
+      'The "future.unstable_splitRouteModules" flag has been stabilized as "future.v8_splitRouteModules"',
+    );
+  }
+  if (futureConfig?.unstable_viteEnvironmentApi !== undefined) {
+    return err(
+      'The "future.unstable_viteEnvironmentApi" flag has been stabilized as "future.v8_viteEnvironmentApi"',
+    );
+  }
+
   let future: FutureConfig = {
-    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    unstable_splitRouteModules:
-      userAndPresetConfigs.future?.unstable_splitRouteModules ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
-    unstable_viteEnvironmentApi:
-      userAndPresetConfigs.future?.unstable_viteEnvironmentApi ?? false,
+    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
+    v8_splitRouteModules:
+      userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
+    v8_viteEnvironmentApi:
+      userAndPresetConfigs.future?.v8_viteEnvironmentApi ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
@@ -921,8 +934,8 @@ export async function resolveEntryFiles({
     }
 
     let packageJsonDirectory = Path.dirname(packageJsonPath);
-    let pkgJson = await PackageJson.load(packageJsonDirectory);
-    let deps = pkgJson.content.dependencies ?? {};
+    let pkgJson = await readPackageJSON(packageJsonDirectory);
+    let deps = pkgJson.dependencies ?? {};
 
     if (!deps["@react-router/node"]) {
       throw new Error(
@@ -935,14 +948,11 @@ export async function resolveEntryFiles({
         "adding `isbot@5` to your package.json, you should commit this change",
       );
 
-      pkgJson.update({
-        dependencies: {
-          ...pkgJson.content.dependencies,
-          isbot: "^5",
-        },
+      await updatePackage(packageJsonPath, (pkg) => {
+        pkg.dependencies ??= {};
+        pkg.dependencies.isbot = "^5";
+        sortPackage(pkg);
       });
-
-      await pkgJson.save();
 
       let packageManager = detectPackageManager() ?? "npm";
 

@@ -434,6 +434,8 @@ export interface DataStrategyMatch
     route: Promise<void> | undefined;
   };
   /**
+   * @deprecated Deprecated in favor of `shouldCallHandler`
+   *
    * A boolean value indicating whether this route handler should be called in
    * this pass.
    *
@@ -459,12 +461,20 @@ export interface DataStrategyMatch
    *    custom `shouldRevalidate` implementations)
    */
   shouldLoad: boolean;
-  // This can be null for actions calls and for initial hydration calls
-  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
-  // This function will use a scoped version of `shouldRevalidateArgs` because
-  // they are read-only but let the user provide an optional override value for
-  // `defaultShouldRevalidate` if they choose
-  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  /**
+   * Arguments passed to the `shouldRevalidate` function for this `loader` execution.
+   * Will be `null` if this is not a revalidating loader {@link DataStrategyMatch}.
+   */
+  shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  /**
+   * Determine if this route's handler should be called during this `dataStrategy`
+   * execution. Calling it with no arguments will leverage the default revalidation
+   * behavior. You can pass your own `defaultShouldRevalidate` value if you wish
+   * to change the default revalidation behavior with your `dataStrategy`.
+   *
+   * @param defaultShouldRevalidate `defaultShouldRevalidate` override value (optional)
+   */
+  shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   /**
    * An async function that will resolve any `route.lazy` implementations and
    * execute the route's handler (if necessary), returning a {@link DataStrategyResult}
@@ -1571,6 +1581,9 @@ export function prependBasename({
   return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
+
 /**
  * Returns a resolved {@link Path} object relative to the given pathname.
  *
@@ -1588,11 +1601,29 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
     hash = "",
   } = typeof to === "string" ? parsePath(to) : to;
 
-  let pathname = toPathname
-    ? toPathname.startsWith("/")
-      ? toPathname
-      : resolvePathname(toPathname, fromPathname)
-    : fromPathname;
+  let pathname: string;
+  if (toPathname) {
+    if (isAbsoluteUrl(toPathname)) {
+      pathname = toPathname;
+    } else {
+      if (toPathname.includes("//")) {
+        let oldPathname = toPathname;
+        toPathname = toPathname.replace(/\/\/+/g, "/");
+        warning(
+          false,
+          `Pathnames cannot have embedded double slashes - normalizing ` +
+            `${oldPathname} -> ${toPathname}`,
+        );
+      }
+      if (toPathname.startsWith("/")) {
+        pathname = resolvePathname(toPathname.substring(1), "/");
+      } else {
+        pathname = resolvePathname(toPathname, fromPathname);
+      }
+    }
+  } else {
+    pathname = fromPathname;
+  }
 
   return {
     pathname,
@@ -1984,7 +2015,8 @@ export class ErrorResponseImpl implements ErrorResponse {
 /**
  * Check if the given error is an {@link ErrorResponse} generated from a 4xx/5xx
  * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
- * thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
+ * thrown from an [`action`](../../start/framework/route-module#action) or
+ * [`loader`](../../start/framework/route-module#loader) function.
  *
  * @example
  * import { isRouteErrorResponse } from "react-router";
@@ -2010,7 +2042,6 @@ export class ErrorResponseImpl implements ErrorResponse {
  * @mode data
  * @param error The error to check.
  * @returns `true` if the error is an {@link ErrorResponse}, `false` otherwise.
- *
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (
@@ -2022,6 +2053,18 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
   );
 }
 
-export function getRoutePattern(paths: (string | undefined)[]) {
-  return paths.filter(Boolean).join("/").replace(/\/\/*/g, "/") || "/";
+/*
+lol - this comment is needed because the JSDoc parser for `docs.ts` gets confused
+by the star-slash in the `getRoutePattern` regex and messes up the parsed comment
+for `isRouteErrorResponse` above.  This comment seems to reset the parser.
+*/
+
+export function getRoutePattern(matches: AgnosticRouteMatch[]) {
+  return (
+    matches
+      .map((m) => m.route.path)
+      .filter(Boolean)
+      .join("/")
+      .replace(/\/\/*/g, "/") || "/"
+  );
 }

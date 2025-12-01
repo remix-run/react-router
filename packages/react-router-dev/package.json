@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.9.5",
+  "version": "7.9.6",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -71,7 +71,6 @@
     "@babel/preset-typescript": "^7.27.1",
     "@babel/traverse": "^7.27.7",
     "@babel/types": "^7.27.7",
-    "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
     "@remix-run/node-fetch-server": "^0.9.0",
     "arg": "^5.0.1",
@@ -86,11 +85,12 @@
     "p-map": "^7.0.3",
     "pathe": "^1.1.2",
     "picocolors": "^1.1.1",
+    "pkg-types": "^2.3.0",
     "prettier": "^3.6.2",
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
     "tinyglobby": "^0.2.14",
-    "valibot": "^1.1.0",
+    "valibot": "^1.2.0",
     "vite-node": "^3.2.2"
   },
   "devDependencies": {
@@ -113,7 +113,7 @@
     "react-router": "workspace:^",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
-    "vite": "^6.1.0",
+    "vite": "^6.3.0",
     "wireit": "0.14.9",
     "wrangler": "^4.23.0"
   },

@@ -7,7 +7,7 @@ export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
 
 export function isHtmlElement(object: any): object is HTMLElement {
-  return object != null && typeof object.tagName === "string";
+  return typeof HTMLElement !== "undefined" && object instanceof HTMLElement;
 }
 
 export function isButtonElement(object: any): object is HTMLButtonElement {
