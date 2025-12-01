@@ -78,12 +78,14 @@ navigate("/some/route?search=param");
 All properties are optional.
 
 ```tsx
-navigate({
-  pathname: "/some/route",
-  search: "?search=param",
-  hash: "#hash",
-  state: { some: "state" },
-});
+navigate(
+  {
+    pathname: "/some/route",
+    search: "?search=param",
+    hash: "#hash",
+  },
+  { state: { some: "state" } }
+);
 ```
 
 If you use `state`, that will be available on the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object on
