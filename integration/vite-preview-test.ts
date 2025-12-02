@@ -97,7 +97,7 @@ test.describe("Vite preview", () => {
   test("handles navigation between routes", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        viteEnvironmentApi: true,
+        v8_viteEnvironmentApi: true,
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -158,14 +158,14 @@ test.describe("Vite preview", () => {
     // Navigate to about page
     await page.click("[data-link-about]");
     await page.waitForLoadState("networkidle");
-    
+
     expect(page.errors).toEqual([]);
     await expect(page.locator("#about [data-title]")).toHaveText("About");
 
     // Navigate back to home
     await page.click("[data-link-home]");
     await page.waitForLoadState("networkidle");
-    
+
     expect(page.errors).toEqual([]);
     await expect(page.locator("#index [data-title]")).toHaveText("Index");
   });
@@ -203,7 +203,7 @@ test.describe("Vite preview", () => {
         import { useLoaderData } from "react-router";
 
         export function loader() {
-          return { 
+          return {
             message: "Hello from loader",
             timestamp: Date.now()
           };
@@ -232,7 +232,7 @@ test.describe("Vite preview", () => {
     await expect(page.locator("#index [data-message]")).toHaveText(
       "Hello from loader",
     );
-    
+
     // Check that timestamp exists and is a number
     const timestampText = await page
       .locator("#index [data-timestamp]")
@@ -282,7 +282,7 @@ test.describe("Vite preview", () => {
         import { useLoaderData, useParams } from "react-router";
 
         export function loader({ params }: { params: { id: string } }) {
-          return { 
+          return {
             productId: params.id,
           };
         }
