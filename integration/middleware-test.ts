@@ -369,7 +369,7 @@ test.describe("Middleware", () => {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
             v8_middleware: true,
-            splitRouteModules: true,
+            v8_splitRouteModules: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1061,7 +1061,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             v8_middleware: true,
-            splitRouteModules: true,
+            v8_splitRouteModules: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";

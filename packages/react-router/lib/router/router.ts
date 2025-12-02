@@ -58,6 +58,7 @@ import {
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   getResolveToMatches,
+  isAbsoluteUrl,
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
@@ -488,6 +489,7 @@ export interface RouterSubscriber {
     state: RouterState,
     opts: {
       deletedFetchers: string[];
+      newErrors: RouteData | null;
       viewTransitionOpts?: ViewTransitionOpts;
       flushSync: boolean;
     },
@@ -838,9 +840,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   location: undefined,
 };
 
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
-
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
@@ -1043,6 +1042,11 @@ export function createRouter(init: RouterInit): Router {
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: NavigationType = NavigationType.Pop;
 
+  // Deferred to use for tracking popstate navigations
+  let pendingPopstateNavigationDfd: ReturnType<
+    typeof createDeferred<void>
+  > | null = null;
+
   // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
   let pendingPreventScrollReset = false;
@@ -1111,6 +1115,7 @@ export function createRouter(init: RouterInit): Router {
   // a POP navigation that was blocked by the user without touching router state
   let unblockBlockerHistoryUpdate: (() => void) | undefined = undefined;
 
+  // Revalidation deferred to be resolved next time we land through completeNavigation
   let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
     null;
 
@@ -1175,6 +1180,11 @@ export function createRouter(init: RouterInit): Router {
               updateState({ blockers });
             },
           });
+
+          // Resolve the promise for the blocked popstate
+          pendingPopstateNavigationDfd?.resolve();
+          pendingPopstateNavigationDfd = null;
+
           return;
         }
 
@@ -1294,6 +1304,7 @@ export function createRouter(init: RouterInit): Router {
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
         deletedFetchers: unmountedFetchers,
+        newErrors: newState.errors ?? null,
         viewTransitionOpts: opts.viewTransitionOpts,
         flushSync: opts.flushSync === true,
       }),
@@ -1449,6 +1460,8 @@ export function createRouter(init: RouterInit): Router {
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
+    pendingPopstateNavigationDfd?.resolve();
+    pendingPopstateNavigationDfd = null;
     pendingRevalidationDfd?.resolve();
     pendingRevalidationDfd = null;
   }
@@ -1459,9 +1472,31 @@ export function createRouter(init: RouterInit): Router {
     to: number | To | null,
     opts?: RouterNavigateOptions,
   ) {
+    // If another popstate is pending and we're about to interrupt it, resolve
+    // the promise since we'll never reach completeNavigation for *that* popstate
+    pendingPopstateNavigationDfd?.resolve();
+    pendingPopstateNavigationDfd = null;
+
     if (typeof to === "number") {
+      // Track this popstate with a deferred so we can expose the promise back
+      // out through useNNavigate.  This will be resolved in one of the following
+      // places:
+      //  - completeNavigation if we are not interrupted
+      //  - history listener if this navigation is blocked
+      //  - this function if another navigation is triggered that interrupts us
+      //  - startRedirectNavigation if we are interrupted by a fetcher-driven
+      //    redirect
+      if (!pendingPopstateNavigationDfd) {
+        pendingPopstateNavigationDfd = createDeferred<void>();
+      }
+
+      let promise = pendingPopstateNavigationDfd.promise;
       init.history.go(to);
-      return;
+
+      // Use a local copy here because memory router popstates can be fully synchronous
+      // so it's possible completeNavigation has already cleared out the pending
+      // variable by now
+      return promise;
     }
 
     let normalizedPath = normalizeTo(
@@ -2465,6 +2500,17 @@ export function createRouter(init: RouterInit): Router {
     );
     let actionResult = actionResults[match.route.id];
 
+    if (!actionResult) {
+      // If this error came from a parent middleware before the action ran,
+      // then it won't be tied to the action route
+      for (let match of fetchMatches) {
+        if (actionResults[match.route.id]) {
+          actionResult = actionResults[match.route.id];
+          break;
+        }
+      }
+    }
+
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
@@ -2837,6 +2883,14 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
     } = {},
   ) {
+    // If we are interrupting a popstate navigation from a fetcher call that
+    // redirected, resolve the pending promise since we won't reach completeNavigation
+    // for that popstate navigation
+    if (!isNavigation) {
+      pendingPopstateNavigationDfd?.resolve();
+      pendingPopstateNavigationDfd = null;
+    }
+
     if (redirect.response.headers.has("X-Remix-Revalidate")) {
       isRevalidationRequired = true;
     }
@@ -3433,30 +3487,67 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
+      let newPartialMatches: AgnosticDataRouteMatch[] | null = null;
+
       if (newMatches) {
-        return { type: "success", matches: newMatches };
+        if (Object.keys(newMatches[0].params).length === 0) {
+          // Static match - use it
+          return { type: "success", matches: newMatches };
+        } else {
+          // Dynamic match - confirm this is the best match.
+          newPartialMatches = matchRoutesImpl(
+            routesToUse,
+            pathname,
+            basename,
+            true,
+          );
+
+          // If we matched deeper into the same branch of `partialMatches` we were already
+          // checking, we want to make another pass through `patchRoutesOnNavigation()`
+          let matchedDeeper =
+            newPartialMatches &&
+            partialMatches.length < newPartialMatches.length &&
+            compareMatches(
+              partialMatches,
+              newPartialMatches.slice(0, partialMatches.length),
+            );
+
+          if (!matchedDeeper) {
+            // Otherwise, use the dynamic matches
+            return { type: "success", matches: newMatches };
+          }
+        }
       }
 
-      let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
-        routesToUse,
-        pathname,
-        basename,
-        true,
-      );
+      // Perform partial matching if we didn't already do it above
+      if (!newPartialMatches) {
+        newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          routesToUse,
+          pathname,
+          basename,
+          true,
+        );
+      }
 
       // Avoid loops if the second pass results in the same partial matches
       if (
         !newPartialMatches ||
-        (partialMatches.length === newPartialMatches.length &&
-          partialMatches.every(
-            (m, i) => m.route.id === newPartialMatches![i].route.id,
-          ))
+        compareMatches(partialMatches, newPartialMatches)
       ) {
         return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
     }
+  }
+
+  function compareMatches(
+    a: AgnosticDataRouteMatch[],
+    b: AgnosticDataRouteMatch[],
+  ) {
+    return (
+      a.length === b.length && a.every((m, i) => m.route.id === b[i].route.id)
+    );
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
@@ -3720,7 +3811,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+            unstable_pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
             // If we're calling middleware then it must be enabled so we can cast
@@ -3952,7 +4043,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+          unstable_pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
           // If we're calling middleware then it must be enabled so we can cast
@@ -4345,7 +4436,7 @@ export function createStaticHandler(
             matches.findIndex((m) => m.route.id === pendingActionResult[0]) - 1
           : undefined;
 
-      let pattern = getRoutePattern(matches.map((m) => m.route.path));
+      let pattern = getRoutePattern(matches);
       dsMatches = matches.map((match, index) => {
         if (maxIdx != null && index > maxIdx) {
           return getDataStrategyMatch(
@@ -4819,7 +4910,7 @@ function getMatchesToLoad(
     actionStatus,
   };
 
-  let pattern = getRoutePattern(matches.map((m) => m.route.path));
+  let pattern = getRoutePattern(matches);
   let dsMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
 
@@ -5604,7 +5695,7 @@ function runClientMiddlewarePipeline(
         ),
         // or the shallowest route that needs to load data
         Math.max(
-          matches.findIndex((m) => m.unstable_shouldCallHandler()),
+          matches.findIndex((m) => m.shouldCallHandler()),
           0,
         ),
       );
@@ -5783,10 +5874,10 @@ function getDataStrategyMatch(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldLoad: boolean,
-  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
+  shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
-  // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
+  // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
   // around when resolve calls through to the handler
   let isUsingNewApi = false;
 
@@ -5802,20 +5893,20 @@ function getDataStrategyMatch(
     ...match,
     _lazyPromises,
     shouldLoad,
-    unstable_shouldRevalidateArgs,
-    unstable_shouldCallHandler(defaultShouldRevalidate) {
+    shouldRevalidateArgs,
+    shouldCallHandler(defaultShouldRevalidate) {
       isUsingNewApi = true;
-      if (!unstable_shouldRevalidateArgs) {
+      if (!shouldRevalidateArgs) {
         return shouldLoad;
       }
 
       if (typeof defaultShouldRevalidate === "boolean") {
         return shouldRevalidateLoader(match, {
-          ...unstable_shouldRevalidateArgs,
+          ...shouldRevalidateArgs,
           defaultShouldRevalidate,
         });
       }
-      return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
+      return shouldRevalidateLoader(match, shouldRevalidateArgs);
     },
     resolve(handlerOverride) {
       let { lazy, loader, middleware } = match.route;
@@ -5860,7 +5951,7 @@ function getTargetedDataStrategyMatches(
   targetMatch: AgnosticDataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
-  shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
+  shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
 ): DataStrategyMatch[] {
   return matches.map((match) => {
     if (match.route.id !== targetMatch.route.id) {
@@ -5869,8 +5960,8 @@ function getTargetedDataStrategyMatches(
       return {
         ...match,
         shouldLoad: false,
-        unstable_shouldRevalidateArgs: shouldRevalidateArgs,
-        unstable_shouldCallHandler: () => false,
+        shouldRevalidateArgs: shouldRevalidateArgs,
+        shouldCallHandler: () => false,
         _lazyPromises: getDataStrategyMatchLazyPromises(
           mapRouteProperties,
           manifest,
@@ -5886,7 +5977,7 @@ function getTargetedDataStrategyMatches(
       mapRouteProperties,
       manifest,
       request,
-      getRoutePattern(matches.map((m) => m.route.path)),
+      getRoutePattern(matches),
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
@@ -5914,7 +6005,7 @@ async function callDataStrategyImpl(
   // back out below.
   let dataStrategyArgs = {
     request,
-    unstable_pattern: getRoutePattern(matches.map((m) => m.route.path)),
+    unstable_pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
     matches,
@@ -6166,11 +6257,7 @@ async function convertDataStrategyResultToDataResult(
       // Convert thrown data() to ErrorResponse instances
       return {
         type: ResultType.error,
-        error: new ErrorResponseImpl(
-          result.init?.status || 500,
-          undefined,
-          result.data,
-        ),
+        error: dataWithResponseInitToErrorResponse(result),
         statusCode: isRouteErrorResponse(result) ? result.status : undefined,
         headers: result.init?.headers
           ? new Headers(result.init.headers)

@@ -5,12 +5,12 @@ import type { Files } from "./helpers/vite.js";
 import { reactRouterConfig, test, viteConfig } from "./helpers/vite.js";
 
 function getFiles({
-  viteEnvironmentApi,
+  v8_viteEnvironmentApi,
 }: {
-  viteEnvironmentApi: boolean;
+  v8_viteEnvironmentApi: boolean;
 }): Files {
   return async ({ port }) => ({
-    "react-router.config.ts": reactRouterConfig({ viteEnvironmentApi }),
+    "react-router.config.ts": reactRouterConfig({ v8_viteEnvironmentApi }),
     "vite.config.ts": `
       import { reactRouter } from "@react-router/dev/vite";
       import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
@@ -144,9 +144,9 @@ function getFiles({
 }
 
 test.describe("Cloudflare Dev Proxy", () => {
-  [false, true].forEach((viteEnvironmentApi) => {
-    test.describe(`viteEnvironmentApi enabled: ${viteEnvironmentApi}`, () => {
-      const files = getFiles({ viteEnvironmentApi });
+  [false, true].forEach((v8_viteEnvironmentApi) => {
+    test.describe(`viteEnvironmentApi enabled: ${v8_viteEnvironmentApi}`, () => {
+      const files = getFiles({ v8_viteEnvironmentApi });
 
       test("vite dev", async ({ page, dev }) => {
         let { port } = await dev(files, "cloudflare-dev-proxy-template");

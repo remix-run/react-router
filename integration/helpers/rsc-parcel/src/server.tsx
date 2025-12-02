@@ -63,10 +63,10 @@ app.get("/.well-known/appspecific/com.chrome.devtools.json", (_, res) => {
 
 // Hookup our application.
 app.use(
-  createRequestListener((request) =>
+  createRequestListener(async (request) =>
     prerender(
       request,
-      fetchServer,
+      await fetchServer(request),
       (assets as unknown as { bootstrapScript?: string }).bootstrapScript,
     ),
   ),

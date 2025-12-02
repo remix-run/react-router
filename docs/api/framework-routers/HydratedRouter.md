@@ -33,10 +33,11 @@ function HydratedRouter(props: HydratedRouterProps)
 
 ### getContext
 
-Context object to be passed through to [`createBrowserRouter`](../data-routers/createBrowserRouter) and made
-available to
+Context factory function to be passed through to [`createBrowserRouter`](../data-routers/createBrowserRouter).
+This function will be called to create a fresh `context` instance on each
+navigation/fetch and made available to
 [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
-functions
+functions.
 
 ### unstable_onError
 

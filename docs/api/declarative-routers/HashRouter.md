@@ -29,7 +29,12 @@ of the URL so it is not sent to the server.
 ## Signature
 
 ```tsx
-function HashRouter({ basename, children, window }: HashRouterProps)
+function HashRouter({
+  basename,
+  children,
+  unstable_useTransitions,
+  window,
+}: HashRouterProps)
 ```
 
 ## Props
@@ -41,6 +46,21 @@ Application basename
 ### children
 
 ``<Route>`` components describing your route configuration
+
+### unstable_useTransitions
+
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all router state updates are wrapped in
+  `React.startTransition`
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and all router state updates are wrapped in
+  `React.startTransition`
+- When set to `false`, the router will not leverage `React.startTransition`
+  on any navigations or state changes.
+
+For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
 
 ### window
 

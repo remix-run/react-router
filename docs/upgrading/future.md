@@ -48,4 +48,61 @@ If you're using `react-router-serve`, then you should not need to make any updat
 
 You should only need to update your code if you are using the `context` parameter in `loader` and `action` functions. This only applies if you have a custom server with a `getLoadContext` function. Please see the docs on the middleware [`getLoadContext` changes](../how-to/middleware#changes-to-getloadcontextapploadcontext) and the instructions to [migrate to the new API](../how-to/middleware#migration-from-apploadcontext).
 
+## `future.v8_splitRouteModules`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+This feature enables splitting client-side route exports (`clientLoader`, `clientAction`, `clientMiddleware`, `HydrateFallback`) into separate chunks that can be loaded independently from the route component. This allows these exports to be fetched and executed while the component code is still downloading, improving performance for client-side data loading.
+
+This can be set to `true` for opt-in behavior, or `"enforce"` to require all routes to be splittable (which will cause build failures for routes that cannot be split due to shared code).
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    v8_splitRouteModules: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required. This is an optimization feature that works automatically once enabled.
+
+## `future.v8_viteEnvironmentApi`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+This enables support for the experimental Vite Environment API, which provides a more flexible and powerful way to configure Vite environments. This is only available when using Vite 6+.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    v8_viteEnvironmentApi: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required unless you have custom Vite configuration that needs to be updated for the [Environment API][vite-environment]. Most users won't need to make any changes.
+
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
+[vite-environment]: https://vite.dev/guide/api-environment

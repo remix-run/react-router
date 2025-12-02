@@ -130,6 +130,58 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("discovers child routes at a depth >1 when a separate matching param route exists (GET navigation)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          handle: {
+            async lazyChildren() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  handle: {
+                    async lazyChildren() {
+                      await tick();
+                      return [{ id: "c", path: "c" }];
+                    },
+                  },
+                },
+              ];
+            },
+          },
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+      ],
+      async patchRoutesOnNavigation({ patch, matches }) {
+        await tick();
+        const leafRoute = last(matches).route;
+        if (leafRoute.handle?.lazyChildren) {
+          const children = await leafRoute.handle.lazyChildren();
+          patch(leafRoute.id, children);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c");
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
   it("discovers child route at a depth of 1 (POST navigation)", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
     let loaderDfd = createDeferred();
@@ -265,6 +317,61 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         c: "C",
       },
     });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
+  it("discovers child routes at a depth >1 when a separate matching param route exists (POST navigation)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          handle: {
+            async lazyChildren() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  handle: {
+                    async lazyChildren() {
+                      await tick();
+                      return [{ id: "c", path: "c" }];
+                    },
+                  },
+                },
+              ];
+            },
+          },
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+      ],
+      async patchRoutesOnNavigation({ patch, matches }) {
+        await tick();
+        const leafRoute = last(matches).route;
+        if (leafRoute.handle?.lazyChildren) {
+          const children = await leafRoute.handle.lazyChildren();
+          patch(leafRoute.id, children);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c", {
+      formMethod: "POST",
+      formData: createFormData({}),
+    });
+    expect(router.state.location.pathname).toBe("/a/b/c");
     expect(router.state.matches.map((m) => m.route.id)).toEqual([
       "a",
       "b",
