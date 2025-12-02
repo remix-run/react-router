@@ -32,7 +32,7 @@ jobs:
 
       # IMPORTANT: if you make changes here, also make them in release.yml
       - name: 📝 Comment on related issues and pull requests
-        uses: remix-run/release-comment-action@v0.5.0
+        uses: remix-run/release-comment-action@v0.5.1
         with:
           DRY_RUN: ${{ github.event.inputs.dryRun }}
           DIRECTORY_TO_CHECK: "./packages"

@@ -130,7 +130,7 @@ jobs:
 
       # IMPORTANT: if you make changes here, also make them in release-comment-manual.yml
       - name: 📝 Comment on related issues and pull requests
-        uses: remix-run/release-comment-action@v0.5.0
+        uses: remix-run/release-comment-action@v0.5.1
         with:
           DIRECTORY_TO_CHECK: "./packages"
           PACKAGE_NAME: "react-router"
