@@ -102,6 +102,7 @@ export default {
 
 **Update your Code**
 
-No code changes are required unless you have custom Vite configuration that needs to be updated for the Environment API. Most users won't need to make any changes.
+No code changes are required unless you have custom Vite configuration that needs to be updated for the [Environment API][vite-environment]. Most users won't need to make any changes.
 
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
+[vite-environment]: https://vite.dev/guide/api-environment

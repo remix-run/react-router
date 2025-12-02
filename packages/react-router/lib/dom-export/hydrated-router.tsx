@@ -235,16 +235,9 @@ export interface HydratedRouterProps {
    * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
    * mostly useful for observability such as wrapping navigations, fetches,
    * as well as route loaders/actions/middlewares with logging and/or performance
-   * tracing.
+   * tracing. See the [docs](../../how-to/instrumentation) for more information.
    *
    * ```tsx
-   * startTransition(() => {
-   *   hydrateRoot(
-   *     document,
-   *     <HydratedRouter unstable_instrumentations={[logging]} />
-   *   );
-   * });
-   *
    * const logging = {
    *   router({ instrument }) {
    *     instrument({
@@ -277,6 +270,13 @@ export interface HydratedRouterProps {
    *   let duration = Math.round(performance.now() - start);
    *   console.log(`end ${label} (${duration}ms)`);
    * }
+   *
+   * startTransition(() => {
+   *   hydrateRoot(
+   *     document,
+   *     <HydratedRouter unstable_instrumentations={[logging]} />
+   *   );
+   * });
    * ```
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
