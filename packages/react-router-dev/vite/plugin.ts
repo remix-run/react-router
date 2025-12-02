@@ -634,7 +634,7 @@ let getServerBundleRouteIds = (
     return undefined;
   }
 
-  let environmentName = ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+  let environmentName = ctx.reactRouterConfig.future.v8_viteEnvironmentApi
     ? vitePluginContext.environment.name
     : ctx.environmentBuildContext?.name;
 
@@ -730,8 +730,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     // `buildManifest` object across multiple builds without having to
     // re-execute the `serverBundles` function.
     let injectedPluginContext =
-      !reactRouterConfig.future.unstable_viteEnvironmentApi &&
-      viteCommand === "build"
+      !reactRouterConfig.future.v8_viteEnvironmentApi && viteCommand === "build"
         ? extractPluginContext(viteUserConfig)
         : undefined;
 
@@ -861,7 +860,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .join(",\n  ")}
       };
       ${
-        ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+        ctx.reactRouterConfig.future.v8_viteEnvironmentApi &&
         viteCommand === "serve"
           ? `
               export const unstable_getCriticalCss = ({ pathname }) => {
@@ -976,7 +975,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let enforceSplitRouteModules =
-      ctx.reactRouterConfig.future.unstable_splitRouteModules === "enforce";
+      ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
@@ -1121,7 +1120,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let enforceSplitRouteModules =
-      ctx.reactRouterConfig.future.unstable_splitRouteModules === "enforce";
+      ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
       let routeFile = route.file;
@@ -1279,6 +1278,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           });
         }
 
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
+
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
           mode,
@@ -1286,12 +1291,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         await updatePluginContext();
-
-        await loadDotenv({
-          rootDirectory,
-          viteUserConfig,
-          mode,
-        });
 
         let environments = await getEnvironmentsOptions(ctx, viteCommand, {
           viteUserConfig,
@@ -1378,7 +1377,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ? { fs: { allow: defaultEntries } }
             : undefined,
 
-          ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+          ...(ctx.reactRouterConfig.future.v8_viteEnvironmentApi
             ? {
                 environments,
                 build: {
@@ -1432,7 +1431,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
       configEnvironment(name, options) {
         if (
-          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+          ctx.reactRouterConfig.future.v8_viteEnvironmentApi &&
           (ctx.buildManifest?.serverBundles
             ? isSsrBundleEnvironmentName(name)
             : name === "ssr")
@@ -1620,7 +1619,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
         );
 
-        if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+        if (ctx.reactRouterConfig.future.v8_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
             if (reqPathname.endsWith("/@react-router/critical.css")) {
@@ -1651,7 +1650,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
                 let build: ServerBuild;
-                if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+                if (ctx.reactRouterConfig.future.v8_viteEnvironmentApi) {
                   let vite = getVite();
                   let ssrEnvironment = viteDevServer.environments.ssr;
                   if (!vite.isRunnableDevEnvironment(ssrEnvironment)) {
@@ -1694,7 +1693,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let { future } = ctx.reactRouterConfig;
 
           if (
-            future.unstable_viteEnvironmentApi
+            future.v8_viteEnvironmentApi
               ? this.environment.name === "client"
               : !viteConfigEnv.isSsrBuild
           ) {
@@ -1706,7 +1705,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ctx.reactRouterConfig,
           );
 
-          let serverBuildDirectory = future.unstable_viteEnvironmentApi
+          let serverBuildDirectory = future.v8_viteEnvironmentApi
             ? this.environment.config?.build?.outDir
             : (ctx.environmentBuildContext?.options.build?.outDir ??
               getServerBuildDirectory(ctx.reactRouterConfig));
@@ -1718,7 +1717,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // assets, we don't remove them. We only copy missing assets from the
           // SSR to the client build.
           let userSsrEmitAssets =
-            (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+            (ctx.reactRouterConfig.future.v8_viteEnvironmentApi
               ? (viteUserConfig.environments?.ssr?.build?.ssrEmitAssets ??
                 viteUserConfig.environments?.ssr?.build?.emitAssets)
               : null) ??
@@ -2030,7 +2029,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
 
         let enforceSplitRouteModules =
-          ctx.reactRouterConfig.future.unstable_splitRouteModules === "enforce";
+          ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
 
         if (enforceSplitRouteModules && chunkName === "main" && chunk) {
           let exportNames = getExportNames(chunk.code);
@@ -3293,7 +3292,7 @@ async function detectRouteChunksIfEnabled(
       },
     };
   }
-  if (!ctx.reactRouterConfig.future.unstable_splitRouteModules) {
+  if (!ctx.reactRouterConfig.future.v8_splitRouteModules) {
     return noRouteChunks();
   }
 
@@ -3325,7 +3324,7 @@ async function getRouteChunkIfEnabled(
   chunkName: RouteChunkName,
   input: ResolveRouteFileCodeInput,
 ): Promise<ReturnType<typeof getRouteChunkCode> | null> {
-  if (!ctx.reactRouterConfig.future.unstable_splitRouteModules) {
+  if (!ctx.reactRouterConfig.future.v8_splitRouteModules) {
     return null;
   }
 
@@ -3472,7 +3471,7 @@ export async function getBuildManifest({
       if (typeof serverBundleId !== "string") {
         throw new Error(`The "serverBundles" function must return a string`);
       }
-      if (reactRouterConfig.future.unstable_viteEnvironmentApi) {
+      if (reactRouterConfig.future.v8_viteEnvironmentApi) {
         // Server bundle IDs must be valid Vite environment names, so hyphens are not allowed
         if (!/^[a-zA-Z0-9_]+$/.test(serverBundleId)) {
           throw new Error(
@@ -3619,8 +3618,8 @@ export async function getEnvironmentOptionsResolvers(
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
       resolve: {
         external:
-          // If `unstable_viteEnvironmentApi` is `true`, `resolve.external` is set in the `configEnvironment` hook
-          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+          // If `v8_viteEnvironmentApi` is `true`, `resolve.external` is set in the `configEnvironment` hook
+          ctx.reactRouterConfig.future.v8_viteEnvironmentApi
             ? undefined
             : ssrExternals,
         conditions: [...baseConditions, ...maybeDefaultServerConditions],
@@ -3636,7 +3635,7 @@ export async function getEnvironmentOptionsResolvers(
         copyPublicDir: false, // The client only uses assets in the public directory
         rollupOptions: {
           input:
-            (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+            (ctx.reactRouterConfig.future.v8_viteEnvironmentApi
               ? viteUserConfig.environments?.ssr?.build?.rollupOptions?.input
               : viteUserConfig.build?.rollupOptions?.input) ??
             virtual.serverBuild.id,
@@ -3670,8 +3669,8 @@ export async function getEnvironmentOptionsResolvers(
 
                   return [
                     `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-                    ...(ctx.reactRouterConfig.future
-                      .unstable_splitRouteModules && !isRootRoute
+                    ...(ctx.reactRouterConfig.future.v8_splitRouteModules &&
+                    !isRootRoute
                       ? routeChunkExportNames.map((exportName) =>
                           code.includes(exportName)
                             ? getRouteChunkModuleId(routeFilePath, exportName)
@@ -3682,7 +3681,7 @@ export async function getEnvironmentOptionsResolvers(
                 },
               ),
             ],
-            output: (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+            output: (ctx.reactRouterConfig.future.v8_viteEnvironmentApi
               ? viteUserConfig?.environments?.client?.build?.rollupOptions
                   ?.output
               : viteUserConfig?.build?.rollupOptions?.output) ?? {
@@ -3698,7 +3697,7 @@ export async function getEnvironmentOptionsResolvers(
                   ? `-${kebabCase(routeChunkName)}`
                   : "";
                 let assetsDir =
-                  (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+                  (ctx.reactRouterConfig.future.v8_viteEnvironmentApi
                     ? viteUserConfig?.environments?.client?.build?.assetsDir
                     : null) ??
                   viteUserConfig?.build?.assetsDir ??

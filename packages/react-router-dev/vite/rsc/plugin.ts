@@ -60,6 +60,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
 
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
+
         configLoader = await createConfigLoader({
           rootDirectory,
           mode,
@@ -72,12 +78,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.routeDiscovery) errors.push("routeDiscovery");
             if (userConfig.serverBundles) errors.push("serverBundles");
             if (userConfig.ssr === false) errors.push("ssr: false");
-            if (userConfig.future?.unstable_splitRouteModules)
-              errors.push("future.unstable_splitRouteModules");
-            if (userConfig.future?.unstable_viteEnvironmentApi === false)
-              errors.push("future.unstable_viteEnvironmentApi: false");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
+            if (userConfig.future?.v8_splitRouteModules)
+              errors.push("future.v8_splitRouteModules");
+            if (userConfig.future?.v8_viteEnvironmentApi === false)
+              errors.push("future.v8_viteEnvironmentApi: false");
             if (userConfig.future?.unstable_subResourceIntegrity)
               errors.push("future.unstable_subResourceIntegrity");
             if (errors.length) {
@@ -103,12 +109,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "Vite dev server.",
           );
         }
-
-        await loadDotenv({
-          rootDirectory,
-          viteUserConfig,
-          mode,
-        });
 
         const vite = await import("vite");
         logger = vite.createLogger(viteUserConfig.logLevel, {

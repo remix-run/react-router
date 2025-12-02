@@ -37,7 +37,7 @@ The following steps will get you set up to contribute changes to this repo:
 
 ## Think You Found a Bug?
 
-Please conform to the issue template and provide a **minimal** and **runnable** reproduction. Best is a pull request with a [failing test](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts). Next best is a link to [StackBlitz](https://reactrouter.com/new), CodeSsndbox, or GitHub repository that illustrates the bug.
+Please conform to the issue template and provide a **minimal** and **runnable** reproduction. Best is a pull request with a [failing test](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts). Next best is a link to [StackBlitz](https://reactrouter.com/new), CodeSandbox, or GitHub repository that illustrates the bug.
 
 ## Issue Not Getting Attention?
 

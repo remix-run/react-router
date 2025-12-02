@@ -51,7 +51,7 @@ jobs:
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -95,7 +95,7 @@ jobs:
       package_version: ${{ steps.find_package_version.outputs.package_version }}
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
@@ -124,16 +124,17 @@ jobs:
       pull-requests: write # enable commenting on released pull requests
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: 📝 Comment on related issues and pull requests
-        uses: remix-run/release-comment-action@v0.4.2
+        uses: remix-run/release-comment-action@v0.5.0
         with:
           DIRECTORY_TO_CHECK: "./packages"
           PACKAGE_NAME: "react-router"
           ISSUE_LABELS_TO_REMOVE: "awaiting release"
+          ISSUE_LABELS_TO_KEEP_OPEN: "🗺 Roadmap"
 
   # HEADS UP! this "nightly" job will only ever run on the `main` branch due to
   # it being a cron job, and the last commit on main will be what github shows
@@ -153,7 +154,7 @@ jobs:
       NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: dev
           # checkout using a custom token so that we can push later on
@@ -221,7 +222,7 @@ jobs:
       id-token: write # enable generation of an ID token for publishing
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.branch }}
           # checkout using a custom token so that we can push later on

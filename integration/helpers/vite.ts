@@ -28,20 +28,18 @@ export const reactRouterConfig = ({
   basename,
   prerender,
   appDirectory,
-  splitRouteModules,
-  viteEnvironmentApi,
   v8_middleware,
+  v8_splitRouteModules,
+  v8_viteEnvironmentApi,
   routeDiscovery,
 }: {
   ssr?: boolean;
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
-  splitRouteModules?: NonNullable<
-    Config["future"]
-  >["unstable_splitRouteModules"];
-  viteEnvironmentApi?: boolean;
   v8_middleware?: boolean;
+  v8_splitRouteModules?: NonNullable<Config["future"]>["v8_splitRouteModules"];
+  v8_viteEnvironmentApi?: boolean;
   routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
@@ -51,9 +49,9 @@ export const reactRouterConfig = ({
     appDirectory,
     routeDiscovery,
     future: {
-      unstable_splitRouteModules: splitRouteModules,
-      unstable_viteEnvironmentApi: viteEnvironmentApi,
       v8_middleware,
+      v8_splitRouteModules,
+      v8_viteEnvironmentApi,
     },
   };
 

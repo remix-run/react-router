@@ -47,8 +47,32 @@ Basename path for the application.
 
 ### opts.dataStrategy
 
-Override the default data strategy of loading in parallel.
-Only intended for advanced usage.
+Override the default data strategy of running loaders in parallel -
+see the [docs](../../how-to/data-strategy) for more information.
+
+```tsx
+let router = createBrowserRouter(routes, {
+  async dataStrategy({
+    matches,
+    request,
+    runClientMiddleware,
+  }) {
+    const matchesToLoad = matches.filter((m) =>
+      m.shouldCallHandler(),
+    );
+
+    const results: Record<string, DataStrategyResult> = {};
+    await runClientMiddleware(() =>
+      Promise.all(
+        matchesToLoad.map(async (match) => {
+          results[match.route.id] = await match.resolve();
+        }),
+      ),
+    );
+    return results;
+  },
+});
+```
 
 ### opts.future
 
@@ -82,7 +106,7 @@ individual routes prior to router initialization (and on any subsequently
 added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
 mostly useful for observability such as wrapping navigations, fetches,
 as well as route loaders/actions/middlewares with logging and/or performance
-tracing.
+tracing.  See the [docs](../../how-to/instrumentation) for more information.
 
 ```tsx
 let router = createBrowserRouter(routes, {
