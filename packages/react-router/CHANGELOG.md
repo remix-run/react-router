@@ -1,12 +1,6 @@
 # `react-router`
 
-## 7.10.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Update source code docs ([`1f8fee408`](https://github.com/remix-run/react-router/commit/1f8fee408db2f74dcc4b04eeb51009da5d51d8a6))
-
-## 7.10.0-pre.0
+## 7.10.0
 
 ### Minor Changes
 
@@ -15,6 +9,7 @@
 
 - Stabilize the `dataStrategy` `match.shouldRevalidateArgs`/`match.shouldCallHandler()` APIs. ([#14592](https://github.com/remix-run/react-router/pull/14592))
   - The `match.shouldLoad` API is now marked deprecated in favor of these more powerful alternatives
+
   - If you're using this API in a custom `dataStrategy` today, you can swap to the new API at your convenience:
 
     ```tsx
@@ -26,6 +21,7 @@
     ```
 
   - `match.shouldRevalidateArgs` is the argument that will be passed to the route `shouldRevaliate` function
+
   - Combined with the parameter accepted by `match.shouldCallHandler`, you can define a custom revalidation behavior for your `dataStrategy`:
 
   ```tsx
@@ -44,7 +40,9 @@
   - If your `shouldRevalidate` function relied on that parameter, you may have seen unintended revalidations
 
 - Fix `fetcher.submit` failing with plain objects containing a `tagName` property ([#14534](https://github.com/remix-run/react-router/pull/14534))
-- [UNSTABLE] Add `unstable_pattern` to the parameters for client side `unstable_onError`, refactor how it's called by `RouterProvider` to avoid potential strict mode issues ([#14573](https://github.com/remix-run/react-router/pull/14573))
+
+- \[UNSTABLE] Add `unstable_pattern` to the parameters for client side `unstable_onError`, refactor how it's called by `RouterProvider` to avoid potential strict mode issues ([#14573](https://github.com/remix-run/react-router/pull/14573))
+
 - Add new `unstable_useTransitions` flag to routers to give users control over the usage of [`React.startTransition`](https://react.dev/reference/react/startTransition) and [`React.useOptimistic`](https://react.dev/reference/react/useOptimistic). ([#14524](https://github.com/remix-run/react-router/pull/14524))
   - Framework Mode + Data Mode:
     - `<HydratedRouter unstable_transition>`/`<RouterProvider unstable_transition>`
@@ -70,8 +68,11 @@
       - the router will not leverage `React.startTransition` on any navigations or state changes
 
 - Fix the promise returned from `useNavigate` in Framework/Data Mode so that it properly tracks the duration of `popstate` navigations (i.e., `navigate(-1)`) ([#14524](https://github.com/remix-run/react-router/pull/14524))
+
 - Fix internal type error in useRoute types that surfaces when skipLibCheck is disabled ([#14577](https://github.com/remix-run/react-router/pull/14577))
+
 - Preserve `statusText` on the `ErrorResponse` instance when throwing `data()` from a route handler ([#14555](https://github.com/remix-run/react-router/pull/14555))
+
 - Optimize href() to avoid backtracking regex on splat ([#14329](https://github.com/remix-run/react-router/pull/14329))
 
 ## 7.9.6

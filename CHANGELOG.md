@@ -15,9 +15,9 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v7.10.0](#v7100)
     - [What's Changed](#whats-changed)
-      - [Stabilized `fetcher.reset()`](#stabilized-fetcherreset)
       - [Stabilized `future.v8_splitRouteModules`](#stabilized-futurev8_splitroutemodules)
       - [Stabilized `future.v8_viteEnvironmentApi`](#stabilized-futurev8_viteenvironmentapi)
+      - [Stabilized `fetcher.reset()`](#stabilized-fetcherreset)
       - [Stabilized `DataStrategyMatch.shouldCallHandler()`](#stabilized-datastrategymatchshouldcallhandler)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
@@ -393,7 +393,7 @@ Date: YYYY-MM-DD
 
 ## v7.10.0
 
-Date: 2025-12-2
+Date: 2025-12-02
 
 ### What's Changed
 
