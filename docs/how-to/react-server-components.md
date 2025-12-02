@@ -722,7 +722,7 @@ app.use(
   createRequestListener((request) =>
     generateHTML(
       request,
-      fetchServer,
+      await fetchServer(request),
       (routes as unknown as { bootstrapScript?: string })
         .bootstrapScript,
     ),
@@ -942,7 +942,7 @@ export default async function handler(request: Request) {
     typeof import("./entry.ssr")
   >("ssr", "index");
 
-  return ssr.generateHTML(request, fetchServer);
+  return ssr.generateHTML(request, await fetchServer(request));
 }
 ```
 

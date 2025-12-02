@@ -89,10 +89,9 @@ async function routeRSCServerRequest({
 
 Your `react-server-dom-xyz/client`'s `createFromReadableStream` function, used to decode payloads from the server.
 
-### opts.fetchServer
+### opts.serverResponse
 
-A function that forwards a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) to the [RSC](https://react.dev/reference/rsc/server-components) handler
-and returns a `Promise<Response>` containing a serialized [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html).
+A Response from the [RSC](https://react.dev/reference/rsc/server-components) handler containing a serialized [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html).
 
 ### opts.hydrate
 
