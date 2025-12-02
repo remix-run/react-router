@@ -10,6 +10,10 @@ unstable: true
 <br/>
 <br/>
 
+<docs-warning>The `unstable_useTransitions` prop is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
+to release notes for relevant changes.</docs-warning>
+
 [React 18][react-18] introduced the concept of "transitions" which allow you to differentiate urgent from non-urgent UI updates. To learn more about React Transitions and "concurrent rendering" Please refer to React's official documentation:
 
 - [What is Concurrent React][concurrent]
