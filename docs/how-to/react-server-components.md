@@ -634,14 +634,14 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
 
 export async function generateHTML(
   request: Request,
-  fetchServer: (request: Request) => Promise<Response>,
+  serverResponse: Response,
   bootstrapScriptContent: string | undefined,
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
     request,
-    // How to call the React Server.
-    fetchServer,
+    // The React Server response.
+    serverResponse,
     // Provide the React Server touchpoints.
     createFromReadableStream,
     // Render the router to HTML.
@@ -722,7 +722,7 @@ app.use(
   createRequestListener((request) =>
     generateHTML(
       request,
-      fetchServer,
+      await fetchServer(request),
       (routes as unknown as { bootstrapScript?: string })
         .bootstrapScript,
     ),
@@ -864,13 +864,13 @@ import {
 
 export async function generateHTML(
   request: Request,
-  fetchServer: (request: Request) => Promise<Response>,
+  serverResponse: Response,
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
     request,
-    // How to call the React Server.
-    fetchServer,
+    // The React Server response
+    serverResponse,
     // Provide the React Server touchpoints.
     createFromReadableStream,
     // Render the router to HTML.
@@ -942,7 +942,7 @@ export default async function handler(request: Request) {
     typeof import("./entry.ssr")
   >("ssr", "index");
 
-  return ssr.generateHTML(request, fetchServer);
+  return ssr.generateHTML(request, await fetchServer(request));
 }
 ```
 

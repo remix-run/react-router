@@ -37,7 +37,7 @@ export default async function handler(request: Request) {
   const ssr = await import.meta.viteRsc.loadModule<
     typeof import("./entry.ssr")
   >("ssr", "index");
-  return ssr.default(request, fetchServer);
+  return ssr.default(request, await fetchServer(request));
 }
 
 if (import.meta.hot) {
