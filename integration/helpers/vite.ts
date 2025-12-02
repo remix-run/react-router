@@ -187,7 +187,7 @@ export const EXPRESS_SERVER = (args: {
                 },
               })
             );
-      const app = express();      
+      const app = express();
 
       ${args?.customLogic || ""}
 
@@ -424,11 +424,15 @@ export const vitePreview = async ({
 }) => {
   let nodeBin = process.argv[0];
   let viteBin = path.join(cwd, "node_modules", "vite", "bin", "vite.js");
-  let proc = spawn(nodeBin, [viteBin, "preview", "--port", String(port), "--strict-port"], {
-    cwd,
-    stdio: "pipe",
-    env: { NODE_ENV: "production" },
-  });
+  let proc = spawn(
+    nodeBin,
+    [viteBin, "preview", "--port", String(port), "--strict-port"],
+    {
+      cwd,
+      stdio: "pipe",
+      env: { NODE_ENV: "production" },
+    },
+  );
   await waitForServer(proc, { port });
   return () => proc.kill();
 };
@@ -524,7 +528,7 @@ export const test = base.extend<Fixtures>({
     });
     stop?.();
   },
-  vitePreview: async (_, use) => {
+  vitePreview: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {
       let port = await getPort();
