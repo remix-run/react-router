@@ -1017,7 +1017,6 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   static contextType = RSCRouterContext;
-  declare context: React.ContextType<typeof RSCRouterContext>;
 
   static getDerivedStateFromError(error: any) {
     return { error: error };
