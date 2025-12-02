@@ -54,9 +54,9 @@ import {
   FetchersContext,
   LocationContext,
   NavigationContext,
-  RSCRouterContext,
   RouteContext,
   ViewTransitionContext,
+  useIsRSCRouterContext,
 } from "./context";
 import {
   _renderMatches,
@@ -465,8 +465,8 @@ export function RouterProvider({
   unstable_onError,
   unstable_useTransitions,
 }: RouterProviderProps): React.ReactElement {
-  let unstable_rsc = React.useContext(RSCRouterContext);
-  unstable_useTransitions = unstable_useTransitions || unstable_rsc;
+  let unstable_rsc = useIsRSCRouterContext();
+  unstable_useTransitions = unstable_rsc || unstable_useTransitions;
 
   let [_state, setStateImpl] = React.useState(router.state);
   let [state, setOptimisticState] = useOptimisticSafe(_state);
