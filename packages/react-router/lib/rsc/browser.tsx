@@ -844,7 +844,6 @@ export function RSCHydratedRouter({
           <RouterProvider
             router={transitionEnabledRouter}
             flushSync={ReactDOM.flushSync}
-            unstable_rsc
           />
         </FrameworkContext.Provider>
       </RSCRouterGlobalErrorBoundary>

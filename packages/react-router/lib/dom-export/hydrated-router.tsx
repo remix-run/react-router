@@ -80,11 +80,9 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   getContext,
   unstable_instrumentations,
-  unstable_rsc,
 }: {
   getContext?: RouterInit["getContext"];
   unstable_instrumentations?: unstable_ClientInstrumentation[];
-  unstable_rsc?: boolean;
 }): DataRouter {
   initSsrInfo();
 
@@ -179,9 +177,7 @@ function createHydratedRouter({
     hydrationRouteProperties,
     unstable_instrumentations,
     mapRouteProperties,
-    future: {
-      unstable_rsc,
-    },
+    future: {},
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
       ssrInfo.manifest,
@@ -319,13 +315,6 @@ export interface HydratedRouterProps {
    * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
   unstable_useTransitions?: boolean;
-
-  /**
-   * Control whether RSC specific behaviors are introduced. This currently
-   * enables the unstable_useTransitions flag, as well as the ability to handle
-   * thrown redirect responses during the render phase.
-   */
-  unstable_rsc?: boolean;
 }
 
 /**
@@ -345,7 +334,6 @@ export function HydratedRouter(props: HydratedRouterProps) {
     router = createHydratedRouter({
       getContext: props.getContext,
       unstable_instrumentations: props.unstable_instrumentations,
-      unstable_rsc: props.unstable_rsc,
     });
   }
 

@@ -54,6 +54,7 @@ import {
   FetchersContext,
   LocationContext,
   NavigationContext,
+  RSCRouterContext,
   RouteContext,
   ViewTransitionContext,
 } from "./context";
@@ -400,12 +401,6 @@ export interface RouterProviderProps {
    * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
   unstable_useTransitions?: boolean;
-
-  /**
-   * Control whether rsc specific behaviors are enabled. This includes
-   * `unstable_useTransitions` and redirects thrown at render time.
-   */
-  unstable_rsc?: boolean;
 }
 
 /**
@@ -438,7 +433,6 @@ export interface RouterProviderProps {
  * @param {RouterProviderProps.unstable_onError} props.unstable_onError n/a
  * @param {RouterProviderProps.router} props.router n/a
  * @param {RouterProviderProps.unstable_useTransitions} props.unstable_useTransitions n/a
- * @param {RouterProviderProps.unstable_rsc} props.unstable_rsc n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
@@ -446,8 +440,8 @@ export function RouterProvider({
   flushSync: reactDomFlushSyncImpl,
   unstable_onError,
   unstable_useTransitions,
-  unstable_rsc,
 }: RouterProviderProps): React.ReactElement {
+  let unstable_rsc = React.useContext(RSCRouterContext);
   unstable_useTransitions = unstable_useTransitions || unstable_rsc;
 
   let [_state, setStateImpl] = React.useState(router.state);
@@ -728,7 +722,6 @@ export function RouterProvider({
                   future={router.future}
                   state={state}
                   unstable_onError={unstable_onError}
-                  unstable_rsc={unstable_rsc}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -775,22 +768,13 @@ function DataRoutes({
   future,
   state,
   unstable_onError,
-  unstable_rsc,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
   unstable_onError: unstable_ClientOnErrorFunction | undefined;
-  unstable_rsc: boolean | undefined;
 }): React.ReactElement | null {
-  return useRoutesImpl(
-    routes,
-    undefined,
-    state,
-    unstable_onError,
-    unstable_rsc,
-    future,
-  );
+  return useRoutesImpl(routes, undefined, state, unstable_onError, future);
 }
 
 /**

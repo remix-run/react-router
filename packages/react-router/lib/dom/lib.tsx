@@ -36,6 +36,7 @@ import {
   ErrorResponseImpl,
   joinPaths,
   matchPath,
+  parseToInfo,
   stripBasename,
 } from "../router/utils";
 
@@ -1412,39 +1413,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
-    // Rendered into <a href> for absolute URLs
-    let absoluteHref;
-    let isExternal = false;
-
-    if (typeof to === "string" && isAbsolute) {
-      // Render the absolute href server- and client-side
-      absoluteHref = to;
-
-      // Only check for external origins client-side
-      if (isBrowser) {
-        try {
-          let currentUrl = new URL(window.location.href);
-          let targetUrl = to.startsWith("//")
-            ? new URL(currentUrl.protocol + to)
-            : new URL(to);
-          let path = stripBasename(targetUrl.pathname, basename);
-
-          if (targetUrl.origin === currentUrl.origin && path != null) {
-            // Strip the protocol/origin/basename for same-origin absolute URLs
-            to = path + targetUrl.search + targetUrl.hash;
-          } else {
-            isExternal = true;
-          }
-        } catch (e) {
-          // We can't do external URL detection without a valid URL
-          warning(
-            false,
-            `<Link to="${to}"> contains an invalid URL which will probably break ` +
-              `when clicked - please update to a valid URL path.`,
-          );
-        }
-      }
-    }
+    let parsed = parseToInfo(to, basename);
+    to = parsed.to;
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
@@ -1476,8 +1446,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={absoluteHref || href}
-        onClick={isExternal || reloadDocument ? onClick : handleClick}
+        href={parsed.absoluteURL || href}
+        onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
         data-discover={

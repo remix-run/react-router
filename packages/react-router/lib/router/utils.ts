@@ -2058,3 +2058,65 @@ export function getRoutePattern(matches: AgnosticRouteMatch[]) {
       .replace(/\/\/*/g, "/") || "/"
   );
 }
+
+export const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
+export type ParsedLocationInfo<T extends To> =
+  | {
+      absoluteURL: string;
+      isExternal: boolean;
+      to: string;
+    }
+  | {
+      absoluteURL: undefined;
+      isExternal: false;
+      to: T;
+    };
+export function parseToInfo<T extends To | string>(
+  _to: T,
+  basename: string,
+): ParsedLocationInfo<T | string> {
+  let to = _to as string;
+  if (typeof to !== "string" || !ABSOLUTE_URL_REGEX.test(to)) {
+    return {
+      absoluteURL: undefined,
+      isExternal: false,
+      to,
+    };
+  }
+
+  let absoluteURL = to;
+  let isExternal = false;
+  if (isBrowser) {
+    try {
+      let currentUrl = new URL(window.location.href);
+      let targetUrl = to.startsWith("//")
+        ? new URL(currentUrl.protocol + to)
+        : new URL(to);
+      let path = stripBasename(targetUrl.pathname, basename);
+
+      if (targetUrl.origin === currentUrl.origin && path != null) {
+        // Strip the protocol/origin/basename for same-origin absolute URLs
+        to = path + targetUrl.search + targetUrl.hash;
+      } else {
+        isExternal = true;
+      }
+    } catch (e) {
+      // We can't do external URL detection without a valid URL
+      warning(
+        false,
+        `<Link to="${to}"> contains an invalid URL which will probably break ` +
+          `when clicked - please update to a valid URL path.`,
+      );
+    }
+  }
+
+  return {
+    absoluteURL,
+    isExternal,
+    to,
+  };
+}

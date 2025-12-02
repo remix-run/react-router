@@ -13,6 +13,7 @@ import {
   ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
+  RSCRouterContext,
   RouteContext,
   RouteErrorContext,
 } from "./context";
@@ -44,10 +45,12 @@ import {
   decodePath,
   getResolveToMatches,
   getRoutePattern,
+  isBrowser,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
+  parseToInfo,
   resolveTo,
   stripBasename,
 } from "./router/utils";
@@ -759,7 +762,6 @@ export function useRoutesImpl(
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
   unstable_onError?: unstable_ClientOnErrorFunction,
-  unstable_rsc?: boolean,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -914,7 +916,6 @@ export function useRoutesImpl(
     parentMatches,
     dataRouterState,
     unstable_onError,
-    unstable_rsc,
     future,
   );
 
@@ -994,7 +995,6 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   component: React.ReactNode;
   routeContext: RouteContextObject;
   onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
-  unstable_rsc?: boolean;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -1015,6 +1015,9 @@ export class RenderErrorBoundary extends React.Component<
       error: props.error,
     };
   }
+
+  static contextType = RSCRouterContext;
+  declare context: React.ContextType<typeof RSCRouterContext>;
 
   static getDerivedStateFromError(error: any) {
     return { error: error };
@@ -1078,7 +1081,7 @@ export class RenderErrorBoundary extends React.Component<
         this.props.children
       );
 
-    if (this.props.unstable_rsc) {
+    if (this.context) {
       return (
         <RSCErrorHandler error={this.state.error}>{result}</RSCErrorHandler>
       );
@@ -1096,6 +1099,9 @@ function RSCErrorHandler({
   children: React.ReactNode;
   error: unknown;
 }) {
+  let { basename } = React.useContext(NavigationContext);
+  let navigate = useNavigate();
+
   if (
     typeof error === "object" &&
     error &&
@@ -1104,21 +1110,27 @@ function RSCErrorHandler({
   ) {
     let redirect = decodeRedirectErrorDigest(error.digest);
     if (redirect) {
-      if (
-        typeof window !== "undefined" &&
-        window.__reactRouterDataRouter &&
-        !errorRedirectHandledMap.get(error)
-      ) {
-        // TODO: Handle external redirects?
-        setTimeout(() => {
-          window.__reactRouterDataRouter!.navigate(redirect.location, {
-            replace: true,
-          });
-        }, 0);
+      let parsed = parseToInfo(redirect.location, basename);
+
+      if (isBrowser && !errorRedirectHandledMap.get(error)) {
         errorRedirectHandledMap.set(error, true);
+
+        if (parsed.isExternal || redirect.reloadDocument) {
+          window.location.href = parsed.absoluteURL || parsed.to;
+        } else {
+          // @ts-expect-error - Needs React 19 types
+          React.startTransition(() => {
+            return navigate(parsed.to, {
+              replace: redirect.replace,
+            });
+          });
+        }
       }
       return (
-        <meta httpEquiv="refresh" content={`0;url=${redirect.location}`} />
+        <meta
+          httpEquiv="refresh"
+          content={`0;url=${parsed.absoluteURL || parsed.to}`}
+        />
       );
     }
   }
@@ -1157,7 +1169,6 @@ export function _renderMatches(
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
   unstable_onError: unstable_ClientOnErrorFunction | null = null,
-  unstable_rsc: boolean | undefined = undefined,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
@@ -1326,7 +1337,6 @@ export function _renderMatches(
           error={error}
           children={getChildren()}
           routeContext={{ outlet: null, matches, isDataRoute: true }}
-          unstable_rsc={unstable_rsc}
           onError={onError}
         />
       ) : (
