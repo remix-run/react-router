@@ -1200,11 +1200,11 @@ describe("shouldRevalidate", () => {
       async dataStrategy({ request, matches }) {
         let keyedResults = {};
         let matchesToLoad = matches.filter((match) =>
-          match.unstable_shouldCallHandler(
+          match.shouldCallHandler(
             request.method === "POST"
               ? undefined
-              : !match.unstable_shouldRevalidateArgs?.actionStatus ||
-                  match.unstable_shouldRevalidateArgs.actionStatus < 400,
+              : !match.shouldRevalidateArgs?.actionStatus ||
+                  match.shouldRevalidateArgs.actionStatus < 400,
           ),
         );
         await Promise.all(

@@ -51,6 +51,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("lazy error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
+      unstable_pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Unexpected Application Error!");
@@ -81,6 +82,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("middleware error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
+      unstable_pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -109,6 +111,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
+      unstable_pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -139,6 +142,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("lazy error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     let html = getHtml(container);
@@ -174,6 +178,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("middleware error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -205,6 +210,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -241,6 +247,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("action error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -270,6 +277,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
+      unstable_pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -304,6 +312,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("action error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
+      unstable_pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -334,6 +343,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("render error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -379,6 +389,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Await Error");
@@ -427,6 +438,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -481,10 +493,12 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledWith(new Error("errorElement error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -534,6 +548,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -584,6 +599,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("render error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
+      unstable_pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),

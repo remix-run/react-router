@@ -32,6 +32,7 @@ function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
+  unstable_useTransitions,
 }: MemoryRouterProps): React.ReactElement
 ```
 
@@ -52,4 +53,19 @@ Initial entries in the in-memory history stack
 ### initialIndex
 
 Index of `initialEntries` the application should initialize to
+
+### unstable_useTransitions
+
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all router state updates are wrapped in
+  `React.startTransition`
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and all router state updates are wrapped in
+  `React.startTransition`
+- When set to `false`, the router will not leverage `React.startTransition`
+  on any navigations or state changes.
+
+For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
 
