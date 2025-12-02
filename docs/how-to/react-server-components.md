@@ -942,7 +942,10 @@ export default async function handler(request: Request) {
     typeof import("./entry.ssr")
   >("ssr", "index");
 
-  return ssr.generateHTML(request, await fetchServer(request));
+  return ssr.generateHTML(
+    request,
+    await fetchServer(request),
+  );
 }
 ```
 
