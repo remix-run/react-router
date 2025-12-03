@@ -1038,7 +1038,7 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /**
-   * Defines the link discovery behavior
+   * Defines the link discovery behavior.
    *
    * ```tsx
    * <Link /> // default ("render")
@@ -1717,16 +1717,16 @@ export interface FetcherFormProps extends SharedFormProps {}
  */
 export interface FormProps extends SharedFormProps {
   /**
-   * Defines the link discovery behavior. See {@link DiscoverBehavior}.
+   * Defines the form discovery behavior.
    *
    * ```tsx
-   * <Link /> // default ("render")
-   * <Link discover="render" />
-   * <Link discover="none" />
+   * <Form /> // default ("render")
+   * <Form discover="render" />
+   * <Form discover="none" />
    * ```
    *
-   * - **render** — default, discover the route when the link renders
-   * - **none** — don't eagerly discover, only discover if the link is clicked
+   * - **render** — default, discover the route when the form renders
+   * - **none** — don't eagerly discover, only discover if the form is submitted
    */
   discover?: DiscoverBehavior;
 
