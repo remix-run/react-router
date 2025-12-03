@@ -20,12 +20,13 @@ export async function prerender(
     // Provide the React Server touchpoints.
     createFromReadableStream,
     // Render the router to HTML.
-    async renderHTML(getPayload) {
+    async renderHTML(getPayload, options) {
       const payload = getPayload();
 
       return await renderHTMLToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
+          ...options,
           bootstrapScriptContent,
           formState: await payload.formState,
         },

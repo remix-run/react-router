@@ -60,6 +60,9 @@ import type {
   ErrorBoundaryProps,
   HydrateFallbackProps,
 } from "../components";
+
+import { createRedirectErrorDigest } from "../errors";
+
 const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
   UNSAFE_WithComponentProps;
@@ -278,7 +281,7 @@ export type DecodeFormStateFunction = (
 
 export type DecodeReplyFunction = (
   reply: FormData | string,
-  { temporaryReferences }: { temporaryReferences: unknown },
+  options: { temporaryReferences: unknown },
 ) => Promise<unknown[]>;
 
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
@@ -379,8 +382,10 @@ export async function matchRSCServerRequest({
   generateResponse: (
     match: RSCMatch,
     {
+      onError,
       temporaryReferences,
     }: {
+      onError(error: unknown): string | undefined;
       temporaryReferences: unknown;
     },
   ) => Response;
@@ -467,7 +472,10 @@ async function generateManifestResponse(
   request: Request,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
 ) {
@@ -518,7 +526,7 @@ async function generateManifestResponse(
       }),
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -722,7 +730,10 @@ async function generateRenderResponse(
   onError: ((error: unknown) => void) | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
 ): Promise<Response> {
@@ -876,7 +887,10 @@ function generateRedirectResponse(
   isDataRequest: boolean,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
   sideEffectRedirectHeaders: Headers | undefined,
@@ -919,7 +933,7 @@ function generateRedirectResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -928,7 +942,10 @@ async function generateStaticContextResponse(
   basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   statusCode: number,
   routeIdsToLoad: string[] | null,
@@ -1034,7 +1051,7 @@ async function generateStaticContextResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -1333,6 +1350,12 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+function defaultOnError(error: unknown) {
+  if (isRedirectResponse(error)) {
+    return createRedirectErrorDigest(error);
+  }
 }
 
 function isClientReference(x: any) {

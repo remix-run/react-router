@@ -21,12 +21,13 @@ app.use(
       request,
       serverResponse: await fetchServer(request),
       createFromReadableStream,
-      async renderHTML(getPayload) {
+      async renderHTML(getPayload, options) {
         const payload = getPayload();
 
         return await renderHTMLToReadableStream(
           <RSCStaticRouter getPayload={getPayload} />,
           {
+            ...options,
             bootstrapScriptContent: (
               fetchServer as unknown as { bootstrapScript: string }
             ).bootstrapScript,

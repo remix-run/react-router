@@ -16,12 +16,13 @@ export default async function handler(
     request,
     serverResponse,
     createFromReadableStream,
-    async renderHTML(getPayload) {
+    async renderHTML(getPayload, options) {
       const payload = getPayload();
 
       return ReactDomServer.renderToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
+          ...options,
           bootstrapScriptContent,
           signal: request.signal,
           formState: await payload.formState,
