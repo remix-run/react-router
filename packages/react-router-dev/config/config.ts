@@ -8,7 +8,6 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import { readPackageJSON, sortPackage, updatePackage } from "pkg-types";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
 import cloneDeep from "lodash/cloneDeep";
@@ -933,6 +932,10 @@ export async function resolveEntryFiles({
       );
     }
 
+    // TODO(v8): Remove - only required for Node 20.18 and below
+    let { readPackageJSON, sortPackage, updatePackage } = await import(
+      "pkg-types"
+    );
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
