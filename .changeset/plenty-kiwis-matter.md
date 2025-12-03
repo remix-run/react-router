@@ -1,6 +1,6 @@
 ---
-"@react-router/dev": minor
-"react-router": minor
+"@react-router/dev": patch
+"react-router": patch
 ---
 
-routeRSCServerRequest replace fetchServer with serverResponse
+`routeRSCServerRequest` replace `fetchServer` with `serverResponse`
