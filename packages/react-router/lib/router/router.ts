@@ -3032,6 +3032,28 @@ export function createRouter(init: RouterInit): Router {
       return dataResults;
     }
 
+    // If they forgot to return a result for a match, and we don't have existing
+    // `loaderData`/`errors` for that match, then we add an error to trigger the
+    // error boundary since we don't have any `loaderData` and therefore can't
+    // render the `Component`
+    if (!isMutationMethod(request.method)) {
+      for (let match of matches) {
+        if (
+          match.shouldCallHandler() &&
+          !results.hasOwnProperty(match.route.id) &&
+          !state.loaderData.hasOwnProperty(match.route.id) &&
+          (!state.errors || !state.errors.hasOwnProperty(match.route.id))
+        ) {
+          results[match.route.id] = {
+            type: ResultType.error,
+            result: new Error(
+              `No result returned from dataStrategy for route ${match.route.id}`,
+            ),
+          };
+        }
+      }
+    }
+
     for (let [routeId, result] of Object.entries(results)) {
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
