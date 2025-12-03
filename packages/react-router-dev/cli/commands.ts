@@ -3,7 +3,6 @@ import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import exitHook from "exit-hook";
 import colors from "picocolors";
-import { readPackageJSON } from "pkg-types";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
 
@@ -138,6 +137,8 @@ export async function generateEntry(
     return;
   }
 
+  // TODO(v8): Remove - only required for Node 20.18 and below
+  let { readPackageJSON } = await import("pkg-types");
   let pkgJson = await readPackageJSON(rootDirectory);
   let deps = pkgJson.dependencies ?? {};
 
