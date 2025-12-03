@@ -6,7 +6,7 @@ unstable: true
 # unstable_RSCStaticRouter
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
 Thank you for helping improve our documentation!
 
@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 <br />
 <br />
 
-<docs-warning>This API is experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
+<docs-warning>This API is experimental and subject to breaking changes in 
+minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
@@ -53,7 +53,7 @@ routeRSCServerRequest({
       {
         bootstrapScriptContent,
         formState: await payload.formState,
-      },
+      }
     );
   },
 });
@@ -62,9 +62,7 @@ routeRSCServerRequest({
 ## Signature
 
 ```tsx
-function RSCStaticRouter({
-  getPayload,
-}: RSCStaticRouterProps);
+function RSCStaticRouter({ getPayload }: RSCStaticRouterProps)
 ```
 
 ## Props
@@ -73,3 +71,4 @@ function RSCStaticRouter({
 
 A function that starts decoding of the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html). Usually passed
 through from [`unstable_routeRSCServerRequest`](../rsc/routeRSCServerRequest)'s `renderHTML`.
+
