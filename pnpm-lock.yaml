@@ -1068,6 +1068,9 @@ importers:
       '@remix-run/node-fetch-server':
         specifier: ^0.9.0
         version: 0.9.0
+      '@vitejs/plugin-rsc':
+        specifier: '*'
+        version: 0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -1159,9 +1162,6 @@ importers:
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
-      '@vitejs/plugin-rsc':
-        specifier: 0.4.30
-        version: 0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
