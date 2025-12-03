@@ -77,8 +77,8 @@ import { warnOnce } from "./server-runtime/warnings";
 import type { unstable_ClientInstrumentation } from "./router/instrumentation";
 
 /**
- * Webpack can fail to compile on against react versions without this export
- * complains that `startTransition` doesn't exist in `React`.
+ * Webpack can fail to compile on against react versions without this export -
+ * it complains that `startTransition` doesn't exist in `React`.
  *
  * Using the string constant directly at runtime fixes the webpack build issue
  * but can result in terser stripping the actual call at minification time.
@@ -90,6 +90,7 @@ import type { unstable_ClientInstrumentation } from "./router/instrumentation";
 const USE_OPTIMISTIC = "useOptimistic";
 // @ts-expect-error Needs React 19 types but we develop against 18
 const useOptimisticImpl = React[USE_OPTIMISTIC];
+const stableUseOptimisticSetter = () => undefined;
 
 function useOptimisticSafe<T>(
   val: T,
@@ -98,7 +99,7 @@ function useOptimisticSafe<T>(
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useOptimisticImpl(val);
   } else {
-    return [val, () => undefined];
+    return [val, stableUseOptimisticSetter];
   }
 }
 
