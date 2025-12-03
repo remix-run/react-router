@@ -10,5 +10,3 @@ run().then(
     process.exit(1);
   },
 );
-
-// Temp change to trigger CI
