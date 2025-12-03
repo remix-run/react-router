@@ -15,6 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  integration-chromium-node-20:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "[20.18]"
+      browser: '["chromium"]'
+
   integration-firefox:
     name: "👀 Integration Test"
     if: github.repository == 'remix-run/react-router'
