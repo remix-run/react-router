@@ -77,8 +77,8 @@ import { warnOnce } from "./server-runtime/warnings";
 import type { unstable_ClientInstrumentation } from "./router/instrumentation";
 
 /**
- * Webpack can fail to compile on against react versions without this export -
- * it complains that `startTransition` doesn't exist in `React`.
+ * Webpack can fail to compile against react versions without this export -
+ * it complains that `useOptimistic` doesn't exist in `React`.
  *
  * Using the string constant directly at runtime fixes the webpack build issue
  * but can result in terser stripping the actual call at minification time.
