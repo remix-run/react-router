@@ -244,7 +244,12 @@ implementations.forEach((implementation) => {
 
     test("Suppport throwing external redirect Response from suspended render", async ({
       page,
+      browserName,
     }) => {
+      test.skip(
+        browserName === "firefox",
+        "Playwright doesn't like external meta redirects for tests. It times out waiting for the URL even though it navigates.",
+      );
       await page.goto(`http://localhost:${port}/render-redirect/lazy/external`);
       await page.waitForURL(`https://example.com/`);
       await expect(page.getByText("Example Domain")).toBeAttached();
