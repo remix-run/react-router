@@ -3,14 +3,11 @@ import * as ReactDOMClient from "react-dom/client";
 import {
   Await,
   createBrowserRouter,
-  defer,
   Form,
-  json,
   Link,
   NavLink,
   Outlet,
-  RouterProvider,
-  unstable_useViewTransitionState,
+  useViewTransitionState,
   useActionData,
   useLoaderData,
   useLocation,
@@ -18,7 +15,8 @@ import {
   useNavigation,
   useParams,
   useSubmit,
-} from "react-router-dom";
+} from "react-router";
+import { RouterProvider } from "react-router/dom";
 import "./index.css";
 
 const images = [
@@ -60,7 +58,7 @@ const router = createBrowserRouter([
         path: "loader",
         async loader() {
           await new Promise((r) => setTimeout(r, 1000));
-          return json({ message: "LOADER DATA" });
+          return { message: "LOADER DATA" };
         },
         Component() {
           let data = useLoaderData() as { message: string };
@@ -79,7 +77,7 @@ const router = createBrowserRouter([
         path: "action",
         async action() {
           await new Promise((r) => setTimeout(r, 1000));
-          return json({ message: "ACTION DATA" });
+          return { message: "ACTION DATA" };
         },
         Component() {
           let data = useActionData() as { message: string } | undefined;
@@ -130,13 +128,13 @@ const router = createBrowserRouter([
         path: "defer-no-boundary",
         async loader({ request }) {
           let value = new URL(request.url).searchParams.get("value") || "";
-          return defer({
+          return {
             value,
             critical: "CRITICAL PATH DATA - NO BOUNDARY " + value,
             lazy: new Promise((r) =>
               setTimeout(() => r("LAZY DATA - NO BOUNDARY " + value), 1000),
             ),
-          });
+          };
         },
         Component() {
           let data = useLoaderData() as {
@@ -173,11 +171,7 @@ const router = createBrowserRouter([
               <div>
                 {images.map((src, idx) => (
                   // Adds 'transitioning' class to the <a> during the transition
-                  <NavLink
-                    key={src}
-                    to={`/images/${idx}`}
-                    unstable_viewTransition
-                  >
+                  <NavLink key={src} to={`/images/${idx}`} viewTransition>
                     <p>Image Number {idx}</p>
                     <img src={src} alt={`Img ${idx}`} />
                   </NavLink>
@@ -186,7 +180,7 @@ const router = createBrowserRouter([
                   // <NavLink
                   //   key={src}
                   //   to={`/images/${idx}`}
-                  //   unstable_viewTransition
+                  //   viewTransition
                   // >
                   //   {({ isTransitioning }) => (
                   //     <div className={isTransitioning ? "transitioning" : ""}>
@@ -226,10 +220,10 @@ const router = createBrowserRouter([
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function NavImage({ src, idx }: { src: string; idx: number }) {
   let href = `/images/${idx}`;
-  let vt = unstable_useViewTransitionState(href);
+  let vt = useViewTransitionState(href);
   return (
     <>
-      <Link to={href} unstable_viewTransition>
+      <Link to={href} viewTransition>
         <p style={{ viewTransitionName: vt ? "image-title" : "" }}>
           Image Number {idx}
         </p>
@@ -257,7 +251,7 @@ function Nav() {
     <nav>
       <ul>
         <li>
-          <Link to="/" unstable_viewTransition>
+          <Link to="/" viewTransition>
             Home
           </Link>
           <ul>
@@ -268,14 +262,12 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/loader" unstable_viewTransition>
+          <Link to="/loader" viewTransition>
             Loader with delay
           </Link>{" "}
           <button
             style={{ display: "inline-block" }}
-            onClick={() =>
-              navigate("/loader", { unstable_viewTransition: true })
-            }
+            onClick={() => navigate("/loader", { viewTransition: true })}
           >
             via useNavigate
           </button>
@@ -291,7 +283,7 @@ function Nav() {
             method="post"
             action="/action"
             style={{ display: "inline-block" }}
-            unstable_viewTransition
+            viewTransition
           >
             <button type="submit" style={{ display: "inline-block" }}>
               Action with delay
@@ -305,7 +297,7 @@ function Nav() {
                 {
                   method: "post",
                   action: "/action",
-                  unstable_viewTransition: true,
+                  viewTransition: true,
                 },
               )
             }
@@ -320,12 +312,12 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/images" unstable_viewTransition>
+          <Link to="/images" viewTransition>
             Image Gallery Example
           </Link>
         </li>
         <li>
-          <Link to={`/defer`} unstable_viewTransition>
+          <Link to={`/defer`} viewTransition>
             Deferred Data
           </Link>
           <ul>
@@ -336,7 +328,7 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/defer-no-boundary" unstable_viewTransition>
+          <Link to="/defer-no-boundary" viewTransition>
             Deferred Data (without boundary)
           </Link>
           <ul>
