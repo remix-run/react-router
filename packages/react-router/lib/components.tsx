@@ -56,6 +56,7 @@ import {
   NavigationContext,
   RouteContext,
   ViewTransitionContext,
+  useIsRSCRouterContext,
 } from "./context";
 import {
   _renderMatches,
@@ -77,8 +78,8 @@ import { warnOnce } from "./server-runtime/warnings";
 import type { unstable_ClientInstrumentation } from "./router/instrumentation";
 
 /**
- * Webpack can fail to compile on against react versions without this export
- * complains that `startTransition` doesn't exist in `React`.
+ * Webpack can fail to compile against react versions without this export -
+ * it complains that `useOptimistic` doesn't exist in `React`.
  *
  * Using the string constant directly at runtime fixes the webpack build issue
  * but can result in terser stripping the actual call at minification time.
@@ -90,6 +91,7 @@ import type { unstable_ClientInstrumentation } from "./router/instrumentation";
 const USE_OPTIMISTIC = "useOptimistic";
 // @ts-expect-error Needs React 19 types but we develop against 18
 const useOptimisticImpl = React[USE_OPTIMISTIC];
+const stableUseOptimisticSetter = () => undefined;
 
 function useOptimisticSafe<T>(
   val: T,
@@ -98,7 +100,7 @@ function useOptimisticSafe<T>(
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useOptimisticImpl(val);
   } else {
-    return [val, () => undefined];
+    return [val, stableUseOptimisticSetter];
   }
 }
 
@@ -207,7 +209,7 @@ export interface MemoryRouterOpts {
    * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
    * mostly useful for observability such as wrapping navigations, fetches,
    * as well as route loaders/actions/middlewares with logging and/or performance
-   * tracing.
+   * tracing.  See the [docs](../../how-to/instrumentation) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
@@ -251,8 +253,32 @@ export interface MemoryRouterOpts {
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
-   * Override the default data strategy of loading in parallel.
-   * Only intended for advanced usage.
+   * Override the default data strategy of running loaders in parallel -
+   * see the [docs](../../how-to/data-strategy) for more information.
+   *
+   * ```tsx
+   * let router = createBrowserRouter(routes, {
+   *   async dataStrategy({
+   *     matches,
+   *     request,
+   *     runClientMiddleware,
+   *   }) {
+   *     const matchesToLoad = matches.filter((m) =>
+   *       m.shouldCallHandler(),
+   *     );
+   *
+   *     const results: Record<string, DataStrategyResult> = {};
+   *     await runClientMiddleware(() =>
+   *       Promise.all(
+   *         matchesToLoad.map(async (match) => {
+   *           results[match.route.id] = await match.resolve();
+   *         }),
+   *       ),
+   *     );
+   *     return results;
+   *   },
+   * });
+   * ```
    */
   dataStrategy?: DataStrategyFunction;
   /**
@@ -441,6 +467,9 @@ export function RouterProvider({
   onError,
   unstable_useTransitions,
 }: RouterProviderProps): React.ReactElement {
+  let unstable_rsc = useIsRSCRouterContext();
+  unstable_useTransitions = unstable_rsc || unstable_useTransitions;
+
   let [_state, setStateImpl] = React.useState(router.state);
   let [state, setOptimisticState] = useOptimisticSafe(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();

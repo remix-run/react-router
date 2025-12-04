@@ -604,14 +604,6 @@ function getShouldRevalidateFunction(
     }
   }
 
-  // Single fetch revalidates by default, so override the RR default value which
-  // matches the multi-fetch behavior with `true`
-  if (ssr && route.shouldRevalidate) {
-    let fn = route.shouldRevalidate;
-    return (opts: ShouldRevalidateFunctionArgs) =>
-      fn({ ...opts, defaultShouldRevalidate: true });
-  }
-
   return route.shouldRevalidate;
 }
 

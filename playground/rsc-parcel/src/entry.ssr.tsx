@@ -19,14 +19,15 @@ app.use(
   createRequestListener(async (request) => {
     return routeRSCServerRequest({
       request,
-      fetchServer,
+      serverResponse: await fetchServer(request),
       createFromReadableStream,
-      async renderHTML(getPayload) {
+      async renderHTML(getPayload, options) {
         const payload = getPayload();
 
         return await renderHTMLToReadableStream(
           <RSCStaticRouter getPayload={getPayload} />,
           {
+            ...options,
             bootstrapScriptContent: (
               fetchServer as unknown as { bootstrapScript: string }
             ).bootstrapScript,

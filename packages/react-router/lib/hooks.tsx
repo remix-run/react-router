@@ -13,6 +13,7 @@ import {
   ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
+  RSCRouterContext,
   RouteContext,
   RouteErrorContext,
 } from "./context";
@@ -44,10 +45,12 @@ import {
   decodePath,
   getResolveToMatches,
   getRoutePattern,
+  isBrowser,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
+  parseToInfo,
   resolveTo,
   stripBasename,
 } from "./router/utils";
@@ -58,6 +61,7 @@ import type {
 } from "./types/route-data";
 import type { ClientOnErrorFunction } from "./components";
 import type { RouteModules } from "./types/register";
+import { decodeRedirectErrorDigest } from "./errors";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -1012,6 +1016,8 @@ export class RenderErrorBoundary extends React.Component<
     };
   }
 
+  static contextType = RSCRouterContext;
+
   static getDerivedStateFromError(error: any) {
     return { error: error };
   }
@@ -1062,17 +1068,74 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
-    return this.state.error !== undefined ? (
-      <RouteContext.Provider value={this.props.routeContext}>
-        <RouteErrorContext.Provider
-          value={this.state.error}
-          children={this.props.component}
-        />
-      </RouteContext.Provider>
-    ) : (
-      this.props.children
-    );
+    let result =
+      this.state.error !== undefined ? (
+        <RouteContext.Provider value={this.props.routeContext}>
+          <RouteErrorContext.Provider
+            value={this.state.error}
+            children={this.props.component}
+          />
+        </RouteContext.Provider>
+      ) : (
+        this.props.children
+      );
+
+    if (this.context) {
+      return (
+        <RSCErrorHandler error={this.state.error}>{result}</RSCErrorHandler>
+      );
+    }
+
+    return result;
   }
+}
+
+const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
+function RSCErrorHandler({
+  children,
+  error,
+}: {
+  children: React.ReactNode;
+  error: unknown;
+}) {
+  let { basename } = React.useContext(NavigationContext);
+
+  if (
+    typeof error === "object" &&
+    error &&
+    "digest" in error &&
+    typeof error.digest === "string"
+  ) {
+    let redirect = decodeRedirectErrorDigest(error.digest);
+    if (redirect) {
+      let existingRedirect = errorRedirectHandledMap.get(error);
+      if (existingRedirect) throw existingRedirect;
+
+      let parsed = parseToInfo(redirect.location, basename);
+
+      if (isBrowser && !errorRedirectHandledMap.get(error)) {
+        if (parsed.isExternal || redirect.reloadDocument) {
+          window.location.href = parsed.absoluteURL || parsed.to;
+        } else {
+          const redirectPromise: Promise<void> = Promise.resolve().then(() =>
+            window.__reactRouterDataRouter!.navigate(parsed.to, {
+              replace: redirect.replace,
+            }),
+          );
+          errorRedirectHandledMap.set(error, redirectPromise);
+          throw redirectPromise;
+        }
+      }
+
+      return (
+        <meta
+          httpEquiv="refresh"
+          content={`0;url=${parsed.absoluteURL || parsed.to}`}
+        />
+      );
+    }
+  }
+  return children;
 }
 
 interface RenderedRouteProps {

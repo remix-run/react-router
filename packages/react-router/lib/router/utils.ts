@@ -434,6 +434,8 @@ export interface DataStrategyMatch
     route: Promise<void> | undefined;
   };
   /**
+   * @deprecated Deprecated in favor of `shouldCallHandler`
+   *
    * A boolean value indicating whether this route handler should be called in
    * this pass.
    *
@@ -459,12 +461,20 @@ export interface DataStrategyMatch
    *    custom `shouldRevalidate` implementations)
    */
   shouldLoad: boolean;
-  // This can be null for actions calls and for initial hydration calls
-  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
-  // This function will use a scoped version of `shouldRevalidateArgs` because
-  // they are read-only but let the user provide an optional override value for
-  // `defaultShouldRevalidate` if they choose
-  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  /**
+   * Arguments passed to the `shouldRevalidate` function for this `loader` execution.
+   * Will be `null` if this is not a revalidating loader {@link DataStrategyMatch}.
+   */
+  shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  /**
+   * Determine if this route's handler should be called during this `dataStrategy`
+   * execution. Calling it with no arguments will leverage the default revalidation
+   * behavior. You can pass your own `defaultShouldRevalidate` value if you wish
+   * to change the default revalidation behavior with your `dataStrategy`.
+   *
+   * @param defaultShouldRevalidate `defaultShouldRevalidate` override value (optional)
+   */
+  shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   /**
    * An async function that will resolve any `route.lazy` implementations and
    * execute the route's handler (if necessary), returning a {@link DataStrategyResult}
@@ -2057,4 +2067,66 @@ export function getRoutePattern(matches: AgnosticRouteMatch[]) {
       .join("/")
       .replace(/\/\/*/g, "/") || "/"
   );
+}
+
+export const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
+export type ParsedLocationInfo<T extends To> =
+  | {
+      absoluteURL: string;
+      isExternal: boolean;
+      to: string;
+    }
+  | {
+      absoluteURL: undefined;
+      isExternal: false;
+      to: T;
+    };
+export function parseToInfo<T extends To | string>(
+  _to: T,
+  basename: string,
+): ParsedLocationInfo<T | string> {
+  let to = _to as string;
+  if (typeof to !== "string" || !ABSOLUTE_URL_REGEX.test(to)) {
+    return {
+      absoluteURL: undefined,
+      isExternal: false,
+      to,
+    };
+  }
+
+  let absoluteURL = to;
+  let isExternal = false;
+  if (isBrowser) {
+    try {
+      let currentUrl = new URL(window.location.href);
+      let targetUrl = to.startsWith("//")
+        ? new URL(currentUrl.protocol + to)
+        : new URL(to);
+      let path = stripBasename(targetUrl.pathname, basename);
+
+      if (targetUrl.origin === currentUrl.origin && path != null) {
+        // Strip the protocol/origin/basename for same-origin absolute URLs
+        to = path + targetUrl.search + targetUrl.hash;
+      } else {
+        isExternal = true;
+      }
+    } catch (e) {
+      // We can't do external URL detection without a valid URL
+      warning(
+        false,
+        `<Link to="${to}"> contains an invalid URL which will probably break ` +
+          `when clicked - please update to a valid URL path.`,
+      );
+    }
+  }
+
+  return {
+    absoluteURL,
+    isExternal,
+    to,
+  };
 }

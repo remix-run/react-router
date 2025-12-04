@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, fireEvent, screen } from "@testing-library/react";
+import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { RouterProvider, createBrowserRouter, useFetcher } from "../../index";
 import getWindow from "../utils/getWindow";
@@ -38,8 +38,8 @@ describe("fetcher.submit with tagName property", () => {
 
     render(<RouterProvider router={router} />);
     fireEvent.click(screen.getByText("Submit"));
+    await waitFor(() => expect(actionSpy).toHaveBeenCalled());
 
-    expect(actionSpy).toHaveBeenCalled();
     let formData = await actionSpy.mock.calls[0][0].request.formData();
     expect(formData.get("tagName")).toBe("div");
     expect(formData.get("data")).toBe("test");
@@ -83,8 +83,8 @@ describe("fetcher.submit with tagName property", () => {
 
     render(<RouterProvider router={router} />);
     fireEvent.click(screen.getByText("Submit"));
+    await waitFor(() => expect(actionSpy).toHaveBeenCalled());
 
-    expect(actionSpy).toHaveBeenCalled();
     let formData = await actionSpy.mock.calls[0][0].request.formData();
     expect(formData.get("tagName")).toBe("button");
     expect(formData.get("className")).toBe("test-class");

@@ -36,6 +36,7 @@ import {
   ErrorResponseImpl,
   joinPaths,
   matchPath,
+  parseToInfo,
   stripBasename,
 } from "../router/utils";
 
@@ -242,7 +243,7 @@ export interface DOMRouterOpts {
    * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
    * mostly useful for observability such as wrapping navigations, fetches,
    * as well as route loaders/actions/middlewares with logging and/or performance
-   * tracing.
+   * tracing.  See the [docs](../../how-to/instrumentation) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
@@ -286,189 +287,32 @@ export interface DOMRouterOpts {
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
-   * Override the default data strategy of running loaders in parallel.
-   * See {@link DataStrategyFunction}.
-   *
-   * <docs-warning>This is a low-level API intended for advanced use-cases. This
-   * overrides React Router's internal handling of
-   * [`action`](../../start/data/route-object#action)/[`loader`](../../start/data/route-object#loader)
-   * execution, and if done incorrectly will break your app code. Please use
-   * with caution and perform the appropriate testing.</docs-warning>
-   *
-   * By default, React Router is opinionated about how your data is loaded/submitted -
-   * and most notably, executes all of your [`loader`](../../start/data/route-object#loader)s
-   * in parallel for optimal data fetching. While we think this is the right
-   * behavior for most use-cases, we realize that there is no "one size fits all"
-   * solution when it comes to data fetching for the wide landscape of
-   * application requirements.
-   *
-   * The `dataStrategy` option gives you full control over how your [`action`](../../start/data/route-object#action)s
-   * and [`loader`](../../start/data/route-object#loader)s are executed and lays
-   * the foundation to build in more advanced APIs such as middleware, context,
-   * and caching layers. Over time, we expect that we'll leverage this API
-   * internally to bring more first class APIs to React Router, but until then
-   * (and beyond), this is your way to add more advanced functionality for your
-   * application's data needs.
-   *
-   * The `dataStrategy` function should return a key/value-object of
-   * `routeId` -> {@link DataStrategyResult} and should include entries for any
-   * routes where a handler was executed. A `DataStrategyResult` indicates if
-   * the handler was successful or not based on the `DataStrategyResult.type`
-   * field. If the returned `DataStrategyResult.result` is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
-   * React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
-   * or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
-   * If you need to do custom decoding of a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-   * but want to preserve the status code, you can use the `data` utility to
-   * return your decoded data along with a `ResponseInit`.
-   *
-   * <details>
-   * <summary><b>Example <code>dataStrategy</code> Use Cases</b></summary>
-   *
-   * **Adding logging**
-   *
-   * In the simplest case, let's look at hooking into this API to add some logging
-   * for when our route [`action`](../../start/data/route-object#action)s/[`loader`](../../start/data/route-object#loader)s
-   * execute:
+   * Override the default data strategy of running loaders in parallel -
+   * see the [docs](../../how-to/data-strategy) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, request }) {
-   *     const matchesToLoad = matches.filter((m) => m.shouldLoad);
+   *   async dataStrategy({
+   *     matches,
+   *     request,
+   *     runClientMiddleware,
+   *   }) {
+   *     const matchesToLoad = matches.filter((m) =>
+   *       m.shouldCallHandler(),
+   *     );
+   *
    *     const results: Record<string, DataStrategyResult> = {};
-   *     await Promise.all(
-   *       matchesToLoad.map(async (match) => {
-   *         console.log(`Processing ${match.route.id}`);
-   *         results[match.route.id] = await match.resolve();;
-   *       })
-   *     );
-   *     return results;
-   *   },
-   * });
-   * ```
-   *
-   * **Middleware**
-   *
-   * Let's define a middleware on each route via [`handle`](../../start/data/route-object#handle)
-   * and call middleware sequentially first, then call all
-   * [`loader`](../../start/data/route-object#loader)s in parallel - providing
-   * any data made available via the middleware:
-   *
-   * ```ts
-   * const routes = [
-   *   {
-   *     id: "parent",
-   *     path: "/parent",
-   *     loader({ request }, context) {
-   *        // ...
-   *     },
-   *     handle: {
-   *       async middleware({ request }, context) {
-   *         context.parent = "PARENT MIDDLEWARE";
-   *       },
-   *     },
-   *     children: [
-   *       {
-   *         id: "child",
-   *         path: "child",
-   *         loader({ request }, context) {
-   *           // ...
-   *         },
-   *         handle: {
-   *           async middleware({ request }, context) {
-   *             context.child = "CHILD MIDDLEWARE";
-   *           },
-   *         },
-   *       },
-   *     ],
-   *   },
-   * ];
-   *
-   * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, params, request }) {
-   *     // Run middleware sequentially and let them add data to `context`
-   *     let context = {};
-   *     for (const match of matches) {
-   *       if (match.route.handle?.middleware) {
-   *         await match.route.handle.middleware(
-   *           { request, params },
-   *           context
-   *         );
-   *       }
-   *     }
-   *
-   *     // Run loaders in parallel with the `context` value
-   *     let matchesToLoad = matches.filter((m) => m.shouldLoad);
-   *     let results = await Promise.all(
-   *       matchesToLoad.map((match, i) =>
-   *         match.resolve((handler) => {
-   *           // Whatever you pass to `handler` will be passed as the 2nd parameter
-   *           // to your loader/action
-   *           return handler(context);
-   *         })
-   *       )
-   *     );
-   *     return results.reduce(
-   *       (acc, result, i) =>
-   *         Object.assign(acc, {
-   *           [matchesToLoad[i].route.id]: result,
+   *     await runClientMiddleware(() =>
+   *       Promise.all(
+   *         matchesToLoad.map(async (match) => {
+   *           results[match.route.id] = await match.resolve();
    *         }),
-   *       {}
+   *       ),
    *     );
-   *   },
-   * });
-   * ```
-   *
-   * **Custom Handler**
-   *
-   * It's also possible you don't even want to define a [`loader`](../../start/data/route-object#loader)
-   * implementation at the route level. Maybe you want to just determine the
-   * routes and issue a single GraphQL request for all of your data? You can do
-   * that by setting your `route.loader=true` so it qualifies as "having a
-   * loader", and then store GQL fragments on `route.handle`:
-   *
-   * ```ts
-   * const routes = [
-   *   {
-   *     id: "parent",
-   *     path: "/parent",
-   *     loader: true,
-   *     handle: {
-   *       gql: gql`
-   *         fragment Parent on Whatever {
-   *           parentField
-   *         }
-   *       `,
-   *     },
-   *     children: [
-   *       {
-   *         id: "child",
-   *         path: "child",
-   *         loader: true,
-   *         handle: {
-   *           gql: gql`
-   *             fragment Child on Whatever {
-   *               childField
-   *             }
-   *           `,
-   *         },
-   *       },
-   *     ],
-   *   },
-   * ];
-   *
-   * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, params, request }) {
-   *     // Compose route fragments into a single GQL payload
-   *     let gql = getFragmentsFromRouteHandles(matches);
-   *     let data = await fetchGql(gql);
-   *     // Parse results back out into individual route level `DataStrategyResult`'s
-   *     // keyed by `routeId`
-   *     let results = parseResultsFromGql(data);
    *     return results;
    *   },
    * });
    * ```
-   *</details>
    */
   dataStrategy?: DataStrategyFunction;
   /**
@@ -1412,39 +1256,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
-    // Rendered into <a href> for absolute URLs
-    let absoluteHref;
-    let isExternal = false;
-
-    if (typeof to === "string" && isAbsolute) {
-      // Render the absolute href server- and client-side
-      absoluteHref = to;
-
-      // Only check for external origins client-side
-      if (isBrowser) {
-        try {
-          let currentUrl = new URL(window.location.href);
-          let targetUrl = to.startsWith("//")
-            ? new URL(currentUrl.protocol + to)
-            : new URL(to);
-          let path = stripBasename(targetUrl.pathname, basename);
-
-          if (targetUrl.origin === currentUrl.origin && path != null) {
-            // Strip the protocol/origin/basename for same-origin absolute URLs
-            to = path + targetUrl.search + targetUrl.hash;
-          } else {
-            isExternal = true;
-          }
-        } catch (e) {
-          // We can't do external URL detection without a valid URL
-          warning(
-            false,
-            `<Link to="${to}"> contains an invalid URL which will probably break ` +
-              `when clicked - please update to a valid URL path.`,
-          );
-        }
-      }
-    }
+    let parsed = parseToInfo(to, basename);
+    to = parsed.to;
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
@@ -1476,8 +1289,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={absoluteHref || href}
-        onClick={isExternal || reloadDocument ? onClick : handleClick}
+        href={parsed.absoluteURL || href}
+        onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
         data-discover={

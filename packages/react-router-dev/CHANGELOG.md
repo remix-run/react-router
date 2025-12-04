@@ -1,5 +1,54 @@
 # `@react-router/dev`
 
+## 7.10.1
+
+### Patch Changes
+
+- Import ESM package `pkg-types` with a dynamic `import()` to fix issues on Node 20.18 ([#14624](https://github.com/remix-run/react-router/pull/14624))
+- Update `valibot` dependency to `^1.2.0` to address [GHSA-vqpr-j7v3-hqw9](https://github.com/advisories/GHSA-vqpr-j7v3-hqw9) ([#14608](https://github.com/remix-run/react-router/pull/14608))
+- Updated dependencies:
+  - `react-router@7.10.1`
+  - `@react-router/node@7.10.1`
+  - `@react-router/serve@7.10.1`
+
+## 7.10.0
+
+### Minor Changes
+
+- Stabilize `future.v8_splitRouteModules`, replacing `future.unstable_splitRouteModules` ([#14595](https://github.com/remix-run/react-router/pull/14595))
+  - ⚠️ This is a breaking change if you have begun using `future.unstable_splitRouteModules`. Please update your `react-router.config.ts`.
+
+- Stabilize `future.v8_viteEnvironmentApi`, replacing `future.unstable_viteEnvironmentApi` ([#14595](https://github.com/remix-run/react-router/pull/14595))
+  - ⚠️ This is a breaking change if you have begun using `future.unstable_viteEnvironmentApi`. Please update your `react-router.config.ts`.
+
+### Patch Changes
+
+- Load environment variables before evaluating `routes.ts` ([#14446](https://github.com/remix-run/react-router/pull/14446))
+
+  For example, you can now compute your routes based on [`VITE_`-prefixed environment variables](https://vite.dev/guide/env-and-mode#env-variables):
+
+  ```txt
+  # .env
+  VITE_ENV_ROUTE=my-route
+  ```
+
+  ```ts
+  // app/routes.ts
+  import { type RouteConfig, route } from "@react-router/dev/routes";
+
+  const routes: RouteConfig = [];
+  if (import.meta.env.VITE_ENV_ROUTE === "my-route") {
+    routes.push(route("my-route", "routes/my-route.tsx"));
+  }
+
+  export default routes;
+  ```
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+  - `@react-router/node@7.10.0`
+  - `@react-router/serve@7.10.0`
+
 ## 7.9.6
 
 ### Patch Changes

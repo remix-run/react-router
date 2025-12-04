@@ -534,7 +534,17 @@ implementations.forEach((implementation) => {
                       id: "action-transition-state",
                       path: "action-transition-state",
                       lazy: () => import("./routes/action-transition-state/home"),
-                    }
+                    },
+                    {
+                      id: "render-redirect-lazy",
+                      path: "/render-redirect/lazy/:id?",
+                      lazy: () => import("./routes/render-redirect/lazy"),
+                    },
+                    {
+                      id: "render-redirect",
+                      path: "/render-redirect/:id?",
+                      lazy: () => import("./routes/render-redirect/home"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1460,6 +1470,60 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+
+            "src/routes/render-redirect/home.tsx": js`
+              import { Link, redirect } from "react-router";
+
+              export default function RenderRedirect({ params: { id } }) {
+                if (id === "redirect") {
+                  throw redirect("/render-redirect/redirected");
+                }
+
+                if (id === "external") {
+                  throw redirect("https://example.com/")
+                }
+
+                return (
+                  <>
+                    <h1>{id || "home"}</h1>
+                    <Link to="/render-redirect/redirect">Redirect</Link>
+                    <Link to="/render-redirect/external">External</Link>
+                  </>
+                )
+              }
+            `,
+            "src/routes/render-redirect/lazy.tsx": js`
+              import { Suspense } from "react";
+              import { Link, redirect } from "react-router";
+
+              export default function RenderRedirect({ params: { id } }) {
+                return (
+                  <Suspense fallback={<p>Loading...</p>}>
+                    <Lazy id={id} />
+                  </Suspense>
+                );
+              }
+
+              async function Lazy({ id }) {
+                await new Promise((r) => setTimeout(r, 0));
+
+                if (id === "redirect") {
+                  throw redirect("/render-redirect/lazy/redirected");
+                }
+
+                if (id === "external") {
+                  throw redirect("https://example.com/")
+                }
+
+                return (
+                  <>
+                    <h1>{id || "home"}</h1>
+                    <Link to="/render-redirect/lazy/redirect">Redirect</Link>
+                    <Link to="/render-redirect/external">External</Link>
+                  </>
+                );
+              }
+            `,
           },
         });
       });
@@ -1737,6 +1801,50 @@ implementations.forEach((implementation) => {
           expect(await rejected.innerText()).toContain(
             "An error occurred in the Server Components render.",
           );
+        });
+
+        test("Suppport throwing redirect Response from render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("Redirect").click();
+          await page.waitForURL(
+            `http://localhost:${port}/render-redirect/redirected`,
+          );
+          await expect(page.getByText("redirected")).toBeAttached();
+        });
+
+        test("Suppport throwing external redirect Response from render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("External").click();
+          await page.waitForURL(`https://example.com/`);
+          await expect(page.getByText("Example Domain")).toBeAttached();
+        });
+
+        test("Suppport throwing redirect Response from suspended render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect/lazy`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("Redirect").click();
+          await page.waitForURL(
+            `http://localhost:${port}/render-redirect/lazy/redirected`,
+          );
+          await expect(page.getByText("redirected")).toBeAttached();
+        });
+
+        test("Suppport throwing external redirect Response from suspended render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect/lazy`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("External").click();
+          await page.waitForURL(`https://example.com/`);
+          await expect(page.getByText("Example Domain")).toBeAttached();
         });
       });
 
