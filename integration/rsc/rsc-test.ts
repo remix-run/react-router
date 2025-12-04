@@ -1876,14 +1876,14 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("Example Domain")).toBeAttached();
         });
 
-        test.only("Support throwing Responses", async ({ page }) => {
+        test("Support throwing Responses", async ({ page }) => {
           await page.goto(
             `http://localhost:${port}/render-route-error-response`,
           );
           await expect(page.getByText("400 Oh no! no")).toBeAttached();
         });
 
-        test.only("Support throwing data() responses with data", async ({
+        test("Support throwing data() responses with data", async ({
           page,
         }) => {
           await page.goto(
