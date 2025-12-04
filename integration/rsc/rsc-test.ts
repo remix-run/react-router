@@ -547,7 +547,7 @@ implementations.forEach((implementation) => {
                     },
                     {
                       id: "render-route-error-response",
-                      path: "render-route-error-response",
+                      path: "render-route-error-response/:id?",
                       lazy: () => import("./routes/render-route-error-response/home"),
                     }
                   ],
@@ -1535,17 +1535,22 @@ implementations.forEach((implementation) => {
 
               export { ErrorBoundary } from "./home.client";
 
-              export default function RenderRouteErrorResponse() {
-                throw data({ message: "Test" }, { status: 400, statusText: "Oh no!" });
+              export default function RenderRouteErrorResponse({ params: { id } }) {
+                if (!id) throw new Response(null, { status: 400, statusText: "Oh no!" });
+
+                throw data({ message: id }, { status: 400, statusText: "Oh no!" });
               }
             `,
             "src/routes/render-route-error-response/home.client.tsx": js`
               "use client";
-              import { useRouteError } from "react-router";
+              import { useRouteError, isRouteErrorResponse } from "react-router";
 
               export function ErrorBoundary() {
                 const error = useRouteError();
-                return <p>{error.status} {error.statusText} {error.data.message}</p>
+                if (isRouteErrorResponse(error)) {
+                  return <p>{error.status} {error.statusText} {error.data?.message || "no"}</p>;
+                }
+                return <p>Oh no D:</p>;
               }
             `,
           },
@@ -1871,9 +1876,18 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("Example Domain")).toBeAttached();
         });
 
-        test("Support throwing data() responses", async ({ page }) => {
+        test.only("Support throwing Responses", async ({ page }) => {
           await page.goto(
             `http://localhost:${port}/render-route-error-response`,
+          );
+          await expect(page.getByText("400 Oh no! no")).toBeAttached();
+        });
+
+        test.only("Support throwing data() responses with data", async ({
+          page,
+        }) => {
+          await page.goto(
+            `http://localhost:${port}/render-route-error-response/Test`,
           );
           await expect(page.getByText("400 Oh no! Test")).toBeAttached();
         });
