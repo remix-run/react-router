@@ -1,11 +1,11 @@
 # `@react-router/fs-routes`
 
-## 7.10.1-pre.0
+## 7.10.1
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@react-router/dev@7.10.1-pre.0`
+  - `@react-router/dev@7.10.1`
 
 ## 7.10.0
 

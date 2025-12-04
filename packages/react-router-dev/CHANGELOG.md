@@ -1,15 +1,15 @@
 # `@react-router/dev`
 
-## 7.10.1-pre.0
+## 7.10.1
 
 ### Patch Changes
 
 - Import ESM package `pkg-types` with a dynamic import to avoid issues on Node 20.18 and below ([`4a4a1273b`](https://github.com/remix-run/react-router/commit/4a4a1273be0143fd08e04a611cc88f134af3a8f4))
 - Update `valibot` dependency to `^1.2.0` ([`ef67e101a`](https://github.com/remix-run/react-router/commit/ef67e101ab7e349ab1a2526b2e6b991fb79deff1))
 - Updated dependencies:
-  - `react-router@7.10.1-pre.0`
-  - `@react-router/node@7.10.1-pre.0`
-  - `@react-router/serve@7.10.1-pre.0`
+  - `react-router@7.10.1`
+  - `@react-router/node@7.10.1`
+  - `@react-router/serve@7.10.1`
 
 ## 7.10.0
 
@@ -229,6 +229,7 @@
 - Stabilize middleware and context APIs. ([#14215](https://github.com/remix-run/react-router/pull/14215))
 
   We have removed the `unstable_` prefix from the following APIs and they are now considered stable and ready for production use:
+
   - [`RouterContextProvider`](https://reactrouter.com/api/utils/RouterContextProvider)
   - [`createContext`](https://reactrouter.com/api/utils/createContext)
   - `createBrowserRouter` [`getContext`](https://reactrouter.com/api/data-routers/createBrowserRouter#optsgetcontext) option
@@ -971,6 +972,7 @@
   ```
 
   This initial implementation targets type inference for:
+
   - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
@@ -985,6 +987,7 @@
   ```
 
   Check out our docs for more:
+
   - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
   - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
@@ -1184,6 +1187,7 @@
 - Vite: Provide `Unstable_ServerBundlesFunction` and `Unstable_VitePluginConfig` types ([#8654](https://github.com/remix-run/remix/pull/8654))
 
 - Vite: add `--sourcemapClient` and `--sourcemapServer` flags to `remix vite:build` ([#8613](https://github.com/remix-run/remix/pull/8613))
+
   - `--sourcemapClient`
 
   - `--sourcemapClient=inline`
@@ -1520,6 +1524,7 @@
 - Add support for `clientLoader`/`clientAction`/`HydrateFallback` route exports ([RFC](https://github.com/remix-run/remix/discussions/7634)) ([#8173](https://github.com/remix-run/remix/pull/8173))
 
   Remix now supports loaders/actions that run on the client (in addition to, or instead of the loader/action that runs on the server). While we still recommend server loaders/actions for the majority of your data needs in a Remix app - these provide some levers you can pull for more advanced use-cases such as:
+
   - Leveraging a data source local to the browser (i.e., `localStorage`)
   - Managing a client-side cache of server data (like `IndexedDB`)
   - Bypassing the Remix server in a BFF setup and hitting your API directly from the browser
@@ -1923,6 +1928,7 @@
 - Output esbuild metafiles for bundle analysis ([#6772](https://github.com/remix-run/remix/pull/6772))
 
   Written to server build directory (`build/` by default):
+
   - `metafile.css.json`
   - `metafile.js.json` (browser JS)
   - `metafile.server.json` (server JS)
@@ -2020,6 +2026,7 @@
 - built-in tls support ([#6483](https://github.com/remix-run/remix/pull/6483))
 
   New options:
+
   - `--tls-key` / `tlsKey`: TLS key
   - `--tls-cert` / `tlsCert`: TLS Certificate
 
@@ -2290,6 +2297,7 @@
   ```
 
   The dev server will:
+
   - force `NODE_ENV=development` and warn you if it was previously set to something else
   - rebuild your app whenever your Remix app code changes
   - restart your app server whenever rebuilds succeed
