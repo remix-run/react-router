@@ -545,6 +545,11 @@ implementations.forEach((implementation) => {
                       path: "/render-redirect/:id?",
                       lazy: () => import("./routes/render-redirect/home"),
                     },
+                    {
+                      id: "render-route-error-response",
+                      path: "render-route-error-response",
+                      lazy: () => import("./routes/render-route-error-response/home"),
+                    }
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1524,6 +1529,25 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+
+            "src/routes/render-route-error-response/home.tsx": js`
+              import { data } from "react-router";
+
+              export { ErrorBoundary } from "./home.client";
+
+              export default function RenderRouteErrorResponse() {
+                throw data({ message: "Test" }, { status: 400, statusText: "Oh no!" });
+              }
+            `,
+            "src/routes/render-route-error-response/home.client.tsx": js`
+              "use client";
+              import { useRouteError } from "react-router";
+
+              export function ErrorBoundary() {
+                const error = useRouteError();
+                return <p>{error.status} {error.statusText} {error.data.message}</p>
+              }
+            `,
           },
         });
       });
@@ -1845,6 +1869,13 @@ implementations.forEach((implementation) => {
           await page.getByText("External").click();
           await page.waitForURL(`https://example.com/`);
           await expect(page.getByText("Example Domain")).toBeAttached();
+        });
+
+        test("Support throwing data() responses", async ({ page }) => {
+          await page.goto(
+            `http://localhost:${port}/render-route-error-response`,
+          );
+          await expect(page.getByText("400 Oh no! Test")).toBeAttached();
         });
       });
 

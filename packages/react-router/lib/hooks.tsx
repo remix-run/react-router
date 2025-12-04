@@ -61,7 +61,10 @@ import type {
 } from "./types/route-data";
 import type { unstable_ClientOnErrorFunction } from "./components";
 import type { RouteModules } from "./types/register";
-import { decodeRedirectErrorDigest } from "./errors";
+import {
+  decodeRedirectErrorDigest,
+  decodeRouteErrorResponseDigest,
+} from "./errors";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -1068,11 +1071,24 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
+    let error = this.state.error;
+
+    if (
+      this.context &&
+      typeof error === "object" &&
+      error &&
+      "digest" in error &&
+      typeof error.digest === "string"
+    ) {
+      const decoded = decodeRouteErrorResponseDigest(error.digest);
+      if (decoded) error = decoded;
+    }
+
     let result =
-      this.state.error !== undefined ? (
+      error !== undefined ? (
         <RouteContext.Provider value={this.props.routeContext}>
           <RouteErrorContext.Provider
-            value={this.state.error}
+            value={error}
             children={this.props.component}
           />
         </RouteContext.Provider>
@@ -1081,9 +1097,7 @@ export class RenderErrorBoundary extends React.Component<
       );
 
     if (this.context) {
-      return (
-        <RSCErrorHandler error={this.state.error}>{result}</RSCErrorHandler>
-      );
+      return <RSCErrorHandler error={error}>{result}</RSCErrorHandler>;
     }
 
     return result;

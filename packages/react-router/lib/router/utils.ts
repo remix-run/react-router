@@ -1809,12 +1809,13 @@ export const normalizeSearch = (search: string): string =>
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
-export class DataWithResponseInit<D> {
+export class DataWithResponseInit<D> extends Error {
   type: string = "DataWithResponseInit";
   data: D;
   init: ResponseInit | null;
 
   constructor(data: D, init?: ResponseInit) {
+    super("DataWithResponseInit");
     this.data = data;
     this.init = init || null;
   }
