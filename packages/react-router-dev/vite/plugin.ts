@@ -1019,6 +1019,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasLoader: sourceExports.includes("loader"),
         hasClientAction,
         hasClientLoader,
+        hasClientLoaderPreload: false, // todo - fix
         hasClientMiddleware,
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         ...getReactRouterManifestBuildAssets(
@@ -1178,6 +1179,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasLoader: sourceExports.includes("loader"),
         hasClientAction,
         hasClientLoader,
+        hasClientLoaderPreload: false, // todo - fix
         hasClientMiddleware,
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         imports: [],
@@ -2629,6 +2631,7 @@ async function getRouteMetadata(
     hasClientAction: sourceExports.includes("clientAction"),
     hasLoader: sourceExports.includes("loader"),
     hasClientLoader: sourceExports.includes("clientLoader"),
+    hasClientLoaderPreload: false, // todo - fix
     hasClientMiddleware: sourceExports.includes("clientMiddleware"),
     hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
     imports: [],
