@@ -3039,10 +3039,10 @@ export function createRouter(init: RouterInit): Router {
     if (!isMutationMethod(request.method)) {
       for (let match of matches) {
         if (
-          match.shouldCallHandler() &&
           !results.hasOwnProperty(match.route.id) &&
           !state.loaderData.hasOwnProperty(match.route.id) &&
-          (!state.errors || !state.errors.hasOwnProperty(match.route.id))
+          (!state.errors || !state.errors.hasOwnProperty(match.route.id)) &&
+          match.shouldCallHandler()
         ) {
           results[match.route.id] = {
             type: ResultType.error,
