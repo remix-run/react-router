@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.10.0",
+  "version": "7.10.1",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -90,7 +90,7 @@
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
     "tinyglobby": "^0.2.14",
-    "valibot": "^1.1.0",
+    "valibot": "^1.2.0",
     "vite-node": "^3.2.2"
   },
   "devDependencies": {
