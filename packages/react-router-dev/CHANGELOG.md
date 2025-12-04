@@ -4,8 +4,8 @@
 
 ### Patch Changes
 
-- Import ESM package `pkg-types` with a dynamic import to avoid issues on Node 20.18 and below ([`4a4a1273b`](https://github.com/remix-run/react-router/commit/4a4a1273be0143fd08e04a611cc88f134af3a8f4))
-- Update `valibot` dependency to `^1.2.0` ([`ef67e101a`](https://github.com/remix-run/react-router/commit/ef67e101ab7e349ab1a2526b2e6b991fb79deff1))
+- Import ESM package `pkg-types` with a dynamic `import()` to fix issues on Node 20.18 ([#14624](https://github.com/remix-run/react-router/pull/14624))
+- Update `valibot` dependency to `^1.2.0` to address [GHSA-vqpr-j7v3-hqw9](https://github.com/advisories/GHSA-vqpr-j7v3-hqw9) ([#14608](https://github.com/remix-run/react-router/pull/14608))
 - Updated dependencies:
   - `react-router@7.10.1`
   - `@react-router/node@7.10.1`

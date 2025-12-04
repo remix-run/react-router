@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Use a stable useOptimistic setter stub in React 18 ([`d04cbbc1b`](https://github.com/remix-run/react-router/commit/d04cbbc1b67eec0e50fd598cbf171261506c8f80))
+- Update the `useOptimistic` stub we provide for React 18 users to use a stable setter function to avoid potential `useEffect` loops - specifically when using `<Link viewTransition>` ([#14628](https://github.com/remix-run/react-router/pull/14628))
 
 ## 7.10.0
 
