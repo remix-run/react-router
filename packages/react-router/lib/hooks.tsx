@@ -1090,7 +1090,7 @@ export class RenderErrorBoundary extends React.Component<
   }
 }
 
-const errorRedirectHandledMap = new WeakMap<any, boolean>();
+const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
 function RSCErrorHandler({
   children,
   error,
@@ -1099,7 +1099,6 @@ function RSCErrorHandler({
   error: unknown;
 }) {
   let { basename } = React.useContext(NavigationContext);
-  let navigate = useNavigate();
 
   if (
     typeof error === "object" &&
@@ -1109,22 +1108,25 @@ function RSCErrorHandler({
   ) {
     let redirect = decodeRedirectErrorDigest(error.digest);
     if (redirect) {
+      let existingRedirect = errorRedirectHandledMap.get(error);
+      if (existingRedirect) throw existingRedirect;
+
       let parsed = parseToInfo(redirect.location, basename);
 
       if (isBrowser && !errorRedirectHandledMap.get(error)) {
-        errorRedirectHandledMap.set(error, true);
-
         if (parsed.isExternal || redirect.reloadDocument) {
           window.location.href = parsed.absoluteURL || parsed.to;
         } else {
-          // @ts-expect-error - Needs React 19 types
-          React.startTransition(() => {
-            return navigate(parsed.to, {
+          const redirectPromise: Promise<void> = Promise.resolve().then(() =>
+            window.__reactRouterDataRouter!.navigate(parsed.to, {
               replace: redirect.replace,
-            });
-          });
+            }),
+          );
+          errorRedirectHandledMap.set(error, redirectPromise);
+          throw redirectPromise;
         }
       }
+
       return (
         <meta
           httpEquiv="refresh"
