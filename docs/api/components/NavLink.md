@@ -109,16 +109,16 @@ returns the `className`:
 
 [modes: framework]
 
-Defines the link discovery behavior
+Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+
+- **render** — default, discover the route when the link renders
+- **none** — don't eagerly discover, only discover if the link is clicked
 
 ```tsx
 <Link /> // default ("render")
 <Link discover="render" />
 <Link discover="none" />
 ```
-
-- **render** — default, discover the route when the link renders
-- **none** — don't eagerly discover, only discover if the link is clicked
 
 ### end
 

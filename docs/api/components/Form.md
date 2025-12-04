@@ -62,16 +62,16 @@ closest route in context.
 
 ### discover
 
-Defines the link discovery behavior. See [`DiscoverBehavior`](https://api.reactrouter.com/v7/types/react_router.DiscoverBehavior.html).
+Defines the form [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+
+- **render** — default, discover the route when the form renders
+- **none** — don't eagerly discover, only discover if the form is submitted
 
 ```tsx
-<Link /> // default ("render")
-<Link discover="render" />
-<Link discover="none" />
+<Form /> // default ("render")
+<Form discover="render" />
+<Form discover="none" />
 ```
-
-- **render** — default, discover the route when the link renders
-- **none** — don't eagerly discover, only discover if the link is clicked
 
 ### encType
 
