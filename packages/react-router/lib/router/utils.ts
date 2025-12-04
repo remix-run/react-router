@@ -89,29 +89,29 @@ type JsonValue = JsonPrimitive | JsonObject | JsonArray;
  */
 export type Submission =
   | {
-    formMethod: FormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: FormData;
-    json: undefined;
-    text: undefined;
-  }
+      formMethod: FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: FormData;
+      json: undefined;
+      text: undefined;
+    }
   | {
-    formMethod: FormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: undefined;
-    json: JsonValue;
-    text: undefined;
-  }
+      formMethod: FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: undefined;
+      json: JsonValue;
+      text: undefined;
+    }
   | {
-    formMethod: FormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: undefined;
-    json: undefined;
-    text: string;
-  };
+      formMethod: FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: undefined;
+      json: undefined;
+      text: string;
+    };
 
 /**
  * A context instance used as the key for the `get`/`set` methods of a
@@ -320,13 +320,13 @@ export type MiddlewareFunction<Result = unknown> = (
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<Context = DefaultContext>
-  extends DataFunctionArgs<Context> { }
+  extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
 export interface ActionFunctionArgs<Context = DefaultContext>
-  extends DataFunctionArgs<Context> { }
+  extends DataFunctionArgs<Context> {}
 
 /**
  * Loaders and actions can return anything
@@ -615,8 +615,8 @@ export function isUnsupportedLazyRouteFunctionKey(
  */
 export type LazyRouteObject<R extends AgnosticRouteObject> = {
   [K in keyof R as K extends UnsupportedLazyRouteObjectKey
-  ? never
-  : K]?: () => Promise<R[K] | null | undefined>;
+    ? never
+    : K]?: () => Promise<R[K] | null | undefined>;
 };
 
 /**
@@ -626,7 +626,7 @@ export type LazyRouteObject<R extends AgnosticRouteObject> = {
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
   (): Promise<
     Omit<R, UnsupportedLazyRouteFunctionKey> &
-    Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
+      Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
   >;
 }
 
@@ -709,34 +709,34 @@ type RegexMatchPlus<
   T extends string,
 > = T extends `${infer First}${infer Rest}`
   ? First extends CharPattern
-  ? RegexMatchPlus<CharPattern, Rest> extends never
-  ? First
-  : `${First}${RegexMatchPlus<CharPattern, Rest>}`
-  : never
+    ? RegexMatchPlus<CharPattern, Rest> extends never
+      ? First
+      : `${First}${RegexMatchPlus<CharPattern, Rest>}`
+    : never
   : never;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
   // split path into individual path segments
   Path extends `${infer L}/${infer R}`
-  ? _PathParam<L> | _PathParam<R>
-  : // find params after `:`
-  Path extends `:${infer Param}`
-  ? Param extends `${infer Optional}?${string}`
-  ? RegexMatchPlus<ParamChar, Optional>
-  : RegexMatchPlus<ParamChar, Param>
-  : // otherwise, there aren't any params present
-  never;
+    ? _PathParam<L> | _PathParam<R>
+    : // find params after `:`
+      Path extends `:${infer Param}`
+      ? Param extends `${infer Optional}?${string}`
+        ? RegexMatchPlus<ParamChar, Optional>
+        : RegexMatchPlus<ParamChar, Param>
+      : // otherwise, there aren't any params present
+        never;
 
 export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
-  ? "*"
-  : // look for wildcard at the end of the path
-  Path extends `${infer Rest}/*`
-  ? "*" | _PathParam<Rest>
-  : // look for params in the absence of wildcards
-  _PathParam<Path>;
+    ? "*"
+    : // look for wildcard at the end of the path
+      Path extends `${infer Rest}/*`
+      ? "*" | _PathParam<Rest>
+      : // look for params in the absence of wildcards
+        _PathParam<Path>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
@@ -790,7 +790,7 @@ export interface AgnosticRouteMatch<
 }
 
 export interface AgnosticDataRouteMatch
-  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> { }
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
 function isIndexRoute(
   route: AgnosticRouteObject,
@@ -817,7 +817,7 @@ export function convertRoutesToDataRoutes(
     invariant(
       allowInPlaceMutations || !manifest[id],
       `Found a route id collision on id "${id}".  Route ` +
-      "id's must be globally unique within Data Router usages",
+        "id's must be globally unique within Data Router usages",
     );
 
     if (isIndexRoute(route)) {
@@ -864,11 +864,11 @@ function mergeRouteUpdates<T extends AgnosticDataRouteObject>(
     ...updates,
     ...(typeof updates.lazy === "object" && updates.lazy != null
       ? {
-        lazy: {
-          ...route.lazy,
-          ...updates.lazy,
-        },
-      }
+          lazy: {
+            ...route.lazy,
+            ...updates.lazy,
+          },
+        }
       : {}),
   });
 }
@@ -1046,8 +1046,8 @@ function flattenRoutes<
       invariant(
         meta.relativePath.startsWith(parentPath),
         `Absolute route path "${meta.relativePath}" nested under path ` +
-        `"${parentPath}" is not valid. An absolute child route path ` +
-        `must start with the combined path of all its parent routes.`,
+          `"${parentPath}" is not valid. An absolute child route path ` +
+          `must start with the combined path of all its parent routes.`,
       );
 
       meta.relativePath = meta.relativePath.slice(parentPath.length);
@@ -1065,7 +1065,7 @@ function flattenRoutes<
         // @ts-expect-error
         route.index !== true,
         `Index routes must not have child routes. Please remove ` +
-        `all child routes from route path "${path}".`,
+          `all child routes from route path "${path}".`,
       );
       flattenRoutes(
         route.children,
@@ -1166,9 +1166,9 @@ function rankRouteBranches(branches: RouteBranch[]): void {
     a.score !== b.score
       ? b.score - a.score // Higher score first
       : compareIndexes(
-        a.routesMeta.map((meta) => meta.childrenIndex),
-        b.routesMeta.map((meta) => meta.childrenIndex),
-      ),
+          a.routesMeta.map((meta) => meta.childrenIndex),
+          b.routesMeta.map((meta) => meta.childrenIndex),
+        ),
   );
 }
 
@@ -1211,13 +1211,13 @@ function compareIndexes(a: number[], b: number[]): number {
 
   return siblings
     ? // If two routes are siblings, we should try to match the earlier sibling
-    // first. This allows people to have fine-grained control over the matching
-    // behavior by simply putting routes with identical paths in the order they
-    // want them tried.
-    a[a.length - 1] - b[b.length - 1]
+      // first. This allows people to have fine-grained control over the matching
+      // behavior by simply putting routes with identical paths in the order they
+      // want them tried.
+      a[a.length - 1] - b[b.length - 1]
     : // Otherwise, it doesn't really make sense to rank non-siblings by index,
-    // so they sort equally.
-    0;
+      // so they sort equally.
+      0;
 }
 
 function matchRouteBranch<
@@ -1312,9 +1312,9 @@ export function generatePath<Path extends string>(
     warning(
       false,
       `Route path "${path}" will be treated as if it were ` +
-      `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
-      `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-      `please change the route path to "${path.replace(/\*$/, "/*")}".`,
+        `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+        `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`,
     );
     path = path.replace(/\*$/, "/*") as Path;
   }
@@ -1478,9 +1478,9 @@ export function compilePath(
   warning(
     path === "*" || !path.endsWith("*") || path.endsWith("/*"),
     `Route path "${path}" will be treated as if it were ` +
-    `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
-    `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-    `please change the route path to "${path.replace(/\*$/, "/*")}".`,
+      `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+      `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+      `please change the route path to "${path.replace(/\*$/, "/*")}".`,
   );
 
   let params: CompiledPathParam[] = [];
@@ -1536,8 +1536,8 @@ export function decodePath(value: string) {
     warning(
       false,
       `The URL path "${value}" could not be decoded because it is a ` +
-      `malformed URL segment. This is probably due to a bad percent ` +
-      `encoding (${error}).`,
+        `malformed URL segment. This is probably due to a bad percent ` +
+        `encoding (${error}).`,
     );
 
     return value;
@@ -1568,11 +1568,9 @@ export function stripBasename(
   return pathname.slice(startIndex) || "/";
 }
 
-
 function safeEncode(value: string): string {
   return encodeURIComponent(value).replace(/%25([0-9A-F]{2})/gi, "%$1");
 }
-
 
 export function prependBasename({
   basename,
@@ -1618,7 +1616,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
         warning(
           false,
           `Pathnames cannot have embedded double slashes - normalizing ` +
-          `${oldPathname} -> ${toPathname}`,
+            `${oldPathname} -> ${toPathname}`,
         );
       }
       if (toPathname.startsWith("/")) {

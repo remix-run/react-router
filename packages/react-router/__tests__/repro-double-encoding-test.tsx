@@ -22,7 +22,7 @@ describe("Double Encoding Bug Repro", () => {
 
     // If we pass a raw string, it should be encoded.
     expect(generatePath("/malformed/:id", { id: "2% 0 g - 2" })).toBe(
-      "/malformed/2%25%200%20g%20-%202"
+      "/malformed/2%25%200%20g%20-%202",
     );
 
     // If we pass an already encoded string (or partially encoded), it should NOT be double encoded if we use safeEncode?
