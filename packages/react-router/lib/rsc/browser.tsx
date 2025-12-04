@@ -433,6 +433,7 @@ export function getRSCSingleFetchDataStrategy(
     route: DataRouteObject & {
       hasLoader: boolean;
       hasClientLoader: boolean;
+      hasClientLoaderPreload: boolean;
       hasComponent: boolean;
       hasAction: boolean;
       hasClientAction: boolean;
@@ -448,6 +449,7 @@ export function getRSCSingleFetchDataStrategy(
       return {
         hasLoader: M.route.hasLoader,
         hasClientLoader: M.route.hasClientLoader,
+        hasClientLoaderPreload: M.route.hasClientLoaderPreload, // this isn't getting properly set from vite plugin
         hasComponent: M.route.hasComponent,
         hasAction: M.route.hasAction,
         hasClientAction: M.route.hasClientAction,

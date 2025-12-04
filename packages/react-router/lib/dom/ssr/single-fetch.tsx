@@ -162,6 +162,7 @@ export function StreamTransfer({
 type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
   hasClientLoader: boolean;
+  hasClientLoaderPreload: boolean;
   hasShouldRevalidate: boolean;
 };
 
@@ -190,6 +191,7 @@ export function getTurboStreamSingleFetchDataStrategy(
       return {
         hasLoader: manifestRoute.hasLoader,
         hasClientLoader: manifestRoute.hasClientLoader,
+        hasClientLoaderPreload: Boolean(routeModule?.clientLoader?.preload),
         hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
       };
     },
@@ -379,8 +381,12 @@ async function singleFetchLoaderNavigationStrategy(
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
         let routeId = m.route.id;
-        let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(m);
+        let {
+          hasLoader,
+          hasClientLoader,
+          hasClientLoaderPreload,
+          hasShouldRevalidate,
+        } = getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.shouldRevalidateArgs ||
@@ -399,7 +405,11 @@ async function singleFetchLoaderNavigationStrategy(
 
         // When a route has a client loader, it opts out of the singular call and
         // calls it's server loader via `serverLoader()` using a `?_routes` param
-        if (shouldAllowOptOut(m) && hasClientLoader) {
+        if (
+          shouldAllowOptOut(m) &&
+          hasClientLoader &&
+          !hasClientLoaderPreload
+        ) {
           if (hasLoader) {
             foundOptOutRoute = true;
           }

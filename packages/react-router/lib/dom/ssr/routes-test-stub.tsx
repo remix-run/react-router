@@ -237,6 +237,7 @@ function processRoutes(
       // flow. That is better tested via E2E tests.
       hasClientAction: false,
       hasClientLoader: false,
+      hasClientLoaderPreload: false,
       hasClientMiddleware: false,
       hasErrorBoundary: route.ErrorBoundary != null,
       // any need for these?

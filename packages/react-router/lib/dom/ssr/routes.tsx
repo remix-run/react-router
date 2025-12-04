@@ -36,6 +36,7 @@ export interface EntryRoute extends Route {
   hasLoader: boolean;
   hasClientAction: boolean;
   hasClientLoader: boolean;
+  hasClientLoaderPreload: boolean;
   hasClientMiddleware: boolean;
   hasErrorBoundary: boolean;
   imports?: string[];
@@ -354,6 +355,10 @@ export function createClientRoutes(
               return fetchServerLoader(singleFetch);
             }
 
+            let fetchServerLoaderPromise = routeModule.clientLoader.preload
+              ? fetchServerLoader(singleFetch)
+              : null;
+
             return routeModule.clientLoader({
               request,
               params,
@@ -373,7 +378,9 @@ export function createClientRoutes(
                 }
 
                 // Call the server loader for client-side navigations
-                return fetchServerLoader(singleFetch);
+                return (
+                  fetchServerLoaderPromise || fetchServerLoader(singleFetch)
+                );
               },
             });
           });
@@ -480,14 +487,20 @@ export function createClientRoutes(
                   )
                 : await getLazyRoute();
               invariant(clientLoader, "No `clientLoader` export found");
-              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
-                clientLoader({
+              return (args: LoaderFunctionArgs, singleFetch?: unknown) => {
+                let fetchServerLoaderPromise = clientLoader.preload
+                  ? fetchServerLoader(singleFetch)
+                  : null;
+                return clientLoader({
                   ...args,
                   async serverLoader() {
                     preventInvalidServerHandlerCall("loader", route);
-                    return fetchServerLoader(singleFetch);
+                    return (
+                      fetchServerLoaderPromise || fetchServerLoader(singleFetch)
+                    );
                   },
                 });
+              };
             }
           : undefined,
         action: route.hasClientAction

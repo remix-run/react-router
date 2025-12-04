@@ -14,6 +14,7 @@ export type ManifestRoute = {
   hasLoader: boolean;
   hasClientAction: boolean;
   hasClientLoader: boolean;
+  hasClientLoaderPreload: boolean;
   hasClientMiddleware: boolean;
   hasErrorBoundary: boolean;
 };
