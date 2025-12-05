@@ -1845,8 +1845,13 @@ implementations.forEach((implementation) => {
         });
 
         test("Suppport throwing external redirect Response from render", async ({
+          browserName,
           page,
         }) => {
+          test.skip(
+            browserName === "firefox",
+            "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+          );
           await page.goto(`http://localhost:${port}/render-redirect`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
@@ -1867,8 +1872,13 @@ implementations.forEach((implementation) => {
         });
 
         test("Suppport throwing external redirect Response from suspended render", async ({
+          browserName,
           page,
         }) => {
+          test.skip(
+            browserName === "firefox",
+            "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+          );
           await page.goto(`http://localhost:${port}/render-redirect/lazy`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
@@ -1990,9 +2000,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions thrown external redirects", async ({
           page,
         }) => {
-          // Test is expected to fail currently — skip running it
-          // test.skip(true, "Known failing test for external redirect behavior");
-
           await page.goto(
             `http://localhost:${port}/throw-external-redirect-server-action/`,
           );
