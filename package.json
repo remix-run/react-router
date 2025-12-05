@@ -83,7 +83,7 @@
     "jsonfile": "^6.1.0",
     "prettier": "^3.6.2",
     "prompts": "^2.4.2",
-    "react-server-dom-parcel": "^19.0.0",
+    "react-server-dom-parcel": "^19.0.1",
     "remark-gfm": "^3.0.1",
     "remark-parse": "^10.0.1",
     "remark-stringify": "^10.0.2",
