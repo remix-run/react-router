@@ -683,7 +683,7 @@ test.describe("typegen", () => {
     });
   });
 
-  test.describe("server-first route component detection", () => {
+  test.describe("route server component detection", () => {
     test.describe("ServerComponent export", () => {
       test("when RSC Framework Mode plugin is present", async ({ edit, $ }) => {
         await edit({
@@ -727,38 +727,6 @@ test.describe("typegen", () => {
                 <>
                   <h1>ServerComponent</h1>
                   <p>Loader data: {loaderData.server}</p>
-                  <p>Action data: {actionData?.server}</p>
-                </>
-              )
-            }
-
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ErrorBoundary</h1>
-                  <p>Loader data: {loaderData?.server}</p>
-                  <p>Action data: {actionData?.server}</p>
-                </>
-              )
-            }
-
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
-
-              return (
-                <>
-                  <h1>HydrateFallback</h1>
-                  <p>Loader data: {loaderData?.server}</p>
                   <p>Action data: {actionData?.server}</p>
                 </>
               )
@@ -820,38 +788,6 @@ test.describe("typegen", () => {
                 </>
               )
             }
-
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ErrorBoundary</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>HydrateFallback</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
           `,
         });
         await $("pnpm typecheck");
@@ -899,38 +835,6 @@ test.describe("typegen", () => {
               <>
                 <h1>default (Component)</h1>
                 <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>
-                {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-              </>
-            )
-          }
-
-          export function ErrorBoundary({ 
-            loaderData, 
-            actionData 
-          }: Route.ErrorBoundaryProps) {
-            type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-            type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-            return (
-              <>
-                <h1>ErrorBoundary</h1>
-                {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-              </>
-            )
-          }
-
-          export function HydrateFallback({ 
-            loaderData, 
-            actionData 
-          }: Route.HydrateFallbackProps) {
-            type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-            type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-            return (
-              <>
-                <h1>HydrateFallback</h1>
-                {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
                 {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
               </>
             )
