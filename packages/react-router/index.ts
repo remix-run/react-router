@@ -103,7 +103,7 @@ export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/conte
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,

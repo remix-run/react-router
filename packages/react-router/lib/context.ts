@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { unstable_ClientOnErrorFunction } from "./components";
+import type { ClientOnErrorFunction } from "./components";
 import type {
   History,
   Location,
@@ -92,7 +92,7 @@ export interface DataRouterContextObject
   extends Omit<NavigationContextObject, "future" | "unstable_useTransitions"> {
   router: Router;
   staticContext?: StaticHandlerContext;
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: ClientOnErrorFunction;
 }
 
 export const DataRouterContext =
