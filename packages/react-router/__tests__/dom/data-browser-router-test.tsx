@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import * as React from "react";
 import type {
+  DataStrategyResult,
   ErrorResponse,
   Fetcher,
   Location,
@@ -417,6 +418,78 @@ function testDomRouter(
               Foo:
               From Foo Loader
             </h1>
+          </div>"
+        `);
+      });
+
+      it("clears the HydrateFallback when dataStrategy returns partial results during hydration", async () => {
+        let dfd = createDeferred<Record<string, DataStrategyResult>>();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: true,
+              HydrateFallback: () => "Loading...",
+              Component: () => (
+                <>
+                  <h1>Root:{useLoaderData()}</h1>
+                  <Outlet />
+                </>
+              ),
+              ErrorBoundary: () => {
+                let error = useRouteError();
+                return (
+                  <pre>
+                    Root:
+                    {error instanceof Error ? error.message : (error as string)}
+                  </pre>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: true,
+                  Component: () => <h2>Index:{useLoaderData()}</h2>,
+                  ErrorBoundary: () => (
+                    <pre>Index:{useRouteError() as string}</pre>
+                  ),
+                },
+              ],
+            },
+          ],
+          {
+            dataStrategy: () => dfd.promise,
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading...
+          </div>"
+        `);
+
+        // Resolve data strategy with only an error at the index route but nothing
+        // for the root route
+        await dfd.resolve({
+          index: {
+            type: "error",
+            result: "INDEX ERROR",
+          },
+        });
+        await tick();
+        await tick();
+
+        // The router stubs in an error for the root route to get out of
+        // displaying the HydrateFallback
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <pre>
+              Root:
+              No result returned from dataStrategy for route root
+            </pre>
           </div>"
         `);
       });
