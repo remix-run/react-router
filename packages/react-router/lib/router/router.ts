@@ -526,6 +526,7 @@ type BaseNavigateOrFetchOptions = {
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   flushSync?: boolean;
+  unstable_defaultShouldRevalidate?: boolean;
 };
 
 // Only allowed for navigations
@@ -1592,6 +1593,8 @@ export function createRouter(init: RouterInit): Router {
       replace: opts && opts.replace,
       enableViewTransition: opts && opts.viewTransition,
       flushSync,
+      callSiteDefaultShouldRevalidate:
+        opts && opts.unstable_defaultShouldRevalidate,
     });
   }
 
@@ -1667,6 +1670,7 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
       enableViewTransition?: boolean;
       flushSync?: boolean;
+      callSiteDefaultShouldRevalidate?: boolean;
     },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1838,6 +1842,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.initialHydration === true,
       flushSync,
       pendingActionResult,
+      opts && opts.callSiteDefaultShouldRevalidate,
     );
 
     if (shortCircuited) {
@@ -2043,6 +2048,7 @@ export function createRouter(init: RouterInit): Router {
     initialHydration?: boolean,
     flushSync?: boolean,
     pendingActionResult?: PendingActionResult,
+    callSiteDefaultShouldRevalidate?: boolean,
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
@@ -2150,6 +2156,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       init.patchRoutesOnNavigation != null,
       pendingActionResult,
+      callSiteDefaultShouldRevalidate,
     );
 
     pendingNavigationLoadId = ++incrementingLoadId;
@@ -2391,6 +2398,7 @@ export function createRouter(init: RouterInit): Router {
         flushSync,
         preventScrollReset,
         submission,
+        opts && opts.unstable_defaultShouldRevalidate,
       );
       return;
     }
@@ -2423,6 +2431,7 @@ export function createRouter(init: RouterInit): Router {
     flushSync: boolean,
     preventScrollReset: boolean,
     submission: Submission,
+    callSiteDefaultShouldRevalidate: boolean | undefined,
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -2598,6 +2607,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       init.patchRoutesOnNavigation != null,
       [match.route.id, actionResult],
+      callSiteDefaultShouldRevalidate,
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -4863,6 +4873,7 @@ function getMatchesToLoad(
   basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
   pendingActionResult?: PendingActionResult,
+  callSiteDefaultShouldRevalidate?: boolean,
 ): {
   dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
@@ -4956,15 +4967,29 @@ function getMatchesToLoad(
     // provides it's own implementation, then we give them full control but
     // provide this value so they can leverage it if needed after they check
     // their own specific use cases
-    let defaultShouldRevalidate = shouldSkipRevalidation
-      ? false
-      : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-        isRevalidationRequired ||
-        currentUrl.pathname + currentUrl.search ===
-          nextUrl.pathname + nextUrl.search ||
-        // Search params affect all loaders
-        currentUrl.search !== nextUrl.search ||
-        isNewRouteInstance(state.matches[index], match);
+    let defaultShouldRevalidate = false;
+    if (typeof callSiteDefaultShouldRevalidate === "boolean") {
+      // Use call-site value verbatim if provided
+      defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
+    } else if (shouldSkipRevalidation) {
+      // Skip due to 4xx/5xx action result
+      defaultShouldRevalidate = false;
+    } else if (isRevalidationRequired) {
+      // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
+      defaultShouldRevalidate = true;
+    } else if (
+      currentUrl.pathname + currentUrl.search ===
+      nextUrl.pathname + nextUrl.search
+    ) {
+      // Same URL - mimic a hard reload
+      defaultShouldRevalidate = true;
+    } else if (currentUrl.search !== nextUrl.search) {
+      // Search params affect all loaders
+      defaultShouldRevalidate = true;
+    } else if (isNewRouteInstance(state.matches[index], match)) {
+      defaultShouldRevalidate = true;
+    }
+
     let shouldRevalidateArgs = {
       ...baseShouldRevalidateArgs,
       defaultShouldRevalidate,
@@ -4980,6 +5005,7 @@ function getMatchesToLoad(
       scopedContext,
       shouldLoad,
       shouldRevalidateArgs,
+      callSiteDefaultShouldRevalidate,
     );
   });
 
@@ -5077,11 +5103,19 @@ function getMatchesToLoad(
     } else {
       // Otherwise fall back on any user-defined shouldRevalidate, defaulting
       // to explicit revalidations only
+      let defaultShouldRevalidate: boolean;
+      if (typeof callSiteDefaultShouldRevalidate === "boolean") {
+        // Use call-site value verbatim if provided
+        defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
+      } else if (shouldSkipRevalidation) {
+        defaultShouldRevalidate = false;
+      } else {
+        defaultShouldRevalidate = isRevalidationRequired;
+      }
+
       let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
         ...baseShouldRevalidateArgs,
-        defaultShouldRevalidate: shouldSkipRevalidation
-          ? false
-          : isRevalidationRequired,
+        defaultShouldRevalidate,
       };
       if (shouldRevalidateLoader(fetcherMatch, shouldRevalidateArgs)) {
         fetcherDsMatches = getTargetedDataStrategyMatches(
@@ -5881,6 +5915,7 @@ function getDataStrategyMatch(
   scopedContext: unknown,
   shouldLoad: boolean,
   shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
+  callSiteDefaultShouldRevalidate?: boolean,
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
   // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
@@ -5906,12 +5941,20 @@ function getDataStrategyMatch(
         return shouldLoad;
       }
 
+      if (typeof callSiteDefaultShouldRevalidate === "boolean") {
+        return shouldRevalidateLoader(match, {
+          ...shouldRevalidateArgs,
+          defaultShouldRevalidate: callSiteDefaultShouldRevalidate,
+        });
+      }
+
       if (typeof defaultShouldRevalidate === "boolean") {
         return shouldRevalidateLoader(match, {
           ...shouldRevalidateArgs,
           defaultShouldRevalidate,
         });
       }
+
       return shouldRevalidateLoader(match, shouldRevalidateArgs);
     },
     resolve(handlerOverride) {
