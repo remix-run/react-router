@@ -335,6 +335,45 @@ function testDomRouter(
         `);
       });
 
+      it("renders hydrateFallbackElement while first data fetch happens when it is only middleware", async () => {
+        let middlewareDfd = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              HydrateFallback: () => "Loading...",
+              children: [
+                {
+                  path: "foo",
+                  middleware: [() => middlewareDfd.promise],
+                  Component: () => "Foo",
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/foo"),
+          },
+        );
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading...
+          </div>"
+        `);
+
+        middlewareDfd.resolve();
+        await waitFor(() => screen.getByText("Foo"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Foo
+          </div>"
+        `);
+      });
+
       it("does not render hydrateFallback if no data fetch or lazy loading is required", async () => {
         let fooDefer = createDeferred();
         let router = createTestRouter(
