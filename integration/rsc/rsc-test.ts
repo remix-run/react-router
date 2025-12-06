@@ -545,6 +545,11 @@ implementations.forEach((implementation) => {
                       path: "/render-redirect/:id?",
                       lazy: () => import("./routes/render-redirect/home"),
                     },
+                    {
+                      id: "render-route-error-response",
+                      path: "render-route-error-response/:id?",
+                      lazy: () => import("./routes/render-route-error-response/home"),
+                    }
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1524,6 +1529,30 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+
+            "src/routes/render-route-error-response/home.tsx": js`
+              import { data } from "react-router";
+
+              export { ErrorBoundary } from "./home.client";
+
+              export default function RenderRouteErrorResponse({ params: { id } }) {
+                if (!id) throw new Response(null, { status: 400, statusText: "Oh no!" });
+
+                throw data({ message: id }, { status: 400, statusText: "Oh no!" });
+              }
+            `,
+            "src/routes/render-route-error-response/home.client.tsx": js`
+              "use client";
+              import { useRouteError, isRouteErrorResponse } from "react-router";
+
+              export function ErrorBoundary() {
+                const error = useRouteError();
+                if (isRouteErrorResponse(error)) {
+                  return <p>{error.status} {error.statusText} {error.data?.message || "no"}</p>;
+                }
+                return <p>Oh no D:</p>;
+              }
+            `,
           },
         });
       });
@@ -1816,8 +1845,13 @@ implementations.forEach((implementation) => {
         });
 
         test("Suppport throwing external redirect Response from render", async ({
+          browserName,
           page,
         }) => {
+          test.skip(
+            browserName === "firefox",
+            "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+          );
           await page.goto(`http://localhost:${port}/render-redirect`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
@@ -1838,13 +1872,34 @@ implementations.forEach((implementation) => {
         });
 
         test("Suppport throwing external redirect Response from suspended render", async ({
+          browserName,
           page,
         }) => {
+          test.skip(
+            browserName === "firefox",
+            "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+          );
           await page.goto(`http://localhost:${port}/render-redirect/lazy`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
           await page.waitForURL(`https://example.com/`);
           await expect(page.getByText("Example Domain")).toBeAttached();
+        });
+
+        test("Support throwing Responses", async ({ page }) => {
+          await page.goto(
+            `http://localhost:${port}/render-route-error-response`,
+          );
+          await expect(page.getByText("400 Oh no! no")).toBeAttached();
+        });
+
+        test("Support throwing data() responses with data", async ({
+          page,
+        }) => {
+          await page.goto(
+            `http://localhost:${port}/render-route-error-response/Test`,
+          );
+          await expect(page.getByText("400 Oh no! Test")).toBeAttached();
         });
       });
 
@@ -1945,9 +2000,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions thrown external redirects", async ({
           page,
         }) => {
-          // Test is expected to fail currently — skip running it
-          // test.skip(true, "Known failing test for external redirect behavior");
-
           await page.goto(
             `http://localhost:${port}/throw-external-redirect-server-action/`,
           );

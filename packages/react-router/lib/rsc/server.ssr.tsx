@@ -10,7 +10,10 @@ import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
 import { isRouteErrorResponse } from "../router/utils";
-import { decodeRedirectErrorDigest } from "../errors";
+import {
+  decodeRedirectErrorDigest,
+  decodeRouteErrorResponseDigest,
+} from "../errors";
 import { escapeHtml } from "../dom/ssr/markup";
 
 type DecodedPayload = Promise<RSCPayload> & {
@@ -184,6 +187,8 @@ export async function routeRSCServerRequest({
   };
 
   let renderRedirect: { status: number; location: string } | undefined;
+  let renderError: unknown;
+
   try {
     if (!detectRedirectResponse.body) {
       throw new Error("Failed to clone server response");
@@ -210,6 +215,9 @@ export async function routeRSCServerRequest({
     }
 
     let reactHeaders = new Headers();
+    let status = serverResponse.status;
+    let statusText = serverResponse.statusText;
+
     let html = await renderHTML(getPayload, {
       onError(error: unknown) {
         if (
@@ -220,6 +228,13 @@ export async function routeRSCServerRequest({
         ) {
           renderRedirect = decodeRedirectErrorDigest(error.digest);
           if (renderRedirect) {
+            return error.digest;
+          }
+          let routeErrorResponse = decodeRouteErrorResponseDigest(error.digest);
+          if (routeErrorResponse) {
+            renderError = routeErrorResponse;
+            status = routeErrorResponse.status;
+            statusText = routeErrorResponse.statusText;
             return error.digest;
           }
         }
@@ -259,7 +274,8 @@ export async function routeRSCServerRequest({
 
     if (!hydrate) {
       return new Response(html.pipeThrough(redirectTransform), {
-        status: serverResponse.status,
+        status,
+        statusText,
         headers,
       });
     }
@@ -272,7 +288,8 @@ export async function routeRSCServerRequest({
       .pipeThrough(injectRSCPayload(serverResponseB.body))
       .pipeThrough(redirectTransform);
     return new Response(body, {
-      status: serverResponse.status,
+      status,
+      statusText,
       headers,
     });
   } catch (reason) {
@@ -290,7 +307,10 @@ export async function routeRSCServerRequest({
     }
 
     try {
-      const status = isRouteErrorResponse(reason) ? reason.status : 500;
+      reason = renderError ?? reason;
+      let [status, statusText] = isRouteErrorResponse(reason)
+        ? [reason.status, reason.statusText]
+        : [500, ""];
 
       let retryRedirect: { status: number; location: string } | undefined;
       let reactHeaders = new Headers();
@@ -341,6 +361,14 @@ export async function routeRSCServerRequest({
               if (retryRedirect) {
                 return error.digest;
               }
+              let routeErrorResponse = decodeRouteErrorResponseDigest(
+                error.digest,
+              );
+              if (routeErrorResponse) {
+                status = routeErrorResponse.status;
+                statusText = routeErrorResponse.statusText;
+                return error.digest;
+              }
             }
           },
           onHeaders(headers) {
@@ -379,7 +407,8 @@ export async function routeRSCServerRequest({
 
       if (!hydrate) {
         return new Response(html.pipeThrough(retryRedirectTransform), {
-          status: status,
+          status,
+          statusText,
           headers,
         });
       }
@@ -393,6 +422,7 @@ export async function routeRSCServerRequest({
         .pipeThrough(retryRedirectTransform);
       return new Response(body, {
         status,
+        statusText,
         headers,
       });
     } catch {
