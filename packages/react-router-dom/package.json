@@ -18,7 +18,7 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "main": "./dist/main.js",
+  "main": "./dist/index.js",
   "unpkg": "./dist/umd/react-router-dom.production.min.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
