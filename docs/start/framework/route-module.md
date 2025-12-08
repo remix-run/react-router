@@ -120,7 +120,7 @@ async function authMiddleware({ request, context }) {
 
   const user = await getUserById(userId);
   context.set(userContext, user);
-};
+}
 
 export const middleware = [authMiddleware];
 ```
