@@ -43,7 +43,7 @@
     "strip-ansi": "^6.0.1",
     "strip-indent": "^3.0.0",
     "type-fest": "^4.0.0",
-    "typescript": "^5.1.0",
+    "typescript": "catalog:",
     "vite": "^6.3.0",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2",

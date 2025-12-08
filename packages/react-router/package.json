@@ -137,7 +137,7 @@
     "react-dom": "^19.1.0",
     "react-test-renderer": "^19.1.0",
     "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
+    "typescript": "catalog:",
     "undici": "^6.19.2",
     "wireit": "0.14.9"
   },

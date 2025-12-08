@@ -54,7 +54,7 @@
     "@types/morgan": "^1.9.2",
     "@types/source-map-support": "^0.5.6",
     "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
+    "typescript": "catalog:",
     "wireit": "0.14.9"
   },
   "engines": {

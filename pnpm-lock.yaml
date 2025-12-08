@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    typescript:
+      specifier: ^5.4.5
+      version: 5.4.5
+
 overrides:
   '@types/react': ^18.2.18
   '@types/react-dom': ^18.2.7
@@ -151,7 +157,7 @@ importers:
         specifier: ^0.28.7
         version: 0.28.7(typescript@5.4.5)
       typescript:
-        specifier: ^5.4.5
+        specifier: 'catalog:'
         version: 5.4.5
       unified:
         specifier: ^10.1.2
@@ -271,7 +277,7 @@ importers:
         specifier: ^4.0.0
         version: 4.40.1
       typescript:
-        specifier: ^5.1.0
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -326,7 +332,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -405,7 +411,7 @@ importers:
         specifier: ^3.1.0
         version: 3.2.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       url:
         specifier: ^0.11.0
@@ -454,7 +460,7 @@ importers:
         specifier: 0.4.30
         version: 0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -521,7 +527,7 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -588,7 +594,7 @@ importers:
         specifier: ^8.38.0
         version: 8.57.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^5.1.0
@@ -655,7 +661,7 @@ importers:
         specifier: ^8.38.0
         version: 8.57.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -722,7 +728,7 @@ importers:
         specifier: ^8.38.0
         version: 8.57.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: 7.0.0-beta.0
@@ -777,7 +783,7 @@ importers:
         specifier: ^8.38.0
         version: 8.57.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -847,7 +853,7 @@ importers:
         specifier: ^8.38.0
         version: 8.57.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: npm:rolldown-vite@6.3.0-beta.5
@@ -926,7 +932,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -972,7 +978,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       undici:
         specifier: ^6.19.2
@@ -1015,7 +1021,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1033,7 +1039,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1181,7 +1187,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1209,7 +1215,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1246,7 +1252,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1265,7 +1271,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1284,7 +1290,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1299,7 +1305,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1351,7 +1357,7 @@ importers:
         specifier: ^8.3.0
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       wireit:
         specifier: 0.14.9
@@ -1388,7 +1394,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1449,7 +1455,7 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1492,7 +1498,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: npm:rolldown-vite@6.3.0-beta.3
@@ -1529,7 +1535,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1569,7 +1575,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^5.1.0
@@ -1609,7 +1615,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: 7.0.0-beta.0
@@ -1682,7 +1688,7 @@ importers:
         specifier: ^4.19.3
         version: 4.19.3
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1807,7 +1813,7 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1874,7 +1880,7 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1911,7 +1917,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -1948,7 +1954,7 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0
@@ -2000,7 +2006,7 @@ importers:
         specifier: ^8.38.0
         version: 8.57.0
       typescript:
-        specifier: ^5.1.6
+        specifier: 'catalog:'
         version: 5.4.5
       vite:
         specifier: ^6.3.0

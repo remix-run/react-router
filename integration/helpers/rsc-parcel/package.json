@@ -33,7 +33,7 @@
     "path-browserify": "^1.0.0",
     "querystring-es3": "^0.2.1",
     "stream-http": "^3.1.0",
-    "typescript": "^5.1.6",
+    "typescript": "catalog:",
     "url": "^0.11.0"
   },
   "dependencies": {

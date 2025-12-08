@@ -3,3 +3,6 @@ packages:
   - "integration/helpers/*"
   - "packages/*"
   - "playground/*"
+
+catalog:
+  typescript: ^5.4.5
