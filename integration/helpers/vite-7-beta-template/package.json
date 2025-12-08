@@ -18,8 +18,8 @@
     "@vanilla-extract/vite-plugin": "^5.1.1",
     "express": "^4.19.2",
     "isbot": "^5.1.11",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "react-router": "workspace:*",
     "serialize-javascript": "^6.0.1"
   },
