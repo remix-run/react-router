@@ -111,10 +111,10 @@
     "express": "^4.19.2",
     "fast-glob": "3.2.11",
     "react-router": "workspace:^",
-    "tsup": "^8.3.0",
+    "tsup": "catalog:",
     "typescript": "catalog:",
     "vite": "^6.3.0",
-    "wireit": "0.14.9",
+    "wireit": "catalog:",
     "wrangler": "^4.23.0"
   },
   "peerDependencies": {

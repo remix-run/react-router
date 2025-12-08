@@ -58,9 +58,9 @@
     "esbuild-register": "^3.6.0",
     "msw": "^2.7.5",
     "tiny-invariant": "^1.2.0",
-    "tsup": "^8.3.0",
+    "tsup": "catalog:",
     "typescript": "catalog:",
-    "wireit": "0.14.9"
+    "wireit": "catalog:"
   },
   "engines": {
     "node": ">=18.0.0"

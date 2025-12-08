@@ -42,9 +42,9 @@
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "tsup": "^8.3.0",
+    "tsup": "catalog:",
     "typescript": "catalog:",
-    "wireit": "0.14.9"
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "@react-router/dev": "workspace:^",

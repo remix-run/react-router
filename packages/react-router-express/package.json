@@ -58,9 +58,9 @@
     "express": "^4.19.2",
     "node-mocks-http": "^1.10.1",
     "supertest": "^6.3.3",
-    "tsup": "^8.3.0",
+    "tsup": "catalog:",
     "typescript": "catalog:",
-    "wireit": "0.14.9"
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "express": "^4.17.1 || ^5",
