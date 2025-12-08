@@ -4368,7 +4368,17 @@ test.describe("single-fetch", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/data", true);
     let scripts = await page.$$("script");
-    expect(scripts.length).toBe(6);
+
+    // Scripts:
+    // RR:    window.__reactRouterContext
+    // RR:    window.__reactRouterManifest/window.__reactRouterRouteModules
+    // React: requestAnimationFrame(function(){$RT=performance.now()});
+    // RR:    window.__reactRouterContext.streamController.enqueue()
+    // React: $RC=function(b,c,e){...
+    // RR:    window.__reactRouterContext.streamController.close();
+    // React: $RC("B:1","S:1")
+    expect(scripts.length).toBe(7);
+
     let remixScriptsCount = 0;
     for (let script of scripts) {
       let content = await script.innerHTML();
