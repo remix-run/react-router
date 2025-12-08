@@ -952,7 +952,7 @@ test.describe("aborted", () => {
           // Exported for use by the server runtime so we can abort the
           // turbo-stream encode() call
           export const streamTimeout = 250;
-          const renderTimeout = streamTimeout + 250;
+          const renderTimeout = streamTimeout * 3;
 
           export default function handleRequest(
             request: Request,
