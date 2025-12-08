@@ -59,7 +59,7 @@
     "esbuild-register": "^3.6.0",
     "msw": "^2.7.5",
     "tiny-invariant": "^1.2.0",
-    "tsdown": "^0.15.6",
+    "tsdown": "^0.17.1",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

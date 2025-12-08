@@ -64,7 +64,7 @@
   "devDependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tsdown": "^0.15.6",
+    "tsdown": "^0.17.1",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

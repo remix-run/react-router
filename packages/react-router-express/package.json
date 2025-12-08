@@ -59,7 +59,7 @@
     "express": "^4.19.2",
     "node-mocks-http": "^1.10.1",
     "supertest": "^6.3.3",
-    "tsdown": "^0.15.6",
+    "tsdown": "^0.17.1",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

@@ -54,7 +54,7 @@
     "@types/express": "^4.17.9",
     "@types/morgan": "^1.9.2",
     "@types/source-map-support": "^0.5.6",
-    "tsdown": "^0.15.6",
+    "tsdown": "^0.17.1",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },

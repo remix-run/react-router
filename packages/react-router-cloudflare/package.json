@@ -48,7 +48,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250803.0",
     "react-router": "workspace:*",
-    "tsdown": "^0.15.6",
+    "tsdown": "^0.17.1",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
   },
