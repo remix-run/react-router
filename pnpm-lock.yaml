@@ -133,8 +133,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       react-server-dom-parcel:
-        specifier: ^19.0.0
-        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^19.0.1
+        version: 19.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       remark-gfm:
         specifier: ^3.0.1
         version: 3.0.1
@@ -359,8 +359,8 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router
       react-server-dom-parcel:
-        specifier: ^19.1.0
-        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^19.1.2
+        version: 19.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@parcel/packager-react-static':
         specifier: 2.15.0
@@ -1712,8 +1712,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router
       react-server-dom-parcel:
-        specifier: ^19.0.0
-        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^19.0.1
+        version: 19.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4
@@ -8448,12 +8448,12 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
-  react-server-dom-parcel@19.1.0:
-    resolution: {integrity: sha512-JkfPt/yV1ru8J1CTM0PD74HZZRQTjdoTU5eg2r6Xjn/TmFRS2J/4QsKdwu2X8NsA+ADnPHI8wKCgBh1HCmRr/A==}
+  react-server-dom-parcel@19.2.1:
+    resolution: {integrity: sha512-/pYJSIjVZy1sZLHlovmItuMqVl8z57jURTPn+sTCWotIm1orCodjFkBiBfY1zWKHa48d406Pble5mlr7tU3lfg==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: ^19.1.0
-      react-dom: ^19.1.0
+      react: ^19.2.1
+      react-dom: ^19.2.1
 
   react-test-renderer@19.1.0:
     resolution: {integrity: sha512-jXkSl3CpvPYEF+p/eGDLB4sPoDX8pKkYvRl9+rR8HxLY0X04vW7hCm1/0zHoUSjPZ3bDa+wXWNTDVIw/R8aDVw==}
@@ -17982,7 +17982,7 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
-  react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-server-dom-parcel@19.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)

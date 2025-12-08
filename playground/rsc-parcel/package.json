@@ -43,6 +43,6 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "workspace:*",
-    "react-server-dom-parcel": "^19.0.0"
+    "react-server-dom-parcel": "^19.0.1"
   }
 }
