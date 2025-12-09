@@ -44,7 +44,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
     await waitFor(() => screen.getByText("lazy error!"));
 
@@ -75,7 +75,7 @@ describe(`handleError`, () => {
       },
     ]);
 
-    render(<RouterProvider router={router} unstable_onError={spy} />);
+    render(<RouterProvider router={router} onError={spy} />);
 
     await waitFor(() => screen.getByText("Error:middleware error!"));
 
@@ -104,7 +104,7 @@ describe(`handleError`, () => {
       },
     ]);
 
-    render(<RouterProvider router={router} unstable_onError={spy} />);
+    render(<RouterProvider router={router} onError={spy} />);
 
     await waitFor(() => screen.getByText("Error:loader error!"));
 
@@ -134,7 +134,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -170,7 +170,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -202,7 +202,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -234,7 +234,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() =>
@@ -269,7 +269,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.fetch("key", "0", "/fetch"));
@@ -299,7 +299,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() =>
@@ -335,7 +335,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -380,7 +380,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -429,7 +429,7 @@ describe(`handleError`, () => {
     }
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -484,7 +484,7 @@ describe(`handleError`, () => {
     }
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -540,7 +540,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
@@ -591,7 +591,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
