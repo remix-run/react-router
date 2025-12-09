@@ -38,7 +38,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let logger: Vite.Logger;
   let entries: { client: string; rsc: string; ssr: string };
 
-
   let config: ResolvedReactRouterConfig;
   let rootRouteFile: string;
   function updateConfig(newConfig: ResolvedReactRouterConfig) {
@@ -179,10 +178,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               build: {
                 rollupOptions: {
                   input: {
-                    // We use a virtual entry here so that consumers can import
-                    // it as `virtual:react-router/unstable_rsc/rsc-entry`
-                    // without needing to know the actual file path, which is
-                    // important when using the default entries.
                     index: entries.rsc,
                   },
                   output: {
@@ -342,12 +337,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
 
-    {
-      name: "react-router/rsc/virtual-rsc-entry",
-      resolveId(id) {
-        if (id === virtual.rscEntry.id) return entries.rsc;
-      },
-    },
     {
       name: "react-router/rsc/virtual-route-config",
       resolveId(id) {
@@ -576,7 +565,6 @@ const virtual = {
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
-  rscEntry: create("unstable_rsc/rsc-entry"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
 

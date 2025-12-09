@@ -13,6 +13,9 @@
   },
   "license": "MIT",
   "exports": {
+    "./config/default-rsc-entries/entry.client": "./dist/config/default-rsc-entries/entry.client.tsx",
+    "./config/default-rsc-entries/entry.rsc": "./dist/config/default-rsc-entries/entry.rsc.tsx",
+    "./config/default-rsc-entries/entry.ssr": "./dist/config/default-rsc-entries/entry.ssr.tsx",
     "./config": {
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
@@ -22,7 +25,6 @@
       "default": "./dist/routes.js"
     },
     "./rsc-types": "./rsc-types.d.ts",
-    "./config/default-rsc-entries/*": "./dist/config/default-rsc-entries/*.tsx",
     "./vite": {
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
