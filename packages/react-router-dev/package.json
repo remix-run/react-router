@@ -22,7 +22,7 @@
       "default": "./dist/routes.js"
     },
     "./rsc-types": "./rsc-types.d.ts",
-    "./config/default-rsc-entries/*": "./config/default-rsc-entries/*.tsx",
+    "./config/default-rsc-entries/*": "./dist/config/default-rsc-entries/*.tsx",
     "./vite": {
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
