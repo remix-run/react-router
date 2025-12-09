@@ -740,7 +740,7 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
-                unstable_useTransitions={unstable_useTransitions === true}
+                unstable_useTransitions={unstable_useTransitions}
               >
                 <MemoizedDataRoutes
                   routes={router.routes}
@@ -895,7 +895,7 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
