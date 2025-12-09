@@ -150,6 +150,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react/jsx-dev-runtime",
               "react-dom",
               "react-dom/client",
+              "react-router",
+              "react-router > cookie",
+              "react-router > set-cookie-parser",
+              "react-router/dom",
               "react-router/internal/react-server-client",
             ],
           },
@@ -166,12 +170,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                   },
                 },
                 outDir: join(config.buildDirectory, "client"),
-              },
-              optimizeDeps: {
-                include: [
-                  "react-router > cookie",
-                  "react-router > set-cookie-parser",
-                ],
               },
             },
             rsc: {
