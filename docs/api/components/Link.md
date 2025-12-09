@@ -214,3 +214,21 @@ for this navigation.
 
 To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
 
+### unstable_defaultShouldRevalidate
+
+[modes: framework, data, declarative]
+
+Specify the default revalidation behavior for the navigation.
+
+```tsx
+<Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+```
+
+If no `shouldRevalidate` functions are present on the active routes, then this
+value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+so the route can make the final determination on revalidation. This can be
+useful when updating search params and you don't want to trigger a revalidation.
+
+By default (when not specified), loaders will revalidate according to the routers
+standard revalidation behavior.
+
