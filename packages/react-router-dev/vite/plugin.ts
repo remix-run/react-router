@@ -85,6 +85,8 @@ import { decorateComponentExportsWithProps } from "./with-props";
 import { loadDotenv } from "./load-dotenv";
 import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
+import type { PrerenderRequest } from "./plugins/prerender";
+import { prerender } from "./plugins/prerender";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -251,6 +253,8 @@ type ReactRouterPluginContext = {
   publicPath: string;
   reactRouterConfig: ResolvedReactRouterConfig;
   viteManifestEnabled: boolean;
+  reactRouterManifest: ReactRouterManifest | null;
+  prerenderPaths: Set<string> | null;
 };
 
 let virtualHmrRuntime = VirtualModule.create("hmr-runtime");
@@ -773,6 +777,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     ctx = {
       environmentBuildContext,
+      reactRouterManifest: null,
+      prerenderPaths: null,
       reactRouterConfig,
       rootDirectory,
       entryClientFilePath,
@@ -798,6 +804,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       ctx.reactRouterConfig.ssr,
       routes,
     );
+
+    if (!ctx.prerenderPaths) {
+      ctx.prerenderPaths = new Set<string>();
+    }
+
+    // Accumulate prerender paths from all bundles
+    for (let path of prerenderPaths) {
+      ctx.prerenderPaths.add(path);
+    }
 
     let isSpaMode = isSpaModeEnabled(ctx.reactRouterConfig);
 
@@ -2139,6 +2154,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   ).reactRouterServerManifest
                 : await getReactRouterManifestForDev();
 
+            // Cache manifest on context for prerendering later
+            ctx.reactRouterManifest = reactRouterManifest;
+
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
               invariant(viteConfig);
@@ -2478,6 +2496,293 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     },
+    prerender({
+      config() {
+        process.env.IS_RR_BUILD_REQUEST = "yes";
+        return {
+          buildDirectory: getClientBuildDirectory(ctx.reactRouterConfig),
+          concurrency: getPrerenderConcurrencyConfig(ctx.reactRouterConfig),
+        };
+      },
+      async requests() {
+        invariant(viteConfig);
+
+        let { future } = ctx.reactRouterConfig;
+
+        // Prerender during SSR build only
+        if (
+          future.v8_viteEnvironmentApi
+            ? this.environment.name === "client"
+            : !viteConfigEnv.isSsrBuild
+        ) {
+          return [];
+        }
+
+        // Skip prerendering if the future flag is disabled
+        if (!future.unstable_previewServerPrerendering) {
+          return [];
+        }
+
+        let requests: PrerenderRequest<PrerenderMetadata>[] = [];
+
+        if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
+          invariant(ctx.prerenderPaths !== null, "Prerender paths missing");
+          invariant(
+            ctx.reactRouterManifest !== null,
+            "Prerender manifest missing",
+          );
+
+          let { reactRouterConfig, reactRouterManifest, prerenderPaths } = ctx;
+
+          assertPrerenderPathsMatchRoutes(
+            reactRouterConfig,
+            Array.from(prerenderPaths),
+          );
+
+          let buildRoutes = createPrerenderRoutes(reactRouterManifest.routes);
+
+          for (let prerenderPath of prerenderPaths) {
+            let matches = matchRoutes(
+              buildRoutes,
+              `/${prerenderPath}/`.replace(/^\/\/+/, "/"),
+            );
+
+            if (!matches) {
+              continue;
+            }
+
+            // When prerendering a resource route, we don't want to pass along the
+            // `.data` file since we want to prerender the raw Response returned from
+            // the loader.  Presumably this is for routes where a file extension is
+            // already included, such as `app/routes/items[.json].tsx` that will
+            // render into `/items.json`
+            let leafRoute = matches[matches.length - 1].route;
+            let manifestRoute = reactRouterManifest.routes[leafRoute.id];
+            let isResourceRoute =
+              manifestRoute &&
+              !manifestRoute.hasDefaultExport &&
+              !manifestRoute.hasErrorBoundary;
+
+            if (isResourceRoute) {
+              if (manifestRoute?.hasLoader) {
+                requests.push(
+                  // Prerender a .data file for turbo-stream consumption
+                  createDataRequest(
+                    prerenderPath,
+                    reactRouterConfig,
+                    [leafRoute.id],
+                    true,
+                  ),
+                  // Prerender a raw file for external consumption
+                  createResourceRouteRequest(prerenderPath, reactRouterConfig),
+                );
+              } else {
+                viteConfig.logger.warn(
+                  `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute.id}`,
+                );
+              }
+            } else {
+              let hasLoaders = matches.some(
+                (m) => reactRouterManifest.routes[m.route.id]?.hasLoader,
+              );
+
+              if (hasLoaders) {
+                requests.push(
+                  createDataRequest(prerenderPath, reactRouterConfig, null),
+                );
+              } else {
+                requests.push(
+                  createRouteRequest(prerenderPath, reactRouterConfig),
+                );
+              }
+            }
+          }
+        }
+
+        // When `ssr:false` is set, we always want a SPA HTML they can use
+        // to serve non-prerendered routes.  This file will only SSR the root
+        // route and can hydrate for any path.
+        if (!ctx.reactRouterConfig.ssr) {
+          requests.push(createSpaModeRequest(ctx.reactRouterConfig));
+        }
+
+        return requests;
+      },
+      async postProcess(request, response, metadata) {
+        invariant(metadata);
+
+        // Normalized path for errors/logging and file writing (includes basename from URL)
+        const normalizedPath =
+          metadata.type === "spa" ? "/" : new URL(request.url).pathname;
+
+        // Handle loader data responses
+        if (metadata.type === "data") {
+          if (response.status !== 200 && response.status !== 202) {
+            throw new Error(
+              `Prerender (data): Received a ${response.status} status code from ` +
+                `\`entry.server.tsx\` while prerendering the \`${metadata.path}\` ` +
+                `path.\n${normalizedPath}`,
+              { cause: response },
+            );
+          }
+
+          let data = await response.text();
+
+          return {
+            files: [
+              {
+                path: normalizedPath,
+                contents: data,
+              },
+            ],
+            requests: !metadata.isResourceRoute
+              ? [createRouteRequest(metadata.path, ctx.reactRouterConfig, data)]
+              : [],
+          };
+        }
+
+        // Handle resource route responses
+        if (metadata.type === "resource") {
+          let contents = new Uint8Array(await response.arrayBuffer());
+          if (response.status !== 200) {
+            throw new Error(
+              `Prerender (resource): Received a ${response.status} status code from ` +
+                `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
+                `path.\n${new TextDecoder().decode(contents)}`,
+            );
+          }
+
+          return [
+            {
+              path: normalizedPath,
+              contents,
+            },
+          ];
+        }
+
+        // Handle document responses (html or spa)
+        let html = await response.text();
+
+        if (metadata.type === "spa") {
+          if (response.status !== 200) {
+            throw new Error(
+              `SPA Mode: Received a ${response.status} status code from ` +
+                `\`entry.server.tsx\` while prerendering your SPA Fallback HTML file.\n` +
+                html,
+            );
+          }
+
+          if (
+            !html.includes("window.__reactRouterContext =") ||
+            !html.includes("window.__reactRouterRouteModules =")
+          ) {
+            throw new Error(
+              "SPA Mode: Did you forget to include `<Scripts/>` in your root route? " +
+                "Your pre-rendered HTML cannot hydrate without `<Scripts />`.",
+            );
+          }
+        }
+
+        if (redirectStatusCodes.has(response.status)) {
+          // This isn't ideal but gets the job done as a fallback if the user can't
+          // implement proper redirects via .htaccess or something else.  This is the
+          // approach used by Astro as well, so there's some precedent.
+          // https://github.com/withastro/roadmap/issues/466
+          // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
+          let location = response.headers.get("Location");
+          // A short delay causes Google to interpret the redirect as temporary.
+          // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
+          let delay = response.status === 302 ? 2 : 0;
+          html = `<!doctype html>
+<head>
+<title>Redirecting to: ${location}</title>
+<meta http-equiv="refresh" content="${delay};url=${location}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+	<a href="${location}">
+    Redirecting from <code>${normalizedPath}</code> to <code>${location}</code>
+  </a>
+</body>
+</html>`;
+        } else if (response.status !== 200) {
+          throw new Error(
+            `Prerender (html): Received a ${response.status} status code from ` +
+              `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
+              `path.\n${html}`,
+          );
+        }
+
+        return [
+          {
+            path: `${normalizedPath}/${metadata.type === "spa" ? "__spa-fallback.html" : "index.html"}`,
+            contents: html,
+          },
+        ];
+      },
+      logFile(outputPath, metadata) {
+        invariant(viteConfig);
+        invariant(metadata);
+        // SPA fallback logging is handled in finalize after we know the final filename
+        if (metadata.type === "spa") {
+          return;
+        }
+        viteConfig.logger.info(
+          `Prerender (${metadata.type}): ${metadata.path} -> ${colors.bold(outputPath)}`,
+        );
+      },
+      async finalize(buildDirectory) {
+        invariant(viteConfig);
+
+        let { ssr, future } = ctx.reactRouterConfig;
+
+        // if ssr:false is set
+        if (!ssr) {
+          let spaFallback = path.join(buildDirectory, "__spa-fallback.html");
+          let index = path.join(buildDirectory, "index.html");
+
+          // If the user didn't prerendered `/`, uses the SPA fallback as the main entry point.
+          let finalSpaPath: string;
+          if (existsSync(spaFallback) && !existsSync(index)) {
+            await rename(spaFallback, index);
+            finalSpaPath = index;
+          } else if (existsSync(spaFallback)) {
+            finalSpaPath = spaFallback;
+          }
+
+          // Log SPA fallback with the final filename
+          if (finalSpaPath!) {
+            let prettyPath = path.relative(viteConfig.root, finalSpaPath);
+            if (ctx.prerenderPaths && ctx.prerenderPaths.size > 0) {
+              viteConfig.logger.info(
+                `Prerender (html): SPA Fallback -> ${colors.bold(prettyPath)}`,
+              );
+            } else {
+              viteConfig.logger.info(
+                `SPA Mode: Generated ${colors.bold(prettyPath)}`,
+              );
+            }
+          }
+
+          let serverBuildDirectory = future.v8_viteEnvironmentApi
+            ? this.environment.config?.build?.outDir
+            : (ctx.environmentBuildContext?.options.build?.outDir ??
+              getServerBuildDirectory(ctx.reactRouterConfig));
+
+          // Cleanup - we no longer need the server build assets
+          viteConfig.logger.info(
+            [
+              "Removing the server build in",
+              colors.green(serverBuildDirectory),
+              "due to ssr:false",
+            ].join(" "),
+          );
+
+          // For both SPA mode and prerendering, we can remove the server builds
+          rmSync(serverBuildDirectory, { force: true, recursive: true });
+        }
+      },
+    }),
     validatePluginOrder(),
     warnOnClientSourceMaps(),
   ];
@@ -3851,4 +4156,116 @@ async function asyncFlatten<T extends unknown[]>(
     arr = (await Promise.all(arr)).flat(Infinity) as any;
   } while (arr.some((v: any) => v?.then));
   return arr as unknown[] as AsyncFlatten<T>;
+}
+
+type PrerenderMetadata = {
+  type: "data" | "resource" | "html" | "spa";
+  path: string;
+  isResourceRoute?: boolean;
+};
+
+function assertPrerenderPathsMatchRoutes(
+  config: ResolvedReactRouterConfig,
+  prerenderPaths: string[],
+): void {
+  let routes = createPrerenderRoutes(config.routes);
+
+  for (let path of prerenderPaths) {
+    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
+    if (!matches) {
+      throw new Error(
+        `Unable to prerender path because it does not match any routes: ${path}`,
+      );
+    }
+  }
+}
+
+function getPrerenderConcurrencyConfig(
+  reactRouterConfig: ResolvedReactRouterConfig,
+): number {
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+    concurrency = prerender.unstable_concurrency ?? 1;
+  }
+  return concurrency;
+}
+
+function createDataRequest(
+  prerenderPath: string,
+  reactRouterConfig: ResolvedReactRouterConfig,
+  onlyRoutes: string[] | null,
+  isResourceRoute?: boolean,
+): PrerenderRequest<PrerenderMetadata> {
+  let normalizedPath = `${reactRouterConfig.basename}${
+    prerenderPath === "/"
+      ? "/_root.data"
+      : `${prerenderPath.replace(/\/$/, "")}.data`
+  }`.replace(/\/\/+/g, "/");
+  let url = new URL(`http://localhost${normalizedPath}`);
+  if (onlyRoutes?.length) {
+    url.searchParams.set("_routes", onlyRoutes.join(","));
+  }
+
+  return {
+    request: new Request(url),
+    metadata: { type: "data", path: prerenderPath, isResourceRoute },
+  };
+}
+
+function createRouteRequest(
+  prerenderPath: string,
+  reactRouterConfig: ResolvedReactRouterConfig,
+  data?: string,
+): PrerenderRequest<PrerenderMetadata> {
+  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
+    /\/\/+/g,
+    "/",
+  );
+
+  let headers = new Headers();
+
+  if (data) {
+    let encodedData = encodeURI(data);
+
+    // Check if encoded data would exceed HTTP header limits (~8KB threshold)
+    // Skip header for large data, loaders will run again
+    if (encodedData.length < 8 * 1024) {
+      headers.set("X-React-Router-Prerender-Data", encodedData);
+    }
+  }
+
+  return {
+    request: new Request(`http://localhost${normalizedPath}`, { headers }),
+    metadata: { type: "html", path: prerenderPath },
+  };
+}
+
+function createResourceRouteRequest(
+  prerenderPath: string,
+  reactRouterConfig: ResolvedReactRouterConfig,
+  requestInit?: RequestInit,
+): PrerenderRequest<PrerenderMetadata> {
+  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
+    .replace(/\/\/+/g, "/")
+    .replace(/\/$/g, "");
+
+  return {
+    request: new Request(`http://localhost${normalizedPath}`, requestInit),
+    metadata: { type: "resource", path: prerenderPath },
+  };
+}
+
+function createSpaModeRequest(
+  reactRouterConfig: ResolvedReactRouterConfig,
+): PrerenderRequest<PrerenderMetadata> {
+  return {
+    request: new Request(`http://localhost${reactRouterConfig.basename}`, {
+      headers: {
+        // Enable SPA mode in the server runtime and only render down to the root
+        "X-React-Router-SPA-Mode": "yes",
+      },
+    }),
+    metadata: { type: "spa", path: "/" },
+  };
 }
