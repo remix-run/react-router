@@ -10,3 +10,7 @@ export default {
     return defaultEntry.fetch(request, requestContext);
   },
 };
+
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}

@@ -102,6 +102,7 @@
     "@types/babel__traverse": "^7.20.7",
     "@types/dedent": "^0.7.0",
     "@types/express": "^4.17.9",
+    "@types/jest": "^29.5.4",
     "@types/jsesc": "^3.0.1",
     "@types/lodash": "^4.14.182",
     "@types/node": "^20.0.0",

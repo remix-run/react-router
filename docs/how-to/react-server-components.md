@@ -281,7 +281,7 @@ RSC Framework Mode supports custom entry files, allowing you to customize the be
 The plugin will automatically detect custom entry files in your `app` directory:
 
 - `app/entry.rsc.ts` (or `.tsx`) - Custom RSC server entry
-- `app/entry.ssr.ts` (or `.tsx`) - Custom SSR server entry  
+- `app/entry.ssr.ts` (or `.tsx`) - Custom SSR server entry
 - `app/entry.client.tsx` - Custom client entry
 
 If these files are not found, React Router will use the default entries provided by the framework.
@@ -296,13 +296,20 @@ import { RouterContextProvider } from "react-router";
 
 export default {
   fetch(request: Request): Promise<Response> {
-    console.log("Custom RSC entry handling request:", request.url);
+    console.log(
+      "Custom RSC entry handling request:",
+      request.url,
+    );
 
     const requestContext = new RouterContextProvider();
 
     return defaultEntry.fetch(request, requestContext);
   },
 };
+
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
 ```
 
 Similarly, you can customize the SSR entry:
@@ -310,14 +317,21 @@ Similarly, you can customize the SSR entry:
 ```ts filename=app/entry.ssr.ts
 import { generateHTML as defaultGenerateHTML } from "@react-router/dev/config/default-rsc-entries/entry.ssr";
 
-export function generateHTML(request: Request, serverResponse: Response): Promise<Response> {
-  console.log("Custom SSR entry generating HTML for:", request.url);
+export function generateHTML(
+  request: Request,
+  serverResponse: Response,
+): Promise<Response> {
+  console.log(
+    "Custom SSR entry generating HTML for:",
+    request.url,
+  );
 
   return defaultGenerateHTML(request, serverResponse);
 }
 ```
 
 And for the client:
+
 ```ts filename=app/entry.client.ts
 import "@react-router/dev/config/default-rsc-entries/entry.client";
 ```
@@ -327,6 +341,7 @@ import "@react-router/dev/config/default-rsc-entries/entry.client";
 For more advanced customization, you can copy the default entries and modify them as needed. To find the default entries:
 
 1. In your IDE, use "Go to Definition" (or Cmd/Ctrl+Click) on the default entry import:
+
    ```ts
    import defaultEntry from "@react-router/dev/config/default-rsc-entries/entry.rsc";
    ```
@@ -336,6 +351,7 @@ For more advanced customization, you can copy the default entries and modify the
 3. Modify it to suit your needs
 
 The default entries are located at:
+
 - [`@react-router/dev/config/default-rsc-entries/entry.rsc`][entry-rsc-source]
 - [`@react-router/dev/config/default-rsc-entries/entry.ssr`][entry-ssr-source]
 - [`@react-router/dev/config/default-rsc-entries/entry.client`][entry-client-source]
@@ -345,6 +361,7 @@ You can view the source code on GitHub using the links above, or navigate direct
 <docs-info>
 
 When copying default entries, make sure to maintain the required exports:
+
 - `entry.rsc.ts` must export a default object with a `fetch` method
 - `entry.ssr.ts` must export a `generateHTML` function
 - `entry.client.tsx` should handle client-side hydration
