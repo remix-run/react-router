@@ -740,7 +740,7 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
-                unstable_useTransitions={unstable_useTransitions === true}
+                unstable_useTransitions={unstable_useTransitions}
               >
                 <MemoizedDataRoutes
                   routes={router.routes}
@@ -895,7 +895,7 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1310,9 +1310,20 @@ export interface RouterProps {
    */
   static?: boolean;
   /**
-   * Whether this router should wrap navigations in `React.startTransition()`
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
-  unstable_useTransitions: boolean;
+  unstable_useTransitions?: boolean;
 }
 
 /**

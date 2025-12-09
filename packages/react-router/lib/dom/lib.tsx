@@ -849,7 +849,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -940,7 +940,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1027,7 +1027,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }

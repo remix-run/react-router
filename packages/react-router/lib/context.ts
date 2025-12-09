@@ -179,7 +179,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  unstable_useTransitions: boolean;
+  unstable_useTransitions: boolean | undefined;
   // TODO: Re-introduce a singular `FutureConfig` once we land our first
   // future.unstable_ or future.v8_ flag
   future: {};
