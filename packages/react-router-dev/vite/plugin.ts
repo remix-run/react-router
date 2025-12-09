@@ -1887,6 +1887,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             viteConfig.logger.info("");
           }
 
+          if (future.unstable_previewServerPrerendering) {
+            // Prerendering is handled by the prerender plugin
+            return;
+          }
+
           // Set an environment variable we can look for in the handler to
           // enable some build-time-only logic
           process.env.IS_RR_BUILD_REQUEST = "yes";
