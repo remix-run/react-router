@@ -12,6 +12,7 @@ import type {
 import { type Location } from "../router/history";
 import {
   createStaticHandler,
+  isDataWithResponseInit,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
@@ -61,7 +62,10 @@ import type {
   HydrateFallbackProps,
 } from "../components";
 
-import { createRedirectErrorDigest } from "../errors";
+import {
+  createRedirectErrorDigest,
+  createRouteErrorResponseDigest,
+} from "../errors";
 
 const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
@@ -1355,6 +1359,9 @@ export function isManifestRequest(url: URL) {
 function defaultOnError(error: unknown) {
   if (isRedirectResponse(error)) {
     return createRedirectErrorDigest(error);
+  }
+  if (isResponse(error) || isDataWithResponseInit(error)) {
+    return createRouteErrorResponseDigest(error);
   }
 }
 

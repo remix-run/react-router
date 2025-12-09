@@ -223,8 +223,13 @@ implementations.forEach((implementation) => {
     });
 
     test("Suppport throwing external redirect Response from render", async ({
+      browserName,
       page,
     }) => {
+      test.skip(
+        browserName === "firefox",
+        "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+      );
       await page.goto(`http://localhost:${port}/render-redirect`);
       await expect(page.getByText("home")).toBeAttached();
       await page.getByText("External").click();
@@ -248,7 +253,7 @@ implementations.forEach((implementation) => {
     }) => {
       test.skip(
         browserName === "firefox",
-        "Playwright doesn't like external meta redirects for tests. It times out waiting for the URL even though it navigates.",
+        "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
       );
       await page.goto(`http://localhost:${port}/render-redirect/lazy/external`);
       await page.waitForURL(`https://example.com/`);

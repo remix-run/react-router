@@ -3,3 +3,8 @@ packages:
   - "integration/helpers/*"
   - "packages/*"
   - "playground/*"
+
+catalog:
+  typescript: ^5.4.5
+  tsup: ^8.3.0
+  wireit: 0.14.9
