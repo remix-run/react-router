@@ -125,7 +125,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.0-canary-fd524fe0-20251121(eslint@8.57.0)
+        version: 7.1.0-canary-ec9cc003-20251208(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -6259,8 +6259,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.0-canary-fd524fe0-20251121:
-    resolution: {integrity: sha512-G5we0+XjZTKpjkLL9AgdWxzmo4mqelVDIYzoR1dBlhhiN8Lf5PQ+l8frr+BmX02nU4g0AEez3eGSF/LNfHokEw==}
+  eslint-plugin-react-hooks@7.1.0-canary-ec9cc003-20251208:
+    resolution: {integrity: sha512-E8g3Nr8kAem8gyieCCbP8T0osLFOkTycOu2KdzQNWFHrMsdsZ5zH+jabrtPIoRtiNq2ZJNub28TbFKWo3dIc8w==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -8463,6 +8463,7 @@ packages:
   react-server-dom-parcel@19.1.0:
     resolution: {integrity: sha512-JkfPt/yV1ru8J1CTM0PD74HZZRQTjdoTU5eg2r6Xjn/TmFRS2J/4QsKdwu2X8NsA+ADnPHI8wKCgBh1HCmRr/A==}
     engines: {node: '>=0.10.0'}
+    deprecated: Critical Security Vulnerability in React Server Components
     peerDependencies:
       react: ^19.1.0
       react-dom: ^19.1.0
@@ -15059,7 +15060,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@7.1.0-canary-fd524fe0-20251121(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.1.0-canary-ec9cc003-20251208(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
