@@ -274,6 +274,83 @@ MDX routes are supported in RSC Framework Mode when using `@mdx-js/rollup` v3.1.
 
 Note that any components exported from an MDX route must also be valid in RSC environments, meaning that they cannot use client-only features like [Hooks][hooks]. Any components that need to use these features should be extracted into a [client module][use-client-docs].
 
+### Custom Entry Files
+
+RSC Framework Mode supports custom entry files, allowing you to customize the behavior of the RSC server, SSR server, and client entry points.
+
+The plugin will automatically detect custom entry files in your `app` directory:
+
+- `app/entry.rsc.ts` (or `.tsx`) - Custom RSC server entry
+- `app/entry.ssr.ts` (or `.tsx`) - Custom SSR server entry  
+- `app/entry.client.tsx` - Custom client entry
+
+If these files are not found, React Router will use the default entries provided by the framework.
+
+#### Basic Override Pattern
+
+You can create a custom entry file that wraps or extends the default behavior. For example, to add custom logging to the RSC entry:
+
+```ts filename=app/entry.rsc.ts
+import defaultEntry from "@react-router/dev/config/default-rsc-entries/entry.rsc";
+import { RouterContextProvider } from "react-router";
+
+export default {
+  fetch(request: Request): Promise<Response> {
+    console.log("Custom RSC entry handling request:", request.url);
+
+    const requestContext = new RouterContextProvider();
+
+    return defaultEntry.fetch(request, requestContext);
+  },
+};
+```
+
+Similarly, you can customize the SSR entry:
+
+```ts filename=app/entry.ssr.ts
+import { generateHTML as defaultGenerateHTML } from "@react-router/dev/config/default-rsc-entries/entry.ssr";
+
+export function generateHTML(request: Request, serverResponse: Response): Promise<Response> {
+  console.log("Custom SSR entry generating HTML for:", request.url);
+
+  return defaultGenerateHTML(request, serverResponse);
+}
+```
+
+And for the client:
+```ts filename=app/entry.client.ts
+import "@react-router/dev/config/default-rsc-entries/entry.client";
+```
+
+#### Copying Default Entries
+
+For more advanced customization, you can copy the default entries and modify them as needed. To find the default entries:
+
+1. In your IDE, use "Go to Definition" (or Cmd/Ctrl+Click) on the default entry import:
+   ```ts
+   import defaultEntry from "@react-router/dev/config/default-rsc-entries/entry.rsc";
+   ```
+
+2. Copy the default entry code into your custom file
+
+3. Modify it to suit your needs
+
+The default entries are located at:
+- [`@react-router/dev/config/default-rsc-entries/entry.rsc`][entry-rsc-source]
+- [`@react-router/dev/config/default-rsc-entries/entry.ssr`][entry-ssr-source]
+- [`@react-router/dev/config/default-rsc-entries/entry.client`][entry-client-source]
+
+You can view the source code on GitHub using the links above, or navigate directly to these files in `node_modules/@react-router/dev/dist/config/default-rsc-entries/`.
+
+<docs-info>
+
+When copying default entries, make sure to maintain the required exports:
+- `entry.rsc.ts` must export a default object with a `fetch` method
+- `entry.ssr.ts` must export a `generateHTML` function
+- `entry.client.tsx` should handle client-side hydration
+
+</docs-info>
+
 ### Unsupported Config Options
 
 For the initial unstable release, the following options from `react-router.config.ts` are not yet supported in RSC Framework Mode:
@@ -286,8 +363,6 @@ For the initial unstable release, the following options from `react-router.confi
 - `ssr: false` (SPA Mode)
 - `future.v8_splitRouteModules`
 - `future.unstable_subResourceIntegrity`
-
-Custom build entry files are also not yet supported.
 
 ## RSC Data Mode
 
@@ -1032,3 +1107,6 @@ createFromReadableStream<RSCServerPayload>(
 [client-modules]: ../api/framework-conventions/client-modules
 [server-only-package]: https://www.npmjs.com/package/server-only
 [client-only-package]: https://www.npmjs.com/package/client-only
+[entry-rsc-source]: https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/default-rsc-entries/entry.rsc.tsx
+[entry-ssr-source]: https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/default-rsc-entries/entry.ssr.tsx
+[entry-client-source]: https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/default-rsc-entries/entry.client.tsx

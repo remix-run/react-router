@@ -7,8 +7,8 @@
     "dev": "react-router dev",
     "dev:vite-middleware": "node start-vite-middleware.js",
     "build": "react-router build",
-    "start": "cross-env NODE_ENV=production node start.js",
-    "start:serve": "react-router-serve ./build/server/index.js",
+    "start:custom": "cross-env NODE_ENV=production node start.js",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
@@ -31,8 +31,8 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.0",
     "express": "^4.21.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "react-router": "workspace:*",
     "remix-utils": "^8.7.0"
   }

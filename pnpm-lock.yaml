@@ -134,7 +134,7 @@ importers:
         version: 2.4.2
       react-server-dom-parcel:
         specifier: ^19.0.0
-        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 19.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       remark-gfm:
         specifier: ^3.0.1
         version: 3.0.1
@@ -1161,7 +1161,7 @@ importers:
         version: 7.7.0
       '@vitejs/plugin-rsc':
         specifier: 0.4.30
-        version: 0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.4.30(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
@@ -1825,17 +1825,17 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.0.0
-        version: 19.1.0
+        specifier: 19.2.1
+        version: 19.2.1
       react-dom:
-        specifier: ^19.0.0
-        version: 19.1.0(react@19.1.0)
+        specifier: 19.2.1
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
       remix-utils:
         specifier: ^8.7.0
-        version: 8.7.0(react-router@packages+react-router)(react@19.1.0)(zod@3.24.2)
+        version: 8.7.0(react-router@packages+react-router)(react@19.2.1)(zod@3.24.2)
     devDependencies:
       '@mdx-js/rollup':
         specifier: ^3.1.0
@@ -1863,7 +1863,7 @@ importers:
         version: 18.2.7
       '@vitejs/plugin-rsc':
         specifier: 0.4.30
-        version: 0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.4.30(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -8433,6 +8433,11 @@ packages:
     peerDependencies:
       react: ^19.1.0
 
+  react-dom@19.2.1:
+    resolution: {integrity: sha512-ibrK8llX2a4eOskq1mXKu/TGZj9qzomO+sNfO98M6d9zIPOEhlBkMkBUBLd1vgS0gQsLDBzA+8jJBVXDnfHmJg==}
+    peerDependencies:
+      react: ^19.2.1
+
   react-is@19.1.0:
     resolution: {integrity: sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==}
 
@@ -8462,6 +8467,10 @@ packages:
 
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
+    engines: {node: '>=0.10.0'}
+
+  react@19.2.1:
+    resolution: {integrity: sha512-DGrYcCWK7tvYMnWh79yrPHt+vdx9tY+1gPZa7nJQtO/p8bLTDaHp4dzwEhQB7pZ4Xe3ok4XKuEPrVuc+wlpkmw==}
     engines: {node: '>=0.10.0'}
 
   read-cache@1.0.0:
@@ -8797,6 +8806,9 @@ packages:
 
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
+
+  scheduler@0.27.0:
+    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
   semver@5.7.1:
     resolution: {integrity: sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==}
@@ -13628,19 +13640,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-rsc@0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
-    dependencies:
-      '@remix-run/node-fetch-server': 0.8.1
-      es-module-lexer: 1.7.0
-      estree-walker: 3.0.3
-      magic-string: 0.30.18
-      periscopic: 4.0.2
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      turbo-stream: 3.1.0
-      vite: 6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
-      vitefu: 1.1.1(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
-
   '@vitejs/plugin-rsc@0.4.30(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@remix-run/node-fetch-server': 0.8.1
@@ -13650,6 +13649,32 @@ snapshots:
       periscopic: 4.0.2
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      turbo-stream: 3.1.0
+      vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
+      vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+
+  '@vitejs/plugin-rsc@0.4.30(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
+    dependencies:
+      '@remix-run/node-fetch-server': 0.8.1
+      es-module-lexer: 1.7.0
+      estree-walker: 3.0.3
+      magic-string: 0.30.18
+      periscopic: 4.0.2
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
+      turbo-stream: 3.1.0
+      vite: 6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
+      vitefu: 1.1.1(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
+
+  '@vitejs/plugin-rsc@0.4.30(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))':
+    dependencies:
+      '@remix-run/node-fetch-server': 0.8.1
+      es-module-lexer: 1.7.0
+      estree-walker: 3.0.3
+      magic-string: 0.30.18
+      periscopic: 4.0.2
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
       turbo-stream: 3.1.0
       vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))
@@ -17974,6 +17999,11 @@ snapshots:
       react: 19.1.0
       scheduler: 0.26.0
 
+  react-dom@19.2.1(react@19.2.1):
+    dependencies:
+      react: 19.2.1
+      scheduler: 0.27.0
+
   react-is@19.1.0: {}
 
   react-refresh@0.14.2: {}
@@ -17987,6 +18017,11 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
+  react-server-dom-parcel@19.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+    dependencies:
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
+
   react-test-renderer@19.1.0(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -17994,6 +18029,8 @@ snapshots:
       scheduler: 0.26.0
 
   react@19.1.0: {}
+
+  react@19.2.1: {}
 
   read-cache@1.0.0:
     dependencies:
@@ -18155,11 +18192,11 @@ snapshots:
       mdast-util-to-markdown: 1.5.0
       unified: 10.1.2
 
-  remix-utils@8.7.0(react-router@packages+react-router)(react@19.1.0)(zod@3.24.2):
+  remix-utils@8.7.0(react-router@packages+react-router)(react@19.2.1)(zod@3.24.2):
     dependencies:
       type-fest: 4.40.1
     optionalDependencies:
-      react: 19.1.0
+      react: 19.2.1
       react-router: link:packages/react-router
       zod: 3.24.2
 
@@ -18358,6 +18395,8 @@ snapshots:
       xmlchars: 2.2.0
 
   scheduler@0.26.0: {}
+
+  scheduler@0.27.0: {}
 
   semver@5.7.1: {}
 

@@ -6,14 +6,14 @@ import colors from "picocolors";
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
-import { readFileSync } from "fs";
 import { readFile } from "fs/promises";
-import path, { join, dirname } from "pathe";
+import path, { join } from "pathe";
 import invariant from "../../invariant";
 import {
   type ConfigLoader,
   type ResolvedReactRouterConfig,
   createConfigLoader,
+  resolveRSCEntryFiles,
 } from "../../config/config";
 import { preloadVite } from "../vite";
 import { hasDependency } from "../has-dependency";
@@ -36,8 +36,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
   let logger: Vite.Logger;
+  let entries: { client: string; rsc: string; ssr: string };
 
-  const defaultEntries = getDefaultEntries();
 
   let config: ResolvedReactRouterConfig;
   let rootRouteFile: string;
@@ -115,6 +115,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           prefix: "[react-router]",
         });
 
+        entries = await resolveRSCEntryFiles({
+          reactRouterConfig: config,
+        });
+
         return {
           resolve: {
             dedupe: [
@@ -132,7 +136,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
           optimizeDeps: {
             entries: getOptimizeDepsEntries({
-              entryClientFilePath: defaultEntries.client,
+              entryClientFilePath: entries.client,
               reactRouterConfig: config,
             }),
             esbuildOptions: {
@@ -159,7 +163,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               build: {
                 rollupOptions: {
                   input: {
-                    index: defaultEntries.client,
+                    index: entries.client,
                   },
                 },
                 outDir: join(config.buildDirectory, "client"),
@@ -179,7 +183,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                     // it as `virtual:react-router/unstable_rsc/rsc-entry`
                     // without needing to know the actual file path, which is
                     // important when using the default entries.
-                    index: defaultEntries.rsc,
+                    index: entries.rsc,
                   },
                   output: {
                     entryFileNames: config.serverBuildFile,
@@ -188,12 +192,17 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                 },
                 outDir: join(config.buildDirectory, "server"),
               },
+              resolve: {
+                noExternal: [
+                  "@react-router/dev/config/default-rsc-entries/entry.ssr",
+                ],
+              },
             },
             ssr: {
               build: {
                 rollupOptions: {
                   input: {
-                    index: defaultEntries.ssr,
+                    index: entries.ssr,
                   },
                   output: {
                     // Note: We don't set `entryFileNames` here because it's
@@ -204,6 +213,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                   },
                 },
                 outDir: join(config.buildDirectory, "server/__ssr_build"),
+              },
+              resolve: {
+                noExternal: [
+                  "@react-router/dev/config/default-rsc-entries/entry.rsc",
+                ],
               },
             },
           },
@@ -331,7 +345,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     {
       name: "react-router/rsc/virtual-rsc-entry",
       resolveId(id) {
-        if (id === virtual.rscEntry.id) return defaultEntries.rsc;
+        if (id === virtual.rscEntry.id) return entries.rsc;
       },
     },
     {
@@ -413,7 +427,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const reactRefreshDir = path.dirname(
           require.resolve("react-refresh/package.json"),
         );
-        const reactRefreshRuntimePath = path.join(
+        const reactRefreshRuntimePath = join(
           reactRefreshDir,
           "cjs/react-refresh-runtime.development.js",
         );
@@ -579,35 +593,6 @@ function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
-}
-
-function getDevPackageRoot(): string {
-  const currentDir = dirname(__dirname);
-  let dir = currentDir;
-  while (dir !== dirname(dir)) {
-    try {
-      const packageJsonPath = join(dir, "package.json");
-      readFileSync(packageJsonPath, "utf-8");
-      return dir;
-    } catch {
-      dir = dirname(dir);
-    }
-  }
-  throw new Error("Could not find package.json");
-}
-
-function getDefaultEntries() {
-  const defaultEntriesDir = join(
-    getDevPackageRoot(),
-    "dist",
-    "config",
-    "default-rsc-entries",
-  );
-  return {
-    rsc: join(defaultEntriesDir, "entry.rsc.tsx"),
-    ssr: join(defaultEntriesDir, "entry.ssr.tsx"),
-    client: join(defaultEntriesDir, "entry.client.tsx"),
-  };
 }
 
 function getModulesWithImporters(
