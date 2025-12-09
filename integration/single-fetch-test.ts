@@ -4240,4 +4240,86 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("h1");
     expect(await app.getHtml("h1")).toMatch("It worked!");
   });
+
+  test("preserves trailing slash in request.url during client navigation", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+
+          export default function Index() {
+            return (
+              <div>
+                <h1>Home</h1>
+                <Link to="/about/">Go to About (with trailing slash)</Link>
+                <Link to="/about">Go to About (without trailing slash)</Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/about.tsx": js`
+          import { useLoaderData } from "react-router";
+
+          export function loader({ request }) {
+            let url = new URL(request.url);
+            return {
+              pathname: url.pathname,
+              hasTrailingSlash: url.pathname.endsWith("/"),
+            };
+          }
+
+          export default function About() {
+            let { pathname, hasTrailingSlash } = useLoaderData();
+            return (
+              <div>
+                <h1>About</h1>
+                <p id="pathname">Pathname: {pathname}</p>
+                <p id="trailing-slash">{String(hasTrailingSlash)}</p>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    // Test client-side navigation WITH trailing slash
+    await app.goto("/");
+    await app.clickLink("/about/");
+    await page.waitForSelector("#pathname");
+
+    // Loader should receive URL with trailing slash
+    expect(await app.getHtml("#pathname")).toContain("/about/");
+    expect(await app.getHtml("#trailing-slash")).toContain("true");
+
+    // Test SSR request WITH trailing slash
+    await app.goto("/about/");
+    await page.waitForSelector("#pathname");
+    expect(await app.getHtml("#pathname")).toContain("/about/");
+    expect(await app.getHtml("#trailing-slash")).toContain("true");
+
+    // Test client-side navigation WITHOUT trailing slash
+    await app.goto("/");
+    await app.clickLink("/about");
+    await page.waitForSelector("#pathname");
+
+    // Loader should receive URL without trailing slash
+    let pathnameHtml = await app.getHtml("#pathname");
+    expect(pathnameHtml).toContain("/about");
+    // Make sure it doesn't have trailing slash
+    expect(pathnameHtml).not.toMatch(/\/about\/<\/p>/);
+    expect(await app.getHtml("#trailing-slash")).toContain("false");
+
+    // Test SSR request WITHOUT trailing slash
+    await app.goto("/about");
+    await page.waitForSelector("#pathname");
+    pathnameHtml = await app.getHtml("#pathname");
+    expect(pathnameHtml).toContain("/about");
+    expect(pathnameHtml).not.toMatch(/\/about\/<\/p>/);
+    expect(await app.getHtml("#trailing-slash")).toContain("false");
+  });
 });

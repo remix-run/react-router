@@ -585,8 +585,12 @@ export function singleFetchUrl(
     url.pathname = `_root.${extension}`;
   } else if (basename && stripBasename(url.pathname, basename) === "/") {
     url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
+  } else if (url.pathname.endsWith("/")) {
+    // Preserve trailing slash by using /_.data pattern
+    // e.g., /about/ -> /about/_.data
+    url.pathname = `${url.pathname}_.${extension}`;
   } else {
-    url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+    url.pathname = `${url.pathname}.${extension}`;
   }
 
   return url;

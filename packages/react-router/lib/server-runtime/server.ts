@@ -111,11 +111,18 @@ function derive(build: ServerBuild, mode?: string) {
     let normalizedPath = url.pathname;
     if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
       normalizedPath = normalizedBasename;
+    } else if (normalizedPath.endsWith("/_.data")) {
+      // Handle trailing slash URLs: /about/_.data -> /about/
+      normalizedPath = normalizedPath.replace(/_.data$/, "");
     } else if (normalizedPath.endsWith(".data")) {
       normalizedPath = normalizedPath.replace(/\.data$/, "");
     }
 
+    // Only strip trailing slashes for non-trailing-slash data requests
+    // When the original request was /about/_.data, we keep the trailing slash
+    let hadTrailingSlashDataRequest = url.pathname.endsWith("/_.data");
     if (
+      !hadTrailingSlashDataRequest &&
       stripBasename(normalizedPath, normalizedBasename) !== "/" &&
       normalizedPath.endsWith("/")
     ) {

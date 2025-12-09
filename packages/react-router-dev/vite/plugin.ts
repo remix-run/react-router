@@ -2898,7 +2898,9 @@ async function prerenderData(
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
       ? "/_root.data"
-      : `${prerenderPath.replace(/\/$/, "")}.data`
+      : prerenderPath.endsWith("/")
+        ? `${prerenderPath}_.data`
+        : `${prerenderPath}.data`
   }`.replace(/\/\/+/g, "/");
   let url = new URL(`http://localhost${normalizedPath}`);
   if (onlyRoutes?.length) {
