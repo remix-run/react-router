@@ -414,7 +414,12 @@ export async function matchRSCServerRequest({
   const url = new URL(request.url);
   let routerRequest = request;
   if (isDataRequest) {
+    // Handle trailing slash URLs: /about/_.rsc -> /about/
+    if (url.pathname.endsWith("/_.rsc")) {
+      url.pathname = url.pathname.replace(/_.rsc$/, "");
+    } else {
     url.pathname = url.pathname.replace(/(_root)?\.rsc$/, "");
+    }
     routerRequest = new Request(url.toString(), {
       method: request.method,
       headers: request.headers,
