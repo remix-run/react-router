@@ -1704,37 +1704,80 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         };
       },
       configurePreviewServer(previewServer) {
+        // Cache combined handler for all server bundles
+        let cachedHandler: RequestHandler | null = null;
+
+        async function getHandler(): Promise<RequestHandler> {
+          if (cachedHandler) return cachedHandler;
+
+          let serverBuildFiles: string[] = [];
+
+          // Get build manifest to find server bundles
+          let buildManifest =
+            ctx.buildManifest ??
+            (ctx.reactRouterConfig.serverBundles
+              ? await getBuildManifest({
+                  reactRouterConfig: ctx.reactRouterConfig,
+                  rootDirectory: ctx.rootDirectory,
+                })
+              : null);
+
+          if (buildManifest?.serverBundles) {
+            // Load all server bundle files
+            for (let bundle of Object.values(buildManifest.serverBundles)) {
+              serverBuildFiles.push(
+                path.resolve(ctx.rootDirectory, bundle.file),
+              );
+            }
+          } else {
+            // Single server build
+            serverBuildFiles.push(
+              path.resolve(
+                getServerBuildDirectory(ctx.reactRouterConfig),
+                "index.js",
+              ),
+            );
+          }
+
+          // Import all bundles and create handlers
+          let handlers: RequestHandler[] = [];
+          for (let file of serverBuildFiles) {
+            let build: ServerBuild = await import(url.pathToFileURL(file).href);
+            handlers.push(createRequestHandler(build, "production"));
+          }
+
+          // Return a combined handler that tries each bundle until one handles the request.
+          // A 404 response means "not my route", so we try the next bundle.
+          cachedHandler = async (request, loadContext) => {
+            let response: Response | undefined;
+
+            for (let handler of handlers) {
+              response = await handler(request, loadContext);
+
+              if (response.status !== 404) {
+                return response;
+              }
+            }
+
+            if (response) {
+              return response;
+            }
+
+            throw new Error("No handlers were found for the request.");
+          };
+
+          return cachedHandler;
+        }
+
         return () => {
-          // Handle SSR requests in preview mode using the built server bundle
+          // Handle SSR requests in preview mode using the built server bundle(s)
           previewServer.middlewares.use(async (req, res, next) => {
             try {
-              let serverBuildDirectory = getServerBuildDirectory(
-                ctx.reactRouterConfig,
-              );
-              let serverBuildFile = path.resolve(
-                serverBuildDirectory,
-                "index.js",
-              );
-
-              // Import the built server bundle using dynamic import
-              // Need to add a cache-busting query parameter to avoid module caching
-              let build = (await import(
-                url.pathToFileURL(serverBuildFile).href
-              )) as ServerBuild;
-
-              let handler = createRequestHandler(build, "production");
-              let nodeHandler: NodeRequestHandler = async (
-                nodeReq,
-                nodeRes,
-              ) => {
-                let req = fromNodeRequest(nodeReq, nodeRes);
-                let res = await handler(
-                  req,
-                  await reactRouterDevLoadContext(req),
-                );
-                await sendResponse(nodeRes, res);
-              };
-              await nodeHandler(req, res);
+              let handler = await getHandler();
+              let request = fromNodeRequest(req, res);
+              let loadContext = await reactRouterDevLoadContext(request);
+              let response = await handler(request, loadContext);
+              await sendResponse(res, response);
             } catch (error) {
               next(error);
             }
