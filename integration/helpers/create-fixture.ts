@@ -199,7 +199,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   type RequestHandler = (request: Request) => Promise<Response>;
   let handler: RequestHandler;
   if (templateName === "rsc-vite-framework") {
-    handler = (await import(buildPath)).default;
+    handler = (await import(buildPath))?.default?.fetch;
     if (typeof handler !== "function") {
       throw new Error(
         "Expected a default request handler function export in Vite RSC Framework Mode server build",
