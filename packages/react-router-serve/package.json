@@ -42,7 +42,7 @@
     "compression": "^1.8.1",
     "express": "^4.19.2",
     "get-port": "5.1.1",
-    "morgan": "^1.10.0",
+    "morgan": "^1.10.1",
     "source-map-support": "^0.5.21"
   },
   "peerDependencies": {
