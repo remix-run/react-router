@@ -16,12 +16,12 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
-    "typescript": "^5.1.6",
+    "typescript": "catalog:",
     "vite": "^6.3.0"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
-    "compression": "^1.8.0",
+    "compression": "^1.8.1",
     "cross-env": "^7.0.3",
     "express": "^4.21.2",
     "react": "^19.0.0",
