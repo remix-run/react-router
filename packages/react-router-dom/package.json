@@ -61,8 +61,8 @@
     "react-router": "workspace:*"
   },
   "devDependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"

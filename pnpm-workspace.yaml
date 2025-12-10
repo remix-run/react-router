@@ -5,6 +5,10 @@ packages:
   - "playground/*"
 
 catalog:
+  react: ^19.2.1
+  react-dom: ^19.2.1
+  react-server-dom-parcel: ^19.2.1
+  react-server-dom-webpack: ^19.2.1
   typescript: ^5.4.5
   tsup: ^8.3.0
   wireit: 0.14.9
