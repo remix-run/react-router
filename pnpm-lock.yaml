@@ -1443,8 +1443,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/compression':
-        specifier: ^1.7.5
-        version: 1.7.5
+        specifier: ^1.8.1
+        version: 1.8.1
       '@types/express':
         specifier: ^4.17.20
         version: 4.17.21
@@ -1670,8 +1670,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-fs-routes
       '@types/compression':
-        specifier: ^1.7.5
-        version: 1.7.5
+        specifier: ^1.8.1
+        version: 1.8.1
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -4744,9 +4744,6 @@ packages:
 
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
-
-  '@types/compression@1.7.5':
-    resolution: {integrity: sha512-AAQvK5pxMpaT+nDvhHrsBhLSYG5yQdtkaJE1WYieSNY2mVFKAgmU4ks65rkZD5oqnGCFLyQpUr1CqI4DmUMyDg==}
 
   '@types/compression@1.8.1':
     resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
@@ -13044,10 +13041,6 @@ snapshots:
     dependencies:
       '@types/connect': 3.4.38
       '@types/node': 22.14.0
-
-  '@types/compression@1.7.5':
-    dependencies:
-      '@types/express': 4.17.21
 
   '@types/compression@1.8.1':
     dependencies:

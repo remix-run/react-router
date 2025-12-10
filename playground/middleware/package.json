@@ -25,7 +25,7 @@
   "devDependencies": {
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
-    "@types/compression": "^1.7.5",
+    "@types/compression": "^1.8.1",
     "@types/express": "^4.17.21",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/morgan": "^1.9.10",
