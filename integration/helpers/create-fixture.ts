@@ -477,54 +477,14 @@ export async function createFixtureProject(
     projectDir,
   );
 
-  if (templateName.includes("parcel")) {
-    parcelBuild(projectDir, init.buildStdio, mode);
-  } else {
-    reactRouterBuild(
-      projectDir,
-      init.buildStdio,
-      mode,
-      templateName.includes("rsc"),
-    );
-  }
+  reactRouterBuild(
+    projectDir,
+    init.buildStdio,
+    mode,
+    templateName.includes("rsc"),
+  );
 
   return projectDir;
-}
-
-function parcelBuild(
-  projectDir: string,
-  buildStdio?: Writable,
-  mode?: ServerMode,
-) {
-  let parcelBin = "node_modules/parcel/lib/bin.js";
-
-  let buildArgs: string[] = [parcelBin, "build", "--no-cache"];
-
-  let buildSpawn = spawnSync("node", buildArgs, {
-    cwd: projectDir,
-    env: {
-      ...process.env,
-      NODE_ENV: mode || ServerMode.Production,
-    },
-  });
-
-  // These logs are helpful for debugging. Remove comments if needed.
-  // console.log("spawning node " + buildArgs.join(" ") + ":\n");
-  // console.log("  STDOUT:");
-  // console.log("  " + buildSpawn.stdout.toString("utf-8"));
-  // console.log("  STDERR:");
-  // console.log("  " + buildSpawn.stderr.toString("utf-8"));
-
-  if (buildStdio) {
-    buildStdio.write(buildSpawn.stdout.toString("utf-8"));
-    buildStdio.write(buildSpawn.stderr.toString("utf-8"));
-    buildStdio.end();
-  }
-
-  if (buildSpawn.error || buildSpawn.status) {
-    console.error(buildSpawn.stderr.toString("utf-8"));
-    throw buildSpawn.error || new Error(`Build failed, check the output above`);
-  }
 }
 
 function reactRouterBuild(

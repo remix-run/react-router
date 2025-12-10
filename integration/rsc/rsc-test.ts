@@ -219,10 +219,6 @@ implementations.forEach((implementation) => {
         });
 
         test("Forces revalidation of routes with errors", async ({ page }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Parcel's built-in error overlay get's in the way of the test",
-          );
           await page.goto(
             `http://localhost:${port}/errors-force-revalidation`,
             {
@@ -1708,11 +1704,6 @@ implementations.forEach((implementation) => {
         });
 
         test("Supports client context using getContext", async ({ page }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Parcel is having trouble resolving modules, should probably file a bug report for this.",
-          );
-
           await page.goto(`http://localhost:${port}/get-context`);
           await page.waitForSelector("[data-client-context]");
           expect(
@@ -1928,12 +1919,6 @@ implementations.forEach((implementation) => {
         });
 
         test("Supports Inline React Server Functions", async ({ page }) => {
-          // FIXME: Waiting on parcel support: https://github.com/parcel-bundler/parcel/pull/10165
-          test.skip(
-            implementation.name === "parcel",
-            "Not supported in parcel yet",
-          );
-
           await page.goto(`http://localhost:${port}/inline-server-action/`);
 
           // Verify initial server render
@@ -2024,8 +2009,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions side-effect redirects", async ({
           page,
         }) => {
-          test.skip(implementation.name === "parcel", "Not working in parcel?");
-
           await page.goto(
             `http://localhost:${port}/side-effect-redirect-server-action`,
           );
@@ -2077,9 +2060,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions side-effect external redirects", async ({
           page,
         }) => {
-          // Test is expected to fail currently — skip running it
-          test.skip(implementation.name === "parcel", "Not working in parcel?");
-
           await page.goto(
             `http://localhost:${port}/side-effect-external-redirect-server-action`,
           );
@@ -2161,7 +2141,9 @@ implementations.forEach((implementation) => {
           await page.click("[data-submit]");
           await page.waitForSelector("[data-state]");
           await page.waitForSelector("[data-pending]", { state: "hidden" });
-          await page.waitForSelector("[data-revalidated]", { state: "hidden" });
+          await page.waitForSelector("[data-revalidated]", {
+            state: "hidden",
+          });
           expect(await page.locator("[data-state]").textContent()).toBe(
             "no revalidate",
           );
@@ -2173,11 +2155,6 @@ implementations.forEach((implementation) => {
         test("Supports transition state throughout the revalidation lifecycle", async ({
           page,
         }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Uses inline server actions which parcel doesn't support yet",
-          );
-
           await page.goto(`http://localhost:${port}/action-transition-state`, {
             waitUntil: "networkidle",
           });
@@ -2229,10 +2206,6 @@ implementations.forEach((implementation) => {
         test("Handles errors thrown in SSR components correctly", async ({
           page,
         }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Parcel's error overlays are interfering with this test",
-          );
           await page.goto(`http://localhost:${port}/ssr-error`);
 
           // Verify error boundary is shown
@@ -2687,8 +2660,6 @@ implementations.forEach((implementation) => {
         test("Supports redirects in server actions without JavaScript with basename", async ({
           page,
         }) => {
-          test.skip(implementation.name === "parcel", "Not working in parcel?");
-
           // Start on home route
           await page.goto(
             `http://localhost:${port}${basename}/server-action-redirects`,

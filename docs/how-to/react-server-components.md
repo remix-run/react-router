@@ -49,18 +49,10 @@ npx create-react-router@latest --template remix-run/react-router-templates/unsta
 
 ### RSC Data Mode Templates
 
-When using RSC Data Mode, you can choose between the Vite and Parcel templates.
-
 The [Vite RSC Data Mode template][vite-rsc-template] uses the experimental Vite `@vitejs/plugin-rsc` plugin.
 
 ```shellscript
 npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-data-mode-vite
-```
-
-The [Parcel RSC Data Mode template][parcel-rsc-template] uses the official React `react-server-dom-parcel` plugin.
-
-```shellscript
-npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-data-mode-parcel
 ```
 
 ## RSC Framework Mode
@@ -637,252 +629,6 @@ Relevant APIs:
 - [`getRSCStream`][get-rsc-stream]
 - [`RSCHydratedRouter`][rsc-hydrated-router]
 
-### Parcel
-
-See the [Parcel RSC docs][parcel-rsc-doc] for more information. You can also refer to our [Parcel RSC Data Mode template][parcel-rsc-template] to see a working version.
-
-In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
-
-```shellscript
-# install runtime dependencies
-npm i @parcel/runtime-rsc react-server-dom-parcel
-
-# install dev dependencies
-npm i -D parcel
-```
-
-#### `package.json`
-
-To configure Parcel, add the following to your `package.json`:
-
-```json filename=package.json
-{
-  "scripts": {
-    "build": "parcel build --no-autoinstall",
-    "dev": "cross-env NODE_ENV=development parcel --no-autoinstall --no-cache",
-    "start": "cross-env NODE_ENV=production node dist/server/entry.rsc.js"
-  },
-  "targets": {
-    "react-server": {
-      "context": "react-server",
-      "source": "src/entry.rsc.tsx",
-      "scopeHoist": false,
-      "includeNodeModules": {
-        "@remix-run/node-fetch-server": false,
-        "compression": false,
-        "express": false
-      }
-    }
-  }
-}
-```
-
-#### `routes/config.ts`
-
-You must add `"use server-entry"` to the top of the file where you define your routes. Additionally, you need to import the client entry point, since it will use the `"use client-entry"` directive (see below).
-
-```tsx filename=src/routes/config.ts
-"use server-entry";
-
-import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
-
-import "../entry.browser";
-
-// This needs to be a function so Parcel can add a `bootstrapScript` property.
-export function routes() {
-  return [
-    {
-      id: "root",
-      path: "",
-      lazy: () => import("./root/route"),
-      children: [
-        {
-          id: "home",
-          index: true,
-          lazy: () => import("./home/route"),
-        },
-        {
-          id: "about",
-          path: "about",
-          lazy: () => import("./about/route"),
-        },
-      ],
-    },
-  ] satisfies RSCRouteConfig;
-}
-```
-
-#### `entry.ssr.tsx`
-
-The following is a simplified example of a Parcel SSR Server.
-
-```tsx filename=src/entry.ssr.tsx
-import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge";
-import {
-  unstable_routeRSCServerRequest as routeRSCServerRequest,
-  unstable_RSCStaticRouter as RSCStaticRouter,
-} from "react-router";
-import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
-
-export async function generateHTML(
-  request: Request,
-  serverResponse: Response,
-  bootstrapScriptContent: string | undefined,
-): Promise<Response> {
-  return await routeRSCServerRequest({
-    // The incoming request.
-    request,
-    // The React Server response.
-    serverResponse,
-    // Provide the React Server touchpoints.
-    createFromReadableStream,
-    // Render the router to HTML.
-    async renderHTML(getPayload) {
-      const payload = getPayload();
-
-      return await renderHTMLToReadableStream(
-        <RSCStaticRouter getPayload={getPayload} />,
-        {
-          bootstrapScriptContent,
-          formState: await payload.formState,
-        },
-      );
-    },
-  });
-}
-```
-
-#### `entry.rsc.tsx`
-
-The following is a simplified example of a Parcel RSC Server.
-
-```tsx filename=src/entry.rsc.tsx
-import { createRequestListener } from "@remix-run/node-fetch-server";
-import express from "express";
-import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
-import {
-  createTemporaryReferenceSet,
-  decodeAction,
-  decodeFormState,
-  decodeReply,
-  loadServerAction,
-  renderToReadableStream,
-} from "react-server-dom-parcel/server.edge";
-
-// Import the generateHTML function from the react-client environment
-import { generateHTML } from "./entry.ssr" with { env: "react-client" };
-import { routes } from "./routes/config";
-
-function fetchServer(request: Request) {
-  return matchRSCServerRequest({
-    // Provide the React Server touchpoints.
-    createTemporaryReferenceSet,
-    decodeAction,
-    decodeFormState,
-    decodeReply,
-    loadServerAction,
-    // The incoming request.
-    request,
-    // The app routes.
-    routes: routes(),
-    // Encode the match with the React Server implementation.
-    generateResponse(match) {
-      return new Response(
-        renderToReadableStream(match.payload),
-        {
-          status: match.statusCode,
-          headers: match.headers,
-        },
-      );
-    },
-  });
-}
-
-const app = express();
-
-// Serve static assets with compression and long cache lifetime.
-app.use(
-  "/client",
-  compression(),
-  express.static("dist/client", {
-    immutable: true,
-    maxAge: "1y",
-  }),
-);
-// Hook up our application.
-app.use(
-  createRequestListener((request) =>
-    generateHTML(
-      request,
-      await fetchServer(request),
-      (routes as unknown as { bootstrapScript?: string })
-        .bootstrapScript,
-    ),
-  ),
-);
-
-app.listen(3000, () => {
-  console.log("Server listening on port 3000");
-});
-```
-
-#### `entry.browser.tsx`
-
-```tsx filename=src/entry.browser.tsx
-"use client-entry";
-
-import { startTransition, StrictMode } from "react";
-import { hydrateRoot } from "react-dom/client";
-import {
-  unstable_createCallServer as createCallServer,
-  unstable_getRSCStream as getRSCStream,
-  unstable_RSCHydratedRouter as RSCHydratedRouter,
-  type unstable_RSCPayload as RSCServerPayload,
-} from "react-router";
-import {
-  createFromReadableStream,
-  createTemporaryReferenceSet,
-  encodeReply,
-  setServerCallback,
-} from "react-server-dom-parcel/client";
-
-// Create and set the callServer function to support post-hydration server actions.
-setServerCallback(
-  createCallServer({
-    createFromReadableStream,
-    createTemporaryReferenceSet,
-    encodeReply,
-  }),
-);
-
-// Get and decode the initial server payload.
-createFromReadableStream(getRSCStream()).then(
-  (payload: RSCServerPayload) => {
-    startTransition(async () => {
-      const formState =
-        payload.type === "render"
-          ? await payload.formState
-          : undefined;
-
-      hydrateRoot(
-        document,
-        <StrictMode>
-          <RSCHydratedRouter
-            createFromReadableStream={
-              createFromReadableStream
-            }
-            payload={payload}
-          />
-        </StrictMode>,
-        {
-          formState,
-        },
-      );
-    });
-  },
-);
-```
-
 ### Vite
 
 See the [@vitejs/plugin-rsc docs][vite-plugin-rsc] for more information. You can also refer to our [Vite RSC Data Mode template][vite-rsc-template] to see a working version.
@@ -1104,7 +850,6 @@ createFromReadableStream<RSCServerPayload>(
 [route-module]: ../start/framework/route-module
 [framework-mode]: ../start/modes#framework
 [custom-framework]: ../start/data/custom
-[parcel-rsc-doc]: https://parceljs.org/recipes/rsc/
 [vite-plugin-rsc]: https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc
 [match-rsc-server-request]: ../api/rsc/matchRSCServerRequest
 [route-rsc-server-request]: ../api/rsc/routeRSCServerRequest
@@ -1115,7 +860,6 @@ createFromReadableStream<RSCServerPayload>(
 [express]: https://expressjs.com/
 [node-fetch-server]: https://www.npmjs.com/package/@remix-run/node-fetch-server
 [framework-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-framework-mode
-[parcel-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-data-mode-parcel
 [vite-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-data-mode-vite
 [node-request-listener]: https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener
 [hooks]: https://react.dev/reference/react/hooks

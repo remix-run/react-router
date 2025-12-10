@@ -10,6 +10,7 @@ import {
   Links,
 } from "react-router";
 import { Counter } from "../../counter";
+import type { loader } from "./root";
 
 export default function RootRoute({
   loaderData,

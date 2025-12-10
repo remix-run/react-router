@@ -1,8 +1,8 @@
-import { Link, Links, Outlet, ScrollRestoration } from "react-router";
+// import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 import { type MiddlewareFunction } from "react-router";
 
 import { Counter } from "../../counter";
-import { ErrorReporter, NavigationState } from "./root.client";
+// import { ErrorReporter, NavigationState } from "./root.client";
 import "./root.css";
 
 export {

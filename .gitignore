@@ -27,7 +27,6 @@ node_modules/
 
 .wireit
 .eslintcache
-.parcel-cache
 .tmp
 tsup.config.bundled_*.mjs
 build.utils.d.ts

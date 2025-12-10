@@ -49,7 +49,7 @@ import {
   UNSAFE_WithErrorBoundaryProps,
   // @ts-ignore There are no types before the tsup build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
-  // TSConfig, it breaks the Parcel build within this repo.
+  // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
 import type {
   Await as AwaitType,
