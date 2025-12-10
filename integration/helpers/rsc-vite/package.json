@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
-    "compression": "^1.8.0",
+    "compression": "^1.8.1",
     "cross-env": "^7.0.3",
     "express": "^4.21.2",
     "react": "^19.0.0",

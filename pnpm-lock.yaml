@@ -125,7 +125,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.0-canary-ec9cc003-20251208(eslint@8.57.0)
+        version: 7.1.0-canary-55480b4d-20251208(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -429,8 +429,8 @@ importers:
         specifier: 0.6.1
         version: 0.6.1
       compression:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -481,8 +481,8 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-serve
       compression:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -1329,8 +1329,8 @@ importers:
         specifier: workspace:*
         version: link:../react-router-node
       compression:
-        specifier: ^1.7.4
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       express:
         specifier: ^4.19.2
         version: 4.21.2
@@ -1338,8 +1338,8 @@ importers:
         specifier: 5.1.1
         version: 5.1.1
       morgan:
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.10.1
+        version: 1.10.1
       react-router:
         specifier: workspace:*
         version: link:../react-router
@@ -1348,14 +1348,14 @@ importers:
         version: 0.5.21
     devDependencies:
       '@types/compression':
-        specifier: ^1.7.0
-        version: 1.7.5
+        specifier: ^1.8.1
+        version: 1.8.1
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
       '@types/morgan':
-        specifier: ^1.9.2
-        version: 1.9.9
+        specifier: ^1.9.10
+        version: 1.9.10
       '@types/source-map-support':
         specifier: ^0.5.6
         version: 0.5.10
@@ -1418,8 +1418,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-node
       compression:
-        specifier: ^1.7.4
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       express:
         specifier: ^4.19.2
         version: 4.21.2
@@ -1427,8 +1427,8 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       morgan:
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.10.1
+        version: 1.10.1
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -1443,14 +1443,14 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/compression':
-        specifier: ^1.7.5
-        version: 1.7.5
+        specifier: ^1.8.1
+        version: 1.8.1
       '@types/express':
         specifier: ^4.17.20
         version: 4.17.21
       '@types/morgan':
-        specifier: ^1.9.9
-        version: 1.9.9
+        specifier: ^1.9.10
+        version: 1.9.10
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -1639,8 +1639,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-node
       compression:
-        specifier: ^1.7.4
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1651,8 +1651,8 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       morgan:
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.10.1
+        version: 1.10.1
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -1670,8 +1670,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-fs-routes
       '@types/compression':
-        specifier: ^1.7.5
-        version: 1.7.5
+        specifier: ^1.8.1
+        version: 1.8.1
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -1679,8 +1679,8 @@ importers:
         specifier: ^5.0.6
         version: 5.0.6
       '@types/morgan':
-        specifier: ^1.9.9
-        version: 1.9.9
+        specifier: ^1.9.10
+        version: 1.9.10
       '@types/node':
         specifier: ^20.0.0
         version: 20.11.30
@@ -1782,8 +1782,8 @@ importers:
         specifier: 0.6.1
         version: 0.6.1
       compression:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -1831,8 +1831,8 @@ importers:
         specifier: 0.6.1
         version: 0.6.1
       compression:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -4745,8 +4745,8 @@ packages:
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
 
-  '@types/compression@1.7.5':
-    resolution: {integrity: sha512-AAQvK5pxMpaT+nDvhHrsBhLSYG5yQdtkaJE1WYieSNY2mVFKAgmU4ks65rkZD5oqnGCFLyQpUr1CqI4DmUMyDg==}
+  '@types/compression@1.8.1':
+    resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -4865,8 +4865,8 @@ packages:
   '@types/minimist@1.2.2':
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
 
-  '@types/morgan@1.9.9':
-    resolution: {integrity: sha512-iRYSDKVaC6FkGSpEVVIvrRGw0DfJMiQzIn3qr2G5B3C//AWkulhXgaBd7tS9/J79GWSYMTHGs7PfI5b3Y8m+RQ==}
+  '@types/morgan@1.9.10':
+    resolution: {integrity: sha512-sS4A1zheMvsADRVfT0lYbJ4S9lmsey8Zo2F7cnbYjWHP67Q0AwMYuuzLlkIM2N8gAbb9cubhIVFwcIN2XyYCkA==}
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -5683,8 +5683,8 @@ packages:
     resolution: {integrity: sha512-AF3r7P5dWxL8MxyITRMlORQNaOA2IkAFaTr4k7BUumjPtRpGDTZpl0Pb1XCO6JeDCBdp126Cgs9sMxqSjgYyRg==}
     engines: {node: '>= 0.6'}
 
-  compression@1.8.0:
-    resolution: {integrity: sha512-k6WLKfunuqCYD3t6AsuPGvQWaKwuLLh2/xHNcX4qE+vIfDNXpSqnrhwA7O53R7WVQUnt8dVAIW+YHr7xTgOgGA==}
+  compression@1.8.1:
+    resolution: {integrity: sha512-9mAqGPHLakhCLeNyxPkK4xVo746zQ/czLH1Ky+vkitMnWfWZps8r0qXuwhwizagCRttsL4lfG4pIOvaWLpAP0w==}
     engines: {node: '>= 0.8.0'}
 
   concat-map@0.0.1:
@@ -6259,8 +6259,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.0-canary-ec9cc003-20251208:
-    resolution: {integrity: sha512-E8g3Nr8kAem8gyieCCbP8T0osLFOkTycOu2KdzQNWFHrMsdsZ5zH+jabrtPIoRtiNq2ZJNub28TbFKWo3dIc8w==}
+  eslint-plugin-react-hooks@7.1.0-canary-55480b4d-20251208:
+    resolution: {integrity: sha512-6aHVv9p+a7mLC/mW5YTaV5+gYrIJw5XTiGkEiACb5xnvbYpEToNwfwCpj4rUzIIOa6hQt+PPC7aHkuf6rmbDfQ==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -7890,8 +7890,8 @@ packages:
   modern-ahocorasick@1.0.1:
     resolution: {integrity: sha512-yoe+JbhTClckZ67b2itRtistFKf8yPYelHLc7e5xAwtNAXxM6wJTUx2C7QeVSJFDzKT7bCIFyBVybPMKvmB9AA==}
 
-  morgan@1.10.0:
-    resolution: {integrity: sha512-AbegBVI4sh6El+1gNwvD5YIck7nSA36weD7xvIxG4in80j/UoK8AEGaWnnz8v1GxonMCltmlNs5ZKbGvl9b1XQ==}
+  morgan@1.10.1:
+    resolution: {integrity: sha512-223dMRJtI/l25dJKWpgij2cMtywuG/WiUKXdvwfbhGKBhy1puASqXwFzmWZ7+K73vUPoR7SS2Qz2cI/g9MKw0A==}
     engines: {node: '>= 0.8.0'}
 
   mri@1.2.0:
@@ -8067,8 +8067,8 @@ packages:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
     engines: {node: '>= 0.8'}
 
-  on-headers@1.0.2:
-    resolution: {integrity: sha512-pZAE+FJLoyITytdqK0U5s+FIpjN0JP3OzFi/u8Rx+EV5/W+JTWGXG8xFzevE7AjBfDqHv/8vL8qQsIhHnqRkrA==}
+  on-headers@1.1.0:
+    resolution: {integrity: sha512-737ZY3yNnXy37FHkQxPzt4UZ2UWPWiCZWLvFZ4fu5cueciegX0zGPnrlY6bwRg4FdQOe9YU8MkmJwGhoMybl8A==}
     engines: {node: '>= 0.8'}
 
   once@1.4.0:
@@ -13042,9 +13042,10 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 22.14.0
 
-  '@types/compression@1.7.5':
+  '@types/compression@1.8.1':
     dependencies:
       '@types/express': 4.17.21
+      '@types/node': 22.14.0
 
   '@types/connect@3.4.38':
     dependencies:
@@ -13186,7 +13187,7 @@ snapshots:
 
   '@types/minimist@1.2.2': {}
 
-  '@types/morgan@1.9.9':
+  '@types/morgan@1.9.10':
     dependencies:
       '@types/node': 22.14.0
 
@@ -14313,13 +14314,13 @@ snapshots:
     dependencies:
       mime-db: 1.54.0
 
-  compression@1.8.0:
+  compression@1.8.1:
     dependencies:
       bytes: 3.1.2
       compressible: 2.0.18
       debug: 2.6.9
       negotiator: 0.6.4
-      on-headers: 1.0.2
+      on-headers: 1.1.0
       safe-buffer: 5.2.1
       vary: 1.1.2
     transitivePeerDependencies:
@@ -15060,7 +15061,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@7.1.0-canary-ec9cc003-20251208(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.1.0-canary-55480b4d-20251208(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
@@ -17402,13 +17403,13 @@ snapshots:
 
   modern-ahocorasick@1.0.1: {}
 
-  morgan@1.10.0:
+  morgan@1.10.1:
     dependencies:
       basic-auth: 2.0.1
       debug: 2.6.9
       depd: 2.0.0
       on-finished: 2.3.0
-      on-headers: 1.0.2
+      on-headers: 1.1.0
     transitivePeerDependencies:
       - supports-color
 
@@ -17601,7 +17602,7 @@ snapshots:
     dependencies:
       ee-first: 1.1.1
 
-  on-headers@1.0.2: {}
+  on-headers@1.1.0: {}
 
   once@1.4.0:
     dependencies:
