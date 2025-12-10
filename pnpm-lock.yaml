@@ -1354,8 +1354,8 @@ importers:
         specifier: ^4.17.9
         version: 4.17.21
       '@types/morgan':
-        specifier: ^1.9.2
-        version: 1.9.9
+        specifier: ^1.9.10
+        version: 1.9.10
       '@types/source-map-support':
         specifier: ^0.5.6
         version: 0.5.10
@@ -1449,8 +1449,8 @@ importers:
         specifier: ^4.17.20
         version: 4.17.21
       '@types/morgan':
-        specifier: ^1.9.9
-        version: 1.9.9
+        specifier: ^1.9.10
+        version: 1.9.10
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -1679,8 +1679,8 @@ importers:
         specifier: ^5.0.6
         version: 5.0.6
       '@types/morgan':
-        specifier: ^1.9.9
-        version: 1.9.9
+        specifier: ^1.9.10
+        version: 1.9.10
       '@types/node':
         specifier: ^20.0.0
         version: 20.11.30
@@ -4868,8 +4868,8 @@ packages:
   '@types/minimist@1.2.2':
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
 
-  '@types/morgan@1.9.9':
-    resolution: {integrity: sha512-iRYSDKVaC6FkGSpEVVIvrRGw0DfJMiQzIn3qr2G5B3C//AWkulhXgaBd7tS9/J79GWSYMTHGs7PfI5b3Y8m+RQ==}
+  '@types/morgan@1.9.10':
+    resolution: {integrity: sha512-sS4A1zheMvsADRVfT0lYbJ4S9lmsey8Zo2F7cnbYjWHP67Q0AwMYuuzLlkIM2N8gAbb9cubhIVFwcIN2XyYCkA==}
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -13194,7 +13194,7 @@ snapshots:
 
   '@types/minimist@1.2.2': {}
 
-  '@types/morgan@1.9.9':
+  '@types/morgan@1.9.10':
     dependencies:
       '@types/node': 22.14.0
 
