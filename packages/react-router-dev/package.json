@@ -48,6 +48,7 @@
     "build": {
       "command": "tsup",
       "files": [
+        "../../pnpm-workspace.yaml",
         "cli/**",
         "config/**",
         "module-sync-enabled/**",
