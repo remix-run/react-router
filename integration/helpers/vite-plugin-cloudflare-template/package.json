@@ -13,8 +13,8 @@
   "dependencies": {
     "express": "^4.19.2",
     "isbot": "^5.1.11",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*",
     "serialize-javascript": "^6.0.1"
   },

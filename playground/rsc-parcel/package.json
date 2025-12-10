@@ -40,8 +40,8 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "@parcel/runtime-rsc": "2.16.3",
     "express": "^4.21.2",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*",
     "react-server-dom-parcel": "^19.2.1"
   }

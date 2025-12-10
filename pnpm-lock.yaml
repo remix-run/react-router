@@ -6,6 +6,12 @@ settings:
 
 catalogs:
   default:
+    react:
+      specifier: ^19.2.1
+      version: 19.2.1
+    react-dom:
+      specifier: ^19.2.1
+      version: 19.2.1
     tsup:
       specifier: ^8.3.0
       version: 8.5.0
@@ -256,10 +262,10 @@ importers:
         specifier: ^3.6.2
         version: 3.6.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -310,10 +316,10 @@ importers:
         specifier: ^3.20250214.0
         version: 3.20250408.0
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -362,10 +368,10 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -438,10 +444,10 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -487,10 +493,10 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -569,10 +575,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -636,10 +642,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -703,10 +709,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -755,10 +761,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -825,10 +831,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -972,10 +978,10 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-test-renderer:
         specifier: ^19.1.0
@@ -1015,10 +1021,10 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1212,10 +1218,10 @@ importers:
         version: link:../react-router
     devDependencies:
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       tsup:
         specifier: 'catalog:'
@@ -1381,10 +1387,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1430,10 +1436,10 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1485,10 +1491,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1522,10 +1528,10 @@ importers:
         specifier: ^5
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1562,10 +1568,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1602,10 +1608,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1654,10 +1660,10 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1715,10 +1721,10 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1788,10 +1794,10 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1837,10 +1843,10 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1904,10 +1910,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1941,10 +1947,10 @@ importers:
         specifier: ^5
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
@@ -1978,10 +1984,10 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       react:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1
       react-dom:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
