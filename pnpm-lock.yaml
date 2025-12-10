@@ -12,6 +12,9 @@ catalogs:
     react-dom:
       specifier: ^19.2.1
       version: 19.2.1
+    react-server-dom-parcel:
+      specifier: ^19.2.1
+      version: 19.2.1
     tsup:
       specifier: ^8.3.0
       version: 8.5.0
@@ -151,7 +154,7 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       react-server-dom-parcel:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       remark-gfm:
         specifier: ^3.0.1
@@ -377,7 +380,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router
       react-server-dom-parcel:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
     devDependencies:
       '@parcel/packager-react-static':
@@ -1730,7 +1733,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router
       react-server-dom-parcel:
-        specifier: ^19.2.1
+        specifier: 'catalog:'
         version: 19.2.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
     devDependencies:
       '@biomejs/biome':

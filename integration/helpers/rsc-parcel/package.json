@@ -44,6 +44,6 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "workspace:*",
-    "react-server-dom-parcel": "^19.2.1"
+    "react-server-dom-parcel": "catalog:"
   }
 }
