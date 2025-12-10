@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
-    "compression": "^1.8.0",
+    "compression": "^1.8.1",
     "express": "^4.21.2",
     "react": "catalog:",
     "react-dom": "catalog:",
