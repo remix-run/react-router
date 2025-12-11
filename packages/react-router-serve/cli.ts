@@ -33,16 +33,32 @@ sourceMapSupport.install({
 
 run();
 
-type RSCServerBuild = {
-  fetch: (request: Request) => Response;
+type RSCServerBuildModule = {
+  default: {
+    fetch: (request: Request) => Response | Promise<Response>;
+  };
+  unstable_reactRouterServeConfig?: {
+    publicPath: string;
+    assetsBuildDirectory: string;
+  };
+};
+
+type NormalizedBuild = {
+  fetch?: (request: Request) => Response | Promise<Response>;
   publicPath: string;
   assetsBuildDirectory: string;
 };
 
-function isRSCServerBuild(
-  build: ServerBuild | RSCServerBuild,
-): build is RSCServerBuild {
-  return "fetch" in build && typeof build.fetch === "function";
+function isRSCServerBuild(build: unknown): build is RSCServerBuildModule {
+  return Boolean(
+    typeof build === "object" &&
+      build &&
+      "default" in build &&
+      typeof build.default === "object" &&
+      build.default &&
+      "fetch" in build.default &&
+      typeof build.default.fetch === "function",
+  );
 }
 
 function parseNumber(raw?: string) {
@@ -66,22 +82,23 @@ async function run() {
   let buildPath = path.resolve(buildPathArg);
 
   let buildModule = await import(url.pathToFileURL(buildPath).href);
-  let build: ServerBuild | RSCServerBuild;
+  let build: NormalizedBuild;
+  let isRSCBuild = false;
 
-  if (buildModule.default && typeof buildModule.default === "function") {
+  if ((isRSCBuild = isRSCServerBuild(buildModule))) {
     const config = {
       publicPath: "/",
       assetsBuildDirectory: "../client",
       ...(buildModule.unstable_reactRouterServeConfig || {}),
     };
     build = {
-      fetch: buildModule.default,
+      fetch: buildModule.default.fetch,
       publicPath: config.publicPath,
       assetsBuildDirectory: path.resolve(
         path.dirname(buildPath),
         config.assetsBuildDirectory,
       ),
-    } satisfies RSCServerBuild;
+    } satisfies NormalizedBuild;
   } else {
     build = buildModule as ServerBuild;
   }
@@ -106,7 +123,7 @@ async function run() {
   let app = express();
   app.disable("x-powered-by");
 
-  if (!isRSCServerBuild(build)) {
+  if (!isRSCBuild) {
     app.use(compression());
   }
 
@@ -121,13 +138,13 @@ async function run() {
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
-  if (isRSCServerBuild(build)) {
+  if (build.fetch) {
     app.all("*", createRequestListener(build.fetch));
   } else {
     app.all(
       "*",
       createRequestHandler({
-        build,
+        build: buildModule,
         mode: process.env.NODE_ENV,
       }),
     );

@@ -15,7 +15,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
-    "@vitejs/plugin-rsc": "0.4.30",
+    "@vitejs/plugin-rsc": "catalog:",
     "cross-env": "^7.0.3",
     "typescript": "catalog:",
     "vite": "^6.3.0"
@@ -24,8 +24,8 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.1",
     "express": "^4.21.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   }
 }

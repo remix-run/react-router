@@ -12,7 +12,11 @@
     "module": "ESNext",
     "target": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "@vitejs/plugin-rsc/types"],
+    "types": [
+      "vite/client",
+      "@vitejs/plugin-rsc/types",
+      "@react-router/dev/rsc-types"
+    ],
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"]
   }

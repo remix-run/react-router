@@ -13,8 +13,8 @@
   "dependencies": {
     "@react-router/node": "workspace:*",
     "isbot": "^5",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {

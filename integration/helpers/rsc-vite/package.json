@@ -10,7 +10,7 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@vitejs/plugin-rsc": "0.4.30",
+    "@vitejs/plugin-rsc": "catalog:",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
@@ -24,8 +24,9 @@
     "compression": "^1.8.1",
     "cross-env": "^7.0.3",
     "express": "^4.21.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router": "workspace:*"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "workspace:*",
+    "react-server-dom-webpack": "catalog:"
   }
 }

@@ -7,8 +7,8 @@
     "dev": "react-router dev",
     "dev:vite-middleware": "node start-vite-middleware.js",
     "build": "react-router build",
-    "start": "cross-env NODE_ENV=production node start.js",
-    "start:serve": "react-router-serve ./build/server/index.js",
+    "start:custom": "cross-env NODE_ENV=production node start.js",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
@@ -20,7 +20,7 @@
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-rsc": "0.4.30",
+    "@vitejs/plugin-rsc": "catalog:",
     "cross-env": "^7.0.3",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
@@ -31,8 +31,8 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.1",
     "express": "^4.21.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*",
     "remix-utils": "^8.7.0"
   }

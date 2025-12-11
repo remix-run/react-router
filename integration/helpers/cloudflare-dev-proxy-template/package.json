@@ -14,8 +14,8 @@
     "@react-router/cloudflare": "workspace:*",
     "isbot": "^4.1.0",
     "miniflare": "^3.20250214.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {

@@ -15,8 +15,8 @@
     "@react-router/serve": "workspace:*",
     "cross-env": "^7.0.3",
     "isbot": "^5.1.11",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {

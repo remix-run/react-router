@@ -7,8 +7,8 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router-dom": "^6.15.0"
   },
   "devDependencies": {
