@@ -135,6 +135,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               ...(hasDependency({ name: "react-router-dom", rootDirectory })
                 ? ["react-router-dom"]
                 : []),
+              ...(hasDependency({
+                name: "react-server-dom-webpack",
+                rootDirectory,
+              })
+                ? ["react-server-dom-webpack"]
+                : []),
             ],
           },
           optimizeDeps: {
@@ -153,9 +159,16 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react/jsx-runtime",
               "react/jsx-dev-runtime",
               "react-dom",
-              "react-server-dom-webpack",
+              ...(hasDependency({
+                name: "react-server-dom-webpack",
+                rootDirectory,
+              })
+                ? ["react-server-dom-webpack"]
+                : []),
+              "react-router",
               "react-router > cookie",
               "react-router > set-cookie-parser",
+              "react-router/dom",
               "react-router/internal/react-server-client",
             ],
           },
