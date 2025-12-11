@@ -42,6 +42,7 @@ jobs:
       os: "windows-latest"
       node_version: "[22]"
       browser: '["msedge"]'
+      timeout: 90
 
   integration-macos:
     name: "👀 Integration Test"

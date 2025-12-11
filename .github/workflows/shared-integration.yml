@@ -21,7 +21,7 @@ on:
       timeout:
         required: false
         type: number
-        default: 40
+        default: 45
 
 env:
   CI: true

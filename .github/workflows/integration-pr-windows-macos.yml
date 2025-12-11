@@ -42,7 +42,7 @@ jobs:
       os: "windows-latest"
       node_version: "[22]"
       browser: '["msedge"]'
-      timeout: 120
+      timeout: 90
 
   integration-webkit:
     name: "👀 Integration Test"
@@ -52,4 +52,3 @@ jobs:
       os: "macos-latest"
       node_version: "[22]"
       browser: '["webkit"]'
-      timeout: 50
