@@ -127,7 +127,7 @@
     "@react-router/serve": "workspace:^",
     "@vitejs/plugin-rsc": "catalog:",
     "react-router": "workspace:^",
-    "react-server-dom-webpack": "*",
+    "react-server-dom-webpack": "catalog:",
     "typescript": "^5.1.0",
     "vite": "^5.1.0 || ^6.0.0 || ^7.0.0",
     "wrangler": "^3.28.2 || ^4.0.0"

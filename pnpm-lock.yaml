@@ -15,6 +15,9 @@ catalogs:
     react-dom:
       specifier: ^19.2.2
       version: 19.2.2
+    react-server-dom-webpack:
+      specifier: ^19.2.2
+      version: 19.2.2
     tsup:
       specifier: ^8.3.0
       version: 8.5.0
@@ -1072,7 +1075,7 @@ importers:
         specifier: ^0.14.0
         version: 0.14.2
       react-server-dom-webpack:
-        specifier: '*'
+        specifier: 'catalog:'
         version: 19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
       semver:
         specifier: ^7.3.7
