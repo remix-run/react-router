@@ -110,7 +110,7 @@
     "@types/node": "^20.0.0",
     "@types/npmcli__package-json": "^4.0.0",
     "@types/semver": "^7.7.0",
-    "@vitejs/plugin-rsc": "0.4.30",
+    "@vitejs/plugin-rsc": "catalog:",
     "esbuild-register": "^3.6.0",
     "execa": "5.1.1",
     "express": "^4.19.2",
@@ -124,7 +124,7 @@
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",
-    "@vitejs/plugin-rsc": "*",
+    "@vitejs/plugin-rsc": "catalog:",
     "react-router": "workspace:^",
     "react-server-dom-webpack": "catalog:",
     "typescript": "^5.1.0",

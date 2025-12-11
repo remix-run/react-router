@@ -123,11 +123,15 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
               "react",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
               "react-dom",
+              "react-dom/client",
               // Avoid router duplicates since mismatching routers cause `Error:
               // You must render this element inside a <Remix> element`.
               "react-router",
               "react-router/dom",
+              "react-router/internal/react-server-client",
               ...(hasDependency({ name: "react-router-dom", rootDirectory })
                 ? ["react-router-dom"]
                 : []),
@@ -149,11 +153,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react/jsx-runtime",
               "react/jsx-dev-runtime",
               "react-dom",
-              "react-dom/client",
-              "react-router",
+              "react-server-dom-webpack",
               "react-router > cookie",
               "react-router > set-cookie-parser",
-              "react-router/dom",
               "react-router/internal/react-server-client",
             ],
           },
