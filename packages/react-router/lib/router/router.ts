@@ -3042,6 +3042,32 @@ export function createRouter(init: RouterInit): Router {
       return dataResults;
     }
 
+    // Stub errors where needed if they skipped returning data for routes
+    // above a route which returned an error.  This is a problem if we don't
+    // already have data (or errors) for the ancestor route because we won't be
+    // able to render through that route in order to get down to the actual error
+    // returned on the descendant route
+    if (!isMutationMethod(request.method)) {
+      for (let match of matches) {
+        if (results[match.route.id]?.type === ResultType.error) {
+          break;
+        }
+        if (
+          !results.hasOwnProperty(match.route.id) &&
+          !state.loaderData.hasOwnProperty(match.route.id) &&
+          (!state.errors || !state.errors.hasOwnProperty(match.route.id)) &&
+          match.shouldCallHandler()
+        ) {
+          results[match.route.id] = {
+            type: ResultType.error,
+            result: new Error(
+              `No result returned from dataStrategy for route ${match.route.id}`,
+            ),
+          };
+        }
+      }
+    }
+
     for (let [routeId, result] of Object.entries(results)) {
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
