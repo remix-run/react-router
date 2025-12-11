@@ -15,9 +15,6 @@ catalogs:
     react-dom:
       specifier: ^19.2.2
       version: 19.2.2
-    react-server-dom-webpack:
-      specifier: ^19.2.2
-      version: 19.2.2
     tsup:
       specifier: ^8.3.0
       version: 8.5.0
@@ -29,14 +26,14 @@ catalogs:
       version: 0.14.9
   react-canary:
     react:
-      specifier: canary
-      version: 19.3.0-canary-80cb7a99-20251211
+      specifier: ^19.2.2
+      version: 19.2.2
     react-dom:
-      specifier: canary
-      version: 19.3.0-canary-80cb7a99-20251211
+      specifier: ^19.2.2
+      version: 19.2.2
     react-server-dom-webpack:
-      specifier: canary
-      version: 19.3.0-canary-80cb7a99-20251211
+      specifier: ^19.2.2
+      version: 19.2.2
 
 overrides:
   '@types/react': ^18.0.27
@@ -382,16 +379,16 @@ importers:
         version: 4.21.2
       react:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211
+        version: 19.2.2
       react-dom:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211)
+        version: 19.2.2(react@19.2.2)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
       react-server-dom-webpack:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0)
+        version: 19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0)
     devDependencies:
       '@types/express':
         specifier: ^5.0.0
@@ -410,7 +407,7 @@ importers:
         version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0))(react@19.3.0-canary-80cb7a99-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.2.2(react@19.2.2))(react-server-dom-webpack@19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0))(react@19.2.2)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       typescript:
         specifier: 'catalog:'
         version: 5.4.5
@@ -434,16 +431,16 @@ importers:
         version: 4.21.2
       react:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211
+        version: 19.2.2
       react-dom:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211)
+        version: 19.2.2(react@19.2.2)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
       react-server-dom-webpack:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0)
+        version: 19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0)
     devDependencies:
       '@mdx-js/rollup':
         specifier: ^3.1.0
@@ -477,7 +474,7 @@ importers:
         version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0))(react@19.3.0-canary-80cb7a99-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.2.2(react@19.2.2))(react-server-dom-webpack@19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0))(react@19.2.2)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1075,10 +1072,8 @@ importers:
         specifier: ^0.14.0
         version: 0.14.2
       react-server-dom-webpack:
-        specifier: 'catalog:'
-        version: 19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
         specifier: '*'
-        version: 19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
+        version: 19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
       semver:
         specifier: ^7.3.7
         version: 7.7.2
@@ -1131,7 +1126,6 @@ importers:
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
         version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
-        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
@@ -1674,16 +1668,16 @@ importers:
         version: 4.21.2
       react:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211
+        version: 19.2.2
       react-dom:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211)
+        version: 19.2.2(react@19.2.2)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
       react-server-dom-webpack:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0)
+        version: 19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0)
     devDependencies:
       '@types/express':
         specifier: ^5.0.0
@@ -1702,7 +1696,7 @@ importers:
         version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0))(react@19.3.0-canary-80cb7a99-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.2.2(react@19.2.2))(react-server-dom-webpack@19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0))(react@19.2.2)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1726,19 +1720,19 @@ importers:
         version: 4.21.2
       react:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211
+        version: 19.2.2
       react-dom:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211)
+        version: 19.2.2(react@19.2.2)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
       react-server-dom-webpack:
         specifier: catalog:react-canary
-        version: 19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0)
+        version: 19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0)
       remix-utils:
         specifier: ^8.7.0
-        version: 8.7.0(react-router@packages+react-router)(react@19.3.0-canary-80cb7a99-20251211)(zod@3.24.2)
+        version: 8.7.0(react-router@packages+react-router)(react@19.2.2)(zod@3.24.2)
     devDependencies:
       '@mdx-js/rollup':
         specifier: ^3.1.0
@@ -1766,7 +1760,7 @@ importers:
         version: 18.2.7
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0))(react@19.3.0-canary-80cb7a99-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.2.2(react@19.2.2))(react-server-dom-webpack@19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0))(react@19.2.2)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -7740,11 +7734,6 @@ packages:
     peerDependencies:
       react: ^19.2.2
 
-  react-dom@19.3.0-canary-80cb7a99-20251211:
-    resolution: {integrity: sha512-fluLI43jQfTd8QsmF1XzShWrdSrjA+iHtbGZR+ICGsFUcsEFDNiA1PPIDxfi72ERjm/JY05CRzmF4OhUq9tRTg==}
-    peerDependencies:
-      react: 19.3.0-canary-80cb7a99-20251211
-
   react-dom@19.3.0-canary-d763f313-20251210:
     resolution: {integrity: sha512-loJ3Y0TFRxwbNl+YA8ra1F0gDYIzJXXAVfe6hPwv8SKkV8eTWBP449oy5CqupcxjDy+4o730euIBTOZDTIQKvQ==}
     peerDependencies:
@@ -7764,17 +7753,10 @@ packages:
   react-server-dom-webpack@19.2.2:
     resolution: {integrity: sha512-E/4xJS8dS6b6sEXio0WoNrDY2d7FjjfEwan547ew4QSeefH7OSB+I7tgBCDV//TL+UUPNR/Fa5Qy3qiywOgdTg==}
     engines: {node: '>=0.10.0'}
+    deprecated: High Security Vulnerability in React Server Components
     peerDependencies:
       react: ^19.2.2
       react-dom: ^19.2.2
-      webpack: ^5.59.0
-
-  react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211:
-    resolution: {integrity: sha512-Kul1OMaHn326FiFTelo7ZXIe2IWfJFEmwHAIh9rNyamv8CQyGwrSWMtYp2J5/eHVt6fxu/OIDeMR3t2rPQ3n6A==}
-    engines: {node: '>=0.10.0'}
-    peerDependencies:
-      react: 19.3.0-canary-80cb7a99-20251211
-      react-dom: 19.3.0-canary-80cb7a99-20251211
       webpack: ^5.59.0
 
   react-test-renderer@19.1.0:
@@ -7784,10 +7766,6 @@ packages:
 
   react@19.2.2:
     resolution: {integrity: sha512-BdOGOY8OKRBcgoDkwqA8Q5XvOIhoNx/Sh6BnGJlet2Abt0X5BK0BDrqGyQgLhAVjD2nAg5f6o01u/OPUhG022Q==}
-    engines: {node: '>=0.10.0'}
-
-  react@19.3.0-canary-80cb7a99-20251211:
-    resolution: {integrity: sha512-i11qdPc0ljxorCofZfojY+5RC2H9pOm9A3bJ5La9bAfilHW+I1bNgFHRvbWWtcpGDt8PUhDEZutlerJ+FCVGzg==}
     engines: {node: '>=0.10.0'}
 
   react@19.3.0-canary-d763f313-20251210:
@@ -8132,9 +8110,6 @@ packages:
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
-  scheduler@0.28.0-canary-80cb7a99-20251211:
-    resolution: {integrity: sha512-MbZ4090tWiRNAXHQM0uMHvuoWyafQD1WnICv7yaDILXPh89m++lo/Y+KnH/aOgODt11P6O2FFPXyRRfELypykw==}
-
   scheduler@0.28.0-canary-d763f313-20251210:
     resolution: {integrity: sha512-Wvi6OlrTVL/PVxHeZmC+pjwfP68DC99Tsnq6jQiBozXlexKz+gcPtAAe6LhJvyS2A5U1TLBO4zxfJHkIKzxtEw==}
 
@@ -8294,7 +8269,6 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
-    deprecated: The work that was done in this beta branch won't be included in future versions
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
@@ -12109,57 +12083,37 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0))(react@19.3.0-canary-80cb7a99-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
+  '@vitejs/plugin-rsc@0.5.6(react-dom@19.2.2(react@19.2.2))(react-server-dom-webpack@19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0))(react@19.2.2)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@remix-run/node-fetch-server': 0.12.0
       es-module-lexer: 1.7.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
       periscopic: 4.0.2
-      react: 19.3.0-canary-80cb7a99-20251211
-      react-dom: 19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211)
+      react: 19.2.2
+      react-dom: 19.2.2(react@19.2.2)
+      strip-literal: 3.1.0
+      turbo-stream: 3.1.0
+      vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
+      vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+    optionalDependencies:
+      react-server-dom-webpack: 19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0)
+
+  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
+    dependencies:
+      '@remix-run/node-fetch-server': 0.12.0
+      es-module-lexer: 1.7.0
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+      periscopic: 4.0.2
+      react: 19.3.0-canary-d763f313-20251210
+      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
       strip-literal: 3.1.0
       turbo-stream: 3.1.0
       vite: 6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
     optionalDependencies:
-      react-server-dom-webpack: 19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0)
-      react-server-dom-webpack: 19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
-
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
-    dependencies:
-      '@remix-run/node-fetch-server': 0.12.0
-      es-module-lexer: 1.7.0
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-      periscopic: 4.0.2
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
-      strip-literal: 3.1.0
-      turbo-stream: 3.1.0
-      vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
-      vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
-    optionalDependencies:
       react-server-dom-webpack: 19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
-      react-server-dom-webpack: 19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0)
-
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
-    dependencies:
-      '@remix-run/node-fetch-server': 0.12.0
-      es-module-lexer: 1.7.0
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-      periscopic: 4.0.2
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
-      strip-literal: 3.1.0
-      turbo-stream: 3.1.0
-      vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
-      vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
-    optionalDependencies:
-      react-server-dom-webpack: 19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0)
 
   '@web3-storage/multipart-parser@1.0.0': {}
 
@@ -16507,11 +16461,6 @@ snapshots:
       react: 19.2.2
       scheduler: 0.27.0
 
-  react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211):
-    dependencies:
-      react: 19.3.0-canary-80cb7a99-20251211
-      scheduler: 0.28.0-canary-80cb7a99-20251211
-
   react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210):
     dependencies:
       react: 19.3.0-canary-d763f313-20251210
@@ -16523,33 +16472,22 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
+  react-server-dom-webpack@19.2.2(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(webpack@5.103.0):
+    dependencies:
+      acorn-loose: 8.5.2
+      neo-async: 2.6.2
+      react: 19.2.2
+      react-dom: 19.2.2(react@19.2.2)
+      webpack: 5.103.0
+      webpack-sources: 3.3.3
+
   react-server-dom-webpack@19.2.2(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)):
-  react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
       react: 19.3.0-canary-d763f313-20251210
       react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
       webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)
-      webpack-sources: 3.3.3
-
-  react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0):
-    dependencies:
-      acorn-loose: 8.5.2
-      neo-async: 2.6.2
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
-      webpack: 5.103.0
-      webpack-sources: 3.3.3
-    optional: true
-
-  react-server-dom-webpack@19.3.0-canary-80cb7a99-20251211(react-dom@19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211))(react@19.3.0-canary-80cb7a99-20251211)(webpack@5.103.0):
-    dependencies:
-      acorn-loose: 8.5.2
-      neo-async: 2.6.2
-      react: 19.3.0-canary-80cb7a99-20251211
-      react-dom: 19.3.0-canary-80cb7a99-20251211(react@19.3.0-canary-80cb7a99-20251211)
-      webpack: 5.103.0
       webpack-sources: 3.3.3
 
   react-test-renderer@19.1.0(react@19.2.2):
@@ -16559,8 +16497,6 @@ snapshots:
       scheduler: 0.26.0
 
   react@19.2.2: {}
-
-  react@19.3.0-canary-80cb7a99-20251211: {}
 
   react@19.3.0-canary-d763f313-20251210: {}
 
@@ -16724,11 +16660,11 @@ snapshots:
       mdast-util-to-markdown: 1.5.0
       unified: 10.1.2
 
-  remix-utils@8.7.0(react-router@packages+react-router)(react@19.3.0-canary-80cb7a99-20251211)(zod@3.24.2):
+  remix-utils@8.7.0(react-router@packages+react-router)(react@19.2.2)(zod@3.24.2):
     dependencies:
       type-fest: 4.40.1
     optionalDependencies:
-      react: 19.3.0-canary-80cb7a99-20251211
+      react: 19.2.2
       react-router: link:packages/react-router
       zod: 3.24.2
 
@@ -16931,8 +16867,6 @@ snapshots:
   scheduler@0.26.0: {}
 
   scheduler@0.27.0: {}
-
-  scheduler@0.28.0-canary-80cb7a99-20251211: {}
 
   scheduler@0.28.0-canary-d763f313-20251210: {}
 
