@@ -42,8 +42,8 @@
   },
   "packageManager": "pnpm@9.10.0",
   "resolutions": {
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-test-renderer": "^18.3.1",
     "jsdom": "22.1.0"
   },
@@ -59,8 +59,8 @@
     "@remix-run/changelog-github": "^0.0.5",
     "@types/jest": "^29.5.4",
     "@types/jsdom": "^21.1.1",
-    "@types/react": "^19.0.12",
-    "@types/react-dom": "^19.0.4",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-test-renderer": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",

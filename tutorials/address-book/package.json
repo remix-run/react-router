@@ -21,8 +21,8 @@
   "devDependencies": {
     "@react-router/dev": "*",
     "@types/node": "^20",
-    "@types/react": "^19.0.1",
-    "@types/react-dom": "^19.0.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "cross-env": "^7.0.3",
     "typescript": "catalog:",
     "vite": "^5.4.11"
