@@ -1,4 +1,4 @@
-import type * as Vite from "vite";
+import * as Vite from "vite";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
 import * as babel from "@babel/core";
@@ -169,6 +169,24 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                 rollupOptions: {
                   input: {
                     index: entries.client,
+                  },
+                  output: {
+                    manualChunks(id) {
+                      const normalized = Vite.normalizePath(id);
+                      if (
+                        normalized.includes("node_modules/react/") ||
+                        normalized.includes("node_modules/react-dom/") ||
+                        normalized.includes(
+                          "node_modules/react-server-dom-webpack/",
+                        ) ||
+                        normalized.includes("node_modules/@vitejs/plugin-rsc/")
+                      ) {
+                        return "react";
+                      }
+                      if (normalized.includes("node_modules/react-router/")) {
+                        return "router";
+                      }
+                    },
                   },
                 },
                 outDir: join(config.buildDirectory, "client"),
