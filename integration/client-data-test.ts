@@ -1233,7 +1233,6 @@ test.describe("Client Data", () => {
 
             test("bubbled server loader errors are persisted for hydrating routes", async ({
               page,
-              browserName,
             }) => {
               // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
               let _consoleError = console.error;
@@ -1278,12 +1277,7 @@ test.describe("Client Data", () => {
               );
               expect(html).toMatch("Child Server Error");
               expect(html).not.toMatch("Should not see me");
-              if (browserName === "firefox") {
-                // firefox logs a bunch of React 19 performance track stuff as well
-                expect(logs).toContain("running parent client loader");
-              } else {
-                expect(logs).toEqual(["running parent client loader"]);
-              }
+              expect(logs).toEqual(["running parent client loader"]);
               console.error = _consoleError;
             });
 

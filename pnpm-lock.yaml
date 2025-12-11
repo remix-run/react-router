@@ -10,14 +10,14 @@ catalogs:
       specifier: ~0.5.6
       version: 0.5.6
     react:
-      specifier: canary
-      version: 19.3.0-canary-d763f313-20251210
+      specifier: ^19.2.1
+      version: 19.2.1
     react-dom:
-      specifier: canary
-      version: 19.3.0-canary-d763f313-20251210
+      specifier: ^19.2.1
+      version: 19.2.1
     react-server-dom-webpack:
-      specifier: canary
-      version: 19.3.0-canary-d763f313-20251210
+      specifier: ^19.2.1
+      version: 19.2.1
     tsup:
       specifier: ^8.3.0
       version: 8.5.0
@@ -27,6 +27,16 @@ catalogs:
     wireit:
       specifier: 0.14.9
       version: 0.14.9
+  react-canary:
+    react:
+      specifier: canary
+      version: 19.3.0-canary-37bcdcde-20251211
+    react-dom:
+      specifier: canary
+      version: 19.3.0-canary-37bcdcde-20251211
+    react-server-dom-webpack:
+      specifier: canary
+      version: 19.3.0-canary-37bcdcde-20251211
 
 overrides:
   '@types/react': ^18.2.18
@@ -266,10 +276,10 @@ importers:
         version: 3.6.2
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../packages/react-router
@@ -320,10 +330,10 @@ importers:
         version: 3.20250408.0
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
@@ -371,17 +381,17 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211
       react-dom:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
       react-server-dom-webpack:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0)
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0)
     devDependencies:
       '@types/express':
         specifier: ^5.0.0
@@ -400,7 +410,7 @@ importers:
         version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0))(react@19.3.0-canary-37bcdcde-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       typescript:
         specifier: 'catalog:'
         version: 5.4.5
@@ -423,17 +433,17 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211
       react-dom:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
       react-server-dom-webpack:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0)
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0)
     devDependencies:
       '@mdx-js/rollup':
         specifier: ^3.1.0
@@ -467,7 +477,7 @@ importers:
         version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0))(react@19.3.0-canary-37bcdcde-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -509,10 +519,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
@@ -576,10 +586,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
@@ -643,10 +653,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
@@ -695,10 +705,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
@@ -765,10 +775,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
@@ -897,7 +907,7 @@ importers:
         version: 6.6.3
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.0)
@@ -912,13 +922,13 @@ importers:
         version: 4.0.0
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-test-renderer:
         specifier: ^19.1.0
-        version: 19.1.0(react@19.3.0-canary-d763f313-20251210)
+        version: 19.1.0(react@19.2.1)
       tsup:
         specifier: 'catalog:'
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
@@ -955,10 +965,10 @@ importers:
         version: 4.0.1
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../react-router
@@ -1066,7 +1076,7 @@ importers:
         version: 0.14.2
       react-server-dom-webpack:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
+        version: 19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
       semver:
         specifier: ^7.3.7
         version: 7.7.2
@@ -1118,7 +1128,7 @@ importers:
         version: 7.7.0
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
@@ -1158,10 +1168,10 @@ importers:
     devDependencies:
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       tsup:
         specifier: 'catalog:'
         version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
@@ -1327,10 +1337,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1376,10 +1386,10 @@ importers:
         version: 1.10.1
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1431,10 +1441,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1468,10 +1478,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1508,10 +1518,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1548,10 +1558,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1600,10 +1610,10 @@ importers:
         version: 1.10.1
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1660,14 +1670,17 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211
       react-dom:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
+      react-server-dom-webpack:
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0)
     devDependencies:
       '@types/express':
         specifier: ^5.0.0
@@ -1686,7 +1699,7 @@ importers:
         version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0))(react@19.3.0-canary-37bcdcde-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1709,17 +1722,20 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211
       react-dom:
-        specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
+      react-server-dom-webpack:
+        specifier: catalog:react-canary
+        version: 19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0)
       remix-utils:
         specifier: ^8.7.0
-        version: 8.7.0(react-router@packages+react-router)(react@19.3.0-canary-d763f313-20251210)(zod@3.24.2)
+        version: 8.7.0(react-router@packages+react-router)(react@19.3.0-canary-37bcdcde-20251211)(zod@3.24.2)
     devDependencies:
       '@mdx-js/rollup':
         specifier: ^3.1.0
@@ -1747,7 +1763,7 @@ importers:
         version: 18.2.7
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.6(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0))(react@19.3.0-canary-37bcdcde-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1777,10 +1793,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1814,10 +1830,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -1851,10 +1867,10 @@ importers:
         version: 5.1.11
       react:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210
+        version: 19.2.1
       react-dom:
         specifier: 'catalog:'
-        version: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+        version: 19.2.1(react@19.2.1)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
@@ -7733,6 +7749,16 @@ packages:
     resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
     engines: {node: '>= 0.8'}
 
+  react-dom@19.2.1:
+    resolution: {integrity: sha512-ibrK8llX2a4eOskq1mXKu/TGZj9qzomO+sNfO98M6d9zIPOEhlBkMkBUBLd1vgS0gQsLDBzA+8jJBVXDnfHmJg==}
+    peerDependencies:
+      react: ^19.2.1
+
+  react-dom@19.3.0-canary-37bcdcde-20251211:
+    resolution: {integrity: sha512-teR9xHFUBj0gTkj3cvLOE9LHGBmR2iUX1HgLKAviPMwEujzvtCthPbn/9UsTqXL+6XTWhSJ6s50Q3Vw/hkcoBg==}
+    peerDependencies:
+      react: 19.3.0-canary-37bcdcde-20251211
+
   react-dom@19.3.0-canary-d763f313-20251210:
     resolution: {integrity: sha512-loJ3Y0TFRxwbNl+YA8ra1F0gDYIzJXXAVfe6hPwv8SKkV8eTWBP449oy5CqupcxjDy+4o730euIBTOZDTIQKvQ==}
     peerDependencies:
@@ -7749,18 +7775,34 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
-  react-server-dom-webpack@19.3.0-canary-d763f313-20251210:
-    resolution: {integrity: sha512-jJnCqAPoFSyHimvA2MpJbcNFFVUPI6Q2XEHeXMQPLwjszZeiWbMHvLmhDw2xwnhqeIXasJ1W9ikGfP1LYtWmDA==}
+  react-server-dom-webpack@19.2.1:
+    resolution: {integrity: sha512-6z3FuEtZ7wVWyPYRhKKRo4TF7IyQ7XrQZRW1fTjzK2mLVmcv7xJtoANSixaUJ+EFjCh2ekNOaBSoI9spiMSnNA==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210
+      react: ^19.2.1
+      react-dom: ^19.2.1
+      webpack: ^5.59.0
+
+  react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211:
+    resolution: {integrity: sha512-byk5F7uE/foJVvr/lvnKCwJ/bmo5ra3nPIMk3Y8gNLrfqDRB8vdPerN0rhSn+IJ3gee7eMzT65fNBFB3a4reRg==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: 19.3.0-canary-37bcdcde-20251211
+      react-dom: 19.3.0-canary-37bcdcde-20251211
       webpack: ^5.59.0
 
   react-test-renderer@19.1.0:
     resolution: {integrity: sha512-jXkSl3CpvPYEF+p/eGDLB4sPoDX8pKkYvRl9+rR8HxLY0X04vW7hCm1/0zHoUSjPZ3bDa+wXWNTDVIw/R8aDVw==}
     peerDependencies:
       react: ^19.1.0
+
+  react@19.2.1:
+    resolution: {integrity: sha512-DGrYcCWK7tvYMnWh79yrPHt+vdx9tY+1gPZa7nJQtO/p8bLTDaHp4dzwEhQB7pZ4Xe3ok4XKuEPrVuc+wlpkmw==}
+    engines: {node: '>=0.10.0'}
+
+  react@19.3.0-canary-37bcdcde-20251211:
+    resolution: {integrity: sha512-Yg0lMPALA3fvkjs0fLbgH9DZY/tiYH6TOLEZzocEMCustV7bLWix9Bo+4DaEr4CdLizbtiXglK9+e/i4zKmrfg==}
+    engines: {node: '>=0.10.0'}
 
   react@19.3.0-canary-d763f313-20251210:
     resolution: {integrity: sha512-XOiCIlc4XiIkKMnnZ8O6Z7yX3Ou1/Ix5MEZG0rPduJPX6pqNZaY679pKlJVUHE4qyqPdYHuwECDerI+jkfeHAQ==}
@@ -8100,6 +8142,12 @@ packages:
 
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
+
+  scheduler@0.27.0:
+    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+
+  scheduler@0.28.0-canary-37bcdcde-20251211:
+    resolution: {integrity: sha512-ALqQpNZmHwt0HX19DJEZ4nZI9RffhXKANWbiC2ytj+zuzPBvuD5dj7xJlYmcqoR8DinwCI5o67We9VnZX0nyLQ==}
 
   scheduler@0.28.0-canary-d763f313-20251210:
     resolution: {integrity: sha512-Wvi6OlrTVL/PVxHeZmC+pjwfP68DC99Tsnq6jQiBozXlexKz+gcPtAAe6LhJvyS2A5U1TLBO4zxfJHkIKzxtEw==}
@@ -11416,12 +11464,12 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@babel/runtime': 7.24.1
       '@testing-library/dom': 10.4.0
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
     optionalDependencies:
       '@types/react': 18.2.18
       '@types/react-dom': 18.2.7
@@ -12081,7 +12129,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
+  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0))(react@19.3.0-canary-37bcdcde-20251211)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
+    dependencies:
+      '@remix-run/node-fetch-server': 0.12.0
+      es-module-lexer: 1.7.0
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+      periscopic: 4.0.2
+      react: 19.3.0-canary-37bcdcde-20251211
+      react-dom: 19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211)
+      strip-literal: 3.1.0
+      turbo-stream: 3.1.0
+      vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
+      vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+    optionalDependencies:
+      react-server-dom-webpack: 19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0)
+
+  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@remix-run/node-fetch-server': 0.12.0
       es-module-lexer: 1.7.0
@@ -12095,23 +12159,7 @@ snapshots:
       vite: 6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
     optionalDependencies:
-      react-server-dom-webpack: 19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
-
-  '@vitejs/plugin-rsc@0.5.6(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
-    dependencies:
-      '@remix-run/node-fetch-server': 0.12.0
-      es-module-lexer: 1.7.0
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-      periscopic: 4.0.2
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
-      strip-literal: 3.1.0
-      turbo-stream: 3.1.0
-      vite: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
-      vitefu: 1.1.1(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
-    optionalDependencies:
-      react-server-dom-webpack: 19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0)
+      react-server-dom-webpack: 19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
 
   '@web3-storage/multipart-parser@1.0.0': {}
 
@@ -16471,6 +16519,16 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
+  react-dom@19.2.1(react@19.2.1):
+    dependencies:
+      react: 19.2.1
+      scheduler: 0.27.0
+
+  react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211):
+    dependencies:
+      react: 19.3.0-canary-37bcdcde-20251211
+      scheduler: 0.28.0-canary-37bcdcde-20251211
+
   react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210):
     dependencies:
       react: 19.3.0-canary-d763f313-20251210
@@ -16482,7 +16540,7 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
-  react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)):
+  react-server-dom-webpack@19.2.1(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
@@ -16491,20 +16549,24 @@ snapshots:
       webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)
       webpack-sources: 3.3.3
 
-  react-server-dom-webpack@19.3.0-canary-d763f313-20251210(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0):
+  react-server-dom-webpack@19.3.0-canary-37bcdcde-20251211(react-dom@19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211))(react@19.3.0-canary-37bcdcde-20251211)(webpack@5.103.0):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
-      react: 19.3.0-canary-d763f313-20251210
-      react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
+      react: 19.3.0-canary-37bcdcde-20251211
+      react-dom: 19.3.0-canary-37bcdcde-20251211(react@19.3.0-canary-37bcdcde-20251211)
       webpack: 5.103.0
       webpack-sources: 3.3.3
 
-  react-test-renderer@19.1.0(react@19.3.0-canary-d763f313-20251210):
+  react-test-renderer@19.1.0(react@19.2.1):
     dependencies:
-      react: 19.3.0-canary-d763f313-20251210
+      react: 19.2.1
       react-is: 19.1.0
       scheduler: 0.26.0
+
+  react@19.2.1: {}
+
+  react@19.3.0-canary-37bcdcde-20251211: {}
 
   react@19.3.0-canary-d763f313-20251210: {}
 
@@ -16668,11 +16730,11 @@ snapshots:
       mdast-util-to-markdown: 1.5.0
       unified: 10.1.2
 
-  remix-utils@8.7.0(react-router@packages+react-router)(react@19.3.0-canary-d763f313-20251210)(zod@3.24.2):
+  remix-utils@8.7.0(react-router@packages+react-router)(react@19.3.0-canary-37bcdcde-20251211)(zod@3.24.2):
     dependencies:
       type-fest: 4.40.1
     optionalDependencies:
-      react: 19.3.0-canary-d763f313-20251210
+      react: 19.3.0-canary-37bcdcde-20251211
       react-router: link:packages/react-router
       zod: 3.24.2
 
@@ -16873,6 +16935,10 @@ snapshots:
       xmlchars: 2.2.0
 
   scheduler@0.26.0: {}
+
+  scheduler@0.27.0: {}
+
+  scheduler@0.28.0-canary-37bcdcde-20251211: {}
 
   scheduler@0.28.0-canary-d763f313-20251210: {}
 

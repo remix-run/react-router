@@ -24,9 +24,9 @@
     "compression": "^1.8.1",
     "cross-env": "^7.0.3",
     "express": "^4.21.2",
-    "react": "catalog:",
-    "react-dom": "catalog:",
+    "react": "catalog:react-canary",
+    "react-dom": "catalog:react-canary",
     "react-router": "workspace:*",
-    "react-server-dom-webpack": "catalog:"
+    "react-server-dom-webpack": "catalog:react-canary"
   }
 }
