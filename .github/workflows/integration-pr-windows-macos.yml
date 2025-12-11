@@ -1,6 +1,7 @@
 name: PR (Full)
 
-# PRs touching react-router-dev will also run on Windows and OSX
+# PRs touching @react-router/dev will also run on Ubuntu/Firefox, Windows/Edge and
+# OSX/WebKit as well as an Ubuntu/Chromium run on  Node 20.18.
 
 on:
   pull_request:
@@ -15,6 +16,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  integration-chromium:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "[20.18]"
+      browser: '["chromium"]'
+
   integration-firefox:
     name: "👀 Integration Test"
     if: github.repository == 'remix-run/react-router'
@@ -32,7 +42,7 @@ jobs:
       os: "windows-latest"
       node_version: "[22]"
       browser: '["msedge"]'
-      timeout: 120
+      timeout: 90
 
   integration-webkit:
     name: "👀 Integration Test"
@@ -42,4 +52,3 @@ jobs:
       os: "macos-latest"
       node_version: "[22]"
       browser: '["webkit"]'
-      timeout: 40

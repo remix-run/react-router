@@ -13,8 +13,8 @@
     "@vitejs/plugin-rsc": "catalog:",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "catalog:react-canary",
+    "@types/react-dom": "catalog:react-canary",
     "@vitejs/plugin-react": "^4.5.2",
     "typescript": "catalog:",
     "vite": "^6.3.0"
@@ -24,9 +24,9 @@
     "compression": "^1.8.1",
     "cross-env": "^7.0.3",
     "express": "^4.21.2",
-    "react": "catalog:",
-    "react-dom": "catalog:",
+    "react": "catalog:react-canary",
+    "react-dom": "catalog:react-canary",
     "react-router": "workspace:*",
-    "react-server-dom-webpack": "catalog:"
+    "react-server-dom-webpack": "catalog:react-canary"
   }
 }

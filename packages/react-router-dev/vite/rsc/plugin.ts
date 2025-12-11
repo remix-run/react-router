@@ -1,4 +1,4 @@
-import * as Vite from "vite";
+import type * as Vite from "vite";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
 import * as babel from "@babel/core";
@@ -118,6 +118,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           reactRouterConfig: config,
         });
 
+        // Async import here to avoid CJS warnings on the console
+        let viteNormalizePath = (await import("vite")).normalizePath;
+
         return {
           resolve: {
             dedupe: [
@@ -185,7 +188,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                   },
                   output: {
                     manualChunks(id) {
-                      const normalized = Vite.normalizePath(id);
+                      const normalized = viteNormalizePath(id);
                       if (
                         normalized.includes("node_modules/react/") ||
                         normalized.includes("node_modules/react-dom/") ||

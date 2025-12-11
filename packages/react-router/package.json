@@ -112,6 +112,7 @@
     "build": {
       "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
       "files": [
+        "../../pnpm-workspace.yaml",
         "lib/**",
         "*.ts",
         "tsconfig.json",

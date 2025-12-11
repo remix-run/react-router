@@ -18,8 +18,8 @@
     "@react-router/serve": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "catalog:react-canary",
+    "@types/react-dom": "catalog:react-canary",
     "@vitejs/plugin-rsc": "catalog:",
     "cross-env": "^7.0.3",
     "remark-frontmatter": "^5.0.0",
@@ -31,9 +31,10 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.1",
     "express": "^4.21.2",
-    "react": "catalog:",
-    "react-dom": "catalog:",
+    "react": "catalog:react-canary",
+    "react-dom": "catalog:react-canary",
     "react-router": "workspace:*",
+    "react-server-dom-webpack": "catalog:react-canary",
     "remix-utils": "^8.7.0"
   }
 }

@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@reach/visually-hidden": "0.18.0",
-    "react": "catalog:",
-    "react-dom": "catalog:",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-router-dom": "^6.15.0"
   },
   "devDependencies": {

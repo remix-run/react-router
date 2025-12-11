@@ -25,6 +25,7 @@
     "build": {
       "command": "tsup",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "bin.js",
         "tsconfig.json",

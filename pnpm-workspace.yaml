@@ -5,17 +5,22 @@ packages:
   - "playground/*"
 
 catalog:
+  "@types/react": ^18.0.27
+  "@types/react-dom": ^18.0.10
   "@vitejs/plugin-rsc": ~0.5.6
-  react: canary
-  react-dom: canary
-  react-server-dom-parcel: canary
-  react-server-dom-webpack: canary
+  react: ^19.2.2
+  react-dom: ^19.2.2
+  react-server-dom-parcel: ^19.2.2
+  react-server-dom-webpack: ^19.2.2
   typescript: ^5.4.5
   tsup: ^8.3.0
   wireit: 0.14.9
 
-overrides:
-  react: canary
-  react-dom: canary
-  react-server-dom-parcel: canary
-  react-server-dom-webpack: canary
+catalogs:
+  react-canary:
+    "@types/react": ^19.2.7
+    "@types/react-dom": ^19.2.3
+    react: canary
+    react-dom: canary
+    react-server-dom-parcel: canary
+    react-server-dom-webpack: canary
