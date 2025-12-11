@@ -204,7 +204,6 @@ const files = ({ templateName }: { templateName: TemplateName }) => ({
 
 test.describe("Vite CSS", () => {
   fixtures.forEach(({ templateName, templateDisplayName }) => {
-    if (templateName !== "rsc-vite-framework") return;
     test.describe(templateDisplayName, () => {
       test.describe("vite dev", async () => {
         let port: number;
