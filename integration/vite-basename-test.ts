@@ -122,7 +122,7 @@ const customServerFile = ({
         app.use("${base}", express.static("build/client"));
         app.all(
           "${basename}*",
-          createRequestListener((await import("./build/server/index.js")).default),
+          createRequestListener((await import("./build/server/index.js")).default.fetch),
         );
       }
       app.get("*", (_req, res) => {
@@ -476,7 +476,7 @@ test.describe("Vite base + React Router basename", () => {
           }
         }
 
-        test.afterAll(() => stop());
+        test.afterAll(() => stop?.());
 
         test("works when base and basename are the same", async ({ page }) => {
           await setup({ base: "/mybase/", basename: "/mybase/" });
@@ -504,6 +504,10 @@ test.describe("Vite base + React Router basename", () => {
         test("works when when base is an absolute external URL", async ({
           page,
         }) => {
+          test.skip(
+            templateName === "rsc-vite-framework",
+            "I'm not sure the use-case for this and can't find anything. If you ever need this file an issue and we will revisit.",
+          );
           port = await getPort();
           cwd = await createProject(
             {
@@ -518,26 +522,26 @@ test.describe("Vite base + React Router basename", () => {
                 ? String.raw`
                   import { createRequestListener } from "@mjackson/node-fetch-server";
                   import express from "express";
-          
+
                   const app = express();
                   app.all(
                     "/app/*",
                     createRequestListener((await import("./build/server/index.js")).default)
                   );
-          
+
                   const port = ${port};
                   app.listen(port, () => console.log('http://localhost:' + port));
                 `
                 : String.raw`
                   import { createRequestHandler } from "@react-router/express";
                   import express from "express";
-          
+
                   const app = express();
                   app.all(
                     "/app/*",
                     createRequestHandler({ build: await import("./build/server/index.js") })
                   );
-          
+
                   const port = ${port};
                   app.listen(port, () => console.log('http://localhost:' + port));
                 `,

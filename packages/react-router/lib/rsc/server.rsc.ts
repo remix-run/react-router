@@ -49,7 +49,7 @@ import {
   UNSAFE_WithErrorBoundaryProps,
   // @ts-ignore There are no types before the tsup build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
-  // TSConfig, it breaks the Parcel build within this repo.
+  // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
 import type {
   Await as AwaitType,
@@ -394,10 +394,37 @@ export async function matchRSCServerRequest({
     },
   ) => Response;
 }): Promise<Response> {
-  let requestUrl = new URL(request.url);
+  let url = new URL(request.url);
+
+  basename = basename || "/";
+  let normalizedPath = url.pathname;
+  if (stripBasename(normalizedPath, basename) === "/_root.rsc") {
+    normalizedPath = basename;
+  } else if (normalizedPath.endsWith(".rsc")) {
+    normalizedPath = normalizedPath.replace(/\.rsc$/, "");
+  }
+
+  if (
+    stripBasename(normalizedPath, basename) !== "/" &&
+    normalizedPath.endsWith("/")
+  ) {
+    normalizedPath = normalizedPath.slice(0, -1);
+  }
+  url.pathname = normalizedPath;
+  basename =
+    basename.length > normalizedPath.length ? normalizedPath : basename;
+
+  let routerRequest = new Request(url.toString(), {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    signal: request.signal,
+    duplex: request.body ? "half" : undefined,
+  } as RequestInit);
 
   const temporaryReferences = createTemporaryReferenceSet();
 
+  const requestUrl = new URL(request.url);
   if (isManifestRequest(requestUrl)) {
     let response = await generateManifestResponse(
       routes,
@@ -410,19 +437,6 @@ export async function matchRSCServerRequest({
   }
 
   let isDataRequest = isReactServerRequest(requestUrl);
-
-  const url = new URL(request.url);
-  let routerRequest = request;
-  if (isDataRequest) {
-    url.pathname = url.pathname.replace(/(_root)?\.rsc$/, "");
-    routerRequest = new Request(url.toString(), {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-      signal: request.signal,
-      duplex: request.body ? "half" : undefined,
-    } as RequestInit);
-  }
 
   // Explode lazy functions out the routes so we can use middleware
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
@@ -1009,7 +1023,7 @@ async function generateStaticContextResponse(
 
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
-    basename,
+    basename: staticContext.basename,
     actionData: staticContext.actionData,
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,

@@ -7,7 +7,6 @@ const templates = [
 
   // RSC templates
   { name: "rsc-vite", displayName: "RSC (Vite)" },
-  { name: "rsc-parcel", displayName: "RSC (Parcel)" },
   { name: "rsc-vite-framework", displayName: "RSC Framework" },
 
   // Cloudflare

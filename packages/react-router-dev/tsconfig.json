@@ -1,8 +1,9 @@
 {
-  "include": ["**/*.ts", "package.json"],
-  "exclude": ["dist", "__tests__", "node_modules"],
+  "include": ["**/*.ts", "./rsc-types.d.ts", "package.json"],
+  "exclude": ["dist", "__tests__", "node_modules", "**/*-test.ts"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client"],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "Bundler",

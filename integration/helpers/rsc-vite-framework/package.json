@@ -35,6 +35,7 @@
     "express": "^4.21.2",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "workspace:*"
+    "react-router": "workspace:*",
+    "react-server-dom-webpack": "catalog:"
   }
 }

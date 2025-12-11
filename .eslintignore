@@ -14,7 +14,6 @@ build.utils.d.ts
 .wrangler/
 .tmp/
 .react-router/
-.react-router-parcel/
 packages/**/dist/
 packages/react-router-dom/server.d.ts
 packages/react-router-dom/server.js

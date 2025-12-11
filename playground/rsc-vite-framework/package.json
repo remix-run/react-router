@@ -7,8 +7,8 @@
     "dev": "react-router dev",
     "dev:vite-middleware": "node start-vite-middleware.js",
     "build": "react-router build",
-    "start": "cross-env NODE_ENV=production node start.js",
-    "start:serve": "react-router-serve ./build/server/index.js",
+    "start:custom": "cross-env NODE_ENV=production node start.js",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
