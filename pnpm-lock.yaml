@@ -39,8 +39,8 @@ catalogs:
       version: 19.3.0-canary-37bcdcde-20251211
 
 overrides:
-  '@types/react': ^18.2.18
-  '@types/react-dom': ^18.2.7
+  '@types/react': ^18.0.27
+  '@types/react-dom': ^18.0.10
   '@types/react-test-renderer': ^18.3.1
   jsdom: 22.1.0
   workerd: 1.20250705.0
@@ -95,10 +95,10 @@ importers:
         specifier: ^21.1.1
         version: 21.1.1
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       '@types/react-test-renderer':
         specifier: ^18.3.1
@@ -351,10 +351,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -400,10 +400,10 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       '@vitejs/plugin-react':
         specifier: ^4.5.2
@@ -461,10 +461,10 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       '@vanilla-extract/css':
         specifier: ^1.17.4
@@ -540,10 +540,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       eslint:
         specifier: ^8.38.0
@@ -607,10 +607,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       eslint:
         specifier: ^8.38.0
@@ -674,10 +674,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       eslint:
         specifier: ^8.38.0
@@ -729,10 +729,10 @@ importers:
         specifier: ^20.0.0
         version: 20.11.30
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       eslint:
         specifier: ^8.38.0
@@ -796,10 +796,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       cross-env:
         specifier: ^7.0.3
@@ -1349,10 +1349,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1407,10 +1407,10 @@ importers:
         specifier: ^1.9.10
         version: 1.9.10
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       cross-env:
         specifier: ^7.0.3
@@ -1453,10 +1453,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1490,10 +1490,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1530,10 +1530,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1570,10 +1570,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1640,10 +1640,10 @@ importers:
         specifier: ^20.0.0
         version: 20.11.30
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       tsx:
         specifier: ^4.19.3
@@ -1689,10 +1689,10 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       '@vitejs/plugin-react':
         specifier: ^4.5.2
@@ -1756,10 +1756,10 @@ importers:
         specifier: ^22.13.1
         version: 22.14.0
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
@@ -1805,10 +1805,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1842,10 +1842,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-dev
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       typescript:
         specifier: 'catalog:'
@@ -1891,10 +1891,10 @@ importers:
         specifier: ^20.0.0
         version: 20.11.30
       '@types/react':
-        specifier: ^18.2.18
+        specifier: ^18.0.27
         version: 18.2.18
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: ^18.0.10
         version: 18.2.7
       eslint:
         specifier: ^8.38.0
@@ -3958,8 +3958,8 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@testing-library/dom': ^10.0.0
-      '@types/react': ^18.2.18
-      '@types/react-dom': ^18.2.7
+      '@types/react': ^18.0.27
+      '@types/react-dom': ^18.0.10
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
