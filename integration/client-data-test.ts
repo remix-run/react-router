@@ -1231,8 +1231,7 @@ test.describe("Client Data", () => {
               console.error = _consoleError;
             });
 
-            test.only("bubbled server loader errors are persisted for hydrating routes", async ({
-              browserName,
+            test("bubbled server loader errors are persisted for hydrating routes", async ({
               page,
             }) => {
               // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
