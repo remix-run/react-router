@@ -142,6 +142,9 @@
     "typescript": {
       "optional": true
     },
+    "react-server-dom-webpack": {
+      "optional": true
+    },
     "wrangler": {
       "optional": true
     }
