@@ -166,11 +166,11 @@ This section captures the notes from the React Router Steering Committee meeting
 -->
 
 <details>
-  <summary>2025-09-23 Meeting Notes</summary>
+<summary>2025-09-23 Meeting Notes</summary>
 
 **Summary**
 
-Brooks Lybrand announced the planned release of unstable framework RSC support in 7.9.2 and the `fetcher.unstable_reset()` API. Matt Brophy and Pedro Cattori discussed splitting Ryan's proposal for `useRouteLoaderData` type-safety to separate "router data" from "route data." Bryan Ross (rossipedia) and Matt Brophy reviewed the proposal for new instrumentation APIs. Matt Brophy and Jacob Ebey decided to close several issues related to ESLint configuration, OpenTelemetry, and module federation.
+Brooks announced the planned release of unstable framework RSC support in 7.9.2 and the `fetcher.unstable_reset()` API. Matt and Pedro discussed splitting Ryan's proposal for `useRouteLoaderData` type-safety to separate "router data" from "route data." Bryan and Matt reviewed the proposal for new instrumentation APIs. Matt and Jacob decided to close several issues related to ESLint configuration, OpenTelemetry, and module federation.
 
 **Details**
 
@@ -181,54 +181,54 @@ Brooks Lybrand announced the planned release of unstable framework RSC support i
   - Current `instrumentRouter`/`instrumentRoutes` APIs should be sufficient for various implementations of logging/tracing layered on top
   - React Router docs can show simple examples of a few types of observability implementations (logging, OTEL, `performance.mark`/`measure`), but will lean on the community to provide packages for specific observability approaches
   - Jacob raised a good point about the design of the current APIs permitting more than instrumentation because folks could mutate existing handler parameters, so Matt is going to look into ways top provide a subset of read-only information that will prohibit this since it is not an intended use case and would likely be abused in unforeseen ways
-  - Matt Brophy will also play around with potential instrumentation utils to see if it is worth shipping anything or just putting them in documentation
+  - Matt will also play around with potential instrumentation utils to see if it is worth shipping anything or just putting them in documentation
 - The committee reviewed and agreed to move forward 2 new RFCs to the "consideration" stage:
   - [Prerender concurrency](https://github.com/remix-run/react-router/discussions/14080)
   - [Per-route Layout component](https://github.com/remix-run/react-router/discussions/13818)
-- Matt Brophy will comment back on the ESLint issue to get it closed out and point to the OpenTelemetry issue to the new instrumentation approach
-- Pedro Cattori will start on the route stuff and try to get a PR up for it, once a PR is opened we will also get an issue on the roadmap
-- Jacob Ebey will check in with Zach about his interest in the [current work w.r.t. module imports](https://github.com/remix-run/react-router/pull/12638), and Matt Brophy will add a comment to the issue asking if it is needed and close it if there is no response in a week.
+- Matt will comment back on the ESLint issue to get it closed out and point to the OpenTelemetry issue to the new instrumentation approach
+- Pedro will start on the route stuff and try to get a PR up for it, once a PR is opened we will also get an issue on the roadmap
+- Jacob will check in with Zach about his interest in the [current work w.r.t. module imports](https://github.com/remix-run/react-router/pull/12638), and Matt will add a comment to the issue asking if it is needed and close it if there is no response in a week.
 
 </details>
 
 <details>
-  <summary>2025-09-08 Meeting Notes</summary>
+<summary>2025-09-08 Meeting Notes</summary>
 
 **Summary**
 
-Matt Brophy, Bryan Ross (rossipedia), Mark Dalgleish, and Pedro Cattori discussed the progress of various features, including middleware, context, the `onError` feature, and RSC framework mode, with most nearing completion or already released. Matt Brophy and Bryan Ross (rossipedia) also explored the integration of observability and OpenTelemetry with Sentry and React Router, considering OpenTelemetry as a potential standard for JavaScript monitoring. The team decided to focus on current in-progress items instead of reviewing and accepting additional proposals because there are already 10+ proposals in-progress.
+Matt, Bryan, Mark, and Pedro discussed the progress of various features, including middleware, context, the `onError` feature, and RSC framework mode, with most nearing completion or already released. Matt and Bryan also explored the integration of observability and OpenTelemetry with Sentry and React Router, considering OpenTelemetry as a potential standard for JavaScript monitoring. The team decided to focus on current in-progress items instead of reviewing and accepting additional proposals because there are already 10+ proposals in-progress.
 
 **Details**
 
 - Roadmap Review and Release Progress
-  - Matt Brophy initiated the meeting by reviewing the public roadmap, starting with [middleware](https://github.com/remix-run/react-router/issues/12695) and [context](https://github.com/remix-run/react-router/issues/14055), which are merged to dev and awaiting a pre-release for version 7.9.0
-  - Bryan Ross (rossipedia) confirmed that the [`onError`](https://github.com/remix-run/react-router/issues/12958) feature, released in 7.8.2, is working as expected and providing anticipated data
-  - Mark Dalgleish noted that the RSC framework mode initial release will not be feature complete but is nearing completion, with the main remaining task being error handling during rendering ([RFC](https://github.com/remix-run/react-router/issues/11566))
+  - Matt initiated the meeting by reviewing the public roadmap, starting with [middleware](https://github.com/remix-run/react-router/issues/12695) and [context](https://github.com/remix-run/react-router/issues/14055), which are merged to dev and awaiting a pre-release for version 7.9.0
+  - Bryan confirmed that the [`onError`](https://github.com/remix-run/react-router/issues/12958) feature, released in 7.8.2, is working as expected and providing anticipated data
+  - Mark noted that the RSC framework mode initial release will not be feature complete but is nearing completion, with the main remaining task being error handling during rendering ([RFC](https://github.com/remix-run/react-router/issues/11566))
 - Upcoming Features and API Discussions
-  - Pedro Cattori discussed the `useRouterState` hook, noting that Ryan's attention is elsewhere, but they are interested in revisiting it for type safety and potentially replacing the `useRouteLoaderData` hook
-  - Brooks Lybrand and Pedro Cattori agreed that the `use matches` API is problematic, especially concerning type safety, and suggested finding a solution that does not rely on it
+  - Pedro discussed the `useRouterState` hook, noting that Ryan's attention is elsewhere, but they are interested in revisiting it for type safety and potentially replacing the `useRouteLoaderData` hook
+  - Brooks and Pedro agreed that the `use matches` API is problematic, especially concerning type safety, and suggested finding a solution that does not rely on it
   - We may be able to keep the distinction that hooks for use in data mode are less type-safe than the typegen equivalents in framework mode, so it might be ok for `useRouterState().matches` to be less type-safe than `Route.ComponentProps["matches"]`
   - [RFC](https://github.com/remix-run/react-router/issues/13073)
 - Observability and OpenTelemetry Integration
-  - Matt Brophy and Bryan Ross (rossipedia) discussed the [observability](https://github.com/remix-run/react-router/discussions/13749) feature, which aims to improve Sentry's integration with React Router Apps
-  - Bryan Ross (rossipedia) explained that a strict event-based system would not support OpenTelemetry because OpenTelemetry requires bounding code execution within a span, unlike events which are instantaneous
+  - Matt and Bryan discussed the [observability](https://github.com/remix-run/react-router/discussions/13749) feature, which aims to improve Sentry's integration with React Router Apps
+  - Bryan explained that a strict event-based system would not support OpenTelemetry because OpenTelemetry requires bounding code execution within a span, unlike events which are instantaneous
   - They are considering whether React Router should fully embrace OpenTelemetry as it appears to be becoming a de facto standard for JavaScript monitoring, which could potentially replace the need for a separate event system
 - Meeting Wrap-up and Next Steps
-  - Matt Brophy announced that the pre-release for version 7.9.0 would be shipped shortly, with the full release expected by the end of the week
-  - Bryan Ross (rossipedia) confirmed that the duplicate loader issue fix will be included in this release
+  - Matt announced that the pre-release for version 7.9.0 would be shipped shortly, with the full release expected by the end of the week
+  - Bryan confirmed that the duplicate loader issue fix will be included in this release
   - The team decided not to overload themselves with additional tasks, focusing on the current in-progress items
 
 **Action Items**
 
-- Mark Dalgleish will work on stabilizing the split route modules and Vite environment API flags
-- Matt Brophy will read through the SvelteKit blog post to understand their approach to OpenTelemetry integration
-- Matt Brophy will merge the unstable [`fetcher.reset()`](https://github.com/remix-run/react-router/issues/14207) work after 7.9.0 is released ()
-- Matt Brophy will try to pick up the [`<Link onPrefetch>`](https://github.com/remix-run/react-router/discussions/12375) task soon
-- Matt Brophy and Pedro Cattori will sync up offline to figure out what parts of the consolidated hook can be done better with typegen and decide on the requirements ([RFC](https://github.com/remix-run/react-router/issues/13073))
+- Mark will work on stabilizing the split route modules and Vite environment API flags
+- Matt will read through the SvelteKit blog post to understand their approach to OpenTelemetry integration
+- Matt will merge the unstable [`fetcher.reset()`](https://github.com/remix-run/react-router/issues/14207) work after 7.9.0 is released ()
+- Matt will try to pick up the [`<Link onPrefetch>`](https://github.com/remix-run/react-router/discussions/12375) task soon
+- Matt and Pedro will sync up offline to figure out what parts of the consolidated hook can be done better with typegen and decide on the requirements ([RFC](https://github.com/remix-run/react-router/issues/13073))
 </details>
 
 <details>
-  <summary>2025-11-04 Meeting Notes</summary>
+<summary>2025-11-04 Meeting Notes</summary>
 
 The SC reviewed items on the open Proposal for React Router v8
 
@@ -245,5 +245,102 @@ The SC reviewed items on the open Proposal for React Router v8
   - We will not be deprecating existing APIs at that time because not everyone should have to use RSC
 - `Vite environment API` and `split route modules` are nearing stabilization
 - Reviewed a new RFC to stop URL normalization in loaders
+
+</details>
+
+<details>
+<summary>2025-11-18 Meeting Notes</summary>
+
+Matt mentioned opening Pull Requests (PRs) to stabilize `fetcher.reset` and `onError` for client-side use
+
+**Stabilizing Fetcher Reset and Client-Side Error Handling**
+
+Matt mentioned opening Pull Requests (PRs) to stabilize `fetcher.reset` and `onError` for client-side use. For client-side `onError`, Matt made a change to align it with `handleError` on the server by passing the `location` and `params` to the error handler, with the goal of not holding off on stabilizing the API . Bryan suggested considering adding the pattern to the error information, which Matt agreed would be useful for filtering errors in Sentry.
+
+**Stabilizing Other Router APIs**
+
+Matt confirmed with Mark that both `split route modules` and the `environment API` are ready to be stabilized. The intent is to batch these stabilizations into a minor release. Other features like observability and a transition flag are still too new for stabilization
+
+**Opt-Out Flag for Custom Navigations**
+
+Matt discussed fast-tracking a flag to allow users to opt out of wrapping their own navigations in `startTransition`. This is needed because the current implementation has bugs related to navigation state not surfacing when custom navigations are wrapped in `startTransition`, particularly affecting `useSyncExternalStore` and causing minor tearing issues with search params. Matt mentioned we could fork off and ship the `false` (opt-out) version of this unstable flag quickly if needed.
+
+**Type-Safe Fetchers Discussion**
+
+The discussion moved to the highly-anticipated type-safe fetchers feature. Bryan suggested that the definition of a fetcher should be tied to a route at creation time, as fetchers resolve to a single handler (action or loader), where all the type signature glue happens . A challenge is resolving ambiguity when a path matches multiple loaders, such as a layout route and an index route.
+
+**Route ID vs. Pattern for Type-Safe Fetchers**
+
+The group debated using route ID versus the path pattern for identifying the route. Bryan and Jacob agreed that parameters should be accepted at the invocation site of the fetcher. Mark raised concerns that using route ID might require querying the full manifest, which could be problematic with "fog of war" architectures where only a small number of routes are known at runtime. They agreed to use the pattern instead, which doubles as the route ID in a sense and does not require querying the manifest for URL construction.
+
+**Proposed New Hooks for Type-Safe Fetchers**
+
+Bryan proposed splitting `useFetcher` into two separate hooks: `useRouteLoader` and `useRouteAction`, bound explicitly to a loader and an action, respectively. This separation is beneficial because a loader is primarily concerned with the GET method, while an action can handle multiple methods (POST, PUT, etc.). The new hooks would return an array with the state/data object and the imperative method (like `submit` or `load`), a pattern which Matt and Mark liked.
+
+**Streamlining State Tracking with React APIs**
+
+The conversation shifted towards aligning the new hooks with modern React APIs, especially those from React 19. Bryan suggested that the router could offload state tracking to userland by using React's `useTransition` and `useOptimistic` hooks, leading to a much slimmer abstraction. This would replace the existing `fetcher.state` (idle, loading, submitting) and `fetcher.form`.
+
+**Leveraging Use Action State and Form Actions**
+
+Jacob noted that using an asynchronous function for a form's action would also allow for use of the `useActionState` hook from React, which can track the pending status of the form, further streamlining the API. This design would also enable the deprecation of `fetcher.form` in favor of a standard React form. However, the group noted that this approach would be for JS-supported forms and not progressively enhanced forms in an RSC world without JavaScript.
+
+**Call Site Revalidation Opt-Out**
+
+The group discussed the community PR for a call site revalidation opt-out, specifically the open question of whether a call site option like `shouldRevalidate: false` should override a route's existing `shouldRevalidate` function. Jacob and Bryan agreed with Sergio's recommendation that the call site option should set the new default value passed to the routes, essentially bubbling up, to avoid potential support headaches and data integrity issues that would arise from overriding all revalidation.
+
+**Naming Convention for Revalidation Opt-Out**
+
+Bryan suggested a minor design point to name the option passed to `submit` as `defaultShouldRevalidate` for consistency. Matt agreed with this suggestion.
+Default Route Revalidation Behavior Bryan and Matt discussed the implementation of a default setting for route revalidation, with Bryan expressing concern that people might misuse a hard bypass but agreeing that passing in a default allows the route logic to still determine the revalidation. Matt highlighted that this default would be an easy win for applications with many routes that need a common revalidation behavior, preventing the need to change fifty routes, while still allowing specific routes with their own logic to override the default. They agreed that the route should always be the final authority on revalidation.
+
+**Scope and Granularity of Default Revalidation**
+
+Jacob proposed setting a specific route default, perhaps for parent routes but not a view, for scenarios involving submissions, but Matt dismissed this, noting that routes already have a specific place for their logic in the route function. Bryan also suggested that more granular control would lead to excessive complexity. The team concluded that the default should not allow a function, as Jacob argued it should be derived from local state.
+
+**Implementation of 'default revalidate'**
+
+Matt confirmed liking the name "default revalidate" and determined that it should apply to all imperative hooks, including navigates and submits. Bryan and Matt agreed that having the routes maintain final control of revalidation makes sense on navigates. Matt mentioned that there is an existing Pull Request for this feature, which they plan to update.
+
+</details>
+
+<details>
+<summary>2025-12-02 Meeting Notes</summary>
+
+**Meeting Status and Stabilizations**
+
+Matt shared that three stabilizations were pushed out: `environment API future flag`, `split route modules future flag`, and `fetch error reset`. Matt noted that `onError` would be in the next release after one last internal refactor to address potential double reporting issues in strict mode.
+
+**`use route` and Type-Safe Fetchers**
+
+Matt discussed the plan to complete the other half of `use route`, the `use router state` functionality, and treating them as a package deal for stabilization. Pedro agreed, emphasizing the need for the type-safe fetcher approach to be cohesive with `use route` before stabilization, to avoid having multiple ways of doing things if the ID-based approach is changed later.
+
+**Babel to SWC/Oxide Migration for Performance**
+
+Mark raised the proposal to switch from Babel to SWC/Oxide for speed improvements, noting that the stabilization of `split route modules` increases the amount of transformations happening in Babel. Pedro expressed support for making things faster but questioned the priority, as they have yet to see a real use case where Babel is the bottleneck, suggesting current HMR times are sub-40 milliseconds.
+
+**Performance Bottlenecks and Rollup Integration**
+
+Pedro explained that a larger architectural problem, the necessity of a full pass over all routes for manifest creation, contributes to performance issues, making the dev server launch time proportional to the number of routes. Mark clarified that Rollup speeds up the build, not dev, and Pedro suggested profiling to determine if Babel is truly the bottleneck out of the 50 milliseconds of overhead. Matt suggested involving the community for hard numbers and potentially waiting to see if Rollup with an AST pipeline API would alleviate the issue, which might necessitate rewriting transforms anyway. Matt asked Mark and Pedro to comment on the proposal, indicating interest but needing more evidence of the bottleneck.
+
+**Fetcher Error Handling and Imperative Usage**
+
+Discussion returned to an existing, highly voted proposal concerning fetcher error handling and completion. Matt noted that returning promises from `fetcher.load` and `fetcher.submit` partially solved the completion concern, but returning the data is still missing. The other main request is to prevent fetcher errors from triggering the route-level error boundary, for which Matt suggested an opt-in mechanism like `don't bubble errors` or a `handle error` option. Bryan argued that fetchers, being out-of-band network requests, should not bubble up to the route error boundary naturally.
+
+**Inline Action Approach for Fetcher Error Handling**
+
+The discussion moved towards an inline action approach for error handling, aligning with `client loader` mechanisms, as suggested by Jacob. Matt and Bryan considered how an inline handler could allow users to catch network errors and decide whether to return errors as data or throw. Sergio Daniel Xalambrí questioned whether these changes should be applied to the new type-safe fetchers (e.g., `use route action`) instead of evolving `use fetcher`. Matt and Bryan agreed that implementing this work within the new type-safe fetcher APIs, where `submit` would return data and reject on errors, seems like the most appropriate approach.
+
+**Route Masking/Rewrites for Modals**
+
+Matt introduced a resurfaced, high-priority proposal for route masking/rewriting, similar to Next.js's parallel/intercepting routes or Tanstack's route masking. This feature, previously available in declarative mode, allows rendering a modal over a background URL while maintaining a different URL in the bar. Matt suggested an API where the user provides the URL to be displayed in the URL bar, and the router navigates internally to a different URL, likely driven by search parameters. Mark and Bryan agreed that this seems coupled to client-side navigation for UX cases like job details over search results.
+
+**Server Rewrites and Client Router Synchronization**
+
+Sergio Daniel Xalambrí noted that people often ask for server rewrites, which in Next.js terms often means URL aliases where a path renders the content of another route, potentially with param rewriting. Matt concluded that true server rewrites are a separate feature but noted that implementing the client-side masking feature would close the gap on what is needed to synchronize rewrite logic with the client router, potentially unlocking future server-side rewrite capabilities. Matt intends to update the proposal and move it to the "accepting PRs" stage, noting that the implementation could draw on internals from V6.
+
+**Element Scroll Restoration**
+
+The last topic discussed was a high-voted proposal for scroll restoration on elements other than the window. Matt explained that a full userland implementation is not reliably possible because the router is the only one that truly knows the moment right before a view changes to reliably capture the scroll position. Matt plans to provide guidance and feedback based on previous PR discussions, hoping the community can finalize the implementation.
 
 </details>
