@@ -3,13 +3,6 @@ import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vit
 import rsc from "@vitejs/plugin-rsc";
 
 export default defineConfig({
-  environments: {
-    client: {
-      optimizeDeps: {
-        exclude: ["react-router", "react-router/dom"],
-      },
-    },
-  },
   plugins: [
     // @ts-ignore
     reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),

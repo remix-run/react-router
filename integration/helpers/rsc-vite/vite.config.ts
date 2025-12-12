@@ -3,9 +3,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  optimizeDeps: {
-    exclude: ["react-router", "react-router/dom"],
-  },
   plugins: [
     react(),
     rsc({
