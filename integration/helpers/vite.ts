@@ -153,7 +153,7 @@ export const viteConfig = {
         plugins: [
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
-          ${isRsc ? "reactRouterRSC()," : "reactRouter(),"}
+          ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
           ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
           tsconfigPaths()

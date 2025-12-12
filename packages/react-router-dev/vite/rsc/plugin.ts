@@ -30,6 +30,14 @@ import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
+  let runningWithinTheReactRouterMonoRepo = Boolean(
+    arguments &&
+      arguments.length === 1 &&
+      typeof arguments[0] === "object" &&
+      arguments[0] &&
+      "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
+      arguments[0].__runningWithinTheReactRouterMonoRepo === true,
+  );
   let configLoader: ConfigLoader;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
@@ -168,11 +176,15 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               })
                 ? ["react-server-dom-webpack"]
                 : []),
-              "react-router",
+              ...(runningWithinTheReactRouterMonoRepo
+                ? []
+                : [
+                    "react-router",
+                    "react-router/dom",
+                    "react-router/internal/react-server-client",
+                  ]),
               "react-router > cookie",
               "react-router > set-cookie-parser",
-              "react-router/dom",
-              "react-router/internal/react-server-client",
             ],
           },
           esbuild: {
