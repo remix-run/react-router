@@ -88,6 +88,10 @@ interface FutureConfig {
   unstable_optimizeDeps: boolean;
   unstable_subResourceIntegrity: boolean;
   /**
+   * Prerender with Vite Preview server
+   */
+  unstable_previewServerPrerendering?: boolean;
+  /**
    * Enable route middleware
    */
   v8_middleware: boolean;
@@ -634,6 +638,8 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
+    unstable_previewServerPrerendering:
+      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
