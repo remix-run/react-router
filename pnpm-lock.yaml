@@ -147,7 +147,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.0-canary-b45bb335-20251211(eslint@8.57.0)
+        version: 7.1.0-canary-b061b597-20251212(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -5587,8 +5587,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.0-canary-b45bb335-20251211:
-    resolution: {integrity: sha512-snsJUxRrq8m9bnC+g/jho1xKZkCIPe7nSKVFbEdnvnQWdDYWw6o9wCNSXyk/r3F1G09uhigPIcqrFWKfEiu5Sw==}
+  eslint-plugin-react-hooks@7.1.0-canary-b061b597-20251212:
+    resolution: {integrity: sha512-tSQTLvkBVbN4rZZZjGIDeUVFgNrY8/hqU6mteRetyCuLYCP92r0x8hetyshU1jInpMQxeJitpOox8A2uMAIrrg==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -7759,7 +7759,6 @@ packages:
   react-server-dom-webpack@19.2.3:
     resolution: {integrity: sha512-ifo7aqqdNJyV6U2zuvvWX4rRQ51pbleuUFNG7ZYhIuSuWZzQPbfmYv11GNsyJm/3uGNbt8buJ9wmoISn/uOAfw==}
     engines: {node: '>=0.10.0'}
-    deprecated: High Security Vulnerability in React Server Components
     peerDependencies:
       react: ^19.2.3
       react-dom: ^19.2.3
@@ -8275,6 +8274,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
@@ -13605,7 +13605,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@7.1.0-canary-b45bb335-20251211(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.1.0-canary-b061b597-20251212(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
