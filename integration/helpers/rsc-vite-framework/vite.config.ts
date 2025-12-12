@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    // @ts-ignore
     reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),
     rsc(),
   ],
