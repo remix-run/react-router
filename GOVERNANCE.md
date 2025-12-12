@@ -206,7 +206,7 @@ Matt, Bryan, Mark, and Pedro discussed the progress of various features, includi
   - Mark noted that the RSC framework mode initial release will not be feature complete but is nearing completion, with the main remaining task being error handling during rendering ([RFC](https://github.com/remix-run/react-router/issues/11566))
 - Upcoming Features and API Discussions
   - Pedro discussed the `useRouterState` hook, noting that Ryan's attention is elsewhere, but they are interested in revisiting it for type safety and potentially replacing the `useRouteLoaderData` hook
-  - Brooks and Pedro agreed that the `use matches` API is problematic, especially concerning type safety, and suggested finding a solution that does not rely on it
+  - Brooks and Pedro agreed that the `useMatches` API is problematic, especially concerning type safety, and suggested finding a solution that does not rely on it
   - We may be able to keep the distinction that hooks for use in data mode are less type-safe than the typegen equivalents in framework mode, so it might be ok for `useRouterState().matches` to be less type-safe than `Route.ComponentProps["matches"]`
   - [RFC](https://github.com/remix-run/react-router/issues/13073)
 - Observability and OpenTelemetry Integration
@@ -281,7 +281,7 @@ Bryan proposed splitting `useFetcher` into two separate hooks: `useRouteLoader` 
 
 The conversation shifted towards aligning the new hooks with modern React APIs, especially those from React 19. Bryan suggested that the router could offload state tracking to userland by using React's `useTransition` and `useOptimistic` hooks, leading to a much slimmer abstraction. This would replace the existing `fetcher.state` (idle, loading, submitting) and `fetcher.form`.
 
-**Leveraging Use Action State and Form Actions**
+**Leveraging `useActionState` and Form Actions**
 
 Jacob noted that using an asynchronous function for a form's action would also allow for use of the `useActionState` hook from React, which can track the pending status of the form, further streamlining the API. This design would also enable the deprecation of `fetcher.form` in favor of a standard React form. However, the group noted that this approach would be for JS-supported forms and not progressively enhanced forms in an RSC world without JavaScript.
 
@@ -311,9 +311,9 @@ Matt confirmed liking the name "default revalidate" and determined that it shoul
 
 Matt shared that three stabilizations were pushed out: `environment API future flag`, `split route modules future flag`, and `fetch error reset`. Matt noted that `onError` would be in the next release after one last internal refactor to address potential double reporting issues in strict mode.
 
-**`use route` and Type-Safe Fetchers**
+**`useRoute` and Type-Safe Fetchers**
 
-Matt discussed the plan to complete the other half of `use route`, the `use router state` functionality, and treating them as a package deal for stabilization. Pedro agreed, emphasizing the need for the type-safe fetcher approach to be cohesive with `use route` before stabilization, to avoid having multiple ways of doing things if the ID-based approach is changed later.
+Matt discussed the plan to complete the other half of `useRoute`, the `useRouterState` functionality, and treating them as a package deal for stabilization. Pedro agreed, emphasizing the need for the type-safe fetcher approach to be cohesive with `useRoute` before stabilization, to avoid having multiple ways of doing things if the ID-based approach is changed later.
 
 **Babel to SWC/Oxide Migration for Performance**
 
@@ -329,7 +329,7 @@ Discussion returned to an existing, highly voted proposal concerning fetcher err
 
 **Inline Action Approach for Fetcher Error Handling**
 
-The discussion moved towards an inline action approach for error handling, aligning with `client loader` mechanisms, as suggested by Jacob. Matt and Bryan considered how an inline handler could allow users to catch network errors and decide whether to return errors as data or throw. Sergio Daniel Xalambrí questioned whether these changes should be applied to the new type-safe fetchers (e.g., `use route action`) instead of evolving `use fetcher`. Matt and Bryan agreed that implementing this work within the new type-safe fetcher APIs, where `submit` would return data and reject on errors, seems like the most appropriate approach.
+The discussion moved towards an inline action approach for error handling, aligning with `client loader` mechanisms, as suggested by Jacob. Matt and Bryan considered how an inline handler could allow users to catch network errors and decide whether to return errors as data or throw. Sergio Daniel Xalambrí questioned whether these changes should be applied to the new type-safe fetchers (e.g., `useRoute action`) instead of evolving `useFetcher`. Matt and Bryan agreed that implementing this work within the new type-safe fetcher APIs, where `submit` would return data and reject on errors, seems like the most appropriate approach.
 
 **Route Masking/Rewrites for Modals**
 
