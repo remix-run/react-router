@@ -85,6 +85,7 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_allowedActionOrigins: boolean | string[];
   unstable_optimizeDeps: boolean;
   unstable_subResourceIntegrity: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
@@ -631,6 +632,8 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
+    unstable_allowedActionOrigins:
+      userAndPresetConfigs.future?.unstable_allowedActionOrigins ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_subResourceIntegrity:

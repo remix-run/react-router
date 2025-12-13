@@ -49,6 +49,7 @@ export function generateServerBuild(ctx: Context): VirtualFile {
       export const routes: ServerBuild["routes"];
       export const ssr: ServerBuild["ssr"];
       export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
+      export const unstable_allowedActionOrigins: ServerBuild["unstable_allowedActionOrigins"];
     }
   `;
   return { filename, content };
