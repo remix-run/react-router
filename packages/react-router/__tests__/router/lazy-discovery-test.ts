@@ -999,9 +999,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.initialized).toBe(false);
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
 
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
     loaderDfd.resolve("PARENT");
     expect(router.state.initialized).toBe(false);
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
 
     childrenDfd.resolve([
       {
@@ -1012,8 +1021,17 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
     expect(router.state.initialized).toBe(false);
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
 
     childLoaderDfd.resolve("CHILD");
+
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
     await tick();
     expect(router.state.initialized).toBe(true);
     expect(router.state.location.pathname).toBe("/parent/child");
@@ -1025,6 +1043,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       "parent",
       "child",
     ]);
+    expect(router.state.navigation).toMatchObject(IDLE_NAVIGATION);
   });
 
   it("discovers routes during initial SPA renders when a splat route matches", async () => {
