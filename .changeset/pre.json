@@ -34,5 +34,19 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "clean-avocados-mix",
+    "early-doors-obey",
+    "empty-rabbits-live",
+    "flat-singers-help",
+    "four-sloths-notice",
+    "orange-kings-exist",
+    "plenty-kiwis-matter",
+    "rich-melons-grow",
+    "rich-points-talk",
+    "small-flowers-drive",
+    "strong-penguins-retire",
+    "stupid-forks-admire",
+    "violet-needles-impress"
+  ]
 }

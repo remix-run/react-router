@@ -1,5 +1,23 @@
 # `@react-router/dev`
 
+## 7.11.0-pre.0
+
+### Minor Changes
+
+- feat: add `vite preview` support ([#14507](https://github.com/remix-run/react-router/pull/14507))
+
+### Patch Changes
+
+- rsc framework mode manual chunking for react and react-router deps ([#14655](https://github.com/remix-run/react-router/pull/14655))
+- add support for throwing redirect Response's at RSC render time ([#14596](https://github.com/remix-run/react-router/pull/14596))
+- support custom entrypoints for RSC framework mode ([#14643](https://github.com/remix-run/react-router/pull/14643))
+- `routeRSCServerRequest` replace `fetchServer` with `serverResponse` ([#14597](https://github.com/remix-run/react-router/pull/14597))
+- rsc framewlrk mode - optimize react-server-dom-webpack if in project package.json ([#14656](https://github.com/remix-run/react-router/pull/14656))
+- Updated dependencies:
+  - `react-router@7.11.0-pre.0`
+  - `@react-router/serve@7.11.0-pre.0`
+  - `@react-router/node@7.11.0-pre.0`
+
 ## 7.10.1
 
 ### Patch Changes

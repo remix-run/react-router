@@ -1,5 +1,16 @@
 # `@react-router/serve`
 
+## 7.11.0-pre.0
+
+### Patch Changes
+
+- support custom entrypoints for RSC framework mode ([#14643](https://github.com/remix-run/react-router/pull/14643))
+- Update `compression` and `morgan` dependencies to address `on-headers` CVE: [GHSA-76c9-3jph-rj3q](https://github.com/advisories/GHSA-76c9-3jph-rj3q) ([#14652](https://github.com/remix-run/react-router/pull/14652))
+- Updated dependencies:
+  - `react-router@7.11.0-pre.0`
+  - `@react-router/node@7.11.0-pre.0`
+  - `@react-router/express@7.11.0-pre.0`
+
 ## 7.10.1
 
 ### Patch Changes

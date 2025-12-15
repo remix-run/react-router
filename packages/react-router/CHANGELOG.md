@@ -1,5 +1,33 @@
 # `react-router`
 
+## 7.11.0-pre.0
+
+### Minor Changes
+
+- Stabilize `<HydratedRouter onError>`/`<RouterProvider onError>` ([#14546](https://github.com/remix-run/react-router/pull/14546))
+
+### Patch Changes
+
+- add support for throwing redirect Response's at RSC render time ([#14596](https://github.com/remix-run/react-router/pull/14596))
+- Support for throwing `data()` and Response from server component render phase. Response body is not serialized as async work is not allowed as error encoding phase. If you wish to transmit data to the boundary, throw `data()` instead. ([#14632](https://github.com/remix-run/react-router/pull/14632))
+- Fix `unstable_useTransitions` prop on `<Router>` component to permit omission for backewards compatibility ([#14646](https://github.com/remix-run/react-router/pull/14646))
+- `routeRSCServerRequest` replace `fetchServer` with `serverResponse` ([#14597](https://github.com/remix-run/react-router/pull/14597))
+- [UNSTABLE] Add a new `unstable_defaultShouldRevalidate` flag to various APIs to allow opt-ing out of standard revalidation behaviors. ([#14542](https://github.com/remix-run/react-router/pull/14542))
+
+  If active routes include a `shouldRevalidate` function, then your value will be passed as `defaultShouldRevalidate` in those function so that the route always has the final revalidation determination.
+  - `<Form method="post" unstable_defaultShouldRevalidate={false}>`
+  - `submit(data, { method: "post", unstable_defaultShouldRevalidate: false })`
+  - `<fetcher.Form method="post" unstable_defaultShouldRevalidate={false}>`
+  - `fetcher.submit(data, { method: "post", unstable_defaultShouldRevalidate: false })`
+
+  This is also available on non-submission APIs that may trigger revalidations due to changing search params:
+  - `<Link to="/" unstable_defaultShouldRevalidate={false}>`
+  - `navigate("/?foo=bar", { unstable_defaultShouldRevalidate: false })`
+  - `setSearchParams(params, { unstable_defaultShouldRevalidate: false })`
+
+- Allow redirects to be returned from client side middleware ([#14598](https://github.com/remix-run/react-router/pull/14598))
+- Handle `dataStrategy` implementations that return insufficient result sets by adding errors for routes without any available result ([#14627](https://github.com/remix-run/react-router/pull/14627))
+
 ## 7.10.1
 
 ### Patch Changes
