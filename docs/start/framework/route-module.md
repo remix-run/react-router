@@ -110,10 +110,7 @@ Here's an example middleware to check for logged in users and set the user in
 `context` you can then access from loaders:
 
 ```tsx filename=routes/_auth.tsx
-async function authMiddleware ({
-  request,
-  context,
-}) => {
+async function authMiddleware({ request, context }) {
   const session = await getSession(request);
   const userId = session.get("userId");
 
@@ -123,7 +120,7 @@ async function authMiddleware ({
 
   const user = await getUserById(userId);
   context.set(userContext, user);
-};
+}
 
 export const middleware = [authMiddleware];
 ```
@@ -153,7 +150,7 @@ async function loggingMiddleware(
   await next(); // 👈 No Response returned
   const duration = performance.now() - start;
   console.log(
-    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
+    `${new Date().toISOString()} (${duration}ms)`,
   );
   // ✅ No need to return anything
 }
