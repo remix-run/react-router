@@ -87,6 +87,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
   unstable_subResourceIntegrity: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
   /**
    * Enable route middleware
    */
@@ -634,6 +635,9 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
+    unstable_trailingSlashAwareDataRequests:
+      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
+      false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,

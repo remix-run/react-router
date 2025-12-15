@@ -45,6 +45,7 @@ export interface EntryContext extends FrameworkContextObject {
 
 export interface FutureConfig {
   unstable_subResourceIntegrity: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
   v8_middleware: boolean;
 }
 

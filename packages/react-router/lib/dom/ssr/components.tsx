@@ -370,7 +370,7 @@ function PrefetchPageLinksImpl({
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useFrameworkContext();
+  let { future, manifest, routeModules } = useFrameworkContext();
   let { basename } = useDataRouterContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
@@ -434,7 +434,12 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, basename, "data");
+    let url = singleFetchUrl(
+      page,
+      basename,
+      "data",
+      future.unstable_trailingSlashAwareDataRequests,
+    );
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
