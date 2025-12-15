@@ -46,6 +46,10 @@ export const handleError: HandleErrorFunction = (
 };
 ```
 
+See also:
+
+- [`handleError`][handleError]
+
 ## Client Errors
 
 To access these caught errors on the client, use the `onError` prop on your [`HydratedRouter`][hydratedrouter] or [`RouterProvider`][routerprovider] component.
@@ -89,6 +93,10 @@ startTransition(() => {
 });
 ```
 
+See also:
+
+- [`<HydratedRouter onError>`][hydratedrouter-onerror]
+
 ### Data Mode
 
 [modes: data]
@@ -113,7 +121,14 @@ function App() {
 }
 ```
 
+See also:
+
+- [`<RouterProvider onError>`][routerprovider-onerror]
+
 [entryserver]: ../api/framework-conventions/entry.server.tsx
+[handleError]: ../api/framework-conventions/entry.server.tsx#handleerror
 [entryclient]: ../api/framework-conventions/entry.client.tsx
-[hydratedrouter]: ../api//framework-routers/HydratedRouter
+[hydratedrouter]: ../api/framework-routers/HydratedRouter
 [routerprovider]: ../api/data-routers/RouterProvider
+[hydratedrouter-onerror]: ../api/framework-routers/HydratedRouter#onError
+[routerprovider-onerror]: ../api/data-routers/RouterProvider#onError
