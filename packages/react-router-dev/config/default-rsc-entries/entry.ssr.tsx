@@ -1,32 +1,38 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
-// @ts-expect-error
-import * as ReactDomServer from "react-dom/server.edge";
+// @ts-expect-error - no types for this, can import from root once on latest 19
+import { renderToReadableStream } from "react-dom/server.edge";
 import {
-  unstable_RSCStaticRouter as RSCStaticRouter,
   unstable_routeRSCServerRequest as routeRSCServerRequest,
+  unstable_RSCStaticRouter as RSCStaticRouter,
 } from "react-router";
 
-export default async function handler(
+export async function generateHTML(
   request: Request,
   serverResponse: Response,
-) {
-  const bootstrapScriptContent =
-    await import.meta.viteRsc.loadBootstrapScriptContent("index");
-
-  return routeRSCServerRequest({
+): Promise<Response> {
+  return await routeRSCServerRequest({
+    // The incoming request.
     request,
+    // The response from the RSC server.
     serverResponse,
+    // Provide the React Server touchpoints.
     createFromReadableStream,
+    // Render the router to HTML.
     async renderHTML(getPayload, options) {
-      const payload = getPayload();
+      const payload = await getPayload();
+      const formState =
+        payload.type === "render" ? await payload.formState : undefined;
 
-      return ReactDomServer.renderToReadableStream(
+      const bootstrapScriptContent =
+        await import.meta.viteRsc.loadBootstrapScriptContent("index");
+
+      return await renderToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
           ...options,
           bootstrapScriptContent,
+          formState,
           signal: request.signal,
-          formState: await payload.formState,
         },
       );
     },

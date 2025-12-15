@@ -6,7 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -282,9 +282,9 @@ export interface HydratedRouterProps {
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
-   * An error handler function that will be called for any loader/action/render
-   * errors that are encountered in your application.  This is useful for
-   * logging or reporting errors instead of the `ErrorBoundary` because it's not
+   * An error handler function that will be called for any middleware, loader, action,
+   * or render errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of in the {@link ErrorBoundary} because it's not
    * subject to re-rendering and will only run one time per error.
    *
    * The `errorInfo` parameter is passed along from
@@ -292,13 +292,14 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter unstable_onError={(error, errorInfo) => {
-   *   console.error(error, errorInfo);
-   *   reportToErrorService(error, errorInfo);
+   * <HydratedRouter onError=(error, info) => {
+   *   let { location, params, unstable_pattern, errorInfo } = info;
+   *   console.error(error, location, errorInfo);
+   *   reportToErrorService(error, location, errorInfo);
    * }} />
    * ```
    */
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: ClientOnErrorFunction;
   /**
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -329,7 +330,7 @@ export interface HydratedRouterProps {
  * @mode framework
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
- * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
+ * @param {dom.HydratedRouterProps.onError} props.onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
@@ -425,7 +426,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
           <RouterProvider
             router={router}
             unstable_useTransitions={props.unstable_useTransitions}
-            unstable_onError={props.unstable_onError}
+            onError={props.onError}
           />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>

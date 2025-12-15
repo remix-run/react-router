@@ -837,6 +837,232 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([]);
   });
 
+  test("supports call-site revalidation opt-out on submissions (w/o shouldRevalidate)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/action.tsx": js`
+          import { Form } from 'react-router';
+
+          let count = 0;
+          export function loader() {
+            return { count: ++count };
+          }
+
+          export function action() {
+            return { count: ++count };
+          }
+
+          export default function Comp({ loaderData, actionData }) {
+            return (
+              <Form method="post" unstable_defaultShouldRevalidate={false}>
+                <button type="submit" name="name" value="value">Submit</button>
+                <p id="data">{loaderData.count}</p>
+                {actionData ? <p id="action-data">{actionData.count}</p> : null}
+              </Form>
+            );
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "GET" && req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/action");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="name"][value="value"]');
+    await page.waitForSelector("#action-data");
+    expect(await app.getHtml("#action-data")).toContain("2");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+  });
+
+  test("supports call-site revalidation opt-in on 4xx/5xx action responses (w/o shouldRevalidate)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/action.tsx": js`
+          import { Form, Link, useNavigation, data } from 'react-router';
+
+          export async function action({ request }) {
+            throw data("Thrown 500", { status: 500 });
+          }
+
+          let count = 0;
+          export function loader() {
+            return { count: ++count };
+          }
+
+          export default function Comp({ loaderData }) {
+            let navigation = useNavigation();
+            return (
+              <Form method="post" unstable_defaultShouldRevalidate={true}>
+                <button type="submit" name="throw" value="5xx">Throw 5xx</button>
+                <p id="data">{loaderData.count}</p>
+                {navigation.state === "idle" ? <p id="idle">idle</p> : null}
+              </Form>
+            );
+          }
+
+          export function ErrorBoundary() {
+            return <h1 id="error">Error</h1>
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "GET" && req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/action");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="throw"][value="5xx"]');
+    await page.waitForSelector("#error");
+    expect(urls).toEqual([expect.stringMatching(/\/action\.data$/)]);
+  });
+
+  test("supports call-site revalidation opt-out on submissions (w/ shouldRevalidate)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/action.tsx": js`
+          import { Form } from 'react-router';
+
+          let count = 0;
+          export function loader() {
+            return { count: ++count };
+          }
+
+          export function action() {
+            return { count: ++count };
+          }
+
+          export function shouldRevalidate({ defaultShouldRevalidate }) {
+            return defaultShouldRevalidate;
+          }
+
+          export default function Comp({ loaderData, actionData }) {
+            return (
+              <Form method="post" unstable_defaultShouldRevalidate={false}>
+                <button type="submit" name="name" value="value">Submit</button>
+                <p id="data">{loaderData.count}</p>
+                {actionData ? <p id="action-data">{actionData.count}</p> : null}
+              </Form>
+            );
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "GET" && req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/action");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="name"][value="value"]');
+    await page.waitForSelector("#action-data");
+    expect(await app.getHtml("#action-data")).toContain("2");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+  });
+
+  test("supports call-site revalidation opt-in on 4xx/5xx action responses (w shouldRevalidate)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/action.tsx": js`
+          import { Form, Link, useNavigation, data } from 'react-router';
+
+          export async function action({ request }) {
+            throw data("Thrown 500", { status: 500 });
+          }
+
+          let count = 0;
+          export function loader() {
+            return { count: ++count };
+          }
+
+          export function shouldRevalidate({ defaultShouldRevalidate }) {
+            return defaultShouldRevalidate;
+          }
+
+          export default function Comp({ loaderData }) {
+            let navigation = useNavigation();
+            return (
+              <Form method="post" unstable_defaultShouldRevalidate={true}>
+                <button type="submit" name="throw" value="5xx">Throw 5xx</button>
+                <p id="data">{loaderData.count}</p>
+                {navigation.state === "idle" ? <p id="idle">idle</p> : null}
+              </Form>
+            );
+          }
+
+          export function ErrorBoundary() {
+            return <h1 id="error">Error</h1>
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "GET" && req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/action");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls).toEqual([]);
+
+    await page.click('button[name="throw"][value="5xx"]');
+    await page.waitForSelector("#error");
+    expect(urls).toEqual([expect.stringMatching(/\/action\.data$/)]);
+  });
+
   test("returns headers correctly for singular loader and action calls", async () => {
     let fixture = await createFixture({
       files: {
@@ -4142,7 +4368,17 @@ test.describe("single-fetch", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/data", true);
     let scripts = await page.$$("script");
-    expect(scripts.length).toBe(6);
+
+    // Scripts:
+    // RR:    window.__reactRouterContext
+    // RR:    window.__reactRouterManifest/window.__reactRouterRouteModules
+    // React: requestAnimationFrame(function(){$RT=performance.now()});
+    // RR:    window.__reactRouterContext.streamController.enqueue()
+    // React: $RC=function(b,c,e){...
+    // RR:    window.__reactRouterContext.streamController.close();
+    // React: $RC("B:1","S:1")
+    expect(scripts.length).toBe(7);
+
     let remixScriptsCount = 0;
     for (let script of scripts) {
       let content = await script.innerHTML();

@@ -13,15 +13,15 @@
   "dependencies": {
     "@react-router/node": "workspace:*",
     "isbot": "^5",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "typescript": "^5.1.6",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
     "vite": "^6.3.0",
     "vite-tsconfig-paths": "^4.2.1"
   },

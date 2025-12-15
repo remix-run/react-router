@@ -74,5 +74,16 @@ will not be reactive to location changes.
 
 ### unstable_useTransitions
 
-Whether this router should wrap navigations in `React.startTransition()`
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all router state updates are wrapped in
+  `React.startTransition`
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and all router state updates are wrapped in
+  `React.startTransition`
+- When set to `false`, the router will not leverage `React.startTransition`
+  on any navigations or state changes.
+
+For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
 

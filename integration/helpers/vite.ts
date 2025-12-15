@@ -153,7 +153,7 @@ export const viteConfig = {
         plugins: [
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
-          ${isRsc ? "reactRouterRSC()," : "reactRouter(),"}
+          ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
           ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
           tsconfigPaths()
@@ -259,7 +259,7 @@ type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
   | "vite-plugin-cloudflare-template";
 
-export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+export type RscBundlerTemplateName = "rsc-vite";
 
 export type TemplateName =
   | FrameworkModeViteMajorTemplateName
@@ -282,7 +282,6 @@ export const viteMajorTemplates = [
 
 export const rscBundlerTemplates = [
   { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
-  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
 ] as const satisfies Array<{
   templateName: RscBundlerTemplateName;
   templateDisplayName: string;

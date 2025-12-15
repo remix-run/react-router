@@ -163,10 +163,7 @@ implementations.forEach((implementation) => {
     test("Supports React Server Functions side-effect redirect headers for document requests", async ({
       page,
     }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+      test.skip(project.name !== "chromium");
 
       await page.goto(`http://localhost:${port}/`);
 
@@ -191,10 +188,7 @@ implementations.forEach((implementation) => {
     });
 
     test("Supports form state without JS", async ({ page }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+      test.skip(project.name !== "chromium");
 
       await page.goto(`http://localhost:${port}/`);
 

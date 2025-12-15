@@ -1234,11 +1234,14 @@ test.describe("Client Data", () => {
             test("bubbled server loader errors are persisted for hydrating routes", async ({
               page,
             }) => {
+              // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
               let _consoleError = console.error;
               console.error = () => {};
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
               page.on("console", (msg) => {
+                if (msg.type() === "timeStamp") return;
+
                 let text = msg.text();
                 if (
                   // Chrome logs the 500 as a console error, so skip that since it's not

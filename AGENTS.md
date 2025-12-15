@@ -24,7 +24,7 @@
 **RSC mode differences:**
 
 - **RSC Framework**: `unstable_reactRouterRSC` plugin, `@vitejs/plugin-rsc`, different entry points/format
-- **RSC Data**: Manual bundler, runtime route config typically in `src/routes.ts`, `unstable_RSCRouteConfig`, different runtime APIs, `setupRscTest` in `integration/rsc/`, tests Vite + Parcel
+- **RSC Data**: Manual bundler, runtime route config typically in `src/routes.ts`, `unstable_RSCRouteConfig`, different runtime APIs, `setupRscTest` in `integration/rsc/`
 
 ## Architecture
 
@@ -70,7 +70,7 @@ pnpm test:integration:run --project chromium -g "middleware"                 # T
 **RSC testing**:
 
 - **RSC Framework**: Use `createFixture` with `rsc-vite-framework/` template
-- **RSC Data**: Use `setupRscTest` in `integration/rsc/`, tests Vite + Parcel
+- **RSC Data**: Use `setupRscTest` in `integration/rsc/`
 
 Test shared behavior across multiple templates (e.g., `["vite-5-template", "rsc-vite-framework"]`). Test RSC-specific features against RSC template.
 
