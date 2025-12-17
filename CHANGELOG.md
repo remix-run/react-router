@@ -17,6 +17,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [What's Changed](#whats-changed)
       - [`vite preview` Support](#vite-preview-support)
       - [Stabilized Client-side `onError`](#stabilized-client-side-onerror)
+      - [Call-site Revalidation Opt-out (unstable)](#call-site-revalidation-opt-out-unstable)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -402,7 +403,7 @@ Date: YYYY-MM-DD
 
 ## v7.11.0
 
-Date: 2025-12-16
+Date: 2025-12-17
 
 ### What's Changed
 
@@ -415,6 +416,25 @@ We've added support for [`vite preview`](https://vite.dev/guide/cli#vite-preview
 #### Stabilized Client-side `onError`
 
 The existing `<RouterProvider unstable_onError>`/`<HydratedRouter unstable_onError>` APIs have been stabilized as `<RouterProvider onError>`/`<HydratedRouter onError>`. Please see the [Error Reporting](https://reactrouter.com/7.11.0/how-to/error-reporting#client-errors) docs for more information.
+
+#### Call-site Revalidation Opt-out (unstable)
+
+We've added initial unstable support for call-site revalidation opt-out via a new `unstable_defaultShouldRevalidate` flag ([RFC](https://github.com/remix-run/react-router/discussions/10006)). This flag is available on all navigation/fetcher submission APIs to alter standard revalidation behavior. If any routes include a `shouldRevalidate` function, then the flag value will be passed to that function so the route has the final say on revalidation behavior.
+
+```tsx
+<Form method="post" unstable_defaultShouldRevalidate={false} />
+submit(data, { method: "post", unstable_defaultShouldRevalidate: false })
+<fetcher.Form method="post" unstable_defaultShouldRevalidate={false} />
+fetcher.submit(data, { method: "post", unstable_defaultShouldRevalidate: false })
+```
+
+This flag is also available on non-submission navigational use cases - for example, you may want to opt-out of revalidation when adding a search param that doesn't impact the UI:
+
+```tsx
+<Link to="?analytics-param=1" unstable_defaultShouldRevalidate={false} />;
+navigate("?analytics-param=1", { unstable_defaultShouldRevalidate: false });
+setSearchParams(params, { unstable_defaultShouldRevalidate: false });
+```
 
 ### Minor Changes
 
@@ -441,15 +461,6 @@ The existing `<RouterProvider unstable_onError>`/`<HydratedRouter unstable_onErr
 - `@react-router/dev` - RSC (Framework mode): Optimize `react-server-dom-webpack` if in project `package.json` ([#14656](https://github.com/remix-run/react-router/pull/14656))
 - `@react-router/{dev,serve}` - RSC (Framework mode): Support custom entrypoints ([#14643](https://github.com/remix-run/react-router/pull/14643))
 - `react-router` - Add a new `unstable_defaultShouldRevalidate` flag to various APIs to allow opt-ing out of standard revalidation behaviors ([#14542](https://github.com/remix-run/react-router/pull/14542))
-  - If active routes include a `shouldRevalidate` function, then your value will be passed as `defaultShouldRevalidate` in those function so that the route always has the final revalidation determination
-    - `<Form method="post" unstable_defaultShouldRevalidate={false}>`
-    - `submit(data, { method: "post", unstable_defaultShouldRevalidate: false })`
-    - `<fetcher.Form method="post" unstable_defaultShouldRevalidate={false}>`
-    - `fetcher.submit(data, { method: "post", unstable_defaultShouldRevalidate: false })`
-  - This is also available on non-submission APIs that may trigger revalidations due to changing search params
-    - `<Link to="/" unstable_defaultShouldRevalidate={false}>`
-    - `navigate("/?foo=bar", { unstable_defaultShouldRevalidate: false })`
-    - `setSearchParams(params, { unstable_defaultShouldRevalidate: false })`
 
 **Full Changelog**: [`v7.10.1...v7.11.0`](https://github.com/remix-run/react-router/compare/react-router@7.10.1...react-router@7.11.0)
 
