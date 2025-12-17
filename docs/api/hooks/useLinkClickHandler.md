@@ -38,6 +38,8 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
+    unstable_defaultShouldRevalidate,
+    unstable_useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -45,6 +47,8 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    unstable_defaultShouldRevalidate?: boolean;
+    unstable_useTransitions?: boolean;
   } = ,
 ): (event: React.MouseEvent<E, MouseEvent>) => void {}
 ```
@@ -80,6 +84,15 @@ The target attribute for the link. Defaults to `undefined`.
 
 Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation. To apply specific styles during the transition, see
 [`useViewTransitionState`](../hooks/useViewTransitionState). Defaults to `false`.
+
+### options.unstable_defaultShouldRevalidate
+
+Specify the default revalidation behavior for the navigation. Defaults to `true`.
+
+### options.unstable_useTransitions
+
+Wraps the navigation in [`React.startTransition`](https://react.dev/reference/react/startTransition)
+for concurrent rendering. Defaults to `false`.
 
 ## Returns
 

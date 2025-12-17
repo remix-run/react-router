@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { unstable_ClientOnErrorFunction } from "./components";
+import type { ClientOnErrorFunction } from "./components";
 import type {
   History,
   Location,
@@ -87,11 +87,12 @@ export type PatchRoutesOnNavigationFunction =
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
-  // `NavigationContext` needs future since it doesn't have a `router` in all cases
-  extends Omit<NavigationContextObject, "future"> {
+  // `NavigationContext` needs `future`/`unstable_useTransitions` since it doesn't
+  // have a `router` in all cases
+  extends Omit<NavigationContextObject, "future" | "unstable_useTransitions"> {
   router: Router;
   staticContext?: StaticHandlerContext;
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: ClientOnErrorFunction;
 }
 
 export const DataRouterContext =
@@ -154,6 +155,8 @@ export interface NavigateOptions {
   flushSync?: boolean;
   /** Enables a {@link https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API View Transition} for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the {@link https://api.reactrouter.com/v7/functions/react_router.useViewTransitionState.html useViewTransitionState()} hook.  */
   viewTransition?: boolean;
+  /** Specifies the default revalidation behavior after this submission */
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -178,6 +181,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
+  unstable_useTransitions: boolean | undefined;
   // TODO: Re-introduce a singular `FutureConfig` once we land our first
   // future.unstable_ or future.v8_ flag
   future: {};

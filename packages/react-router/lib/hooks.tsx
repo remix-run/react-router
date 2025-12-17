@@ -13,6 +13,7 @@ import {
   ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
+  RSCRouterContext,
   RouteContext,
   RouteErrorContext,
 } from "./context";
@@ -43,10 +44,13 @@ import {
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,
+  getRoutePattern,
+  isBrowser,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
+  parseToInfo,
   resolveTo,
   stripBasename,
 } from "./router/utils";
@@ -55,8 +59,12 @@ import type {
   GetLoaderData,
   SerializeFrom,
 } from "./types/route-data";
-import type { unstable_ClientOnErrorFunction } from "./components";
+import type { ClientOnErrorFunction } from "./components";
 import type { RouteModules } from "./types/register";
+import {
+  decodeRedirectErrorDigest,
+  decodeRouteErrorResponseDigest,
+} from "./errors";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -233,12 +241,14 @@ function useIsomorphicLayoutEffect(
  *
  * * `to` can be a string path, a {@link To} object, or a number (delta)
  * * `options` contains options for modifying the navigation
- *   * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
- *   * `preventScrollReset`: Do not scroll back to the top of the page after navigation
- *   * `relative`: `"route"` or `"path"` to control relative routing logic
- *   * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
- *   * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new {@link Location}
- *   * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
+ *   * These options work in all modes (Framework, Data, and Declarative):
+ *     * `relative`: `"route"` or `"path"` to control relative routing logic
+ *     * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
+ *     * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new {@link Location}
+ *   * These options only work in Framework and Data modes:
+ *     * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
+ *     * `preventScrollReset`: Do not scroll back to the top of the page after navigation
+ *     * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
  *
  * @example
  * import { useNavigate } from "react-router";
@@ -754,7 +764,7 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  unstable_onError?: unstable_ClientOnErrorFunction,
+  onError?: ClientOnErrorFunction,
   future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
@@ -908,7 +918,7 @@ export function useRoutesImpl(
       ),
     parentMatches,
     dataRouterState,
-    unstable_onError,
+    onError,
     future,
   );
 
@@ -1009,6 +1019,8 @@ export class RenderErrorBoundary extends React.Component<
     };
   }
 
+  static contextType = RSCRouterContext;
+
   static getDerivedStateFromError(error: any) {
     return { error: error };
   }
@@ -1059,17 +1071,85 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
-    return this.state.error !== undefined ? (
-      <RouteContext.Provider value={this.props.routeContext}>
-        <RouteErrorContext.Provider
-          value={this.state.error}
-          children={this.props.component}
-        />
-      </RouteContext.Provider>
-    ) : (
-      this.props.children
-    );
+    let error = this.state.error;
+
+    if (
+      this.context &&
+      typeof error === "object" &&
+      error &&
+      "digest" in error &&
+      typeof error.digest === "string"
+    ) {
+      const decoded = decodeRouteErrorResponseDigest(error.digest);
+      if (decoded) error = decoded;
+    }
+
+    let result =
+      error !== undefined ? (
+        <RouteContext.Provider value={this.props.routeContext}>
+          <RouteErrorContext.Provider
+            value={error}
+            children={this.props.component}
+          />
+        </RouteContext.Provider>
+      ) : (
+        this.props.children
+      );
+
+    if (this.context) {
+      return <RSCErrorHandler error={error}>{result}</RSCErrorHandler>;
+    }
+
+    return result;
   }
+}
+
+const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
+function RSCErrorHandler({
+  children,
+  error,
+}: {
+  children: React.ReactNode;
+  error: unknown;
+}) {
+  let { basename } = React.useContext(NavigationContext);
+
+  if (
+    typeof error === "object" &&
+    error &&
+    "digest" in error &&
+    typeof error.digest === "string"
+  ) {
+    let redirect = decodeRedirectErrorDigest(error.digest);
+    if (redirect) {
+      let existingRedirect = errorRedirectHandledMap.get(error);
+      if (existingRedirect) throw existingRedirect;
+
+      let parsed = parseToInfo(redirect.location, basename);
+
+      if (isBrowser && !errorRedirectHandledMap.get(error)) {
+        if (parsed.isExternal || redirect.reloadDocument) {
+          window.location.href = parsed.absoluteURL || parsed.to;
+        } else {
+          const redirectPromise: Promise<void> = Promise.resolve().then(() =>
+            window.__reactRouterDataRouter!.navigate(parsed.to, {
+              replace: redirect.replace,
+            }),
+          );
+          errorRedirectHandledMap.set(error, redirectPromise);
+          throw redirectPromise;
+        }
+      }
+
+      return (
+        <meta
+          httpEquiv="refresh"
+          content={`0;url=${parsed.absoluteURL || parsed.to}`}
+        />
+      );
+    }
+  }
+  return children;
 }
 
 interface RenderedRouteProps {
@@ -1103,7 +1183,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  unstable_onError: unstable_ClientOnErrorFunction | null = null,
+  onErrorHandler: ClientOnErrorFunction | null = null,
   future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
@@ -1187,11 +1267,12 @@ export function _renderMatches(
   }
 
   let onError =
-    dataRouterState && unstable_onError
+    dataRouterState && onErrorHandler
       ? (error: unknown, errorInfo?: React.ErrorInfo) => {
-          unstable_onError(error, {
+          onErrorHandler(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
+            unstable_pattern: getRoutePattern(dataRouterState.matches),
             errorInfo,
           });
         }
@@ -1836,7 +1917,7 @@ function useNavigateStable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        router.navigate(to);
+        await router.navigate(to);
       } else {
         await router.navigate(to, { fromRouteId: id, ...options });
       }
@@ -1865,16 +1946,20 @@ type UseRouteResult<Args extends UseRouteArgs> =
   Args extends [infer RouteId extends keyof RouteModules] ? UseRoute<RouteId> | undefined :
   never;
 
+// prettier-ignore
 type UseRoute<RouteId extends keyof RouteModules | unknown> = {
-  handle: RouteId extends keyof RouteModules
-    ? RouteModules[RouteId]["handle"]
-    : unknown;
-  loaderData: RouteId extends keyof RouteModules
-    ? GetLoaderData<RouteModules[RouteId]> | undefined
-    : unknown;
-  actionData: RouteId extends keyof RouteModules
-    ? GetActionData<RouteModules[RouteId]> | undefined
-    : unknown;
+  handle:
+    RouteId extends keyof RouteModules ?
+      RouteModules[RouteId] extends { handle: infer handle } ? handle :
+      unknown
+    :
+    unknown;
+  loaderData:
+    RouteId extends keyof RouteModules ? GetLoaderData<RouteModules[RouteId]> | undefined :
+    unknown;
+  actionData:
+    RouteId extends keyof RouteModules ? GetActionData<RouteModules[RouteId]> | undefined :
+    unknown;
 };
 
 export function useRoute<Args extends UseRouteArgs>(

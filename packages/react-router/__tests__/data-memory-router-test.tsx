@@ -1067,6 +1067,62 @@ describe("createMemoryRouter", () => {
     ]);
   });
 
+  it("exposes promise from useNavigate (popstate)", async () => {
+    let sequence: string[] = [];
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          async loader() {
+            sequence.push("loader start");
+            await new Promise((r) => setTimeout(r, 100));
+            sequence.push("loader end");
+            return null;
+          },
+          Component() {
+            sequence.push("render");
+            return <h1>Home</h1>;
+          },
+        },
+        {
+          path: "/page",
+          Component: () => {
+            let navigate = useNavigate();
+            return (
+              <>
+                <h1>Page</h1>
+                <button
+                  onClick={async () => {
+                    sequence.push("call navigate");
+                    await navigate(-1);
+                    sequence.push("navigate resolved");
+                  }}
+                >
+                  Back
+                </button>
+              </>
+            );
+          },
+        },
+      ],
+      { initialEntries: ["/", "/page"] },
+    );
+
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toContain("Page");
+    fireEvent.click(screen.getByText("Back"));
+    await waitFor(() => screen.getByText("Home"));
+
+    expect(sequence).toEqual([
+      "call navigate",
+      "loader start",
+      "loader end",
+      "navigate resolved",
+      "render",
+    ]);
+  });
+
   it("exposes promise from useSubmit", async () => {
     let sequence: string[] = [];
     let router = createMemoryRouter([

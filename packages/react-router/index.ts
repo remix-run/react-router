@@ -103,7 +103,7 @@ export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/conte
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,
@@ -349,7 +349,9 @@ export type {
 
 /** @internal */
 export {
+  createMemoryHistory as UNSAFE_createMemoryHistory,
   createBrowserHistory as UNSAFE_createBrowserHistory,
+  createHashHistory as UNSAFE_createHashHistory,
   invariant as UNSAFE_invariant,
 } from "./lib/router/history";
 

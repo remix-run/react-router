@@ -42,8 +42,8 @@
   },
   "packageManager": "pnpm@9.10.0",
   "resolutions": {
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-test-renderer": "^18.3.1",
     "jsdom": "22.1.0"
   },
@@ -59,8 +59,8 @@
     "@remix-run/changelog-github": "^0.0.5",
     "@types/jest": "^29.5.4",
     "@types/jsdom": "^21.1.1",
-    "@types/react": "^19.0.12",
-    "@types/react-dom": "^19.0.4",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/react-test-renderer": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",
@@ -83,16 +83,15 @@
     "jsonfile": "^6.1.0",
     "prettier": "^3.6.2",
     "prompts": "^2.4.2",
-    "react-server-dom-parcel": "^19.0.0",
     "remark-gfm": "^3.0.1",
     "remark-parse": "^10.0.1",
     "remark-stringify": "^10.0.2",
     "semver": "^7.5.4",
     "typedoc": "^0.28.7",
-    "typescript": "^5.4.5",
+    "typescript": "catalog:",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
-    "vite": "^6.1.0"
+    "vite": "^6.3.0"
   },
   "engines": {
     "node": ">=20.0.0"

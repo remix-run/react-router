@@ -243,11 +243,11 @@ test.describe("Vite / presets", async () => {
 
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
-        v8_middleware: true,
         unstable_optimizeDeps: true,
-        unstable_splitRouteModules: false,
         unstable_subResourceIntegrity: false,
-        unstable_viteEnvironmentApi: false,
+        v8_middleware: true,
+        v8_splitRouteModules: false,
+        v8_viteEnvironmentApi: false,
       });
 
       // Ensure we get a valid build manifest

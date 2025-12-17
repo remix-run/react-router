@@ -6,7 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -235,16 +235,9 @@ export interface HydratedRouterProps {
    * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
    * mostly useful for observability such as wrapping navigations, fetches,
    * as well as route loaders/actions/middlewares with logging and/or performance
-   * tracing.
+   * tracing. See the [docs](../../how-to/instrumentation) for more information.
    *
    * ```tsx
-   * startTransition(() => {
-   *   hydrateRoot(
-   *     document,
-   *     <HydratedRouter unstable_instrumentations={[logging]} />
-   *   );
-   * });
-   *
    * const logging = {
    *   router({ instrument }) {
    *     instrument({
@@ -277,13 +270,20 @@ export interface HydratedRouterProps {
    *   let duration = Math.round(performance.now() - start);
    *   console.log(`end ${label} (${duration}ms)`);
    * }
+   *
+   * startTransition(() => {
+   *   hydrateRoot(
+   *     document,
+   *     <HydratedRouter unstable_instrumentations={[logging]} />
+   *   );
+   * });
    * ```
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
-   * An error handler function that will be called for any loader/action/render
-   * errors that are encountered in your application.  This is useful for
-   * logging or reporting errors instead of the `ErrorBoundary` because it's not
+   * An error handler function that will be called for any middleware, loader, action,
+   * or render errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of in the {@link ErrorBoundary} because it's not
    * subject to re-rendering and will only run one time per error.
    *
    * The `errorInfo` parameter is passed along from
@@ -291,13 +291,33 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter unstable_onError={(error, errorInfo) => {
-   *   console.error(error, errorInfo);
-   *   reportToErrorService(error, errorInfo);
+   * <HydratedRouter onError=(error, info) => {
+   *   let { location, params, unstable_pattern, errorInfo } = info;
+   *   console.error(error, location, errorInfo);
+   *   reportToErrorService(error, location, errorInfo);
    * }} />
    * ```
    */
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: ClientOnErrorFunction;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all state updates are wrapped in
+   *   `React.startTransition`
+   *   - This can lead to buggy behaviors if you are wrapping your own
+   *     navigations/fetchers in `startTransition`.
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and router state changes will be wrapped in
+   *   `React.startTransition` and also sent through
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI.
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
 }
 
 /**
@@ -309,7 +329,7 @@ export interface HydratedRouterProps {
  * @mode framework
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
- * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
+ * @param {dom.HydratedRouterProps.onError} props.onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
@@ -404,7 +424,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
         <RemixErrorBoundary location={location}>
           <RouterProvider
             router={router}
-            unstable_onError={props.unstable_onError}
+            unstable_useTransitions={props.unstable_useTransitions}
+            onError={props.onError}
           />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>

@@ -43,7 +43,7 @@ import {
 
 routeRSCServerRequest({
   request,
-  fetchServer,
+  serverResponse,
   createFromReadableStream,
   async renderHTML(getPayload) {
     const payload = getPayload();

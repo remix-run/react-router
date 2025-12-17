@@ -1633,6 +1633,160 @@ describe("context/middleware", () => {
           e: new Error("E ERROR"),
         });
       });
+
+      it("throwing from a fetcher action middleware before next bubbles up to the boundary", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "a",
+              path: "/a",
+              hasErrorBoundary: true,
+              children: [
+                {
+                  id: "b",
+                  path: "b",
+                  hasErrorBoundary: false,
+                  middleware: [
+                    ({ request }) => {
+                      if (request.method === "POST") {
+                        throw new Error("B ERROR");
+                      }
+                    },
+                  ],
+                  action: () => "B",
+                },
+              ],
+            },
+          ],
+        });
+
+        // Bubbles to B because it's the initial load and it's loader hasn't run
+        await router.navigate("/a/b");
+        expect(router.state.loaderData).toEqual({});
+        expect(router.state.errors).toBeNull();
+
+        let data;
+        router.subscribe((state) => {
+          data ??= state.fetchers.get("key")?.data;
+        });
+
+        await router.fetch("key", "b", "/a/b", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(data).toBeUndefined();
+        expect(router.state.errors).toEqual({
+          a: new Error("B ERROR"),
+        });
+      });
+    });
+
+    describe("redirects", () => {
+      it("allows you to return redirects before next from client middleware", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              path: "/redirect",
+              middleware: [
+                async () => {
+                  return redirect("/target");
+                },
+              ],
+            },
+            {
+              path: "/target",
+            },
+          ],
+        });
+
+        await router.navigate("/redirect");
+        expect(router.state.location.pathname).toBe("/target");
+      });
+
+      it("allows you to return redirects after next from client middleware", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              path: "/redirect",
+              middleware: [
+                async (_, next) => {
+                  await next();
+                  return redirect("/target");
+                },
+              ],
+            },
+            {
+              path: "/target",
+            },
+          ],
+        });
+
+        await router.navigate("/redirect");
+        expect(router.state.location.pathname).toBe("/target");
+      });
+
+      it("allows you to throw  redirects before next from client middleware", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              path: "/redirect",
+              middleware: [
+                async () => {
+                  throw redirect("/target");
+                },
+              ],
+            },
+            {
+              path: "/target",
+            },
+          ],
+        });
+
+        await router.navigate("/redirect");
+        expect(router.state.location.pathname).toBe("/target");
+      });
+
+      it("allows you to throw redirects after next from client middleware", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              path: "/redirect",
+              middleware: [
+                async (_, next) => {
+                  await next();
+                  throw redirect("/target");
+                },
+              ],
+            },
+            {
+              path: "/target",
+            },
+          ],
+        });
+
+        await router.navigate("/redirect");
+        expect(router.state.location.pathname).toBe("/target");
+      });
     });
   });
 

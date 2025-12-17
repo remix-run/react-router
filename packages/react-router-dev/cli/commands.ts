@@ -1,7 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
 import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
@@ -138,8 +137,10 @@ export async function generateEntry(
     return;
   }
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
+  // TODO(v8): Remove - only required for Node 20.18 and below
+  let { readPackageJSON } = await import("pkg-types");
+  let pkgJson = await readPackageJSON(rootDirectory);
+  let deps = pkgJson.dependencies ?? {};
 
   if (!deps["@react-router/node"]) {
     console.error(colors.red(`No default server entry detected.`));

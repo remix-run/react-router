@@ -53,7 +53,7 @@ function SomeComponent() {
   })
 
   // reset fetcher
-  fetcher.unstable_reset()
+  fetcher.reset()
 }
 ```
 

@@ -1,6 +1,6 @@
 {
   "name": "create-react-router",
-  "version": "7.9.5",
+  "version": "7.10.1",
   "description": "Create a new React Router app",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -26,6 +26,7 @@
     "build": {
       "command": "tsup",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "tsconfig.json",
         "package.json"
@@ -58,9 +59,9 @@
     "esbuild-register": "^3.6.0",
     "msw": "^2.7.5",
     "tiny-invariant": "^1.2.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "engines": {
     "node": ">=18.0.0"

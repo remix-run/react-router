@@ -36,6 +36,7 @@ import {
   ErrorResponseImpl,
   joinPaths,
   matchPath,
+  parseToInfo,
   stripBasename,
 } from "../router/utils";
 
@@ -242,7 +243,7 @@ export interface DOMRouterOpts {
    * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
    * mostly useful for observability such as wrapping navigations, fetches,
    * as well as route loaders/actions/middlewares with logging and/or performance
-   * tracing.
+   * tracing.  See the [docs](../../how-to/instrumentation) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
@@ -286,189 +287,32 @@ export interface DOMRouterOpts {
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
-   * Override the default data strategy of running loaders in parallel.
-   * See {@link DataStrategyFunction}.
-   *
-   * <docs-warning>This is a low-level API intended for advanced use-cases. This
-   * overrides React Router's internal handling of
-   * [`action`](../../start/data/route-object#action)/[`loader`](../../start/data/route-object#loader)
-   * execution, and if done incorrectly will break your app code. Please use
-   * with caution and perform the appropriate testing.</docs-warning>
-   *
-   * By default, React Router is opinionated about how your data is loaded/submitted -
-   * and most notably, executes all of your [`loader`](../../start/data/route-object#loader)s
-   * in parallel for optimal data fetching. While we think this is the right
-   * behavior for most use-cases, we realize that there is no "one size fits all"
-   * solution when it comes to data fetching for the wide landscape of
-   * application requirements.
-   *
-   * The `dataStrategy` option gives you full control over how your [`action`](../../start/data/route-object#action)s
-   * and [`loader`](../../start/data/route-object#loader)s are executed and lays
-   * the foundation to build in more advanced APIs such as middleware, context,
-   * and caching layers. Over time, we expect that we'll leverage this API
-   * internally to bring more first class APIs to React Router, but until then
-   * (and beyond), this is your way to add more advanced functionality for your
-   * application's data needs.
-   *
-   * The `dataStrategy` function should return a key/value-object of
-   * `routeId` -> {@link DataStrategyResult} and should include entries for any
-   * routes where a handler was executed. A `DataStrategyResult` indicates if
-   * the handler was successful or not based on the `DataStrategyResult.type`
-   * field. If the returned `DataStrategyResult.result` is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
-   * React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
-   * or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
-   * If you need to do custom decoding of a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-   * but want to preserve the status code, you can use the `data` utility to
-   * return your decoded data along with a `ResponseInit`.
-   *
-   * <details>
-   * <summary><b>Example <code>dataStrategy</code> Use Cases</b></summary>
-   *
-   * **Adding logging**
-   *
-   * In the simplest case, let's look at hooking into this API to add some logging
-   * for when our route [`action`](../../start/data/route-object#action)s/[`loader`](../../start/data/route-object#loader)s
-   * execute:
+   * Override the default data strategy of running loaders in parallel -
+   * see the [docs](../../how-to/data-strategy) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, request }) {
-   *     const matchesToLoad = matches.filter((m) => m.shouldLoad);
+   *   async dataStrategy({
+   *     matches,
+   *     request,
+   *     runClientMiddleware,
+   *   }) {
+   *     const matchesToLoad = matches.filter((m) =>
+   *       m.shouldCallHandler(),
+   *     );
+   *
    *     const results: Record<string, DataStrategyResult> = {};
-   *     await Promise.all(
-   *       matchesToLoad.map(async (match) => {
-   *         console.log(`Processing ${match.route.id}`);
-   *         results[match.route.id] = await match.resolve();;
-   *       })
-   *     );
-   *     return results;
-   *   },
-   * });
-   * ```
-   *
-   * **Middleware**
-   *
-   * Let's define a middleware on each route via [`handle`](../../start/data/route-object#handle)
-   * and call middleware sequentially first, then call all
-   * [`loader`](../../start/data/route-object#loader)s in parallel - providing
-   * any data made available via the middleware:
-   *
-   * ```ts
-   * const routes = [
-   *   {
-   *     id: "parent",
-   *     path: "/parent",
-   *     loader({ request }, context) {
-   *        // ...
-   *     },
-   *     handle: {
-   *       async middleware({ request }, context) {
-   *         context.parent = "PARENT MIDDLEWARE";
-   *       },
-   *     },
-   *     children: [
-   *       {
-   *         id: "child",
-   *         path: "child",
-   *         loader({ request }, context) {
-   *           // ...
-   *         },
-   *         handle: {
-   *           async middleware({ request }, context) {
-   *             context.child = "CHILD MIDDLEWARE";
-   *           },
-   *         },
-   *       },
-   *     ],
-   *   },
-   * ];
-   *
-   * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, params, request }) {
-   *     // Run middleware sequentially and let them add data to `context`
-   *     let context = {};
-   *     for (const match of matches) {
-   *       if (match.route.handle?.middleware) {
-   *         await match.route.handle.middleware(
-   *           { request, params },
-   *           context
-   *         );
-   *       }
-   *     }
-   *
-   *     // Run loaders in parallel with the `context` value
-   *     let matchesToLoad = matches.filter((m) => m.shouldLoad);
-   *     let results = await Promise.all(
-   *       matchesToLoad.map((match, i) =>
-   *         match.resolve((handler) => {
-   *           // Whatever you pass to `handler` will be passed as the 2nd parameter
-   *           // to your loader/action
-   *           return handler(context);
-   *         })
-   *       )
-   *     );
-   *     return results.reduce(
-   *       (acc, result, i) =>
-   *         Object.assign(acc, {
-   *           [matchesToLoad[i].route.id]: result,
+   *     await runClientMiddleware(() =>
+   *       Promise.all(
+   *         matchesToLoad.map(async (match) => {
+   *           results[match.route.id] = await match.resolve();
    *         }),
-   *       {}
+   *       ),
    *     );
-   *   },
-   * });
-   * ```
-   *
-   * **Custom Handler**
-   *
-   * It's also possible you don't even want to define a [`loader`](../../start/data/route-object#loader)
-   * implementation at the route level. Maybe you want to just determine the
-   * routes and issue a single GraphQL request for all of your data? You can do
-   * that by setting your `route.loader=true` so it qualifies as "having a
-   * loader", and then store GQL fragments on `route.handle`:
-   *
-   * ```ts
-   * const routes = [
-   *   {
-   *     id: "parent",
-   *     path: "/parent",
-   *     loader: true,
-   *     handle: {
-   *       gql: gql`
-   *         fragment Parent on Whatever {
-   *           parentField
-   *         }
-   *       `,
-   *     },
-   *     children: [
-   *       {
-   *         id: "child",
-   *         path: "child",
-   *         loader: true,
-   *         handle: {
-   *           gql: gql`
-   *             fragment Child on Whatever {
-   *               childField
-   *             }
-   *           `,
-   *         },
-   *       },
-   *     ],
-   *   },
-   * ];
-   *
-   * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, params, request }) {
-   *     // Compose route fragments into a single GQL payload
-   *     let gql = getFragmentsFromRouteHandles(matches);
-   *     let data = await fetchGql(gql);
-   *     // Parse results back out into individual route level `DataStrategyResult`'s
-   *     // keyed by `routeId`
-   *     let results = parseResultsFromGql(data);
    *     return results;
    *   },
    * });
    * ```
-   *</details>
    */
   dataStrategy?: DataStrategyFunction;
   /**
@@ -933,6 +777,21 @@ export interface BrowserRouterProps {
    */
   children?: React.ReactNode;
   /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
+  /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
    */
@@ -949,6 +808,7 @@ export interface BrowserRouterProps {
  * @param props Props
  * @param {BrowserRouterProps.basename} props.basename n/a
  * @param {BrowserRouterProps.children} props.children n/a
+ * @param {BrowserRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @param {BrowserRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * API for client-side routing.
@@ -956,6 +816,7 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
+  unstable_useTransitions,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -970,9 +831,13 @@ export function BrowserRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_useTransitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -984,6 +849,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1000,6 +866,21 @@ export interface HashRouterProps {
    * {@link Route | `<Route>`} components describing your route configuration
    */
   children?: React.ReactNode;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -1018,11 +899,17 @@ export interface HashRouterProps {
  * @param props Props
  * @param {HashRouterProps.basename} props.basename n/a
  * @param {HashRouterProps.children} props.children n/a
+ * @param {HashRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @param {HashRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
  * for client-side routing.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename,
+  children,
+  unstable_useTransitions,
+  window,
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
@@ -1035,9 +922,13 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_useTransitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1049,6 +940,7 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1069,6 +961,21 @@ export interface HistoryRouterProps {
    *  A {@link History} implementation for use by the router
    */
   history: History;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and all router state updates are wrapped in
+   *   `React.startTransition`
+   * - When set to `false`, the router will not leverage `React.startTransition`
+   *   on any navigations or state changes.
+   *
+   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   */
+  unstable_useTransitions?: boolean;
 }
 
 /**
@@ -1086,6 +993,7 @@ export interface HistoryRouterProps {
  * @param {HistoryRouterProps.basename} props.basename n/a
  * @param {HistoryRouterProps.children} props.children n/a
  * @param {HistoryRouterProps.history} props.history n/a
+ * @param {HistoryRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
  * @returns A declarative {@link Router | `<Router>`} using the provided history
  * implementation for client-side routing.
  */
@@ -1093,6 +1001,7 @@ export function HistoryRouter({
   basename,
   children,
   history,
+  unstable_useTransitions,
 }: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
@@ -1100,9 +1009,13 @@ export function HistoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      React.startTransition(() => setStateImpl(newState));
+      if (unstable_useTransitions === false) {
+        setStateImpl(newState);
+      } else {
+        React.startTransition(() => setStateImpl(newState));
+      }
     },
-    [setStateImpl],
+    [unstable_useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1114,6 +1027,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1287,6 +1201,23 @@ export interface LinkProps
    * To apply specific styles for the transition, see {@link useViewTransitionState}
    */
   viewTransition?: boolean;
+
+  /**
+   * Specify the default revalidation behavior for the navigation.
+   *
+   * ```tsx
+   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+   * ```
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1319,6 +1250,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
+ * @param {LinkProps.unstable_defaultShouldRevalidate} props.unstable_defaultShouldRevalidate n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1334,46 +1266,17 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       to,
       preventScrollReset,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       ...rest
     },
     forwardedRef,
   ) {
-    let { basename } = React.useContext(NavigationContext);
+    let { basename, unstable_useTransitions } =
+      React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
-    // Rendered into <a href> for absolute URLs
-    let absoluteHref;
-    let isExternal = false;
-
-    if (typeof to === "string" && isAbsolute) {
-      // Render the absolute href server- and client-side
-      absoluteHref = to;
-
-      // Only check for external origins client-side
-      if (isBrowser) {
-        try {
-          let currentUrl = new URL(window.location.href);
-          let targetUrl = to.startsWith("//")
-            ? new URL(currentUrl.protocol + to)
-            : new URL(to);
-          let path = stripBasename(targetUrl.pathname, basename);
-
-          if (targetUrl.origin === currentUrl.origin && path != null) {
-            // Strip the protocol/origin/basename for same-origin absolute URLs
-            to = path + targetUrl.search + targetUrl.hash;
-          } else {
-            isExternal = true;
-          }
-        } catch (e) {
-          // We can't do external URL detection without a valid URL
-          warning(
-            false,
-            `<Link to="${to}"> contains an invalid URL which will probably break ` +
-              `when clicked - please update to a valid URL path.`,
-          );
-        }
-      }
-    }
+    let parsed = parseToInfo(to, basename);
+    to = parsed.to;
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
@@ -1389,6 +1292,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_defaultShouldRevalidate,
+      unstable_useTransitions,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -1404,8 +1309,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={absoluteHref || href}
-        onClick={isExternal || reloadDocument ? onClick : handleClick}
+        href={parsed.absoluteURL || href}
+        onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
         data-discover={
@@ -1788,6 +1693,19 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+
+  /**
+   * Specify the default revalidation behavior after this submission
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -1911,6 +1829,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.replace} replace n/a
  * @param {FormProps.state} state n/a
  * @param {FormProps.viewTransition} viewTransition n/a
+ * @param {FormProps.unstable_defaultShouldRevalidate} unstable_defaultShouldRevalidate n/a
  * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
@@ -1928,10 +1847,12 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       relative,
       preventScrollReset,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       ...props
     },
     forwardedRef,
   ) => {
+    let { unstable_useTransitions } = React.useContext(NavigationContext);
     let submit = useSubmit();
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
@@ -1951,16 +1872,25 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         (submitter?.getAttribute("formmethod") as HTMLFormMethod | undefined) ||
         method;
 
-      submit(submitter || event.currentTarget, {
-        fetcherKey,
-        method: submitMethod,
-        navigate,
-        replace,
-        state,
-        relative,
-        preventScrollReset,
-        viewTransition,
-      });
+      let doSubmit = () =>
+        submit(submitter || event.currentTarget, {
+          fetcherKey,
+          method: submitMethod,
+          navigate,
+          replace,
+          state,
+          relative,
+          preventScrollReset,
+          viewTransition,
+          unstable_defaultShouldRevalidate,
+        });
+
+      if (unstable_useTransitions && navigate !== false) {
+        // @ts-expect-error Needs React 19 types
+        React.startTransition(() => doSubmit());
+      } else {
+        doSubmit();
+      }
     };
 
     return (
@@ -2175,6 +2105,11 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.unstable_defaultShouldRevalidate Specify the default revalidation
+ * behavior for the navigation. Defaults to `true`.
+ * @param options.unstable_useTransitions Wraps the navigation in
+ * [`React.startTransition`](https://react.dev/reference/react/startTransition)
+ * for concurrent rendering. Defaults to `false`.
  * @returns A click handler function that can be used in a custom {@link Link} component.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
@@ -2186,6 +2121,8 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
+    unstable_defaultShouldRevalidate,
+    unstable_useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -2193,6 +2130,8 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    unstable_defaultShouldRevalidate?: boolean;
+    unstable_useTransitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -2211,13 +2150,22 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, {
-          replace,
-          state,
-          preventScrollReset,
-          relative,
-          viewTransition,
-        });
+        let doNavigate = () =>
+          navigate(to, {
+            replace,
+            state,
+            preventScrollReset,
+            relative,
+            viewTransition,
+            unstable_defaultShouldRevalidate,
+          });
+
+        if (unstable_useTransitions) {
+          // @ts-expect-error Needs React 19 types
+          React.startTransition(() => doNavigate());
+        } else {
+          doNavigate();
+        }
       }
     },
     [
@@ -2231,6 +2179,8 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_defaultShouldRevalidate,
+      unstable_useTransitions,
     ],
   );
 }
@@ -2539,6 +2489,9 @@ export function useSubmit(): SubmitFunction {
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
+  let routerFetch = router.fetch;
+  let routerNavigate = router.navigate;
+
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
@@ -2548,7 +2501,9 @@ export function useSubmit(): SubmitFunction {
 
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
-        await router.fetch(key, currentRouteId, options.action || action, {
+        await routerFetch(key, currentRouteId, options.action || action, {
+          unstable_defaultShouldRevalidate:
+            options.unstable_defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2557,7 +2512,9 @@ export function useSubmit(): SubmitFunction {
           flushSync: options.flushSync,
         });
       } else {
-        await router.navigate(options.action || action, {
+        await routerNavigate(options.action || action, {
+          unstable_defaultShouldRevalidate:
+            options.unstable_defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2571,7 +2528,7 @@ export function useSubmit(): SubmitFunction {
         });
       }
     },
-    [router, basename, currentRouteId],
+    [routerFetch, routerNavigate, basename, currentRouteId],
   );
 }
 
@@ -2722,7 +2679,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
    * @param reason Optional `reason` to provide to [`AbortController.abort()`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
    * @returns void
    */
-  unstable_reset: (opts?: { reason?: unknown }) => void;
+  reset: (opts?: { reason?: unknown }) => void;
 
   /**
    *  Submits form data to a route. While multiple nested routes can match a URL, only the leaf route will be called.
@@ -2813,7 +2770,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  *   })
  *
  *   // reset fetcher
- *   fetcher.unstable_reset()
+ *   fetcher.reset()
  * }
  *
  * @public
@@ -2868,19 +2825,21 @@ export function useFetcher<T = any>({
     setFetcherKey(key);
   }
 
+  let { deleteFetcher, getFetcher, resetFetcher, fetch: routerFetch } = router;
+
   // Registration/cleanup
   React.useEffect(() => {
-    router.getFetcher(fetcherKey);
-    return () => router.deleteFetcher(fetcherKey);
-  }, [router, fetcherKey]);
+    getFetcher(fetcherKey);
+    return () => deleteFetcher(fetcherKey);
+  }, [deleteFetcher, getFetcher, fetcherKey]);
 
   // Fetcher additions
   let load = React.useCallback(
     async (href: string, opts?: { flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      await router.fetch(fetcherKey, routeId, href, opts);
+      await routerFetch(fetcherKey, routeId, href, opts);
     },
-    [fetcherKey, routeId, router],
+    [fetcherKey, routeId, routerFetch],
   );
 
   let submitImpl = useSubmit();
@@ -2895,9 +2854,10 @@ export function useFetcher<T = any>({
     [fetcherKey, submitImpl],
   );
 
-  let unstable_reset = React.useCallback<
-    FetcherWithComponents<T>["unstable_reset"]
-  >((opts) => router.resetFetcher(fetcherKey, opts), [router, fetcherKey]);
+  let reset = React.useCallback<FetcherWithComponents<T>["reset"]>(
+    (opts) => resetFetcher(fetcherKey, opts),
+    [resetFetcher, fetcherKey],
+  );
 
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
@@ -2919,11 +2879,11 @@ export function useFetcher<T = any>({
       Form: FetcherForm,
       submit,
       load,
-      unstable_reset,
+      reset,
       ...fetcher,
       data,
     }),
-    [FetcherForm, submit, load, unstable_reset, fetcher, data],
+    [FetcherForm, submit, load, reset, fetcher, data],
   );
 
   return fetcherWithComponents;

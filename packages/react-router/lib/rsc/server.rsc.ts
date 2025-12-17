@@ -12,7 +12,7 @@ import type {
 import { type Location } from "../router/history";
 import {
   createStaticHandler,
-  isAbsoluteUrl,
+  isDataWithResponseInit,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
@@ -26,6 +26,7 @@ import {
   type ShouldRevalidateFunction,
   type RouterContextProvider,
   type TrackedPromise,
+  isAbsoluteUrl,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -48,7 +49,7 @@ import {
   UNSAFE_WithErrorBoundaryProps,
   // @ts-ignore There are no types before the tsup build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
-  // TSConfig, it breaks the Parcel build within this repo.
+  // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
 import type {
   Await as AwaitType,
@@ -60,6 +61,12 @@ import type {
   ErrorBoundaryProps,
   HydrateFallbackProps,
 } from "../components";
+
+import {
+  createRedirectErrorDigest,
+  createRouteErrorResponseDigest,
+} from "../errors";
+
 const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
   UNSAFE_WithComponentProps;
@@ -278,7 +285,7 @@ export type DecodeFormStateFunction = (
 
 export type DecodeReplyFunction = (
   reply: FormData | string,
-  { temporaryReferences }: { temporaryReferences: unknown },
+  options: { temporaryReferences: unknown },
 ) => Promise<unknown[]>;
 
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
@@ -379,16 +386,45 @@ export async function matchRSCServerRequest({
   generateResponse: (
     match: RSCMatch,
     {
+      onError,
       temporaryReferences,
     }: {
+      onError(error: unknown): string | undefined;
       temporaryReferences: unknown;
     },
   ) => Response;
 }): Promise<Response> {
-  let requestUrl = new URL(request.url);
+  let url = new URL(request.url);
+
+  basename = basename || "/";
+  let normalizedPath = url.pathname;
+  if (stripBasename(normalizedPath, basename) === "/_root.rsc") {
+    normalizedPath = basename;
+  } else if (normalizedPath.endsWith(".rsc")) {
+    normalizedPath = normalizedPath.replace(/\.rsc$/, "");
+  }
+
+  if (
+    stripBasename(normalizedPath, basename) !== "/" &&
+    normalizedPath.endsWith("/")
+  ) {
+    normalizedPath = normalizedPath.slice(0, -1);
+  }
+  url.pathname = normalizedPath;
+  basename =
+    basename.length > normalizedPath.length ? normalizedPath : basename;
+
+  let routerRequest = new Request(url.toString(), {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    signal: request.signal,
+    duplex: request.body ? "half" : undefined,
+  } as RequestInit);
 
   const temporaryReferences = createTemporaryReferenceSet();
 
+  const requestUrl = new URL(request.url);
   if (isManifestRequest(requestUrl)) {
     let response = await generateManifestResponse(
       routes,
@@ -401,19 +437,6 @@ export async function matchRSCServerRequest({
   }
 
   let isDataRequest = isReactServerRequest(requestUrl);
-
-  const url = new URL(request.url);
-  let routerRequest = request;
-  if (isDataRequest) {
-    url.pathname = url.pathname.replace(/(_root)?\.rsc$/, "");
-    routerRequest = new Request(url.toString(), {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-      signal: request.signal,
-      duplex: request.body ? "half" : undefined,
-    } as RequestInit);
-  }
 
   // Explode lazy functions out the routes so we can use middleware
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
@@ -467,7 +490,10 @@ async function generateManifestResponse(
   request: Request,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
 ) {
@@ -518,7 +544,7 @@ async function generateManifestResponse(
       }),
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -722,7 +748,10 @@ async function generateRenderResponse(
   onError: ((error: unknown) => void) | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
 ): Promise<Response> {
@@ -876,7 +905,10 @@ function generateRedirectResponse(
   isDataRequest: boolean,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
   sideEffectRedirectHeaders: Headers | undefined,
@@ -919,7 +951,7 @@ function generateRedirectResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -928,7 +960,10 @@ async function generateStaticContextResponse(
   basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   statusCode: number,
   routeIdsToLoad: string[] | null,
@@ -988,7 +1023,7 @@ async function generateStaticContextResponse(
 
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
-    basename,
+    basename: staticContext.basename,
     actionData: staticContext.actionData,
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
@@ -1034,7 +1069,7 @@ async function generateStaticContextResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -1333,6 +1368,15 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+function defaultOnError(error: unknown) {
+  if (isRedirectResponse(error)) {
+    return createRedirectErrorDigest(error);
+  }
+  if (isResponse(error) || isDataWithResponseInit(error)) {
+    return createRouteErrorResponseDigest(error);
+  }
 }
 
 function isClientReference(x: any) {

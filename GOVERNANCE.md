@@ -107,16 +107,17 @@ This table gives a high-level overview of the stages, but please see the individ
 ### Stage 1 — Consideration
 
 - A proposal enters **Stage 1 — Consideration** when 2 SC members indicate interest/support for the idea as a valuable addition to React Router
-- Upon entering this stage, a GitHub Issue will be created for the feature and added to the roadmap
 - These initial supporting SC members will be the champions for the feature and will be loosely responsible for shepherding the feature through the stages of the RFC process
 - At this stage, the proposal is eligible for a sample PR implementation from a core team or community member
 - The SC will indicate at this stage if this is a feature open to a community PR or something the core team would prefer to tackle
+- We will add the `accepting-prs` label to the RFC if we are open to community PRs
 - All PRs at this stage should implement the feature in an "unstable" fashion (usually using an `unstable_` prefix on the future flag or API)
 
 ### Stage 2 — Alpha
 
 - A proposal enters **Stage 2 — Alpha** once a PR has been opened implementing the feature in an `unstable_` state
 - At this stage, we should open an Issue for the Proposal and add it to the [Roadmap](https://github.com/orgs/remix-run/projects/5)
+- We will remove any `accepting-prs` label and add the `🗺️ Roadmap` label to indicate that this RFc is officially on the roadmap
 - At this stage, we are looking for early community testing _before_ merging any work to the React Router repo — so these PRs should provide a mechanism for community members to opt into to alpha testing
   - Maintainers can trigger an alpha release from the PR branch by adding the `alpha-release` label, which will kick off an experimental release and comment it back on the PR
   - Because the alpha release may contain other work committed to `dev` but not yet released in a stable version, it may not be ideal for testing in all cases
@@ -186,7 +187,7 @@ Brooks Lybrand announced the planned release of unstable framework RSC support i
   - [Per-route Layout component](https://github.com/remix-run/react-router/discussions/13818)
 - Matt Brophy will comment back on the ESLint issue to get it closed out and point to the OpenTelemetry issue to the new instrumentation approach
 - Pedro Cattori will start on the route stuff and try to get a PR up for it, once a PR is opened we will also get an issue on the roadmap
-- Jacob Ebey will check in with Zach about his interest in the [current work w.r.t. module imoports](https://github.com/remix-run/react-router/pull/12638), and Matt Brophy will add a comment to the issue asking if it is needed and close it if there is no response in a week.
+- Jacob Ebey will check in with Zach about his interest in the [current work w.r.t. module imports](https://github.com/remix-run/react-router/pull/12638), and Matt Brophy will add a comment to the issue asking if it is needed and close it if there is no response in a week.
 
 </details>
 
@@ -224,4 +225,25 @@ Matt Brophy, Bryan Ross (rossipedia), Mark Dalgleish, and Pedro Cattori discusse
 - Matt Brophy will merge the unstable [`fetcher.reset()`](https://github.com/remix-run/react-router/issues/14207) work after 7.9.0 is released ()
 - Matt Brophy will try to pick up the [`<Link onPrefetch>`](https://github.com/remix-run/react-router/discussions/12375) task soon
 - Matt Brophy and Pedro Cattori will sync up offline to figure out what parts of the consolidated hook can be done better with typegen and decide on the requirements ([RFC](https://github.com/remix-run/react-router/issues/13073))
+</details>
+
+<details>
+  <summary>2025-11-04 Meeting Notes</summary>
+
+The SC reviewed items on the open Proposal for React Router v8
+
+- Confirmed the plan to drop CJS builds for ESM-only builds
+  - We will plan RR v8 for Q2 2026 which aligns nicely with the EOL for Node 20
+  - v8 will have a minimum Node version of 22.12 so that the `require(esm)` feature is not behind an [experimental flag](https://nodejs.org/docs/latest-v22.x/api/modules.html#loading-ecmascript-modules-using-require)
+- Going forward we will aim for a yearly major release in the same Q2 timeframe
+- We would like to try to get `useRouterState` into v8 as the other half of the `unstable_useRoute` coin
+- We think Subresource Integrity (SRI) is ready for stabilization but we would like to ping a few existing users and/or SME's to confirm the implementation is valid
+- Discussed the `unstable_optimizedDeps` feature, confirming it will remain unstable in V8 and then be pseudo-deprecated in favor of RollDown
+  - There are some concerns about RollDown's full bundle mode limiting scalability so we may need to wait until rolldown is ready for testing
+- Decided against making "type-safe matches" an immediate V8 necessity due to the API churn
+- RSC implementation will not have a stable API ready for V8 but will be released in a minor version later
+  - We will not be deprecating existing APIs at that time because not everyone should have to use RSC
+- `Vite environment API` and `split route modules` are nearing stabilization
+- Reviewed a new RFC to stop URL normalization in loaders
+
 </details>

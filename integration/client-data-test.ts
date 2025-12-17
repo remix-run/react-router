@@ -125,17 +125,17 @@ test.describe("Client Data", () => {
     }
 
     test.describe(`template: ${templateName}`, () => {
-      for (const splitRouteModules of [true, false]) {
-        test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
+      for (const v8_splitRouteModules of [true, false]) {
+        test.describe(`v8_splitRouteModules: ${v8_splitRouteModules}`, () => {
           test.skip(
-            templateName.includes("rsc") && splitRouteModules,
+            templateName.includes("rsc") && v8_splitRouteModules,
             "RSC Framework Mode doesn't support splitRouteModules",
           );
 
           test.skip(
             ({ browserName }) =>
               Boolean(process.env.CI) &&
-              splitRouteModules &&
+              v8_splitRouteModules &&
               (browserName === "webkit" || process.platform === "win32"),
             "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific",
           );
@@ -149,7 +149,7 @@ test.describe("Client Data", () => {
                   templateName,
                   files: {
                     "react-router.config.ts": reactRouterConfig({
-                      splitRouteModules,
+                      v8_splitRouteModules,
                     }),
                     "app/root.tsx": js`
                       import { Form, Outlet, Scripts } from "react-router"
@@ -1234,11 +1234,14 @@ test.describe("Client Data", () => {
             test("bubbled server loader errors are persisted for hydrating routes", async ({
               page,
             }) => {
+              // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
               let _consoleError = console.error;
               console.error = () => {};
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
               page.on("console", (msg) => {
+                if (msg.type() === "timeStamp") return;
+
                 let text = msg.text();
                 if (
                   // Chrome logs the 500 as a console error, so skip that since it's not
