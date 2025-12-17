@@ -43,11 +43,11 @@ export async function singleFetchAction(
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
-    if (build.future.unstable_allowedActionOrigins) {
+    if (build.allowedActionOrigins) {
       throwIfPotentialCSRFAttack(
         request.headers,
-        Array.isArray(build.future.unstable_allowedActionOrigins)
-          ? build.future.unstable_allowedActionOrigins
+        Array.isArray(build.allowedActionOrigins)
+          ? build.allowedActionOrigins
           : [],
       );
     }

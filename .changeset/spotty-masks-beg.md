@@ -3,4 +3,4 @@
 "react-router": patch
 ---
 
-Add additional layer of CSRF protection.
+additional layer of CSRF protection.

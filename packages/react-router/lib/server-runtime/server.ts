@@ -482,14 +482,11 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
-    if (
-      request.method === "POST" &&
-      build.future.unstable_allowedActionOrigins
-    ) {
+    if (request.method === "POST") {
       throwIfPotentialCSRFAttack(
         request.headers,
-        Array.isArray(build.future.unstable_allowedActionOrigins)
-          ? build.future.unstable_allowedActionOrigins
+        Array.isArray(build.allowedActionOrigins)
+          ? build.allowedActionOrigins
           : [],
       );
     }

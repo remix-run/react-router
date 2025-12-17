@@ -132,7 +132,6 @@ export function createRoutesStub(
     if (routerRef.current == null) {
       frameworkContextRef.current = {
         future: {
-          unstable_allowedActionOrigins: false,
           unstable_subResourceIntegrity:
             future?.unstable_subResourceIntegrity === true,
           v8_middleware: future?.v8_middleware === true,

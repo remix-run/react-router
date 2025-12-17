@@ -871,7 +871,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               }
             `
           : ""
-      }`;
+      }
+      export const allowedActionOrigins = ${JSON.stringify(ctx.reactRouterConfig.allowedActionOrigins)};
+    `;
   };
 
   let loadViteManifest = async (directory: string) => {
