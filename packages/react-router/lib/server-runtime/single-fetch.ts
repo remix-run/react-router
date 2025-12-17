@@ -43,14 +43,12 @@ export async function singleFetchAction(
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
-    if (build.allowedActionOrigins) {
-      throwIfPotentialCSRFAttack(
-        request.headers,
-        Array.isArray(build.allowedActionOrigins)
-          ? build.allowedActionOrigins
-          : [],
-      );
-    }
+    throwIfPotentialCSRFAttack(
+      request.headers,
+      Array.isArray(build.allowedActionOrigins)
+        ? build.allowedActionOrigins
+        : [],
+    );
 
     let handlerRequest = new Request(handlerUrl, {
       method: request.method,
