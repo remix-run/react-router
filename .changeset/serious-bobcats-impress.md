@@ -29,4 +29,6 @@ With this flag enabled, these pathnames will be made consistent though a new `_.
 | **Document**  | `/a/b/c/`          | `/a/b/c/` ✅           |
 | **Data**      | `/a/b/c/_.data` ⬅️ | `/a/b/c/` ✅           |
 
-This a bug fix but we are putting it behind an opt-in flag because it has the potential to be a "breaking bug fix" if you are relying on the URL format for any other application or caching logic
+This a bug fix but we are putting it behind an opt-in flag because it has the potential to be a "breaking bug fix" if you are relying on the URL format for any other application or caching logic.
+
+Enabling this flag also changes the format of client side `.data` requests from `/_root.data -> /_.data` when navigating to `/` to align with the new format.
