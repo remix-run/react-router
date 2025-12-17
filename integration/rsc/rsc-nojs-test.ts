@@ -3,8 +3,6 @@ import getPort from "get-port";
 
 import { implementations, js, setupRscTest, validateRSCHtml } from "./utils";
 
-test.use({ javaScriptEnabled: false });
-
 implementations.forEach((implementation) => {
   test.describe(`RSC nojs (${implementation.name})`, () => {
     let port: number;
@@ -20,6 +18,34 @@ implementations.forEach((implementation) => {
         implementation,
         port,
         files: {
+          "src/routes.ts": js`
+            import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+            export const routes = [
+              {
+                id: "root",
+                path: "",
+                lazy: () => import("./routes/root"),
+                children: [
+                  {
+                    id: "home",
+                    index: true,
+                    lazy: () => import("./routes/home"),
+                  },
+                  {
+                    id: "render-redirect-lazy",
+                    path: "/render-redirect/lazy/:id?",
+                    lazy: () => import("./routes/render-redirect/lazy"),
+                  },
+                  {
+                    id: "render-redirect",
+                    path: "/render-redirect/:id?",
+                    lazy: () => import("./routes/render-redirect/home"),
+                  },
+                ],
+              },
+            ] satisfies RSCRouteConfig;
+          `,
           "src/routes/home.actions.ts": js`
             "use server";
             import { redirect } from "react-router";
@@ -76,6 +102,60 @@ implementations.forEach((implementation) => {
               );
             }
           `,
+
+          "src/routes/render-redirect/home.tsx": js`
+            import { Link, redirect } from "react-router";
+
+            export default function RenderRedirect({ params: { id } }) {
+              if (id === "redirect") {
+                throw redirect("/render-redirect/redirected");
+              }
+
+              if (id === "external") {
+                throw redirect("https://example.com/");
+              }
+
+              return (
+                <>
+                  <h1>{id || "home"}</h1>
+                  <Link to="/render-redirect/redirect">Redirect</Link>
+                  <Link to="/render-redirect/external">External</Link>
+                </>
+              )
+            }
+          `,
+          "src/routes/render-redirect/lazy.tsx": js`
+            import { Suspense } from "react";
+            import { Link, redirect } from "react-router";
+
+            export default function RenderRedirect({ params: { id } }) {
+              return (
+                <Suspense fallback={<p>Loading...</p>}>
+                  <Lazy id={id} />
+                </Suspense>
+              );
+            }
+
+            async function Lazy({ id }) {
+              await new Promise((r) => setTimeout(r, 0));
+
+              if (id === "redirect") {
+                throw redirect("/render-redirect/lazy/redirected");
+              }
+
+              if (id === "external") {
+                throw redirect("https://example.com/");
+              }
+
+              return (
+                <>
+                  <h1>{id || "home"}</h1>
+                  <Link to="/render-redirect/lazy/redirect">Redirect</Link>
+                  <Link to="/render-redirect/external">External</Link>
+                </>
+              );
+            }
+          `,
         },
       });
     });
@@ -83,10 +163,7 @@ implementations.forEach((implementation) => {
     test("Supports React Server Functions side-effect redirect headers for document requests", async ({
       page,
     }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+      test.skip(project.name !== "chromium");
 
       await page.goto(`http://localhost:${port}/`);
 
@@ -111,10 +188,7 @@ implementations.forEach((implementation) => {
     });
 
     test("Supports form state without JS", async ({ page }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+      test.skip(project.name !== "chromium");
 
       await page.goto(`http://localhost:${port}/`);
 
@@ -128,6 +202,56 @@ implementations.forEach((implementation) => {
 
       // Ensure this is using RSC
       validateRSCHtml(await page.content());
+    });
+
+    test("Suppport throwing redirect Response from render", async ({
+      page,
+    }) => {
+      await page.goto(`http://localhost:${port}/render-redirect`);
+      await expect(page.getByText("home")).toBeAttached();
+      await page.getByText("Redirect").click();
+      await page.waitForURL(
+        `http://localhost:${port}/render-redirect/redirected`,
+      );
+      await expect(page.getByText("redirected")).toBeAttached();
+    });
+
+    test("Suppport throwing external redirect Response from render", async ({
+      browserName,
+      page,
+    }) => {
+      test.skip(
+        browserName === "firefox",
+        "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+      );
+      await page.goto(`http://localhost:${port}/render-redirect`);
+      await expect(page.getByText("home")).toBeAttached();
+      await page.getByText("External").click();
+      await page.waitForURL(`https://example.com/`);
+      await expect(page.getByText("Example Domain")).toBeAttached();
+    });
+
+    test("Suppport throwing redirect Response from suspended render", async ({
+      page,
+    }) => {
+      await page.goto(`http://localhost:${port}/render-redirect/lazy/redirect`);
+      await page.waitForURL(
+        `http://localhost:${port}/render-redirect/lazy/redirected`,
+      );
+      await expect(page.getByText("redirected")).toBeAttached();
+    });
+
+    test("Suppport throwing external redirect Response from suspended render", async ({
+      page,
+      browserName,
+    }) => {
+      test.skip(
+        browserName === "firefox",
+        "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+      );
+      await page.goto(`http://localhost:${port}/render-redirect/lazy/external`);
+      await page.waitForURL(`https://example.com/`);
+      await expect(page.getByText("Example Domain")).toBeAttached();
     });
   });
 });

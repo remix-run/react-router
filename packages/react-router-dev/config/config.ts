@@ -979,6 +979,38 @@ export async function resolveEntryFiles({
   return { entryClientFilePath, entryServerFilePath };
 }
 
+export async function resolveRSCEntryFiles({
+  reactRouterConfig,
+}: {
+  reactRouterConfig: ResolvedReactRouterConfig;
+}) {
+  let { appDirectory } = reactRouterConfig;
+
+  let defaultsDirectory = Path.resolve(
+    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "default-rsc-entries",
+  );
+
+  let userEntryClientFile = findEntry(appDirectory, "entry.client", {
+    absolute: true,
+  });
+  let userEntryRSCFile = findEntry(appDirectory, "entry.rsc", {
+    absolute: true,
+  });
+  let userEntrySSRFile = findEntry(appDirectory, "entry.ssr", {
+    absolute: true,
+  });
+
+  let client =
+    userEntryClientFile ?? Path.join(defaultsDirectory, "entry.client.tsx");
+  let rsc = userEntryRSCFile ?? Path.join(defaultsDirectory, "entry.rsc.tsx");
+  let ssr = userEntrySSRFile ?? Path.join(defaultsDirectory, "entry.ssr.tsx");
+
+  return { client, rsc, ssr };
+}
+
 function omitRoutes(
   config: ResolvedReactRouterConfig,
 ): ResolvedReactRouterConfig {

@@ -36,6 +36,7 @@ import {
   ErrorResponseImpl,
   joinPaths,
   matchPath,
+  parseToInfo,
   stripBasename,
 } from "../router/utils";
 
@@ -848,7 +849,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -939,7 +940,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1026,7 +1027,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1200,6 +1201,23 @@ export interface LinkProps
    * To apply specific styles for the transition, see {@link useViewTransitionState}
    */
   viewTransition?: boolean;
+
+  /**
+   * Specify the default revalidation behavior for the navigation.
+   *
+   * ```tsx
+   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+   * ```
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1232,6 +1250,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
+ * @param {LinkProps.unstable_defaultShouldRevalidate} props.unstable_defaultShouldRevalidate n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1247,6 +1266,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       to,
       preventScrollReset,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       ...rest
     },
     forwardedRef,
@@ -1255,39 +1275,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
-    // Rendered into <a href> for absolute URLs
-    let absoluteHref;
-    let isExternal = false;
-
-    if (typeof to === "string" && isAbsolute) {
-      // Render the absolute href server- and client-side
-      absoluteHref = to;
-
-      // Only check for external origins client-side
-      if (isBrowser) {
-        try {
-          let currentUrl = new URL(window.location.href);
-          let targetUrl = to.startsWith("//")
-            ? new URL(currentUrl.protocol + to)
-            : new URL(to);
-          let path = stripBasename(targetUrl.pathname, basename);
-
-          if (targetUrl.origin === currentUrl.origin && path != null) {
-            // Strip the protocol/origin/basename for same-origin absolute URLs
-            to = path + targetUrl.search + targetUrl.hash;
-          } else {
-            isExternal = true;
-          }
-        } catch (e) {
-          // We can't do external URL detection without a valid URL
-          warning(
-            false,
-            `<Link to="${to}"> contains an invalid URL which will probably break ` +
-              `when clicked - please update to a valid URL path.`,
-          );
-        }
-      }
-    }
+    let parsed = parseToInfo(to, basename);
+    to = parsed.to;
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
@@ -1303,6 +1292,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       unstable_useTransitions,
     });
     function handleClick(
@@ -1319,8 +1309,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={absoluteHref || href}
-        onClick={isExternal || reloadDocument ? onClick : handleClick}
+        href={parsed.absoluteURL || href}
+        onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
         data-discover={
@@ -1703,6 +1693,19 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+
+  /**
+   * Specify the default revalidation behavior after this submission
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -1826,6 +1829,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.replace} replace n/a
  * @param {FormProps.state} state n/a
  * @param {FormProps.viewTransition} viewTransition n/a
+ * @param {FormProps.unstable_defaultShouldRevalidate} unstable_defaultShouldRevalidate n/a
  * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
@@ -1843,6 +1847,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       relative,
       preventScrollReset,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       ...props
     },
     forwardedRef,
@@ -1877,6 +1882,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
           relative,
           preventScrollReset,
           viewTransition,
+          unstable_defaultShouldRevalidate,
         });
 
       if (unstable_useTransitions && navigate !== false) {
@@ -2099,6 +2105,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.unstable_defaultShouldRevalidate Specify the default revalidation
+ * behavior for the navigation. Defaults to `true`.
  * @param options.unstable_useTransitions Wraps the navigation in
  * [`React.startTransition`](https://react.dev/reference/react/startTransition)
  * for concurrent rendering. Defaults to `false`.
@@ -2113,6 +2121,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset,
     relative,
     viewTransition,
+    unstable_defaultShouldRevalidate,
     unstable_useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
@@ -2121,6 +2130,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    unstable_defaultShouldRevalidate?: boolean;
     unstable_useTransitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
@@ -2147,6 +2157,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             preventScrollReset,
             relative,
             viewTransition,
+            unstable_defaultShouldRevalidate,
           });
 
         if (unstable_useTransitions) {
@@ -2168,6 +2179,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       unstable_useTransitions,
     ],
   );
@@ -2490,6 +2502,8 @@ export function useSubmit(): SubmitFunction {
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
         await routerFetch(key, currentRouteId, options.action || action, {
+          unstable_defaultShouldRevalidate:
+            options.unstable_defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2499,6 +2513,8 @@ export function useSubmit(): SubmitFunction {
         });
       } else {
         await routerNavigate(options.action || action, {
+          unstable_defaultShouldRevalidate:
+            options.unstable_defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
