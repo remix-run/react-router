@@ -76,7 +76,8 @@ export function useFrameworkContext(): FrameworkContextObject {
 // Public API
 
 /**
- * Defines the discovery behavior of the link:
+ * Defines the [lazy route discovery](../../explanation/lazy-route-discovery)
+ * behavior of the link/form:
  *
  * - "render" - default, discover the route when the link renders
  * - "none" - don't eagerly discover, only discover if the link is clicked
