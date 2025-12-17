@@ -1,15 +1,15 @@
 # `@react-router/serve`
 
-## 7.11.0-pre.0
+## 7.11.0
 
 ### Patch Changes
 
 - support custom entrypoints for RSC framework mode ([#14643](https://github.com/remix-run/react-router/pull/14643))
 - Update `compression` and `morgan` dependencies to address `on-headers` CVE: [GHSA-76c9-3jph-rj3q](https://github.com/advisories/GHSA-76c9-3jph-rj3q) ([#14652](https://github.com/remix-run/react-router/pull/14652))
 - Updated dependencies:
-  - `react-router@7.11.0-pre.0`
-  - `@react-router/node@7.11.0-pre.0`
-  - `@react-router/express@7.11.0-pre.0`
+  - `react-router@7.11.0`
+  - `@react-router/node@7.11.0`
+  - `@react-router/express@7.11.0`
 
 ## 7.10.1
 
@@ -701,10 +701,12 @@
 - Introduces the `defer()` API from `@remix-run/router` with support for server-rendering and HTTP streaming. This utility allows you to defer values returned from `loader` functions by returning promises instead of resolved values. This has been refered to as _"sending a promise over the wire"_. ([#4920](https://github.com/remix-run/remix/pull/4920))
 
   Informational Resources:
+
   - <https://gist.github.com/jacob-ebey/9bde9546c1aafaa6bc8c242054b1be26>
   - <https://github.com/remix-run/remix/blob/main/decisions/0004-streaming-apis.md>
 
   Documentation Resources (better docs specific to Remix are in the works):
+
   - <https://reactrouter.com/en/main/utils/defer>
   - <https://reactrouter.com/en/main/components/await>
   - <https://reactrouter.com/en/main/hooks/use-async-value>
