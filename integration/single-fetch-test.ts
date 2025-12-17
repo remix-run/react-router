@@ -4497,7 +4497,7 @@ test.describe("single-fetch", () => {
           }
         `,
         "app/routes/about.tsx": js`
-          import { useLoaderData } from "react-router";
+          import { Link, useLoaderData } from "react-router";
 
           export function loader({ request }) {
             let url = new URL(request.url);
@@ -4514,6 +4514,7 @@ test.describe("single-fetch", () => {
                 <h1>About</h1>
                 <p id="pathname">{pathname}</p>
                 <p id="trailing-slash">{String(hasTrailingSlash)}</p>
+                <Link to="/">Go back home</Link>
               </div>
             );
           }
@@ -4522,6 +4523,14 @@ test.describe("single-fetch", () => {
     });
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
+
+    let requests: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (url.pathname.endsWith(".data")) {
+        requests.push(url.pathname + url.search);
+      }
+    });
 
     // Document load without trailing slash
     await app.goto("/about");
@@ -4535,6 +4544,8 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("#pathname");
     expect(await page.locator("#pathname").innerText()).toEqual("/about");
     expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+    expect(requests).toEqual(["/about.data"]);
+    requests = [];
 
     // Document load with trailing slash
     await app.goto("/about/");
@@ -4548,6 +4559,14 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("#pathname");
     expect(await page.locator("#pathname").innerText()).toEqual("/about");
     expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+    expect(requests).toEqual(["/about.data"]);
+    requests = [];
+
+    // Client-side navigation back to /
+    await app.clickLink("/");
+    await page.waitForSelector("h1:has-text('Home')");
+    expect(requests).toEqual(["/_root.data"]);
+    requests = [];
   });
 
   test("uses {path}.data or {path}/_.data depending on trailing slash with future.unstable_trailingSlashAwareDataRequests flag", async ({
@@ -4556,16 +4575,14 @@ test.describe("single-fetch", () => {
     let fixture = await createFixture({
       files: {
         ...files,
-        "vite.config.ts": js`
-          import { reactRouter } from "@react-router/dev/vite";
+        "react-router.config.ts": js`
+          import type { Config } from "@react-router/dev/config";
 
           export default {
-            base: "/base/",
-            plugins: [reactRouter()],
             future: {
-              unstable_trailingSlashAwareDataRequests: true
+              unstable_trailingSlashAwareDataRequests: true,
             }
-          }
+          } satisfies Config;
         `,
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
@@ -4581,7 +4598,7 @@ test.describe("single-fetch", () => {
           }
         `,
         "app/routes/about.tsx": js`
-          import { useLoaderData } from "react-router";
+          import { Link, useLoaderData } from "react-router";
 
           export function loader({ request }) {
             let url = new URL(request.url);
@@ -4598,6 +4615,7 @@ test.describe("single-fetch", () => {
                 <h1>About</h1>
                 <p id="pathname">{pathname}</p>
                 <p id="trailing-slash">{String(hasTrailingSlash)}</p>
+                <Link to="/">Go back home</Link>
               </div>
             );
           }
@@ -4606,6 +4624,14 @@ test.describe("single-fetch", () => {
     });
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
+
+    let requests: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (url.pathname.endsWith(".data")) {
+        requests.push(url.pathname + url.search);
+      }
+    });
 
     // Document load without trailing slash
     await app.goto("/about");
@@ -4619,6 +4645,8 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("#pathname");
     expect(await page.locator("#pathname").innerText()).toEqual("/about");
     expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+    expect(requests).toEqual(["/about.data"]);
+    requests = [];
 
     // Document load with trailing slash
     await app.goto("/about/");
@@ -4632,5 +4660,13 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("#pathname");
     expect(await page.locator("#pathname").innerText()).toEqual("/about/");
     expect(await page.locator("#trailing-slash").innerText()).toEqual("true");
+    expect(requests).toEqual(["/about/_.data"]);
+    requests = [];
+
+    // Client-side navigation back to /
+    await app.clickLink("/");
+    await page.waitForSelector("h1:has-text('Home')");
+    expect(requests).toEqual(["/_.data"]);
+    requests = [];
   });
 });

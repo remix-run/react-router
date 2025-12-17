@@ -398,14 +398,10 @@ export async function matchRSCServerRequest({
 
   basename = basename || "/";
   let normalizedPath = url.pathname;
-  if (stripBasename(normalizedPath, basename) === "/_root.rsc") {
-    normalizedPath = basename;
-  } else if (url.pathname.endsWith("/_.rsc")) {
-    // Not future flag aware - adopting new behavior directly for unstable releases
-    // Handle trailing slash URLs: /about/_.rsc -> /about/
-    normalizedPath = url.pathname.replace(/_.rsc$/, "");
-  } else if (normalizedPath.endsWith(".rsc")) {
-    normalizedPath = normalizedPath.replace(/\.rsc$/, "");
+  if (url.pathname.endsWith("/_.rsc")) {
+    normalizedPath = url.pathname.replace(/_\.rsc$/, "");
+  } else if (url.pathname.endsWith(".rsc")) {
+    normalizedPath = url.pathname.replace(/\.rsc$/, "");
   }
 
   if (

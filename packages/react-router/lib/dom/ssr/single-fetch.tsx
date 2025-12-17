@@ -627,11 +627,7 @@ export function singleFetchUrl(
         )
       : reqUrl;
 
-  if (url.pathname === "/") {
-    url.pathname = `_root.${extension}`;
-  } else if (basename && stripBasename(url.pathname, basename) === "/") {
-    url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
-  } else if (trailingSlashAware) {
+  if (trailingSlashAware) {
     if (url.pathname.endsWith("/")) {
       // Preserve trailing slash by using /_.data pattern
       // e.g., /about/ -> /about/_.data
@@ -640,7 +636,13 @@ export function singleFetchUrl(
       url.pathname = `${url.pathname}.${extension}`;
     }
   } else {
-    url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+    if (url.pathname === "/") {
+      url.pathname = `_root.${extension}`;
+    } else if (basename && stripBasename(url.pathname, basename) === "/") {
+      url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
+    } else {
+      url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+    }
   }
 
   return url;

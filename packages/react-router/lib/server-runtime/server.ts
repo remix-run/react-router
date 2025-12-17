@@ -109,17 +109,19 @@ function derive(build: ServerBuild, mode?: string) {
 
     let normalizedBasename = build.basename || "/";
     let normalizedPath = url.pathname;
-    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-      normalizedPath = normalizedBasename;
-    } else if (build.future.unstable_trailingSlashAwareDataRequests) {
+    if (build.future.unstable_trailingSlashAwareDataRequests) {
       if (normalizedPath.endsWith("/_.data")) {
         // Handle trailing slash URLs: /about/_.data -> /about/
         normalizedPath = normalizedPath.replace(/_.data$/, "");
       } else {
         normalizedPath = normalizedPath.replace(/\.data$/, "");
       }
-    } else if (normalizedPath.endsWith(".data")) {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
+    } else {
+      if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+        normalizedPath = normalizedBasename;
+      } else if (normalizedPath.endsWith(".data")) {
+        normalizedPath = normalizedPath.replace(/\.data$/, "");
+      }
 
       if (
         stripBasename(normalizedPath, normalizedBasename) !== "/" &&

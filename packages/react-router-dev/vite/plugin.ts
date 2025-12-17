@@ -2896,16 +2896,18 @@ async function prerenderData(
   requestInit?: RequestInit,
 ) {
   let dataRequestPath: string;
-  if (prerenderPath === "/") {
-    dataRequestPath = "/_root.data";
-  } else if (reactRouterConfig.future.unstable_trailingSlashAwareDataRequests) {
+  if (reactRouterConfig.future.unstable_trailingSlashAwareDataRequests) {
     if (prerenderPath.endsWith("/")) {
       dataRequestPath = `${prerenderPath}_.data`;
     } else {
       dataRequestPath = `${prerenderPath}.data`;
     }
   } else {
-    dataRequestPath = `${prerenderPath.replace(/\/$/, "")}.data`;
+    if (prerenderPath === "/") {
+      dataRequestPath = "/_root.data";
+    } else {
+      dataRequestPath = `${prerenderPath.replace(/\/$/, "")}.data`;
+    }
   }
   let normalizedPath =
     `${reactRouterConfig.basename}${dataRequestPath}`.replace(/\/\/+/g, "/");
