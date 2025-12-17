@@ -248,7 +248,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       method: "POST",
       body: data,
       headers: {
-        origin: new URL(href, "test://test").origin,
         "Content-Type":
           data instanceof URLSearchParams
             ? "application/x-www-form-urlencoded"
