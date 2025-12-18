@@ -185,8 +185,8 @@ function createHydratedRouter({
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
-      ssrInfo.context.future.unstable_trailingSlashAwareDataRequests,
       ssrInfo.context.basename,
+      ssrInfo.context.future.unstable_trailingSlashAwareDataRequests,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
