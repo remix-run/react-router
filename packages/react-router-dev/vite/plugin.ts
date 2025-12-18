@@ -1688,6 +1688,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
       configurePreviewServer(previewServer) {
         return () => {
+          // Skip SSR handling in SPA mode
+          if (!ctx.reactRouterConfig.ssr) {
+            return;
+          }
+
           // Handle SSR requests in preview mode using the built server bundle
           previewServer.middlewares.use(async (req, res, next) => {
             try {
