@@ -9,6 +9,7 @@ import type {
   FormEncType,
   HTMLFormMethod,
   LazyRouteObject,
+  LoaderFunction,
   LoaderFunctionArgs,
   MaybePromise,
   MiddlewareFunction,
@@ -218,6 +219,9 @@ export function getRouteInstrumentationUpdates(
         getHandlerInfo(args[0] as LoaderFunctionArgs | ActionFunctionArgs),
       );
       if (instrumented) {
+        if (key === "loader" && original.hydrate === true) {
+          (instrumented as LoaderFunction).hydrate = true;
+        }
         // @ts-expect-error
         instrumented[UninstrumentedSymbol] = original;
         updates[key] = instrumented;
