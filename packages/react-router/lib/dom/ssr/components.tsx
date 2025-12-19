@@ -903,6 +903,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         <script
           rr-importmap=""
           type="importmap"
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
