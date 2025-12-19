@@ -438,7 +438,7 @@ function PrefetchPageLinksImpl({
     let url = singleFetchUrl(
       page,
       basename,
-      future.unstable_trailingSlashAwareDataRequests,
+      future.unstable_trailingSlashAware,
       "data",
     );
     // When one or more routes have opted out, we add a _routes param to
@@ -457,7 +457,7 @@ function PrefetchPageLinksImpl({
     return [url.pathname + url.search];
   }, [
     basename,
-    future.unstable_trailingSlashAwareDataRequests,
+    future.unstable_trailingSlashAware,
     loaderData,
     location,
     manifest,

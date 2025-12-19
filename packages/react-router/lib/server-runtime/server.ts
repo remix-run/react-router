@@ -109,7 +109,7 @@ function derive(build: ServerBuild, mode?: string) {
 
     let normalizedBasename = build.basename || "/";
     let normalizedPath = url.pathname;
-    if (build.future.unstable_trailingSlashAwareDataRequests) {
+    if (build.future.unstable_trailingSlashAware) {
       if (normalizedPath.endsWith("/_.data")) {
         // Handle trailing slash URLs: /about/_.data -> /about/
         normalizedPath = normalizedPath.replace(/_.data$/, "");

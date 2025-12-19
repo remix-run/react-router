@@ -3,7 +3,7 @@
 "react-router": patch
 ---
 
-[UNSTABLE] Add a new `future.unstable_trailingSlashAwareDataRequests` flag to provide consistent behavior of `request.pathname` inside `middleware`, `loader`, and `action` functions on document and data requests when a trailing slash is present in the browser URL.
+[UNSTABLE] Add a new `future.unstable_trailingSlashAware` flag to provide consistent behavior of `request.pathname` inside `middleware`, `loader`, and `action` functions on document and data requests when a trailing slash is present in the browser URL.
 
 Currently, your HTTP and `request` pathnames would be as follows for `/a/b/c` and `/a/b/c/`
 

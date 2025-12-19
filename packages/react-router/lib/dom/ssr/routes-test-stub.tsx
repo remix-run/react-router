@@ -135,8 +135,8 @@ export function createRoutesStub(
           unstable_subResourceIntegrity:
             future?.unstable_subResourceIntegrity === true,
           v8_middleware: future?.v8_middleware === true,
-          unstable_trailingSlashAwareDataRequests:
-            future?.unstable_trailingSlashAwareDataRequests === true,
+          unstable_trailingSlashAware:
+            future?.unstable_trailingSlashAware === true,
         },
         manifest: {
           routes: {},
