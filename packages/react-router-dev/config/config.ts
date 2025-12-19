@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
 import Path from "pathe";
@@ -83,21 +82,24 @@ type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
+type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
+
 interface FutureConfig {
+  unstable_optimizeDeps: boolean;
+  unstable_subResourceIntegrity: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
   /**
    * Enable route middleware
    */
   v8_middleware: boolean;
-  unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
    */
-  unstable_splitRouteModules: boolean | "enforce";
-  unstable_subResourceIntegrity: boolean;
+  v8_splitRouteModules: boolean | "enforce";
   /**
-   * Use Vite Environment API (experimental)
+   * Use Vite Environment API
    */
-  unstable_viteEnvironmentApi: boolean;
+  v8_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -107,6 +109,13 @@ type BuildEndHook = (args: {
   reactRouterConfig: ResolvedReactRouterConfig;
   viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
+
+export type PrerenderPaths =
+  | boolean
+  | Array<string>
+  | ((args: {
+      getStaticPaths: () => string[];
+    }) => Array<string> | Promise<Array<string>>);
 
 /**
  * Config to be exported via the default export from `react-router.config.ts`.
@@ -147,13 +156,19 @@ export type ReactRouterConfig = {
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
+   *
+   * `unstable_concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
+   * Setting it to a value more than 1 enables concurrent prerendering.
+   * Setting it to a value higher than one can increase the speed of the build,
+   * but may consume more resources, and send more concurrent requests to the
+   * server/CMS.
    */
   prerender?:
-    | boolean
-    | Array<string>
-    | ((args: {
-        getStaticPaths: () => string[];
-      }) => Array<string> | Promise<Array<string>>);
+    | PrerenderPaths
+    | {
+        paths: PrerenderPaths;
+        unstable_concurrency?: number;
+      };
   /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
@@ -343,6 +358,8 @@ type Result<T> =
       error: string;
     };
 
+type ConfigResult = Result<ResolvedReactRouterConfig>;
+
 function ok<T>(value: T): Result<T> {
   return { ok: true, value };
 }
@@ -356,12 +373,14 @@ async function resolveConfig({
   viteNodeContext,
   reactRouterConfigFile,
   skipRoutes,
+  validateConfig,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
-}): Promise<Result<ResolvedReactRouterConfig>> {
+  validateConfig?: ValidateConfigFunction;
+}): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
   if (reactRouterConfigFile) {
@@ -383,6 +402,13 @@ async function resolveConfig({
       }
 
       reactRouterUserConfig = configModule.default;
+
+      if (validateConfig) {
+        const error = validateConfig(reactRouterUserConfig);
+        if (error) {
+          return err(error);
+        }
+      }
     } catch (error) {
       return err(`Error loading ${reactRouterConfigFile}: ${error}`);
     }
@@ -449,17 +475,35 @@ async function resolveConfig({
     serverBundles = undefined;
   }
 
-  let isValidPrerenderConfig =
-    prerender == null ||
-    typeof prerender === "boolean" ||
-    Array.isArray(prerender) ||
-    typeof prerender === "function";
+  if (prerender) {
+    let isValidPrerenderPathsConfig = (p: unknown) =>
+      typeof p === "boolean" || typeof p === "function" || Array.isArray(p);
 
-  if (!isValidPrerenderConfig) {
-    return err(
-      "The `prerender` config must be a boolean, an array of string paths, " +
-        "or a function returning a boolean or array of string paths",
-    );
+    let isValidPrerenderConfig =
+      isValidPrerenderPathsConfig(prerender) ||
+      (typeof prerender === "object" &&
+        "paths" in prerender &&
+        isValidPrerenderPathsConfig(prerender.paths));
+
+    if (!isValidPrerenderConfig) {
+      return err(
+        "The `prerender`/`prerender.paths` config must be a boolean, an array " +
+          "of string paths, or a function returning a boolean or array of string paths.",
+      );
+    }
+
+    let isValidConcurrencyConfig =
+      typeof prerender != "object" ||
+      !("unstable_concurrency" in prerender) ||
+      (typeof prerender.unstable_concurrency === "number" &&
+        Number.isInteger(prerender.unstable_concurrency) &&
+        prerender.unstable_concurrency > 0);
+
+    if (!isValidConcurrencyConfig) {
+      return err(
+        "The `prerender.unstable_concurrency` config must be a positive integer if specified.",
+      );
+    }
   }
 
   let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
@@ -495,7 +539,7 @@ async function resolveConfig({
   let appDirectory = Path.resolve(root, userAppDirectory || "app");
   let buildDirectory = Path.resolve(root, userBuildDirectory);
 
-  let rootRouteFile = findEntry(appDirectory, "root");
+  let rootRouteFile = findEntry(appDirectory, "root", { absolute: true });
   if (!rootRouteFile) {
     let rootRouteDisplayPath = Path.relative(
       root,
@@ -545,7 +589,7 @@ async function resolveConfig({
         {
           id: "root",
           path: "",
-          file: rootRouteFile,
+          file: Path.relative(appDirectory, rootRouteFile),
           children: result.routeConfig,
         },
       ];
@@ -573,16 +617,32 @@ async function resolveConfig({
     }
   }
 
+  // Check for renamed flags and provide helpful error messages
+  let futureConfig = userAndPresetConfigs.future as any;
+  if (futureConfig?.unstable_splitRouteModules !== undefined) {
+    return err(
+      'The "future.unstable_splitRouteModules" flag has been stabilized as "future.v8_splitRouteModules"',
+    );
+  }
+  if (futureConfig?.unstable_viteEnvironmentApi !== undefined) {
+    return err(
+      'The "future.unstable_viteEnvironmentApi" flag has been stabilized as "future.v8_viteEnvironmentApi"',
+    );
+  }
+
   let future: FutureConfig = {
-    v8_middleware: reactRouterUserConfig.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
-      reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
-    unstable_splitRouteModules:
-      reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
+      userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_subResourceIntegrity:
-      reactRouterUserConfig.future?.unstable_subResourceIntegrity ?? false,
-    unstable_viteEnvironmentApi:
-      reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
+      userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
+    unstable_trailingSlashAwareDataRequests:
+      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
+      false,
+    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
+    v8_splitRouteModules:
+      userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
+    v8_viteEnvironmentApi:
+      userAndPresetConfigs.future?.v8_viteEnvironmentApi ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
@@ -611,7 +671,7 @@ async function resolveConfig({
 type ChokidarEventName = ChokidarEmitArgs[0];
 
 type ChangeHandler = (args: {
-  result: Result<ResolvedReactRouterConfig>;
+  result: ConfigResult;
   configCodeChanged: boolean;
   routeConfigCodeChanged: boolean;
   configChanged: boolean;
@@ -621,7 +681,7 @@ type ChangeHandler = (args: {
 }) => void;
 
 export type ConfigLoader = {
-  getConfig: () => Promise<Result<ResolvedReactRouterConfig>>;
+  getConfig: () => Promise<ConfigResult>;
   onChange: (handler: ChangeHandler) => () => void;
   close: () => Promise<void>;
 };
@@ -631,11 +691,13 @@ export async function createConfigLoader({
   watch,
   mode,
   skipRoutes,
+  validateConfig,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
+  validateConfig?: ValidateConfigFunction;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -660,7 +722,13 @@ export async function createConfigLoader({
   updateReactRouterConfigFile();
 
   let getConfig = () =>
-    resolveConfig({ root, viteNodeContext, reactRouterConfigFile, skipRoutes });
+    resolveConfig({
+      root,
+      viteNodeContext,
+      reactRouterConfigFile,
+      skipRoutes,
+      validateConfig,
+    });
 
   let appDirectory: string;
 
@@ -868,9 +936,13 @@ export async function resolveEntryFiles({
       );
     }
 
+    // TODO(v8): Remove - only required for Node 20.18 and below
+    let { readPackageJSON, sortPackage, updatePackage } = await import(
+      "pkg-types"
+    );
     let packageJsonDirectory = Path.dirname(packageJsonPath);
-    let pkgJson = await PackageJson.load(packageJsonDirectory);
-    let deps = pkgJson.content.dependencies ?? {};
+    let pkgJson = await readPackageJSON(packageJsonDirectory);
+    let deps = pkgJson.dependencies ?? {};
 
     if (!deps["@react-router/node"]) {
       throw new Error(
@@ -883,14 +955,11 @@ export async function resolveEntryFiles({
         "adding `isbot@5` to your package.json, you should commit this change",
       );
 
-      pkgJson.update({
-        dependencies: {
-          ...pkgJson.content.dependencies,
-          isbot: "^5",
-        },
+      await updatePackage(packageJsonPath, (pkg) => {
+        pkg.dependencies ??= {};
+        pkg.dependencies.isbot = "^5";
+        sortPackage(pkg);
       });
-
-      await pkgJson.save();
 
       let packageManager = detectPackageManager() ?? "npm";
 
@@ -912,6 +981,38 @@ export async function resolveEntryFiles({
     : Path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
+}
+
+export async function resolveRSCEntryFiles({
+  reactRouterConfig,
+}: {
+  reactRouterConfig: ResolvedReactRouterConfig;
+}) {
+  let { appDirectory } = reactRouterConfig;
+
+  let defaultsDirectory = Path.resolve(
+    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "default-rsc-entries",
+  );
+
+  let userEntryClientFile = findEntry(appDirectory, "entry.client", {
+    absolute: true,
+  });
+  let userEntryRSCFile = findEntry(appDirectory, "entry.rsc", {
+    absolute: true,
+  });
+  let userEntrySSRFile = findEntry(appDirectory, "entry.ssr", {
+    absolute: true,
+  });
+
+  let client =
+    userEntryClientFile ?? Path.join(defaultsDirectory, "entry.client.tsx");
+  let rsc = userEntryRSCFile ?? Path.join(defaultsDirectory, "entry.rsc.tsx");
+  let ssr = userEntrySSRFile ?? Path.join(defaultsDirectory, "entry.ssr.tsx");
+
+  return { client, rsc, ssr };
 }
 
 function omitRoutes(

@@ -29,8 +29,11 @@ async function write(...files: Array<VirtualFile>) {
   );
 }
 
-export async function run(rootDirectory: string, { mode }: { mode: string }) {
-  const ctx = await createContext({ rootDirectory, mode, watch: false });
+export async function run(
+  rootDirectory: string,
+  { mode, rsc }: { mode: string; rsc: boolean },
+) {
+  const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(
     generateFuture(ctx),
@@ -45,9 +48,9 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { mode, logger }: { mode: string; logger?: vite.Logger },
+  { mode, logger, rsc }: { mode: string; logger?: vite.Logger; rsc: boolean },
 ): Promise<Watcher> {
-  const ctx = await createContext({ rootDirectory, mode, watch: true });
+  const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(
     generateFuture(ctx),

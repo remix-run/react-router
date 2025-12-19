@@ -66,7 +66,7 @@ A function that is called after the full React Router build is complete.
 
 ```tsx filename=react-router.config.ts
 export default {
-  buildEnd: async ({ buildManifest, serverBuildPath }) => {
+  buildEnd: async ({ buildManifest, reactRouterConfig, viteConfig }) => {
     // Custom build logic here
     console.log("Build completed!");
   },

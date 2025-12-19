@@ -114,6 +114,17 @@ const files = {
           }),
         },
 
+        // Ensure presets can set future flags
+        {
+          name: "test-preset",
+          reactRouterConfig: async () => ({
+            future: {
+              v8_middleware: true,
+              unstable_optimizeDeps: true,
+            },
+          }),
+        },
+
         // Ensure presets can set buildEnd option (this is critical for Vercel support)
         {
           name: "test-preset",
@@ -128,6 +139,7 @@ const files = {
                   "export const buildManifest = " + serializeJs(buildManifest, { space: 2, unsafe: true }) + ";",
                   "export const reactRouterConfig = " + serializeJs(reactRouterConfig, { space: 2, unsafe: true }) + ";",
                   "export const assetsDir = " + JSON.stringify(viteConfig.build.assetsDir) + ";",
+                  "export const futureFlags = " + JSON.stringify(reactRouterConfig.future) + ";",
                 ].join("\\n"),
                 "utf-8"
               );
@@ -228,6 +240,16 @@ test.describe("Vite / presets", async () => {
         "ssr",
         "unstable_routeConfig",
       ]);
+
+      // Ensure future flags from presets are properly merged
+      expect(buildEndArgsMeta.futureFlags).toEqual({
+        unstable_optimizeDeps: true,
+        unstable_subResourceIntegrity: false,
+        unstable_trailingSlashAwareDataRequests: false,
+        v8_middleware: true,
+        v8_splitRouteModules: false,
+        v8_viteEnvironmentApi: false,
+      });
 
       // Ensure we get a valid build manifest
       expect(buildEndArgsMeta.buildManifest).toEqual({

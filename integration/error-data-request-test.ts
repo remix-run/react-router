@@ -110,7 +110,7 @@ test.describe("ErrorBoundary", () => {
     let { status, headers, data } =
       await fixture.requestSingleFetchData("/_root.data");
     expect(status).toBe(200);
-    expect(headers.has("X-Remix-Error")).toBe(false);
+    expect(headers.has("X-Remix-Response")).toBe(true);
     expect(data).toEqual({});
   });
 
@@ -122,7 +122,7 @@ test.describe("ErrorBoundary", () => {
       },
     );
     expect(status).toBe(405);
-    expect(headers.has("X-Remix-Error")).toBe(false);
+    expect(headers.has("X-Remix-Response")).toBe(true);
     expect(data).toEqual({
       error: new ErrorResponseImpl(
         405,
@@ -153,7 +153,7 @@ test.describe("ErrorBoundary", () => {
       "/i/match/nothing.data",
     );
     expect(status).toBe(404);
-    expect(headers.has("X-Remix-Error")).toBe(false);
+    expect(headers.has("X-Remix-Response")).toBe(true);
     expect(data).toEqual({
       root: {
         error: new ErrorResponseImpl(

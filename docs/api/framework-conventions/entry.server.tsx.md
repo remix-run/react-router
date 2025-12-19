@@ -9,17 +9,18 @@ order: 5
 
 ## Summary
 
-<docs-info>
-This file is optional
-</docs-info>
-
 This file is the server-side entry point that controls how your React Router application generates HTTP responses on the server.
 
 This module should render the markup for the current page using a [`<ServerRouter>`][serverrouter] element with the `context` and `url` for the current request. This markup will (optionally) be re-hydrated once JavaScript loads in the browser using the [client entry module][client-entry].
 
+<docs-info>This file is optional if you are running on Node. If it is not present, a [default implementation][node-streaming-entry-server] will be used.
+<br/>
+<br/>
+If you are using another runtime (i.e., Cloudflare) then you need to include this file. You can find sample implementations in the [templates repository][templates-repo].</docs-info>
+
 ## Generating `entry.server.tsx`
 
-By default, React Router will handle generating the HTTP Response for you. You can reveal the default entry server file with the following:
+When running in Node, React Router will handle generating the HTTP Response for you. You can reveal the default entry server file with the following:
 
 ```shellscript nonumber
 npx react-router reveal
@@ -42,7 +43,7 @@ export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  routerContext: EntryContext
+  routerContext: EntryContext,
 ) {
   return new Promise((resolve, reject) => {
     const { pipe, abort } = renderToPipeableStream(
@@ -62,7 +63,7 @@ export default function handleRequest(
             new Response(stream, {
               headers: responseHeaders,
               status: responseStatusCode,
-            })
+            }),
           );
 
           pipe(body);
@@ -70,7 +71,7 @@ export default function handleRequest(
         onShellError(error: unknown) {
           reject(error);
         },
-      }
+      },
     );
   });
 }
@@ -113,7 +114,7 @@ export function handleDataRequest(
     request,
     params,
     context,
-  }: LoaderFunctionArgs | ActionFunctionArgs
+  }: LoaderFunctionArgs | ActionFunctionArgs,
 ) {
   response.headers.set("X-Custom-Header", "value");
   return response;
@@ -131,7 +132,7 @@ export function handleError(
     request,
     params,
     context,
-  }: LoaderFunctionArgs | ActionFunctionArgs
+  }: LoaderFunctionArgs | ActionFunctionArgs,
 ) {
   if (!request.signal.aborted) {
     sendErrorToErrorReportingService(error);
@@ -155,8 +156,9 @@ For an example, please refer to the default [`entry.server.tsx`][node-streaming-
 Note that this does not handle thrown `Response` instances from your `loader`/`action` functions. The intention of this handler is to find bugs in your code which result in unexpected thrown errors. If you are detecting a scenario and throwing a 401/404/etc. `Response` in your `loader`/`action` then it's an expected flow that is handled by your code. If you also wish to log, or send those to an external service, that should be done at the time you throw the response.
 
 [client-entry]: ./entry.client.tsx
-[serverrouter]: ../components/ServerRouter
-[streaming]: ../how-to/suspense
+[serverrouter]: ../framework-routers/ServerRouter
+[streaming]: ../../how-to/suspense
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
 [node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
+[templates-repo]: https://github.com/remix-run/react-router-templates

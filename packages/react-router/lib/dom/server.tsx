@@ -94,6 +94,7 @@ export function StaticRouter({
       navigationType={action}
       navigator={staticNavigator}
       static={true}
+      unstable_useTransitions={false}
     />
   );
 }
@@ -204,6 +205,7 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
+                unstable_useTransitions={false}
               >
                 <DataRoutes
                   routes={router.routes}
@@ -471,6 +473,9 @@ export function createStaticRouter(
     },
     deleteFetcher() {
       throw msg("deleteFetcher");
+    },
+    resetFetcher() {
+      throw msg("resetFetcher");
     },
     dispose() {
       throw msg("dispose");

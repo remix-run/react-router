@@ -25,13 +25,13 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4.1.0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           # required for --experimental-strip-types
           node-version: 22

@@ -61,6 +61,14 @@ export {
   createPath,
   parsePath,
 } from "./lib/router/history";
+export type {
+  unstable_ServerInstrumentation,
+  unstable_ClientInstrumentation,
+  unstable_InstrumentRequestHandlerFunction,
+  unstable_InstrumentRouterFunction,
+  unstable_InstrumentRouteFunction,
+  unstable_InstrumentationHandlerResult,
+} from "./lib/router/instrumentation";
 export {
   IDLE_NAVIGATION,
   IDLE_FETCHER,
@@ -95,7 +103,7 @@ export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/conte
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,
@@ -144,6 +152,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  useRoute as unstable_useRoute,
 } from "./lib/hooks";
 
 // Expose old RR DOM API
@@ -296,10 +305,6 @@ export type {
   EncodeReplyFunction as unstable_EncodeReplyFunction,
   RSCHydratedRouterProps as unstable_RSCHydratedRouterProps,
 } from "./lib/rsc/browser";
-export {
-  createCallServer as unstable_createCallServer,
-  RSCHydratedRouter as unstable_RSCHydratedRouter,
-} from "./lib/rsc/browser";
 export type {
   SSRCreateFromReadableStreamFunction as unstable_SSRCreateFromReadableStreamFunction,
   RSCStaticRouterProps as unstable_RSCStaticRouterProps,
@@ -308,7 +313,6 @@ export {
   routeRSCServerRequest as unstable_routeRSCServerRequest,
   RSCStaticRouter as unstable_RSCStaticRouter,
 } from "./lib/rsc/server.ssr";
-export { getRSCStream as unstable_getRSCStream } from "./lib/rsc/html-stream/browser";
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 // Re-export of RSC types
@@ -345,7 +349,9 @@ export type {
 
 /** @internal */
 export {
+  createMemoryHistory as UNSAFE_createMemoryHistory,
   createBrowserHistory as UNSAFE_createBrowserHistory,
+  createHashHistory as UNSAFE_createHashHistory,
   invariant as UNSAFE_invariant,
 } from "./lib/router/history";
 

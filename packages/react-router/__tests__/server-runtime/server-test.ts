@@ -555,7 +555,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(result.status).toBe(400);
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect((await result.json()).message).toBeTruthy();
     });
 
@@ -585,7 +585,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(result.status).toBe(403);
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect((await result.json()).message).toBeTruthy();
     });
 
@@ -608,7 +608,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(result.status).toBe(404);
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect((await result.json()).message).toBeTruthy();
     });
 
@@ -670,7 +670,7 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect((await result.json()).message).toBe("Unexpected Server Error");
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(testAction.mock.calls.length).toBe(0);
     });
@@ -704,7 +704,7 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect((await result.json()).message).toBe(message);
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(testAction.mock.calls.length).toBe(0);
       expect(spy.console.mock.calls.length).toBe(1);
@@ -737,7 +737,6 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(400);
       expect(await result.text()).toBe("test");
-      expect(result.headers.get("X-Remix-Catch")).toBe("yes");
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(testAction.mock.calls.length).toBe(0);
     });
@@ -800,7 +799,7 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect((await result.json()).message).toBe("Unexpected Server Error");
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(testAction.mock.calls.length).toBe(1);
     });
@@ -834,7 +833,7 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect((await result.json()).message).toBe(message);
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect(headers.has("X-Remix-Response")).toBe(true);
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(testAction.mock.calls.length).toBe(1);
       expect(spy.console.mock.calls.length).toBe(1);
@@ -867,7 +866,6 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(400);
       expect(await result.text()).toBe("test");
-      expect(result.headers.get("X-Remix-Catch")).toBe("yes");
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(testAction.mock.calls.length).toBe(1);
     });

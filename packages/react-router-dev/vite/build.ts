@@ -15,6 +15,7 @@ import {
 } from "./plugin";
 import invariant from "../invariant";
 import { preloadVite, getVite } from "./vite";
+import { hasReactRouterRscPlugin } from "./has-rsc-plugin";
 export interface ViteBuildOptions {
   assetsInlineLimit?: number;
   clearScreen?: boolean;
@@ -48,16 +49,19 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   }
 
   let config = configResult.value;
-  let unstable_viteEnvironmentApi = config.future.unstable_viteEnvironmentApi;
-  let viteMajor = parseInt(vite.version.split(".")[0], 10);
 
-  if (unstable_viteEnvironmentApi && viteMajor === 5) {
+  let viteMajor = parseInt(vite.version.split(".")[0], 10);
+  if (config.future.v8_viteEnvironmentApi && viteMajor === 5) {
     throw new Error(
-      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5",
+      "The future.v8_viteEnvironmentApi option is not supported in Vite 5",
     );
   }
 
-  return await (unstable_viteEnvironmentApi
+  const useViteEnvironmentApi =
+    config.future.v8_viteEnvironmentApi ||
+    (await hasReactRouterRscPlugin({ root, viteBuildOptions }));
+
+  return await (useViteEnvironmentApi
     ? viteAppBuild(root, viteBuildOptions)
     : viteBuild(root, viteBuildOptions));
 }

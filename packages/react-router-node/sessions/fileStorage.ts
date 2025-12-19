@@ -26,7 +26,7 @@ interface FileSessionStorageOptions {
  * The advantage of using this instead of cookie session storage is that
  * files may contain much more data than cookies.
  *
- * @see https://remix.run/utils/sessions#createfilesessionstorage-node
+ * @see https://api.reactrouter.com/v7/functions/_react_router_node.createFileSessionStorage
  */
 export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   cookie,
@@ -47,6 +47,9 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
 
         try {
           let file = getFile(dir, id);
+          if (!file) {
+            throw new Error("Error generating session");
+          }
           await fsp.mkdir(path.dirname(file), { recursive: true });
           await fsp.writeFile(file, content, { encoding: "utf-8", flag: "wx" });
           return id;
@@ -58,6 +61,9 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
     async readData(id) {
       try {
         let file = getFile(dir, id);
+        if (!file) {
+          return null;
+        }
         let content = JSON.parse(await fsp.readFile(file, "utf-8"));
         let data = content.data;
         let expires =
@@ -81,6 +87,9 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
     async updateData(id, data, expires) {
       let content = JSON.stringify({ data, expires });
       let file = getFile(dir, id);
+      if (!file) {
+        return;
+      }
       await fsp.mkdir(path.dirname(file), { recursive: true });
       await fsp.writeFile(file, content, "utf-8");
     },
@@ -90,8 +99,12 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       if (!id) {
         return;
       }
+      let file = getFile(dir, id);
+      if (!file) {
+        return;
+      }
       try {
-        await fsp.unlink(getFile(dir, id));
+        await fsp.unlink(file);
       } catch (error: any) {
         if (error.code !== "ENOENT") throw error;
       }
@@ -99,7 +112,11 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   });
 }
 
-export function getFile(dir: string, id: string): string {
+export function getFile(dir: string, id: string): string | null {
+  if (!/^[0-9a-f]{16}$/i.test(id)) {
+    return null;
+  }
+
   // Divide the session id up into a directory (first 2 bytes) and filename
   // (remaining 6 bytes) to reduce the chance of having very large directories,
   // which should speed up file access. This is a maximum of 2^16 directories,

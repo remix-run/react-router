@@ -1,5 +1,266 @@
 # `@react-router/dev`
 
+## 7.11.0
+
+### Minor Changes
+
+- feat: add `vite preview` support ([#14507](https://github.com/remix-run/react-router/pull/14507))
+
+### Patch Changes
+
+- rsc framework mode manual chunking for react and react-router deps ([#14655](https://github.com/remix-run/react-router/pull/14655))
+- add support for throwing redirect Response's at RSC render time ([#14596](https://github.com/remix-run/react-router/pull/14596))
+- support custom entrypoints for RSC framework mode ([#14643](https://github.com/remix-run/react-router/pull/14643))
+- `routeRSCServerRequest` replace `fetchServer` with `serverResponse` ([#14597](https://github.com/remix-run/react-router/pull/14597))
+- rsc framewlrk mode - optimize react-server-dom-webpack if in project package.json ([#14656](https://github.com/remix-run/react-router/pull/14656))
+- Updated dependencies:
+  - `react-router@7.11.0`
+  - `@react-router/serve@7.11.0`
+  - `@react-router/node@7.11.0`
+
+## 7.10.1
+
+### Patch Changes
+
+- Import ESM package `pkg-types` with a dynamic `import()` to fix issues on Node 20.18 ([#14624](https://github.com/remix-run/react-router/pull/14624))
+- Update `valibot` dependency to `^1.2.0` to address [GHSA-vqpr-j7v3-hqw9](https://github.com/advisories/GHSA-vqpr-j7v3-hqw9) ([#14608](https://github.com/remix-run/react-router/pull/14608))
+- Updated dependencies:
+  - `react-router@7.10.1`
+  - `@react-router/node@7.10.1`
+  - `@react-router/serve@7.10.1`
+
+## 7.10.0
+
+### Minor Changes
+
+- Stabilize `future.v8_splitRouteModules`, replacing `future.unstable_splitRouteModules` ([#14595](https://github.com/remix-run/react-router/pull/14595))
+  - ⚠️ This is a breaking change if you have begun using `future.unstable_splitRouteModules`. Please update your `react-router.config.ts`.
+
+- Stabilize `future.v8_viteEnvironmentApi`, replacing `future.unstable_viteEnvironmentApi` ([#14595](https://github.com/remix-run/react-router/pull/14595))
+  - ⚠️ This is a breaking change if you have begun using `future.unstable_viteEnvironmentApi`. Please update your `react-router.config.ts`.
+
+### Patch Changes
+
+- Load environment variables before evaluating `routes.ts` ([#14446](https://github.com/remix-run/react-router/pull/14446))
+
+  For example, you can now compute your routes based on [`VITE_`-prefixed environment variables](https://vite.dev/guide/env-and-mode#env-variables):
+
+  ```txt
+  # .env
+  VITE_ENV_ROUTE=my-route
+  ```
+
+  ```ts
+  // app/routes.ts
+  import { type RouteConfig, route } from "@react-router/dev/routes";
+
+  const routes: RouteConfig = [];
+  if (import.meta.env.VITE_ENV_ROUTE === "my-route") {
+    routes.push(route("my-route", "routes/my-route.tsx"));
+  }
+
+  export default routes;
+  ```
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+  - `@react-router/node@7.10.0`
+  - `@react-router/serve@7.10.0`
+
+## 7.9.6
+
+### Patch Changes
+
+- Use a dynamic `import()` to load ESM-only `p-map` dependency to avoid issues on Node 20.18 and below ([#14492](https://github.com/remix-run/react-router/pull/14492))
+- Short circuit `HEAD` document requests before calling `renderToPipeableStream` in the default `entry.server.tsx` to more closely align with the [spec](https://httpwg.org/specs/rfc9110.html#HEAD) ([#14488](https://github.com/remix-run/react-router/pull/14488))
+- Updated dependencies:
+  - `react-router@7.9.6`
+  - `@react-router/node@7.9.6`
+  - `@react-router/serve@7.9.6`
+
+## 7.9.5
+
+### Patch Changes
+
+- Introduce a `prerender.unstable_concurrency` option, to support running the prerendering concurrently, potentially speeding up the build. ([#14380](https://github.com/remix-run/react-router/pull/14380))
+- Move RSCHydratedRouter and utils to `/dom` export. ([#14457](https://github.com/remix-run/react-router/pull/14457))
+- Ensure route navigation doesn't remove CSS `link` elements used by dynamic imports ([#14463](https://github.com/remix-run/react-router/pull/14463))
+- Typegen: only register route module types for routes within the app directory ([#14439](https://github.com/remix-run/react-router/pull/14439))
+- Updated dependencies:
+  - `react-router@7.9.5`
+  - `@react-router/node@7.9.5`
+  - `@react-router/serve@7.9.5`
+
+## 7.9.4
+
+### Patch Changes
+
+- Update `valibot` dependency to `^1.1.0` ([#14379](https://github.com/remix-run/react-router/pull/14379))
+
+- New (unstable) `useRoute` hook for accessing data from specific routes ([#14407](https://github.com/remix-run/react-router/pull/14407))
+
+  For example, let's say you have an `admin` route somewhere in your app and you want any child routes of `admin` to all have access to the `loaderData` and `actionData` from `admin.`
+
+  ```tsx
+  // app/routes/admin.tsx
+  import { Outlet } from "react-router";
+
+  export const loader = () => ({ message: "Hello, loader!" });
+
+  export const action = () => ({ count: 1 });
+
+  export default function Component() {
+    return (
+      <div>
+        {/* ... */}
+        <Outlet />
+        {/* ... */}
+      </div>
+    );
+  }
+  ```
+
+  You might even want to create a reusable widget that all of the routes nested under `admin` could use:
+
+  ```tsx
+  import { unstable_useRoute as useRoute } from "react-router";
+
+  export function AdminWidget() {
+    // How to get `message` and `count` from `admin` route?
+  }
+  ```
+
+  In framework mode, `useRoute` knows all your app's routes and gives you TS errors when invalid route IDs are passed in:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/dmin");
+    //                      ^^^^^^^^^^^
+  }
+  ```
+
+  `useRoute` returns `undefined` if the route is not part of the current page:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+  }
+  ```
+
+  Note: the `root` route is the exception since it is guaranteed to be part of the current page.
+  As a result, `useRoute` never returns `undefined` for `root`.
+
+  `loaderData` and `actionData` are marked as optional since they could be accessed before the `action` is triggered or after the `loader` threw an error:
+
+  ```tsx
+  export function AdminWidget() {
+    const admin = useRoute("routes/admin");
+    if (!admin) {
+      throw new Error(`AdminWidget used outside of "routes/admin"`);
+    }
+    const { loaderData, actionData } = admin;
+    console.log(loaderData);
+    //          ^? { message: string } | undefined
+    console.log(actionData);
+    //          ^? { count: number } | undefined
+  }
+  ```
+
+  If instead of a specific route, you wanted access to the _current_ route's `loaderData` and `actionData`, you can call `useRoute` without arguments:
+
+  ```tsx
+  export function AdminWidget() {
+    const currentRoute = useRoute();
+    currentRoute.loaderData;
+    currentRoute.actionData;
+  }
+  ```
+
+  This usage is equivalent to calling `useLoaderData` and `useActionData`, but consolidates all route data access into one hook: `useRoute`.
+
+  Note: when calling `useRoute()` (without a route ID), TS has no way to know which route is the current route.
+  As a result, `loaderData` and `actionData` are typed as `unknown`.
+  If you want more type-safety, you can either narrow the type yourself with something like `zod` or you can refactor your app to pass down typed props to your `AdminWidget`:
+
+  ```tsx
+  export function AdminWidget({
+    message,
+    count,
+  }: {
+    message: string;
+    count: number;
+  }) {
+    /* ... */
+  }
+  ```
+
+- Updated dependencies:
+  - `react-router@7.9.4`
+  - `@react-router/node@7.9.4`
+  - `@react-router/serve@7.9.4`
+
+## 7.9.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.3`
+  - `@react-router/node@7.9.3`
+  - `@react-router/serve@7.9.3`
+
+## 7.9.2
+
+### Patch Changes
+
+- Fix preset future flags being ignored during config resolution ([#14369](https://github.com/remix-run/react-router/pull/14369))
+
+  Fixes a bug where future flags defined by presets were completely ignored. The config resolution was incorrectly reading from `reactRouterUserConfig.future` instead of the merged `userAndPresetConfigs.future`, causing all preset-defined future flags to be lost.
+
+  This fix ensures presets can properly enable experimental features as intended by the preset system design.
+
+- Add unstable support for RSC Framework Mode ([#14336](https://github.com/remix-run/react-router/pull/14336))
+
+- Switch internal vite plugin Response logic to use `@remix-run/node-fetch-server` ([#13927](https://github.com/remix-run/react-router/pull/13927))
+
+- Updated dependencies:
+  - `react-router@7.9.2`
+  - `@react-router/serve@7.9.2`
+  - `@react-router/node@7.9.2`
+
+## 7.9.1
+
+### Patch Changes
+
+- Fix internal `Future` interface naming from `middleware` -> `v8_middleware` ([#14327](https://github.com/remix-run/react-router/pull/14327))
+- Updated dependencies:
+  - `react-router@7.9.1`
+  - `@react-router/node@7.9.1`
+  - `@react-router/serve@7.9.1`
+
+## 7.9.0
+
+### Minor Changes
+
+- Stabilize middleware and context APIs. ([#14215](https://github.com/remix-run/react-router/pull/14215))
+
+  We have removed the `unstable_` prefix from the following APIs and they are now considered stable and ready for production use:
+  - [`RouterContextProvider`](https://reactrouter.com/api/utils/RouterContextProvider)
+  - [`createContext`](https://reactrouter.com/api/utils/createContext)
+  - `createBrowserRouter` [`getContext`](https://reactrouter.com/api/data-routers/createBrowserRouter#optsgetcontext) option
+  - `<HydratedRouter>` [`getContext`](https://reactrouter.com/api/framework-routers/HydratedRouter#getcontext) prop
+
+  Please see the [Middleware Docs](https://reactrouter.com/how-to/middleware), the [Middleware RFC](https://github.com/remix-run/remix/discussions/7642), and the [Client-side Context RFC](https://github.com/remix-run/react-router/discussions/9856) for more information.
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.0`
+  - `@react-router/node@7.9.0`
+  - `@react-router/serve@7.9.0`
+
 ## 7.8.2
 
 ### Patch Changes

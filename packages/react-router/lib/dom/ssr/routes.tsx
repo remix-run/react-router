@@ -340,7 +340,7 @@ export function createClientRoutes(
         (routeModule.clientLoader?.hydrate === true || !route.hasLoader);
 
       dataRoute.loader = async (
-        { request, params, context }: LoaderFunctionArgs,
+        { request, params, context, unstable_pattern }: LoaderFunctionArgs,
         singleFetch?: unknown,
       ) => {
         try {
@@ -358,6 +358,7 @@ export function createClientRoutes(
               request,
               params,
               context,
+              unstable_pattern,
               async serverLoader() {
                 preventInvalidServerHandlerCall("loader", route);
 
@@ -393,7 +394,7 @@ export function createClientRoutes(
       );
 
       dataRoute.action = (
-        { request, params, context }: ActionFunctionArgs,
+        { request, params, context, unstable_pattern }: ActionFunctionArgs,
         singleFetch?: unknown,
       ) => {
         return prefetchStylesAndCallHandler(async () => {
@@ -412,6 +413,7 @@ export function createClientRoutes(
             request,
             params,
             context,
+            unstable_pattern,
             async serverAction() {
               preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);
@@ -600,14 +602,6 @@ function getShouldRevalidateFunction(
     } else {
       return (opts: ShouldRevalidateFunctionArgs) => didParamsChange(opts);
     }
-  }
-
-  // Single fetch revalidates by default, so override the RR default value which
-  // matches the multi-fetch behavior with `true`
-  if (ssr && route.shouldRevalidate) {
-    let fn = route.shouldRevalidate;
-    return (opts: ShouldRevalidateFunctionArgs) =>
-      fn({ ...opts, defaultShouldRevalidate: true });
   }
 
   return route.shouldRevalidate;

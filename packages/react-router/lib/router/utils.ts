@@ -270,6 +270,11 @@ interface DataFunctionArgs<Context> {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
   /**
+   * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
+   * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
+   */
+  unstable_pattern: string;
+  /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
    * // app/routes.ts
@@ -429,6 +434,8 @@ export interface DataStrategyMatch
     route: Promise<void> | undefined;
   };
   /**
+   * @deprecated Deprecated in favor of `shouldCallHandler`
+   *
    * A boolean value indicating whether this route handler should be called in
    * this pass.
    *
@@ -454,12 +461,20 @@ export interface DataStrategyMatch
    *    custom `shouldRevalidate` implementations)
    */
   shouldLoad: boolean;
-  // This can be null for actions calls and for initial hydration calls
-  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
-  // This function will use a scoped version of `shouldRevalidateArgs` because
-  // they are read-only but let the user provide an optional override value for
-  // `defaultShouldRevalidate` if they choose
-  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  /**
+   * Arguments passed to the `shouldRevalidate` function for this `loader` execution.
+   * Will be `null` if this is not a revalidating loader {@link DataStrategyMatch}.
+   */
+  shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  /**
+   * Determine if this route's handler should be called during this `dataStrategy`
+   * execution. Calling it with no arguments will leverage the default revalidation
+   * behavior. You can pass your own `defaultShouldRevalidate` value if you wish
+   * to change the default revalidation behavior with your `dataStrategy`.
+   *
+   * @param defaultShouldRevalidate `defaultShouldRevalidate` override value (optional)
+   */
+  shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   /**
    * An async function that will resolve any `route.lazy` implementations and
    * execute the route's handler (if necessary), returning a {@link DataStrategyResult}
@@ -535,7 +550,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
  * properties from framework-agnostic properties
  */
 export interface MapRoutePropertiesFunction {
-  (route: AgnosticRouteObject): {
+  (route: AgnosticDataRouteObject): {
     hasErrorBoundary: boolean;
   } & Record<string, any>;
 }
@@ -808,19 +823,23 @@ export function convertRoutesToDataRoutes(
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
         ...route,
-        ...mapRouteProperties(route),
         id,
       };
-      manifest[id] = indexRoute;
+      manifest[id] = mergeRouteUpdates(
+        indexRoute,
+        mapRouteProperties(indexRoute),
+      );
       return indexRoute;
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
-        ...mapRouteProperties(route),
         id,
         children: undefined,
       };
-      manifest[id] = pathOrLayoutRoute;
+      manifest[id] = mergeRouteUpdates(
+        pathOrLayoutRoute,
+        mapRouteProperties(pathOrLayoutRoute),
+      );
 
       if (route.children) {
         pathOrLayoutRoute.children = convertRoutesToDataRoutes(
@@ -834,6 +853,23 @@ export function convertRoutesToDataRoutes(
 
       return pathOrLayoutRoute;
     }
+  });
+}
+
+function mergeRouteUpdates<T extends AgnosticDataRouteObject>(
+  route: T,
+  updates: ReturnType<MapRoutePropertiesFunction>,
+): T {
+  return Object.assign(route, {
+    ...updates,
+    ...(typeof updates.lazy === "object" && updates.lazy != null
+      ? {
+          lazy: {
+            ...route.lazy,
+            ...updates.lazy,
+          },
+        }
+      : {}),
   });
 }
 
@@ -1545,6 +1581,9 @@ export function prependBasename({
   return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
+
 /**
  * Returns a resolved {@link Path} object relative to the given pathname.
  *
@@ -1562,11 +1601,29 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
     hash = "",
   } = typeof to === "string" ? parsePath(to) : to;
 
-  let pathname = toPathname
-    ? toPathname.startsWith("/")
-      ? toPathname
-      : resolvePathname(toPathname, fromPathname)
-    : fromPathname;
+  let pathname: string;
+  if (toPathname) {
+    if (isAbsoluteUrl(toPathname)) {
+      pathname = toPathname;
+    } else {
+      if (toPathname.includes("//")) {
+        let oldPathname = toPathname;
+        toPathname = toPathname.replace(/\/\/+/g, "/");
+        warning(
+          false,
+          `Pathnames cannot have embedded double slashes - normalizing ` +
+            `${oldPathname} -> ${toPathname}`,
+        );
+      }
+      if (toPathname.startsWith("/")) {
+        pathname = resolvePathname(toPathname.substring(1), "/");
+      } else {
+        pathname = resolvePathname(toPathname, fromPathname);
+      }
+    }
+  } else {
+    pathname = fromPathname;
+  }
 
   return {
     pathname,
@@ -1958,7 +2015,8 @@ export class ErrorResponseImpl implements ErrorResponse {
 /**
  * Check if the given error is an {@link ErrorResponse} generated from a 4xx/5xx
  * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
- * thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
+ * thrown from an [`action`](../../start/framework/route-module#action) or
+ * [`loader`](../../start/framework/route-module#loader) function.
  *
  * @example
  * import { isRouteErrorResponse } from "react-router";
@@ -1984,7 +2042,6 @@ export class ErrorResponseImpl implements ErrorResponse {
  * @mode data
  * @param error The error to check.
  * @returns `true` if the error is an {@link ErrorResponse}, `false` otherwise.
- *
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (
@@ -1994,4 +2051,82 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.internal === "boolean" &&
     "data" in error
   );
+}
+
+/*
+lol - this comment is needed because the JSDoc parser for `docs.ts` gets confused
+by the star-slash in the `getRoutePattern` regex and messes up the parsed comment
+for `isRouteErrorResponse` above.  This comment seems to reset the parser.
+*/
+
+export function getRoutePattern(matches: AgnosticRouteMatch[]) {
+  return (
+    matches
+      .map((m) => m.route.path)
+      .filter(Boolean)
+      .join("/")
+      .replace(/\/\/*/g, "/") || "/"
+  );
+}
+
+export const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
+export type ParsedLocationInfo<T extends To> =
+  | {
+      absoluteURL: string;
+      isExternal: boolean;
+      to: string;
+    }
+  | {
+      absoluteURL: undefined;
+      isExternal: false;
+      to: T;
+    };
+export function parseToInfo<T extends To | string>(
+  _to: T,
+  basename: string,
+): ParsedLocationInfo<T | string> {
+  let to = _to as string;
+  if (typeof to !== "string" || !ABSOLUTE_URL_REGEX.test(to)) {
+    return {
+      absoluteURL: undefined,
+      isExternal: false,
+      to,
+    };
+  }
+
+  let absoluteURL = to;
+  let isExternal = false;
+  if (isBrowser) {
+    try {
+      let currentUrl = new URL(window.location.href);
+      let targetUrl = to.startsWith("//")
+        ? new URL(currentUrl.protocol + to)
+        : new URL(to);
+      let path = stripBasename(targetUrl.pathname, basename);
+
+      if (targetUrl.origin === currentUrl.origin && path != null) {
+        // Strip the protocol/origin/basename for same-origin absolute URLs
+        to = path + targetUrl.search + targetUrl.hash;
+      } else {
+        isExternal = true;
+      }
+    } catch (e) {
+      // We can't do external URL detection without a valid URL
+      warning(
+        false,
+        `<Link to="${to}"> contains an invalid URL which will probably break ` +
+          `when clicked - please update to a valid URL path.`,
+      );
+    }
+  }
+
+  return {
+    absoluteURL,
+    isExternal,
+    to,
+  };
 }

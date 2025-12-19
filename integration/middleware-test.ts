@@ -369,7 +369,7 @@ test.describe("Middleware", () => {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
             v8_middleware: true,
-            splitRouteModules: true,
+            v8_splitRouteModules: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1061,7 +1061,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             v8_middleware: true,
-            splitRouteModules: true,
+            v8_splitRouteModules: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1479,6 +1479,77 @@ test.describe("Middleware", () => {
               return <h3 data-b>B: {loaderData}</h3>;
             }
           `,
+          "app/routes/revalidate.parent.tsx": js`
+            import { Outlet } from "react-router";
+            import { orderContext } from '../context';
+
+            export const middleware = [
+              ({ context, params }) => {
+                context.set(orderContext, [
+                  ...context.get(orderContext),
+                  'parent middleware ' + params.child
+                ]);
+              },
+            ];
+
+            export async function loader({ context, params }) {
+              context.set(orderContext, [
+                ...context.get(orderContext),
+                'parent loader ' + params.child
+              ]);
+              await new Promise(r => setTimeout(r, 0));
+              return context.get(orderContext).join(',');
+            }
+
+            export const shouldRevalidate = () => false;
+
+            export default function Parent({ loaderData }) {
+              return (
+                <>
+                  <h1>Parent</h1>
+                  <div id="parent-loader-data">{loaderData}</div>
+                  <Outlet />
+                </>
+              );
+            }
+          `,
+
+          "app/routes/revalidate.parent.$child.tsx": js`
+            import { href, Link } from "react-router";
+            import { orderContext } from '../context';
+
+            export const middleware = [
+              ({ context, params }) => {
+                context.set(orderContext, [
+                  ...context.get(orderContext),
+                  'child middleware ' + params.child
+                ]);
+              },
+            ];
+
+            export async function loader({ context, params }) {
+              context.set(orderContext, [
+                ...context.get(orderContext),
+                'child loader ' + params.child
+              ]);
+              await new Promise(r => setTimeout(r, 0));
+              return context.get(orderContext).join(',');
+            }
+
+            export default function Child({ loaderData, params }) {
+              const nextChild = String(Number(params.child) + 1);
+
+              return (
+                <>
+                  <h1>Child: {params.child}</h1>
+                  <div id="child-loader-data">{loaderData}</div>
+                  <Link to={href("/revalidate/parent/:child", { child: nextChild })}>
+                    Next child
+                  </Link>
+                </>
+              );
+            }
+          `,
           "app/routes/without-loader-document._index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
@@ -1821,6 +1892,34 @@ test.describe("Middleware", () => {
       await page.waitForSelector("[data-b]");
       expect(await page.locator("[data-a]").textContent()).toBe("A: a,b");
       expect(await page.locator("[data-b]").textContent()).toBe("B: a,b");
+    });
+
+    test("Filters server loaders via shouldRevalidate", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/revalidate/parent/1");
+      expect(await page.locator("#parent-loader-data").textContent()).toBe(
+        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
+      );
+      expect(await page.locator("#child-loader-data").textContent()).toBe(
+        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
+      );
+
+      await app.clickLink("/revalidate/parent/2");
+      expect(await page.locator("#parent-loader-data").textContent()).toBe(
+        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
+      );
+      expect(await page.locator("#child-loader-data").textContent()).toBe(
+        "parent middleware 2,child middleware 2,child loader 2",
+      );
+
+      await app.clickLink("/revalidate/parent/3");
+      expect(await page.locator("#parent-loader-data").textContent()).toBe(
+        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
+      );
+      expect(await page.locator("#child-loader-data").textContent()).toBe(
+        "parent middleware 3,child middleware 3,child loader 3",
+      );
     });
 
     test("calls middleware for routes even without a loader (document)", async ({

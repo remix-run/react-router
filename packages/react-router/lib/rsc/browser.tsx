@@ -18,6 +18,7 @@ import type {
   RSCRenderPayload,
 } from "./server.rsc";
 import type {
+  AgnosticDataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   RouterContextProvider,
@@ -118,7 +119,7 @@ export function createCallServer({
       (globalVar.__routerActionID ??= 0) + 1);
 
     const temporaryReferences = createTemporaryReferenceSet();
-    const response = await fetchImplementation(
+    const payloadPromise = fetchImplementation(
       new Request(location.href, {
         body: await encodeReply(args, { temporaryReferences }),
         method: "POST",
@@ -127,71 +128,67 @@ export function createCallServer({
           "rsc-action-id": id,
         },
       }),
-    );
-    if (!response.body) {
-      throw new Error("No response body");
-    }
-    const payload = (await createFromReadableStream(response.body, {
-      temporaryReferences,
-    })) as RSCPayload;
-
-    if (payload.type === "redirect") {
-      if (payload.reload) {
-        window.location.href = payload.location;
-        return;
+    ).then((response) => {
+      if (!response.body) {
+        throw new Error("No response body");
       }
+      return createFromReadableStream(response.body, {
+        temporaryReferences,
+      }) as Promise<RSCPayload>;
+    });
 
-      globalVar.__reactRouterDataRouter.navigate(payload.location, {
-        replace: payload.replace,
-      });
+    React.startTransition(() =>
+      // @ts-expect-error - Needs React 19 types
+      Promise.resolve(payloadPromise)
+        .then(async (payload) => {
+          if (payload.type === "redirect") {
+            if (payload.reload || isExternalLocation(payload.location)) {
+              window.location.href = payload.location;
+              return;
+            }
 
-      return payload.actionResult;
-    }
+            React.startTransition(() => {
+              globalVar.__reactRouterDataRouter.navigate(payload.location, {
+                replace: payload.replace,
+              });
+            });
+            return;
+          }
 
-    if (payload.type !== "action") {
-      throw new Error("Unexpected payload type");
-    }
+          if (payload.type !== "action") {
+            throw new Error("Unexpected payload type");
+          }
 
-    if (payload.rerender) {
-      React.startTransition(
-        // @ts-expect-error - We have old react types that don't know this can be async
-        async () => {
           const rerender = await payload.rerender;
-          if (!rerender) return;
-
           if (
+            rerender &&
             landedActionId < actionId &&
             globalVar.__routerActionID <= actionId
           ) {
-            landedActionId = actionId;
-
             if (rerender.type === "redirect") {
-              if (rerender.reload) {
+              if (rerender.reload || isExternalLocation(rerender.location)) {
                 window.location.href = rerender.location;
                 return;
               }
-              globalVar.__reactRouterDataRouter.navigate(rerender.location, {
-                replace: rerender.replace,
+              React.startTransition(() => {
+                globalVar.__reactRouterDataRouter.navigate(rerender.location, {
+                  replace: rerender.replace,
+                });
               });
               return;
             }
 
-            let lastMatch: RSCRouteManifest | undefined;
-            for (const match of rerender.matches) {
-              globalVar.__reactRouterDataRouter.patchRoutes(
-                lastMatch?.id ?? null,
-                [createRouteFromServerManifest(match)],
-                true,
-              );
-              lastMatch = match;
-            }
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
-              {},
-            );
-
             React.startTransition(() => {
+              let lastMatch: RSCRouteManifest | undefined;
+              for (const match of rerender.matches) {
+                globalVar.__reactRouterDataRouter.patchRoutes(
+                  lastMatch?.id ?? null,
+                  [createRouteFromServerManifest(match)],
+                  true,
+                );
+                lastMatch = match;
+              }
+
               (
                 window as WindowWithRouterGlobals
               ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
@@ -212,11 +209,17 @@ export function createCallServer({
               );
             });
           }
-        },
-      );
-    }
+        })
+        .catch(() => {}),
+    );
 
-    return payload.actionResult;
+    return payloadPromise.then((payload) => {
+      if (payload.type !== "action" && payload.type !== "redirect") {
+        throw new Error("Unexpected payload type");
+      }
+
+      return payload.actionResult;
+    });
   };
 }
 
@@ -455,6 +458,8 @@ export function getRSCSingleFetchDataStrategy(
     getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
     ssr,
     basename,
+    // .rsc requests are always trailing slash aware
+    true,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
@@ -489,20 +494,23 @@ export function getRSCSingleFetchDataStrategy(
         }
         renderedRoutesById.get(route.id)!.push(route);
       }
-      for (const match of args.matches) {
-        const renderedRoutes = renderedRoutesById.get(match.route.id);
-        if (renderedRoutes) {
-          for (const rendered of renderedRoutes) {
-            (
-              window as WindowWithRouterGlobals
-            ).__reactRouterDataRouter.patchRoutes(
-              rendered.parentId ?? null,
-              [createRouteFromServerManifest(rendered)],
-              true,
-            );
+
+      React.startTransition(() => {
+        for (const match of args.matches) {
+          const renderedRoutes = renderedRoutesById.get(match.route.id);
+          if (renderedRoutes) {
+            for (const rendered of renderedRoutes) {
+              (
+                window as WindowWithRouterGlobals
+              ).__reactRouterDataRouter.patchRoutes(
+                rendered.parentId ?? null,
+                [createRouteFromServerManifest(rendered)],
+                true,
+              );
+            }
           }
         }
-      }
+      });
       return results;
     });
 }
@@ -514,10 +522,11 @@ function getFetchAndDecodeViaRSC(
   return async (
     args: DataStrategyFunctionArgs<unknown>,
     basename: string | undefined,
+    trailingSlashAware: boolean,
     targetRoutes?: string[],
   ) => {
     let { request, context } = args;
-    let url = singleFetchUrl(request.url, basename, "rsc");
+    let url = singleFetchUrl(request.url, basename, trailingSlashAware, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
       if (targetRoutes) {
@@ -529,10 +538,14 @@ function getFetchAndDecodeViaRSC(
       new Request(url, await createRequestInit(request)),
     );
 
-    // If this 404'd without hitting the running server (most likely in a
-    // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
-    if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
-      throw new ErrorResponseImpl(404, "Not Found", true);
+    // If this error'd without hitting the running server, then bubble a normal
+    // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
+    //
+    // This could be triggered by a few scenarios:
+    // - `.data` request 404 on a pre-rendered app using a CDN
+    // - 429 error returned from a CDN on a SSR app
+    if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
+      throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
     }
 
     invariant(res.body, "No response body to decode");
@@ -702,16 +715,33 @@ export function RSCHydratedRouter({
     }
   }, []);
 
-  let [location, setLocation] = React.useState(router.state.location);
+  let [{ routes, state }, setState] = React.useState(() => ({
+    routes: cloneRoutes(router.routes),
+    state: router.state,
+  }));
 
   React.useLayoutEffect(
     () =>
       router.subscribe((newState) => {
-        if (newState.location !== location) {
-          setLocation(newState.location);
-        }
+        if (diffRoutes(router.routes, routes))
+          React.startTransition(() => {
+            setState({
+              routes: cloneRoutes(router.routes),
+              state: newState,
+            });
+          });
       }),
-    [router, location],
+    [router.subscribe, routes, router],
+  );
+
+  const transitionEnabledRouter = React.useMemo(
+    () =>
+      ({
+        ...router,
+        state,
+        routes,
+      }) as typeof router,
+    [router, routes, state],
   );
 
   React.useEffect(() => {
@@ -793,6 +823,7 @@ export function RSCHydratedRouter({
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
       unstable_subResourceIntegrity: false,
+      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
@@ -812,9 +843,12 @@ export function RSCHydratedRouter({
 
   return (
     <RSCRouterContext.Provider value={true}>
-      <RSCRouterGlobalErrorBoundary location={location}>
+      <RSCRouterGlobalErrorBoundary location={state.location}>
         <FrameworkContext.Provider value={frameworkContext}>
-          <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
+          <RouterProvider
+            router={transitionEnabledRouter}
+            flushSync={ReactDOM.flushSync}
+          />
         </FrameworkContext.Provider>
       </RSCRouterGlobalErrorBoundary>
     </RSCRouterContext.Provider>
@@ -976,7 +1010,7 @@ function getManifestUrl(paths: string[]): URL | null {
     "",
   );
   let url = new URL(`${basename}/.manifest`, window.location.origin);
-  paths.sort().forEach((path) => url.searchParams.append("p", path));
+  url.searchParams.set("paths", paths.sort().join(","));
 
   return url;
 }
@@ -1017,18 +1051,20 @@ async function fetchAndApplyManifestPatches(
 
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
-  payload.patches.forEach((p) => {
-    (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
-      p.parentId ?? null,
-      [createRouteFromServerManifest(p)],
-    );
+  React.startTransition(() => {
+    payload.patches.forEach((p) => {
+      (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
+        p.parentId ?? null,
+        [createRouteFromServerManifest(p)],
+      );
+    });
   });
 }
 
 function addToFifoQueue(path: string, queue: Set<string>) {
   if (queue.size >= discoveredPathsMaxSize) {
     let first = queue.values().next().value;
-    queue.delete(first);
+    if (typeof first === "string") queue.delete(first);
   }
   queue.add(path);
 }
@@ -1041,4 +1077,45 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
     window.clearTimeout(timeoutId);
     timeoutId = window.setTimeout(() => callback(...args), wait);
   };
+}
+
+function isExternalLocation(location: string) {
+  const newLocation = new URL(location, window.location.href);
+  return newLocation.origin !== window.location.origin;
+}
+
+function cloneRoutes(
+  routes: AgnosticDataRouteObject[] | undefined,
+): AgnosticDataRouteObject[] {
+  if (!routes) return undefined as any;
+  return routes.map((route) => ({
+    ...route,
+    children: cloneRoutes(route.children),
+  })) as any;
+}
+
+function diffRoutes(
+  a: AgnosticDataRouteObject[],
+  b: AgnosticDataRouteObject[],
+): boolean {
+  if (a.length !== b.length) return true;
+  return a.some((route, index) => {
+    if ((route as any).element !== (b[index] as any).element) return true;
+    if ((route as any).errorElement !== (b[index] as any).errorElement)
+      return true;
+    if (
+      (route as any).hydrateFallbackElement !==
+      (b[index] as any).hydrateFallbackElement
+    )
+      return true;
+    if ((route as any).hasErrorBoundary !== (b[index] as any).hasErrorBoundary)
+      return true;
+    if ((route as any).hasLoader !== (b[index] as any).hasLoader) return true;
+    if ((route as any).hasClientLoader !== (b[index] as any).hasClientLoader)
+      return true;
+    if ((route as any).hasAction !== (b[index] as any).hasAction) return true;
+    if ((route as any).hasClientAction !== (b[index] as any).hasClientAction)
+      return true;
+    return diffRoutes(route.children || [], b[index].children || []);
+  });
 }

@@ -28,20 +28,18 @@ export const reactRouterConfig = ({
   basename,
   prerender,
   appDirectory,
-  splitRouteModules,
-  viteEnvironmentApi,
   v8_middleware,
+  v8_splitRouteModules,
+  v8_viteEnvironmentApi,
   routeDiscovery,
 }: {
   ssr?: boolean;
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
-  splitRouteModules?: NonNullable<
-    Config["future"]
-  >["unstable_splitRouteModules"];
-  viteEnvironmentApi?: boolean;
   v8_middleware?: boolean;
+  v8_splitRouteModules?: NonNullable<Config["future"]>["v8_splitRouteModules"];
+  v8_viteEnvironmentApi?: boolean;
   routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
@@ -51,9 +49,9 @@ export const reactRouterConfig = ({
     appDirectory,
     routeDiscovery,
     future: {
-      unstable_splitRouteModules: splitRouteModules,
-      unstable_viteEnvironmentApi: viteEnvironmentApi,
       v8_middleware,
+      v8_splitRouteModules,
+      v8_viteEnvironmentApi,
     },
   };
 
@@ -132,13 +130,14 @@ export const viteConfig = {
     `;
   },
   basic: async (args: ViteConfigArgs) => {
+    const isRsc = args.templateName?.includes("rsc");
     return dedent`
       ${
-        !args.templateName?.includes("rsc")
+        !isRsc
           ? "import { reactRouter } from '@react-router/dev/vite';"
           : [
-              "import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from '@react-router/dev/internal';",
-              "const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;",
+              "import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';",
+              "import rsc from '@vitejs/plugin-rsc';",
             ].join("\n")
       }
       ${args.mdx ? 'import mdx from "@mdx-js/rollup";' : ""}
@@ -154,7 +153,8 @@ export const viteConfig = {
         plugins: [
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
-          reactRouter(),
+          ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
+          ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
           tsconfigPaths()
         ],
@@ -168,8 +168,43 @@ export const EXPRESS_SERVER = (args: {
   base?: string;
   loadContext?: Record<string, unknown>;
   customLogic?: string;
-}) =>
-  String.raw`
+  templateName?: TemplateName;
+}) => {
+  if (args.templateName?.includes("rsc")) {
+    return String.raw`
+      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import express from "express";
+
+      const viteDevServer =
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : await import("vite").then(({ createServer }) =>
+              createServer({
+                server: {
+                  middlewareMode: true,
+                },
+              })
+            );
+      const app = express();
+
+      ${args?.customLogic || ""}
+
+      if (viteDevServer) {
+        app.use(viteDevServer.middlewares);
+      } else {
+        app.use(
+          "/assets",
+          express.static("build/client/assets", { immutable: true, maxAge: "1y" })
+        );
+        app.all("*", createRequestListener((await import("./build/server/index.js")).default));
+      }
+
+      const port = ${args.port};
+      app.listen(port, () => console.log('http://localhost:' + port));
+    `;
+  }
+
+  return String.raw`
     import { createRequestHandler } from "@react-router/express";
     import express from "express";
 
@@ -209,6 +244,7 @@ export const EXPRESS_SERVER = (args: {
     const port = ${args.port};
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
+};
 
 type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
@@ -223,7 +259,7 @@ type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
   | "vite-plugin-cloudflare-template";
 
-export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+export type RscBundlerTemplateName = "rsc-vite";
 
 export type TemplateName =
   | FrameworkModeViteMajorTemplateName
@@ -246,7 +282,6 @@ export const viteMajorTemplates = [
 
 export const rscBundlerTemplates = [
   { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
-  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
 ] as const satisfies Array<{
   templateName: RscBundlerTemplateName;
   templateDisplayName: string;
@@ -334,31 +369,6 @@ export const reactRouterServe = async ({
   return () => serveProc.kill();
 };
 
-export const runStartScript = async ({
-  cwd,
-  port,
-  viteBase,
-  basename,
-}: {
-  cwd: string;
-  port: number;
-  viteBase?: string;
-  basename?: string;
-}) => {
-  let nodeBin = process.argv[0];
-  let proc = spawn(nodeBin, ["start.js"], {
-    cwd,
-    stdio: "pipe",
-    env: {
-      NODE_ENV: "production",
-      PORT: port.toFixed(0),
-      VITE_BASE: viteBase,
-    },
-  });
-  await waitForServer(proc, { port, basename });
-  return () => proc.kill();
-};
-
 export const wranglerPagesDev = async ({
   cwd,
   port,
@@ -402,6 +412,28 @@ export const createDev =
 export const dev = createDev([reactRouterBin, "dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
+export const vitePreview = async ({
+  cwd,
+  port,
+}: {
+  cwd: string;
+  port: number;
+}) => {
+  let nodeBin = process.argv[0];
+  let viteBin = path.join(cwd, "node_modules", "vite", "bin", "vite.js");
+  let proc = spawn(
+    nodeBin,
+    [viteBin, "preview", "--port", String(port), "--strict-port"],
+    {
+      cwd,
+      stdio: "pipe",
+      env: { NODE_ENV: "production" },
+    },
+  );
+  await waitForServer(proc, { port });
+  return () => proc.kill();
+};
+
 // Used for testing errors thrown on build when we don't want to start and
 // wait for the server
 export const viteDevCmd = ({ cwd }: { cwd: string }) => {
@@ -436,6 +468,13 @@ type Fixtures = {
     cwd: string;
   }>;
   reactRouterServe: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  vitePreview: (
+    files: Files,
+    templateName?: TemplateName,
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -482,6 +521,18 @@ export const test = base.extend<Fixtures>({
       let { status } = build({ cwd });
       expect(status).toBe(0);
       stop = await reactRouterServe({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  vitePreview: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files, template) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }), template);
+      let { status } = build({ cwd });
+      expect(status).toBe(0);
+      stop = await vitePreview({ cwd, port });
       return { port, cwd };
     });
     stop?.();

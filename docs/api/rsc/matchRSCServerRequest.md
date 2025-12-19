@@ -95,8 +95,10 @@ async function matchRSCServerRequest({
   generateResponse: (
     match: RSCMatch,
     {
+      onError,
       temporaryReferences,
     }: {
+      onError(error: unknown): string | undefined;
       temporaryReferences: unknown;
     },
   ) => Response;

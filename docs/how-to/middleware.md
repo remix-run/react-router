@@ -487,6 +487,8 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 ```
 
+Which `ErrorBoundary` is rendered will differ based on whether your middleware threw _before_ or _after_ calling then `next()` function. If it throws _after_ then it will bubble up from the throwing route just like a normal loader error because we've already run the loaders and have the appropriate `loaderData` to render in the route components. However, if an error is thrown _before_ calling `next()`, then we haven't called any loaders yet and there is no `loaderData` available. When this happens, we must bubble up to the highest route with a `loader` and start looking for an `ErrorBoundary` there. We cannot render any route components at that level or below without any `loaderData`.
+
 ## Changes to `getLoadContext`/`AppLoadContext`
 
 <docs-info>This only applies if you are using a custom server and a custom `getLoadContext` function</docs-info>
@@ -678,13 +680,17 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 ### Sharing Context Between `action` and `loader`
 
+<docs-info>On the server, this approach only works for document POST requests because `context` is scoped to a request. SPA navigation submissions use separate POST/GET requests so you cannot share `context` between them. This pattern always works in `clientMiddleware`/`clientLoader`/`clientAction` because there's no separate HTTP requests.</docs-info>
+
 ```tsx
 const sharedDataContext = createContext<any>();
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    if (request.method === "POST") {
-      // Set data during action phase
+    // Set data if it doesn't exist
+    // This will only run once for document requests
+    // It will run twice (action request + loader request) in SPA submissions
+    if (!context.get(sharedDataContext)) {
       context.set(
         sharedDataContext,
         await getExpensiveData(),

@@ -1,5 +1,98 @@
 # `@react-router/serve`
 
+## 7.11.0
+
+### Patch Changes
+
+- support custom entrypoints for RSC framework mode ([#14643](https://github.com/remix-run/react-router/pull/14643))
+- Update `compression` and `morgan` dependencies to address `on-headers` CVE: [GHSA-76c9-3jph-rj3q](https://github.com/advisories/GHSA-76c9-3jph-rj3q) ([#14652](https://github.com/remix-run/react-router/pull/14652))
+- Updated dependencies:
+  - `react-router@7.11.0`
+  - `@react-router/node@7.11.0`
+  - `@react-router/express@7.11.0`
+
+## 7.10.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.1`
+  - `@react-router/node@7.10.1`
+  - `@react-router/express@7.10.1`
+
+## 7.10.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+  - `@react-router/node@7.10.0`
+  - `@react-router/express@7.10.0`
+
+## 7.9.6
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.6`
+  - `@react-router/node@7.9.6`
+  - `@react-router/express@7.9.6`
+
+## 7.9.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.5`
+  - `@react-router/node@7.9.5`
+  - `@react-router/express@7.9.5`
+
+## 7.9.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.4`
+  - `@react-router/node@7.9.4`
+  - `@react-router/express@7.9.4`
+
+## 7.9.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.3`
+  - `@react-router/node@7.9.3`
+  - `@react-router/express@7.9.3`
+
+## 7.9.2
+
+### Patch Changes
+
+- disable compression for RSC responses for now ([#14381](https://github.com/remix-run/react-router/pull/14381))
+- Updated dependencies:
+  - `react-router@7.9.2`
+  - `@react-router/node@7.9.2`
+  - `@react-router/express@7.9.2`
+
+## 7.9.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.1`
+  - `@react-router/node@7.9.1`
+  - `@react-router/express@7.9.1`
+
+## 7.9.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.0`
+  - `@react-router/express@7.9.0`
+  - `@react-router/node@7.9.0`
+
 ## 7.8.2
 
 ### Patch Changes

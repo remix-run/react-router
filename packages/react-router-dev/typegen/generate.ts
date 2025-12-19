@@ -23,7 +23,7 @@ export function generateFuture(ctx: Context): VirtualFile {
 
     declare module "react-router" {
       interface Future {
-        middleware: ${ctx.config.future.v8_middleware}
+        v8_middleware: ${ctx.config.future.v8_middleware}
       }
     }
   `;
@@ -105,13 +105,16 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
           interface Register {
             pages: Pages
             routeFiles: RouteFiles
+            routeModules: RouteModules
           }
         }
       ` +
       "\n\n" +
       Babel.generate(pagesType(allPages)).code +
       "\n\n" +
-      Babel.generate(routeFilesType({ fileToRoutes, routeToPages })).code,
+      Babel.generate(routeFilesType({ fileToRoutes, routeToPages })).code +
+      "\n\n" +
+      Babel.generate(routeModulesType(ctx)).code,
   };
 
   // **/+types/*.ts
@@ -186,6 +189,31 @@ function routeFilesType({
                 ]);
               }),
             ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+function routeModulesType(ctx: Context) {
+  return t.tsTypeAliasDeclaration(
+    t.identifier("RouteModules"),
+    null,
+    t.tsTypeLiteral(
+      Object.values(ctx.config.routes).map((route) =>
+        t.tsPropertySignature(
+          t.stringLiteral(route.id),
+          t.tsTypeAnnotation(
+            isInAppDirectory(ctx, route.file)
+              ? t.tsTypeQuery(
+                  t.tsImportType(
+                    t.stringLiteral(
+                      `./${Path.relative(ctx.rootDirectory, ctx.config.appDirectory)}/${route.file}`,
+                    ),
+                  ),
+                )
+              : t.tsUnknownKeyword(),
           ),
         ),
       ),
@@ -274,7 +302,7 @@ function getRouteAnnotations({
     Babel.generate(matchesType).code +
     "\n\n" +
     ts`
-      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;
+      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, ${ctx.rsc}>;
 
       export namespace Route {
         // links

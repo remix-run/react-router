@@ -373,6 +373,7 @@ describe("fetchers", () => {
         request: new Request("http://localhost/foo", {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
         }),
+        unstable_pattern: expect.any(String),
         context: {},
       });
     });
@@ -3373,6 +3374,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3402,6 +3404,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3429,6 +3432,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3456,6 +3460,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3484,6 +3489,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3514,6 +3520,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3543,6 +3550,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 
@@ -3553,6 +3561,118 @@ describe("fetchers", () => {
         "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await request.formData()).get("a")).toBe("1");
+    });
+  });
+
+  describe("resetFetcher", () => {
+    it("resets fetcher data", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+    });
+
+    it("aborts in-flight fetchers (first call)", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+
+      // no-op
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+      expect(A.loaders.fetch.signal.aborted).toBe(true);
+    });
+
+    it("aborts in-flight fetchers (subsequent call)", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+
+      let B = await t.fetch("/fetch", "a", "root");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "loading",
+        data: "FETCH",
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+
+      // no-op
+      await B.loaders.fetch.resolve("FETCH*");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+      expect(B.loaders.fetch.signal.aborted).toBe(true);
+    });
+
+    it("passes along the `reason` to the abort controller", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      t.router.resetFetcher("a", { reason: "BECAUSE I SAID SO" });
+      expect(A.loaders.fetch.signal.reason).toBe("BECAUSE I SAID SO");
     });
   });
 });

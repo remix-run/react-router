@@ -1,18 +1,23 @@
 import type * as Vite from "vite";
-import rsc, { type RscPluginOptions } from "@vitejs/plugin-rsc";
 import { init as initEsModuleLexer } from "es-module-lexer";
+import * as Path from "pathe";
 import * as babel from "@babel/core";
+import colors from "picocolors";
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
-import { readFileSync } from "fs";
 import { readFile } from "fs/promises";
-import path, { join, dirname } from "pathe";
+import path, { join } from "pathe";
+import invariant from "../../invariant";
 import {
   type ConfigLoader,
   type ResolvedReactRouterConfig,
   createConfigLoader,
+  resolveRSCEntryFiles,
 } from "../../config/config";
+import { preloadVite } from "../vite";
+import { hasDependency } from "../has-dependency";
+import { getOptimizeDepsEntries } from "../optimize-deps-entries";
 import { createVirtualRouteConfig } from "./virtual-route-config";
 import {
   transformVirtualRouteModules,
@@ -20,29 +25,83 @@ import {
   isVirtualClientRouteModuleId,
   CLIENT_NON_COMPONENT_EXPORTS,
 } from "./virtual-route-modules";
-import validatePluginOrder from "../plugins/validate-plugin-order";
+import { loadDotenv } from "../load-dotenv";
+import { validatePluginOrder } from "../plugins/validate-plugin-order";
+import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
+  let runningWithinTheReactRouterMonoRepo = Boolean(
+    arguments &&
+      arguments.length === 1 &&
+      typeof arguments[0] === "object" &&
+      arguments[0] &&
+      "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
+      arguments[0].__runningWithinTheReactRouterMonoRepo === true,
+  );
   let configLoader: ConfigLoader;
-  let config: ResolvedReactRouterConfig;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
+  let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
+  let logger: Vite.Logger;
+  let entries: { client: string; rsc: string; ssr: string };
+
+  let config: ResolvedReactRouterConfig;
+  let rootRouteFile: string;
+  function updateConfig(newConfig: ResolvedReactRouterConfig) {
+    config = newConfig;
+    rootRouteFile = Path.resolve(
+      newConfig.appDirectory,
+      newConfig.routes.root.file,
+    );
+  }
 
   return [
     {
       name: "react-router/rsc",
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
+        await preloadVite();
+
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
 
-        configLoader = await createConfigLoader({ rootDirectory, mode, watch });
+        await loadDotenv({
+          rootDirectory,
+          viteUserConfig,
+          mode,
+        });
+
+        configLoader = await createConfigLoader({
+          rootDirectory,
+          mode,
+          watch,
+          validateConfig: (userConfig) => {
+            let errors: string[] = [];
+            if (userConfig.buildEnd) errors.push("buildEnd");
+            if (userConfig.prerender) errors.push("prerender");
+            if (userConfig.presets?.length) errors.push("presets");
+            if (userConfig.routeDiscovery) errors.push("routeDiscovery");
+            if (userConfig.serverBundles) errors.push("serverBundles");
+            if (userConfig.ssr === false) errors.push("ssr: false");
+            if (userConfig.future?.v8_middleware === false)
+              errors.push("future.v8_middleware: false");
+            if (userConfig.future?.v8_splitRouteModules)
+              errors.push("future.v8_splitRouteModules");
+            if (userConfig.future?.v8_viteEnvironmentApi === false)
+              errors.push("future.v8_viteEnvironmentApi: false");
+            if (userConfig.future?.unstable_subResourceIntegrity)
+              errors.push("future.unstable_subResourceIntegrity");
+            if (errors.length) {
+              return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
+            }
+          },
+        });
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
-        config = configResult.value;
+        updateConfig(configResult.value);
 
         if (
           viteUserConfig.base &&
@@ -58,20 +117,48 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           );
         }
 
+        const vite = await import("vite");
+        logger = vite.createLogger(viteUserConfig.logLevel, {
+          prefix: "[react-router]",
+        });
+
+        entries = await resolveRSCEntryFiles({
+          reactRouterConfig: config,
+        });
+
+        // Async import here to avoid CJS warnings on the console
+        let viteNormalizePath = (await import("vite")).normalizePath;
+
         return {
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
               "react",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
               "react-dom",
+              "react-dom/client",
               // Avoid router duplicates since mismatching routers cause `Error:
               // You must render this element inside a <Remix> element`.
               "react-router",
               "react-router/dom",
-              "react-router-dom",
+              "react-router/internal/react-server-client",
+              ...(hasDependency({ name: "react-router-dom", rootDirectory })
+                ? ["react-router-dom"]
+                : []),
+              ...(hasDependency({
+                name: "react-server-dom-webpack",
+                rootDirectory,
+              })
+                ? ["react-server-dom-webpack"]
+                : []),
             ],
           },
           optimizeDeps: {
+            entries: getOptimizeDepsEntries({
+              entryClientFilePath: entries.client,
+              reactRouterConfig: config,
+            }),
             esbuildOptions: {
               jsx: "automatic",
             },
@@ -83,7 +170,21 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react/jsx-runtime",
               "react/jsx-dev-runtime",
               "react-dom",
-              "react-dom/client",
+              ...(hasDependency({
+                name: "react-server-dom-webpack",
+                rootDirectory,
+              })
+                ? ["react-server-dom-webpack"]
+                : []),
+              ...(runningWithinTheReactRouterMonoRepo
+                ? []
+                : [
+                    "react-router",
+                    "react-router/dom",
+                    "react-router/internal/react-server-client",
+                  ]),
+              "react-router > cookie",
+              "react-router > set-cookie-parser",
             ],
           },
           esbuild: {
@@ -93,17 +194,71 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           environments: {
             client: {
               build: {
+                rollupOptions: {
+                  input: {
+                    index: entries.client,
+                  },
+                  output: {
+                    manualChunks(id) {
+                      const normalized = viteNormalizePath(id);
+                      if (
+                        normalized.includes("node_modules/react/") ||
+                        normalized.includes("node_modules/react-dom/") ||
+                        normalized.includes(
+                          "node_modules/react-server-dom-webpack/",
+                        ) ||
+                        normalized.includes("node_modules/@vitejs/plugin-rsc/")
+                      ) {
+                        return "react";
+                      }
+                      if (normalized.includes("node_modules/react-router/")) {
+                        return "router";
+                      }
+                    },
+                  },
+                },
                 outDir: join(config.buildDirectory, "client"),
               },
             },
             rsc: {
               build: {
+                rollupOptions: {
+                  input: {
+                    index: entries.rsc,
+                  },
+                  output: {
+                    entryFileNames: config.serverBuildFile,
+                    format: config.serverModuleFormat,
+                  },
+                },
                 outDir: join(config.buildDirectory, "server"),
+              },
+              resolve: {
+                noExternal: [
+                  "@react-router/dev/config/default-rsc-entries/entry.ssr",
+                ],
               },
             },
             ssr: {
               build: {
+                rollupOptions: {
+                  input: {
+                    index: entries.ssr,
+                  },
+                  output: {
+                    // Note: We don't set `entryFileNames` here because it's
+                    // considered private to the RSC environment build, and
+                    // @vitejs/plugin-rsc currently breaks if it's set to
+                    // something other than `index.js`.
+                    format: config.serverModuleFormat,
+                  },
+                },
                 outDir: join(config.buildDirectory, "server/__ssr_build"),
+              },
+              resolve: {
+                noExternal: [
+                  "@react-router/dev/config/default-rsc-entries/entry.rsc",
+                ],
               },
             },
           },
@@ -139,10 +294,71 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
         };
       },
+      configResolved(viteConfig) {
+        resolvedViteConfig = viteConfig;
+      },
+      async configureServer(viteDevServer) {
+        configLoader.onChange(
+          async ({
+            result,
+            configCodeChanged,
+            routeConfigCodeChanged,
+            configChanged,
+            routeConfigChanged,
+          }) => {
+            if (!result.ok) {
+              invalidateVirtualModules(viteDevServer);
+              logger.error(result.error, {
+                clear: true,
+                timestamp: true,
+              });
+              return;
+            }
+
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
+
+            logger.info(colors.green(message), {
+              clear: true,
+              timestamp: true,
+            });
+
+            // Update shared plugin config reference
+            updateConfig(result.value);
+
+            if (configChanged || routeConfigChanged) {
+              invalidateVirtualModules(viteDevServer);
+            }
+          },
+        );
+      },
       async buildEnd() {
         await configLoader.close();
       },
     },
+    (() => {
+      let logged = false;
+      function logExperimentalNotice() {
+        if (logged) return;
+        logged = true;
+        logger.info(
+          colors.yellow(
+            `${viteCommand === "serve" ? "  " : ""}🧪 Using React Router's RSC Framework Mode (experimental)`,
+          ),
+        );
+      }
+      return {
+        name: "react-router/rsc/log-experimental-notice",
+        sharedDuringBuild: true,
+        buildStart: logExperimentalNotice,
+        configureServer: logExperimentalNotice,
+      };
+    })(),
     {
       name: "react-router/rsc/typegen",
       async config(viteUserConfig, { command, mode }) {
@@ -152,6 +368,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             getRootDirectory(viteUserConfig),
             {
               mode,
+              rsc: true,
               // ignore `info` logs from typegen since they are
               // redundant when Vite plugin logs are active
               logger: vite.createLogger("warn", {
@@ -165,6 +382,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         (await typegenWatcherPromise)?.close();
       },
     },
+
     {
       name: "react-router/rsc/virtual-route-config",
       resolveId(id) {
@@ -192,6 +410,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           id,
           viteCommand,
           routeIdByFile,
+          rootRouteFile,
           viteEnvironment: this.environment,
         });
       },
@@ -243,7 +462,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         const reactRefreshDir = path.dirname(
           require.resolve("react-refresh/package.json"),
         );
-        const reactRefreshRuntimePath = path.join(
+        const reactRefreshRuntimePath = join(
           reactRefreshDir,
           "cjs/react-refresh-runtime.development.js",
         );
@@ -358,8 +577,32 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return modules;
       },
     },
+    {
+      name: "react-router/rsc/virtual-react-router-serve-config",
+      resolveId(id) {
+        if (id === virtual.reactRouterServeConfig.id) {
+          return virtual.reactRouterServeConfig.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.reactRouterServeConfig.resolvedId) {
+          const rscOutDir = resolvedViteConfig.environments.rsc?.build?.outDir;
+          invariant(rscOutDir, "RSC build directory config not found");
+          const clientOutDir =
+            resolvedViteConfig.environments.client?.build?.outDir;
+          invariant(clientOutDir, "Client build directory config not found");
+          const assetsBuildDirectory = Path.relative(rscOutDir, clientOutDir);
+          const publicPath = resolvedViteConfig.base;
+
+          return `export default ${JSON.stringify({
+            assetsBuildDirectory,
+            publicPath,
+          })};`;
+        }
+      },
+    },
     validatePluginOrder(),
-    rsc({ entries: getRscEntries() }),
+    warnOnClientSourceMaps(),
   ];
 }
 
@@ -368,39 +611,22 @@ const virtual = {
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
+  reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
+
+function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {
+  for (const vmod of Object.values(virtual)) {
+    for (const env of Object.values(viteDevServer.environments)) {
+      const mod = env.moduleGraph.getModuleById(vmod.resolvedId);
+      if (mod) {
+        env.moduleGraph.invalidateModule(mod);
+      }
+    }
+  }
+}
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
-}
-
-function getRscEntries(): NonNullable<RscPluginOptions["entries"]> {
-  const entriesDir = join(
-    getDevPackageRoot(),
-    "dist",
-    "config",
-    "default-rsc-entries",
-  );
-  return {
-    client: join(entriesDir, "entry.client.tsx"),
-    rsc: join(entriesDir, "entry.rsc.tsx"),
-    ssr: join(entriesDir, "entry.ssr.tsx"),
-  };
-}
-
-function getDevPackageRoot(): string {
-  const currentDir = dirname(__dirname);
-  let dir = currentDir;
-  while (dir !== dirname(dir)) {
-    try {
-      const packageJsonPath = join(dir, "package.json");
-      readFileSync(packageJsonPath, "utf-8");
-      return dir;
-    } catch {
-      dir = dirname(dir);
-    }
-  }
-  throw new Error("Could not find package.json");
 }
 
 function getModulesWithImporters(

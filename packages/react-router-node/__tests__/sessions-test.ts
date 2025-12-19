@@ -55,6 +55,32 @@ describe("File session storage", () => {
     expect(session.get("user")).toBeUndefined();
   });
 
+  it("returns an empty session for invalid session ids", async () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+    });
+
+    let cookie = `__session=${btoa(JSON.stringify("0123456789abcdef"))}`;
+    let session = await getSession(cookie);
+    session.set("user", "mjackson");
+    expect(session.get("user")).toBe("mjackson");
+    let setCookie = await commitSession(session);
+    session = await getSession(getCookieFromSetCookie(setCookie));
+    expect(session.get("user")).toBe("mjackson");
+
+    cookie = `__session=${btoa(JSON.stringify("0123456789abcdeg"))}`;
+    session = await getSession(cookie);
+    session.set("user", "mjackson");
+    expect(session.get("user")).toBe("mjackson");
+
+    setCookie = await commitSession(session);
+    session = await getSession(getCookieFromSetCookie(setCookie));
+    expect(session.get("user")).toBeUndefined();
+
+    spy.mockRestore();
+  });
+
   it("doesn't destroy the entire session directory when destroying an empty file session", async () => {
     let { getSession, destroySession } = createFileSessionStorage({
       dir,

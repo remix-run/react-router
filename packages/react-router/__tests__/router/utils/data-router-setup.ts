@@ -2,9 +2,9 @@ import type { InitialEntry } from "../../../lib/router/history";
 import type {
   Fetcher,
   RouterFetchOptions,
-  HydrationState,
   Router,
   RouterNavigateOptions,
+  RouterInit,
 } from "../../../lib/router/router";
 import type {
   AgnosticDataRouteObject,
@@ -19,7 +19,6 @@ import {
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
-  DataStrategyFunction,
 } from "../../../lib/router/utils";
 import {
   matchRoutes,
@@ -34,7 +33,13 @@ import { isRedirect, tick } from "./utils";
 // by our test harness
 export type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
+  | "id"
+  | "index"
+  | "path"
+  | "shouldRevalidate"
+  | "handle"
+  | "lazy"
+  | "middleware"
 > & {
   loader?: boolean;
   action?: boolean;
@@ -43,7 +48,13 @@ export type TestIndexRouteObject = Pick<
 
 export type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
+  | "id"
+  | "index"
+  | "path"
+  | "shouldRevalidate"
+  | "handle"
+  | "lazy"
+  | "middleware"
 > & {
   loader?: boolean;
   action?: boolean;
@@ -134,14 +145,10 @@ export const TASK_ROUTES: TestRouteObject[] = [
   },
 ];
 
-type SetupOpts = {
+type SetupOpts = Omit<RouterInit, "routes" | "history" | "window"> & {
   routes: TestRouteObject[];
-  basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  hydrationRouteProperties?: string[];
-  hydrationData?: HydrationState;
-  dataStrategy?: DataStrategyFunction;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -202,12 +209,9 @@ export function getFetcherData(router: Router) {
 
 export function setup({
   routes,
-  basename,
   initialEntries,
   initialIndex,
-  hydrationRouteProperties,
-  hydrationData,
-  dataStrategy,
+  ...routerInit
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -318,13 +322,10 @@ export function setup({
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
   currentRouter = createRouter({
-    basename,
     history,
     routes: enhanceRoutes(routes),
-    hydrationRouteProperties,
-    hydrationData,
     window: testWindow,
-    dataStrategy: dataStrategy,
+    ...routerInit,
   });
 
   let fetcherData = getFetcherData(currentRouter);
@@ -716,7 +717,7 @@ export function setup({
     history,
     router: currentRouter,
     get fetchers() {
-      let fetchers = {};
+      let fetchers: Record<string, Fetcher> = {};
       currentRouter?.state.fetchers.forEach((f, key) => {
         fetchers[key] = {
           ...f,

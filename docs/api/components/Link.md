@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.Link.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Link.html)
 
 A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
 wrapper to enable navigation with client-side routing.
@@ -45,16 +45,16 @@ import { Link } from "react-router";
 
 [modes: framework]
 
-Defines the link discovery behavior
+Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+
+- **render** — default, discover the route when the link renders
+- **none** — don't eagerly discover, only discover if the link is clicked
 
 ```tsx
 <Link /> // default ("render")
 <Link discover="render" />
 <Link discover="none" />
 ```
-
-- **render** — default, discover the route when the link renders
-- **none** — don't eagerly discover, only discover if the link is clicked
 
 ### prefetch
 
@@ -213,4 +213,22 @@ for this navigation.
 ```
 
 To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
+
+### unstable_defaultShouldRevalidate
+
+[modes: framework, data, declarative]
+
+Specify the default revalidation behavior for the navigation.
+
+```tsx
+<Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+```
+
+If no `shouldRevalidate` functions are present on the active routes, then this
+value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+so the route can make the final determination on revalidation. This can be
+useful when updating search params and you don't want to trigger a revalidation.
+
+By default (when not specified), loaders will revalidate according to the routers
+standard revalidation behavior.
 

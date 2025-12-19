@@ -1,3 +1,4 @@
+import { sendResponse } from "@remix-run/node-fetch-server";
 import { createRequestHandler } from "react-router";
 import {
   type AppLoadContext,
@@ -8,7 +9,7 @@ import {
 import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
-import { fromNodeRequest, toNodeRequest } from "./node-adapter";
+import { fromNodeRequest } from "./node-adapter";
 import { preloadVite } from "./vite";
 import { type ResolvedReactRouterConfig, loadConfig } from "../config/config";
 
@@ -94,7 +95,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       };
     },
     configEnvironment: async (name, options) => {
-      if (!future.unstable_viteEnvironmentApi) {
+      if (!future.v8_viteEnvironmentApi) {
         return;
       }
 
@@ -144,7 +145,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
                 ? await getLoadContext({ request: req, context })
                 : context;
               let res = await handler(req, loadContext);
-              await toNodeRequest(res, nodeRes);
+              await sendResponse(nodeRes, res);
             } catch (error) {
               next(error);
             }

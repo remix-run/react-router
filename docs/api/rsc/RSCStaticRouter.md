@@ -43,16 +43,16 @@ import {
 
 routeRSCServerRequest({
   request,
-  fetchServer,
+  serverResponse,
   createFromReadableStream,
   async renderHTML(getPayload) {
-    const payload = await getPayload();
+    const payload = getPayload();
 
     return await renderHTMLToReadableStream(
       <RSCStaticRouter getPayload={getPayload} />,
       {
         bootstrapScriptContent,
-        formState: await getFormState(payload),
+        formState: await payload.formState,
       }
     );
   },

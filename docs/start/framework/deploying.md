@@ -81,37 +81,12 @@ The containerized application can be deployed to any platform that supports Dock
 
 ### Vercel
 
-```
-npx create-react-router@latest --template remix-run/react-router-templates/vercel
-```
-
-- Server Rendering
-- Tailwind CSS
-
-### Cloudflare Workers w/ D1
-
-```
-npx create-react-router@latest --template remix-run/react-router-templates/cloudflare-d1
-```
-
-- Server Rendering
-- D1 Database with Drizzle ORM
-- Tailwind CSS
+Vercel maintains their own template for React Router. Checkout the [Vercel Guide](https://vercel.com/templates/react-router/react-router-boilerplate) for more information.
 
 ### Cloudflare Workers
 
-```
-npx create-react-router@latest --template remix-run/react-router-templates/cloudflare
-```
-
-- Server Rendering
-- Tailwind CSS
+Cloudflare maintains their own template for React Router. Checkout the [Cloudflare Guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/) for more information.
 
 ### Netlify
 
-```
-npx create-react-router@latest --template remix-run/react-router-templates/netlify
-```
-
-- Server Rendering
-- Tailwind CSS
+Netlify maintains their own template for React Router. Checkout the [Netlify Guide](https://docs.netlify.com/build/frameworks/framework-setup-guides/react-router/) for more information.

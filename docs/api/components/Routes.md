@@ -33,7 +33,7 @@ import { Route, Routes } from "react-router";
 <Routes>
   <Route index element={<StepOne />} />
   <Route path="step-2" element={<StepTwo />} />
-  <Route path="step-3" element={<StepThree />}>
+  <Route path="step-3" element={<StepThree />} />
 </Routes>
 ```
 

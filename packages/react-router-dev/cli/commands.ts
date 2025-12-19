@@ -1,7 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
 import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
@@ -16,6 +15,7 @@ import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
+import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
 
 export async function routes(
   rootDirectory?: string,
@@ -89,6 +89,25 @@ export async function generateEntry(
     mode?: string;
   } = {},
 ) {
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
+
+  if (
+    await hasReactRouterRscPlugin({
+      root: rootDirectory,
+      viteBuildOptions: {
+        config: flags.config,
+        mode: flags.mode,
+      },
+    })
+  ) {
+    console.error(
+      colors.red(
+        `The reveal command is currently not supported in RSC Framework Mode.`,
+      ),
+    );
+    process.exit(1);
+  }
+
   // if no entry passed, attempt to create both
   if (!entry) {
     await generateEntry("entry.client", rootDirectory, flags);
@@ -96,7 +115,6 @@ export async function generateEntry(
     return;
   }
 
-  rootDirectory = resolveRootDirectory(rootDirectory, flags);
   let configResult = await loadConfig({
     rootDirectory,
     mode: flags.mode ?? "production",
@@ -119,8 +137,10 @@ export async function generateEntry(
     return;
   }
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
+  // TODO(v8): Remove - only required for Node 20.18 and below
+  let { readPackageJSON } = await import("pkg-types");
+  let pkgJson = await readPackageJSON(rootDirectory);
+  let deps = pkgJson.dependencies ?? {};
 
   if (!deps["@react-router/node"]) {
     console.error(colors.red(`No default server entry detected.`));
@@ -228,6 +248,14 @@ export async function typegen(
 ) {
   root = resolveRootDirectory(root, flags);
 
+  const rsc = await hasReactRouterRscPlugin({
+    root,
+    viteBuildOptions: {
+      config: flags.config,
+      mode: flags.mode,
+    },
+  });
+
   if (flags.watch) {
     await preloadVite();
     const vite = getVite();
@@ -235,6 +263,7 @@ export async function typegen(
 
     await Typegen.watch(root, {
       mode: flags.mode ?? "development",
+      rsc,
       logger,
     });
     await new Promise(() => {}); // keep alive
@@ -243,5 +272,6 @@ export async function typegen(
 
   await Typegen.run(root, {
     mode: flags.mode ?? "production",
+    rsc,
   });
 }

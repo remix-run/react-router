@@ -110,10 +110,7 @@ Here's an example middleware to check for logged in users and set the user in
 `context` you can then access from loaders:
 
 ```tsx filename=routes/_auth.tsx
-async function authMiddleware ({
-  request,
-  context,
-}) => {
+async function authMiddleware({ request, context }) {
   const session = await getSession(request);
   const userId = session.get("userId");
 
@@ -123,7 +120,7 @@ async function authMiddleware ({
 
   const user = await getUserById(userId);
   context.set(userContext, user);
-};
+}
 
 export const middleware = [authMiddleware];
 ```
@@ -153,7 +150,7 @@ async function loggingMiddleware(
   await next(); // 👈 No Response returned
   const duration = performance.now() - start;
   console.log(
-    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
+    `${new Date().toISOString()} (${duration}ms)`,
   );
   // ✅ No need to return anything
 }
@@ -164,6 +161,7 @@ export const clientMiddleware = [loggingMiddleware];
 See also:
 
 - [Middleware][middleware]
+- [Client Data][client-data]
 
 ## `loader`
 
@@ -217,6 +215,7 @@ That way, React Router can derive types for `loaderData` based on the value of `
 See also:
 
 - [`clientLoader` params][client-loader-params]
+- [Client Data][client-data]
 
 ## `action`
 
@@ -275,6 +274,7 @@ export async function clientAction({ serverAction }) {
 See also:
 
 - [`clientAction` params][client-action-params]
+- [Client Data][client-data]
 
 ## `ErrorBoundary`
 
@@ -480,7 +480,7 @@ The meta of the last matching route is used, allowing you to override parent rou
 
 ## `shouldRevalidate`
 
-In framework mode, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode](../data/route-object#shouldrevalidate)). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
+In framework mode with SSR, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode][data-mode-should-revalidate]). This enables middleware and loaders to share a request context and optimize in different ways than they would in Data Mode.
 
 Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
 
@@ -493,6 +493,8 @@ export function shouldRevalidate(
   return true;
 }
 ```
+
+When using [SPA Mode][spa-mode], there are no server loaders to call on navigations, so `shouldRevalidate` behaves the same as it does in [Data Mode][data-mode-should-revalidate].
 
 [`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
 
@@ -515,3 +517,6 @@ Next: [Rendering Strategies](./rendering)
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 [meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
 [meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
+[data-mode-should-revalidate]: ../data/route-object#shouldrevalidate
+[spa-mode]: ../../how-to/spa
+[client-data]: ../../how-to/client-data

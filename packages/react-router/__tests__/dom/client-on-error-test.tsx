@@ -13,9 +13,10 @@ import {
   createMemoryRouter,
   useFetcher,
   useLoaderData,
+  useRouteError,
 } from "../../index";
 
-import { createFormData } from "../router/utils/utils";
+import { createFormData, tick } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
 
 describe(`handleError`, () => {
@@ -27,6 +28,160 @@ describe(`handleError`, () => {
 
   afterEach(() => {
     consoleError.mockRestore();
+  });
+
+  it("handles hydration lazy errors", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async lazy() {
+          await tick();
+          throw new Error("lazy error!");
+        },
+        HydrateFallback: () => <h1>Loading...</h1>,
+      },
+    ]);
+
+    let { container } = render(
+      <RouterProvider router={router} onError={spy} />,
+    );
+    await waitFor(() => screen.getByText("lazy error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("lazy error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      unstable_pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(getHtml(container)).toContain("Unexpected Application Error!");
+  });
+
+  it("handles hydration middleware errors", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        middleware: [
+          async () => {
+            await tick();
+            throw new Error("middleware error!");
+          },
+        ],
+        Component: () => <h1>Home</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+      },
+    ]);
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:middleware error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("middleware error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      unstable_pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles hydration loader errors", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async loader() {
+          await tick;
+          throw new Error("loader error!");
+        },
+        Component: () => <h1>Home</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+        HydrateFallback: () => <h1>Loading...</h1>,
+      },
+    ]);
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:loader error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      unstable_pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles navigation lazy errors", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => <h1>Home</h1>,
+      },
+      {
+        id: "page",
+        path: "/page",
+        async lazy() {
+          throw new Error("lazy error!");
+        },
+        HydrateFallback: () => <h1>Loading...</h1>,
+      },
+    ]);
+
+    let { container } = render(
+      <RouterProvider router={router} onError={spy} />,
+    );
+
+    await act(() => router.navigate("/page"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("lazy error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+    let html = getHtml(container);
+    expect(html).toContain("Unexpected Application Error!");
+    expect(html).toContain("lazy error!");
+  });
+
+  it("handles navigation middleware errors", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => <h1>Home</h1>,
+      },
+      {
+        path: "/page",
+        middleware: [
+          () => {
+            throw new Error("middleware error!");
+          },
+        ],
+        Component: () => <h1>Page</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
+
+    let { container } = render(
+      <RouterProvider router={router} onError={spy} />,
+    );
+
+    await act(() => router.navigate("/page"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("middleware error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(getHtml(container)).toContain("Error");
   });
 
   it("handles navigation loader errors", async () => {
@@ -47,12 +202,16 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
 
-    expect(spy).toHaveBeenCalledWith(new Error("loader error!"));
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
@@ -75,7 +234,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() =>
@@ -85,7 +244,11 @@ describe(`handleError`, () => {
       }),
     );
 
-    expect(spy).toHaveBeenCalledWith(new Error("action error!"));
+    expect(spy).toHaveBeenCalledWith(new Error("action error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
@@ -106,12 +269,16 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.fetch("key", "0", "/fetch"));
 
-    expect(spy).toHaveBeenCalledWith(new Error("loader error!"));
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      unstable_pattern: "/",
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
@@ -132,7 +299,7 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() =>
@@ -142,7 +309,11 @@ describe(`handleError`, () => {
       }),
     );
 
-    expect(spy).toHaveBeenCalledWith(new Error("action error!"));
+    expect(spy).toHaveBeenCalledWith(new Error("action error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      unstable_pattern: "/",
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
@@ -164,17 +335,19 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
 
-    expect(spy).toHaveBeenCalledWith(
-      new Error("render error!"),
-      expect.objectContaining({
+    expect(spy).toHaveBeenCalledWith(new Error("render error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+      errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
-    );
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
   });
@@ -207,13 +380,17 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
     await waitFor(() => screen.getByText("Await Error"));
 
-    expect(spy).toHaveBeenCalledWith(new Error("await error!"));
+    expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Await Error");
   });
@@ -252,18 +429,20 @@ describe(`handleError`, () => {
     }
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
     await waitFor(() => screen.getByText("Await Error"));
 
-    expect(spy).toHaveBeenCalledWith(
-      new Error("await error!"),
-      expect.objectContaining({
+    expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+      errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
-    );
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Await Error");
   });
@@ -305,19 +484,25 @@ describe(`handleError`, () => {
     }
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
     await waitFor(() => screen.getByText("Route Error"));
 
-    expect(spy).toHaveBeenCalledWith(new Error("await error!"));
-    expect(spy).toHaveBeenCalledWith(
-      new Error("errorElement error!"),
-      expect.objectContaining({
+    expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
+    expect(spy).toHaveBeenCalledWith(new Error("errorElement error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+      errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
-    );
+    });
     expect(spy).toHaveBeenCalledTimes(2);
     expect(getHtml(container)).toContain("Route Error");
   });
@@ -355,12 +540,16 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
 
-    expect(spy).toHaveBeenCalledWith(new Error("loader error!"));
+    expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
 
@@ -402,17 +591,19 @@ describe(`handleError`, () => {
     ]);
 
     let { container } = render(
-      <RouterProvider router={router} unstable_onError={spy} />,
+      <RouterProvider router={router} onError={spy} />,
     );
 
     await act(() => router.navigate("/page"));
 
-    expect(spy).toHaveBeenCalledWith(
-      new Error("render error!"),
-      expect.objectContaining({
+    expect(spy).toHaveBeenCalledWith(new Error("render error!"), {
+      location: expect.objectContaining({ pathname: "/page" }),
+      params: {},
+      unstable_pattern: "/page",
+      errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
-    );
+    });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
 

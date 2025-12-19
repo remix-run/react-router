@@ -11,7 +11,7 @@ export type { DefineRoutesFunction, DefineRouteFunction };
 
 /**
  * Adapts routes defined using [Remix's `routes` config
- * option](https://remix.run/docs/en/v2/file-conventions/vite-config#routes) to
+ * option](https://v2.remix.run/docs/file-conventions/vite-config#routes) to
  * React Router's config format, for use within `routes.ts`.
  */
 export async function remixRoutesOptionAdapter(

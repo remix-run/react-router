@@ -73,7 +73,7 @@ export default function App() {
 }
 ```
 
-If you are are not on React 19 or choosing not to use React's [`<link>`][react-link], [`<title>`][react-title], and [`<meta>`][react-meta] components, and instead relying on React Router's [`links`][react-router-links] and [`meta`][react-router-meta] exports, you need to add the following to your root route:
+If you are not on React 19 or choosing not to use React's [`<link>`][react-link], [`<title>`][react-title], and [`<meta>`][react-meta] components, and instead relying on React Router's [`links`][react-router-links] and [`meta`][react-router-meta] exports, you need to add the following to your root route:
 
 ```tsx filename=app/root.tsx
 import { Links, Meta } from "react-router";
@@ -191,7 +191,7 @@ export function Layout({
 }
 ```
 
-[route-module]: ../start/framework/route-module
+[route-module]: ../../start/framework/route-module
 [react-link]: https://react.dev/reference/react-dom/components/link
 [react-meta]: https://react.dev/reference/react-dom/components/meta
 [react-title]: https://react.dev/reference/react-dom/components/title

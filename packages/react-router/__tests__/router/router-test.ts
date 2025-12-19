@@ -5,7 +5,7 @@ import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
 } from "../../lib/router/utils";
-import { ErrorResponseImpl } from "../../lib/router/utils";
+import { data, ErrorResponseImpl, redirect } from "../../lib/router/utils";
 
 import { urlMatch } from "./utils/custom-matchers";
 import {
@@ -883,6 +883,254 @@ describe("a router", () => {
         ),
       });
     });
+
+    it("handles promises for navigations", async () => {
+      let aDfd = createDeferred();
+
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "/a",
+            loader: () => aDfd.promise,
+          },
+        ],
+      });
+
+      let sequence: string[] = [];
+      router.navigate("/a").then(() => sequence.push("/a complete"));
+      await tick();
+      expect(sequence).toEqual([]);
+      aDfd.resolve("A DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(sequence).toEqual(["/a complete"]);
+    });
+
+    it("handles promises for popstate navigations", async () => {
+      let indexDfd = createDeferred();
+
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: () => indexDfd.promise,
+          },
+          {
+            id: "a",
+            path: "/a",
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX DATA",
+          },
+        },
+      }).initialize();
+
+      let sequence: string[] = [];
+      await router.navigate("/a");
+      expect(router.state.location.pathname).toBe("/a");
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+
+      router.navigate(-1).then(() => sequence.push("back complete"));
+      await tick();
+      expect(sequence).toEqual([]);
+
+      indexDfd.resolve("INDEX DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(sequence).toEqual(["back complete"]);
+    });
+
+    it("handles promises for interrupted navigations", async () => {
+      let indexDfd = createDeferred();
+      let aDfd = createDeferred();
+      let bDfd = createDeferred();
+      let cDfd = createDeferred();
+
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: () => indexDfd.promise,
+          },
+          {
+            id: "a",
+            path: "/a",
+            loader: () => aDfd.promise,
+          },
+          {
+            id: "b",
+            path: "/b",
+            loader: () => bDfd.promise,
+          },
+          {
+            id: "c",
+            path: "/c",
+            loader: () => cDfd.promise,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let sequence: string[] = [];
+      router.navigate("/a").then(() => sequence.push("/a complete"));
+      aDfd.resolve("A DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+
+      router.navigate("/b").then(() => sequence.push("/b complete"));
+      await tick();
+      expect(sequence).toEqual(["/a complete"]);
+
+      router.navigate("/c").then(() => sequence.push("/c complete"));
+      await tick();
+      expect(sequence).toEqual(["/a complete", "/b complete"]);
+
+      bDfd.resolve("B DATA"); // no-op
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(sequence).toEqual(["/a complete", "/b complete"]);
+
+      cDfd.resolve("C DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(sequence).toEqual(["/a complete", "/b complete", "/c complete"]);
+    });
+
+    it("handles promises for interrupted popstate navigations", async () => {
+      let indexDfd = createDeferred();
+      let aDfd = createDeferred();
+      let bDfd = createDeferred();
+
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: () => indexDfd.promise,
+          },
+          {
+            id: "a",
+            path: "/a",
+            loader: () => aDfd.promise,
+          },
+          {
+            id: "b",
+            path: "/b",
+            loader: () => bDfd.promise,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let sequence: string[] = [];
+      router.navigate("/a").then(() => sequence.push("/a complete"));
+      aDfd.resolve("A DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+
+      router.navigate(-1).then(() => sequence.push("back complete"));
+      await tick();
+      expect(sequence).toEqual(["/a complete"]);
+
+      router.navigate("/b").then(() => sequence.push("/b complete"));
+      await tick();
+      expect(sequence).toEqual(["/a complete", "back complete"]);
+
+      indexDfd.resolve("A DATA");
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(sequence).toEqual(["/a complete", "back complete"]);
+
+      bDfd.resolve("B DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(sequence).toEqual(["/a complete", "back complete", "/b complete"]);
+    });
+
+    it("handles promises for fetcher redirect interrupted popstate navigations", async () => {
+      let indexDfd = createDeferred();
+      let bDfd = createDeferred();
+
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: () => indexDfd.promise,
+          },
+          {
+            id: "a",
+            path: "/a",
+          },
+          {
+            id: "b",
+            path: "/b",
+            loader: () => bDfd.promise,
+          },
+          {
+            id: "fetch",
+            path: "/fetch",
+            loader: () => redirect("/b"),
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let sequence: string[] = [];
+      router.navigate("/a").then(() => sequence.push("/a complete"));
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+
+      router.navigate(-1).then(() => sequence.push("back complete"));
+      await tick();
+      expect(sequence).toEqual(["/a complete"]);
+
+      router
+        .fetch("key", "a", "/fetch")
+        .then(() => sequence.push("fetch redirect complete"));
+      await tick();
+      expect(sequence).toEqual(["/a complete", "back complete"]);
+
+      indexDfd.resolve("A DATA"); // no-op
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(sequence).toEqual(["/a complete", "back complete"]);
+
+      bDfd.resolve("B DATA");
+      await tick();
+      expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(sequence).toEqual([
+        "/a complete",
+        "back complete",
+        "fetch redirect complete",
+      ]);
+    });
   });
 
   describe("data loading (new)", () => {
@@ -934,6 +1182,42 @@ describe("a router", () => {
           index: "INDEX DATA",
         },
       });
+    });
+
+    it("does not run middlewares when complete hydrationData exists", async () => {
+      let middlewareSpy = jest.fn();
+      let loaderSpy = jest.fn();
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            middleware: [middlewareSpy],
+            loader: loaderSpy,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX DATA",
+          },
+        },
+      });
+      router.initialize();
+
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          index: "INDEX DATA",
+        },
+      });
+      expect(middlewareSpy).not.toHaveBeenCalled();
+      expect(loaderSpy).not.toHaveBeenCalled();
     });
 
     it("kicks off initial data load if no hydration data is provided", async () => {
@@ -988,6 +1272,61 @@ describe("a router", () => {
           "0": "PARENT DATA",
           "0-0": "CHILD DATA",
         },
+      });
+
+      router.dispose();
+    });
+
+    it("run middlewares without loaders on initial load if no hydration data is provided", async () => {
+      let parentDfd = createDeferred();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = createDeferred();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+            middleware: [parentSpy],
+            children: [
+              {
+                index: true,
+                middleware: [childSpy],
+              },
+            ],
+          },
+        ],
+      });
+      router.initialize();
+      await tick();
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(parentSpy.mock.calls.length).toBe(1);
+      expect(childSpy.mock.calls.length).toBe(0);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/" }),
+        initialized: false,
+        navigation: IDLE_NAVIGATION,
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await parentDfd.resolve(undefined);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/" }),
+        initialized: false,
+        navigation: IDLE_NAVIGATION,
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await childDfd.resolve(undefined);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/" }),
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
       });
 
       router.dispose();
@@ -1412,6 +1751,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        unstable_pattern: "/tasks",
         context: {},
       });
 
@@ -1421,6 +1761,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
+        unstable_pattern: "/tasks/:id",
         context: {},
       });
 
@@ -1430,6 +1771,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        unstable_pattern: "/tasks",
         context: {},
       });
 
@@ -1441,6 +1783,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        unstable_pattern: "/tasks",
         context: {},
       });
 
@@ -1820,6 +2163,33 @@ describe("a router", () => {
       });
     });
 
+    it("handles thrown data() values as ErrorResponse's", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let nav = await t.navigate("/tasks");
+      await nav.loaders.tasks.reject(
+        data("broken", { status: 400, statusText: "Bad Request" }),
+      );
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        errors: {
+          tasks: new ErrorResponseImpl(400, "Bad Request", "broken"),
+        },
+      });
+    });
+
     it("sends proper arguments to actions", async () => {
       let t = setup({
         routes: TASK_ROUTES,
@@ -1839,6 +2209,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: "/tasks",
         context: {},
       });
 
@@ -1883,6 +2254,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
@@ -1916,6 +2288,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        unstable_pattern: expect.any(String),
         context: {},
       });
 

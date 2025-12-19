@@ -42,7 +42,7 @@ You can use the following helpers to create route config entries:
 - [`route`][route] — Helper function for creating a route config entry
 - [`index`][index] — Helper function for creating a route config entry for an index route
 - [`layout`][layout] — Helper function for creating a route config entry for a layout route
-- [`prefix`][prefix] — Helper function for adding a path prefix to a set of routes without needing to introduce a parent route file
+- [`prefix`][prefix] — Helper function for adding a path prefix to a set of routes without needing to introduce a parent route
 - [`relative`][relative] — Creates a set of route config helpers that resolve file paths relative to the given directory. Designed to support splitting route config into multiple files within different directories
 
 ### File-based Routing
