@@ -1342,7 +1342,7 @@ export function generatePath<Path extends string>(
         const [, key, optional] = keyMatch;
         let param = params[key as PathParam<Path>];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
-        return encodeURIComponent(stringify(param));
+        return safeEncode(stringify(param));
       }
 
       // Remove any optional markers from optional static segments
@@ -1566,6 +1566,10 @@ export function stripBasename(
   }
 
   return pathname.slice(startIndex) || "/";
+}
+
+function safeEncode(value: string): string {
+  return encodeURIComponent(value).replace(/%25([0-9A-F]{2})/gi, "%$1");
 }
 
 export function prependBasename({
