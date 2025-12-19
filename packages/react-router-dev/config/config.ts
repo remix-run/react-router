@@ -114,7 +114,7 @@ export type PrerenderPaths =
   | boolean
   | Array<string>
   | ((args: {
-      getStaticPaths: () => string[];
+      getStaticPaths: (opts?: { trailingSlash?: boolean | "both" }) => string[];
     }) => Array<string> | Promise<Array<string>>);
 
 /**

@@ -794,11 +794,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       : // Otherwise, all routes are imported as usual
         ctx.reactRouterConfig.routes;
 
-    let prerenderPaths = await getPrerenderPaths(
-      ctx.reactRouterConfig.prerender,
-      ctx.reactRouterConfig.ssr,
-      routes,
-    );
+    let prerenderPaths = await getPrerenderPaths(ctx.reactRouterConfig, routes);
 
     let isSpaMode = isSpaModeEnabled(ctx.reactRouterConfig);
 
@@ -2943,10 +2939,15 @@ async function prerenderRoute(
   viteConfig: Vite.ResolvedConfig,
   requestInit?: RequestInit,
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
-    /\/\/+/g,
-    "/",
-  );
+  // Only append trailing slashes without the future flag for backwards compatibility.
+  //  With the flag, we let the incoming path dictate the trailing slash behavior.
+  let suffix = reactRouterConfig.future.unstable_trailingSlashAware ? "" : "/";
+  let normalizedPath =
+    `${reactRouterConfig.basename}${prerenderPath}${suffix}`.replace(
+      /\/\/+/g,
+      "/",
+    );
+
   let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
   let html = await response.text();
@@ -2982,11 +2983,19 @@ async function prerenderRoute(
   }
 
   // Write out the HTML file
-  let outfile = path.join(
-    clientBuildDirectory,
-    ...normalizedPath.split("/"),
-    "index.html",
-  );
+  let segments = normalizedPath.split("/");
+  let outfile: string;
+  if (reactRouterConfig.future.unstable_trailingSlashAware) {
+    if (normalizedPath.endsWith("/")) {
+      outfile = path.join(clientBuildDirectory, ...segments, "index.html");
+    } else {
+      let file = segments.pop() + ".html";
+      outfile = path.join(clientBuildDirectory, ...segments, file);
+    }
+  } else {
+    outfile = path.join(clientBuildDirectory, ...segments, "index.html");
+  }
+
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, html);
   viteConfig.logger.info(
@@ -3036,11 +3045,12 @@ export interface GenericRouteManifest {
 }
 
 export async function getPrerenderPaths(
-  prerender: ResolvedReactRouterConfig["prerender"],
-  ssr: ResolvedReactRouterConfig["ssr"],
+  reactRouterConfig: ResolvedReactRouterConfig,
   routes: GenericRouteManifest,
   logWarning = false,
 ): Promise<string[]> {
+  let { future, prerender, ssr } = reactRouterConfig;
+
   if (prerender == null || prerender === false) {
     return [];
   }
@@ -3078,7 +3088,29 @@ export async function getPrerenderPaths(
 
   if (typeof pathsConfig === "function") {
     let paths = await pathsConfig({
-      getStaticPaths: () => getStaticPrerenderPaths(prerenderRoutes).paths,
+      getStaticPaths(opts: { trailingSlash?: boolean | "both" } = {}) {
+        let withoutTrailingSlash =
+          getStaticPrerenderPaths(prerenderRoutes).paths;
+
+        if (opts?.trailingSlash === true) {
+          return withoutTrailingSlash.map((p) =>
+            p.endsWith("/") ? p : `${p}/`,
+          );
+        }
+
+        if (
+          opts?.trailingSlash === "both" ||
+          // `both` is the default when the future flag is enabled
+          (opts?.trailingSlash === undefined &&
+            future.unstable_trailingSlashAware)
+        ) {
+          return withoutTrailingSlash.flatMap((p) =>
+            p.endsWith("/") ? [p, p.replace(/\/$/, "")] : [p, `${p}/`],
+          );
+        }
+
+        return withoutTrailingSlash;
+      },
     });
     return paths;
   }
@@ -3136,8 +3168,7 @@ async function validateSsrFalsePrerenderExports(
   viteChildCompiler: Vite.ViteDevServer | null,
 ) {
   let prerenderPaths = await getPrerenderPaths(
-    ctx.reactRouterConfig.prerender,
-    ctx.reactRouterConfig.ssr,
+    ctx.reactRouterConfig,
     manifest.routes,
     true,
   );
