@@ -109,17 +109,26 @@ function derive(build: ServerBuild, mode?: string) {
 
     let normalizedBasename = build.basename || "/";
     let normalizedPath = url.pathname;
-    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-      normalizedPath = normalizedBasename;
-    } else if (normalizedPath.endsWith(".data")) {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
-    }
+    if (build.future.unstable_trailingSlashAwareDataRequests) {
+      if (normalizedPath.endsWith("/_.data")) {
+        // Handle trailing slash URLs: /about/_.data -> /about/
+        normalizedPath = normalizedPath.replace(/_.data$/, "");
+      } else {
+        normalizedPath = normalizedPath.replace(/\.data$/, "");
+      }
+    } else {
+      if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+        normalizedPath = normalizedBasename;
+      } else if (normalizedPath.endsWith(".data")) {
+        normalizedPath = normalizedPath.replace(/\.data$/, "");
+      }
 
-    if (
-      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-      normalizedPath.endsWith("/")
-    ) {
-      normalizedPath = normalizedPath.slice(0, -1);
+      if (
+        stripBasename(normalizedPath, normalizedBasename) !== "/" &&
+        normalizedPath.endsWith("/")
+      ) {
+        normalizedPath = normalizedPath.slice(0, -1);
+      }
     }
 
     let isSpaMode =

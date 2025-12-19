@@ -2888,11 +2888,22 @@ async function prerenderData(
   viteConfig: Vite.ResolvedConfig,
   requestInit?: RequestInit,
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}${
-    prerenderPath === "/"
-      ? "/_root.data"
-      : `${prerenderPath.replace(/\/$/, "")}.data`
-  }`.replace(/\/\/+/g, "/");
+  let dataRequestPath: string;
+  if (reactRouterConfig.future.unstable_trailingSlashAwareDataRequests) {
+    if (prerenderPath.endsWith("/")) {
+      dataRequestPath = `${prerenderPath}_.data`;
+    } else {
+      dataRequestPath = `${prerenderPath}.data`;
+    }
+  } else {
+    if (prerenderPath === "/") {
+      dataRequestPath = "/_root.data";
+    } else {
+      dataRequestPath = `${prerenderPath.replace(/\/$/, "")}.data`;
+    }
+  }
+  let normalizedPath =
+    `${reactRouterConfig.basename}${dataRequestPath}`.replace(/\/\/+/g, "/");
   let url = new URL(`http://localhost${normalizedPath}`);
   if (onlyRoutes?.length) {
     url.searchParams.set("_routes", onlyRoutes.join(","));

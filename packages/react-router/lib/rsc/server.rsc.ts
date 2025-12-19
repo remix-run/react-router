@@ -398,10 +398,10 @@ export async function matchRSCServerRequest({
 
   basename = basename || "/";
   let normalizedPath = url.pathname;
-  if (stripBasename(normalizedPath, basename) === "/_root.rsc") {
-    normalizedPath = basename;
-  } else if (normalizedPath.endsWith(".rsc")) {
-    normalizedPath = normalizedPath.replace(/\.rsc$/, "");
+  if (url.pathname.endsWith("/_.rsc")) {
+    normalizedPath = url.pathname.replace(/_\.rsc$/, "");
+  } else if (url.pathname.endsWith(".rsc")) {
+    normalizedPath = url.pathname.replace(/\.rsc$/, "");
   }
 
   if (

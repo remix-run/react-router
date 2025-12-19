@@ -458,6 +458,8 @@ export function getRSCSingleFetchDataStrategy(
     getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
     ssr,
     basename,
+    // .rsc requests are always trailing slash aware
+    true,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
@@ -520,10 +522,11 @@ function getFetchAndDecodeViaRSC(
   return async (
     args: DataStrategyFunctionArgs<unknown>,
     basename: string | undefined,
+    trailingSlashAware: boolean,
     targetRoutes?: string[],
   ) => {
     let { request, context } = args;
-    let url = singleFetchUrl(request.url, basename, "rsc");
+    let url = singleFetchUrl(request.url, basename, trailingSlashAware, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
       if (targetRoutes) {
@@ -820,6 +823,7 @@ export function RSCHydratedRouter({
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
       unstable_subResourceIntegrity: false,
+      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
