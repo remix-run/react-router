@@ -36,6 +36,22 @@ This uses a pretty bare-bones template but includes our css and data model, so w
 
 👉 **Start the app**
 
+This template uses the `catalog:` dependency protocol, which requires [pnpm](https://pnpm.io/).
+If you don’t have pnpm installed yet, you can install it with:
+
+```shellscript nonumber
+npm install -g pnpm
+```
+
+Create a `pnpm-workspace.yaml` file at the project root with the required catalog entries:
+
+```yaml
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
+  typescript: ^5.0.0
+```
+
 ```shellscript nonumber
 # cd into the app directory
 cd {wherever you put the app}
@@ -47,12 +63,6 @@ pnpm install
 pnpm dev
 ```
 
-Note: This template uses the `catalog:` dependency protocol, which requires [pnpm](https://pnpm.io/).
-If you don’t have pnpm installed yet, you can install it with:
-
-```shellscript nonumber
-npm install -g pnpm
-```
 
 You should now be able to open up [http://localhost:5173][http-localhost-5173] and see your app running, though there's not much going on just yet.
 
