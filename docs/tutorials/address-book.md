@@ -41,10 +41,17 @@ This uses a pretty bare-bones template but includes our css and data model, so w
 cd {wherever you put the app}
 
 # install dependencies if you haven't already
-npm install
+pnpm install
 
 # start the server
-npm run dev
+pnpm dev
+```
+
+Note: This template uses the `catalog:` dependency protocol, which requires [pnpm](https://pnpm.io/).
+If you don’t have pnpm installed yet, you can install it with:
+
+```shellscript nonumber
+npm install -g pnpm
 ```
 
 You should now be able to open up [http://localhost:5173][http-localhost-5173] and see your app running, though there's not much going on just yet.
