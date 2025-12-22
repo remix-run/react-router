@@ -548,6 +548,29 @@ export function createLocation(
   return location;
 }
 
+export function getRewritePath(location: Location): Path {
+  let rewrite = location.state && (location.state as any)._rewrite;
+
+  if (
+    typeof rewrite === "object" &&
+    rewrite != null &&
+    "pathname" in rewrite &&
+    typeof rewrite.pathname === "string" &&
+    "search" in rewrite &&
+    typeof rewrite.search === "string" &&
+    "hash" in rewrite &&
+    typeof rewrite.hash === "string"
+  ) {
+    return {
+      pathname: rewrite.pathname,
+      search: rewrite.search,
+      hash: rewrite.hash,
+    };
+  }
+
+  return location;
+}
+
 /**
  * Creates a string URL path from the given pathname, search, and hash components.
  *

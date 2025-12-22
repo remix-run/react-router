@@ -1171,6 +1171,8 @@ export interface LinkProps
    */
   relative?: RelativeRoutingType;
 
+  rewrite?: To;
+
   /**
    * Can be a string or a partial {@link Path}:
    *
@@ -1261,6 +1263,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       relative,
       reloadDocument,
       replace,
+      rewrite,
       state,
       target,
       to,
@@ -1287,6 +1290,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
+      rewrite,
       state,
       target,
       preventScrollReset,
@@ -2099,6 +2103,7 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * to use for the link. Defaults to `"route"`.
  * @param options.replace Whether to replace the current [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry instead of pushing a new one. Defaults to `false`.
+ * @param options.rewrite Rewrite the URL for this navigation. Defaults to `undefined`.
  * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
@@ -2117,6 +2122,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
+    rewrite,
     state,
     preventScrollReset,
     relative,
@@ -2126,6 +2132,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
+    rewrite?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
@@ -2153,6 +2160,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
+            rewrite,
             state,
             preventScrollReset,
             relative,
@@ -2173,6 +2181,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
+      rewrite,
       state,
       target,
       to,

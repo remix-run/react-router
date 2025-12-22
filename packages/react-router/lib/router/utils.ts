@@ -903,7 +903,7 @@ export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
-  locationArg: Partial<Location> | string,
+  locationArg: Partial<Path> | string,
   basename = "/",
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   return matchRoutesImpl(routes, locationArg, basename, false);
