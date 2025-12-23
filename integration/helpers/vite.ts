@@ -23,30 +23,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
 
-export const reactRouterConfig = ({
-  ssr,
-  basename,
-  prerender,
-  appDirectory,
-  future,
-  routeDiscovery,
-}: {
-  ssr?: boolean;
-  basename?: string;
-  prerender?: boolean | string[];
-  appDirectory?: string;
-  future?: Partial<NonNullable<Config["future"]>>;
-  routeDiscovery?: Config["routeDiscovery"];
-}) => {
-  let config: Config = {
-    ssr,
-    basename,
-    prerender,
-    appDirectory,
-    routeDiscovery,
-    future,
-  };
-
+export const reactRouterConfig = (config: Partial<Config>) => {
   return dedent`
     import type { Config } from "@react-router/dev/config";
 
