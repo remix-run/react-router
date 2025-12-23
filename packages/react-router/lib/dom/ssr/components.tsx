@@ -907,6 +907,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
     <>
       {typeof manifest.sri === "object" ? (
         <script
+          {...scriptProps}
           rr-importmap=""
           type="importmap"
           suppressHydrationWarning
