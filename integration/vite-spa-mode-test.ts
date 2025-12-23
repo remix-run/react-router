@@ -24,7 +24,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/routes/invalid-exports.tsx": String.raw`
               // Invalid exports
@@ -51,7 +51,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/root.tsx": String.raw`
                 // Invalid exports
@@ -83,7 +83,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/routes/invalid-exports.tsx": String.raw`
               // Invalid exports
@@ -108,7 +108,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/entry.server.tsx": js`
               import { ServerRouter } from "react-router";
@@ -176,7 +176,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/root.tsx": String.raw`
               export function HydrateFallback() {
@@ -199,7 +199,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -238,7 +238,7 @@ test.describe("SPA Mode", () => {
           let fixture = await createFixture({
             files: {
               "react-router.config.ts": reactRouterConfig({
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -272,7 +272,7 @@ test.describe("SPA Mode", () => {
               "react-router.config.ts": reactRouterConfig({
                 basename: "/base/",
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -345,7 +345,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/index.html": String.raw`
                 <!DOCTYPE html>
@@ -529,7 +529,7 @@ test.describe("SPA Mode", () => {
                 // file below
                 appDirectory: "src",
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "src/routes.ts": js`
                 import { type RouteConfig } from "@react-router/dev/routes";
@@ -611,7 +611,7 @@ test.describe("SPA Mode", () => {
                 // file below
                 appDirectory: "src",
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "src/routes.ts": js`
                 import { type RouteConfig } from "@react-router/dev/routes";
@@ -677,7 +677,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/routes/_index.tsx": js`
                 import { Link } from 'react-router';
@@ -732,7 +732,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "app/root.tsx": js`
                 import {
@@ -805,7 +805,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                v8_splitRouteModules,
+                future: { v8_splitRouteModules },
               }),
               "vite.config.ts": js`
                 import { defineConfig } from "vite";
