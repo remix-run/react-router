@@ -4477,7 +4477,7 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("h1")).toMatch("It worked!");
   });
 
-  test("always uses /{path}.data without future.unstable_trailingSlashAwareDataRequests flag", async ({
+  test("always uses /{path}.data without future.unstable_trailingSlashAware flag", async ({
     page,
   }) => {
     let fixture = await createFixture({
@@ -4569,7 +4569,7 @@ test.describe("single-fetch", () => {
     requests = [];
   });
 
-  test("uses {path}.data or {path}/_.data depending on trailing slash with future.unstable_trailingSlashAwareDataRequests flag", async ({
+  test("uses {path}.data or {path}/_.data depending on trailing slash with future.unstable_trailingSlashAware flag", async ({
     page,
   }) => {
     let fixture = await createFixture({
@@ -4580,7 +4580,7 @@ test.describe("single-fetch", () => {
 
           export default {
             future: {
-              unstable_trailingSlashAwareDataRequests: true,
+              unstable_trailingSlashAware: true,
             }
           } satisfies Config;
         `,

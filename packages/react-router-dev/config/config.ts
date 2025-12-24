@@ -87,7 +87,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
   unstable_subResourceIntegrity: boolean;
-  unstable_trailingSlashAwareDataRequests: boolean;
+  unstable_trailingSlashAware: boolean;
   /**
    * Enable route middleware
    */
@@ -114,7 +114,7 @@ export type PrerenderPaths =
   | boolean
   | Array<string>
   | ((args: {
-      getStaticPaths: () => string[];
+      getStaticPaths: (opts?: { trailingSlash?: boolean | "both" }) => string[];
     }) => Array<string> | Promise<Array<string>>);
 
 /**
@@ -635,9 +635,8 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
-    unstable_trailingSlashAwareDataRequests:
-      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
-      false,
+    unstable_trailingSlashAware:
+      userAndPresetConfigs.future?.unstable_trailingSlashAware ?? false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,

@@ -823,7 +823,7 @@ export function RSCHydratedRouter({
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
       unstable_subResourceIntegrity: false,
-      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
+      unstable_trailingSlashAware: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
