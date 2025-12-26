@@ -260,6 +260,7 @@ export interface LinksProps {
  * @mode framework
  * @param props Props
  * @param {LinksProps.nonce} props.nonce n/a
+ * @param {LinksProps.crossOrigin} props.crossOrigin n/a
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
