@@ -227,6 +227,12 @@ export interface LinksProps {
    * element
    */
   nonce?: string | undefined;
+  /**
+   * A [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)
+   * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * element
+   */
+  crossOrigin?: "anonymous" | "use-credentials";
 }
 
 /**
@@ -257,7 +263,7 @@ export interface LinksProps {
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
-export function Links({ nonce }: LinksProps): React.JSX.Element {
+export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
@@ -283,13 +289,14 @@ export function Links({ nonce }: LinksProps): React.JSX.Element {
           rel="stylesheet"
           href={criticalCss.href}
           nonce={nonce}
+          crossOrigin={crossOrigin}
         />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
           <PrefetchPageLinks key={key} nonce={nonce} {...link} />
         ) : (
-          <link key={key} nonce={nonce} {...link} />
+          <link key={key} nonce={nonce} crossOrigin={crossOrigin} {...link} />
         ),
       )}
     </>
