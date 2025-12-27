@@ -290,6 +290,28 @@ describe("matchPath optional dynamic segments", () => {
     const match = matchPath("/:lang?/user/:id?", "/en/user/123");
     expect(match).toMatchObject({ params: { lang: "en", id: "123" } });
   });
+
+  it("should NOT match when pathname extends base path without separator", () => {
+    expect(matchPath("/test_route/:part?", "/test_route_more")).toBeNull();
+  });
+
+  it("should NOT match optional param when pathname has extra characters after base", () => {
+    expect(matchPath("/users/:id?", "/usersblah")).toBeNull();
+    expect(matchPath("/api/:version?", "/api123")).toBeNull();
+    expect(matchPath("/home/:section?", "/homepage")).toBeNull();
+  });
+
+  it("should still match optional param with proper path separator", () => {
+    expect(matchPath("/test_route/:part?", "/test_route/more")).toMatchObject({
+      params: { part: "more" },
+    });
+    expect(matchPath("/test_route/:part?", "/test_route")).toMatchObject({
+      params: { part: undefined },
+    });
+    expect(matchPath("/test_route/:part?", "/test_route/")).toMatchObject({
+      params: { part: undefined },
+    });
+  });
 });
 
 describe("matchPath optional static segments", () => {

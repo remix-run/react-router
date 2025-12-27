@@ -1494,7 +1494,7 @@ export function compilePath(
         /\/:([\w-]+)(\?)?/g,
         (_: string, paramName: string, isOptional) => {
           params.push({ paramName, isOptional: isOptional != null });
-          return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
+          return isOptional ? "(?:/([^\\/]*))?" : "/([^\\/]+)";
         },
       ) // Dynamic segment
       .replace(/\/([\w-]+)\?(\/|$)/g, "(/$1)?$2"); // Optional static segment
