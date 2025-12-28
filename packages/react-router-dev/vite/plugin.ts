@@ -1688,6 +1688,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
       configurePreviewServer(previewServer) {
         return () => {
+          // Skip SSR handling in SPA mode
+          if (!ctx.reactRouterConfig.ssr) {
+            return;
+          }
+
           // Handle SSR requests in preview mode using the built server bundle
           previewServer.middlewares.use(async (req, res, next) => {
             try {
@@ -2445,10 +2450,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return;
         }
 
-        let clientModules = uniqueNodes(
-          modules.flatMap((mod) =>
-            getParentClientNodes(server.environments.client.moduleGraph, mod),
-          ),
+        let clientModules = modules.flatMap((mod) =>
+          getParentClientNodes(server.environments.client.moduleGraph, mod),
         );
 
         for (let clientModule of clientModules) {
@@ -2464,10 +2467,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 function getParentClientNodes(
   clientModuleGraph: Vite.EnvironmentModuleGraph,
   module: Vite.EnvironmentModuleNode,
+  seenNodes: Set<string> = new Set(),
 ): Vite.EnvironmentModuleNode[] {
   if (!module.id) {
     return [];
   }
+  if (seenNodes.has(module.url)) {
+    return [];
+  }
+  seenNodes.add(module.url);
 
   let clientModule = clientModuleGraph.getModuleById(module.id);
   if (clientModule) {
@@ -2475,23 +2483,8 @@ function getParentClientNodes(
   }
 
   return [...module.importers].flatMap((importer) =>
-    getParentClientNodes(clientModuleGraph, importer),
+    getParentClientNodes(clientModuleGraph, importer, seenNodes),
   );
-}
-
-function uniqueNodes(
-  nodes: Vite.EnvironmentModuleNode[],
-): Vite.EnvironmentModuleNode[] {
-  let nodeUrls = new Set<string>();
-  let unique: Vite.EnvironmentModuleNode[] = [];
-  for (let node of nodes) {
-    if (nodeUrls.has(node.url)) {
-      continue;
-    }
-    nodeUrls.add(node.url);
-    unique.push(node);
-  }
-  return unique;
 }
 
 function addRefreshWrapper(
@@ -2895,11 +2888,22 @@ async function prerenderData(
   viteConfig: Vite.ResolvedConfig,
   requestInit?: RequestInit,
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}${
-    prerenderPath === "/"
-      ? "/_root.data"
-      : `${prerenderPath.replace(/\/$/, "")}.data`
-  }`.replace(/\/\/+/g, "/");
+  let dataRequestPath: string;
+  if (reactRouterConfig.future.unstable_trailingSlashAwareDataRequests) {
+    if (prerenderPath.endsWith("/")) {
+      dataRequestPath = `${prerenderPath}_.data`;
+    } else {
+      dataRequestPath = `${prerenderPath}.data`;
+    }
+  } else {
+    if (prerenderPath === "/") {
+      dataRequestPath = "/_root.data";
+    } else {
+      dataRequestPath = `${prerenderPath.replace(/\/$/, "")}.data`;
+    }
+  }
+  let normalizedPath =
+    `${reactRouterConfig.basename}${dataRequestPath}`.replace(/\/\/+/g, "/");
   let url = new URL(`http://localhost${normalizedPath}`);
   if (onlyRoutes?.length) {
     url.searchParams.set("_routes", onlyRoutes.join(","));

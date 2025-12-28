@@ -1337,12 +1337,12 @@ export function generatePath<Path extends string>(
         return stringify(params[star]);
       }
 
-      const keyMatch = segment.match(/^:([\w-]+)(\??)$/);
+      const keyMatch = segment.match(/^:([\w-]+)(\??)(.*)/);
       if (keyMatch) {
-        const [, key, optional] = keyMatch;
+        const [, key, optional, suffix] = keyMatch;
         let param = params[key as PathParam<Path>];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
-        return encodeURIComponent(stringify(param));
+        return encodeURIComponent(stringify(param)) + suffix;
       }
 
       // Remove any optional markers from optional static segments
