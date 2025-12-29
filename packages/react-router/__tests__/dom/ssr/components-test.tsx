@@ -296,8 +296,7 @@ describe("<HydratedRouter>", () => {
 describe("<Links />", () => {
   it("renders critical css with nonce", () => {
     let context = mockFrameworkContext({
-      criticalCss:
-        ".critical { color: red; }",
+      criticalCss: ".critical { color: red; }",
     });
 
     let { container } = render(
@@ -389,9 +388,7 @@ describe("<Scripts />", () => {
 
     let { container } = render(
       <DataRouterContext.Provider value={{ router: { routes: [] } } as any}>
-        <DataRouterStateContext.Provider
-          value={{ matches: [] } as any}
-        >
+        <DataRouterStateContext.Provider value={{ matches: [] } as any}>
           <FrameworkContext.Provider value={context}>
             <Scripts nonce="test-nonce" />
           </FrameworkContext.Provider>
@@ -411,9 +408,7 @@ describe("<Scripts />", () => {
 
     let { container } = render(
       <DataRouterContext.Provider value={{ router: { routes: [] } } as any}>
-        <DataRouterStateContext.Provider
-          value={{ matches: [] } as any}
-        >
+        <DataRouterStateContext.Provider value={{ matches: [] } as any}>
           <FrameworkContext.Provider value={context}>
             <Scripts crossOrigin="anonymous" />
           </FrameworkContext.Provider>
@@ -491,10 +486,8 @@ describe("usePrefetchBehavior", () => {
     // Trigger intersection
     act(() => {
       observeCallback(
-        [
-          { isIntersecting: true } as IntersectionObserverEntry,
-        ],
-        new IntersectionObserver(() => { })
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        new IntersectionObserver(() => {}),
       );
     });
 
