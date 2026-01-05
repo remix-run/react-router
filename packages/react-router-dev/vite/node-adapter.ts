@@ -1,9 +1,10 @@
 import type { ServerResponse } from "node:http";
 
-import { createRequest } from "@remix-run/node-fetch-server";
 import type * as Vite from "vite";
 
 import invariant from "../invariant";
+
+const { createRequest } = await import("@remix-run/node-fetch-server");
 
 export type NodeRequestHandler = (
   req: Vite.Connect.IncomingMessage,

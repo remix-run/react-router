@@ -1,4 +1,3 @@
-import { sendResponse } from "@remix-run/node-fetch-server";
 import { createRequestHandler } from "react-router";
 import {
   type AppLoadContext,
@@ -121,6 +120,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       }
     },
     configureServer: async (viteDevServer) => {
+      const { sendResponse } = await import("@remix-run/node-fetch-server");
       let context: Awaited<ReturnType<typeof getContext>>;
       let getContext = async () => {
         let { getPlatformProxy } = await importWrangler();

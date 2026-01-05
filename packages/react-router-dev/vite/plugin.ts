@@ -15,7 +15,6 @@ import {
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
-import { sendResponse } from "@remix-run/node-fetch-server";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
@@ -1649,6 +1648,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           if (!viteDevServer.config.server.middlewareMode) {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
+                const { sendResponse } = await import(
+                  "@remix-run/node-fetch-server"
+                );
                 let build: ServerBuild;
                 if (ctx.reactRouterConfig.future.v8_viteEnvironmentApi) {
                   let vite = getVite();
@@ -1696,6 +1698,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // Handle SSR requests in preview mode using the built server bundle
           previewServer.middlewares.use(async (req, res, next) => {
             try {
+              const { sendResponse } = await import(
+                "@remix-run/node-fetch-server"
+              );
               let serverBuildDirectory = getServerBuildDirectory(
                 ctx.reactRouterConfig,
               );
