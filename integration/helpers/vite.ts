@@ -23,11 +23,23 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
 
-export const reactRouterConfig = (config: Partial<Config>) => {
+export const reactRouterConfig = (
+  // Don't support function configs due to JSON.stringify()
+  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles">,
+) => {
+  if (
+    typeof config.prerender === "function" ||
+    (typeof config.prerender === "object" &&
+      !Array.isArray(config.prerender) &&
+      typeof config.prerender.paths === "function")
+  ) {
+    throw new Error("reactRouterConfig() does not support prerender functions");
+  }
+
   return dedent`
     import type { Config } from "@react-router/dev/config";
 
-    export default ${JSON.stringify(config)} satisfies Config;
+    export default ${JSON.stringify(config, null, 2)} satisfies Config;
   `;
 };
 
