@@ -1993,6 +1993,7 @@ export function createRouter(init: RouterInit): Router {
           result.response.headers.get("Location")!,
           new URL(request.url),
           basename,
+          init.history,
         );
         replace = location === state.location.pathname + state.location.search;
       }
@@ -2911,6 +2912,7 @@ export function createRouter(init: RouterInit): Router {
       location,
       new URL(request.url),
       basename,
+      init.history,
     );
     let redirectLocation = createLocation(state.location, location, {
       _isRedirect: true,
@@ -6396,18 +6398,46 @@ function normalizeRedirectLocation(
   location: string,
   currentUrl: URL,
   basename: string,
+  historyInstance: History,
 ): string {
+  // Match Chrome's behavior:
+  // https://github.com/chromium/chromium/blob/216dbeb61db0c667e62082e5f5400a32d6983df3/content/public/common/url_utils.cc#L82
+  let invalidProtocols = [
+    "about:",
+    "blob:",
+    "chrome:",
+    "chrome-untrusted:",
+    "content:",
+    "data:",
+    "devtools:",
+    "file:",
+    "filesystem:",
+    // eslint-disable-next-line no-script-url
+    "javascript:",
+  ];
+
   if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
     let normalizedLocation = location;
     let url = normalizedLocation.startsWith("//")
       ? new URL(currentUrl.protocol + normalizedLocation)
       : new URL(normalizedLocation);
+    if (invalidProtocols.includes(url.protocol)) {
+      throw new Error("Invalid redirect location");
+    }
     let isSameBasename = stripBasename(url.pathname, basename) != null;
     if (url.origin === currentUrl.origin && isSameBasename) {
       return url.pathname + url.search + url.hash;
     }
   }
+
+  try {
+    let url = historyInstance.createURL(location);
+    if (invalidProtocols.includes(url.protocol)) {
+      throw new Error("Invalid redirect location");
+    }
+  } catch (e) {}
+
   return location;
 }
 

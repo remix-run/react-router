@@ -38,6 +38,7 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
+import { throwIfPotentialCSRFAttack } from "../actions";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
@@ -331,6 +332,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * @category RSC
  * @mode data
  * @param opts Options
+ * @param opts.allowedActionOrigins Origin patterns that are allowed to execute actions.
  * @param opts.basename The basename to use when matching the request.
  * @param opts.createTemporaryReferenceSet A function that returns a temporary
  * reference set for the request, used to track temporary references in the [RSC](https://react.dev/reference/rsc/server-components)
@@ -361,6 +363,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * data for hydration.
  */
 export async function matchRSCServerRequest({
+  allowedActionOrigins,
   createTemporaryReferenceSet,
   basename,
   decodeReply,
@@ -373,6 +376,7 @@ export async function matchRSCServerRequest({
   routes,
   generateResponse,
 }: {
+  allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
   basename?: string;
   decodeReply?: DecodeReplyFunction;
@@ -477,6 +481,7 @@ export async function matchRSCServerRequest({
     onError,
     generateResponse,
     temporaryReferences,
+    allowedActionOrigins,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -754,6 +759,7 @@ async function generateRenderResponse(
     },
   ) => Response,
   temporaryReferences: unknown,
+  allowedActionOrigins: string[] | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -799,6 +805,8 @@ async function generateRenderResponse(
         let formState: unknown;
         let skipRevalidation = false;
         if (request.method === "POST") {
+          throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+
           ctx.runningAction = true;
           let result = await processServerAction(
             request,

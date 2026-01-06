@@ -97,6 +97,7 @@ import {
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
 import type { unstable_ClientInstrumentation } from "../router/instrumentation";
+import { escapeHtml } from "./ssr/markup";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -2033,9 +2034,9 @@ export function ScrollRestoration({
       {...props}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{
-        __html: `(${restoreScroll})(${JSON.stringify(
-          storageKey || SCROLL_RESTORATION_STORAGE_KEY,
-        )}, ${JSON.stringify(ssrKey)})`,
+        __html: `(${restoreScroll})(${escapeHtml(
+          JSON.stringify(storageKey || SCROLL_RESTORATION_STORAGE_KEY),
+        )}, ${escapeHtml(JSON.stringify(ssrKey))})`,
       }}
     />
   );

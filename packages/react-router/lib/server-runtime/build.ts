@@ -12,11 +12,7 @@ import type {
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
 import type { MiddlewareEnabled } from "../types/future";
-import type {
-  unstable_InstrumentRequestHandlerFunction,
-  unstable_InstrumentRouteFunction,
-  unstable_ServerInstrumentation,
-} from "../router/instrumentation";
+import type { unstable_ServerInstrumentation } from "../router/instrumentation";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -46,6 +42,7 @@ export interface ServerBuild {
     mode: "lazy" | "initial";
     manifestPath: string;
   };
+  allowedActionOrigins?: string[] | false;
 }
 
 export interface HandleDocumentRequestFunction {
