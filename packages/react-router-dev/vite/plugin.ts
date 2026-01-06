@@ -1648,9 +1648,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           if (!viteDevServer.config.server.middlewareMode) {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
-                const { sendResponse } = await import(
-                  "@remix-run/node-fetch-server"
-                );
                 let build: ServerBuild;
                 if (ctx.reactRouterConfig.future.v8_viteEnvironmentApi) {
                   let vite = getVite();
@@ -1673,10 +1670,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   nodeReq,
                   nodeRes,
                 ) => {
-                  let req = fromNodeRequest(nodeReq, nodeRes);
+                  let req = await fromNodeRequest(nodeReq, nodeRes);
                   let res = await handler(
                     req,
                     await reactRouterDevLoadContext(req),
+                  );
+                  // Async import here to allow ESM only module on Node 20.18.
+                  // TODO(v8): Can move to a normal import when Node 20 support
+                  const { sendResponse } = await import(
+                    "@remix-run/node-fetch-server"
                   );
                   await sendResponse(nodeRes, res);
                 };
@@ -1698,9 +1700,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // Handle SSR requests in preview mode using the built server bundle
           previewServer.middlewares.use(async (req, res, next) => {
             try {
-              const { sendResponse } = await import(
-                "@remix-run/node-fetch-server"
-              );
               let serverBuildDirectory = getServerBuildDirectory(
                 ctx.reactRouterConfig,
               );
@@ -1720,10 +1719,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 nodeReq,
                 nodeRes,
               ) => {
-                let req = fromNodeRequest(nodeReq, nodeRes);
+                let req = await fromNodeRequest(nodeReq, nodeRes);
                 let res = await handler(
                   req,
                   await reactRouterDevLoadContext(req),
+                );
+
+                // Async import here to allow ESM only module on Node 20.18.
+                // TODO(v8): Can move to a normal import when Node 20 support
+                const { sendResponse } = await import(
+                  "@remix-run/node-fetch-server"
                 );
                 await sendResponse(nodeRes, res);
               };
