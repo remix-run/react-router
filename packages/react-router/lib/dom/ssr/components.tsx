@@ -663,10 +663,6 @@ export function setIsHydrated() {
   isHydrated = true;
 }
 
-export function _resetIsHydrated() {
-  isHydrated = false;
-}
-
 /**
  * A couple common attributes:
  *

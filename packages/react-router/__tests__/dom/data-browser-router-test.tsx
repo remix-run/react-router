@@ -473,26 +473,25 @@ function testDomRouter(
 
         // Resolve data strategy with only an error at the index route but nothing
         // for the root route
-        await act(async () => {
-          await dfd.resolve({
-            index: {
-              type: "error",
-              result: "INDEX ERROR",
-            },
-          });
+        await dfd.resolve({
+          index: {
+            type: "error",
+            result: "INDEX ERROR",
+          },
         });
+        await tick();
+        await tick();
+
         // The router stubs in an error for the root route to get out of
         // displaying the HydrateFallback
-        await waitFor(() =>
-          expect(getHtml(container)).toMatchInlineSnapshot(`
+        expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
             <pre>
               Root:
               No result returned from dataStrategy for route root
             </pre>
           </div>"
-        `),
-        );
+        `);
       });
     });
 
