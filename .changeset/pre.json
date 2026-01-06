@@ -34,5 +34,16 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "beige-wasps-cover",
+    "early-moles-drum",
+    "fix-spa-vite-preview",
+    "friendly-moose-argue",
+    "fuzzy-worms-decide",
+    "hungry-pears-battle",
+    "little-timers-occur",
+    "serious-bobcats-impress",
+    "spotty-masks-beg",
+    "young-geese-pay"
+  ]
 }
