@@ -300,9 +300,13 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <FrameworkContext.Provider value={context}>
-        <Links nonce="test-nonce" />
-      </FrameworkContext.Provider>,
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let style = container.querySelector("style");
@@ -317,9 +321,13 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <FrameworkContext.Provider value={context}>
-        <Links nonce="test-nonce" />
-      </FrameworkContext.Provider>,
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let link = container.querySelector("link[rel='stylesheet']");
