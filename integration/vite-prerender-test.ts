@@ -583,14 +583,12 @@ test.describe("Prerendering", () => {
         prerender: true,
         files: {
           ...files,
-          "react-router.config.ts": js`
-            export default {
-              prerender: {
-                paths: ['/', '/about'],
-                unstable_concurrency: 2,
-              },
-            }
-          `,
+          "react-router.config.ts": reactRouterConfig({
+            prerender: {
+              paths: ["/", "/about"],
+              unstable_concurrency: 2,
+            },
+          }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";

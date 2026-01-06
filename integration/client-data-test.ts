@@ -149,7 +149,7 @@ test.describe("Client Data", () => {
                   templateName,
                   files: {
                     "react-router.config.ts": reactRouterConfig({
-                      v8_splitRouteModules,
+                      future: { v8_splitRouteModules },
                     }),
                     "app/root.tsx": js`
                       import { Form, Outlet, Scripts } from "react-router"

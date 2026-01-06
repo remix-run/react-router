@@ -19,7 +19,7 @@ test.describe("CSub-Resource Integrity", () => {
     fixture = await createFixture({
       files: {
         "react-router.config.ts": reactRouterConfig({
-          unstable_subResourceIntegrity: true,
+          future: { unstable_subResourceIntegrity: true },
         }),
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
