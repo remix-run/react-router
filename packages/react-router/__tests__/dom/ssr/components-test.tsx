@@ -426,6 +426,7 @@ describe("<Scripts />", () => {
 
     // Check context script (first one)
     let scripts = container.querySelectorAll("script");
+    expect(scripts[0]).toHaveAttribute("suppressHydrationWarning");
     // Check modulepreload links for crossOrigin
     let links = container.querySelectorAll("link[rel='modulepreload']");
     links.forEach((link) => {
