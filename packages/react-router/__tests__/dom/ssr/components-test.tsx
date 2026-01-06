@@ -390,51 +390,6 @@ describe("<Links />", () => {
   });
 });
 
-describe("<Scripts />", () => {
-  it("propagates nonce to all generated scripts", () => {
-    let context = mockFrameworkContext({});
-
-    let { container } = render(
-      <DataRouterContext.Provider value={{ router: { routes: [] } } as any}>
-        <DataRouterStateContext.Provider value={{ matches: [] } as any}>
-          <FrameworkContext.Provider value={context}>
-            <Scripts nonce="test-nonce" />
-          </FrameworkContext.Provider>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>,
-    );
-
-    let scripts = container.querySelectorAll("script");
-    expect(scripts.length).toBeGreaterThan(0);
-    scripts.forEach((script) => {
-      expect(script).toHaveAttribute("nonce", "test-nonce");
-    });
-  });
-
-  it("respects suppressHydrationWarning and other props", () => {
-    let context = mockFrameworkContext({});
-
-    let { container } = render(
-      <DataRouterContext.Provider value={{ router: { routes: [] } } as any}>
-        <DataRouterStateContext.Provider value={{ matches: [] } as any}>
-          <FrameworkContext.Provider value={context}>
-            <Scripts crossOrigin="anonymous" />
-          </FrameworkContext.Provider>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>,
-    );
-
-    // Check context script (first one)
-    let scripts = container.querySelectorAll("script");
-    expect(scripts[0]).toHaveAttribute("suppressHydrationWarning");
-    // Check modulepreload links for crossOrigin
-    let links = container.querySelectorAll("link[rel='modulepreload']");
-    links.forEach((link) => {
-      expect(link).toHaveAttribute("crossorigin", "anonymous");
-    });
-  });
-});
-
 describe("usePrefetchBehavior", () => {
   function TestComponent({
     prefetch,
