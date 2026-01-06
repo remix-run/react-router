@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.30.3-pre-v6.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.23.2-pre-v6.0`
+  - `react-router@6.30.3-pre-v6.0`
+
 ## 6.30.2
 
 ### Patch Changes
