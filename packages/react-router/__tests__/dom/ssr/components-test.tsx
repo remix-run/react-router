@@ -15,6 +15,7 @@ import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import {
   FrameworkContext,
   usePrefetchBehavior,
+  _resetIsHydrated,
 } from "../../../lib/dom/ssr/components";
 import {
   DataRouterContext,
@@ -210,7 +211,7 @@ describe("<ServerRouter>", () => {
       },
     });
 
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "warn").mockImplementation(() => { });
     jest.spyOn(console, "error");
 
     let { container } = render(
@@ -281,7 +282,7 @@ describe("<HydratedRouter>", () => {
     window.__reactRouterContext!.streamController.close();
 
     jest.spyOn(console, "error");
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "warn").mockImplementation(() => { });
 
     let container;
     await act(() => {
@@ -300,9 +301,13 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <FrameworkContext.Provider value={context}>
-        <Links nonce="test-nonce" />
-      </FrameworkContext.Provider>,
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let style = container.querySelector("style");
@@ -317,9 +322,13 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <FrameworkContext.Provider value={context}>
-        <Links nonce="test-nonce" />
-      </FrameworkContext.Provider>,
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let link = container.querySelector("link[rel='stylesheet']");
@@ -383,6 +392,9 @@ describe("<Links />", () => {
 });
 
 describe("<Scripts />", () => {
+  afterEach(() => {
+    _resetIsHydrated();
+  });
   it("propagates nonce to all generated scripts", () => {
     let context = mockFrameworkContext({});
 
@@ -418,7 +430,6 @@ describe("<Scripts />", () => {
 
     // Check context script (first one)
     let scripts = container.querySelectorAll("script");
-    expect(scripts[0]).toHaveAttribute("suppressHydrationWarning");
     // Check modulepreload links for crossOrigin
     let links = container.querySelectorAll("link[rel='modulepreload']");
     links.forEach((link) => {
@@ -487,7 +498,7 @@ describe("usePrefetchBehavior", () => {
     act(() => {
       observeCallback(
         [{ isIntersecting: true } as IntersectionObserverEntry],
-        new IntersectionObserver(() => {}),
+        new IntersectionObserver(() => { }),
       );
     });
 

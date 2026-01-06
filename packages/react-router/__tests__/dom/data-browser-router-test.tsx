@@ -76,8 +76,8 @@ function testDomRouter(
     let consoleError: jest.SpyInstance;
 
     beforeEach(() => {
-      consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
-      consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => { });
+      consoleError = jest.spyOn(console, "error").mockImplementation(() => { });
     });
 
     afterEach(() => {
@@ -473,25 +473,26 @@ function testDomRouter(
 
         // Resolve data strategy with only an error at the index route but nothing
         // for the root route
-        await dfd.resolve({
-          index: {
-            type: "error",
-            result: "INDEX ERROR",
-          },
+        await act(async () => {
+          await dfd.resolve({
+            index: {
+              type: "error",
+              result: "INDEX ERROR",
+            },
+          });
         });
-        await tick();
-        await tick();
-
         // The router stubs in an error for the root route to get out of
         // displaying the HydrateFallback
-        expect(getHtml(container)).toMatchInlineSnapshot(`
+        await waitFor(() =>
+          expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
             <pre>
               Root:
               No result returned from dataStrategy for route root
             </pre>
           </div>"
-        `);
+        `),
+        );
       });
     });
 
@@ -7337,18 +7338,18 @@ function testDomRouter(
                 },
                 ...(renderFetcher
                   ? {
-                      children: [
-                        {
-                          index: true,
-                          Component() {
-                            let fetcher = useFetcher({ key: "my-key" });
-                            return (
-                              <pre>{`fetcher:${fetcher.state}:${fetcher.data}`}</pre>
-                            );
-                          },
+                    children: [
+                      {
+                        index: true,
+                        Component() {
+                          let fetcher = useFetcher({ key: "my-key" });
+                          return (
+                            <pre>{`fetcher:${fetcher.state}:${fetcher.data}`}</pre>
+                          );
                         },
-                      ],
-                    }
+                      },
+                    ],
+                  }
                   : {}),
               },
             ],
@@ -8497,7 +8498,7 @@ function testDomRouter(
             ready: Promise.resolve(),
             finished: Promise.resolve(),
             updateCallbackDone: Promise.resolve(),
-            skipTransition: () => {},
+            skipTransition: () => { },
           };
         });
         testWindow.document.startViewTransition = spy;
@@ -8579,7 +8580,7 @@ function testDomRouter(
             ready: Promise.resolve(),
             finished: Promise.resolve(),
             updateCallbackDone: Promise.resolve(),
-            skipTransition: () => {},
+            skipTransition: () => { },
           };
         };
 
