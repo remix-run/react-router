@@ -211,6 +211,12 @@ export type ReactRouterConfig = {
    * SPA without server-rendering. Default's to `true`.
    */
   ssr?: boolean;
+
+  /**
+   * The allowed origins for actions / mutations. Does not apply to routes
+   * without a component. micromatch glob patterns are supported.
+   */
+  allowedActionOrigins?: string[];
 };
 
 export type ResolvedReactRouterConfig = Readonly<{
@@ -277,6 +283,11 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * The allowed origins for actions / mutations. Does not apply to routes
+   * without a component. micromatch glob patterns are supported.
+   */
+  allowedActionOrigins: string[] | false;
   /**
    * The resolved array of route config entries exported from `routes.ts`
    */
@@ -645,6 +656,8 @@ async function resolveConfig({
       userAndPresetConfigs.future?.v8_viteEnvironmentApi ?? false,
   };
 
+  let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
     basename,
@@ -658,6 +671,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    allowedActionOrigins,
     unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);
 

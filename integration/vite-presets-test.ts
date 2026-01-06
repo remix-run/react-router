@@ -238,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "allowedActionOrigins",
         "unstable_routeConfig",
       ]);
 
