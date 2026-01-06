@@ -15,7 +15,6 @@ import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import {
   FrameworkContext,
   usePrefetchBehavior,
-  _resetIsHydrated,
 } from "../../../lib/dom/ssr/components";
 import {
   DataRouterContext,
@@ -392,9 +391,6 @@ describe("<Links />", () => {
 });
 
 describe("<Scripts />", () => {
-  afterEach(() => {
-    _resetIsHydrated();
-  });
   it("propagates nonce to all generated scripts", () => {
     let context = mockFrameworkContext({});
 
