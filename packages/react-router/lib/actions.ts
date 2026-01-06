@@ -14,12 +14,15 @@ export function throwIfPotentialCSRFAttack(
       if (host) {
         // This seems to be an CSRF attack. We should not proceed with the action.
         throw new Error(
-          `${host.type} header does not match \`origin\` header from a forwarded Server Actions request. Aborting the action.`,
+          `${host.type} header does not match \`origin\` header from a forwarded ` +
+            `action request. Aborting the action.`,
         );
       } else {
         // This is an attack. We should not proceed with the action.
         throw new Error(
-          "`x-forwarded-host` or `host` headers are not provided. One of these is needed to compare the `origin` header from a forwarded Server Actions request. Aborting the action.",
+          "`x-forwarded-host` or `host` headers are not provided. One of these " +
+            "is needed to compare the `origin` header from a forwarded action " +
+            "request. Aborting the action.",
         );
       }
     }
