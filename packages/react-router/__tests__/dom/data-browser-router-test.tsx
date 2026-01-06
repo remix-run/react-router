@@ -76,8 +76,8 @@ function testDomRouter(
     let consoleError: jest.SpyInstance;
 
     beforeEach(() => {
-      consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => { });
-      consoleError = jest.spyOn(console, "error").mockImplementation(() => { });
+      consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+      consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -7338,18 +7338,18 @@ function testDomRouter(
                 },
                 ...(renderFetcher
                   ? {
-                    children: [
-                      {
-                        index: true,
-                        Component() {
-                          let fetcher = useFetcher({ key: "my-key" });
-                          return (
-                            <pre>{`fetcher:${fetcher.state}:${fetcher.data}`}</pre>
-                          );
+                      children: [
+                        {
+                          index: true,
+                          Component() {
+                            let fetcher = useFetcher({ key: "my-key" });
+                            return (
+                              <pre>{`fetcher:${fetcher.state}:${fetcher.data}`}</pre>
+                            );
+                          },
                         },
-                      },
-                    ],
-                  }
+                      ],
+                    }
                   : {}),
               },
             ],
@@ -8498,7 +8498,7 @@ function testDomRouter(
             ready: Promise.resolve(),
             finished: Promise.resolve(),
             updateCallbackDone: Promise.resolve(),
-            skipTransition: () => { },
+            skipTransition: () => {},
           };
         });
         testWindow.document.startViewTransition = spy;
@@ -8580,7 +8580,7 @@ function testDomRouter(
             ready: Promise.resolve(),
             finished: Promise.resolve(),
             updateCallbackDone: Promise.resolve(),
-            skipTransition: () => { },
+            skipTransition: () => {},
           };
         };
 

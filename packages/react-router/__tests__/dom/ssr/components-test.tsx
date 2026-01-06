@@ -211,7 +211,7 @@ describe("<ServerRouter>", () => {
       },
     });
 
-    jest.spyOn(console, "warn").mockImplementation(() => { });
+    jest.spyOn(console, "warn").mockImplementation(() => {});
     jest.spyOn(console, "error");
 
     let { container } = render(
@@ -282,7 +282,7 @@ describe("<HydratedRouter>", () => {
     window.__reactRouterContext!.streamController.close();
 
     jest.spyOn(console, "error");
-    jest.spyOn(console, "warn").mockImplementation(() => { });
+    jest.spyOn(console, "warn").mockImplementation(() => {});
 
     let container;
     await act(() => {
@@ -498,7 +498,7 @@ describe("usePrefetchBehavior", () => {
     act(() => {
       observeCallback(
         [{ isIntersecting: true } as IntersectionObserverEntry],
-        new IntersectionObserver(() => { }),
+        new IntersectionObserver(() => {}),
       );
     });
 
