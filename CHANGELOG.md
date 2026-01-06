@@ -412,7 +412,7 @@ Date: 2026-01-07
 ### Minor Changes
 
 - `react-router` - Add additional layer of CSRF protection by rejecting submissions to UI routes from external origins ([#14708](https://github.com/remix-run/react-router/pull/14708))
-  - If you need to permit access to specific external origins, you can specify them in the new `react-router.config.ts` config `allowedActionOrigins` field
+  - If you need to permit access to specific external origins, there is a new `allowedActionOrigins` config field in `react-router.config.ts` where you can specify external origins
 
 ### Patch Changes
 
