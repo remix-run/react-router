@@ -4476,4 +4476,193 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("h1");
     expect(await app.getHtml("h1")).toMatch("It worked!");
   });
+
+  test("always uses /{path}.data without future.unstable_trailingSlashAwareDataRequests flag", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+
+          export default function Index() {
+            return (
+              <div>
+                <h1>Home</h1>
+                <Link to="/about/">Go to About (with trailing slash)</Link>
+                <Link to="/about">Go to About (without trailing slash)</Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/about.tsx": js`
+          import { Link, useLoaderData } from "react-router";
+
+          export function loader({ request }) {
+            let url = new URL(request.url);
+            return {
+              pathname: url.pathname,
+              hasTrailingSlash: url.pathname.endsWith("/"),
+            };
+          }
+
+          export default function About() {
+            let { pathname, hasTrailingSlash } = useLoaderData();
+            return (
+              <div>
+                <h1>About</h1>
+                <p id="pathname">{pathname}</p>
+                <p id="trailing-slash">{String(hasTrailingSlash)}</p>
+                <Link to="/">Go back home</Link>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let requests: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (url.pathname.endsWith(".data")) {
+        requests.push(url.pathname + url.search);
+      }
+    });
+
+    // Document load without trailing slash
+    await app.goto("/about");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+
+    // Client-side navigation without trailing slash
+    await app.goto("/");
+    await app.clickLink("/about");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+    expect(requests).toEqual(["/about.data"]);
+    requests = [];
+
+    // Document load with trailing slash
+    await app.goto("/about/");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about/");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("true");
+
+    // Client-side navigation with trailing slash
+    await app.goto("/");
+    await app.clickLink("/about/");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+    expect(requests).toEqual(["/about.data"]);
+    requests = [];
+
+    // Client-side navigation back to /
+    await app.clickLink("/");
+    await page.waitForSelector("h1:has-text('Home')");
+    expect(requests).toEqual(["/_root.data"]);
+    requests = [];
+  });
+
+  test("uses {path}.data or {path}/_.data depending on trailing slash with future.unstable_trailingSlashAwareDataRequests flag", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          future: {
+            unstable_trailingSlashAwareDataRequests: true,
+          },
+        }),
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+
+          export default function Index() {
+            return (
+              <div>
+                <h1>Home</h1>
+                <Link to="/about/">Go to About (with trailing slash)</Link>
+                <Link to="/about">Go to About (without trailing slash)</Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/about.tsx": js`
+          import { Link, useLoaderData } from "react-router";
+
+          export function loader({ request }) {
+            let url = new URL(request.url);
+            return {
+              pathname: url.pathname,
+              hasTrailingSlash: url.pathname.endsWith("/"),
+            };
+          }
+
+          export default function About() {
+            let { pathname, hasTrailingSlash } = useLoaderData();
+            return (
+              <div>
+                <h1>About</h1>
+                <p id="pathname">{pathname}</p>
+                <p id="trailing-slash">{String(hasTrailingSlash)}</p>
+                <Link to="/">Go back home</Link>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let requests: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (url.pathname.endsWith(".data")) {
+        requests.push(url.pathname + url.search);
+      }
+    });
+
+    // Document load without trailing slash
+    await app.goto("/about");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+
+    // Client-side navigation without trailing slash
+    await app.goto("/");
+    await app.clickLink("/about");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
+    expect(requests).toEqual(["/about.data"]);
+    requests = [];
+
+    // Document load with trailing slash
+    await app.goto("/about/");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about/");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("true");
+
+    // Client-side navigation with trailing slash
+    await app.goto("/");
+    await app.clickLink("/about/");
+    await page.waitForSelector("#pathname");
+    expect(await page.locator("#pathname").innerText()).toEqual("/about/");
+    expect(await page.locator("#trailing-slash").innerText()).toEqual("true");
+    expect(requests).toEqual(["/about/_.data"]);
+    requests = [];
+
+    // Client-side navigation back to /
+    await app.clickLink("/");
+    await page.waitForSelector("h1:has-text('Home')");
+    expect(requests).toEqual(["/_.data"]);
+    requests = [];
+  });
 });

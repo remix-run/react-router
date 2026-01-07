@@ -170,6 +170,7 @@ type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
 export type FetchAndDecodeFunction = (
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
+  trailingSlashAware: boolean,
   targetRoutes?: string[],
   shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
@@ -180,6 +181,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   routeModules: RouteModules,
   ssr: boolean,
   basename: string | undefined,
+  trailingSlashAware: boolean,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -196,6 +198,7 @@ export function getTurboStreamSingleFetchDataStrategy(
     fetchAndDecodeViaTurboStream,
     ssr,
     basename,
+    trailingSlashAware,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -206,6 +209,7 @@ export function getSingleFetchDataStrategyImpl(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   basename: string | undefined,
+  trailingSlashAware: boolean,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
 ): DataStrategyFunction {
   return async (args) => {
@@ -214,7 +218,12 @@ export function getSingleFetchDataStrategyImpl(
 
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
-      return singleFetchActionStrategy(args, fetchAndDecode, basename);
+      return singleFetchActionStrategy(
+        args,
+        fetchAndDecode,
+        basename,
+        trailingSlashAware,
+      );
     }
 
     let foundRevalidatingServerLoader = matches.some((m) => {
@@ -254,12 +263,23 @@ export function getSingleFetchDataStrategyImpl(
       //   errored otherwise
       // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      return nonSsrStrategy(args, getRouteInfo, fetchAndDecode, basename);
+      return nonSsrStrategy(
+        args,
+        getRouteInfo,
+        fetchAndDecode,
+        basename,
+        trailingSlashAware,
+      );
     }
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return singleFetchLoaderFetcherStrategy(args, fetchAndDecode, basename);
+      return singleFetchLoaderFetcherStrategy(
+        args,
+        fetchAndDecode,
+        basename,
+        trailingSlashAware,
+      );
     }
 
     // Navigational loads are more complex...
@@ -270,6 +290,7 @@ export function getSingleFetchDataStrategyImpl(
       fetchAndDecode,
       ssr,
       basename,
+      trailingSlashAware,
       shouldAllowOptOut,
     );
   };
@@ -281,15 +302,19 @@ async function singleFetchActionStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined,
+  trailingSlashAware: boolean,
 ) {
   let actionMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
     let result = await handler(async () => {
-      let { data, status } = await fetchAndDecode(args, basename, [
-        actionMatch!.route.id,
-      ]);
+      let { data, status } = await fetchAndDecode(
+        args,
+        basename,
+        trailingSlashAware,
+        [actionMatch!.route.id],
+      );
       actionStatus = status;
       return unwrapSingleFetchResult(data, actionMatch!.route.id);
     });
@@ -320,6 +345,7 @@ async function nonSsrStrategy(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined,
+  trailingSlashAware: boolean,
 ) {
   let matchesToLoad = args.matches.filter((m) => m.shouldCallHandler());
   let results: Record<string, DataStrategyResult> = {};
@@ -334,7 +360,12 @@ async function nonSsrStrategy(
           let routeId = m.route.id;
           let result = hasClientLoader
             ? await handler(async () => {
-                let { data } = await fetchAndDecode(args, basename, [routeId]);
+                let { data } = await fetchAndDecode(
+                  args,
+                  basename,
+                  trailingSlashAware,
+                  [routeId],
+                );
                 return unwrapSingleFetchResult(data, routeId);
               })
             : await handler();
@@ -357,6 +388,7 @@ async function singleFetchLoaderNavigationStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   basename: string | undefined,
+  trailingSlashAware: boolean,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
 ) {
   // Track which routes need a server load for use in a `_routes` param
@@ -405,7 +437,12 @@ async function singleFetchLoaderNavigationStrategy(
           }
           try {
             let result = await handler(async () => {
-              let { data } = await fetchAndDecode(args, basename, [routeId]);
+              let { data } = await fetchAndDecode(
+                args,
+                basename,
+                trailingSlashAware,
+                [routeId],
+              );
               return unwrapSingleFetchResult(data, routeId);
             });
 
@@ -463,7 +500,12 @@ async function singleFetchLoaderNavigationStrategy(
         ? [...routesParams.keys()]
         : undefined;
     try {
-      let data = await fetchAndDecode(args, basename, targetRoutes);
+      let data = await fetchAndDecode(
+        args,
+        basename,
+        trailingSlashAware,
+        targetRoutes,
+      );
       singleFetchDfd.resolve(data.data);
     } catch (e) {
       singleFetchDfd.reject(e);
@@ -535,13 +577,16 @@ async function singleFetchLoaderFetcherStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined,
+  trailingSlashAware: boolean,
 ) {
   let fetcherMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
   let routeId = fetcherMatch.route.id;
   let result = await fetcherMatch.resolve(async (handler) =>
     handler(async () => {
-      let { data } = await fetchAndDecode(args, basename, [routeId]);
+      let { data } = await fetchAndDecode(args, basename, trailingSlashAware, [
+        routeId,
+      ]);
       return unwrapSingleFetchResult(data, routeId);
     }),
   );
@@ -567,6 +612,7 @@ export function stripIndexParam(url: URL) {
 export function singleFetchUrl(
   reqUrl: URL | string,
   basename: string | undefined,
+  trailingSlashAware: boolean,
   extension: "data" | "rsc",
 ) {
   let url =
@@ -581,12 +627,22 @@ export function singleFetchUrl(
         )
       : reqUrl;
 
-  if (url.pathname === "/") {
-    url.pathname = `_root.${extension}`;
-  } else if (basename && stripBasename(url.pathname, basename) === "/") {
-    url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
+  if (trailingSlashAware) {
+    if (url.pathname.endsWith("/")) {
+      // Preserve trailing slash by using /_.data pattern
+      // e.g., /about/ -> /about/_.data
+      url.pathname = `${url.pathname}_.${extension}`;
+    } else {
+      url.pathname = `${url.pathname}.${extension}`;
+    }
   } else {
-    url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+    if (url.pathname === "/") {
+      url.pathname = `_root.${extension}`;
+    } else if (basename && stripBasename(url.pathname, basename) === "/") {
+      url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
+    } else {
+      url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+    }
   }
 
   return url;
@@ -595,10 +651,11 @@ export function singleFetchUrl(
 async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
+  trailingSlashAware: boolean,
   targetRoutes?: string[],
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
-  let url = singleFetchUrl(request.url, basename, "data");
+  let url = singleFetchUrl(request.url, basename, trailingSlashAware, "data");
   if (request.method === "GET") {
     url = stripIndexParam(url);
     if (targetRoutes) {

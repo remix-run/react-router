@@ -14,7 +14,7 @@ test.describe("Vite preview", () => {
   test("serves built app with vite preview", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -97,7 +97,7 @@ test.describe("Vite preview", () => {
   test("handles navigation between routes", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -173,7 +173,7 @@ test.describe("Vite preview", () => {
   test("handles loader data correctly", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -247,7 +247,7 @@ test.describe("Vite preview", () => {
   }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -312,6 +312,76 @@ test.describe("Vite preview", () => {
     await expect(page.locator("#product [data-id]")).toHaveText("123");
     await expect(page.locator("#product [data-name]")).toHaveText(
       "Product 123",
+    );
+  });
+
+  test("serves SPA mode app with vite preview", async ({
+    vitePreview,
+    page,
+  }) => {
+    const files: Files = async ({ port }) => ({
+      "react-router.config.ts": reactRouterConfig({
+        ssr: false,
+        future: { v8_viteEnvironmentApi: true },
+      }),
+      "vite.config.ts": await viteConfig.basic({
+        port,
+        templateName: "vite-6-template",
+      }),
+      "app/root.tsx": tsx`
+        import { Links, Meta, Outlet, Scripts } from "react-router";
+
+        export default function Root() {
+          return (
+            <html lang="en">
+              <head>
+                <Meta />
+                <Links />
+              </head>
+              <body>
+                <div id="content">
+                  <h1>SPA Mode</h1>
+                  <Outlet />
+                </div>
+                <Scripts />
+              </body>
+            </html>
+          );
+        }
+      `,
+      "app/routes/_index.tsx": tsx`
+        export default function IndexRoute() {
+          return (
+            <div id="index">
+              <h2 data-title>Index</h2>
+              <p data-spa-mode>SPA Mode Enabled</p>
+            </div>
+          );
+        }
+      `,
+      "app/routes/about.tsx": tsx`
+        export default function AboutRoute() {
+          return (
+            <div id="about">
+              <h2 data-title>About</h2>
+              <p>About page in SPA mode</p>
+            </div>
+          );
+        }
+      `,
+    });
+
+    const { port } = await vitePreview(files, "vite-6-template");
+    await page.goto(`http://localhost:${port}/`, {
+      waitUntil: "networkidle",
+    });
+
+    // Ensure no errors on page load (this would fail without the fix)
+    expect(page.errors).toEqual([]);
+
+    await expect(page.locator("#index [data-title]")).toHaveText("Index");
+    await expect(page.locator("#index [data-spa-mode]")).toHaveText(
+      "SPA Mode Enabled",
     );
   });
 });

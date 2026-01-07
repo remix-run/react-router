@@ -87,6 +87,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
   unstable_subResourceIntegrity: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
   /**
    * Enable route middleware
    */
@@ -210,6 +211,12 @@ export type ReactRouterConfig = {
    * SPA without server-rendering. Default's to `true`.
    */
   ssr?: boolean;
+
+  /**
+   * The allowed origins for actions / mutations. Does not apply to routes
+   * without a component. micromatch glob patterns are supported.
+   */
+  allowedActionOrigins?: string[];
 };
 
 export type ResolvedReactRouterConfig = Readonly<{
@@ -276,6 +283,11 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * The allowed origins for actions / mutations. Does not apply to routes
+   * without a component. micromatch glob patterns are supported.
+   */
+  allowedActionOrigins: string[] | false;
   /**
    * The resolved array of route config entries exported from `routes.ts`
    */
@@ -634,12 +646,17 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
+    unstable_trailingSlashAwareDataRequests:
+      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
+      false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
     v8_viteEnvironmentApi:
       userAndPresetConfigs.future?.v8_viteEnvironmentApi ?? false,
   };
+
+  let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
@@ -654,6 +671,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    allowedActionOrigins,
     unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);
 

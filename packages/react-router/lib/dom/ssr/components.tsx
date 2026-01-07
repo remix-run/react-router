@@ -371,7 +371,7 @@ function PrefetchPageLinksImpl({
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useFrameworkContext();
+  let { future, manifest, routeModules } = useFrameworkContext();
   let { basename } = useDataRouterContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
@@ -435,7 +435,12 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, basename, "data");
+    let url = singleFetchUrl(
+      page,
+      basename,
+      future.unstable_trailingSlashAwareDataRequests,
+      "data",
+    );
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -452,6 +457,7 @@ function PrefetchPageLinksImpl({
     return [url.pathname + url.search];
   }, [
     basename,
+    future.unstable_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,
@@ -901,6 +907,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
     <>
       {typeof manifest.sri === "object" ? (
         <script
+          {...scriptProps}
           rr-importmap=""
           type="importmap"
           suppressHydrationWarning

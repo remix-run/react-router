@@ -238,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "allowedActionOrigins",
         "unstable_routeConfig",
       ]);
 
@@ -245,6 +246,7 @@ test.describe("Vite / presets", async () => {
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
         unstable_subResourceIntegrity: false,
+        unstable_trailingSlashAwareDataRequests: false,
         v8_middleware: true,
         v8_splitRouteModules: false,
         v8_viteEnvironmentApi: false,

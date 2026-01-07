@@ -38,6 +38,7 @@ import type { MiddlewareEnabled } from "../types/future";
 import { getManifestPath } from "../dom/ssr/fog-of-war";
 import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
+import { throwIfPotentialCSRFAttack } from "../actions";
 
 export type RequestHandler = (
   request: Request,
@@ -109,17 +110,26 @@ function derive(build: ServerBuild, mode?: string) {
 
     let normalizedBasename = build.basename || "/";
     let normalizedPath = url.pathname;
-    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-      normalizedPath = normalizedBasename;
-    } else if (normalizedPath.endsWith(".data")) {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
-    }
+    if (build.future.unstable_trailingSlashAwareDataRequests) {
+      if (normalizedPath.endsWith("/_.data")) {
+        // Handle trailing slash URLs: /about/_.data -> /about/
+        normalizedPath = normalizedPath.replace(/_.data$/, "");
+      } else {
+        normalizedPath = normalizedPath.replace(/\.data$/, "");
+      }
+    } else {
+      if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+        normalizedPath = normalizedBasename;
+      } else if (normalizedPath.endsWith(".data")) {
+        normalizedPath = normalizedPath.replace(/\.data$/, "");
+      }
 
-    if (
-      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-      normalizedPath.endsWith("/")
-    ) {
-      normalizedPath = normalizedPath.slice(0, -1);
+      if (
+        stripBasename(normalizedPath, normalizedBasename) !== "/" &&
+        normalizedPath.endsWith("/")
+      ) {
+        normalizedPath = normalizedPath.slice(0, -1);
+      }
     }
 
     let isSpaMode =
@@ -472,6 +482,14 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
+    if (request.method === "POST") {
+      throwIfPotentialCSRFAttack(
+        request.headers,
+        Array.isArray(build.allowedActionOrigins)
+          ? build.allowedActionOrigins
+          : [],
+      );
+    }
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
       generateMiddlewareResponse: build.future.v8_middleware

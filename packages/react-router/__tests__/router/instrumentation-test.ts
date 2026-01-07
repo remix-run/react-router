@@ -1,6 +1,7 @@
 import { createMemoryRouter } from "../../lib/components";
+import { createMemoryHistory } from "../../lib/router/history";
 import type { StaticHandlerContext } from "../../lib/router/router";
-import { createStaticHandler } from "../../lib/router/router";
+import { createRouter, createStaticHandler } from "../../lib/router/router";
 import {
   ErrorResponseImpl,
   data,
@@ -110,6 +111,56 @@ describe("instrumentation", () => {
         location: { pathname: "/page" },
         loaderData: { page: "PAGE" },
       });
+    });
+
+    it("preserves hydrate=true on client side loaders", async () => {
+      let dfd = createDeferred();
+      let spy = jest.fn();
+      function loader() {
+        dfd.resolve();
+        return "INDEX*";
+      }
+      loader.hydrate = true;
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+        unstable_instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async loader(loader) {
+                  spy("start");
+                  await loader();
+                  spy("end");
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      expect(router.state.initialized).toBe(false);
+      expect(router.state.loaderData).toEqual({ index: "INDEX" });
+
+      router.initialize();
+      await dfd.promise;
+      await tick();
+
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.loaderData).toEqual({ index: "INDEX*" });
+      expect(spy).toHaveBeenCalledWith("start");
+      expect(spy).toHaveBeenCalledWith("end");
     });
 
     it("allows instrumentation of actions", async () => {
