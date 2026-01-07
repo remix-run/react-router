@@ -4,6 +4,7 @@ import {
   Link,
   createBrowserRouter,
   useLoaderData,
+  useLocation,
   useParams,
 } from "react-router";
 import { RouterProvider } from "react-router/dom";
@@ -54,11 +55,13 @@ const router = createBrowserRouter([
     },
     Component() {
       let data = useLoaderData() as { photo: Photo | null };
+      let location = useLocation();
       console.log("data in component", data);
       return (
         <>
           <h1>Hello React Router (data mode)</h1>
           <ImageGallery />
+          <pre>useLocation: {location.pathname + location.search}</pre>
           {data.photo && (
             <dialog open>
               <PhotoDisplay photo={data.photo} />
@@ -80,9 +83,11 @@ const router = createBrowserRouter([
     },
     Component() {
       let data = useLoaderData() as { photo: Photo };
+      let location = useLocation();
       return (
         <>
           <h1>Images Page</h1>
+          <pre>useLocation: {location.pathname + location.search}</pre>
           <PhotoDisplay photo={data.photo} />
         </>
       );
