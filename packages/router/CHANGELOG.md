@@ -1,6 +1,6 @@
 # `@remix-run/router`
 
-## 1.23.2-pre-v6.0
+## 1.23.2
 
 ### Patch Changes
 
