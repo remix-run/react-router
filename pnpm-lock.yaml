@@ -147,7 +147,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.0-canary-b061b597-20251212(eslint@8.57.0)
+        version: 7.1.0-canary-65eec428-20251218(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -5587,8 +5587,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.0-canary-b061b597-20251212:
-    resolution: {integrity: sha512-tSQTLvkBVbN4rZZZjGIDeUVFgNrY8/hqU6mteRetyCuLYCP92r0x8hetyshU1jInpMQxeJitpOox8A2uMAIrrg==}
+  eslint-plugin-react-hooks@7.1.0-canary-65eec428-20251218:
+    resolution: {integrity: sha512-7HtYkBLCNKakC5OOJucfhzxT/Kp+C63yEnh614v9ZiC8PuydYiYs3gQzokbYhy1Uc29XtEXv5GZ/dui1H4Z9Zw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9064,10 +9064,12 @@ packages:
   whatwg-encoding@2.0.0:
     resolution: {integrity: sha512-p41ogyeMUrw3jWclHWTQg1k05DSVXPLcVxRTYsXUk+ZooOCZLcoYgPZ/HL/D/N+uQPOtcp1me1WhBEaX02mhWg==}
     engines: {node: '>=12'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
@@ -13605,7 +13607,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@7.1.0-canary-b061b597-20251212(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.1.0-canary-65eec428-20251218(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
