@@ -11,9 +11,12 @@ interface HtmlLinkProps {
   href?: string;
 
   /**
-   * How the element handles crossorigin requests
+   * A [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)
+   * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * element. Set to `null` to explicitly remove the attribute if the `<Links>` component
+   * has a `crossOrigin` prop.
    */
-  crossOrigin?: "anonymous" | "use-credentials";
+  crossOrigin?: "anonymous" | "use-credentials" | "" | null;
 
   /**
    * Relationship between the document containing the hyperlink and the destination resource

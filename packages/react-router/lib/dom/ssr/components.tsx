@@ -46,6 +46,21 @@ function useDataRouterContext() {
   return context;
 }
 
+// Resolves the crossOrigin attribute for a link element.
+// - If the link descriptor's crossOrigin is undefined, use the component-level default
+// - If the link descriptor's crossOrigin is null, explicitly remove the attribute
+// - Otherwise, use the link descriptor's crossOrigin value
+function resolveCrossOriginValue(
+  linkCrossOrigin: LinksProps["crossOrigin"] | null | undefined,
+  defaultCrossOrigin: LinksProps["crossOrigin"] | undefined,
+): LinksProps["crossOrigin"] | undefined {
+  if (linkCrossOrigin === undefined) {
+    return defaultCrossOrigin;
+  }
+  // null coerces to undefined (removes the attribute)
+  return linkCrossOrigin ?? undefined;
+}
+
 function useDataRouterStateContext() {
   let context = React.useContext(DataRouterStateContext);
   invariant(
@@ -232,7 +247,7 @@ export interface LinksProps {
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
    * element
    */
-  crossOrigin?: "anonymous" | "use-credentials";
+  crossOrigin?: "anonymous" | "use-credentials" | "";
 }
 
 /**
@@ -264,7 +279,10 @@ export interface LinksProps {
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
-export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
+export function Links({
+  nonce,
+  crossOrigin: defaultCrossOrigin,
+}: LinksProps): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
@@ -290,16 +308,37 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
           rel="stylesheet"
           href={criticalCss.href}
           nonce={nonce}
-          crossOrigin={crossOrigin}
+          crossOrigin={defaultCrossOrigin}
         />
       ) : null}
-      {keyedLinks.map(({ key, link }) =>
-        isPageLinkDescriptor(link) ? (
-          <PrefetchPageLinks key={key} nonce={nonce} {...link} />
-        ) : (
-          <link key={key} nonce={nonce} crossOrigin={crossOrigin} {...link} />
-        ),
-      )}
+      {keyedLinks.map(({ key, link }) => {
+        if (isPageLinkDescriptor(link)) {
+          let { crossOrigin: linkCrossOrigin, ...rest } = link;
+          return (
+            <PrefetchPageLinks
+              key={key}
+              nonce={nonce}
+              {...rest}
+              crossOrigin={resolveCrossOriginValue(
+                linkCrossOrigin,
+                defaultCrossOrigin,
+              )}
+            />
+          );
+        }
+        let { crossOrigin: linkCrossOrigin, ...rest } = link;
+        return (
+          <link
+            key={key}
+            nonce={nonce}
+            {...rest}
+            crossOrigin={resolveCrossOriginValue(
+              linkCrossOrigin,
+              defaultCrossOrigin,
+            )}
+          />
+        );
+      })}
     </>
   );
 }
@@ -331,7 +370,12 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
-export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
+export function PrefetchPageLinks({
+  page,
+  ...linkProps
+}: Omit<PageLinkDescriptor, "crossOrigin"> & {
+  crossOrigin?: Exclude<PageLinkDescriptor["crossOrigin"], null>;
+}) {
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -484,19 +528,46 @@ function PrefetchPageLinksImpl({
   // just the manifest like the other links in here.
   let keyedPrefetchLinks = useKeyedPrefetchLinks(newMatchesForAssets);
 
+  let { crossOrigin: crossOriginProp, ...restLinkProps } = linkProps;
+  let defaultCrossOrigin = crossOriginProp ?? undefined;
+
   return (
     <>
       {dataHrefs.map((href) => (
-        <link key={href} rel="prefetch" as="fetch" href={href} {...linkProps} />
+        <link
+          key={href}
+          rel="prefetch"
+          as="fetch"
+          href={href}
+          {...restLinkProps}
+          crossOrigin={defaultCrossOrigin}
+        />
       ))}
       {moduleHrefs.map((href) => (
-        <link key={href} rel="modulepreload" href={href} {...linkProps} />
+        <link
+          key={href}
+          rel="modulepreload"
+          href={href}
+          {...restLinkProps}
+          crossOrigin={defaultCrossOrigin}
+        />
       ))}
-      {keyedPrefetchLinks.map(({ key, link }) => (
+      {keyedPrefetchLinks.map(({ key, link }) => {
         // these don't spread `linkProps` because they are full link descriptors
         // already with their own props
-        <link key={key} nonce={linkProps.nonce} {...link} />
-      ))}
+        let { crossOrigin: linkCrossOrigin, ...rest } = link;
+        return (
+          <link
+            key={key}
+            nonce={linkProps.nonce}
+            {...rest}
+            crossOrigin={resolveCrossOriginValue(
+              linkCrossOrigin,
+              defaultCrossOrigin,
+            )}
+          />
+        );
+      })}
     </>
   );
 }
