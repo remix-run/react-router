@@ -11,7 +11,7 @@ interface HtmlLinkProps {
   href?: string;
 
   /**
-   * How the element handles crossorigin requests.
+   * How the element handles crossorigin requests
    */
   crossOrigin?: "anonymous" | "use-credentials";
 
