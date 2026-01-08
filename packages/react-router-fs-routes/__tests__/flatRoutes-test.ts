@@ -912,4 +912,54 @@ describe("flatRoutes", () => {
       );
     });
   });
+
+  describe("ignoredFilePatterns", () => {
+    let tempDir = path.join(
+      os.tmpdir(),
+      "react-router-fs-routes-test",
+      Math.random().toString(36).substring(2, 15),
+    );
+    let routesDir = path.join(tempDir, "routes");
+
+    beforeEach(() => {
+      mkdirSync(tempDir, { recursive: true });
+      mkdirSync(routesDir, { recursive: true });
+      writeFileSync(path.join(tempDir, "root.tsx"), "");
+    });
+    afterEach(() => {
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    test("should ignore a single file matching the pattern", () => {
+      let routeOne = path.join(routesDir, "one.tsx");
+      let routeTwo = path.join(routesDir, "two.tsx");
+      writeFileSync(routeOne, "");
+      writeFileSync(routeTwo, "");
+
+      let ignoredFilePatterns = ["two.tsx"];
+      let routeManifest = flatRoutes(tempDir, ignoredFilePatterns);
+
+      let routeIds = Object.keys(routeManifest);
+
+      expect(routeIds).not.toContain("routes/two");
+      expect(routeIds.length).toBe(1);
+    });
+
+    test("should ignore all files in a folder matching the pattern", () => {
+      let routeOne = path.join(routesDir, "one.tsx");
+      let routeTwoDir = path.join(routesDir, "two");
+      let routeTwo = path.join(routeTwoDir, "route.tsx");
+      writeFileSync(routeOne, "");
+      mkdirSync(routeTwoDir, { recursive: true });
+      writeFileSync(routeTwo, "");
+
+      let ignoredFilePatterns = ["two"];
+      let routeManifest = flatRoutes(tempDir, ignoredFilePatterns);
+
+      let routeIds = Object.keys(routeManifest);
+
+      expect(routeIds).not.toContain("routes/two");
+      expect(routeIds.length).toBe(1);
+    });
+  });
 });

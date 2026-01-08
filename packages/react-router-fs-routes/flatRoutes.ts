@@ -110,11 +110,12 @@ export function flatRoutes(
     if (entry.isDirectory()) {
       route = findRouteModuleForFolder(
         appDirectory,
+        routesDir,
         filepath,
         ignoredFileRegex,
       );
     } else if (entry.isFile()) {
-      route = findRouteModuleForFile(appDirectory, filepath, ignoredFileRegex);
+      route = findRouteModuleForFile(routesDir, filepath, ignoredFileRegex);
     }
 
     if (route) routes.push(route);
@@ -297,11 +298,11 @@ export function flatRoutesUniversal(
 }
 
 function findRouteModuleForFile(
-  appDirectory: string,
+  routesDir: string,
   filepath: string,
   ignoredFileRegex: RegExp[],
 ): string | null {
-  let relativePath = normalizeSlashes(path.relative(appDirectory, filepath));
+  let relativePath = normalizeSlashes(path.relative(routesDir, filepath));
   let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
   if (isIgnored) return null;
   return filepath;
@@ -309,10 +310,11 @@ function findRouteModuleForFile(
 
 function findRouteModuleForFolder(
   appDirectory: string,
+  routesDir: string,
   filepath: string,
   ignoredFileRegex: RegExp[],
 ): string | null {
-  let relativePath = path.relative(appDirectory, filepath);
+  let relativePath = path.relative(routesDir, filepath);
   let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
   if (isIgnored) return null;
 
