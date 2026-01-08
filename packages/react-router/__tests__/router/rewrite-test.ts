@@ -17,7 +17,7 @@ describe("rewrite", () => {
 
     // Navigate to /images/123 but load data from /gallery?photo=123
     let A = await t.navigate("/images/123", {
-      rewrite: "/gallery?photo=123",
+      unstable_rewrite: "/gallery?photo=123",
     });
 
     // Should call the gallery loader, not the images loader
@@ -64,7 +64,7 @@ describe("rewrite", () => {
 
     // Navigate to /images/123 with rewrite
     let A = await t.navigate("/images/123", {
-      rewrite: "/gallery?photo=123",
+      unstable_rewrite: "/gallery?photo=123",
     });
     await A.loaders.gallery.resolve("GALLERY DATA");
 
@@ -106,7 +106,7 @@ describe("rewrite", () => {
     });
 
     let A = await t.navigate("/images/123", {
-      rewrite: "/gallery?photo=123",
+      unstable_rewrite: "/gallery?photo=123",
       replace: true,
     });
 
@@ -134,7 +134,7 @@ describe("rewrite", () => {
     });
 
     let A = await t.navigate("/images/123#preview", {
-      rewrite: "/gallery?photo=123#header",
+      unstable_rewrite: "/gallery?photo=123#header",
     });
 
     expect(A.loaders.gallery).toBeDefined();
@@ -171,7 +171,7 @@ describe("rewrite", () => {
     });
 
     let A = await t.navigate("/images/123", {
-      rewrite: "/gallery?photo=123",
+      unstable_rewrite: "/gallery?photo=123",
       state: { customData: "test" },
     });
 
@@ -201,7 +201,7 @@ describe("rewrite", () => {
     });
 
     let A = await t.navigate("/images/123", {
-      rewrite: "/gallery?photo=123",
+      unstable_rewrite: "/gallery?photo=123",
       formMethod: "post",
       formData: createFormData({ test: "value" }),
     });
@@ -247,7 +247,7 @@ describe("rewrite", () => {
     });
 
     let A = await t.navigate("/images/123", {
-      rewrite: "/gallery?photo=123",
+      unstable_rewrite: "/gallery?photo=123",
     });
 
     expect(A.loaders.gallery).toBeDefined();
@@ -297,7 +297,7 @@ describe("rewrite", () => {
 
     // Rewrite to a non-existent route
     let A = await t.navigate("/images/123", {
-      rewrite: "/nonexistent",
+      unstable_rewrite: "/nonexistent",
     });
 
     // Should get a 404 error

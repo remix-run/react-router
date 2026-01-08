@@ -535,7 +535,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   state?: any;
   fromRouteId?: string;
   viewTransition?: boolean;
-  rewrite?: To;
+  unstable_rewrite?: To;
 };
 
 // Only allowed for submission navigations
@@ -1525,13 +1525,13 @@ export function createRouter(init: RouterInit): Router {
     let currentLocation = state.location;
 
     // If rewrite is provided, normalize and create a separate path for the router
-    let rewritePath = opts?.rewrite
+    let rewritePath = opts?.unstable_rewrite
       ? init.history.encodeLocation(
           normalizeTo(
             state.location,
             state.matches,
             basename,
-            opts.rewrite,
+            opts.unstable_rewrite,
             opts?.fromRouteId,
             opts?.relative,
           ),

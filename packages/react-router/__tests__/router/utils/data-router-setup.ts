@@ -606,9 +606,9 @@ export function setup({
 
     helpers = getNavigationHelpers(
       // @ts-expect-error - rewrite is a new option
-      opts?.rewrite
-        ? typeof opts.rewrite === "string"
-          ? opts.rewrite
+      opts?.unstable_rewrite
+        ? typeof opts.unstable_rewrite === "string"
+          ? opts.unstable_rewrite
           : ""
         : href,
       navigationId,
