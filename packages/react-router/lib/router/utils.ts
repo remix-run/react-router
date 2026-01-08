@@ -1581,7 +1581,11 @@ export function prependBasename({
   return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+// Match absolute URLs: hierarchical (scheme://), protocol-relative (//),
+// and common non-hierarchical schemes (mailto:, tel:, etc.)
+// This allows relative paths with colons like "my-path:value" to be resolved
+// as relative paths without requiring a ./ prefix
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:\/\/|\/\/|(?:mailto|tel|sms|data|blob|file|about|javascript|vbscript|web\+[a-z0-9+.-]*|app|chrome|chrome-extension|moz-extension|ms-browser-extension):)/i;
 export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 /**
