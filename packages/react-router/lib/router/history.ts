@@ -69,6 +69,12 @@ export interface Location<State = any> extends Path {
    * Note: This value is always "default" on the initial location.
    */
   key: string;
+
+  /**
+   * The rewritten location used by the router, which differs from the URL shown
+   * in the browser URL bar
+   */
+  rewrite: Path | undefined;
 }
 
 /**
@@ -189,9 +195,22 @@ type HistoryState = {
   usr: any;
   key?: string;
   idx: number;
+  rewrite?: Path;
 };
 
 const PopStateEventType = "popstate";
+
+function isLocation(obj: unknown): obj is Location {
+  return (
+    typeof obj === "object" &&
+    obj != null &&
+    "pathname" in obj &&
+    "search" in obj &&
+    "hash" in obj &&
+    "key" in obj
+  );
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +255,7 @@ export function createMemoryHistory(
       entry,
       typeof entry === "string" ? null : entry.state,
       index === 0 ? "default" : undefined,
+      typeof entry === "string" ? undefined : entry.rewrite,
     ),
   );
   let index = clampIndex(
@@ -254,12 +274,14 @@ export function createMemoryHistory(
     to: To,
     state: any = null,
     key?: string,
+    rewrite?: Path,
   ): Location {
     let location = createLocation(
       entries ? getCurrentLocation().pathname : "/",
       to,
       state,
       key,
+      rewrite,
     );
     warning(
       location.pathname.charAt(0) === "/",
@@ -298,7 +320,7 @@ export function createMemoryHistory(
     },
     push(to, state) {
       action = Action.Push;
-      let nextLocation = createMemoryLocation(to, state);
+      let nextLocation = isLocation(to) ? to : createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
       if (v5Compat && listener) {
@@ -370,6 +392,7 @@ export function createBrowserHistory(
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
       (globalHistory.state && globalHistory.state.key) || "default",
+      (globalHistory.state && globalHistory.state.rewrite) || undefined,
     );
   }
 
@@ -521,6 +544,7 @@ function getHistoryState(location: Location, index: number): HistoryState {
     usr: location.state,
     key: location.key,
     idx: index,
+    rewrite: location.rewrite,
   };
 }
 
@@ -532,6 +556,7 @@ export function createLocation(
   to: To,
   state: any = null,
   key?: string,
+  rewrite?: Path,
 ): Readonly<Location> {
   let location: Readonly<Location> = {
     pathname: typeof current === "string" ? current : current.pathname,
@@ -544,30 +569,8 @@ export function createLocation(
     // But that's a pretty big refactor to the current test suite so going to
     // keep as is for the time being and just let any incoming keys take precedence
     key: (to && (to as Location).key) || key || createKey(),
+    rewrite,
   };
-  return location;
-}
-
-export function getRewritePath(location: Location): Path {
-  let rewrite = location.state && (location.state as any)._rewrite;
-
-  if (
-    typeof rewrite === "object" &&
-    rewrite != null &&
-    "pathname" in rewrite &&
-    typeof rewrite.pathname === "string" &&
-    "search" in rewrite &&
-    typeof rewrite.search === "string" &&
-    "hash" in rewrite &&
-    typeof rewrite.hash === "string"
-  ) {
-    return {
-      pathname: rewrite.pathname,
-      search: rewrite.search,
-      hash: rewrite.hash,
-    };
-  }
-
   return location;
 }
 
@@ -659,9 +662,11 @@ function getUrlBasedHistory(
     }
   }
 
-  function push(to: To, state?: any) {
+  function push(to: Location | To, state?: any) {
     action = Action.Push;
-    let location = createLocation(history.location, to, state);
+    let location = isLocation(to)
+      ? to
+      : createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex() + 1;
@@ -691,7 +696,9 @@ function getUrlBasedHistory(
 
   function replace(to: To, state?: any) {
     action = Action.Replace;
-    let location = createLocation(history.location, to, state);
+    let location = isLocation(to)
+      ? to
+      : createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex();

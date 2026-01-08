@@ -83,6 +83,7 @@ export function StaticRouter({
     hash: locationProp.hash || "",
     state: locationProp.state != null ? locationProp.state : null,
     key: locationProp.key || "default",
+    rewrite: undefined,
   };
 
   let staticNavigator = getStatelessNavigator();

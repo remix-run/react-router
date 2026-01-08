@@ -769,8 +769,8 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     // browser URL
     let rewriteScript = ssr
       ? [
-          "if (window.history.state.usr && window.history.state.usr._rewrite) {",
-          "window.history.replaceState({ ...window.history.state, usr: { ...window.history.state.usr, _rewrite: null }}, null);",
+          "if (window.history.state && window.history.state.rewrite) {",
+          "window.history.replaceState({ ...window.history.state, rewrite: undefined }, null);",
           "}",
         ].join("")
       : "";

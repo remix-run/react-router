@@ -724,13 +724,13 @@ export function RouterProvider({
     [router, navigator, basename, onError],
   );
 
-  let uiLocation = state.location;
-  if (state.location.state?._rewrite) {
+  let uiLocation = state.location.rewrite || state.location;
+  if (state.location.rewrite) {
     uiLocation = {
       ...state.location,
-      pathname: state.location.state._rewrite.pathname,
-      search: state.location.state._rewrite.search,
-      hash: state.location.state._rewrite.hash,
+      pathname: state.location.rewrite.pathname,
+      search: state.location.rewrite.search,
+      hash: state.location.rewrite.hash,
     };
   }
 
@@ -1397,6 +1397,7 @@ export function Router({
     hash = "",
     state = null,
     key = "default",
+    rewrite,
   } = locationProp;
 
   let locationContext = React.useMemo(() => {
@@ -1413,10 +1414,11 @@ export function Router({
         hash,
         state,
         key,
+        rewrite,
       },
       navigationType,
     };
-  }, [basename, pathname, search, hash, state, key, navigationType]);
+  }, [basename, pathname, search, hash, state, key, rewrite, navigationType]);
 
   warning(
     locationContext != null,

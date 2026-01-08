@@ -8,7 +8,6 @@ import {
   invariant,
   parsePath,
   warning,
-  getRewritePath,
 } from "./history";
 import type {
   unstable_ClientInstrumentation,
@@ -940,11 +939,10 @@ export function createRouter(init: RouterInit): Router {
   let initialScrollRestored = init.hydrationData != null;
 
   let initialLocation = init.history.location;
-  let rewritePath = getRewritePath(initialLocation);
-  if (rewritePath) {
+  if (initialLocation.rewrite) {
     initialLocation = {
       ...initialLocation,
-      ...rewritePath,
+      ...initialLocation.rewrite,
     };
   }
   let initialMatches = matchRoutes(dataRoutes, initialLocation, basename);
@@ -1525,35 +1523,31 @@ export function createRouter(init: RouterInit): Router {
     );
 
     let currentLocation = state.location;
-    let nextLocation = createLocation(state.location, path, opts && opts.state);
 
-    // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
-    // URL from window.location, so we need to encode it here so the behavior
-    // remains the same as POP and non-data-router usages.  new URL() does all
-    // the same encoding we'd get from a history.pushState/window.location read
-    // without having to touch history
-    nextLocation = {
-      ...nextLocation,
-      ...init.history.encodeLocation(nextLocation),
-    };
+    // If rewrite is provided, normalize and create a separate path for the router
+    let rewritePath = opts?.rewrite
+      ? init.history.encodeLocation(
+          normalizeTo(
+            state.location,
+            state.matches,
+            basename,
+            opts.rewrite,
+            opts?.fromRouteId,
+            opts?.relative,
+          ),
+        )
+      : undefined;
 
-    // If rewrite is provided, normalize and create a separate location for data loading
-    if (opts?.rewrite) {
-      let normalizedRewritePath = normalizeTo(
-        state.location,
-        state.matches,
-        basename,
-        opts.rewrite,
-        opts?.fromRouteId,
-        opts?.relative,
-      );
-      Object.assign(nextLocation, {
-        state: {
-          ...nextLocation.state,
-          _rewrite: init.history.encodeLocation(normalizedRewritePath),
-        },
-      });
-    }
+    let nextLocation = createLocation(
+      currentLocation,
+      // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
+      // URL from window.location, so we need to encode it here so the behavior
+      // remains the same as POP and non-data-router usages
+      init.history.encodeLocation(path),
+      opts && opts.state,
+      undefined,
+      rewritePath,
+    );
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
@@ -1702,7 +1696,7 @@ export function createRouter(init: RouterInit): Router {
     },
   ): Promise<void> {
     let externalLocation = _location;
-    let routerPath = getRewritePath(_location);
+    let routerPath = _location.rewrite || _location;
 
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
@@ -1912,7 +1906,7 @@ export function createRouter(init: RouterInit): Router {
     interruptActiveLoads();
 
     let externalLocation = _location;
-    let routerPath = getRewritePath(_location);
+    let routerPath = _location.rewrite || _location;
 
     // Put us in a submitting state
     let navigation = getSubmittingNavigation(externalLocation, submission);
@@ -2089,7 +2083,7 @@ export function createRouter(init: RouterInit): Router {
     callSiteDefaultShouldRevalidate?: boolean,
   ): Promise<HandleLoadersResult> {
     let externalLocation = _location;
-    let routerPath = getRewritePath(_location);
+    let routerPath = _location.rewrite || _location;
 
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
