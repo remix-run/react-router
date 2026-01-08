@@ -523,21 +523,19 @@ function PrefetchPageLinksImpl({
       {moduleHrefs.map((href) => (
         <link key={href} rel="modulepreload" href={href} {...linkProps} />
       ))}
-      {keyedPrefetchLinks.map(({ key, link }) => {
+      {keyedPrefetchLinks.map(({ key, link }) => (
         // these don't spread `linkProps` because they are full link descriptors
         // already with their own props
-        return (
-          <link
-            key={key}
-            nonce={linkProps.nonce}
-            {...link}
-            crossOrigin={resolveCrossOriginValue(
-              link.crossOrigin,
-              linkProps.crossOrigin,
-            )}
-          />
-        );
-      })}
+        <link
+          key={key}
+          nonce={linkProps.nonce}
+          {...link}
+          crossOrigin={resolveCrossOriginValue(
+            link.crossOrigin,
+            linkProps.crossOrigin,
+          )}
+        />
+      ))}
     </>
   );
 }
