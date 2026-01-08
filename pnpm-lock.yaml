@@ -1324,34 +1324,6 @@ importers:
         specifier: 'catalog:'
         version: 0.14.9
 
-  playground/data:
-    dependencies:
-      react:
-        specifier: 'catalog:'
-        version: 19.2.3
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.2.3(react@19.2.3)
-      react-router:
-        specifier: 'workspace:'
-        version: link:../../packages/react-router
-    devDependencies:
-      '@types/react':
-        specifier: ^18.0.27
-        version: 18.2.18
-      '@types/react-dom':
-        specifier: ^18.0.10
-        version: 18.2.7
-      '@vitejs/plugin-react':
-        specifier: ^4
-        version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
-      typescript:
-        specifier: 'catalog:'
-        version: 5.4.5
-      vite:
-        specifier: 6.4.1
-        version: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
-
   playground/framework:
     dependencies:
       '@react-router/node':
