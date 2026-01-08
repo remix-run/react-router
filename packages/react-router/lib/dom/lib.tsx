@@ -1337,7 +1337,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
-      rewrite,
+      unstable_rewrite,
       state,
       target,
       preventScrollReset,
@@ -2207,7 +2207,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
-            unstable_rewrite: rewrite,
+            unstable_rewrite,
             state,
             preventScrollReset,
             relative,
@@ -2228,7 +2228,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
-      rewrite,
+      unstable_rewrite,
       state,
       target,
       to,
