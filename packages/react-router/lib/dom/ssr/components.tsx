@@ -419,8 +419,9 @@ function PrefetchPageLinksImpl({
   page,
   matches: nextMatches,
   ...linkProps
-}: PageLinkDescriptor & {
+}: Omit<PageLinkDescriptor, "crossOrigin"> & {
   matches: AgnosticDataRouteMatch[];
+  crossOrigin?: Exclude<PageLinkDescriptor["crossOrigin"], null>;
 }) {
   let location = useLocation();
   let { future, manifest, routeModules } = useFrameworkContext();
@@ -528,8 +529,7 @@ function PrefetchPageLinksImpl({
   // just the manifest like the other links in here.
   let keyedPrefetchLinks = useKeyedPrefetchLinks(newMatchesForAssets);
 
-  let { crossOrigin: crossOriginProp, ...restLinkProps } = linkProps;
-  let defaultCrossOrigin = crossOriginProp ?? undefined;
+  let { crossOrigin: defaultCrossOrigin, ...restLinkProps } = linkProps;
 
   return (
     <>
