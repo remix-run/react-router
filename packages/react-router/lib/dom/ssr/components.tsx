@@ -232,7 +232,7 @@ export interface LinksProps {
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
    * element
    */
-  crossOrigin?: "anonymous" | "use-credentials" | "";
+  crossOrigin?: "anonymous" | "use-credentials";
 }
 
 /**
