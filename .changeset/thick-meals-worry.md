@@ -1,5 +1,5 @@
 ---
-"react-router": patch
+"react-router": minor
 ---
 
-Add crossOrigin prop to Links component
+Add `crossOrigin` prop to `Links` component
