@@ -46,21 +46,6 @@ function useDataRouterContext() {
   return context;
 }
 
-// Resolves the crossOrigin attribute for a link element.
-// - If the link descriptor's crossOrigin is undefined, use the component-level default
-// - If the link descriptor's crossOrigin is null, explicitly remove the attribute
-// - Otherwise, use the link descriptor's crossOrigin value
-function resolveCrossOriginValue(
-  linkCrossOrigin: LinksProps["crossOrigin"] | null | undefined,
-  defaultCrossOrigin: LinksProps["crossOrigin"] | undefined,
-): LinksProps["crossOrigin"] | undefined {
-  if (linkCrossOrigin === undefined) {
-    return defaultCrossOrigin;
-  }
-  // null coerces to undefined (removes the attribute)
-  return linkCrossOrigin ?? undefined;
-}
-
 function useDataRouterStateContext() {
   let context = React.useContext(DataRouterStateContext);
   invariant(
@@ -314,14 +299,14 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
             key={key}
             nonce={nonce}
             {...link}
-            crossOrigin={resolveCrossOriginValue(link.crossOrigin, crossOrigin)}
+            crossOrigin={link.crossOrigin ?? crossOrigin}
           />
         ) : (
           <link
             key={key}
             nonce={nonce}
             {...link}
-            crossOrigin={resolveCrossOriginValue(link.crossOrigin, crossOrigin)}
+            crossOrigin={link.crossOrigin ?? crossOrigin}
           />
         ),
       )}
@@ -356,12 +341,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
-export function PrefetchPageLinks({
-  page,
-  ...linkProps
-}: Omit<PageLinkDescriptor, "crossOrigin"> & {
-  crossOrigin?: Exclude<PageLinkDescriptor["crossOrigin"], null>;
-}) {
+export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -405,9 +385,8 @@ function PrefetchPageLinksImpl({
   page,
   matches: nextMatches,
   ...linkProps
-}: Omit<PageLinkDescriptor, "crossOrigin"> & {
+}: PageLinkDescriptor & {
   matches: AgnosticDataRouteMatch[];
-  crossOrigin?: Exclude<PageLinkDescriptor["crossOrigin"], null>;
 }) {
   let location = useLocation();
   let { future, manifest, routeModules } = useFrameworkContext();
@@ -530,10 +509,7 @@ function PrefetchPageLinksImpl({
           key={key}
           nonce={linkProps.nonce}
           {...link}
-          crossOrigin={resolveCrossOriginValue(
-            link.crossOrigin,
-            linkProps.crossOrigin,
-          )}
+          crossOrigin={link.crossOrigin ?? linkProps.crossOrigin}
         />
       ))}
     </>

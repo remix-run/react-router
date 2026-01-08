@@ -169,40 +169,5 @@ describe("<Links>", () => {
       expect(stylesheetLink).toBeTruthy();
       expect(stylesheetLink?.getAttribute("crossorigin")).toBe("anonymous");
     });
-
-    it("link descriptor can remove crossOrigin by setting it to null", () => {
-      let RoutesStub = createRoutesStub([
-        {
-          id: "root",
-          path: "/",
-          links: () => [
-            {
-              rel: "stylesheet",
-              href: "/assets/styles.css",
-              crossOrigin: null,
-            },
-          ],
-          Component() {
-            return (
-              <>
-                <Links crossOrigin="anonymous" />
-                <Outlet />
-              </>
-            );
-          },
-          children: [
-            { id: "index", index: true, Component: () => <div>Index</div> },
-          ],
-        },
-      ]);
-
-      let { container } = render(<RoutesStub />);
-
-      let stylesheetLink = container.ownerDocument.querySelector(
-        'link[rel="stylesheet"][href="/assets/styles.css"]',
-      );
-      expect(stylesheetLink).toBeTruthy();
-      expect(stylesheetLink?.hasAttribute("crossorigin")).toBe(false);
-    });
   });
 });

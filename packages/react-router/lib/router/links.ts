@@ -13,7 +13,7 @@ interface HtmlLinkProps {
   /**
    * How the element handles crossorigin requests.
    */
-  crossOrigin?: "anonymous" | "use-credentials" | "" | null;
+  crossOrigin?: "anonymous" | "use-credentials";
 
   /**
    * Relationship between the document containing the hyperlink and the destination resource
