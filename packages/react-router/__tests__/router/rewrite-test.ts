@@ -36,7 +36,7 @@ describe("rewrite", () => {
     expect(t.router.state.location.search).toBe("");
 
     // The location state should contain the rewrite information
-    expect(t.router.state.location.state?._rewrite).toEqual({
+    expect(t.router.state.location.rewrite).toEqual({
       pathname: "/gallery",
       search: "?photo=123",
       hash: "",
@@ -82,7 +82,7 @@ describe("rewrite", () => {
     expect(t.router.state.location.pathname).toBe("/images/123");
 
     // The rewrite should still be in the state
-    expect(t.router.state.location.state?._rewrite).toEqual({
+    expect(t.router.state.location.rewrite).toEqual({
       pathname: "/gallery",
       search: "?photo=123",
       hash: "",
@@ -114,7 +114,7 @@ describe("rewrite", () => {
     await A.loaders.gallery.resolve("GALLERY DATA");
 
     expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.state?._rewrite).toEqual({
+    expect(t.router.state.location.rewrite).toEqual({
       pathname: "/gallery",
       search: "?photo=123",
       hash: "",
@@ -151,7 +151,7 @@ describe("rewrite", () => {
     expect(t.router.state.location.hash).toBe("#preview");
 
     // The rewrite should have the rewrite hash
-    expect(t.router.state.location.state?._rewrite).toEqual({
+    expect(t.router.state.location.rewrite).toEqual({
       pathname: "/gallery",
       search: "?photo=123",
       hash: "#header",
@@ -177,14 +177,12 @@ describe("rewrite", () => {
 
     await A.loaders.gallery.resolve("GALLERY DATA");
 
-    // Both custom state and _rewrite should be present
-    expect(t.router.state.location.state).toEqual({
-      customData: "test",
-      _rewrite: {
-        pathname: "/gallery",
-        search: "?photo=123",
-        hash: "",
-      },
+    // Both custom state and rewrite should be present
+    expect(t.router.state.location.state).toEqual({ customData: "test" });
+    expect(t.router.state.location.rewrite).toEqual({
+      pathname: "/gallery",
+      search: "?photo=123",
+      hash: "",
     });
 
     t.router.dispose();
@@ -223,7 +221,7 @@ describe("rewrite", () => {
 
     // The browser location should be /images/123
     expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.state?._rewrite).toEqual({
+    expect(t.router.state.location.rewrite).toEqual({
       pathname: "/gallery",
       search: "?photo=123",
       hash: "",
@@ -279,7 +277,7 @@ describe("rewrite", () => {
     await A.loaders.images.resolve("IMAGES DATA");
 
     expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.state?._rewrite).toBeUndefined();
+    expect(t.router.state.location.rewrite).toBeUndefined();
     expect(t.router.state.matches).toHaveLength(1);
     expect(t.router.state.matches[0].route.id).toBe("images");
 
