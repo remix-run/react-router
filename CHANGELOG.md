@@ -14,6 +14,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 - [React Router Releases](#react-router-releases)
   - [v7.12.0](#v7120)
+    - [Security Notice](#security-notice)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -37,6 +38,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-3)
     - [Unstable Changes](#unstable-changes-2)
   - [v7.9.6](#v796)
+    - [Security Notice](#security-notice-1)
     - [Patch Changes](#patch-changes-4)
     - [Unstable Changes](#unstable-changes-3)
   - [v7.9.5](#v795)
@@ -45,6 +47,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-5)
     - [Unstable Changes](#unstable-changes-4)
   - [v7.9.4](#v794)
+    - [Security Notice](#security-notice-2)
     - [What's Changed](#whats-changed-3)
       - [`useRoute()` (unstable)](#useroute-unstable)
     - [Patch Changes](#patch-changes-6)
@@ -60,6 +63,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.9.1](#v791)
     - [Patch Changes](#patch-changes-9)
   - [v7.9.0](#v790)
+    - [Security Notice](#security-notice-3)
     - [What's Changed](#whats-changed-5)
       - [Stable Middleware and Context APIs](#stable-middleware-and-context-apis)
     - [Minor Changes](#minor-changes-3)
@@ -107,7 +111,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.5.3](#v753)
     - [Patch Changes](#patch-changes-20)
   - [v7.5.2](#v752)
-    - [Security Notice](#security-notice)
+    - [Security Notice](#security-notice-4)
     - [Patch Changes](#patch-changes-21)
   - [v7.5.1](#v751)
     - [Patch Changes](#patch-changes-22)
@@ -120,7 +124,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Unstable Changes](#unstable-changes-16)
     - [Changes by Package](#changes-by-package-3)
   - [v7.4.1](#v741)
-    - [Security Notice](#security-notice-1)
+    - [Security Notice](#security-notice-5)
     - [Patch Changes](#patch-changes-24)
     - [Unstable Changes](#unstable-changes-17)
   - [v7.4.0](#v740)
@@ -185,8 +189,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Changes by Package](#changes-by-package-8)
 - [React Router v6 Releases](#react-router-v6-releases)
   - [v6.30.3](#v6303)
+    - [Security Notice](#security-notice-6)
     - [Patch Changes](#patch-changes-37)
   - [v6.30.2](#v6302)
+    - [Security Notice](#security-notice-7)
     - [Patch Changes](#patch-changes-38)
   - [v6.30.1](#v6301)
     - [Patch Changes](#patch-changes-39)
@@ -410,6 +416,14 @@ Date: YYYY-MM-DD
 ## v7.12.0
 
 Date: 2026-01-07
+
+### Security Notice
+
+This release addresses 3 security vulnerabilities:
+
+- [CSRF in React Router Action/Server Action Request Processing](https://github.com/remix-run/react-router/security/advisories/GHSA-h5cw-625j-3rxh)
+- [XSS via Open Redirects](https://github.com/remix-run/react-router/security/advisories/GHSA-2w69-qvjg-hvjx)
+- [React Router SSR XSS in ScrollRestoration](https://github.com/remix-run/react-router/security/advisories/GHSA-8v8x-cx79-35w7)
 
 ### Minor Changes
 
@@ -637,6 +651,12 @@ The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStr
 
 Date: 2025-11-13
 
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [Unexpected external redirect via untrusted paths](https://github.com/remix-run/react-router/security/advisories/GHSA-9jcx-v3wj-wh4m)
+
 ### Patch Changes
 
 - `react-router` - Properly handle ancestor thrown middleware errors before `next()` on fetcher submissions ([#14517](https://github.com/remix-run/react-router/pull/14517))
@@ -731,6 +751,12 @@ This release adds new `unstable_instrumentation` APIs that will allow you to add
 ## v7.9.4
 
 Date: 2025-10-08
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [Unauthorized file access when using `createFileSessionStorage()` with unsigned cookies](https://github.com/remix-run/react-router/security/advisories/GHSA-9583-h5hc-x8cw)
 
 ### What's Changed
 
@@ -919,6 +945,12 @@ Date: 2025-09-12
 ## v7.9.0
 
 Date: 2025-09-12
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [XSS via Meta component when generating script:ld+json tags](https://github.com/remix-run/react-router/security/advisories/GHSA-3cgp-3xvw-98x8)
 
 ### What's Changed
 
@@ -2964,6 +2996,12 @@ async function fakeGetSlugsFromCms() {
 
 Date: 2026-01-07
 
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [XSS via Open Redirects](https://github.com/remix-run/react-router/security/advisories/GHSA-2w69-qvjg-hvjx)
+
 ### Patch Changes
 
 - Validate redirect locations ([#14707](https://github.com/remix-run/react-router/pull/14707))
@@ -2973,6 +3011,12 @@ Date: 2026-01-07
 ## v6.30.2
 
 Date: 2025-11-13
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [Unexpected external redirect via untrusted paths](https://github.com/remix-run/react-router/security/advisories/GHSA-9jcx-v3wj-wh4m)
 
 ### Patch Changes
 
