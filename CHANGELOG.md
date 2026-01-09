@@ -14,6 +14,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 - [React Router Releases](#react-router-releases)
   - [v6.30.3](#v6303)
+    - [Security Notice](#security-notice)
     - [Patch Changes](#patch-changes)
   - [v6.30.2](#v6302)
     - [Patch Changes](#patch-changes-1)
@@ -235,6 +236,12 @@ Date: YYYY-MM-DD
 ## v6.30.3
 
 Date: 2026-01-07
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [XSS via Open Redirects](https://github.com/remix-run/react-router/security/advisories/GHSA-2w69-qvjg-hvjx)
 
 ### Patch Changes
 
