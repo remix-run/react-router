@@ -2,4 +2,4 @@
 "@react-router/fs-routes": patch
 ---
 
-Resolve route file outside of app directory relative to app directory
+Fix route file paths when routes directory is outside of the app directory
