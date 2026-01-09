@@ -1,28 +1,36 @@
-[![npm package][npm-badge]][npm] [![build][build-badge]][build]
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <title>Highcharts Chart - SDN News</title>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <style>
+        #container { height: 400px; max-width: 800px; margin: 0 auto; }
+        .button-row { text-align: center; margin-top: 20px; }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div class="button-row">
+        <button id="large">Large</button>
+        <button id="small">Small</button>
+    </div>
+    <script>
+        const chart = Highcharts.chart('container', {
+            title: { text: 'Highcharts responsive chart' },
+            series: [{
+                name: 'Data 1',
+                data: [1, 4, 3, 4, 2]
+            }, {
+                name: 'Data 2',
+                data: [6, 4, 2, 1, 3]
+            }]
+        });
+        document.getElementById('small').addEventListener('click', () => { chart.setSize(400, 300); });
+        document.getElementById('large').addEventListener('click', () => { chart.setSize(600, 300); });
+    </script>
+</body>
+</html>
 
-[npm-badge]: https://img.shields.io/npm/v/react-router-dom.svg
-[npm]: https://www.npmjs.org/package/react-router-dom
-[build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test.yml?branch=dev&style=square
-[build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
-
-React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or minimally as a library with your own architecture.
-
-- [Getting Started - Framework](https://reactrouter.com/start/framework/installation)
-- [Getting Started - Library](https://reactrouter.com/start/library/installation)
-- [Upgrade from v6](https://reactrouter.com/upgrading/v6)
-- [Upgrade from Remix](https://reactrouter.com/upgrading/remix)
-- [Changelog](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md)
-
-## Packages
-
-- [`react-router`](./packages/react-router)
-- [`@react-router/dev`](./packages/react-router-dev)
-- [`@react-router/node`](./packages/react-router-node)
-- [`@react-router/cloudflare`](./packages/react-router-cloudflare)
-- [`@react-router/serve`](./packages/react-router-serve)
-- [`@react-router/fs-routes`](./packages/react-router-fs-routes)
-
-## Previous Versions
-
-- [v6](https://reactrouter.com/v6)
-- [v5](https://v5.reactrouter.com/)
