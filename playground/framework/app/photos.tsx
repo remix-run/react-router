@@ -63,7 +63,7 @@ export function ImageGallery() {
         <Link
           key={photo.id}
           to={`/images/${photo.id}`}
-          rewrite={`/?photo=${photo.id}`}
+          unstable_rewrite={`/?photo=${photo.id}`}
         >
           <img
             src={photo.url}

@@ -22,7 +22,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
           <Link
             key={image.id}
             to={`/images/${image.id}`}
-            rewrite={`/gallery?image=${image.id}`}
+            unstable_rewrite={`/gallery?image=${image.id}`}
           >
             <img src={image.url} alt={image.alt} />
           </Link>

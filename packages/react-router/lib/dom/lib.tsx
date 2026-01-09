@@ -1200,7 +1200,7 @@ export interface LinkProps
    *          <Link
    *            key={image.id}
    *            to={`/images/${image.id}`}
-   *            rewrite={`/gallery?image=${image.id}`}
+   *            unstable_rewrite={`/gallery?image=${image.id}`}
    *          >
    *            <img src={image.url} alt={image.alt} />
    *          </Link>
