@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.23.2
+
+### Patch Changes
+
+- Validate redirect locations ([#14707](https://github.com/remix-run/react-router/pull/14707))
+
 ## 1.23.1
 
 ### Patch Changes
