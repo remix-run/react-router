@@ -147,7 +147,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.0-canary-b061b597-20251212(eslint@8.57.0)
+        version: 7.1.0-canary-d6cae440-20260106(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -1027,8 +1027,8 @@ importers:
         specifier: workspace:*
         version: link:../react-router-node
       '@remix-run/node-fetch-server':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^0.13.0
+        version: 0.13.0
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -1323,6 +1323,34 @@ importers:
       wireit:
         specifier: 'catalog:'
         version: 0.14.9
+
+  playground/data:
+    dependencies:
+      react:
+        specifier: 'catalog:'
+        version: 19.2.3
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.3(react@19.2.3)
+      react-router:
+        specifier: 'workspace:'
+        version: link:../../packages/react-router
+    devDependencies:
+      '@types/react':
+        specifier: ^18.0.27
+        version: 18.2.18
+      '@types/react-dom':
+        specifier: ^18.0.10
+        version: 18.2.7
+      '@vitejs/plugin-react':
+        specifier: ^4
+        version: 4.5.2(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+      typescript:
+        specifier: 'catalog:'
+        version: 5.4.5
+      vite:
+        specifier: 6.4.1
+        version: 6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
 
   playground/framework:
     dependencies:
@@ -3567,8 +3595,8 @@ packages:
   '@remix-run/node-fetch-server@0.12.0':
     resolution: {integrity: sha512-oeg8w8aJJSuq1fCx85jCkcgTfI6On7sKwWVSO4/OW5AvTBuosAIwnuBd/LYeU/I7lYPOTW2NXhUfyfpyeexs4w==}
 
-  '@remix-run/node-fetch-server@0.9.0':
-    resolution: {integrity: sha512-SoLMv7dbH+njWzXnOY6fI08dFMI5+/dQ+vY3n8RnnbdG7MdJEgiP28Xj/xWlnRnED/aB6SFw56Zop+LbmaaKqA==}
+  '@remix-run/node-fetch-server@0.13.0':
+    resolution: {integrity: sha512-1EsNo0ZpgXu/90AWoRZf/oE3RVTUS80tiTUpt+hv5pjtAkw7icN4WskDwz/KdAw5ARbJLMhZBrO1NqThmy/McA==}
 
   '@remix-run/web-blob@3.1.0':
     resolution: {integrity: sha512-owGzFLbqPH9PlKb8KvpNJ0NO74HWE2euAn61eEiyCXX/oteoVzTVSN8mpLgDjaxBf2btj5/nUllSUgpyd6IH6g==}
@@ -5587,8 +5615,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.0-canary-b061b597-20251212:
-    resolution: {integrity: sha512-tSQTLvkBVbN4rZZZjGIDeUVFgNrY8/hqU6mteRetyCuLYCP92r0x8hetyshU1jInpMQxeJitpOox8A2uMAIrrg==}
+  eslint-plugin-react-hooks@7.1.0-canary-d6cae440-20260106:
+    resolution: {integrity: sha512-uIHYvMstCMzczNT658m/AvxiHZA77RIyU8vZpyixi8YfZXiPLIaKZEhqt8ce3OLwnaqISYoyPtkpxPtk6Z5Ydw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9064,10 +9092,12 @@ packages:
   whatwg-encoding@2.0.0:
     resolution: {integrity: sha512-p41ogyeMUrw3jWclHWTQg1k05DSVXPLcVxRTYsXUk+ZooOCZLcoYgPZ/HL/D/N+uQPOtcp1me1WhBEaX02mhWg==}
     engines: {node: '>=12'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
@@ -11121,7 +11151,7 @@ snapshots:
 
   '@remix-run/node-fetch-server@0.12.0': {}
 
-  '@remix-run/node-fetch-server@0.9.0': {}
+  '@remix-run/node-fetch-server@0.13.0': {}
 
   '@remix-run/web-blob@3.1.0':
     dependencies:
@@ -13605,7 +13635,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@7.1.0-canary-b061b597-20251212(eslint@8.57.0):
+  eslint-plugin-react-hooks@7.1.0-canary-d6cae440-20260106(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7

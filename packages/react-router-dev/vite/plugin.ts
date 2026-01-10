@@ -15,7 +15,6 @@ import {
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
-import { sendResponse } from "@remix-run/node-fetch-server";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
@@ -1673,10 +1672,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   nodeReq,
                   nodeRes,
                 ) => {
-                  let req = fromNodeRequest(nodeReq, nodeRes);
+                  let req = await fromNodeRequest(nodeReq, nodeRes);
                   let res = await handler(
                     req,
                     await reactRouterDevLoadContext(req),
+                  );
+                  // Async import here to allow ESM only module on Node 20.18.
+                  // TODO(v8): Can move to a normal import when Node 20 support
+                  const { sendResponse } = await import(
+                    "@remix-run/node-fetch-server"
                   );
                   await sendResponse(nodeRes, res);
                 };
@@ -1717,10 +1721,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 nodeReq,
                 nodeRes,
               ) => {
-                let req = fromNodeRequest(nodeReq, nodeRes);
+                let req = await fromNodeRequest(nodeReq, nodeRes);
                 let res = await handler(
                   req,
                   await reactRouterDevLoadContext(req),
+                );
+
+                // Async import here to allow ESM only module on Node 20.18.
+                // TODO(v8): Can move to a normal import when Node 20 support
+                const { sendResponse } = await import(
+                  "@remix-run/node-fetch-server"
                 );
                 await sendResponse(nodeRes, res);
               };

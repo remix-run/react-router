@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.11.0",
+  "version": "7.12.0",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -77,7 +77,7 @@
     "@babel/traverse": "^7.27.7",
     "@babel/types": "^7.27.7",
     "@react-router/node": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.9.0",
+    "@remix-run/node-fetch-server": "^0.13.0",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
     "chokidar": "^4.0.0",
