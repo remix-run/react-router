@@ -281,6 +281,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
       {typeof criticalCss === "string" ? (
         <style
           {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: criticalCss }}
         />
       ) : null}
