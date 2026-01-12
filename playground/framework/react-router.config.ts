@@ -4,5 +4,5 @@ export default {
   future: {
     unstable_subResourceIntegrity: true,
   },
-  ssr: true,
+  ssr: false,
 } satisfies Config;

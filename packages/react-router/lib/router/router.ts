@@ -1536,7 +1536,18 @@ export function createRouter(init: RouterInit): Router {
             opts?.relative,
           ),
         )
-      : undefined;
+      : currentLocation.rewrite
+        ? init.history.encodeLocation(
+            normalizeTo(
+              currentLocation.rewrite,
+              state.matches,
+              basename,
+              to,
+              opts?.fromRouteId,
+              opts?.relative,
+            ),
+          )
+        : undefined;
 
     let nextLocation = createLocation(
       currentLocation,

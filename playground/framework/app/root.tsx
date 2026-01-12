@@ -5,9 +5,11 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  let { key, ...location } = useLocation();
   return (
     <html lang="en">
       <head>
@@ -18,18 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ul>
-          <li>
-            <Link prefetch="intent" to="/">
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link prefetch="intent" to="/products/abc">
-              Product
-            </Link>
-          </li>
-        </ul>
+        <pre>useLocation: {JSON.stringify(location)}</pre>
         {children}
         <ScrollRestoration />
         <Scripts />
