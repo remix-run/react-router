@@ -213,8 +213,11 @@ export type ReactRouterConfig = {
   ssr?: boolean;
 
   /**
-   * The allowed origins for actions / mutations. Does not apply to routes
+   * The allowed origin hosts for actions / mutations. Does not apply to routes
    * without a component. micromatch glob patterns are supported.
+   *
+   * Do not specify the scheme, only hosts are supported (e.g. example.com instead
+   * of https://example.com).
    */
   allowedActionOrigins?: string[];
 };
