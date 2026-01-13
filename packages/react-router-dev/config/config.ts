@@ -213,8 +213,44 @@ export type ReactRouterConfig = {
   ssr?: boolean;
 
   /**
-   * The allowed origins for actions / mutations. Does not apply to routes
-   * without a component. micromatch glob patterns are supported.
+   * An array of allowed origins for action submissions to UI routes (does not apply
+   * to resource routes). Supports micromatch glob patterns (`*` to match one segment,
+   * `**` to match multiple).
+   *
+   * ```tsx
+   * export default {
+   *   allowedActionOrigins: [
+   *     "example.com",
+   *     "*.example.com", // sub.example.som
+   *     "**.example.com", // sub.domain.example.com
+   *   ],
+   * } satisfies Config;
+   * ```
+   *
+   * If you need to set this value at runtime, you can do in by setting the value
+   * on the server build in your custom server. For example, when using `express`:
+   *
+   * ```ts
+   * import express from "express";
+   * import { createRequestHandler } from "@react-router/express";
+   * import type { ServerBuild } from "react-router";
+   *
+   * export const app = express();
+   *
+   * async function getBuild() {
+   *   let build: ServerBuild = await import(
+   *     "virtual:react-router/server-build"
+   *   );
+   *   return {
+   *     ...build,
+   *     allowedActionOrigins:
+   *       process.env.NODE_ENV === "development"
+   *         ? undefined
+   *         : ["staging.example.com", "www.example.com"],
+   *   };
+   * }
+   *
+   * app.use(createRequestHandler({ build: getBuild }));
    */
   allowedActionOrigins?: string[];
 };
