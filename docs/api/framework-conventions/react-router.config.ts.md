@@ -32,7 +32,7 @@ export default {
 
 ### `allowedActionOrigins`
 
-An array of allowed origins for action submissions to UI routes (does not apply to resource routes). Supports micromatch glob patterns (`*` to match one segment, `**` to match multiple).
+An array of allowed origin hosts for action submissions to UI routes (does not apply to resource routes). Supports micromatch glob patterns (`*` to match one segment, `**` to match multiple).
 
 ```tsx filename=react-router.config.ts
 export default {
