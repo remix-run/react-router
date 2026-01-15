@@ -38,7 +38,7 @@ An array of allowed origin hosts for action submissions to UI routes (does not a
 export default {
   allowedActionOrigins: [
     "example.com",
-    "*.example.com", // sub.example.som
+    "*.example.com", // sub.example.com
     "**.example.com", // sub.domain.example.com
   ],
 } satisfies Config;

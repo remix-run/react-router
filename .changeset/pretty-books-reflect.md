@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Fix `allowedActionOrigins` glob check so `**` matches all domains
+Loosen `allowedActionOrigins` glob check so `**` matches all domains

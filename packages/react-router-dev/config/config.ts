@@ -213,7 +213,7 @@ export type ReactRouterConfig = {
   ssr?: boolean;
 
   /**
-   * An array of allowed origins for action submissions to UI routes (does not apply
+   * An array of allowed origin hosts for action submissions to UI routes (does not apply
    * to resource routes). Supports micromatch glob patterns (`*` to match one segment,
    * `**` to match multiple).
    *
@@ -221,7 +221,7 @@ export type ReactRouterConfig = {
    * export default {
    *   allowedActionOrigins: [
    *     "example.com",
-   *     "*.example.com", // sub.example.som
+   *     "*.example.com", // sub.example.com
    *     "**.example.com", // sub.domain.example.com
    *   ],
    * } satisfies Config;
