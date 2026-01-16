@@ -2088,6 +2088,8 @@ export function createRouter(init: RouterInit): Router {
             flushSync,
           },
         );
+      } else if (initialMatchesIsFOW) {
+        updateState({ navigation: loadingNavigation }, { flushSync });
       }
 
       let discoverResult = await discoverRoutes(
