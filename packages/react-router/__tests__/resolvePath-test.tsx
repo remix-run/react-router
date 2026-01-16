@@ -63,6 +63,32 @@ describe("resolvePath", () => {
     spy.mockRestore();
   });
 
+  it("handles relative paths with an embedded colon", () => {
+    expect(resolvePath("foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("./foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("../foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("foo:bar", "/path")).toMatchObject({
+      pathname: "/path/foo:bar",
+    });
+
+    expect(resolvePath("./foo:bar", "/path")).toMatchObject({
+      pathname: "/path/foo:bar",
+    });
+
+    expect(resolvePath("../foo:bar", "/path")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+  });
+
   it('ignores trailing slashes on the "from" pathname when resolving relative paths', () => {
     expect(resolvePath("../search", "/inbox/")).toMatchObject({
       pathname: "/search",
