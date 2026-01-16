@@ -788,6 +788,17 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
       return null;
     }
 
+    // We cannot support history-state-driven rewrites with SSR, so if a hard
+    // reload is performed we remove the rewrite and hydrate according to the
+    // browser URL
+    let rewriteScript = ssr
+      ? [
+          "if (window.history.state && window.history.state.rewrite) {",
+          "window.history.replaceState({ ...window.history.state, rewrite: undefined }, null);",
+          "}",
+        ].join("")
+      : "";
+
     let streamScript =
       "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
@@ -796,7 +807,11 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
       "}).pipeThrough(new TextEncoderStream());";
 
     let contextScript = staticContext
-      ? `window.__reactRouterContext = ${serverHandoffString};${streamScript}`
+      ? [
+          `window.__reactRouterContext = ${serverHandoffString};`,
+          rewriteScript,
+          streamScript,
+        ].join("\n")
       : " ";
 
     let routeModulesScript = !isStatic

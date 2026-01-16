@@ -604,7 +604,15 @@ export function setup({
       return helpers;
     }
 
-    helpers = getNavigationHelpers(href, navigationId);
+    helpers = getNavigationHelpers(
+      // @ts-expect-error - rewrite is a new option
+      opts?.unstable_rewrite
+        ? typeof opts.unstable_rewrite === "string"
+          ? opts.unstable_rewrite
+          : ""
+        : href,
+      navigationId,
+    );
     shims?.forEach((routeId) =>
       shimHelper(helpers.loaders, "navigation", "loader", routeId),
     );

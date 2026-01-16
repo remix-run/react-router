@@ -724,6 +724,16 @@ export function RouterProvider({
     [router, navigator, basename, onError],
   );
 
+  let uiLocation = state.location.rewrite || state.location;
+  if (state.location.rewrite) {
+    uiLocation = {
+      ...state.location,
+      pathname: state.location.rewrite.pathname,
+      search: state.location.rewrite.search,
+      hash: state.location.rewrite.hash,
+    };
+  }
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -738,7 +748,7 @@ export function RouterProvider({
             <ViewTransitionContext.Provider value={vtContext}>
               <Router
                 basename={basename}
-                location={state.location}
+                location={uiLocation}
                 navigationType={state.historyAction}
                 navigator={navigator}
                 unstable_useTransitions={unstable_useTransitions}
@@ -1387,6 +1397,7 @@ export function Router({
     hash = "",
     state = null,
     key = "default",
+    rewrite,
   } = locationProp;
 
   let locationContext = React.useMemo(() => {
@@ -1403,10 +1414,11 @@ export function Router({
         hash,
         state,
         key,
+        rewrite,
       },
       navigationType,
     };
-  }, [basename, pathname, search, hash, state, key, navigationType]);
+  }, [basename, pathname, search, hash, state, key, rewrite, navigationType]);
 
   warning(
     locationContext != null,

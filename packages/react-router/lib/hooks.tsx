@@ -935,6 +935,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
+            rewrite: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,
