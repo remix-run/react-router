@@ -43,12 +43,16 @@ export async function singleFetchAction(
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
-    throwIfPotentialCSRFAttack(
-      request.headers,
-      Array.isArray(build.allowedActionOrigins)
-        ? build.allowedActionOrigins
-        : [],
-    );
+    try {
+      throwIfPotentialCSRFAttack(
+        request.headers,
+        Array.isArray(build.allowedActionOrigins)
+          ? build.allowedActionOrigins
+          : [],
+      );
+    } catch (e) {
+      return handleQueryError(new Error("Bad Request"), 400);
+    }
 
     let handlerRequest = new Request(handlerUrl, {
       method: request.method,
@@ -85,13 +89,13 @@ export async function singleFetchAction(
     return isResponse(result) ? result : staticContextToResponse(result);
   }
 
-  function handleQueryError(error: unknown) {
+  function handleQueryError(error: unknown, status = 500) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs
     return generateSingleFetchResponse(request, build, serverMode, {
       result: { error },
       headers: new Headers(),
-      status: 500,
+      status,
     });
   }
 
