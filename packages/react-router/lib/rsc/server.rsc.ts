@@ -805,7 +805,11 @@ async function generateRenderResponse(
         let formState: unknown;
         let skipRevalidation = false;
         if (request.method === "POST") {
-          throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+          try {
+            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+          } catch (e) {
+            return new Response("Bad Request", { status: 400 });
+          }
 
           ctx.runningAction = true;
           let result = await processServerAction(
