@@ -638,14 +638,14 @@ export type LazyRouteDefinition<R extends AgnosticRouteObject> =
  * Base RouteObject with common props shared by all types of routes
  */
 type AgnosticBaseRouteObject = {
-  caseSensitive?: boolean;
-  path?: string;
-  id?: string;
-  middleware?: MiddlewareFunction[];
-  loader?: LoaderFunction | boolean;
-  action?: ActionFunction | boolean;
-  hasErrorBoundary?: boolean;
-  shouldRevalidate?: ShouldRevalidateFunction;
+  caseSensitive?: boolean | undefined;
+  path?: string | undefined;
+  id?: string | undefined;
+  middleware?: MiddlewareFunction[] | undefined;
+  loader?: LoaderFunction | boolean | undefined;
+  action?: ActionFunction | boolean | undefined;
+  hasErrorBoundary?: boolean | undefined;
+  shouldRevalidate?: ShouldRevalidateFunction | undefined;
   handle?: any;
   lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
 };
