@@ -138,9 +138,10 @@ export function encode(
     plugins?: EncodePlugin[];
     postPlugins?: EncodePlugin[];
     signal?: AbortSignal;
+    onComplete?: () => void;
   },
 ) {
-  const { plugins, postPlugins, signal } = options ?? {};
+  const { plugins, postPlugins, signal, onComplete } = options ?? {};
 
   const encoder: ThisEncode = {
     deferred: {},
@@ -274,6 +275,7 @@ export function encode(
       }
       await Promise.all(Object.values(encoder.deferred));
 
+      onComplete?.();
       controller.close();
     },
   });
