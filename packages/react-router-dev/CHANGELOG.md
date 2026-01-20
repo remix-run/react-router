@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.13.0-pre.0
+
+### Patch Changes
+
+- Bump @remix-run/node-fetch-server dep ([#14704](https://github.com/remix-run/react-router/pull/14704))
+- Updated dependencies:
+  - `react-router@7.13.0-pre.0`
+  - `@react-router/node@7.13.0-pre.0`
+  - `@react-router/serve@7.13.0-pre.0`
+
 ## 7.12.0
 
 ### Minor Changes

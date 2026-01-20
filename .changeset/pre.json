@@ -35,5 +35,13 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "blue-parrots-grin",
+    "honest-planes-glow",
+    "new-humans-bow",
+    "odd-crabs-sing",
+    "pretty-books-reflect",
+    "red-pugs-itch",
+    "thick-meals-worry"
+  ]
 }

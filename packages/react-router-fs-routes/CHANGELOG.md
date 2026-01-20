@@ -1,5 +1,13 @@
 # `@react-router/fs-routes`
 
+## 7.13.0-pre.0
+
+### Patch Changes
+
+- Fix route file paths when routes directory is outside of the app directory ([#13937](https://github.com/remix-run/react-router/pull/13937))
+- Updated dependencies:
+  - `@react-router/dev@7.13.0-pre.0`
+
 ## 7.12.0
 
 ### Patch Changes
