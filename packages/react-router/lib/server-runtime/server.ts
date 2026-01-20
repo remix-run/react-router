@@ -483,12 +483,17 @@ async function handleDocumentRequest(
 ) {
   try {
     if (request.method === "POST") {
-      throwIfPotentialCSRFAttack(
-        request.headers,
-        Array.isArray(build.allowedActionOrigins)
-          ? build.allowedActionOrigins
-          : [],
-      );
+      try {
+        throwIfPotentialCSRFAttack(
+          request.headers,
+          Array.isArray(build.allowedActionOrigins)
+            ? build.allowedActionOrigins
+            : [],
+        );
+      } catch (e) {
+        handleError(e);
+        return new Response("Bad Request", { status: 400 });
+      }
     }
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
