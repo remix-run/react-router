@@ -14,6 +14,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 - [React Router Releases](#react-router-releases)
   - [v7.12.0](#v7120)
+    - [Security Notice](#security-notice)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -37,6 +38,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-3)
     - [Unstable Changes](#unstable-changes-2)
   - [v7.9.6](#v796)
+    - [Security Notice](#security-notice-1)
     - [Patch Changes](#patch-changes-4)
     - [Unstable Changes](#unstable-changes-3)
   - [v7.9.5](#v795)
@@ -45,6 +47,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-5)
     - [Unstable Changes](#unstable-changes-4)
   - [v7.9.4](#v794)
+    - [Security Notice](#security-notice-2)
     - [What's Changed](#whats-changed-3)
       - [`useRoute()` (unstable)](#useroute-unstable)
     - [Patch Changes](#patch-changes-6)
@@ -60,6 +63,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.9.1](#v791)
     - [Patch Changes](#patch-changes-9)
   - [v7.9.0](#v790)
+    - [Security Notice](#security-notice-3)
     - [What's Changed](#whats-changed-5)
       - [Stable Middleware and Context APIs](#stable-middleware-and-context-apis)
     - [Minor Changes](#minor-changes-3)
@@ -107,7 +111,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.5.3](#v753)
     - [Patch Changes](#patch-changes-20)
   - [v7.5.2](#v752)
-    - [Security Notice](#security-notice)
+    - [Security Notice](#security-notice-4)
     - [Patch Changes](#patch-changes-21)
   - [v7.5.1](#v751)
     - [Patch Changes](#patch-changes-22)
@@ -120,7 +124,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Unstable Changes](#unstable-changes-16)
     - [Changes by Package](#changes-by-package-3)
   - [v7.4.1](#v741)
-    - [Security Notice](#security-notice-1)
+    - [Security Notice](#security-notice-5)
     - [Patch Changes](#patch-changes-24)
     - [Unstable Changes](#unstable-changes-17)
   - [v7.4.0](#v740)
@@ -184,200 +188,204 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-36)
     - [Changes by Package](#changes-by-package-8)
 - [React Router v6 Releases](#react-router-v6-releases)
-  - [v6.30.2](#v6302)
+  - [v6.30.3](#v6303)
+    - [Security Notice](#security-notice-6)
     - [Patch Changes](#patch-changes-37)
-  - [v6.30.1](#v6301)
+  - [v6.30.2](#v6302)
+    - [Security Notice](#security-notice-7)
     - [Patch Changes](#patch-changes-38)
+  - [v6.30.1](#v6301)
+    - [Patch Changes](#patch-changes-39)
   - [v6.30.0](#v6300)
     - [Minor Changes](#minor-changes-13)
-    - [Patch Changes](#patch-changes-39)
+    - [Patch Changes](#patch-changes-40)
   - [v6.29.0](#v6290)
     - [Minor Changes](#minor-changes-14)
-    - [Patch Changes](#patch-changes-40)
-  - [v6.28.2](#v6282)
     - [Patch Changes](#patch-changes-41)
-  - [v6.28.1](#v6281)
+  - [v6.28.2](#v6282)
     - [Patch Changes](#patch-changes-42)
+  - [v6.28.1](#v6281)
+    - [Patch Changes](#patch-changes-43)
   - [v6.28.0](#v6280)
     - [What's Changed](#whats-changed-11)
     - [Minor Changes](#minor-changes-15)
-    - [Patch Changes](#patch-changes-43)
+    - [Patch Changes](#patch-changes-44)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-12)
       - [Stabilized APIs](#stabilized-apis)
     - [Minor Changes](#minor-changes-16)
-    - [Patch Changes](#patch-changes-44)
-  - [v6.26.2](#v6262)
     - [Patch Changes](#patch-changes-45)
-  - [v6.26.1](#v6261)
+  - [v6.26.2](#v6262)
     - [Patch Changes](#patch-changes-46)
+  - [v6.26.1](#v6261)
+    - [Patch Changes](#patch-changes-47)
   - [v6.26.0](#v6260)
     - [Minor Changes](#minor-changes-17)
-    - [Patch Changes](#patch-changes-47)
-  - [v6.25.1](#v6251)
     - [Patch Changes](#patch-changes-48)
+  - [v6.25.1](#v6251)
+    - [Patch Changes](#patch-changes-49)
   - [v6.25.0](#v6250)
     - [What's Changed](#whats-changed-13)
       - [Stabilized `v7_skipActionErrorRevalidation`](#stabilized-v7_skipactionerrorrevalidation)
     - [Minor Changes](#minor-changes-18)
-    - [Patch Changes](#patch-changes-49)
-  - [v6.24.1](#v6241)
     - [Patch Changes](#patch-changes-50)
+  - [v6.24.1](#v6241)
+    - [Patch Changes](#patch-changes-51)
   - [v6.24.0](#v6240)
     - [What's Changed](#whats-changed-14)
       - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
     - [Minor Changes](#minor-changes-19)
-    - [Patch Changes](#patch-changes-51)
-  - [v6.23.1](#v6231)
     - [Patch Changes](#patch-changes-52)
+  - [v6.23.1](#v6231)
+    - [Patch Changes](#patch-changes-53)
   - [v6.23.0](#v6230)
     - [What's Changed](#whats-changed-15)
       - [Data Strategy (unstable)](#data-strategy-unstable)
       - [Skip Action Error Revalidation (unstable)](#skip-action-error-revalidation-unstable)
     - [Minor Changes](#minor-changes-20)
   - [v6.22.3](#v6223)
-    - [Patch Changes](#patch-changes-53)
-  - [v6.22.2](#v6222)
     - [Patch Changes](#patch-changes-54)
-  - [v6.22.1](#v6221)
+  - [v6.22.2](#v6222)
     - [Patch Changes](#patch-changes-55)
+  - [v6.22.1](#v6221)
+    - [Patch Changes](#patch-changes-56)
   - [v6.22.0](#v6220)
     - [What's Changed](#whats-changed-16)
       - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
     - [Minor Changes](#minor-changes-21)
-    - [Patch Changes](#patch-changes-56)
-  - [v6.21.3](#v6213)
     - [Patch Changes](#patch-changes-57)
-  - [v6.21.2](#v6212)
+  - [v6.21.3](#v6213)
     - [Patch Changes](#patch-changes-58)
-  - [v6.21.1](#v6211)
+  - [v6.21.2](#v6212)
     - [Patch Changes](#patch-changes-59)
+  - [v6.21.1](#v6211)
+    - [Patch Changes](#patch-changes-60)
   - [v6.21.0](#v6210)
     - [What's Changed](#whats-changed-17)
       - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
       - [Partial Hydration](#partial-hydration)
     - [Minor Changes](#minor-changes-22)
-    - [Patch Changes](#patch-changes-60)
-  - [v6.20.1](#v6201)
     - [Patch Changes](#patch-changes-61)
+  - [v6.20.1](#v6201)
+    - [Patch Changes](#patch-changes-62)
   - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-23)
-    - [Patch Changes](#patch-changes-62)
+    - [Patch Changes](#patch-changes-63)
   - [v6.19.0](#v6190)
     - [What's Changed](#whats-changed-18)
       - [`unstable_flushSync` API](#unstable_flushsync-api)
     - [Minor Changes](#minor-changes-24)
-    - [Patch Changes](#patch-changes-63)
+    - [Patch Changes](#patch-changes-64)
   - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-19)
       - [New Fetcher APIs](#new-fetcher-apis)
       - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
     - [Minor Changes](#minor-changes-25)
-    - [Patch Changes](#patch-changes-64)
+    - [Patch Changes](#patch-changes-65)
   - [v6.17.0](#v6170)
     - [What's Changed](#whats-changed-20)
       - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-26)
-    - [Patch Changes](#patch-changes-65)
+    - [Patch Changes](#patch-changes-66)
   - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-27)
-    - [Patch Changes](#patch-changes-66)
+    - [Patch Changes](#patch-changes-67)
   - [v6.15.0](#v6150)
     - [Minor Changes](#minor-changes-28)
-    - [Patch Changes](#patch-changes-67)
-  - [v6.14.2](#v6142)
     - [Patch Changes](#patch-changes-68)
-  - [v6.14.1](#v6141)
+  - [v6.14.2](#v6142)
     - [Patch Changes](#patch-changes-69)
+  - [v6.14.1](#v6141)
+    - [Patch Changes](#patch-changes-70)
   - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-21)
       - [JSON/Text Submissions](#jsontext-submissions)
     - [Minor Changes](#minor-changes-29)
-    - [Patch Changes](#patch-changes-70)
+    - [Patch Changes](#patch-changes-71)
   - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-22)
       - [`future.v7_startTransition`](#futurev7_starttransition)
     - [Minor Changes](#minor-changes-30)
-    - [Patch Changes](#patch-changes-71)
-  - [v6.12.1](#v6121)
     - [Patch Changes](#patch-changes-72)
+  - [v6.12.1](#v6121)
+    - [Patch Changes](#patch-changes-73)
   - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-23)
       - [`React.startTransition` support](#reactstarttransition-support)
     - [Minor Changes](#minor-changes-31)
-    - [Patch Changes](#patch-changes-73)
-  - [v6.11.2](#v6112)
     - [Patch Changes](#patch-changes-74)
-  - [v6.11.1](#v6111)
+  - [v6.11.2](#v6112)
     - [Patch Changes](#patch-changes-75)
+  - [v6.11.1](#v6111)
+    - [Patch Changes](#patch-changes-76)
   - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-32)
-    - [Patch Changes](#patch-changes-76)
+    - [Patch Changes](#patch-changes-77)
   - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-24)
     - [Minor Changes](#minor-changes-33)
       - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
-    - [Patch Changes](#patch-changes-77)
+    - [Patch Changes](#patch-changes-78)
   - [v6.9.0](#v690)
     - [What's Changed](#whats-changed-25)
       - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
       - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
     - [Minor Changes](#minor-changes-34)
-    - [Patch Changes](#patch-changes-78)
-  - [v6.8.2](#v682)
     - [Patch Changes](#patch-changes-79)
-  - [v6.8.1](#v681)
+  - [v6.8.2](#v682)
     - [Patch Changes](#patch-changes-80)
+  - [v6.8.1](#v681)
+    - [Patch Changes](#patch-changes-81)
   - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-35)
-    - [Patch Changes](#patch-changes-81)
+    - [Patch Changes](#patch-changes-82)
   - [v6.7.0](#v670)
     - [Minor Changes](#minor-changes-36)
-    - [Patch Changes](#patch-changes-82)
-  - [v6.6.2](#v662)
     - [Patch Changes](#patch-changes-83)
-  - [v6.6.1](#v661)
+  - [v6.6.2](#v662)
     - [Patch Changes](#patch-changes-84)
+  - [v6.6.1](#v661)
+    - [Patch Changes](#patch-changes-85)
   - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-26)
     - [Minor Changes](#minor-changes-37)
-    - [Patch Changes](#patch-changes-85)
+    - [Patch Changes](#patch-changes-86)
   - [v6.5.0](#v650)
     - [What's Changed](#whats-changed-27)
     - [Minor Changes](#minor-changes-38)
-    - [Patch Changes](#patch-changes-86)
-  - [v6.4.5](#v645)
     - [Patch Changes](#patch-changes-87)
-  - [v6.4.4](#v644)
+  - [v6.4.5](#v645)
     - [Patch Changes](#patch-changes-88)
-  - [v6.4.3](#v643)
+  - [v6.4.4](#v644)
     - [Patch Changes](#patch-changes-89)
-  - [v6.4.2](#v642)
+  - [v6.4.3](#v643)
     - [Patch Changes](#patch-changes-90)
-  - [v6.4.1](#v641)
+  - [v6.4.2](#v642)
     - [Patch Changes](#patch-changes-91)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-92)
   - [v6.4.0](#v640)
     - [What's Changed](#whats-changed-28)
       - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-92)
+    - [Patch Changes](#patch-changes-93)
   - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-39)
   - [v6.2.2](#v622)
-    - [Patch Changes](#patch-changes-93)
-  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-94)
+  - [v6.2.1](#v621)
+    - [Patch Changes](#patch-changes-95)
   - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-40)
-    - [Patch Changes](#patch-changes-95)
-  - [v6.1.1](#v611)
     - [Patch Changes](#patch-changes-96)
+  - [v6.1.1](#v611)
+    - [Patch Changes](#patch-changes-97)
   - [v6.1.0](#v610)
     - [Minor Changes](#minor-changes-41)
-    - [Patch Changes](#patch-changes-97)
-  - [v6.0.2](#v602)
     - [Patch Changes](#patch-changes-98)
-  - [v6.0.1](#v601)
+  - [v6.0.2](#v602)
     - [Patch Changes](#patch-changes-99)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-100)
   - [v6.0.0](#v600)
 
 </details>
@@ -408,6 +416,14 @@ Date: YYYY-MM-DD
 ## v7.12.0
 
 Date: 2026-01-07
+
+### Security Notice
+
+This release addresses 3 security vulnerabilities:
+
+- [CSRF in React Router Action/Server Action Request Processing](https://github.com/remix-run/react-router/security/advisories/GHSA-h5cw-625j-3rxh)
+- [XSS via Open Redirects](https://github.com/remix-run/react-router/security/advisories/GHSA-2w69-qvjg-hvjx)
+- [React Router SSR XSS in ScrollRestoration](https://github.com/remix-run/react-router/security/advisories/GHSA-8v8x-cx79-35w7)
 
 ### Minor Changes
 
@@ -635,6 +651,12 @@ The existing low-level `DataStrategyMatch.unstable_shouldCallHandler()`/`DataStr
 
 Date: 2025-11-13
 
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [Unexpected external redirect via untrusted paths](https://github.com/remix-run/react-router/security/advisories/GHSA-9jcx-v3wj-wh4m)
+
 ### Patch Changes
 
 - `react-router` - Properly handle ancestor thrown middleware errors before `next()` on fetcher submissions ([#14517](https://github.com/remix-run/react-router/pull/14517))
@@ -729,6 +751,12 @@ This release adds new `unstable_instrumentation` APIs that will allow you to add
 ## v7.9.4
 
 Date: 2025-10-08
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [Unauthorized file access when using `createFileSessionStorage()` with unsigned cookies](https://github.com/remix-run/react-router/security/advisories/GHSA-9583-h5hc-x8cw)
 
 ### What's Changed
 
@@ -917,6 +945,12 @@ Date: 2025-09-12
 ## v7.9.0
 
 Date: 2025-09-12
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [XSS via Meta component when generating script:ld+json tags](https://github.com/remix-run/react-router/security/advisories/GHSA-3cgp-3xvw-98x8)
 
 ### What's Changed
 
@@ -2958,9 +2992,31 @@ async function fakeGetSlugsFromCms() {
 
 # React Router v6 Releases
 
+## v6.30.3
+
+Date: 2026-01-07
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [XSS via Open Redirects](https://github.com/remix-run/react-router/security/advisories/GHSA-2w69-qvjg-hvjx)
+
+### Patch Changes
+
+- Validate redirect locations ([#14707](https://github.com/remix-run/react-router/pull/14707))
+
+**Full Changelog**: [`v6.30.2...v6.30.3`](https://github.com/remix-run/react-router/compare/react-router@6.30.2...react-router@6.30.3)
+
 ## v6.30.2
 
 Date: 2025-11-13
+
+### Security Notice
+
+This release addresses 1 security vulnerability:
+
+- [Unexpected external redirect via untrusted paths](https://github.com/remix-run/react-router/security/advisories/GHSA-9jcx-v3wj-wh4m)
 
 ### Patch Changes
 
