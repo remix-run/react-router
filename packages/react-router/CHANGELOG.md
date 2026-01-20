@@ -1,5 +1,18 @@
 # `react-router`
 
+## 7.13.0-pre.0
+
+### Minor Changes
+
+- Add `crossOrigin` prop to `Links` component ([#14687](https://github.com/remix-run/react-router/pull/14687))
+
+### Patch Changes
+
+- Fix double slash normalization for useNavigate colon urls ([#14718](https://github.com/remix-run/react-router/pull/14718))
+- Update failed origin checks to return a 400 status instead of a 500 ([#14737](https://github.com/remix-run/react-router/pull/14737))
+- Bugfix #14666: Inline criticalCss is missing nonce ([#14691](https://github.com/remix-run/react-router/pull/14691))
+- Loosen `allowedActionOrigins` glob check so `**` matches all domains ([#14722](https://github.com/remix-run/react-router/pull/14722))
+
 ## 7.12.0
 
 ### Minor Changes
