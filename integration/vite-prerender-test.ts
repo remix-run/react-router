@@ -3008,5 +3008,47 @@ test.describe("Prerendering", () => {
       );
       expect(requests).toEqual([]);
     });
+
+    test("Prerenders files in correct path with basename", async () => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            prerender: ["/", "/about"],
+            basename: "/base",
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import { Outlet, Scripts } from "react-router";
+            export function Layout({ children }) {
+              return (
+                <html><body>{children}<Scripts /></body></html>
+              );
+            }
+            export default function Root() {
+              return <Outlet />;
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            export function loader() { return "INDEX"; }
+            export default function Index() { return <h1>Index</h1>; }
+          `,
+          "app/routes/about.tsx": js`
+            export function loader() { return "ABOUT"; }
+            export default function About() { return <h1>About</h1>; }
+          `,
+        },
+      });
+
+      let clientDir = path.join(fixture.projectDir, "build", "client");
+      // basename should NOT create a subfolder - it's the deployment path, not build output path
+      expect(listAllFiles(clientDir).sort()).toEqual([
+        "_root.data",
+        "about.data",
+        "about/index.html",
+        "favicon.ico",
+        "index.html",
+      ]);
+    });
   });
 });
