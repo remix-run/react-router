@@ -296,7 +296,9 @@ describe("matchPath optional dynamic segments", () => {
   });
 
   it("should NOT match when pathname extends base path without separator (middle optional param)", () => {
-    expect(matchPath("/test_route/:part?/edit", "/test_route_more/edit")).toBeNull();
+    expect(
+      matchPath("/test_route/:part?/edit", "/test_route_more/edit"),
+    ).toBeNull();
   });
 
   it("should NOT match optional param when pathname has extra characters after base", () => {
@@ -318,10 +320,14 @@ describe("matchPath optional dynamic segments", () => {
   });
 
   it("should match a middle optional param with proper path separators", () => {
-    expect(matchPath("/test_route/:part?/edit", "/test_route/more/edit")).toMatchObject({
+    expect(
+      matchPath("/test_route/:part?/edit", "/test_route/more/edit"),
+    ).toMatchObject({
       params: { part: "more" },
     });
-    expect(matchPath("/test_route/:part?/edit", "/test_route/edit")).toMatchObject({
+    expect(
+      matchPath("/test_route/:part?/edit", "/test_route/edit"),
+    ).toMatchObject({
       params: { part: undefined },
     });
   });
