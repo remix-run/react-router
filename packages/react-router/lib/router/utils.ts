@@ -1492,9 +1492,25 @@ export function compilePath(
       .replace(/[\\.*+^${}|()[\]]/g, "\\$&") // Escape special regex chars
       .replace(
         /\/:([\w-]+)(\?)?/g,
-        (_: string, paramName: string, isOptional) => {
+        (
+          match: string,
+          paramName: string,
+          isOptional: string | undefined,
+          index: number,
+          str: string,
+        ) => {
           params.push({ paramName, isOptional: isOptional != null });
-          return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
+
+          if (isOptional) {
+            let nextChar = str.charAt(index + match.length);
+            if (nextChar && nextChar !== "/") {
+              return "/([^\\/]*)";
+            }
+
+            return "(?:/([^\\/]*))?";
+          }
+
+          return "/([^\\/]+)";
         },
       ) // Dynamic segment
       .replace(/\/([\w-]+)\?(\/|$)/g, "(/$1)?$2"); // Optional static segment

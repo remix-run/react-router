@@ -185,6 +185,10 @@ describe("path matching", () => {
     expect(
       matchPath("/sitemap/:lang?.xml", "/sitemap/.xml")?.params,
     ).toStrictEqual({ lang: undefined });
+    expect(matchPath("/sitemap/:lang?.xml", "/sitemap/en.xml")?.params).toStrictEqual(
+      { lang: "en" },
+    );
+    expect(matchPath("/sitemap/:lang?.xml", "/sitemap.xml")).toBeNull();
   });
 });
 
