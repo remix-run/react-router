@@ -1237,6 +1237,7 @@ export function _renderMatches(
   let renderFallback = false;
   let fallbackIndex = -1;
   if (dataRouterState) {
+    renderFallback = dataRouterState.renderFallback;
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
@@ -1252,9 +1253,8 @@ export function _renderMatches(
           (!errors || errors[match.route.id] === undefined);
         if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
-          // lazy, or has a loader that hasn't run yet).  Flag that we need to
-          // render a fallback and render up until the appropriate fallback
-          renderFallback = true;
+          // lazy, or has a loader that hasn't run yet) - render up until the
+          // appropriate fallback
           if (fallbackIndex >= 0) {
             renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
           } else {

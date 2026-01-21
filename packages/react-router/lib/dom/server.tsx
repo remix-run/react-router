@@ -435,6 +435,7 @@ export function createStaticRouter(
         actionData: context.actionData,
         errors: context.errors,
         initialized: true,
+        renderFallback: false,
         navigation: IDLE_NAVIGATION,
         restoreScrollPosition: null,
         preventScrollReset: false,
