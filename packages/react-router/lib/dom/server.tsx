@@ -12,7 +12,6 @@ import type {
   Router as DataRouter,
   RevalidationState,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
-  RouterState,
   StaticHandlerContext,
 } from "../router/router";
 import {
@@ -26,15 +25,14 @@ import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import { Router, mapRouteProperties } from "../components";
-import type { DataRouteObject, RouteObject } from "../context";
+import { DataRoutes, Router, mapRouteProperties } from "../components";
+import type { RouteObject } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,
   FetchersContext,
   ViewTransitionContext,
 } from "../context";
-import { useRoutesImpl } from "../hooks";
 import { escapeHtml } from "./ssr/markup";
 
 /**
@@ -212,6 +210,7 @@ export function StaticRouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
+                  isStatic={true}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -227,18 +226,6 @@ export function StaticRouterProvider({
       ) : null}
     </>
   );
-}
-
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: DataRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, undefined, future);
 }
 
 function serializeErrors(

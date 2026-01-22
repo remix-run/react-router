@@ -763,9 +763,12 @@ export function useRoutes(
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
-  dataRouterState?: DataRouter["state"],
-  onError?: ClientOnErrorFunction,
-  future?: DataRouter["future"],
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -917,9 +920,7 @@ export function useRoutesImpl(
         }),
       ),
     parentMatches,
-    dataRouterState,
-    onError,
-    future,
+    dataRouterOpts,
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -1182,10 +1183,15 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState: DataRouter["state"] | null = null,
-  onErrorHandler: ClientOnErrorFunction | null = null,
-  future: DataRouter["future"] | null = null,
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
+  let dataRouterState = dataRouterOpts?.state;
+
   if (matches == null) {
     if (!dataRouterState) {
       return null;
@@ -1236,7 +1242,7 @@ export function _renderMatches(
   // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (dataRouterState) {
+  if (dataRouterOpts && dataRouterState) {
     renderFallback = dataRouterState.renderFallback;
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
@@ -1255,6 +1261,9 @@ export function _renderMatches(
           // We found the first route that's not ready to render (waiting on
           // lazy, or has a loader that hasn't run yet) - render up until the
           // appropriate fallback
+          if (dataRouterOpts.isStatic) {
+            renderFallback = true;
+          }
           if (fallbackIndex >= 0) {
             renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
           } else {
@@ -1266,6 +1275,7 @@ export function _renderMatches(
     }
   }
 
+  let onErrorHandler = dataRouterOpts?.onError;
   let onError =
     dataRouterState && onErrorHandler
       ? (error: unknown, errorInfo?: React.ErrorInfo) => {
