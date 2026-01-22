@@ -13,7 +13,7 @@ import {
 } from "../flatRoutes";
 import { normalizeSlashes } from "../normalizeSlashes";
 
-let APP_DIR = path.join("test", "root", "app");
+let APP_DIR = path.posix.join("test", "root", "app");
 
 describe("flatRoutes", () => {
   describe("creates proper route paths", () => {
