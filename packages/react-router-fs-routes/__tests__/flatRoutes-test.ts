@@ -7,8 +7,8 @@ import type { RouteManifestEntry } from "../manifest";
 import {
   flatRoutes,
   flatRoutesUniversal,
-  getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
+  getRoutePathConflictErrorMessage,
   getRouteSegments,
 } from "../flatRoutes";
 import { normalizeSlashes } from "../normalizeSlashes";
@@ -654,7 +654,7 @@ describe("flatRoutes", () => {
   describe("doesn't warn when there's not a route collision", () => {
     let consoleError = jest
       .spyOn(global.console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     afterEach(consoleError.mockReset);
 
@@ -676,7 +676,7 @@ describe("flatRoutes", () => {
   describe("warns when there's a route collision", () => {
     let consoleError = jest
       .spyOn(global.console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     afterEach(consoleError.mockReset);
 
