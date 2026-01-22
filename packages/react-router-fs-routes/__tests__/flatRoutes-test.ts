@@ -86,7 +86,7 @@ describe("flatRoutes", () => {
 
     let manifest = flatRoutesUniversal(
       APP_DIR,
-      tests.map((t) => path.join(APP_DIR, "routes", t[0] + ".tsx")),
+      tests.map((t) => path.posix.join(APP_DIR, "routes", t[0] + ".tsx")),
     );
 
     for (let [input, expected] of tests) {
@@ -636,7 +636,7 @@ describe("flatRoutes", () => {
 
     let routeManifest = flatRoutesUniversal(
       APP_DIR,
-      files.map(([file]) => path.join(APP_DIR, file)),
+      files.map(([file]) => path.posix.join(APP_DIR, file)),
     );
     let routes = Object.values(routeManifest);
 
@@ -660,8 +660,8 @@ describe("flatRoutes", () => {
 
     test("same number of segments and the same dynamic segment index", () => {
       let testFiles = [
-        path.join(APP_DIR, "routes", "_user.$username.tsx"),
-        path.join(APP_DIR, "routes", "sneakers.$sneakerId.tsx"),
+        path.posix.join(APP_DIR, "routes", "_user.$username.tsx"),
+        path.posix.join(APP_DIR, "routes", "sneakers.$sneakerId.tsx"),
       ];
 
       let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -682,13 +682,13 @@ describe("flatRoutes", () => {
 
     test("index files", () => {
       let testFiles = [
-        path.join("routes", "_dashboard._index.tsx"),
-        path.join("routes", "_landing._index.tsx"),
-        path.join("routes", "_index.tsx"),
+        path.posix.join("routes", "_dashboard._index.tsx"),
+        path.posix.join("routes", "_landing._index.tsx"),
+        path.posix.join("routes", "_index.tsx"),
       ];
 
       // route manifest uses the full path
-      let fullPaths = testFiles.map((file) => path.join(APP_DIR, file));
+      let fullPaths = testFiles.map((file) => path.posix.join(APP_DIR, file));
 
       // this is for the expected error message,
       // which uses the relative path from the app directory internally
@@ -706,12 +706,12 @@ describe("flatRoutes", () => {
 
     test("folder/route.tsx matching folder.tsx", () => {
       let testFiles = [
-        path.join("routes", "dashboard", "route.tsx"),
-        path.join("routes", "dashboard.tsx"),
+        path.posix.join("routes", "dashboard", "route.tsx"),
+        path.posix.join("routes", "dashboard.tsx"),
       ];
 
       // route manifest uses the full path
-      let fullPaths = testFiles.map((file) => path.join(APP_DIR, file));
+      let fullPaths = testFiles.map((file) => path.posix.join(APP_DIR, file));
 
       // this is for the expected error message,
       // which uses the relative path from the app directory internally
@@ -732,11 +732,11 @@ describe("flatRoutes", () => {
 
     test("pathless layouts should not collide", () => {
       let testFiles = [
-        path.join(APP_DIR, "routes", "_a.tsx"),
-        path.join(APP_DIR, "routes", "_a._index.tsx"),
-        path.join(APP_DIR, "routes", "_a.a.tsx"),
-        path.join(APP_DIR, "routes", "_b.tsx"),
-        path.join(APP_DIR, "routes", "_b.b.tsx"),
+        path.posix.join(APP_DIR, "routes", "_a.tsx"),
+        path.posix.join(APP_DIR, "routes", "_a._index.tsx"),
+        path.posix.join(APP_DIR, "routes", "_a.a.tsx"),
+        path.posix.join(APP_DIR, "routes", "_b.tsx"),
+        path.posix.join(APP_DIR, "routes", "_b.b.tsx"),
       ];
 
       let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -748,11 +748,11 @@ describe("flatRoutes", () => {
 
       // When using folders and route.tsx files
       testFiles = [
-        path.join(APP_DIR, "routes", "_a", "route.tsx"),
-        path.join(APP_DIR, "routes", "_a._index", "route.tsx"),
-        path.join(APP_DIR, "routes", "_a.a", "route.tsx"),
-        path.join(APP_DIR, "routes", "_b", "route.tsx"),
-        path.join(APP_DIR, "routes", "_b.b", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "_a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "_a._index", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "_a.a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "_b", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "_b.b", "route.tsx"),
       ];
 
       routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -765,11 +765,11 @@ describe("flatRoutes", () => {
 
     test("nested pathless layouts should not collide", () => {
       let testFiles = [
-        path.join(APP_DIR, "routes", "nested._a.tsx"),
-        path.join(APP_DIR, "routes", "nested._a._index.tsx"),
-        path.join(APP_DIR, "routes", "nested._a.a.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.b.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a._index.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.a.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.b.tsx"),
       ];
 
       let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -781,11 +781,11 @@ describe("flatRoutes", () => {
 
       // When using folders and route.tsx files
       testFiles = [
-        path.join(APP_DIR, "routes", "nested._a", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._a._index", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._a.a", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._b", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.b", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a._index", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.b", "route.tsx"),
       ];
 
       routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -798,10 +798,10 @@ describe("flatRoutes", () => {
 
     test("legit collisions without nested pathless layouts should collide (paths)", () => {
       let testFiles = [
-        path.join(APP_DIR, "routes", "nested._a.tsx"),
-        path.join(APP_DIR, "routes", "nested._a.a.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.a.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.a.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.a.tsx"),
       ];
 
       let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -819,10 +819,10 @@ describe("flatRoutes", () => {
       // When using folders and route.tsx files
       consoleError.mockClear();
       testFiles = [
-        path.join(APP_DIR, "routes", "nested._a", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._a.a", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._b", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.a", "route.tsx"),
       ];
 
       routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -840,10 +840,10 @@ describe("flatRoutes", () => {
 
     test("legit collisions without nested pathless layouts should collide (index routes)", () => {
       let testFiles = [
-        path.join(APP_DIR, "routes", "nested._a.tsx"),
-        path.join(APP_DIR, "routes", "nested._a._index.tsx"),
-        path.join(APP_DIR, "routes", "nested._b.tsx"),
-        path.join(APP_DIR, "routes", "nested._b._index.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a._index.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b._index.tsx"),
       ];
 
       let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
@@ -861,10 +861,10 @@ describe("flatRoutes", () => {
       // When using folders and route.tsx files
       consoleError.mockClear();
       testFiles = [
-        path.join(APP_DIR, "routes", "nested._a", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._a._index", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._b", "route.tsx"),
-        path.join(APP_DIR, "routes", "nested._b._index", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._a._index", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b", "route.tsx"),
+        path.posix.join(APP_DIR, "routes", "nested._b._index", "route.tsx"),
       ];
 
       routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
