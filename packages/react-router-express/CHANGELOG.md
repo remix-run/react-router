@@ -1,5 +1,13 @@
 # `@react-router/express`
 
+## 7.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.0`
+  - `@react-router/node@7.13.0`
+
 ## 7.12.0
 
 ### Patch Changes
@@ -87,6 +95,7 @@
 - Stabilize middleware and context APIs. ([#14215](https://github.com/remix-run/react-router/pull/14215))
 
   We have removed the `unstable_` prefix from the following APIs and they are now considered stable and ready for production use:
+
   - [`RouterContextProvider`](https://reactrouter.com/api/utils/RouterContextProvider)
   - [`createContext`](https://reactrouter.com/api/utils/createContext)
   - `createBrowserRouter` [`getContext`](https://reactrouter.com/api/data-routers/createBrowserRouter#optsgetcontext) option

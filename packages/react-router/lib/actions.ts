@@ -44,15 +44,6 @@ function matchWildcardDomain(domain: string, pattern: string) {
     return false;
   }
 
-  // Prevent wildcards from matching entire domains (e.g. '**' or '*.com')
-  // This ensures wildcards can only match subdomains, not the main domain
-  if (
-    patternParts.length === 1 &&
-    (patternParts[0] === "*" || patternParts[0] === "**")
-  ) {
-    return false;
-  }
-
   while (patternParts.length) {
     const patternPart = patternParts.pop();
     const domainPart = domainParts.pop();
