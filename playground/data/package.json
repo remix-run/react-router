@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "workspace:"
+    "react-router": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

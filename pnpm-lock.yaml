@@ -1333,7 +1333,7 @@ importers:
         specifier: 'catalog:'
         version: 19.2.3(react@19.2.3)
       react-router:
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../packages/react-router
     devDependencies:
       '@types/react':
