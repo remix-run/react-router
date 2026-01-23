@@ -13,7 +13,7 @@ export function throwIfPotentialCSRFAttack(
   } catch {
     // error parsing the Origin header as a valid URL
     throw new Error(
-      `provided \`origin\` header is not a valid URL. Aborting the action.`,
+      `\`origin\` header is not a valid URL. Aborting the action.`,
     );
   }
   let host = parseHostHeader(headers);
