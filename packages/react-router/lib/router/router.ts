@@ -1013,26 +1013,23 @@ export function createRouter(init: RouterInit): Router {
         ? init.hydrationData.loaderData
         : null;
       let errors = init.hydrationData ? init.hydrationData.errors : null;
-
-      renderFallback = false;
-
-      const shouldLoadRoute = (m: AgnosticDataRouteMatch) => {
-        let status = getRouteHydrationStatus(m.route, loaderData, errors);
-        renderFallback = renderFallback || status.renderFallback;
-        return status.shouldLoad;
-      };
+      let relevantMatches = initialMatches;
 
       // If errors exist, don't consider routes below the boundary
       if (errors) {
         let idx = initialMatches.findIndex(
           (m) => errors![m.route.id] !== undefined,
         );
-        initialized = initialMatches
-          .slice(0, idx + 1)
-          .every((m) => !shouldLoadRoute(m));
-      } else {
-        initialized = initialMatches.every((m) => !shouldLoadRoute(m));
+        relevantMatches = relevantMatches.slice(0, idx + 1);
       }
+
+      // Toggle renderFallback based on per-route values
+      renderFallback = false;
+      initialized = relevantMatches.every((m) => {
+        let status = getRouteHydrationStatus(m.route, loaderData, errors);
+        renderFallback = renderFallback || status.renderFallback;
+        return !status.shouldLoad;
+      });
     }
   }
 
