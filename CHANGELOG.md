@@ -418,7 +418,7 @@ Date: YYYY-MM-DD
 
 ## v7.13.0
 
-Date: 2026-01-21
+Date: 2026-01-23
 
 ### Minor Changes
 
