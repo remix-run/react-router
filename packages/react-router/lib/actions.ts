@@ -11,7 +11,6 @@ export function throwIfPotentialCSRFAttack(
         ? new URL(originHeader).host
         : originHeader;
   } catch {
-    // error parsing the Origin header as a valid URL
     throw new Error(
       `\`origin\` header is not a valid URL. Aborting the action.`,
     );
