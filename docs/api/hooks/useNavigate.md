@@ -103,7 +103,7 @@ navigate(1);
 
 Be cautious with `navigate(number)`. If your application can load up to a
 route that has a button that tries to navigate forward/back, there may not be
-a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+a [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 entry to go back or forward to, or it can go somewhere you don't expect
 (like a different domain).
 
