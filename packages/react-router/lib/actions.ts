@@ -3,10 +3,19 @@ export function throwIfPotentialCSRFAttack(
   allowedActionOrigins: string[] | undefined,
 ) {
   let originHeader = headers.get("origin");
-  let originDomain =
-    typeof originHeader === "string" && originHeader !== "null"
-      ? new URL(originHeader).host
-      : originHeader;
+  let originDomain: string | null = null;
+
+  try {
+    originDomain =
+      typeof originHeader === "string" && originHeader !== "null"
+        ? new URL(originHeader).host
+        : originHeader;
+  } catch {
+    // error parsing the Origin header as a valid URL
+    throw new Error(
+      `provided \`origin\` header is not a valid URL. Aborting the action.`,
+    );
+  }
   let host = parseHostHeader(headers);
 
   if (originDomain && (!host || originDomain !== host.value)) {
