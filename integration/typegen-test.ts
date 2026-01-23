@@ -33,6 +33,66 @@ test.use({
 });
 
 test.describe("typegen", () => {
+  test("exactOptionalPropertyTypes compatibility", async ({ edit, $ }) => {
+    await edit({
+      "tsconfig.json": tsx`
+        {
+          "include": [
+            "**/*.ts",
+            "**/*.tsx",
+            "**/.server/**/*.ts",
+            "**/.server/**/*.tsx",
+            "**/.client/**/*.ts",
+            "**/.client/**/*.tsx"
+          ],
+          "compilerOptions": {
+            "lib": ["DOM", "DOM.Iterable", "ES2022"],
+            "types": ["@react-router/node", "vite/client"],
+            "isolatedModules": true,
+            "esModuleInterop": true,
+            "jsx": "react-jsx",
+            "module": "ESNext",
+            "moduleResolution": "Bundler",
+            "resolveJsonModule": true,
+            "target": "ES2022",
+            "strict": true,
+            "exactOptionalPropertyTypes": true,
+            "allowJs": true,
+            "skipLibCheck": true,
+            "forceConsistentCasingInFileNames": true,
+            "baseUrl": ".",
+            "paths": {
+              "~/*": ["./app/*"]
+            },
+            "noEmit": true
+          }
+        }
+      `,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("products/:id", "routes/product.tsx")
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/product.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/product"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { id: string} >>
+          return { planet: "world" }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          return <h1>Hello, {loaderData.planet}!</h1>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
   test("basic", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`
