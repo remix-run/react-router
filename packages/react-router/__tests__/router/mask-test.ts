@@ -5,7 +5,7 @@ describe("rewrite", () => {
   // Detect any failures inside the router navigate code
   afterEach(() => cleanup());
 
-  it("loads data from the rewrite location but updates browser URL to the to location", async () => {
+  it("navigates to router location and masks the browser URL", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -15,34 +15,33 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    // Navigate to /images/123 but load data from /gallery?photo=123
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/gallery?photo=123",
+    // Navigate to /gallery?photo=123 but mask browser URL as /images/123
+    let A = await t.navigate("/gallery?photo=123", {
+      unstable_mask: "/images/123",
     });
 
     // Should call the gallery loader, not the images loader
     expect(A.loaders.gallery).toBeDefined();
     expect(A.loaders.images).toBeUndefined();
 
-    // The loader should receive the rewrite URL in the request
+    // The loader should receive the router location URL in the request
     expect(A.loaders.gallery.stub.mock.calls[0][0].request.url).toMatch(
       /\/gallery\?photo=123$/,
     );
 
     await A.loaders.gallery.resolve("GALLERY DATA");
 
-    // The browser location should be /images/123, not /gallery?photo=123
-    expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.search).toBe("");
-
-    // The location state should contain the rewrite information
-    expect(t.router.state.location.rewrite).toEqual({
+    expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      hash: "",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
     });
 
-    // The matched routes should be for the rewrite location
+    // The matched routes should be for the router location
     expect(t.router.state.matches).toHaveLength(1);
     expect(t.router.state.matches[0].route.id).toBe("gallery");
 
@@ -52,7 +51,7 @@ describe("rewrite", () => {
     t.router.dispose();
   });
 
-  it("preserves rewrite on POP navigation", async () => {
+  it("preserves mask on POP navigation", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -62,9 +61,9 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    // Navigate to /images/123 with rewrite
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/gallery?photo=123",
+    // Navigate to /gallery?photo=123 with mask
+    let A = await t.navigate("/gallery?photo=123", {
+      unstable_mask: "/images/123",
     });
     await A.loaders.gallery.resolve("GALLERY DATA");
 
@@ -72,30 +71,30 @@ describe("rewrite", () => {
     let B = await t.navigate("/");
     expect(t.router.state.location.pathname).toBe("/");
 
-    // Go back - should use the rewrite
+    // Go back - should preserve the mask
     let promise = t.router.navigate(-1);
 
     // Wait for navigation to complete
     await promise;
 
-    // The browser location should be /images/123
-    expect(t.router.state.location.pathname).toBe("/images/123");
-
-    // The rewrite should still be in the state
-    expect(t.router.state.location.rewrite).toEqual({
+    expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      hash: "",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
     });
 
-    // The matched routes should be for the rewrite location
+    // The matched routes should be for the router location
     expect(t.router.state.matches).toHaveLength(1);
     expect(t.router.state.matches[0].route.id).toBe("gallery");
 
     t.router.dispose();
   });
 
-  it("supports rewrite with replace", async () => {
+  it("supports mask with replace", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -105,25 +104,28 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/gallery?photo=123",
+    let A = await t.navigate("/gallery?photo=123", {
+      unstable_mask: "/images/123",
       replace: true,
     });
 
     expect(A.loaders.gallery).toBeDefined();
     await A.loaders.gallery.resolve("GALLERY DATA");
 
-    expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.rewrite).toEqual({
+    expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      hash: "",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
     });
 
     t.router.dispose();
   });
 
-  it("supports rewrite with hash", async () => {
+  it("supports mask with hash", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -133,34 +135,34 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    let A = await t.navigate("/images/123#preview", {
-      unstable_rewrite: "/gallery?photo=123#header",
+    let A = await t.navigate("/gallery?photo=123#header", {
+      unstable_mask: "/images/123#preview",
     });
 
     expect(A.loaders.gallery).toBeDefined();
 
-    // The loader should receive the rewrite URL (hash is not preserved in Request URL)
+    // The loader should receive the router location URL (hash is not preserved in Request URL)
     expect(A.loaders.gallery.stub.mock.calls[0][0].request.url).toMatch(
       /\/gallery\?photo=123$/,
     );
 
     await A.loaders.gallery.resolve("GALLERY DATA");
 
-    // The browser location should have the "to" hash
-    expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.hash).toBe("#preview");
-
-    // The rewrite should have the rewrite hash
-    expect(t.router.state.location.rewrite).toEqual({
+    expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
       hash: "#header",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "#preview",
+      },
     });
 
     t.router.dispose();
   });
 
-  it("supports rewrite with state", async () => {
+  it("supports mask with state", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -170,25 +172,28 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/gallery?photo=123",
+    let A = await t.navigate("/gallery?photo=123", {
+      unstable_mask: "/images/123",
       state: { customData: "test" },
     });
 
     await A.loaders.gallery.resolve("GALLERY DATA");
 
-    // Both custom state and rewrite should be present
-    expect(t.router.state.location.state).toEqual({ customData: "test" });
-    expect(t.router.state.location.rewrite).toEqual({
+    expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      hash: "",
+      state: { customData: "test" },
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
     });
 
     t.router.dispose();
   });
 
-  it("supports rewrite with action submission", async () => {
+  it("supports mask with action submission", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -198,8 +203,8 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/gallery?photo=123",
+    let A = await t.navigate("/gallery?photo=123", {
+      unstable_mask: "/images/123",
       formMethod: "post",
       formData: createFormData({ test: "value" }),
     });
@@ -208,7 +213,7 @@ describe("rewrite", () => {
     expect(A.actions.gallery).toBeDefined();
     expect(A.actions.images).toBeUndefined();
 
-    // The action should receive the rewrite URL
+    // The action should receive the router location URL
     expect(A.actions.gallery.stub.mock.calls[0][0].request.url).toMatch(
       /\/gallery\?photo=123$/,
     );
@@ -219,18 +224,20 @@ describe("rewrite", () => {
     expect(A.loaders.gallery).toBeDefined();
     await A.loaders.gallery.resolve("LOADER DATA");
 
-    // The browser location should be /images/123
-    expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.rewrite).toEqual({
+    expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      hash: "",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
     });
 
     t.router.dispose();
   });
 
-  it("handles rewrite with relative paths", async () => {
+  it("handles mask with relative paths", async () => {
     let t = setup({
       routes: [
         {
@@ -244,14 +251,22 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/gallery?photo=123",
+    let A = await t.navigate("/gallery?photo=123", {
+      unstable_mask: "/images/123",
     });
 
     expect(A.loaders.gallery).toBeDefined();
     await A.loaders.gallery.resolve("GALLERY DATA");
 
-    expect(t.router.state.location.pathname).toBe("/images/123");
+    expect(t.router.state.location).toMatchObject({
+      pathname: "/gallery",
+      search: "?photo=123",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
+    });
     expect(t.router.state.matches[1].route.id).toBe("gallery");
 
     t.router.dispose();
@@ -267,7 +282,7 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    // Normal navigation without rewrite
+    // Normal navigation without mask
     let A = await t.navigate("/images/123");
 
     // Should call the images loader
@@ -276,15 +291,17 @@ describe("rewrite", () => {
 
     await A.loaders.images.resolve("IMAGES DATA");
 
-    expect(t.router.state.location.pathname).toBe("/images/123");
-    expect(t.router.state.location.rewrite).toBeUndefined();
+    expect(t.router.state.location).toMatchObject({
+      pathname: "/images/123",
+      unstable_mask: undefined,
+    });
     expect(t.router.state.matches).toHaveLength(1);
     expect(t.router.state.matches[0].route.id).toBe("images");
 
     t.router.dispose();
   });
 
-  it("handles 404 on rewrite location", async () => {
+  it("handles 404 on router location", async () => {
     let t = setup({
       routes: [
         { path: "/" },
@@ -293,14 +310,21 @@ describe("rewrite", () => {
       initialEntries: ["/"],
     });
 
-    // Rewrite to a non-existent route
-    let A = await t.navigate("/images/123", {
-      unstable_rewrite: "/nonexistent",
+    // Navigate to non-existent route with mask
+    let A = await t.navigate("/nonexistent", {
+      unstable_mask: "/images/123",
     });
 
     // Should get a 404 error
     expect(t.router.state.errors).toBeDefined();
-    expect(t.router.state.location.pathname).toBe("/images/123");
+    expect(t.router.state.location).toMatchObject({
+      pathname: "/nonexistent",
+      unstable_mask: {
+        pathname: "/images/123",
+        search: "",
+        hash: "",
+      },
+    });
 
     t.router.dispose();
   });
