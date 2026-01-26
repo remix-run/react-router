@@ -1200,8 +1200,8 @@ export interface LinkProps
    *        {loaderData.images.map((image) => (
    *          <Link
    *            key={image.id}
-   *            to={`/images/${image.id}`}
-   *            unstable_rewrite={`/gallery?image=${image.id}`}
+   *            to={`/gallery?image=${image.id}`}
+   *            unstable_mask={`/images/${image.id}`}
    *          >
    *            <img src={image.url} alt={image.alt} />
    *          </Link>
@@ -1296,7 +1296,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.relative} props.relative n/a
  * @param {LinkProps.reloadDocument} props.reloadDocument n/a
  * @param {LinkProps.replace} props.replace n/a
- * @param {LinkProps.unstable_rewrite} props.unstable_rewrite [modes: framework, data] n/a
+ * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
@@ -2176,7 +2176,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * to use for the link. Defaults to `"route"`.
  * @param options.replace Whether to replace the current [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry instead of pushing a new one. Defaults to `false`.
- * @param options.unstable_rewrite Rewrite the URL for this navigation. Defaults to `undefined`.
+ * @param options.unstable_mask Masked location to display in the browser instead
+ * of the router location. Defaults to `undefined`.
  * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
