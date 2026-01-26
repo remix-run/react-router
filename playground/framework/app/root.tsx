@@ -1,15 +1,6 @@
-import {
-  Link,
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useLocation,
-} from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  let { key, ...location } = useLocation();
   return (
     <html lang="en">
       <head>
@@ -20,7 +11,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <pre>useLocation: {JSON.stringify(location)}</pre>
         {children}
         <ScrollRestoration />
         <Scripts />

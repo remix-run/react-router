@@ -1387,7 +1387,7 @@ export function Router({
     hash = "",
     state = null,
     key = "default",
-    rewrite,
+    unstable_mask,
   } = locationProp;
 
   let locationContext = React.useMemo(() => {
@@ -1404,11 +1404,20 @@ export function Router({
         hash,
         state,
         key,
-        rewrite,
+        unstable_mask,
       },
       navigationType,
     };
-  }, [basename, pathname, search, hash, state, key, rewrite, navigationType]);
+  }, [
+    basename,
+    pathname,
+    search,
+    hash,
+    state,
+    key,
+    unstable_mask,
+    navigationType,
+  ]);
 
   warning(
     locationContext != null,

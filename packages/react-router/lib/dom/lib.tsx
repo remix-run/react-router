@@ -37,6 +37,7 @@ import {
   joinPaths,
   matchPath,
   parseToInfo,
+  resolveTo,
   stripBasename,
 } from "../router/utils";
 
@@ -1217,7 +1218,7 @@ export interface LinkProps
    * }
    * ```
    */
-  unstable_rewrite?: To;
+  unstable_mask?: To;
 
   /**
    * Can be a string or a partial {@link Path}:
@@ -1310,7 +1311,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       relative,
       reloadDocument,
       replace,
-      unstable_rewrite,
+      unstable_mask,
       state,
       target,
       to,
@@ -1321,7 +1322,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     forwardedRef,
   ) {
-    let { basename, unstable_useTransitions } =
+    let { basename, navigator, unstable_useTransitions } =
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
@@ -1330,6 +1331,31 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
+    let location = useLocation();
+
+    let maskedHref: string | null = null;
+
+    if (unstable_mask) {
+      let resolved = resolveTo(
+        unstable_mask,
+        [],
+        location.unstable_mask?.pathname || location.pathname,
+      );
+
+      // If we're operating within a basename, prepend it to the pathname prior
+      // to creating the href.  If this is a root navigation, then just use the raw
+      // basename which allows the basename to have full control over the presence
+      // of a trailing slash on root links
+      if (basename !== "/") {
+        resolved.pathname =
+          resolved.pathname === "/"
+            ? basename
+            : joinPaths([basename, resolved.pathname]);
+      }
+
+      maskedHref = navigator.createHref(resolved);
+    }
+
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,
       rest,
@@ -1337,7 +1363,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
-      unstable_rewrite,
+      unstable_mask,
       state,
       target,
       preventScrollReset,
@@ -1360,7 +1386,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={parsed.absoluteURL || href}
+        href={parsed.absoluteURL || maskedHref || href}
         onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
@@ -2169,7 +2195,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
-    unstable_rewrite,
+    unstable_mask,
     state,
     preventScrollReset,
     relative,
@@ -2179,7 +2205,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    unstable_rewrite?: To;
+    unstable_mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
@@ -2207,7 +2233,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
-            unstable_rewrite,
+            unstable_mask,
             state,
             preventScrollReset,
             relative,
@@ -2228,7 +2254,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
-      unstable_rewrite,
+      unstable_mask,
       state,
       target,
       to,

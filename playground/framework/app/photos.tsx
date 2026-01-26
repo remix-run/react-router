@@ -62,8 +62,8 @@ export function ImageGallery() {
       {Object.values(PHOTOS).map((photo) => (
         <Link
           key={photo.id}
-          to={`/images/${photo.id}`}
-          unstable_rewrite={`/?photo=${photo.id}`}
+          to={`?photo=${photo.id}`}
+          unstable_mask={`/images/${photo.id}`}
         >
           <img
             src={photo.url}

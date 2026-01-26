@@ -767,10 +767,10 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     // We cannot support history-state-driven rewrites with SSR, so if a hard
     // reload is performed we remove the rewrite and hydrate according to the
     // browser URL
-    let rewriteScript = ssr
+    let maskScript = ssr
       ? [
-          "if (window.history.state && window.history.state.rewrite) {",
-          "window.history.replaceState({ ...window.history.state, rewrite: undefined }, null);",
+          "if (window.history.state && window.history.state.unstable_maskFrom) {",
+          "window.history.replaceState({ ...window.history.state, unstable_maskFrom: undefined }, null);",
           "}",
         ].join("")
       : "";
@@ -785,7 +785,7 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     let contextScript = staticContext
       ? [
           `window.__reactRouterContext = ${serverHandoffString};`,
-          rewriteScript,
+          maskScript,
           streamScript,
         ].join("\n")
       : " ";

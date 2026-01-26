@@ -535,7 +535,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   state?: any;
   fromRouteId?: string;
   viewTransition?: boolean;
-  unstable_rewrite?: To;
+  unstable_mask?: To;
 };
 
 // Only allowed for submission navigations
@@ -939,12 +939,6 @@ export function createRouter(init: RouterInit): Router {
   let initialScrollRestored = init.hydrationData != null;
 
   let initialLocation = init.history.location;
-  if (initialLocation.rewrite) {
-    initialLocation = {
-      ...initialLocation,
-      ...initialLocation.rewrite,
-    };
-  }
   let initialMatches = matchRoutes(dataRoutes, initialLocation, basename);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
@@ -1524,30 +1518,23 @@ export function createRouter(init: RouterInit): Router {
 
     let currentLocation = state.location;
 
-    // If rewrite is provided, normalize and create a separate path for the router
-    let rewritePath = opts?.unstable_rewrite
-      ? init.history.encodeLocation(
-          normalizeTo(
-            state.location,
-            state.matches,
-            basename,
-            opts.unstable_rewrite,
-            opts?.fromRouteId,
-            opts?.relative,
-          ),
-        )
-      : currentLocation.rewrite
-        ? init.history.encodeLocation(
-            normalizeTo(
-              currentLocation.rewrite,
-              state.matches,
-              basename,
-              to,
-              opts?.fromRouteId,
-              opts?.relative,
-            ),
-          )
-        : undefined;
+    // If mask is provided, normalize and create a separate path for the router
+    let currentPath: Path = {
+      pathname: currentLocation.pathname,
+      search: currentLocation.search,
+      hash: currentLocation.hash,
+    };
+    let maskPath = opts?.unstable_mask
+      ? typeof opts.unstable_mask === "string"
+        ? {
+            ...currentPath,
+            ...parsePath(opts.unstable_mask),
+          }
+        : {
+            ...(currentLocation.unstable_mask || currentPath),
+            ...opts.unstable_mask,
+          }
+      : undefined;
 
     let nextLocation = createLocation(
       currentLocation,
@@ -1557,7 +1544,7 @@ export function createRouter(init: RouterInit): Router {
       init.history.encodeLocation(path),
       opts && opts.state,
       undefined,
-      rewritePath,
+      maskPath,
     );
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
@@ -1691,7 +1678,7 @@ export function createRouter(init: RouterInit): Router {
   // navigation
   async function startNavigation(
     historyAction: NavigationType,
-    _location: Location,
+    location: Location,
     opts?: {
       initialHydration?: boolean;
       submission?: Submission;
@@ -1706,9 +1693,6 @@ export function createRouter(init: RouterInit): Router {
       callSiteDefaultShouldRevalidate?: boolean;
     },
   ): Promise<void> {
-    let externalLocation = _location;
-    let routerPath = _location.rewrite || _location;
-
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
@@ -1735,7 +1719,7 @@ export function createRouter(init: RouterInit): Router {
       !initialMatchesIsFOW
         ? // `matchRoutes()` has already been called if we're in here via `router.initialize()`
           state.matches
-        : matchRoutes(routesToUse, routerPath, basename);
+        : matchRoutes(routesToUse, location, basename);
     let flushSync = (opts && opts.flushSync) === true;
 
     // Short circuit if it's only a hash change and not a revalidation or
@@ -1748,14 +1732,14 @@ export function createRouter(init: RouterInit): Router {
       matches &&
       state.initialized &&
       !isRevalidationRequired &&
-      isHashChangeOnly(state.location, routerPath) &&
+      isHashChangeOnly(state.location, location) &&
       !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
     ) {
-      completeNavigation(externalLocation, { matches }, { flushSync });
+      completeNavigation(location, { matches }, { flushSync });
       return;
     }
 
-    let fogOfWar = checkFogOfWar(matches, routesToUse, routerPath.pathname);
+    let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
     }
@@ -1763,10 +1747,10 @@ export function createRouter(init: RouterInit): Router {
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
       let { error, notFoundMatches, route } = handleNavigational404(
-        routerPath.pathname,
+        location.pathname,
       );
       completeNavigation(
-        externalLocation,
+        location,
         {
           matches: notFoundMatches,
           loaderData: {},
@@ -1783,7 +1767,7 @@ export function createRouter(init: RouterInit): Router {
     pendingNavigationController = new AbortController();
     let request = createClientSideRequest(
       init.history,
-      routerPath,
+      location,
       pendingNavigationController.signal,
       opts && opts.submission,
     );
@@ -1810,7 +1794,7 @@ export function createRouter(init: RouterInit): Router {
       // Call action if we received an action submission
       let actionResult = await handleAction(
         request,
-        externalLocation,
+        location,
         opts.submission,
         matches,
         scopedContext,
@@ -1834,7 +1818,7 @@ export function createRouter(init: RouterInit): Router {
         ) {
           pendingNavigationController = null;
 
-          completeNavigation(externalLocation, {
+          completeNavigation(location, {
             matches: actionResult.matches,
             loaderData: {},
             errors: {
@@ -1847,10 +1831,7 @@ export function createRouter(init: RouterInit): Router {
 
       matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
-      loadingNavigation = getLoadingNavigation(
-        externalLocation,
-        opts.submission,
-      );
+      loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
       // No need to do fog of war matching again on loader execution
       fogOfWar.active = false;
@@ -1871,7 +1852,7 @@ export function createRouter(init: RouterInit): Router {
       errors,
     } = await handleLoaders(
       request,
-      externalLocation,
+      location,
       matches,
       scopedContext,
       fogOfWar.active,
@@ -1894,7 +1875,7 @@ export function createRouter(init: RouterInit): Router {
     // been assigned to a new controller for the next navigation
     pendingNavigationController = null;
 
-    completeNavigation(externalLocation, {
+    completeNavigation(location, {
       matches: updatedMatches || matches,
       ...getActionDataForCommit(pendingActionResult),
       loaderData,
@@ -1906,7 +1887,7 @@ export function createRouter(init: RouterInit): Router {
   // redirects/errors
   async function handleAction(
     request: Request,
-    _location: Location,
+    location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
     scopedContext: RouterContextProvider,
@@ -1916,17 +1897,14 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
 
-    let externalLocation = _location;
-    let routerPath = _location.rewrite || _location;
-
     // Put us in a submitting state
-    let navigation = getSubmittingNavigation(externalLocation, submission);
+    let navigation = getSubmittingNavigation(location, submission);
     updateState({ navigation }, { flushSync: opts.flushSync === true });
 
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         matches,
-        routerPath.pathname,
+        location.pathname,
         request.signal,
       );
       if (discoverResult.type === "aborted") {
@@ -1960,7 +1938,7 @@ export function createRouter(init: RouterInit): Router {
         };
       } else if (!discoverResult.matches) {
         let { notFoundMatches, error, route } = handleNavigational404(
-          routerPath.pathname,
+          location.pathname,
         );
         return {
           matches: notFoundMatches,
@@ -1979,14 +1957,14 @@ export function createRouter(init: RouterInit): Router {
 
     // Call our action and get the result
     let result: DataResult;
-    let actionMatch = getTargetMatch(matches, routerPath);
+    let actionMatch = getTargetMatch(matches, location);
 
     if (!actionMatch.route.action && !actionMatch.route.lazy) {
       result = {
         type: ResultType.error,
         error: getInternalRouterError(405, {
           method: request.method,
-          pathname: routerPath.pathname,
+          pathname: location.pathname,
           routeId: actionMatch.route.id,
         }),
       };
@@ -2080,7 +2058,7 @@ export function createRouter(init: RouterInit): Router {
   // errors, etc.
   async function handleLoaders(
     request: Request,
-    _location: Location,
+    location: Location,
     matches: AgnosticDataRouteMatch[],
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
@@ -2093,12 +2071,9 @@ export function createRouter(init: RouterInit): Router {
     pendingActionResult?: PendingActionResult,
     callSiteDefaultShouldRevalidate?: boolean,
   ): Promise<HandleLoadersResult> {
-    let externalLocation = _location;
-    let routerPath = _location.rewrite || _location;
-
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
-      overrideNavigation || getLoadingNavigation(externalLocation, submission);
+      overrideNavigation || getLoadingNavigation(location, submission);
 
     // If this was a redirect from an action we don't have a "submission" but
     // we have it on the loading navigation so use that if available
@@ -2137,7 +2112,7 @@ export function createRouter(init: RouterInit): Router {
 
       let discoverResult = await discoverRoutes(
         matches,
-        routerPath.pathname,
+        location.pathname,
         request.signal,
       );
 
@@ -2166,7 +2141,7 @@ export function createRouter(init: RouterInit): Router {
         };
       } else if (!discoverResult.matches) {
         let { error, notFoundMatches, route } = handleNavigational404(
-          routerPath.pathname,
+          location.pathname,
         );
         return {
           matches: notFoundMatches,
@@ -2190,7 +2165,7 @@ export function createRouter(init: RouterInit): Router {
       state,
       matches,
       activeSubmission,
-      routerPath,
+      location,
       initialHydration ? [] : hydrationRouteProperties,
       initialHydration === true,
       isRevalidationRequired,
@@ -2220,7 +2195,7 @@ export function createRouter(init: RouterInit): Router {
     ) {
       let updatedFetchers = markFetchRedirectsDone();
       completeNavigation(
-        externalLocation,
+        location,
         {
           matches,
           loaderData: {},

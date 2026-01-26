@@ -835,7 +835,7 @@ export function useRoutesImpl(
 
     location = parsedLocationArg;
   } else {
-    location = locationFromContext.rewrite ?? locationFromContext;
+    location = locationFromContext;
   }
 
   let pathname = location.pathname || "/";
@@ -935,7 +935,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
-            rewrite: undefined,
+            unstable_mask: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,

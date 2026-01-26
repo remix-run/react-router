@@ -13,8 +13,10 @@ export function clientLoader({ params }: Route.LoaderArgs) {
 
 export default function Component({ loaderData }: Route.ComponentProps) {
   let data = useLoaderData() as { photo: Photo };
+  let location = useLocation();
   return (
     <>
+      <pre>useLocation: {JSON.stringify(location)}</pre>
       <h1>Images Page</h1>
       <PhotoDisplay photo={data.photo} />
     </>

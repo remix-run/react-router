@@ -146,7 +146,7 @@ export interface NavigateOptions {
   /** Replace the current entry in the history stack instead of pushing a new one */
   replace?: boolean;
   /** Rewrite the url */
-  unstable_rewrite?: To;
+  unstable_mask?: To;
   /** Adds persistent client side routing state to the next location */
   state?: any;
   /** If you are using {@link https://api.reactrouter.com/v7/functions/react_router.ScrollRestoration.html <ScrollRestoration>}, prevent the scroll position from being reset to the top of the window when navigating */
