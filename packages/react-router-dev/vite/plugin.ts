@@ -2545,6 +2545,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       config() {
         process.env.IS_RR_BUILD_REQUEST = "yes";
         return {
+          // Required as viteConfig.environments.client.build.outDir is only available in Vite v6+
           buildDirectory: getClientBuildDirectory(ctx.reactRouterConfig),
           concurrency: getPrerenderConcurrencyConfig(ctx.reactRouterConfig),
         };
@@ -2656,17 +2657,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async postProcess(request, response, metadata) {
         invariant(metadata);
 
-        // Normalized path for errors/logging and file writing (includes basename from URL)
-        const normalizedPath =
-          metadata.type === "spa" ? "/" : new URL(request.url).pathname;
-
         // Handle loader data responses
         if (metadata.type === "data") {
+          let pathname = new URL(request.url).pathname;
+
           if (response.status !== 200 && response.status !== 202) {
             throw new Error(
               `Prerender (data): Received a ${response.status} status code from ` +
                 `\`entry.server.tsx\` while prerendering the \`${metadata.path}\` ` +
-                `path.\n${normalizedPath}`,
+                `path.\n${pathname}`,
               { cause: response },
             );
           }
@@ -2676,10 +2675,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return {
             files: [
               {
-                path: normalizedPath,
+                path: pathname,
                 contents: data,
               },
             ],
+            // After saving the .data file, request the HTML page.
+            // The data is passed along to be embedded in the response header.
             requests: !metadata.isResourceRoute
               ? [createRouteRequest(metadata.path, ctx.reactRouterConfig, data)]
               : [],
@@ -2688,18 +2689,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         // Handle resource route responses
         if (metadata.type === "resource") {
+          let pathname = new URL(request.url).pathname;
           let contents = new Uint8Array(await response.arrayBuffer());
+
           if (response.status !== 200) {
             throw new Error(
               `Prerender (resource): Received a ${response.status} status code from ` +
-                `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
+                `\`entry.server.tsx\` while prerendering the \`${pathname}\` ` +
                 `path.\n${new TextDecoder().decode(contents)}`,
             );
           }
 
           return [
             {
-              path: normalizedPath,
+              path: pathname,
               contents,
             },
           ];
@@ -2726,7 +2729,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 "Your pre-rendered HTML cannot hydrate without `<Scripts />`.",
             );
           }
+
+          // SPA fallback is written to root regardless of basename
+          return [
+            {
+              path: "/__spa-fallback.html",
+              contents: html,
+            },
+          ];
         }
+
+        // Handle html responses
+        let pathname = new URL(request.url).pathname;
 
         if (redirectStatusCodes.has(response.status)) {
           // This isn't ideal but gets the job done as a fallback if the user can't
@@ -2746,21 +2760,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 </head>
 <body>
 	<a href="${location}">
-    Redirecting from <code>${normalizedPath}</code> to <code>${location}</code>
+    Redirecting from <code>${pathname}</code> to <code>${location}</code>
   </a>
 </body>
 </html>`;
         } else if (response.status !== 200) {
           throw new Error(
             `Prerender (html): Received a ${response.status} status code from ` +
-              `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
+              `\`entry.server.tsx\` while prerendering the \`${pathname}\` ` +
               `path.\n${html}`,
           );
         }
 
         return [
           {
-            path: `${normalizedPath}/${metadata.type === "spa" ? "__spa-fallback.html" : "index.html"}`,
+            path: `${pathname}/index.html`,
             contents: html,
           },
         ];
@@ -2787,7 +2801,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let index = path.join(buildDirectory, "index.html");
 
           // If the user didn't prerendered `/`, uses the SPA fallback as the main entry point.
-          let finalSpaPath: string;
+          let finalSpaPath: string | undefined;
           if (existsSync(spaFallback) && !existsSync(index)) {
             await rename(spaFallback, index);
             finalSpaPath = index;
@@ -2796,7 +2810,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
 
           // Log SPA fallback with the final filename
-          if (finalSpaPath!) {
+          if (finalSpaPath) {
             let prettyPath = path.relative(viteConfig.root, finalSpaPath);
             if (ctx.prerenderPaths && ctx.prerenderPaths.size > 0) {
               viteConfig.logger.info(

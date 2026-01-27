@@ -146,9 +146,7 @@ export interface PrerenderPluginOptions<
     request: Request,
     response: Response,
     metadata: Metadata | undefined,
-  ) =>
-    | NoInfer<PostProcessResult<Metadata>>
-    | Promise<NoInfer<PostProcessResult<Metadata>>>;
+  ) => Promise<NoInfer<PostProcessResult<Metadata>>>;
 
   /**
    * Handle errors during prerendering
