@@ -535,6 +535,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   state?: any;
   fromRouteId?: string;
   viewTransition?: boolean;
+  unstable_mask?: To;
 };
 
 // Only allowed for submission navigations
@@ -937,7 +938,8 @@ export function createRouter(init: RouterInit): Router {
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
 
-  let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
+  let initialLocation = init.history.location;
+  let initialMatches = matchRoutes(dataRoutes, initialLocation, basename);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
   let initialized: boolean;
@@ -1515,17 +1517,35 @@ export function createRouter(init: RouterInit): Router {
     );
 
     let currentLocation = state.location;
-    let nextLocation = createLocation(state.location, path, opts && opts.state);
 
-    // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
-    // URL from window.location, so we need to encode it here so the behavior
-    // remains the same as POP and non-data-router usages.  new URL() does all
-    // the same encoding we'd get from a history.pushState/window.location read
-    // without having to touch history
-    nextLocation = {
-      ...nextLocation,
-      ...init.history.encodeLocation(nextLocation),
+    // If mask is provided, normalize and create a separate path for the router
+    let currentPath: Path = {
+      pathname: currentLocation.pathname,
+      search: currentLocation.search,
+      hash: currentLocation.hash,
     };
+    let maskPath = opts?.unstable_mask
+      ? typeof opts.unstable_mask === "string"
+        ? {
+            ...currentPath,
+            ...parsePath(opts.unstable_mask),
+          }
+        : {
+            ...(currentLocation.unstable_mask || currentPath),
+            ...opts.unstable_mask,
+          }
+      : undefined;
+
+    let nextLocation = createLocation(
+      currentLocation,
+      // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
+      // URL from window.location, so we need to encode it here so the behavior
+      // remains the same as POP and non-data-router usages
+      init.history.encodeLocation(path),
+      opts && opts.state,
+      undefined,
+      maskPath,
+    );
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
@@ -1691,6 +1711,7 @@ export function createRouter(init: RouterInit): Router {
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
+
     let matches =
       opts?.initialHydration &&
       state.matches &&
@@ -4889,7 +4910,7 @@ function getMatchesToLoad(
   state: RouterState,
   matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
-  location: Location,
+  location: Path,
   lazyRoutePropertiesToSkip: string[],
   initialHydration: boolean,
   isRevalidationRequired: boolean,
@@ -6446,7 +6467,7 @@ function normalizeRedirectLocation(
 // Request instance from the static handler (query/queryRoute)
 function createClientSideRequest(
   history: History,
-  location: string | Location,
+  location: string | Path,
   signal: AbortSignal,
   submission?: Submission,
 ): Request {
@@ -6828,7 +6849,7 @@ function stripHashFromPath(path: To) {
   return createPath({ ...parsedPath, hash: "" });
 }
 
-function isHashChangeOnly(a: Location, b: Location): boolean {
+function isHashChangeOnly(a: Path, b: Path): boolean {
   if (a.pathname !== b.pathname || a.search !== b.search) {
     return false;
   }
@@ -6950,10 +6971,7 @@ function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
 }
 
-function getTargetMatch(
-  matches: AgnosticDataRouteMatch[],
-  location: Location | string,
-) {
+function getTargetMatch(matches: AgnosticDataRouteMatch[], location: To) {
   let search =
     typeof location === "string" ? parsePath(location).search : location.search;
   if (

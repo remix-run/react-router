@@ -69,6 +69,12 @@ export interface Location<State = any> extends Path {
    * Note: This value is always "default" on the initial location.
    */
   key: string;
+
+  /**
+   * The masked location displayed in the URL bar, which differs from the URL the
+   * router is operating on
+   */
+  unstable_mask: Path | undefined;
 }
 
 /**
@@ -189,9 +195,22 @@ type HistoryState = {
   usr: any;
   key?: string;
   idx: number;
+  unstable_maskFrom?: Path;
 };
 
 const PopStateEventType = "popstate";
+
+function isLocation(obj: unknown): obj is Location {
+  return (
+    typeof obj === "object" &&
+    obj != null &&
+    "pathname" in obj &&
+    "search" in obj &&
+    "hash" in obj &&
+    "key" in obj
+  );
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +255,7 @@ export function createMemoryHistory(
       entry,
       typeof entry === "string" ? null : entry.state,
       index === 0 ? "default" : undefined,
+      typeof entry === "string" ? undefined : entry.unstable_mask,
     ),
   );
   let index = clampIndex(
@@ -254,12 +274,14 @@ export function createMemoryHistory(
     to: To,
     state: any = null,
     key?: string,
+    unstable_mask?: Path,
   ): Location {
     let location = createLocation(
       entries ? getCurrentLocation().pathname : "/",
       to,
       state,
       key,
+      unstable_mask,
     );
     warning(
       location.pathname.charAt(0) === "/",
@@ -298,7 +320,7 @@ export function createMemoryHistory(
     },
     push(to, state) {
       action = Action.Push;
-      let nextLocation = createMemoryLocation(to, state);
+      let nextLocation = isLocation(to) ? to : createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
       if (v5Compat && listener) {
@@ -363,13 +385,21 @@ export function createBrowserHistory(
     window: Window,
     globalHistory: Window["history"],
   ) {
-    let { pathname, search, hash } = window.location;
+    let maskFrom = globalHistory.state?.unstable_maskFrom;
+    let { pathname, search, hash } = maskFrom || window.location;
     return createLocation(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
       (globalHistory.state && globalHistory.state.key) || "default",
+      maskFrom
+        ? {
+            pathname: window.location.pathname,
+            search: window.location.search,
+            hash: window.location.hash,
+          }
+        : undefined,
     );
   }
 
@@ -521,6 +551,13 @@ function getHistoryState(location: Location, index: number): HistoryState {
     usr: location.state,
     key: location.key,
     idx: index,
+    unstable_maskFrom: location.unstable_mask
+      ? {
+          pathname: location.pathname,
+          search: location.search,
+          hash: location.hash,
+        }
+      : undefined,
   };
 }
 
@@ -532,6 +569,7 @@ export function createLocation(
   to: To,
   state: any = null,
   key?: string,
+  unstable_mask?: Path,
 ): Readonly<Location> {
   let location: Readonly<Location> = {
     pathname: typeof current === "string" ? current : current.pathname,
@@ -544,6 +582,7 @@ export function createLocation(
     // But that's a pretty big refactor to the current test suite so going to
     // keep as is for the time being and just let any incoming keys take precedence
     key: (to && (to as Location).key) || key || createKey(),
+    unstable_mask,
   };
   return location;
 }
@@ -636,14 +675,16 @@ function getUrlBasedHistory(
     }
   }
 
-  function push(to: To, state?: any) {
+  function push(to: Location | To, state?: any) {
     action = Action.Push;
-    let location = createLocation(history.location, to, state);
+    let location = isLocation(to)
+      ? to
+      : createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex() + 1;
     let historyState = getHistoryState(location, index);
-    let url = history.createHref(location);
+    let url = history.createHref(location.unstable_mask || location);
 
     // try...catch because iOS limits us to 100 pushState calls :/
     try {
@@ -668,12 +709,14 @@ function getUrlBasedHistory(
 
   function replace(to: To, state?: any) {
     action = Action.Replace;
-    let location = createLocation(history.location, to, state);
+    let location = isLocation(to)
+      ? to
+      : createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex();
     let historyState = getHistoryState(location, index);
-    let url = history.createHref(location);
+    let url = history.createHref(location.unstable_mask || location);
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
