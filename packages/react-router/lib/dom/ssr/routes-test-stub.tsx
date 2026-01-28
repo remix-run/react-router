@@ -154,7 +154,7 @@ export function createRoutesStub(
       // the manifest and routeModules during the walk
       let patched = processRoutes(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
-        // types compared to `AgnosticRouteObject`
+        // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
         _context !== undefined
           ? _context

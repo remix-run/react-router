@@ -402,9 +402,9 @@ export function createStaticRouter(
     manifest,
   );
 
-  // Because our context matches may be from a framework-agnostic set of
-  // routes passed to createStaticHandler(), we update them here with our
-  // newly created/enhanced data routes
+  // Because our context matches may be from a set of routes passed to
+  // createStaticHandler(), we update them here with our newly created/enhanced
+  // data routes
   let matches = context.matches.map((match) => {
     let route = manifest[match.route.id] || match.route;
     return {

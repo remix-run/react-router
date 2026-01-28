@@ -547,8 +547,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
 ) => MaybePromise<void>;
 
 /**
- * Function provided by the framework-aware layers to set any framework-specific
- * properties from framework-agnostic properties
+ * Function provided to set route-specific properties from route objects
  */
 export interface MapRoutePropertiesFunction {
   (route: DataRouteObject): {
