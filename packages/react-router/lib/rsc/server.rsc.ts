@@ -20,7 +20,7 @@ import {
 } from "../router/router";
 import {
   type ActionFunction,
-  type AgnosticDataRouteMatch,
+  type DataRouteMatch,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
@@ -1146,12 +1146,12 @@ async function getRSCRouteMatch({
   parentId,
 }: {
   staticContext: StaticHandlerContext;
-  match: AgnosticDataRouteMatch;
+  match: DataRouteMatch;
   isBelowErrorBoundary: boolean;
   routeIdsToLoad: string[] | null;
   parentId: string | undefined;
 }) {
-  // @ts-expect-error - FIXME: Fix the types here
+  // @ts-expect-error - RSC routes don't support boolean loader/action but DataRouteObject does
   await explodeLazyRoute(match.route);
   const Layout = (match.route as any).Layout || React.Fragment;
   const Component = (match.route as any).Component;

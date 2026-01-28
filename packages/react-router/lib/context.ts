@@ -12,78 +12,33 @@ import type {
   StaticHandlerContext,
 } from "./router/router";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
   AgnosticPatchRoutesOnNavigationFunction,
   AgnosticPatchRoutesOnNavigationFunctionArgs,
-  AgnosticRouteMatch,
-  LazyRouteDefinition,
   TrackedPromise,
+  RouteMatch,
 } from "./router/utils";
 
-// Create react-specific types from the agnostic types in @remix-run/router to
-// export from react-router
-export interface IndexRouteObject {
-  caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
-  path?: AgnosticIndexRouteObject["path"];
-  id?: AgnosticIndexRouteObject["id"];
-  middleware?: AgnosticIndexRouteObject["middleware"];
-  loader?: AgnosticIndexRouteObject["loader"];
-  action?: AgnosticIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticIndexRouteObject["handle"];
-  index: true;
-  children?: undefined;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteDefinition<RouteObject>;
-}
-
-export interface NonIndexRouteObject {
-  caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
-  path?: AgnosticNonIndexRouteObject["path"];
-  id?: AgnosticNonIndexRouteObject["id"];
-  middleware?: AgnosticNonIndexRouteObject["middleware"];
-  loader?: AgnosticNonIndexRouteObject["loader"];
-  action?: AgnosticNonIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticNonIndexRouteObject["handle"];
-  index?: false;
-  children?: RouteObject[];
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteDefinition<RouteObject>;
-}
-
-export type RouteObject = IndexRouteObject | NonIndexRouteObject;
-
-export type DataRouteObject = RouteObject & {
-  children?: DataRouteObject[];
-  id: string;
-};
-
-export interface RouteMatch<
-  ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject,
-> extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
-
-export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
+// Re-export route types from utils (they're now React-aware)
+export type {
+  IndexRouteObject,
+  NonIndexRouteObject,
+  RouteObject,
+  DataRouteObject,
+  RouteMatch,
+  DataRouteMatch,
+} from "./router/utils";
 
 export type PatchRoutesOnNavigationFunctionArgs =
-  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+  AgnosticPatchRoutesOnNavigationFunctionArgs<
+    import("./router/utils").RouteObject,
+    import("./router/utils").RouteMatch
+  >;
 
 export type PatchRoutesOnNavigationFunction =
-  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+  AgnosticPatchRoutesOnNavigationFunction<
+    import("./router/utils").RouteObject,
+    import("./router/utils").RouteMatch
+  >;
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`

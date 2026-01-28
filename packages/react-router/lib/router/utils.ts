@@ -1,3 +1,4 @@
+import type * as React from "react";
 import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
@@ -362,11 +363,11 @@ export interface ShouldRevalidateFunctionArgs {
   /** This is the url the navigation started from. You can compare it with `nextUrl` to decide if you need to revalidate this route's data. */
   currentUrl: URL;
   /** These are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params} from the URL that can be compared to the `nextParams` to decide if you need to reload or not. Perhaps you're using only a partial piece of the param for data loading, you don't need to revalidate if a superfluous part of the param changed. */
-  currentParams: AgnosticDataRouteMatch["params"];
+  currentParams: DataRouteMatch["params"];
   /** In the case of navigation, this the URL the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentUrl. */
   nextUrl: URL;
   /** In the case of navigation, these are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params}  from the next location the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentParams. */
-  nextParams: AgnosticDataRouteMatch["params"];
+  nextParams: DataRouteMatch["params"];
   /** The method (probably `"GET"` or `"POST"`) used in the form submission that triggered the revalidation. */
   formMethod?: Submission["formMethod"];
   /** The form action (`<Form action="/somewhere">`) that triggered the revalidation. */
@@ -424,7 +425,7 @@ export interface ShouldRevalidateFunction {
 }
 
 export interface DataStrategyMatch
-  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  extends RouteMatch<string, DataRouteObject> {
   /**
    * @private
    */
@@ -528,8 +529,8 @@ export interface DataStrategyFunction<Context = DefaultContext> {
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
-  O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch,
+  O extends RouteObject = RouteObject,
+  M extends RouteMatch = RouteMatch,
 > = {
   signal: AbortSignal;
   path: string;
@@ -539,8 +540,8 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
 };
 
 export type AgnosticPatchRoutesOnNavigationFunction<
-  O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch,
+  O extends RouteObject = RouteObject,
+  M extends RouteMatch = RouteMatch,
 > = (
   opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>,
 ) => MaybePromise<void>;
@@ -550,7 +551,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
  * properties from framework-agnostic properties
  */
 export interface MapRoutePropertiesFunction {
-  (route: AgnosticDataRouteObject): {
+  (route: DataRouteObject): {
     hasErrorBoundary: boolean;
   } & Record<string, any>;
 }
@@ -613,7 +614,7 @@ export function isUnsupportedLazyRouteFunctionKey(
  * lazy object to load route properties, which can add non-matching
  * related properties to a route
  */
-export type LazyRouteObject<R extends AgnosticRouteObject> = {
+export type LazyRouteObject<R extends RouteObject> = {
   [K in keyof R as K extends UnsupportedLazyRouteObjectKey
     ? never
     : K]?: () => Promise<R[K] | null | undefined>;
@@ -623,21 +624,21 @@ export type LazyRouteObject<R extends AgnosticRouteObject> = {
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
-export interface LazyRouteFunction<R extends AgnosticRouteObject> {
+export interface LazyRouteFunction<R extends RouteObject> {
   (): Promise<
     Omit<R, UnsupportedLazyRouteFunctionKey> &
       Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
   >;
 }
 
-export type LazyRouteDefinition<R extends AgnosticRouteObject> =
+export type LazyRouteDefinition<R extends RouteObject> =
   | LazyRouteObject<R>
   | LazyRouteFunction<R>;
 
 /**
  * Base RouteObject with common props shared by all types of routes
  */
-type AgnosticBaseRouteObject = {
+type BaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
@@ -647,13 +648,20 @@ type AgnosticBaseRouteObject = {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
+  lazy?: LazyRouteDefinition<BaseRouteObject>;
+  // React-specific fields
+  element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 };
 
 /**
  * Index routes must not have children
  */
-export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
+export type IndexRouteObject = BaseRouteObject & {
   children?: undefined;
   index: true;
 };
@@ -661,8 +669,8 @@ export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
 /**
  * Non-index routes may have children, but cannot have index
  */
-export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
-  children?: AgnosticRouteObject[];
+export type NonIndexRouteObject = BaseRouteObject & {
+  children?: RouteObject[];
   index?: false;
 };
 
@@ -670,27 +678,27 @@ export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
-export type AgnosticRouteObject =
-  | AgnosticIndexRouteObject
-  | AgnosticNonIndexRouteObject;
+export type RouteObject =
+  | IndexRouteObject
+  | NonIndexRouteObject;
 
-export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
+export type DataIndexRouteObject = IndexRouteObject & {
   id: string;
 };
 
-export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
-  children?: AgnosticDataRouteObject[];
+export type DataNonIndexRouteObject = NonIndexRouteObject & {
+  children?: DataRouteObject[];
   id: string;
 };
 
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export type AgnosticDataRouteObject =
-  | AgnosticDataIndexRouteObject
-  | AgnosticDataNonIndexRouteObject;
+export type DataRouteObject =
+  | DataIndexRouteObject
+  | DataNonIndexRouteObject;
 
-export type RouteManifest<R = AgnosticDataRouteObject> = Record<
+export type RouteManifest<R = DataRouteObject> = Record<
   string,
   R | undefined
 >;
@@ -767,9 +775,9 @@ export type Params<Key extends string = string> = {
 /**
  * A RouteMatch contains info about how a route matched a URL.
  */
-export interface AgnosticRouteMatch<
+export interface RouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -789,24 +797,24 @@ export interface AgnosticRouteMatch<
   route: RouteObjectType;
 }
 
-export interface AgnosticDataRouteMatch
-  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
+export interface DataRouteMatch
+  extends RouteMatch<string, DataRouteObject> {}
 
 function isIndexRoute(
-  route: AgnosticRouteObject,
-): route is AgnosticIndexRouteObject {
+  route: RouteObject,
+): route is IndexRouteObject {
   return route.index === true;
 }
 
 // Walk the route tree generating unique IDs where necessary, so we are working
-// solely with AgnosticDataRouteObject's within the Router
+// solely with DataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
-  routes: AgnosticRouteObject[],
+  routes: RouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
   parentPath: string[] = [],
   manifest: RouteManifest = {},
   allowInPlaceMutations = false,
-): AgnosticDataRouteObject[] {
+): DataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
@@ -821,7 +829,7 @@ export function convertRoutesToDataRoutes(
     );
 
     if (isIndexRoute(route)) {
-      let indexRoute: AgnosticDataIndexRouteObject = {
+      let indexRoute: DataIndexRouteObject = {
         ...route,
         id,
       };
@@ -831,7 +839,7 @@ export function convertRoutesToDataRoutes(
       );
       return indexRoute;
     } else {
-      let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
+      let pathOrLayoutRoute: DataNonIndexRouteObject = {
         ...route,
         id,
         children: undefined,
@@ -856,7 +864,7 @@ export function convertRoutesToDataRoutes(
   });
 }
 
-function mergeRouteUpdates<T extends AgnosticDataRouteObject>(
+function mergeRouteUpdates<T extends DataRouteObject>(
   route: T,
   updates: ReturnType<MapRoutePropertiesFunction>,
 ): T {
@@ -900,23 +908,23 @@ function mergeRouteUpdates<T extends AgnosticDataRouteObject>(
  * @returns An array of matched routes, or `null` if no matches were found.
  */
 export function matchRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/",
-): AgnosticRouteMatch<string, RouteObjectType>[] | null {
+): RouteMatch<string, RouteObjectType>[] | null {
   return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
 export function matchRoutesImpl<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename: string,
   allowPartial: boolean,
-): AgnosticRouteMatch<string, RouteObjectType>[] | null {
+): RouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -954,7 +962,7 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
    */
-  params: AgnosticRouteMatch["params"];
+  params: RouteMatch["params"];
   /**
    * The return value from the matched route's loader or clientLoader. This might
    * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
@@ -977,7 +985,7 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
 }
 
 export function convertRouteMatchToUiMatch(
-  match: AgnosticDataRouteMatch,
+  match: DataRouteMatch,
   loaderData: RouteData,
 ): UIMatch {
   let { route, pathname, params } = match;
@@ -992,7 +1000,7 @@ export function convertRouteMatchToUiMatch(
 }
 
 interface RouteMeta<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 > {
   relativePath: string;
   caseSensitive: boolean;
@@ -1001,7 +1009,7 @@ interface RouteMeta<
 }
 
 interface RouteBranch<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 > {
   path: string;
   score: number;
@@ -1009,7 +1017,7 @@ interface RouteBranch<
 }
 
 function flattenRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 >(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
@@ -1222,17 +1230,17 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
+  RouteObjectType extends RouteObject = RouteObject,
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string,
   allowPartial = false,
-): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
+): RouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
   let matchedParams = {};
   let matchedPathname = "/";
-  let matches: AgnosticRouteMatch<ParamKey, RouteObjectType>[] = [];
+  let matches: RouteMatch<ParamKey, RouteObjectType>[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;
@@ -1688,7 +1696,7 @@ function getInvalidPathError(
 //   </Route>
 // </Route>
 export function getPathContributingMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch,
+  T extends RouteMatch = RouteMatch,
 >(matches: T[]) {
   return matches.filter(
     (match, index) =>
@@ -1699,7 +1707,7 @@ export function getPathContributingMatches<
 // Return the array of pathnames for the current route matches - used to
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch,
+  T extends RouteMatch = RouteMatch,
 >(matches: T[]) {
   let pathMatches = getPathContributingMatches(matches);
 
@@ -2063,7 +2071,7 @@ by the star-slash in the `getRoutePattern` regex and messes up the parsed commen
 for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 */
 
-export function getRoutePattern(matches: AgnosticRouteMatch[]) {
+export function getRoutePattern(matches: RouteMatch[]) {
   return (
     matches
       .map((m) => m.route.path)

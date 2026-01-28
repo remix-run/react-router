@@ -18,7 +18,6 @@ import type {
   RSCRenderPayload,
 } from "./server.rsc";
 import type {
-  AgnosticDataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   RouterContextProvider,
@@ -1085,8 +1084,8 @@ function isExternalLocation(location: string) {
 }
 
 function cloneRoutes(
-  routes: AgnosticDataRouteObject[] | undefined,
-): AgnosticDataRouteObject[] {
+  routes: DataRouteObject[] | undefined,
+): DataRouteObject[] {
   if (!routes) return undefined as any;
   return routes.map((route) => ({
     ...route,
@@ -1095,8 +1094,8 @@ function cloneRoutes(
 }
 
 function diffRoutes(
-  a: AgnosticDataRouteObject[],
-  b: AgnosticDataRouteObject[],
+  a: DataRouteObject[],
+  b: DataRouteObject[],
 ): boolean {
   if (a.length !== b.length) return true;
   return a.some((route, index) => {
