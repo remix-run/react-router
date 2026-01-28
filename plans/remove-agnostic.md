@@ -284,11 +284,10 @@ For any external code using the `Agnostic*` types (unlikely since they're not ex
 5. ✅ Update `lib/router/instrumentation.ts` - Replace `Agnostic*` type references
 6. ✅ Update `lib/dom/ssr/links.ts` - Replace `AgnosticDataRouteMatch` references
 7. ✅ Update `lib/rsc/server.rsc.ts` - Replace `AgnosticDataRouteMatch` references
-8. ⬜ Update test files - Replace `Agnostic*` type references (~40 files)
-9. ⬜ Run full test suite (`pnpm typecheck && pnpm test && pnpm test:integration --project chromium`)
-10. ⬜ Update JSDoc comments if any reference "agnostic" or "framework-agnostic"
-11. ⬜ Update documentation if needed
-12. ⬜ Create changeset
+8. ✅ Update test files - Replace `Agnostic*` type references (~40 files) - No test files needed updating
+9. ✅ Run full test suite (`pnpm typecheck && pnpm test && pnpm test:integration --project chromium`) - All passing
+10. ✅ Update JSDoc comments if any reference "agnostic" or "framework-agnostic"
+11. ✅ Create changeset
 
 ### Risks & Mitigations
 
