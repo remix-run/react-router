@@ -766,10 +766,6 @@ async function generateRenderResponse(
   // will happen in the subsequent revalidation request
   let statusCode = 200;
   let url = new URL(request.url);
-  // TODO: Can this be done with a pathname extension instead of a header?
-  // If not, make sure we strip this at the SSR server and it can only be set
-  // by us to avoid cache-poisoning attempts
-
   let isSubmission = isMutationMethod(request.method);
   let routeIdsToLoad =
     !isSubmission && url.searchParams.has("_routes")
@@ -804,55 +800,61 @@ async function generateRenderResponse(
         // POST `request` to `query` and process our action there.
         let formState: unknown;
         let skipRevalidation = false;
+        let potentialCSRFAttackError: unknown | undefined;
         if (request.method === "POST") {
-          throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+          try {
+            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
 
-          ctx.runningAction = true;
-          let result = await processServerAction(
-            request,
-            basename,
-            decodeReply,
-            loadServerAction,
-            decodeAction,
-            decodeFormState,
-            onError,
-            temporaryReferences,
-          );
-          ctx.runningAction = false;
-
-          if (isResponse(result)) {
-            return generateRedirectResponse(
-              result,
-              actionResult,
+            ctx.runningAction = true;
+            let result = await processServerAction(
+              request,
               basename,
-              isDataRequest,
-              generateResponse,
+              decodeReply,
+              loadServerAction,
+              decodeAction,
+              decodeFormState,
+              onError,
               temporaryReferences,
-              (ctx.redirect as unknown as Response)?.headers,
-            );
-          }
+            ).finally(() => {
+              ctx.runningAction = false;
+            });
 
-          skipRevalidation = result?.skipRevalidation ?? false;
-          actionResult = result?.actionResult;
-          formState = result?.formState;
-          request = result?.revalidationRequest ?? request;
+            if (isResponse(result)) {
+              return generateRedirectResponse(
+                result,
+                actionResult,
+                basename,
+                isDataRequest,
+                generateResponse,
+                temporaryReferences,
+                (ctx.redirect as unknown as Response)?.headers,
+              );
+            }
 
-          if (ctx.redirect) {
-            return generateRedirectResponse(
-              ctx.redirect,
-              actionResult,
-              basename,
-              isDataRequest,
-              generateResponse,
-              temporaryReferences,
-              undefined,
-            );
+            skipRevalidation = result?.skipRevalidation ?? false;
+            actionResult = result?.actionResult;
+            formState = result?.formState;
+            request = result?.revalidationRequest ?? request;
+
+            if (ctx.redirect) {
+              return generateRedirectResponse(
+                ctx.redirect,
+                actionResult,
+                basename,
+                isDataRequest,
+                generateResponse,
+                temporaryReferences,
+                undefined,
+              );
+            }
+          } catch (error) {
+            potentialCSRFAttackError = error;
           }
         }
 
         let staticContext = await query(
           request,
-          skipRevalidation
+          skipRevalidation || !!potentialCSRFAttackError
             ? {
                 filterMatchesToLoad: () => false,
               }
@@ -869,6 +871,13 @@ async function generateRenderResponse(
             temporaryReferences,
             ctx.redirect?.headers,
           );
+        }
+
+        if (potentialCSRFAttackError) {
+          staticContext.errors ??= {};
+          staticContext.errors[staticContext.matches[0].route.id] =
+            potentialCSRFAttackError;
+          staticContext.statusCode = 400;
         }
 
         return generateStaticContextResponse(
