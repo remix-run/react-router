@@ -1083,9 +1083,7 @@ function isExternalLocation(location: string) {
   return newLocation.origin !== window.location.origin;
 }
 
-function cloneRoutes(
-  routes: DataRouteObject[] | undefined,
-): DataRouteObject[] {
+function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {
   if (!routes) return undefined as any;
   return routes.map((route) => ({
     ...route,
@@ -1093,10 +1091,7 @@ function cloneRoutes(
   })) as any;
 }
 
-function diffRoutes(
-  a: DataRouteObject[],
-  b: DataRouteObject[],
-): boolean {
+function diffRoutes(a: DataRouteObject[], b: DataRouteObject[]): boolean {
   if (a.length !== b.length) return true;
   return a.some((route, index) => {
     if ((route as any).element !== (b[index] as any).element) return true;

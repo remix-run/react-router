@@ -424,8 +424,7 @@ export interface ShouldRevalidateFunction {
   (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
-export interface DataStrategyMatch
-  extends RouteMatch<string, DataRouteObject> {
+export interface DataStrategyMatch extends RouteMatch<string, DataRouteObject> {
   /**
    * @private
    */
@@ -677,9 +676,7 @@ export type NonIndexRouteObject = BaseRouteObject & {
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
-export type RouteObject =
-  | IndexRouteObject
-  | NonIndexRouteObject;
+export type RouteObject = IndexRouteObject | NonIndexRouteObject;
 
 export type DataIndexRouteObject = IndexRouteObject & {
   id: string;
@@ -693,14 +690,9 @@ export type DataNonIndexRouteObject = NonIndexRouteObject & {
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export type DataRouteObject =
-  | DataIndexRouteObject
-  | DataNonIndexRouteObject;
+export type DataRouteObject = DataIndexRouteObject | DataNonIndexRouteObject;
 
-export type RouteManifest<R = DataRouteObject> = Record<
-  string,
-  R | undefined
->;
+export type RouteManifest<R = DataRouteObject> = Record<string, R | undefined>;
 
 // prettier-ignore
 type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
@@ -796,12 +788,9 @@ export interface RouteMatch<
   route: RouteObjectType;
 }
 
-export interface DataRouteMatch
-  extends RouteMatch<string, DataRouteObject> {}
+export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-function isIndexRoute(
-  route: RouteObject,
-): route is IndexRouteObject {
+function isIndexRoute(route: RouteObject): route is IndexRouteObject {
   return route.index === true;
 }
 
@@ -906,9 +895,7 @@ function mergeRouteUpdates<T extends DataRouteObject>(
  * Defaults to `/`.
  * @returns An array of matched routes, or `null` if no matches were found.
  */
-export function matchRoutes<
-  RouteObjectType extends RouteObject = RouteObject,
->(
+export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/",
@@ -998,26 +985,20 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<
-  RouteObjectType extends RouteObject = RouteObject,
-> {
+interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
   route: RouteObjectType;
 }
 
-interface RouteBranch<
-  RouteObjectType extends RouteObject = RouteObject,
-> {
+interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
   path: string;
   score: number;
   routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes<
-  RouteObjectType extends RouteObject = RouteObject,
->(
+function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
@@ -1694,9 +1675,9 @@ function getInvalidPathError(
 //     </Route
 //   </Route>
 // </Route>
-export function getPathContributingMatches<
-  T extends RouteMatch = RouteMatch,
->(matches: T[]) {
+export function getPathContributingMatches<T extends RouteMatch = RouteMatch>(
+  matches: T[],
+) {
   return matches.filter(
     (match, index) =>
       index === 0 || (match.route.path && match.route.path.length > 0),
@@ -1705,9 +1686,9 @@ export function getPathContributingMatches<
 
 // Return the array of pathnames for the current route matches - used to
 // generate the routePathnames input for resolveTo()
-export function getResolveToMatches<
-  T extends RouteMatch = RouteMatch,
->(matches: T[]) {
+export function getResolveToMatches<T extends RouteMatch = RouteMatch>(
+  matches: T[],
+) {
   let pathMatches = getPathContributingMatches(matches);
 
   // Use the full pathname for the leaf match so we include splat values for "." links

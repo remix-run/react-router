@@ -3578,10 +3578,7 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  function compareMatches(
-    a: DataRouteMatch[],
-    b: DataRouteMatch[],
-  ) {
+  function compareMatches(a: DataRouteMatch[], b: DataRouteMatch[]) {
     return (
       a.length === b.length && a.every((m, i) => m.route.id === b[i].route.id)
     );
@@ -5467,10 +5464,7 @@ const loadLazyRouteProperty = ({
   return propertyPromise;
 };
 
-const lazyRouteFunctionCache = new WeakMap<
-  DataRouteObject,
-  Promise<void>
->();
+const lazyRouteFunctionCache = new WeakMap<DataRouteObject, Promise<void>>();
 
 /**
  * Execute route.lazy functions to lazily load route modules (loader, action,
