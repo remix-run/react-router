@@ -142,11 +142,6 @@ export async function generateEntry(
   let pkgJson = await readPackageJSON(rootDirectory);
   let deps = pkgJson.dependencies ?? {};
 
-  if (!deps["@react-router/node"]) {
-    console.error(colors.red(`No default server entry detected.`));
-    return;
-  }
-
   let defaultsDirectory = path.resolve(
     path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
@@ -157,7 +152,9 @@ export async function generateEntry(
 
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    `entry.server.node.tsx`,
+    deps["@react-router/node"]
+      ? `entry.server.node.tsx`
+      : `entry.server.web.tsx`,
   );
 
   let isServerEntry = entry === "entry.server";

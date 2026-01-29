@@ -1,24 +1,47 @@
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
-import { renderToReadableStream } from "react-dom/server";
+import * as ReactDOMServer from "react-dom/server";
+
+// ReactDOMServer.renderToPipeableStream is only available in Node.js
+if (typeof ReactDOMServer.renderToPipeableStream === "function") {
+  throw new Error(
+    `The default server entry for non-Node runtimes is being used on Node.js. ` +
+      `Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
+  );
+}
+
+const { renderToReadableStream } = ReactDOMServer;
+
+export const streamTimeout = 5_000;
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  _loadContext: AppLoadContext,
+  loadContext: AppLoadContext,
+  // If you have middleware enabled:
+  // loadContext: RouterContextProvider
 ) {
+  // https://httpwg.org/specs/rfc9110.html#HEAD
+  if (request.method.toUpperCase() === "HEAD") {
+    return new Response(null, {
+      status: responseStatusCode,
+      headers: responseHeaders,
+    });
+  }
+
   let shellRendered = false;
-  const userAgent = request.headers.get("user-agent");
+  let userAgent = request.headers.get("user-agent");
 
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
     {
+      signal: AbortSignal.timeout(streamTimeout + 1000),
       onError(error: unknown) {
         responseStatusCode = 500;
-        // Log streaming rendering errors from inside the shell.  Don't log
+        // Log streaming rendering errors from inside the shell. Don't log
         // errors encountered during initial shell rendering since they'll
         // reject and get logged in handleDocumentRequest.
         if (shellRendered) {
