@@ -1,17 +1,7 @@
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
-import * as ReactDOMServer from "react-dom/server";
-
-// ReactDOMServer.renderToPipeableStream is only available in Node.js
-if (typeof ReactDOMServer.renderToPipeableStream === "function") {
-  throw new Error(
-    `The default server entry for non-Node runtimes is being used on Node.js. ` +
-      `Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
-  );
-}
-
-const { renderToReadableStream } = ReactDOMServer;
+import { renderToReadableStream } from "react-dom/server";
 
 export const streamTimeout = 5_000;
 
