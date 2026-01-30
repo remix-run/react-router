@@ -10,7 +10,7 @@ process.env.NODE_OPTIONS =
 
 const isWindows = process.platform === "win32";
 let workers = Math.floor(os.cpus().length / 2);
-if (workers < 1) workers = 1;
+if (workers < 2) workers = 2;
 
 const config: PlaywrightTestConfig = {
   testDir: ".",
