@@ -15,6 +15,7 @@ import {
   data,
   stripBasename,
 } from "../../router/utils";
+import { isAbortError } from "../../router/abort";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
@@ -667,28 +668,7 @@ async function fetchAndDecodeViaTurboStream(
   try {
     res = await fetch(url, await createRequestInit(request));
   } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : String(e);
-    const signalReason = request.signal.reason;
-    const hasAbortReason =
-      (signalReason instanceof DOMException &&
-        signalReason.name === "AbortError") ||
-      (signalReason instanceof Error && signalReason.name === "AbortError");
-
-    // Prefer signal/AbortError checks and only fall back to message matching
-    // for TypeError cases where some browsers report fetch aborts this way.
-    const isAbortError = 
-      request.signal.aborted ||
-      hasAbortReason ||
-      (typeof DOMException !== "undefined" &&
-        e instanceof DOMException &&
-        e.name === "AbortError") ||
-      (e instanceof TypeError &&
-        /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
-          errorMessage,
-        )) ||
-      (e instanceof Error && e.name === "AbortError");
-    
-    if (isAbortError) {
+    if (isAbortError(e, request.signal)) {
       throw new DOMException("Aborted", "AbortError");
     }
     throw e;

@@ -9,6 +9,7 @@ import {
   parsePath,
   warning,
 } from "./history";
+import { isAbortError } from "./abort";
 import type {
   unstable_ClientInstrumentation,
   unstable_InstrumentRouteFunction,
@@ -3017,36 +3018,6 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
-    let isAbortError = (error: unknown) => {
-      if (request.signal.aborted) {
-        return true;
-      }
-
-      const signalReason = request.signal.reason;
-      if (
-        signalReason instanceof DOMException &&
-        signalReason.name === "AbortError"
-      ) {
-        return true;
-      }
-      if (signalReason instanceof Error && signalReason.name === "AbortError") {
-        return true;
-      }
-
-      if (typeof DOMException !== "undefined" && error instanceof DOMException) {
-        return error.name === "AbortError";
-      }
-      if (error instanceof TypeError) {
-        // Fallback for browsers that surface aborted fetches as TypeError
-        return /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
-          error.message,
-        );
-      }
-      if (error instanceof Error) {
-        return error.name === "AbortError";
-      }
-      return false;
-    };
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
@@ -3060,7 +3031,7 @@ export function createRouter(init: RouterInit): Router {
       // If the request was aborted, don't treat it as an error - just return
       // empty results. This prevents abort errors from bubbling to error boundary.
       // See: https://github.com/remix-run/react-router/issues/14203
-      if (isAbortError(e)) {
+      if (isAbortError(e, request.signal)) {
         return dataResults;
       }
       // If the outer dataStrategy method throws, just return the error for all
@@ -3110,7 +3081,10 @@ export function createRouter(init: RouterInit): Router {
       // If this is an abort-related error result, convert to empty data result
       // This prevents abort errors from bubbling to error boundary
       // See: https://github.com/remix-run/react-router/issues/14203
-      if (result.type === ResultType.error && isAbortError(result.result)) {
+      if (
+        result.type === ResultType.error &&
+        isAbortError(result.result, request.signal)
+      ) {
         dataResults[routeId] = {
           type: ResultType.data,
           data: undefined,
