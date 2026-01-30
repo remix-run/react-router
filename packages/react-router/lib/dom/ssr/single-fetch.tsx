@@ -674,8 +674,8 @@ async function fetchAndDecodeViaTurboStream(
         signalReason.name === "AbortError") ||
       (signalReason instanceof Error && signalReason.name === "AbortError");
 
-    // Check if this was an abort - the signal might not be marked as aborted yet
-    // due to browser race conditions, so also check for known abort error patterns
+    // Prefer signal/AbortError checks and only fall back to message matching
+    // for TypeError cases where some browsers report fetch aborts this way.
     const isAbortError = 
       request.signal.aborted ||
       hasAbortReason ||

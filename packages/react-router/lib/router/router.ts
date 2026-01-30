@@ -3037,6 +3037,7 @@ export function createRouter(init: RouterInit): Router {
         return error.name === "AbortError";
       }
       if (error instanceof TypeError) {
+        // Fallback for browsers that surface aborted fetches as TypeError
         return /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
           error.message,
         );
