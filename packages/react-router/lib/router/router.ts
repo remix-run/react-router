@@ -9,6 +9,7 @@ import {
   parsePath,
   warning,
 } from "./history";
+import { isAbortError } from "./abort";
 import type {
   unstable_ClientInstrumentation,
   unstable_InstrumentRouteFunction,
@@ -3027,6 +3028,12 @@ export function createRouter(init: RouterInit): Router {
         false,
       );
     } catch (e) {
+      // If the request was aborted, don't treat it as an error - just return
+      // empty results. This prevents abort errors from bubbling to error boundary.
+      // See: https://github.com/remix-run/react-router/issues/14203
+      if (isAbortError(e, request.signal)) {
+        return dataResults;
+      }
       // If the outer dataStrategy method throws, just return the error for all
       // matches - and it'll naturally bubble to the root
       matches
@@ -3071,6 +3078,19 @@ export function createRouter(init: RouterInit): Router {
     }
 
     for (let [routeId, result] of Object.entries(results)) {
+      // If this is an abort-related error result, convert to empty data result
+      // This prevents abort errors from bubbling to error boundary
+      // See: https://github.com/remix-run/react-router/issues/14203
+      if (
+        result.type === ResultType.error &&
+        isAbortError(result.result, request.signal)
+      ) {
+        dataResults[routeId] = {
+          type: ResultType.data,
+          data: undefined,
+        };
+        continue;
+      }
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
         dataResults[routeId] = {
