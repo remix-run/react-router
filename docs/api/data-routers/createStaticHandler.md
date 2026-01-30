@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createStaticHandler.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createStaticHandler.html)
 
 Create a static handler to perform server-side data loading
 
@@ -54,7 +54,7 @@ function createStaticHandler(
 
 ### routes
 
-The [route objects](https://api.reactrouter.com/v7/types/react_router.RouteObject.html) to create a static handler for
+The [route objects](https://api.reactrouter.com/v7/types/react-router.RouteObject.html) to create a static handler for
 
 ### opts.basename
 

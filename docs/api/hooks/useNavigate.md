@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useNavigate.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useNavigate.html)
 
 Returns a function that lets you navigate programmatically in the browser in
 response to user interactions or effects.
@@ -30,12 +30,12 @@ functions than this hook.
 
 The returned function signature is `navigate(to, options?)`/`navigate(delta)` where:
 
-* `to` can be a string path, a [`To`](https://api.reactrouter.com/v7/types/react_router.To.html) object, or a number (delta)
+* `to` can be a string path, a [`To`](https://api.reactrouter.com/v7/types/react-router.To.html) object, or a number (delta)
 * `options` contains options for modifying the navigation
   * These options work in all modes (Framework, Data, and Declarative):
     * `relative`: `"route"` or `"path"` to control relative routing logic
     * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
-    * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html)
+    * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html)
   * These options only work in Framework and Data modes:
     * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
     * `preventScrollReset`: Do not scroll back to the top of the page after navigation
@@ -73,7 +73,7 @@ navigate("/some/route");
 navigate("/some/route?search=param");
 ```
 
-### Navigate with a [`To`](https://api.reactrouter.com/v7/types/react_router.To.html) object
+### Navigate with a [`To`](https://api.reactrouter.com/v7/types/react-router.To.html) object
 
 All properties are optional.
 
@@ -86,7 +86,7 @@ navigate({
 });
 ```
 
-If you use `state`, that will be available on the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object on
+If you use `state`, that will be available on the [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html) object on
 the next page. Access it with `useLocation().state` (see [`useLocation`](../hooks/useLocation)).
 
 ### Navigate back or forward in the history stack
@@ -103,7 +103,7 @@ navigate(1);
 
 Be cautious with `navigate(number)`. If your application can load up to a
 route that has a button that tries to navigate forward/back, there may not be
-a [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 entry to go back or forward to, or it can go somewhere you don't expect
 (like a different domain).
 

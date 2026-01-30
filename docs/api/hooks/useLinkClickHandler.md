@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLinkClickHandler.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useLinkClickHandler.html)
 
 Handles the click behavior for router [`<Link>`](../components/Link) components.This
 is useful if you need to create custom [`<Link>`](../components/Link) components with
@@ -57,7 +57,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 
 ### to
 
-The URL to navigate to, can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html).
+The URL to navigate to, can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react-router.Path.html).
 
 ### options.preventScrollReset
 
@@ -66,7 +66,7 @@ using the [`ScrollRestoration`](../components/ScrollRestoration) component. Defa
 
 ### options.relative
 
-The [relative routing type](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html) to use for the link. Defaults to `"route"`.
+The [relative routing type](https://api.reactrouter.com/v7/types/react-router.RelativeRoutingType.html) to use for the link. Defaults to `"route"`.
 
 ### options.replace
 

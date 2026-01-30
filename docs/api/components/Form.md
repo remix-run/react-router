@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Form.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.Form.html)
 
 A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
 that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch),
@@ -38,7 +38,7 @@ enabling web application user experiences.
 `Form` is most useful for submissions that should also change the URL or
 otherwise add an entry to the browser history stack. For forms that shouldn't
 manipulate the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-stack, use [`<fetcher.Form>`](https://api.reactrouter.com/v7/types/react_router.FetcherWithComponents.html#Form).
+stack, use [`<fetcher.Form>`](https://api.reactrouter.com/v7/types/react-router.FetcherWithComponents.html#Form).
 
 ```tsx
 import { Form } from "react-router";
@@ -120,7 +120,7 @@ completion of the navigation when using the
 Determines whether the form action is relative to the route hierarchy or
 the pathname. Use this if you want to opt out of navigating the route
 hierarchy and want to instead route based on slash-delimited URL segments.
-See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html).
+See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react-router.RelativeRoutingType.html).
 
 ### reloadDocument
 

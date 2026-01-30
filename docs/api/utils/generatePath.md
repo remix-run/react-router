@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.generatePath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.generatePath.html)
 
 Returns a path with params interpolated.
 

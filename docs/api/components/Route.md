@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Route.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.Route.html)
 
 Configures an element to render when a pattern matches the current location.
 It must be rendered within a [`Routes`](../components/Routes) element. Note that these routes
@@ -114,7 +114,7 @@ Mutually exclusive with `HydrateFallback`.
 
 ### id
 
-The unique identifier for this route (for use with [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html)s)
+The unique identifier for this route (for use with [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html)s)
 
 ### index
 

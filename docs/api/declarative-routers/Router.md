@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Router.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.Router.html)
 
 Provides location context for the rest of the app.
 
@@ -55,7 +55,7 @@ Nested [`Route`](../components/Route) elements describing the route tree
 ### location
 
 The location to match against. Defaults to the current location.
-This can be a string or a [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object.
+This can be a string or a [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html) object.
 
 ### navigationType
 
@@ -65,7 +65,7 @@ Defaults to `NavigationType.Pop`.
 ### navigator
 
 The navigator to use for navigation. This is usually a history object
-or a custom navigator that implements the [`Navigator`](https://api.reactrouter.com/v7/interfaces/react_router.Navigator.html) interface.
+or a custom navigator that implements the [`Navigator`](https://api.reactrouter.com/v7/interfaces/react-router.Navigator.html) interface.
 
 ### static
 
