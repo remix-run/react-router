@@ -37,6 +37,7 @@ import {
   joinPaths,
   matchPath,
   parseToInfo,
+  resolveTo,
   stripBasename,
 } from "../router/utils";
 
@@ -1173,6 +1174,54 @@ export interface LinkProps
   relative?: RelativeRoutingType;
 
   /**
+   * Rewrite path to "rewrite" the URL the router navigates to internally, while
+   * reflecting the `to` URL in the browser.  Useful for contextual navigations
+   * such as opening an image in a model on top of a gallery while keeping the
+   * underlying gallery active.
+   *
+   * The rewrite location is managed in history state, so if the user shares a URL
+   * or opens in a new tab, the rewrite location will not be included and the user
+   * will land on the non-contextual location. This also means rewrite's are only
+   * intended for SPA uses and SSR renders will not respect the rewrite.
+   *
+   * ```tsx
+   * // routes/gallery.tsx
+   * export function clientLoader({ request }: Route.LoaderArgs) {
+   *   let sp = new URL(request.url).searchParams;
+   *   return {
+   *     images: getImages(),
+   *     modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+   *   };
+   * }
+   *
+   * export default function Gallery({ loaderData }: Route.ComponentProps) {
+   *   return (
+   *     <>
+   *       <GalleryGrid>
+   *        {loaderData.images.map((image) => (
+   *          <Link
+   *            key={image.id}
+   *            to={`/gallery?image=${image.id}`}
+   *            unstable_mask={`/images/${image.id}`}
+   *          >
+   *            <img src={image.url} alt={image.alt} />
+   *          </Link>
+   *        ))}
+   *       </GalleryGrid>
+   *
+   *       {data.modalImage ? (
+   *         <dialog open>
+   *           <img src={data.modalImage.url} alt={data.modalImage.alt} />
+   *         </dialog>
+   *       ) : null}
+   *     </>
+   *   );
+   * }
+   * ```
+   */
+  unstable_mask?: To;
+
+  /**
    * Can be a string or a partial {@link Path}:
    *
    * ```tsx
@@ -1248,6 +1297,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.relative} props.relative n/a
  * @param {LinkProps.reloadDocument} props.reloadDocument n/a
  * @param {LinkProps.replace} props.replace n/a
+ * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
@@ -1262,6 +1312,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       relative,
       reloadDocument,
       replace,
+      unstable_mask,
       state,
       target,
       to,
@@ -1272,7 +1323,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     forwardedRef,
   ) {
-    let { basename, unstable_useTransitions } =
+    let { basename, navigator, unstable_useTransitions } =
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
@@ -1281,6 +1332,31 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
+    let location = useLocation();
+
+    let maskedHref: string | null = null;
+
+    if (unstable_mask) {
+      let resolved = resolveTo(
+        unstable_mask,
+        [],
+        location.unstable_mask?.pathname || location.pathname,
+      );
+
+      // If we're operating within a basename, prepend it to the pathname prior
+      // to creating the href.  If this is a root navigation, then just use the raw
+      // basename which allows the basename to have full control over the presence
+      // of a trailing slash on root links
+      if (basename !== "/") {
+        resolved.pathname =
+          resolved.pathname === "/"
+            ? basename
+            : joinPaths([basename, resolved.pathname]);
+      }
+
+      maskedHref = navigator.createHref(resolved);
+    }
+
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,
       rest,
@@ -1288,6 +1364,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
+      unstable_mask,
       state,
       target,
       preventScrollReset,
@@ -1310,7 +1387,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={parsed.absoluteURL || href}
+        href={parsed.absoluteURL || maskedHref || href}
         onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
@@ -2100,6 +2177,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * to use for the link. Defaults to `"route"`.
  * @param options.replace Whether to replace the current [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry instead of pushing a new one. Defaults to `false`.
+ * @param options.unstable_mask Masked location to display in the browser instead
+ * of the router location. Defaults to `undefined`.
  * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
@@ -2118,6 +2197,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
+    unstable_mask,
     state,
     preventScrollReset,
     relative,
@@ -2127,6 +2207,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
+    unstable_mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
@@ -2154,6 +2235,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
+            unstable_mask,
             state,
             preventScrollReset,
             relative,
@@ -2174,6 +2256,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
+      unstable_mask,
       state,
       target,
       to,

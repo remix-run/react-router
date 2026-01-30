@@ -819,7 +819,7 @@ export function useRoutesImpl(
 
   let locationFromContext = useLocation();
 
-  let location;
+  let location: Partial<Path>;
   if (locationArg) {
     let parsedLocationArg =
       typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
@@ -935,6 +935,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
+            unstable_mask: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,
