@@ -128,7 +128,7 @@ test.describe("vite-plugin-cloudflare", () => {
     );
   });
 
-  test("builds project with default web entry", async () => {
+  test("builds project with default server entry", async () => {
     const files = defineFiles();
     const cwd = await createProject(
       await files({ port: 0 }),
