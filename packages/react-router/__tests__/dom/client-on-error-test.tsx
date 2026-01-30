@@ -68,6 +68,7 @@ describe(`handleError`, () => {
             throw new Error("middleware error!");
           },
         ],
+        HydrateFallback: () => <h1>Loading...</h1>,
         Component: () => <h1>Home</h1>,
         ErrorBoundary: () => (
           <h1>Error:{(useRouteError() as Error).message}</h1>
