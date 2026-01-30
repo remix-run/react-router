@@ -3021,16 +3021,28 @@ export function createRouter(init: RouterInit): Router {
       if (request.signal.aborted) {
         return true;
       }
+
+      const signalReason = request.signal.reason;
+      if (
+        signalReason instanceof DOMException &&
+        signalReason.name === "AbortError"
+      ) {
+        return true;
+      }
+      if (signalReason instanceof Error && signalReason.name === "AbortError") {
+        return true;
+      }
+
       if (typeof DOMException !== "undefined" && error instanceof DOMException) {
         return error.name === "AbortError";
       }
-      if (error instanceof Error) {
-        return (
-          error.name === "AbortError" ||
-          /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
-            error.message,
-          )
+      if (error instanceof TypeError) {
+        return /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
+          error.message,
         );
+      }
+      if (error instanceof Error) {
+        return error.name === "AbortError";
       }
       return false;
     };

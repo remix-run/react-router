@@ -668,14 +668,25 @@ async function fetchAndDecodeViaTurboStream(
     res = await fetch(url, await createRequestInit(request));
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : String(e);
-    const errorName = e instanceof Error ? e.name : 'unknown';
+    const signalReason = request.signal.reason;
+    const hasAbortReason =
+      (signalReason instanceof DOMException &&
+        signalReason.name === "AbortError") ||
+      (signalReason instanceof Error && signalReason.name === "AbortError");
 
     // Check if this was an abort - the signal might not be marked as aborted yet
     // due to browser race conditions, so also check for known abort error patterns
     const isAbortError = 
       request.signal.aborted ||
-      errorName === 'AbortError' ||
-      /failed to fetch|load failed|network request failed|the operation was aborted/i.test(errorMessage);
+      hasAbortReason ||
+      (typeof DOMException !== "undefined" &&
+        e instanceof DOMException &&
+        e.name === "AbortError") ||
+      (e instanceof TypeError &&
+        /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
+          errorMessage,
+        )) ||
+      (e instanceof Error && e.name === "AbortError");
     
     if (isAbortError) {
       throw new DOMException("Aborted", "AbortError");
