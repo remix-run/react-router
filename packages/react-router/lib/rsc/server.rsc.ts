@@ -78,6 +78,7 @@ const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
 
 type ServerContext = {
   redirect?: Response;
+  request: Request;
   runningAction: boolean;
 };
 
@@ -87,6 +88,16 @@ const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
 
 const ServerStorage = (globalVar.___reactRouterServerStorage___ ??=
   new AsyncLocalStorage<ServerContext>());
+
+export function getRequest() {
+  const ctx = ServerStorage.getStore();
+
+  if (!ctx)
+    throw new Error(
+      "getRequest must be called from within a React Server render context",
+    );
+  return ctx.request;
+}
 
 export const redirect: typeof baseRedirect = (...args) => {
   const response = baseRedirect(...args);
@@ -782,6 +793,7 @@ async function generateRenderResponse(
 
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {
+    request,
     runningAction: false,
   };
 
