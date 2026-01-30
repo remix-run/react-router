@@ -663,7 +663,25 @@ async function fetchAndDecodeViaTurboStream(
     }
   }
 
-  let res = await fetch(url, await createRequestInit(request));
+  let res: Response;
+  try {
+    res = await fetch(url, await createRequestInit(request));
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    const errorName = e instanceof Error ? e.name : 'unknown';
+
+    // Check if this was an abort - the signal might not be marked as aborted yet
+    // due to browser race conditions, so also check for known abort error patterns
+    const isAbortError = 
+      request.signal.aborted ||
+      errorName === 'AbortError' ||
+      /failed to fetch|load failed|network request failed|the operation was aborted/i.test(errorMessage);
+    
+    if (isAbortError) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    throw e;
+  }
 
   // If this error'd without hitting the running server, then bubble a normal
   // `ErrorResponse` and don't try to decode the body with `turbo-stream`.

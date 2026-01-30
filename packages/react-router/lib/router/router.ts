@@ -3017,6 +3017,23 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
+    let isAbortError = (error: unknown) => {
+      if (request.signal.aborted) {
+        return true;
+      }
+      if (typeof DOMException !== "undefined" && error instanceof DOMException) {
+        return error.name === "AbortError";
+      }
+      if (error instanceof Error) {
+        return (
+          error.name === "AbortError" ||
+          /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
+            error.message,
+          )
+        );
+      }
+      return false;
+    };
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
@@ -3027,6 +3044,12 @@ export function createRouter(init: RouterInit): Router {
         false,
       );
     } catch (e) {
+      // If the request was aborted, don't treat it as an error - just return
+      // empty results. This prevents abort errors from bubbling to error boundary.
+      // See: https://github.com/remix-run/react-router/issues/14203
+      if (isAbortError(e)) {
+        return dataResults;
+      }
       // If the outer dataStrategy method throws, just return the error for all
       // matches - and it'll naturally bubble to the root
       matches
@@ -3071,6 +3094,16 @@ export function createRouter(init: RouterInit): Router {
     }
 
     for (let [routeId, result] of Object.entries(results)) {
+      // If this is an abort-related error result, convert to empty data result
+      // This prevents abort errors from bubbling to error boundary
+      // See: https://github.com/remix-run/react-router/issues/14203
+      if (result.type === ResultType.error && isAbortError(result.result)) {
+        dataResults[routeId] = {
+          type: ResultType.data,
+          data: undefined,
+        };
+        continue;
+      }
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
         dataResults[routeId] = {
