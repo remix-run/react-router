@@ -5,7 +5,16 @@ import { createReadableStreamFromReadable } from "@react-router/node";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import type { RenderToPipeableStreamOptions } from "react-dom/server";
-import { renderToPipeableStream } from "react-dom/server";
+import * as ReactDOMServer from "react-dom/server";
+
+// ReactDOMServer.renderToPipeableStream is only available in Node.js
+if (typeof ReactDOMServer.renderToPipeableStream !== "function") {
+  throw new Error(
+    `Running the Node.js server entry on a non-Node runtime. ` +
+      `React Router uses this when @react-router/node is listed in your dependencies. ` +
+      `Remove it, or provide a custom entry.server.tsx/jsx file in your app directory.`,
+  );
+}
 
 export const streamTimeout = 5_000;
 
@@ -44,7 +53,7 @@ export default function handleRequest(
       streamTimeout + 1000,
     );
 
-    const { pipe, abort } = renderToPipeableStream(
+    const { pipe, abort } = ReactDOMServer.renderToPipeableStream(
       <ServerRouter context={routerContext} url={request.url} />,
       {
         [readyOption]() {
