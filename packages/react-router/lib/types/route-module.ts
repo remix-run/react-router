@@ -1,15 +1,15 @@
 import type { Func } from "./utils";
 
 export type RouteModule = {
-  meta?: Func;
-  links?: Func;
-  headers?: Func;
-  loader?: Func;
-  clientLoader?: Func;
-  action?: Func;
-  clientAction?: Func;
-  HydrateFallback?: Func;
-  default?: Func;
-  ErrorBoundary?: Func;
+  meta?: Func | undefined;
+  links?: Func | undefined;
+  headers?: Func | undefined;
+  loader?: Func | undefined;
+  clientLoader?: Func | undefined;
+  action?: Func | undefined;
+  clientAction?: Func | undefined;
+  HydrateFallback?: Func | undefined;
+  default?: Func | undefined;
+  ErrorBoundary?: Func | undefined;
   [key: string]: unknown; // allow user-defined exports
 };
