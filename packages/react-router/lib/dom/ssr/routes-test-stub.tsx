@@ -2,15 +2,13 @@ import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  DataRouteObject,
+  IndexRouteObject,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
-} from "../../router/utils";
-import type {
-  DataRouteObject,
-  IndexRouteObject,
   NonIndexRouteObject,
-} from "../../context";
+} from "../../router/utils";
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
@@ -18,7 +16,6 @@ import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
 } from "../../router/utils";
-import type { MiddlewareEnabled } from "../../types/future";
 import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,

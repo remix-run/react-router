@@ -2,11 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { RouterProvider } from "../components";
-import {
-  RSCRouterContext,
-  type DataRouteMatch,
-  type DataRouteObject,
-} from "../context";
+import { RSCRouterContext } from "../context";
 import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
@@ -18,6 +14,8 @@ import type {
   RSCRenderPayload,
 } from "./server.rsc";
 import type {
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   RouterContextProvider,

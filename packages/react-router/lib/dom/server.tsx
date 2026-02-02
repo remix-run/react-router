@@ -21,13 +21,16 @@ import {
   IDLE_NAVIGATION,
   createStaticHandler as routerCreateStaticHandler,
 } from "../router/router";
-import type { RouteManifest } from "../router/utils";
+import type {
+  DataRouteObject,
+  RouteManifest,
+  RouteObject,
+} from "../router/utils";
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
 import { Router, mapRouteProperties } from "../components";
-import type { DataRouteObject, RouteObject } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,

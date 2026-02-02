@@ -1,11 +1,5 @@
 import * as React from "react";
-import type {
-  DataRouteMatch,
-  NavigateOptions,
-  RouteContextObject,
-  RouteMatch,
-  RouteObject,
-} from "./context";
+import type { NavigateOptions, RouteContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
@@ -34,10 +28,13 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
+  DataRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
   PathPattern,
+  RouteMatch,
+  RouteObject,
   UIMatch,
 } from "./router/utils";
 import {

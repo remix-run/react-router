@@ -13,18 +13,6 @@ import type {
 } from "./router/router";
 import type { TrackedPromise, RouteMatch } from "./router/utils";
 
-// Re-export route types from utils (they're now React-aware)
-export type {
-  IndexRouteObject,
-  NonIndexRouteObject,
-  RouteObject,
-  DataRouteObject,
-  RouteMatch,
-  DataRouteMatch,
-  PatchRoutesOnNavigationFunction,
-  PatchRoutesOnNavigationFunctionArgs,
-} from "./router/utils";
-
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
   // `NavigationContext` needs `future`/`unstable_useTransitions` since it doesn't
