@@ -294,7 +294,7 @@ What's next?
 [routing]: ../start/framework/routing
 [http-localhost-3000]: http://localhost:3000
 [vite]: https://vitejs.dev
-[react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
+[react-router-config]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html
 [vite-middleware]: https://vitejs.dev/guide/ssr#setting-up-the-dev-server
 [cross-env]: https://www.npmjs.com/package/cross-env
 [address-book-tutorial]: ./address-book
