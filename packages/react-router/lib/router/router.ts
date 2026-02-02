@@ -41,7 +41,6 @@ import type {
   Submission,
   SuccessResult,
   UIMatch,
-  AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
   LoaderFunctionArgs,
   ActionFunctionArgs,
@@ -49,6 +48,7 @@ import type {
   ActionFunction,
   MiddlewareFunction,
   MiddlewareNextFunction,
+  PatchRoutesOnNavigationFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -420,7 +420,7 @@ export interface RouterInit {
   hydrationData?: HydrationState;
   window?: Window;
   dataStrategy?: DataStrategyFunction;
-  patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
 }
 
 /**

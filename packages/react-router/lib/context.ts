@@ -11,12 +11,7 @@ import type {
   Router,
   StaticHandlerContext,
 } from "./router/router";
-import type {
-  AgnosticPatchRoutesOnNavigationFunction,
-  AgnosticPatchRoutesOnNavigationFunctionArgs,
-  TrackedPromise,
-  RouteMatch,
-} from "./router/utils";
+import type { TrackedPromise, RouteMatch } from "./router/utils";
 
 // Re-export route types from utils (they're now React-aware)
 export type {
@@ -26,19 +21,9 @@ export type {
   DataRouteObject,
   RouteMatch,
   DataRouteMatch,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
 } from "./router/utils";
-
-export type PatchRoutesOnNavigationFunctionArgs =
-  AgnosticPatchRoutesOnNavigationFunctionArgs<
-    import("./router/utils").RouteObject,
-    import("./router/utils").RouteMatch
-  >;
-
-export type PatchRoutesOnNavigationFunction =
-  AgnosticPatchRoutesOnNavigationFunction<
-    import("./router/utils").RouteObject,
-    import("./router/utils").RouteMatch
-  >;
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`

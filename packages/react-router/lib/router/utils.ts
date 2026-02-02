@@ -527,22 +527,16 @@ export interface DataStrategyFunction<Context = DefaultContext> {
   ): Promise<Record<string, DataStrategyResult>>;
 }
 
-export type AgnosticPatchRoutesOnNavigationFunctionArgs<
-  O extends RouteObject = RouteObject,
-  M extends RouteMatch = RouteMatch,
-> = {
+export type PatchRoutesOnNavigationFunctionArgs = {
   signal: AbortSignal;
   path: string;
-  matches: M[];
+  matches: RouteMatch[];
   fetcherKey: string | undefined;
-  patch: (routeId: string | null, children: O[]) => void;
+  patch: (routeId: string | null, children: RouteObject[]) => void;
 };
 
-export type AgnosticPatchRoutesOnNavigationFunction<
-  O extends RouteObject = RouteObject,
-  M extends RouteMatch = RouteMatch,
-> = (
-  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>,
+export type PatchRoutesOnNavigationFunction = (
+  opts: PatchRoutesOnNavigationFunctionArgs,
 ) => MaybePromise<void>;
 
 /**
