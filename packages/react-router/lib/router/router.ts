@@ -404,7 +404,9 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_passThroughRequests: boolean;
+}
 
 /**
  * Initialization options for createRouter
@@ -917,6 +919,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
+    unstable_passThroughRequests: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -3688,7 +3691,7 @@ export interface CreateStaticHandlerOptions {
   basename?: string;
   mapRouteProperties?: MapRoutePropertiesFunction;
   unstable_instrumentations?: Pick<unstable_ServerInstrumentation, "route">[];
-  future?: {};
+  future?: Partial<FutureConfig>;
 }
 
 export function createStaticHandler(
@@ -3705,6 +3708,10 @@ export function createStaticHandler(
   let _mapRouteProperties =
     opts?.mapRouteProperties || defaultMapRouteProperties;
   let mapRouteProperties = _mapRouteProperties;
+  let future: FutureConfig = {
+    unstable_passThroughRequests: false,
+    ...opts?.future,
+  };
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
@@ -4363,11 +4370,20 @@ export function createStaticHandler(
     }
 
     // Create a GET request for the loaders
-    let loaderRequest = new Request(request.url, {
-      headers: request.headers,
-      redirect: request.redirect,
-      signal: request.signal,
-    });
+    let loaderRequest: Request;
+    if (future.unstable_passThroughRequests) {
+      // Don't permit loaders to read from POST request bodies
+      if (!request.bodyUsed) {
+        request.body?.cancel();
+      }
+      loaderRequest = request;
+    } else {
+      loaderRequest = new Request(request.url, {
+        headers: request.headers,
+        redirect: request.redirect,
+        signal: request.signal,
+      });
+    }
 
     if (isErrorResult(result)) {
       // Store off the pending error - we use it to determine which loaders

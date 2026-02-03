@@ -24,6 +24,7 @@ import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
 import { throwIfPotentialCSRFAttack } from "../actions";
+import { FutureConfig } from "../dom/ssr/entry";
 
 // Add 304 for server side - that is not included in the client side logic
 // because the browser should fill those responses with the cached data
@@ -54,13 +55,15 @@ export async function singleFetchAction(
       return handleQueryError(new Error("Bad Request"), 400);
     }
 
-    let handlerRequest = new Request(handlerUrl, {
-      method: request.method,
-      body: request.body,
-      headers: request.headers,
-      signal: request.signal,
-      ...(request.body ? { duplex: "half" } : undefined),
-    });
+    let handlerRequest = build.future.unstable_passThroughRequests
+      ? request
+      : new Request(handlerUrl, {
+          method: request.method,
+          body: request.body,
+          headers: request.headers,
+          signal: request.signal,
+          ...(request.body ? { duplex: "half" } : undefined),
+        });
 
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
@@ -147,10 +150,12 @@ export async function singleFetchLoaders(
   let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
   try {
-    let handlerRequest = new Request(handlerUrl, {
-      headers: request.headers,
-      signal: request.signal,
-    });
+    let handlerRequest = build.future.unstable_passThroughRequests
+      ? request
+      : new Request(handlerUrl, {
+          headers: request.headers,
+          signal: request.signal,
+        });
 
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,

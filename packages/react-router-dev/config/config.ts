@@ -86,6 +86,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
+  unstable_passThroughRequests: boolean;
   unstable_subResourceIntegrity: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
@@ -684,6 +685,8 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
+    unstable_passThroughRequests:
+      userAndPresetConfigs.future?.unstable_passThroughRequests ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
     unstable_trailingSlashAwareDataRequests:

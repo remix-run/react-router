@@ -221,12 +221,9 @@ function derive(build: ServerBuild, mode?: string) {
 
     let response: Response;
     if (url.pathname.endsWith(".data")) {
-      let handlerUrl = new URL(request.url);
-      handlerUrl.pathname = normalizedPath;
-
       let singleFetchMatches = matchServerRoutes(
         routes,
-        handlerUrl.pathname,
+        normalizedPath,
         build.basename,
       );
 
@@ -235,7 +232,7 @@ function derive(build: ServerBuild, mode?: string) {
         build,
         staticHandler,
         request,
-        handlerUrl,
+        normalizedPath,
         loadContext,
         handleError,
       );
@@ -443,10 +440,13 @@ async function handleSingleFetchRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
+  normalizedPath: string,
   loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
+  let handlerUrl = new URL(request.url);
+  handlerUrl.pathname = normalizedPath;
+
   let response =
     request.method !== "GET"
       ? await singleFetchAction(
