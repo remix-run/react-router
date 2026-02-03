@@ -45,6 +45,7 @@ overrides:
   jsdom: 22.1.0
   workerd: 1.20250705.0
   react-is: 19.1.0
+  lodash: npm:lodash-es@*
 
 patchedDependencies:
   '@changesets/assemble-release-plan':
@@ -6837,9 +6838,6 @@ packages:
   lodash.startcase@4.4.0:
     resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-
   log-update@5.0.1:
     resolution: {integrity: sha512-5UtUDQ/6edw4ofyljDNcOVJQ4c7OjDro4h3y8e1GQL5iYElYclVHJ3zeWchylvMaKnDbDilC8irOVyexnA/Slw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -11457,7 +11455,7 @@ snapshots:
       chalk: 3.0.0
       css.escape: 1.5.1
       dom-accessibility-api: 0.6.3
-      lodash: 4.17.21
+      lodash: lodash-es@4.17.23
       redent: 3.0.0
 
   '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
@@ -13526,7 +13524,7 @@ snapshots:
       '@babel/plugin-syntax-flow': 7.18.6(@babel/core@7.27.7)
       '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.27.7)
       eslint: 8.57.0
-      lodash: 4.17.21
+      lodash: lodash-es@4.17.23
       string-natural-compare: 3.0.1
 
   eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.62.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0):
@@ -15182,8 +15180,6 @@ snapshots:
   lodash.sortby@4.7.0: {}
 
   lodash.startcase@4.4.0: {}
-
-  lodash@4.17.21: {}
 
   log-update@5.0.1:
     dependencies:
@@ -18054,7 +18050,7 @@ snapshots:
     dependencies:
       axios: 1.6.8
       joi: 17.12.3
-      lodash: 4.17.21
+      lodash: lodash-es@4.17.23
       minimist: 1.2.8
       rxjs: 7.8.1
     transitivePeerDependencies:

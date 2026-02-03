@@ -104,7 +104,8 @@
     },
     "overrides": {
       "workerd": "1.20250705.0",
-      "react-is": "19.1.0"
+      "react-is": "19.1.0",
+      "lodash": "npm:lodash-es@*"
     }
   }
 }

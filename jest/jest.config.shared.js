@@ -23,6 +23,7 @@ module.exports = {
   transform: {
     "\\.[jt]sx?$": require.resolve("./transform"),
   },
+  transformIgnorePatterns: ["node_modules\\/(?!(lodash-es)(/|$))"],
   watchPathIgnorePatterns: [...ignorePatterns, "\\/node_modules\\/"],
   globals: {
     __DEV__: true,
