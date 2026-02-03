@@ -31,10 +31,10 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
-import pick from "lodash/pick";
+import pick from "lodash-es/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
-import kebabCase from "lodash/kebabCase";
+import kebabCase from "lodash-es/kebabCase";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";

@@ -8,10 +8,10 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
+import pick from "lodash-es/pick";
+import omit from "lodash-es/omit";
+import cloneDeep from "lodash-es/cloneDeep";
+import isEqual from "lodash-es/isEqual";
 
 import {
   type RouteManifest,
