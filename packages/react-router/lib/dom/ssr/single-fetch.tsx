@@ -199,6 +199,13 @@ export function getTurboStreamSingleFetchDataStrategy(
     ssr,
     basename,
     trailingSlashAware,
+    (match) => {
+      // Don't allow opt out if the clientLoader asked to batch the serverLoader call
+      let batched =
+        typeof match.route.loader === "function" &&
+        match.route.loader.unstable_batchServerLoader === true;
+      return !batched;
+    },
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }

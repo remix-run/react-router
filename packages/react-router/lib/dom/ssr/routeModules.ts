@@ -68,6 +68,7 @@ export type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs,
 ) => ReturnType<LoaderFunction>) & {
   hydrate?: boolean;
+  unstable_batchServerLoader?: boolean;
 };
 
 /**

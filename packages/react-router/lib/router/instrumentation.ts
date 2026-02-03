@@ -219,8 +219,13 @@ export function getRouteInstrumentationUpdates(
         getHandlerInfo(args[0] as LoaderFunctionArgs | ActionFunctionArgs),
       );
       if (instrumented) {
-        if (key === "loader" && original.hydrate === true) {
-          (instrumented as LoaderFunction).hydrate = true;
+        if (key === "loader") {
+          if (original.hydrate === true) {
+            (instrumented as LoaderFunction).hydrate = true;
+          }
+          if (original.unstable_batchServerLoader === true) {
+            (instrumented as LoaderFunction).unstable_batchServerLoader = true;
+          }
         }
         // @ts-expect-error
         instrumented[UninstrumentedSymbol] = original;

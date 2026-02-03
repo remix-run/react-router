@@ -343,7 +343,7 @@ export type LoaderFunction<Context = DefaultContext> = {
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown,
   ): DataFunctionReturnValue;
-} & { hydrate?: boolean };
+} & { hydrate?: boolean; unstable_batchServerLoader?: boolean };
 
 /**
  * Route action function signature
