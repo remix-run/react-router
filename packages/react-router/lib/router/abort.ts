@@ -1,4 +1,13 @@
-export function isAbortError(error: unknown, signal: AbortSignal) {
+type AbortErrorOptions = {
+  allowTypeError?: boolean;
+};
+
+export function isAbortError(
+  error: unknown,
+  signal: AbortSignal,
+  options: AbortErrorOptions = {},
+) {
+  const { allowTypeError = true } = options;
   if (signal.aborted) {
     return true;
   }
@@ -21,6 +30,9 @@ export function isAbortError(error: unknown, signal: AbortSignal) {
     return error.name === "AbortError";
   }
   if (error instanceof TypeError) {
+    if (!allowTypeError) {
+      return false;
+    }
     // Fallback for browsers that surface aborted fetches as TypeError
     return /failed to fetch|load failed|network request failed|the operation was aborted/i.test(
       error.message,
