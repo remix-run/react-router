@@ -30,6 +30,7 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  BaseRouteObject,
   DataRouteMatch,
   DataRouteObject,
   DataStrategyFunction,

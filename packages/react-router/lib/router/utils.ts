@@ -629,24 +629,83 @@ export type LazyRouteDefinition<R extends RouteObject> =
 
 /**
  * Base RouteObject with common props shared by all types of routes
+ * @internal
  */
-type BaseRouteObject = {
+export type BaseRouteObject = {
+  /**
+   * Whether the path should be case-sensitive. Defaults to `false`.
+   */
   caseSensitive?: boolean;
+  /**
+   * The path pattern to match. If unspecified or empty, then this becomes a
+   * layout route.
+   */
   path?: string;
+  /**
+   * The unique identifier for this route (for use with {@link DataRouter}s)
+   */
   id?: string;
+  /**
+   * The route middleware.
+   * See [`middleware`](../../start/data/route-object#middleware).
+   */
   middleware?: MiddlewareFunction[];
+  /**
+   * The route loader.
+   * See [`loader`](../../start/data/route-object#loader).
+   */
   loader?: LoaderFunction | boolean;
+  /**
+   * The route action.
+   * See [`action`](../../start/data/route-object#action).
+   */
   action?: ActionFunction | boolean;
+  // TODO(v8): deprecate/remove
   hasErrorBoundary?: boolean;
+  /**
+   * The route shouldRevalidate function.
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   */
   shouldRevalidate?: ShouldRevalidateFunction;
+  /**
+   * The route handle.
+   */
   handle?: any;
+  /**
+   * A function that returns a promise that resolves to the route object.
+   * Used for code-splitting routes.
+   * See [`lazy`](../../start/data/route-object#lazy).
+   */
   lazy?: LazyRouteDefinition<BaseRouteObject>;
-  // React-specific fields
+  /**
+   * The React element to render when this Route matches.
+   * Mutually exclusive with `Component`.
+   */
   element?: React.ReactNode | null;
+  /**
+   * The React element to render while this router is loading data.
+   * Mutually exclusive with `HydrateFallback`.
+   */
   hydrateFallbackElement?: React.ReactNode | null;
+  /**
+   * The React element to render at this route if an error occurs.
+   * Mutually exclusive with `ErrorBoundary`.
+   */
   errorElement?: React.ReactNode | null;
+  /**
+   * The React Component to render when this route matches.
+   * Mutually exclusive with `element`.
+   */
   Component?: React.ComponentType | null;
+  /**
+   * The React Component to render while this router is loading data.
+   * Mutually exclusive with `hydrateFallbackElement`.
+   */
   HydrateFallback?: React.ComponentType | null;
+  /**
+   * The React Component to render at this route if an error occurs.
+   * Mutually exclusive with `errorElement`.
+   */
   ErrorBoundary?: React.ComponentType | null;
 };
 
@@ -654,7 +713,13 @@ type BaseRouteObject = {
  * Index routes must not have children
  */
 export type IndexRouteObject = BaseRouteObject & {
+  /**
+   * Child Route objects - not valid on index routes
+   */
   children?: undefined;
+  /**
+   * Whether this is an index route.
+   */
   index: true;
 };
 
@@ -662,7 +727,13 @@ export type IndexRouteObject = BaseRouteObject & {
  * Non-index routes may have children, but cannot have index
  */
 export type NonIndexRouteObject = BaseRouteObject & {
+  /**
+   * Child Route objects
+   */
   children?: RouteObject[];
+  /**
+   * Whether this is an index route.
+   */
   index?: false;
 };
 
