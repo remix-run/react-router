@@ -12,113 +12,116 @@ let fixture: Fixture;
 let appFixture: AppFixture;
 
 ////////////////////////////////////////////////////////////////////////////////
-// 👋 Hola! I'm here to help you write a great bug report pull request.
+// Bug Report: Manifest version mismatch reload loses query parameters
 //
-// You don't need to fix the bug, this is just to report one.
+// When React Router detects a manifest version mismatch during navigation
+// (e.g., after a deployment), it performs a hard refresh using only the path,
+// stripping query parameters and hash from the URL.
 //
-// The pull request you are submitting is supposed to fail when created, to let
-// the team see the erroneous behavior, and understand what's going wrong.
+// Root cause: In fog-of-war.ts line 87, navigation passes just `path` instead
+// of the full URL with query params:
+//   fetcherKey ? window.location.href : path
 //
-// If you happen to have a fix as well, it will have to be applied in a subsequent
-// commit to this pull request, and your now-succeeding test will have to be moved
-// to the appropriate file.
-//
-// First, make sure to install dependencies and build React Router. From the root of
-// the project, run this:
-//
-//    ```
-//    pnpm install && pnpm build
-//    ```
-//
-// If you have never installed playwright on your system before, you may also need
-// to install a browser engine:
-//
-//    ```
-//    pnpm exec playwright install chromium
-//    ```
-//
-// Now try running this test:
-//
-//    ```
-//    pnpm test:integration bug-report --project chromium
-//    ```
-//
-// You can add `--watch` to the end to have it re-run on file changes:
-//
-//    ```
-//    pnpm test:integration bug-report --project chromium --watch
-//    ```
+// This causes data loss for users with tracking params, auth tokens, or
+// application state in query strings when they navigate during/after a deploy.
 ////////////////////////////////////////////////////////////////////////////////
 
-test.beforeEach(async ({ context }) => {
-  await context.route(/\.data$/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    route.continue();
-  });
+test.afterAll(() => {
+  appFixture?.close();
 });
 
-test.beforeAll(async () => {
+test("manifest version mismatch reload should preserve query parameters and hash", async ({
+  page,
+}) => {
   fixture = await createFixture({
-    ////////////////////////////////////////////////////////////////////////////
-    // 💿 Next, add files to this object, just like files in a real app,
-    // `createFixture` will make an app and run your tests against it.
-    ////////////////////////////////////////////////////////////////////////////
     files: {
       "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
-
-        export function loader() {
-          return "pizza";
-        }
+        import { Link, useSearchParams } from "react-router";
 
         export default function Index() {
-          let data = useLoaderData();
+          const [searchParams] = useSearchParams();
           return (
             <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
+              <h1>Home</h1>
+              <p data-token>Token: {searchParams.get("token") || "none"}</p>
+              <p data-ref>Ref: {searchParams.get("ref") || "none"}</p>
+              <Link to="/other?token=abc123&ref=campaign#section1">Go to Other</Link>
             </div>
-          )
+          );
         }
       `,
 
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+      "app/routes/other.tsx": js`
+        import { useSearchParams, useLocation } from "react-router";
+
+        export default function Other() {
+          const [searchParams] = useSearchParams();
+          const location = useLocation();
+          return (
+            <div>
+              <h1>Other Page</h1>
+              <p data-token>Token: {searchParams.get("token") || "none"}</p>
+              <p data-ref>Ref: {searchParams.get("ref") || "none"}</p>
+              <p data-hash>Hash: {location.hash || "none"}</p>
+              <p data-search>Search: {location.search || "none"}</p>
+            </div>
+          );
         }
       `,
     },
   });
 
-  // This creates an interactive app using playwright.
+  // Intercept manifest requests and simulate a version mismatch by returning
+  // 204 with X-Remix-Reload-Document header (this triggers the hard reload)
+  await page.route(/\/__manifest/, async (route) => {
+    const url = route.request().url();
+    // Only trigger mismatch for the /other route discovery
+    if (url.includes(encodeURIComponent("/other"))) {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          "X-Remix-Reload-Document": "true",
+        },
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  // Track the URL that the browser navigates to on reload
+  let reloadUrl: string | null = null;
+  page.on("request", (request) => {
+    if (request.isNavigationRequest() && request.url().includes("/other")) {
+      reloadUrl = request.url();
+    }
+  });
+
   appFixture = await createAppFixture(fixture);
-});
-
-test.afterAll(() => {
-  appFixture.close();
-});
-
-////////////////////////////////////////////////////////////////////////////////
-// 💿 Almost done, now write your failing test case(s) down here Make sure to
-// add a good description for what you expect React Router to do 👇🏽
-////////////////////////////////////////////////////////////////////////////////
-
-test("[description of what you expect it to do]", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
 
-  // If you need to test interactivity use the `app`
+  // Start on home page
   await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
+  await page.waitForSelector("h1");
 
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
-  // await app.poke(20);
+  // Click link to /other with query params and hash
+  // This should trigger manifest fetch -> version mismatch -> hard reload
+  await app.clickLink("/other?token=abc123&ref=campaign#section1");
 
-  // Go check out the other tests to see what else you can do.
+  // Wait for the page to reload and render
+  await page.waitForSelector('[data-token]', { timeout: 5000 });
+
+  // EXPECTED: Query parameters and hash should be preserved after reload
+  // ACTUAL BUG: They are stripped because fog-of-war.ts uses just `path`
+  await expect(page.locator("[data-token]")).toHaveText("Token: abc123");
+  await expect(page.locator("[data-ref]")).toHaveText("Ref: campaign");
+  await expect(page.locator("[data-hash]")).toHaveText("Hash: #section1");
+  await expect(page.locator("[data-search]")).toContain("?token=abc123");
+
+  // Also verify the URL in the browser
+  const currentUrl = page.url();
+  expect(currentUrl).toContain("token=abc123");
+  expect(currentUrl).toContain("ref=campaign");
+  expect(currentUrl).toContain("#section1");
 });
 
 ////////////////////////////////////////////////////////////////////////////////
