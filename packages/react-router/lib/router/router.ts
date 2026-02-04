@@ -1229,9 +1229,6 @@ export function createRouter(init: RouterInit): Router {
     }
     subscribers.clear();
     if (pendingNavigationController) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[RR-DEBUG] abortNavigation", { reason: "router:dispose" });
-      }
       pendingNavigationController.abort();
     }
     state.fetchers.forEach((_, key) => deleteFetcher(key));
@@ -1683,11 +1680,6 @@ export function createRouter(init: RouterInit): Router {
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
     if (pendingNavigationController) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[RR-DEBUG] abortNavigation", {
-          reason: "navigation:restart",
-        });
-      }
       pendingNavigationController.abort();
     }
     pendingNavigationController = null;
@@ -2730,11 +2722,6 @@ export function createRouter(init: RouterInit): Router {
     ) {
       invariant(pendingAction, "Expected pending action");
       if (pendingNavigationController) {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("[RR-DEBUG] abortNavigation", {
-            reason: "navigation:replaced-by-fetcher",
-          });
-        }
         pendingNavigationController.abort();
       }
 
@@ -3280,9 +3267,6 @@ export function createRouter(init: RouterInit): Router {
   function abortFetcher(key: string, reason?: unknown) {
     let controller = fetchControllers.get(key);
     if (controller) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[RR-DEBUG] abortFetcher", { key, reason });
-      }
       controller.abort(reason);
       fetchControllers.delete(key);
     }
@@ -6217,11 +6201,6 @@ async function callLoaderOrAction({
     let abortPromise = new Promise<DataStrategyResult>((_, r) => (reject = r));
     onReject = () => {
       const reason = request.signal.reason;
-      if (process.env.NODE_ENV !== "production") {
-        const message = reason instanceof Error ? reason.message : String(reason);
-        const name = reason instanceof Error ? reason.name : "unknown";
-        console.warn("[RR-DEBUG] abortPromise", { name, message });
-      }
       if (
         reason instanceof Error ||
         (typeof DOMException !== "undefined" && reason instanceof DOMException)
