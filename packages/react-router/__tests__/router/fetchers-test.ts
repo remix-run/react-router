@@ -172,6 +172,19 @@ describe("fetchers", () => {
       await A.loaders.foo.resolve("A DATA");
       expect(A.fetcher.state).toBe("idle");
       expect(A.fetcher.data).toBe("A DATA");
+      expect(A.loaders.foo.stub).toHaveBeenCalledWith({
+        params: {},
+        request: new Request("http://localhost/foo", {
+          signal: A.loaders.foo.stub.mock.calls[0][0].request.signal,
+        }),
+        unstable_pattern: "/foo",
+        unstable_path: {
+          pathname: "/foo",
+          search: "",
+          hash: "",
+        },
+        context: {},
+      });
     });
 
     it("loader re-fetch", async () => {
@@ -212,11 +225,19 @@ describe("fetchers", () => {
       expect(A.fetcher.formAction).toBe("/foo");
       expect(A.fetcher.formData).toEqual(createFormData({ key: "value" }));
       expect(A.fetcher.formEncType).toBe("application/x-www-form-urlencoded");
-      expect(
-        new URL(
-          A.loaders.foo.stub.mock.calls[0][0].request.url,
-        ).searchParams.toString(),
-      ).toBe("key=value");
+      expect(A.loaders.foo.stub).toHaveBeenCalledWith({
+        params: {},
+        request: new Request("http://localhost/foo?key=value", {
+          signal: A.loaders.foo.stub.mock.calls[0][0].request.signal,
+        }),
+        unstable_pattern: "/foo",
+        unstable_path: {
+          pathname: "/foo",
+          search: "?key=value",
+          hash: "",
+        },
+        context: {},
+      });
 
       await A.loaders.foo.resolve("A DATA");
       expect(A.fetcher.state).toBe("idle");
@@ -264,6 +285,17 @@ describe("fetchers", () => {
         formData: createFormData({ key: "value" }),
       });
       expect(A.fetcher.state).toBe("submitting");
+      expect(A.actions.foo.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        unstable_pattern: "/foo",
+        unstable_path: {
+          pathname: "/foo",
+          search: "",
+          hash: "",
+        },
+        context: {},
+      });
 
       await A.actions.foo.resolve("A ACTION");
       expect(A.fetcher.state).toBe("loading");
@@ -374,6 +406,7 @@ describe("fetchers", () => {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
     });
@@ -3375,6 +3408,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 
@@ -3405,6 +3439,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 
@@ -3433,6 +3468,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 
@@ -3461,6 +3497,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 
@@ -3490,6 +3527,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 
@@ -3521,6 +3559,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 
@@ -3551,6 +3590,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 

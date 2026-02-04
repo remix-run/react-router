@@ -1752,6 +1752,7 @@ describe("a router", () => {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: "/tasks",
+        unstable_path: { pathname: "/tasks", search: "", hash: "" },
         context: {},
       });
 
@@ -1762,6 +1763,7 @@ describe("a router", () => {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: "/tasks/:id",
+        unstable_path: { pathname: "/tasks/1", search: "", hash: "" },
         context: {},
       });
 
@@ -1772,6 +1774,11 @@ describe("a router", () => {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: "/tasks",
+        unstable_path: {
+          pathname: "/tasks",
+          search: "?foo=bar",
+          hash: "#hash",
+        },
         context: {},
       });
 
@@ -1784,6 +1791,11 @@ describe("a router", () => {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: "/tasks",
+        unstable_path: {
+          pathname: "/tasks",
+          search: "?foo=bar",
+          hash: "#hash",
+        },
         context: {},
       });
 
@@ -2210,6 +2222,7 @@ describe("a router", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: "/tasks",
+        unstable_path: { pathname: "/tasks", search: "", hash: "" },
         context: {},
       });
 
@@ -2254,7 +2267,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
+        unstable_pattern: "/tasks",
+        unstable_path: { pathname: "/tasks", search: "?foo=bar", hash: "" },
         context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
@@ -2289,6 +2303,7 @@ describe("a router", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
+        unstable_path: expect.any(Object),
         context: {},
       });
 

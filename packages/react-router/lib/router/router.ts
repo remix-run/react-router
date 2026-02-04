@@ -3875,7 +3875,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_path: stripIndexParam(location),
+            unstable_path: createDataFunctionPath(location),
             unstable_pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
@@ -4112,7 +4112,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_path: stripIndexParam(location),
+          unstable_path: createDataFunctionPath(location),
           unstable_pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
@@ -6136,7 +6136,7 @@ async function callDataStrategyImpl(
     "fetcherKey" | "runClientMiddleware"
   > = {
     request,
-    unstable_path: stripIndexParam(path),
+    unstable_path: createDataFunctionPath(path),
     unstable_pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
@@ -6239,7 +6239,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
-          unstable_path: stripIndexParam(path),
+          unstable_path: createDataFunctionPath(path),
           unstable_pattern,
           params: match.params,
           context: scopedContext,
@@ -6539,7 +6539,9 @@ function createClientSideRequest(
   return new Request(url, init);
 }
 
-function stripIndexParam(path: To): Path {
+// Create the unstable_path object to pass to loaders/actions/middleware,
+// we strip the `?index` param becuase that is a React Router implementation detail
+function createDataFunctionPath(path: To): Path {
   let parsed = typeof path === "string" ? parsePath(path) : path;
   let searchParams = new URLSearchParams(parsed.search);
 
@@ -6550,11 +6552,13 @@ function stripIndexParam(path: To): Path {
     searchParams.append("index", value);
   }
 
+  // Create fresh here to strip any `state`/`key` fields from `Location` instances
+  // coming in (which satisfy the `To` interface)
+  let search = searchParams.toString();
   return {
-    pathname: "",
-    hash: "",
-    ...parsed,
-    search: searchParams.size ? `?${searchParams.toString()}` : "",
+    pathname: parsed.pathname || "/",
+    search: search ? `?${search}` : "",
+    hash: parsed.hash || "",
   };
 }
 
