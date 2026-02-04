@@ -39,6 +39,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
 import { throwIfPotentialCSRFAttack } from "../actions";
+import { normalizePath, normalizeUrl } from "./urls";
 
 export type RequestHandler = (
   request: Request,
@@ -108,29 +109,11 @@ function derive(build: ServerBuild, mode?: string) {
 
     let url = new URL(request.url);
 
-    let normalizedBasename = build.basename || "/";
-    let normalizedPath = url.pathname;
-    if (build.future.unstable_trailingSlashAwareDataRequests) {
-      if (normalizedPath.endsWith("/_.data")) {
-        // Handle trailing slash URLs: /about/_.data -> /about/
-        normalizedPath = normalizedPath.replace(/_.data$/, "");
-      } else {
-        normalizedPath = normalizedPath.replace(/\.data$/, "");
-      }
-    } else {
-      if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-        normalizedPath = normalizedBasename;
-      } else if (normalizedPath.endsWith(".data")) {
-        normalizedPath = normalizedPath.replace(/\.data$/, "");
-      }
-
-      if (
-        stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-        normalizedPath.endsWith("/")
-      ) {
-        normalizedPath = normalizedPath.slice(0, -1);
-      }
-    }
+    let normalizedPath = normalizePath(
+      url.pathname,
+      build.basename || "/",
+      build.future,
+    );
 
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
@@ -141,15 +124,15 @@ function derive(build: ServerBuild, mode?: string) {
       // Decode the URL path before checking against the prerender config
       let decodedPath = decodeURI(normalizedPath);
 
-      if (normalizedBasename !== "/") {
-        let strippedPath = stripBasename(decodedPath, normalizedBasename);
+      if (build.basename && build.basename !== "/") {
+        let strippedPath = stripBasename(decodedPath, build.basename);
         if (strippedPath == null) {
           errorHandler(
             new ErrorResponseImpl(
               404,
               "Not Found",
               `Refusing to prerender the \`${decodedPath}\` path because it does ` +
-                `not start with the basename \`${normalizedBasename}\``,
+                `not start with the basename \`${build.basename}\``,
             ),
             {
               context: loadContext,
@@ -202,7 +185,7 @@ function derive(build: ServerBuild, mode?: string) {
     // Manifest request for fog of war
     let manifestUrl = getManifestPath(
       build.routeDiscovery.manifestPath,
-      normalizedBasename,
+      build.basename,
     );
     if (url.pathname === manifestUrl) {
       try {
@@ -511,6 +494,8 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
+      unstable_normalizeUrl: (r) =>
+        normalizeUrl(new URL(r.url), build.basename, build.future),
     });
 
     if (!isResponse(result)) {
@@ -688,6 +673,8 @@ async function handleResourceRequest(
             }
           }
         : undefined,
+      unstable_normalizeUrl: (r) =>
+        normalizeUrl(new URL(r.url), build.basename, build.future),
     });
 
     return handleQueryRouteResult(result);

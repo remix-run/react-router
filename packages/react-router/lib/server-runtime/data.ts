@@ -28,6 +28,7 @@ export async function callRouteHandler(
     request: future.unstable_passThroughRequests
       ? args.request
       : stripRoutesParam(stripIndexParam(args.request)),
+    unstable_url: args.unstable_url,
     params: args.params,
     context: args.context,
     unstable_pattern: args.unstable_pattern,
