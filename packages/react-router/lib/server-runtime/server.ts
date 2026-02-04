@@ -494,8 +494,8 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (r) =>
-        normalizeUrl(new URL(r.url), build.basename, build.future),
+      unstable_normalizeUrl: (url) =>
+        normalizeUrl(url, build.basename, build.future),
     });
 
     if (!isResponse(result)) {
@@ -673,8 +673,8 @@ async function handleResourceRequest(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (r) =>
-        normalizeUrl(new URL(r.url), build.basename, build.future),
+      unstable_normalizeUrl: (url) =>
+        normalizeUrl(url, build.basename, build.future),
     });
 
     return handleQueryRouteResult(result);

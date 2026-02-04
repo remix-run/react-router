@@ -12,12 +12,8 @@ export function normalizeUrl(
   // Strip _routes param
   url.searchParams.delete("_routes");
 
-  // Strip index param
-  let indexValues = url.searchParams.getAll("index");
-  url.searchParams.delete("index");
-  for (let value of indexValues.filter(Boolean)) {
-    url.searchParams.append("index", value);
-  }
+  // Don't touch index params here - they're needed for router matching and are
+  // stripped when creating the loader/action args
 
   return url;
 }
@@ -25,11 +21,11 @@ export function normalizeUrl(
 export function normalizePath(
   pathname: string,
   basename: string | undefined,
-  future: FutureConfig,
+  future: FutureConfig | null,
 ) {
   let normalizedBasename = basename || "/";
   let normalizedPath = pathname;
-  if (future.unstable_trailingSlashAwareDataRequests) {
+  if (future?.unstable_trailingSlashAwareDataRequests) {
     if (normalizedPath.endsWith("/_.data")) {
       // Handle trailing slash URLs: /about/_.data -> /about/
       normalizedPath = normalizedPath.replace(/_.data$/, "");

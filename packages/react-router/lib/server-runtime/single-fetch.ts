@@ -80,8 +80,8 @@ export async function singleFetchAction(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (r) =>
-        normalizeUrl(new URL(r.url), build.basename, build.future),
+      unstable_normalizeUrl: (url) =>
+        normalizeUrl(url, build.basename, build.future),
     });
 
     return handleQueryResult(result);
@@ -174,8 +174,8 @@ export async function singleFetchLoaders(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (r) =>
-        normalizeUrl(new URL(r.url), build.basename, build.future),
+      unstable_normalizeUrl: (url) =>
+        normalizeUrl(url, build.basename, build.future),
     });
 
     return handleQueryResult(result);

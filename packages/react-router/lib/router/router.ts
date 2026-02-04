@@ -463,7 +463,7 @@ export interface StaticHandler {
           },
         ) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
-      unstable_normalizeUrl?: (r: Request) => URL;
+      unstable_normalizeUrl?: (url: URL) => URL;
     },
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -475,7 +475,7 @@ export interface StaticHandler {
       generateMiddlewareResponse?: (
         queryRoute: (r: Request) => Promise<Response>,
       ) => MaybePromise<Response>;
-      unstable_normalizeUrl?: (r: Request) => URL;
+      unstable_normalizeUrl?: (url: URL) => URL;
     },
   ): Promise<any>;
 }
@@ -1821,18 +1821,11 @@ export function createRouter(init: RouterInit): Router {
       fogOfWar.active = false;
 
       // Create a GET request for the loaders
-      if (future.unstable_passThroughRequests) {
-        // Don't let loaders consume any request bodies
-        if (!request.bodyUsed) {
-          request.body?.cancel();
-        }
-      } else {
-        request = createClientSideRequest(
-          init.history,
-          request.url,
-          request.signal,
-        );
-      }
+      request = createClientSideRequest(
+        init.history,
+        request.url,
+        request.signal,
+      );
     }
 
     // Call loaders
@@ -3118,13 +3111,13 @@ export function createRouter(init: RouterInit): Router {
     matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
-    path: To,
+    location: Location,
     scopedContext: RouterContextProvider,
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       request,
-      path,
+      location,
       matches,
       scopedContext,
       null,
@@ -3798,11 +3791,12 @@ export function createStaticHandler(
       unstable_normalizeUrl,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
-    let normalizedUrl = unstable_normalizeUrl
-      ? unstable_normalizeUrl(request)
-      : new URL(request.url);
+    let url = new URL(request.url);
+    if (unstable_normalizeUrl) {
+      url = unstable_normalizeUrl(url);
+    }
     let method = request.method;
-    let location = createLocation("", normalizedUrl, null, "default");
+    let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -3881,7 +3875,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_url: createNormalizedUrlFromLocation(request, location),
+            unstable_path: stripIndexParam(location),
             unstable_pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
@@ -4077,11 +4071,12 @@ export function createStaticHandler(
       unstable_normalizeUrl,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
-    let normalizedUrl = unstable_normalizeUrl
-      ? unstable_normalizeUrl(request)
-      : new URL(request.url);
-    let location = createLocation("", normalizedUrl, null, "default");
+    let url = new URL(request.url);
+    if (unstable_normalizeUrl) {
+      url = unstable_normalizeUrl(url);
+    }
     let method = request.method;
+    let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -4117,7 +4112,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_url: normalizedUrl,
+          unstable_path: stripIndexParam(location),
           unstable_pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
@@ -4208,7 +4203,7 @@ export function createStaticHandler(
 
   async function queryImpl(
     request: Request,
-    path: To,
+    location: Location,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
@@ -4226,9 +4221,9 @@ export function createStaticHandler(
       if (isMutationMethod(request.method)) {
         let result = await submit(
           request,
-          path,
+          location,
           matches,
-          routeMatch || getTargetMatch(matches, new URL(request.url)),
+          routeMatch || getTargetMatch(matches, location),
           requestContext,
           dataStrategy,
           skipLoaderErrorBubbling,
@@ -4241,7 +4236,7 @@ export function createStaticHandler(
 
       let result = await loadRouteData(
         request,
-        path,
+        location,
         matches,
         requestContext,
         dataStrategy,
@@ -4277,7 +4272,7 @@ export function createStaticHandler(
 
   async function submit(
     request: Request,
-    path: To,
+    location: Location,
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
@@ -4307,7 +4302,7 @@ export function createStaticHandler(
         mapRouteProperties,
         manifest,
         request,
-        path,
+        location,
         matches,
         actionMatch,
         [],
@@ -4316,7 +4311,7 @@ export function createStaticHandler(
 
       let results = await callDataStrategy(
         request,
-        path,
+        location,
         dsMatches,
         isRouteRequest,
         requestContext,
@@ -4405,20 +4400,11 @@ export function createStaticHandler(
     }
 
     // Create a GET request for the loaders
-    let loaderRequest: Request;
-    if (future.unstable_passThroughRequests) {
-      // Don't permit loaders to read from POST request bodies
-      if (!request.bodyUsed) {
-        request.body?.cancel();
-      }
-      loaderRequest = request;
-    } else {
-      loaderRequest = new Request(request.url, {
-        headers: request.headers,
-        redirect: request.redirect,
-        signal: request.signal,
-      });
-    }
+    let loaderRequest = new Request(request.url, {
+      headers: request.headers,
+      redirect: request.redirect,
+      signal: request.signal,
+    });
 
     if (isErrorResult(result)) {
       // Store off the pending error - we use it to determine which loaders
@@ -4429,7 +4415,7 @@ export function createStaticHandler(
 
       let handlerContext = await loadRouteData(
         loaderRequest,
-        path,
+        location,
         matches,
         requestContext,
         dataStrategy,
@@ -4456,7 +4442,7 @@ export function createStaticHandler(
 
     let handlerContext = await loadRouteData(
       loaderRequest,
-      path,
+      location,
       matches,
       requestContext,
       dataStrategy,
@@ -4480,7 +4466,7 @@ export function createStaticHandler(
 
   async function loadRouteData(
     request: Request,
-    path: To,
+    location: Location,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
@@ -4516,7 +4502,7 @@ export function createStaticHandler(
         mapRouteProperties,
         manifest,
         request,
-        path,
+        location,
         matches,
         routeMatch,
         [],
@@ -4536,7 +4522,7 @@ export function createStaticHandler(
             mapRouteProperties,
             manifest,
             request,
-            path,
+            location,
             pattern,
             match,
             [],
@@ -4549,7 +4535,7 @@ export function createStaticHandler(
           mapRouteProperties,
           manifest,
           request,
-          path,
+          location,
           pattern,
           match,
           [],
@@ -4579,7 +4565,7 @@ export function createStaticHandler(
 
     let results = await callDataStrategy(
       request,
-      path,
+      location,
       dsMatches,
       isRouteRequest,
       requestContext,
@@ -4609,7 +4595,7 @@ export function createStaticHandler(
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
     request: Request,
-    path: To,
+    location: Location,
     matches: DataStrategyMatch[],
     isRouteRequest: boolean,
     requestContext: unknown,
@@ -4618,7 +4604,7 @@ export function createStaticHandler(
     let results = await callDataStrategyImpl(
       dataStrategy || defaultDataStrategy,
       request,
-      path,
+      location,
       matches,
       null,
       requestContext,
@@ -6150,12 +6136,7 @@ async function callDataStrategyImpl(
     "fetcherKey" | "runClientMiddleware"
   > = {
     request,
-    unstable_url: createNormalizedUrlFromLocation(request, {
-      pathname: "",
-      search: "",
-      hash: "",
-      ...(typeof path === "string" ? parsePath(path) : path),
-    }),
+    unstable_path: stripIndexParam(path),
     unstable_pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
@@ -6258,7 +6239,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
-          unstable_url: createNormalizedUrlFromLocation(request, path),
+          unstable_path: stripIndexParam(path),
           unstable_pattern,
           params: match.params,
           context: scopedContext,
@@ -6558,20 +6539,23 @@ function createClientSideRequest(
   return new Request(url, init);
 }
 
-function createNormalizedUrlFromLocation(request: Request, path: To): URL {
-  let url = new URL(
-    new URL(request.url).origin +
-      createPath(typeof path === "string" ? parsePath(path) : path),
-  );
+function stripIndexParam(path: To): Path {
+  let parsed = typeof path === "string" ? parsePath(path) : path;
+  let searchParams = new URLSearchParams(parsed.search);
 
   // Strip naked index param, preserve any other index params with values
-  let indexValues = url.searchParams.getAll("index");
-  url.searchParams.delete("index");
+  let indexValues = searchParams.getAll("index");
+  searchParams.delete("index");
   for (let value of indexValues.filter(Boolean)) {
-    url.searchParams.append("index", value);
+    searchParams.append("index", value);
   }
 
-  return url;
+  return {
+    pathname: "",
+    hash: "",
+    ...parsed,
+    search: searchParams.size ? `?${searchParams.toString()}` : "",
+  };
 }
 
 function convertFormDataToSearchParams(formData: FormData): URLSearchParams {

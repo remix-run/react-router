@@ -715,8 +715,7 @@ async function generateResourceResponse(
           return generateErrorResponse(error);
         }
       },
-      unstable_normalizeUrl: (r) =>
-        normalizeUrl(new URL(r.url), basename, null),
+      unstable_normalizeUrl: (url) => normalizeUrl(url, basename, null),
     });
     return response;
   } catch (error) {
@@ -808,8 +807,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
-      unstable_normalizeUrl: (r) =>
-        normalizeUrl(new URL(r.url), basename, null),
+      unstable_normalizeUrl: (url) => normalizeUrl(url, basename, null),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
