@@ -1755,7 +1755,6 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission,
     );
-    let normalizedUrl = createNormalizedUrl(request);
     // Create a new context per navigation
     let scopedContext = init.getContext
       ? await init.getContext()
@@ -1779,7 +1778,6 @@ export function createRouter(init: RouterInit): Router {
       // Call action if we received an action submission
       let actionResult = await handleAction(
         request,
-        normalizedUrl,
         location,
         opts.submission,
         matches,
@@ -1845,7 +1843,6 @@ export function createRouter(init: RouterInit): Router {
       errors,
     } = await handleLoaders(
       request,
-      normalizedUrl,
       location,
       matches,
       scopedContext,
@@ -1881,7 +1878,6 @@ export function createRouter(init: RouterInit): Router {
   // redirects/errors
   async function handleAction(
     request: Request,
-    normalizedUrl: URL,
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
@@ -1968,7 +1964,7 @@ export function createRouter(init: RouterInit): Router {
         mapRouteProperties,
         manifest,
         request,
-        normalizedUrl,
+        location,
         matches,
         actionMatch,
         initialHydration ? [] : hydrationRouteProperties,
@@ -1976,6 +1972,7 @@ export function createRouter(init: RouterInit): Router {
       );
       let results = await callDataStrategy(
         request,
+        location,
         dsMatches,
         scopedContext,
         null,
@@ -2055,7 +2052,6 @@ export function createRouter(init: RouterInit): Router {
   // errors, etc.
   async function handleLoaders(
     request: Request,
-    normalizedUrl: URL,
     location: Location,
     matches: AgnosticDataRouteMatch[],
     scopedContext: RouterContextProvider,
@@ -2156,7 +2152,6 @@ export function createRouter(init: RouterInit): Router {
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
       request,
-      normalizedUrl,
       scopedContext,
       mapRouteProperties,
       manifest,
@@ -2252,6 +2247,7 @@ export function createRouter(init: RouterInit): Router {
         dsMatches,
         revalidatingFetchers,
         request,
+        location,
         scopedContext,
       );
 
@@ -2469,7 +2465,6 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal,
       submission,
     );
-    let normalizedFetcherUrl = createNormalizedUrl(fetchRequest);
 
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
@@ -2517,7 +2512,7 @@ export function createRouter(init: RouterInit): Router {
       mapRouteProperties,
       manifest,
       fetchRequest,
-      normalizedFetcherUrl,
+      path,
       requestMatches,
       match,
       hydrationRouteProperties,
@@ -2525,6 +2520,7 @@ export function createRouter(init: RouterInit): Router {
     );
     let actionResults = await callDataStrategy(
       fetchRequest,
+      path,
       fetchMatches,
       scopedContext,
       key,
@@ -2594,7 +2590,6 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       abortController.signal,
     );
-    let normalizedUrl = createNormalizedUrl(revalidationRequest);
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let matches =
       state.navigation.state !== "idle"
@@ -2611,7 +2606,6 @@ export function createRouter(init: RouterInit): Router {
 
     let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
       revalidationRequest,
-      normalizedUrl,
       scopedContext,
       mapRouteProperties,
       manifest,
@@ -2668,6 +2662,7 @@ export function createRouter(init: RouterInit): Router {
         dsMatches,
         revalidatingFetchers,
         revalidationRequest,
+        nextLocation,
         scopedContext,
       );
 
@@ -2789,7 +2784,6 @@ export function createRouter(init: RouterInit): Router {
       path,
       abortController.signal,
     );
-    let normalizedFetcherUrl = createNormalizedUrl(fetchRequest);
 
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
@@ -2827,7 +2821,7 @@ export function createRouter(init: RouterInit): Router {
       mapRouteProperties,
       manifest,
       fetchRequest,
-      normalizedFetcherUrl,
+      path,
       matches,
       match,
       hydrationRouteProperties,
@@ -2835,6 +2829,7 @@ export function createRouter(init: RouterInit): Router {
     );
     let results = await callDataStrategy(
       fetchRequest,
+      path,
       dsMatches,
       scopedContext,
       key,
@@ -3036,6 +3031,7 @@ export function createRouter(init: RouterInit): Router {
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
     request: Request,
+    path: To,
     matches: DataStrategyMatch[],
     scopedContext: RouterContextProvider,
     fetcherKey: string | null,
@@ -3046,7 +3042,7 @@ export function createRouter(init: RouterInit): Router {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
         request,
-        createNormalizedUrl(request),
+        path,
         matches,
         fetcherKey,
         scopedContext,
@@ -3122,11 +3118,13 @@ export function createRouter(init: RouterInit): Router {
     matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
+    path: To,
     scopedContext: RouterContextProvider,
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       request,
+      path,
       matches,
       scopedContext,
       null,
@@ -3137,6 +3135,7 @@ export function createRouter(init: RouterInit): Router {
         if (f.matches && f.match && f.request && f.controller) {
           let results = await callDataStrategy(
             f.request,
+            f.path,
             f.matches,
             scopedContext,
             f.key,
@@ -3803,12 +3802,7 @@ export function createStaticHandler(
       ? unstable_normalizeUrl(request)
       : new URL(request.url);
     let method = request.method;
-    let location = createLocation(
-      "",
-      createPath(normalizedUrl),
-      null,
-      "default",
-    );
+    let location = createLocation("", normalizedUrl, null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -3887,9 +3881,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_url: unstable_normalizeUrl
-              ? unstable_normalizeUrl(request)
-              : createNormalizedUrl(request),
+            unstable_url: createNormalizedUrlFromLocation(request, location),
             unstable_pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
@@ -3909,7 +3901,6 @@ export function createStaticHandler(
               ) => {
                 let result = await queryImpl(
                   revalidationRequest,
-                  normalizedUrl,
                   location,
                   matches!,
                   requestContext,
@@ -4030,7 +4021,6 @@ export function createStaticHandler(
 
     let result = await queryImpl(
       request,
-      normalizedUrl,
       location,
       matches,
       requestContext,
@@ -4090,13 +4080,8 @@ export function createStaticHandler(
     let normalizedUrl = unstable_normalizeUrl
       ? unstable_normalizeUrl(request)
       : new URL(request.url);
+    let location = createLocation("", normalizedUrl, null, "default");
     let method = request.method;
-    let location = createLocation(
-      "",
-      createPath(normalizedUrl),
-      null,
-      "default",
-    );
     let matches = matchRoutes(dataRoutes, location, basename);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -4132,9 +4117,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_url: unstable_normalizeUrl
-            ? unstable_normalizeUrl(request)
-            : createNormalizedUrl(request),
+          unstable_url: normalizedUrl,
           unstable_pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
@@ -4147,7 +4130,6 @@ export function createStaticHandler(
             async (innerRequest: Request) => {
               let result = await queryImpl(
                 innerRequest,
-                normalizedUrl,
                 location,
                 matches!,
                 requestContext,
@@ -4185,7 +4167,6 @@ export function createStaticHandler(
 
     let result = await queryImpl(
       request,
-      normalizedUrl,
       location,
       matches,
       requestContext,
@@ -4227,8 +4208,7 @@ export function createStaticHandler(
 
   async function queryImpl(
     request: Request,
-    normalizedUrl: URL,
-    location: Location,
+    path: To,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
@@ -4246,9 +4226,9 @@ export function createStaticHandler(
       if (isMutationMethod(request.method)) {
         let result = await submit(
           request,
-          normalizedUrl,
+          path,
           matches,
-          routeMatch || getTargetMatch(matches, location),
+          routeMatch || getTargetMatch(matches, new URL(request.url)),
           requestContext,
           dataStrategy,
           skipLoaderErrorBubbling,
@@ -4261,7 +4241,7 @@ export function createStaticHandler(
 
       let result = await loadRouteData(
         request,
-        normalizedUrl,
+        path,
         matches,
         requestContext,
         dataStrategy,
@@ -4297,7 +4277,7 @@ export function createStaticHandler(
 
   async function submit(
     request: Request,
-    normalizedUrl: URL,
+    path: To,
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
@@ -4327,7 +4307,7 @@ export function createStaticHandler(
         mapRouteProperties,
         manifest,
         request,
-        normalizedUrl,
+        path,
         matches,
         actionMatch,
         [],
@@ -4336,7 +4316,7 @@ export function createStaticHandler(
 
       let results = await callDataStrategy(
         request,
-        normalizedUrl,
+        path,
         dsMatches,
         isRouteRequest,
         requestContext,
@@ -4449,7 +4429,7 @@ export function createStaticHandler(
 
       let handlerContext = await loadRouteData(
         loaderRequest,
-        normalizedUrl,
+        path,
         matches,
         requestContext,
         dataStrategy,
@@ -4476,7 +4456,7 @@ export function createStaticHandler(
 
     let handlerContext = await loadRouteData(
       loaderRequest,
-      normalizedUrl,
+      path,
       matches,
       requestContext,
       dataStrategy,
@@ -4500,7 +4480,7 @@ export function createStaticHandler(
 
   async function loadRouteData(
     request: Request,
-    normalizedUrl: URL,
+    path: To,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
@@ -4536,7 +4516,7 @@ export function createStaticHandler(
         mapRouteProperties,
         manifest,
         request,
-        normalizedUrl,
+        path,
         matches,
         routeMatch,
         [],
@@ -4556,7 +4536,7 @@ export function createStaticHandler(
             mapRouteProperties,
             manifest,
             request,
-            normalizedUrl,
+            path,
             pattern,
             match,
             [],
@@ -4569,7 +4549,7 @@ export function createStaticHandler(
           mapRouteProperties,
           manifest,
           request,
-          normalizedUrl,
+          path,
           pattern,
           match,
           [],
@@ -4599,7 +4579,7 @@ export function createStaticHandler(
 
     let results = await callDataStrategy(
       request,
-      normalizedUrl,
+      path,
       dsMatches,
       isRouteRequest,
       requestContext,
@@ -4629,7 +4609,7 @@ export function createStaticHandler(
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
     request: Request,
-    normalizedUrl: URL,
+    path: To,
     matches: DataStrategyMatch[],
     isRouteRequest: boolean,
     requestContext: unknown,
@@ -4638,7 +4618,7 @@ export function createStaticHandler(
     let results = await callDataStrategyImpl(
       dataStrategy || defaultDataStrategy,
       request,
-      normalizedUrl,
+      path,
       matches,
       null,
       requestContext,
@@ -4962,7 +4942,6 @@ function normalizeNavigateOptions(
 
 function getMatchesToLoad(
   request: Request,
-  normalizedUrl: URL,
   scopedContext: unknown,
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
@@ -5064,7 +5043,7 @@ function getMatchesToLoad(
         mapRouteProperties,
         manifest,
         request,
-        normalizedUrl,
+        location,
         pattern,
         match,
         lazyRoutePropertiesToSkip,
@@ -5109,7 +5088,7 @@ function getMatchesToLoad(
       mapRouteProperties,
       manifest,
       request,
-      normalizedUrl,
+      location,
       pattern,
       match,
       lazyRoutePropertiesToSkip,
@@ -5181,7 +5160,6 @@ function getMatchesToLoad(
       f.path,
       fetchController.signal,
     );
-    let fetchUrl = createNormalizedUrl(fetchRequest);
 
     let fetcherDsMatches: DataStrategyMatch[] | null = null;
 
@@ -5192,7 +5170,7 @@ function getMatchesToLoad(
         mapRouteProperties,
         manifest,
         fetchRequest,
-        fetchUrl,
+        f.path,
         fetcherMatches,
         fetcherMatch,
         lazyRoutePropertiesToSkip,
@@ -5207,7 +5185,7 @@ function getMatchesToLoad(
           mapRouteProperties,
           manifest,
           fetchRequest,
-          fetchUrl,
+          f.path,
           fetcherMatches,
           fetcherMatch,
           lazyRoutePropertiesToSkip,
@@ -5236,7 +5214,7 @@ function getMatchesToLoad(
           mapRouteProperties,
           manifest,
           fetchRequest,
-          fetchUrl,
+          f.path,
           fetcherMatches,
           fetcherMatch,
           lazyRoutePropertiesToSkip,
@@ -6019,7 +5997,7 @@ function getDataStrategyMatch(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
   request: Request,
-  normalizedUrl: URL,
+  path: To,
   unstable_pattern: string,
   match: DataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
@@ -6090,7 +6068,7 @@ function getDataStrategyMatch(
       ) {
         return callLoaderOrAction({
           request,
-          normalizedUrl,
+          path,
           unstable_pattern,
           match,
           lazyHandlerPromise: _lazyPromises?.handler,
@@ -6108,7 +6086,7 @@ function getTargetedDataStrategyMatches(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
   request: Request,
-  normalizedUrl: URL,
+  path: To,
   matches: AgnosticDataRouteMatch[],
   targetMatch: AgnosticDataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
@@ -6139,7 +6117,7 @@ function getTargetedDataStrategyMatches(
       mapRouteProperties,
       manifest,
       request,
-      normalizedUrl,
+      path,
       getRoutePattern(matches),
       match,
       lazyRoutePropertiesToSkip,
@@ -6153,7 +6131,7 @@ function getTargetedDataStrategyMatches(
 async function callDataStrategyImpl(
   dataStrategyImpl: DataStrategyFunction<unknown>,
   request: Request,
-  normalizedUrl: URL,
+  path: To,
   matches: DataStrategyMatch[],
   fetcherKey: string | null,
   scopedContext: unknown,
@@ -6172,7 +6150,12 @@ async function callDataStrategyImpl(
     "fetcherKey" | "runClientMiddleware"
   > = {
     request,
-    unstable_url: normalizedUrl,
+    unstable_url: createNormalizedUrlFromLocation(request, {
+      pathname: "",
+      search: "",
+      hash: "",
+      ...(typeof path === "string" ? parsePath(path) : path),
+    }),
     unstable_pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
@@ -6231,7 +6214,7 @@ async function callDataStrategyImpl(
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
 async function callLoaderOrAction({
   request,
-  normalizedUrl,
+  path,
   unstable_pattern,
   match,
   lazyHandlerPromise,
@@ -6240,7 +6223,7 @@ async function callLoaderOrAction({
   scopedContext,
 }: {
   request: Request;
-  normalizedUrl: URL;
+  path: To;
   unstable_pattern: string;
   match: AgnosticDataRouteMatch;
   lazyHandlerPromise: Promise<void> | undefined;
@@ -6275,7 +6258,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
-          unstable_url: normalizedUrl,
+          unstable_url: createNormalizedUrlFromLocation(request, path),
           unstable_pattern,
           params: match.params,
           context: scopedContext,
@@ -6575,8 +6558,11 @@ function createClientSideRequest(
   return new Request(url, init);
 }
 
-function createNormalizedUrl(request: Request): URL {
-  let url = new URL(request.url);
+function createNormalizedUrlFromLocation(request: Request, path: To): URL {
+  let url = new URL(
+    new URL(request.url).origin +
+      createPath(typeof path === "string" ? parsePath(path) : path),
+  );
 
   // Strip naked index param, preserve any other index params with values
   let indexValues = url.searchParams.getAll("index");
@@ -7059,7 +7045,7 @@ function hasNakedIndexQuery(search: string): boolean {
 
 function getTargetMatch(
   matches: AgnosticDataRouteMatch[],
-  location: Location | string,
+  location: Path | string,
 ) {
   let search =
     typeof location === "string" ? parsePath(location).search : location.search;
