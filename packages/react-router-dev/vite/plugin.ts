@@ -1,6 +1,6 @@
 // We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build since Vite 7+ is ESM only
-import type * as Vite from "vite";
+import * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import {
@@ -725,6 +725,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         process.exit(1);
       }
       return;
+    }
+
+    if (
+      reactRouterConfig.future.unstable_previewServerPrerendering &&
+      Number(Vite.version.split(".")[0]) < 7
+    ) {
+      logger.error(
+        colors.red(
+          "Vite 7 or higher is required for preview server prerendering, got version " +
+            Vite.version,
+        ),
+      );
+      process.exit(1);
     }
 
     // This `injectedPluginContext` logic is so we can support injecting an
@@ -2555,15 +2568,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { future } = ctx.reactRouterConfig;
 
-        // Prerender during SSR build only
-        if (
-          future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
-            : !viteConfigEnv.isSsrBuild
-        ) {
-          return [];
-        }
-
         // Skip prerendering if the future flag is disabled
         if (!future.unstable_previewServerPrerendering) {
           return [];
@@ -2824,7 +2828,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
 
           let serverBuildDirectory = future.v8_viteEnvironmentApi
-            ? this.environment.config?.build?.outDir
+            ? viteConfig.environments.ssr?.build?.outDir
             : (ctx.environmentBuildContext?.options.build?.outDir ??
               getServerBuildDirectory(ctx.reactRouterConfig));
 

@@ -9,6 +9,7 @@
     "build": "react-router build",
     "start:custom": "cross-env NODE_ENV=production node start.js",
     "start": "react-router-serve ./build/server/index.js",
+    "preview": "vite preview",
     "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
@@ -25,7 +26,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "typescript": "catalog:",
-    "vite": "^6.3.0"
+    "vite": "catalog:"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",

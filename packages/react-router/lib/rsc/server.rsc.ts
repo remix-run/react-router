@@ -227,6 +227,7 @@ export type RSCRouteMatch = RSCRouteManifest & {
 
 export type RSCRenderPayload = {
   type: "render";
+  routeDiscovery: "eager" | "lazy";
   actionData: Record<string, any> | null;
   basename: string | undefined;
   errors: Record<string, any> | null;
@@ -358,6 +359,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
  * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
  * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
+ * @param opts.prerender If this request is being prerendered.
  * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  * that contains the [RSC](https://react.dev/reference/rsc/server-components)
  * data for hydration.
@@ -374,6 +376,7 @@ export async function matchRSCServerRequest({
   onError,
   request,
   routes,
+  prerender,
   generateResponse,
 }: {
   allowedActionOrigins?: string[];
@@ -387,6 +390,7 @@ export async function matchRSCServerRequest({
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
+  prerender?: boolean;
   generateResponse: (
     match: RSCMatch,
     {
@@ -482,6 +486,7 @@ export async function matchRSCServerRequest({
     generateResponse,
     temporaryReferences,
     allowedActionOrigins,
+    prerender,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -760,6 +765,7 @@ async function generateRenderResponse(
   ) => Response,
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
+  prerender: boolean | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -894,6 +900,7 @@ async function generateRenderResponse(
           temporaryReferences,
           skipRevalidation,
           ctx.redirect?.headers,
+          prerender,
         );
       },
     }),
@@ -992,6 +999,7 @@ async function generateStaticContextResponse(
   temporaryReferences: unknown,
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
+  prerender: boolean | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1040,6 +1048,7 @@ async function generateStaticContextResponse(
 
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
+    routeDiscovery: prerender ? "lazy" : "eager",
     basename: staticContext.basename,
     actionData: staticContext.actionData,
     errors: staticContext.errors,

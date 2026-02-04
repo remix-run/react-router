@@ -28,6 +28,8 @@ import {
 import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
+import { prerender } from "../plugins/prerender";
+import { getPrerenderPaths } from "../plugin";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
@@ -80,11 +82,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           validateConfig: (userConfig) => {
             let errors: string[] = [];
             if (userConfig.buildEnd) errors.push("buildEnd");
-            if (userConfig.prerender) errors.push("prerender");
             if (userConfig.presets?.length) errors.push("presets");
             if (userConfig.routeDiscovery) errors.push("routeDiscovery");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.ssr === false) errors.push("ssr: false");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
             if (userConfig.future?.v8_splitRouteModules)
@@ -411,7 +411,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           viteCommand,
           routeIdByFile,
           rootRouteFile,
-          viteEnvironment: this.environment,
+          viteEnvironment: this.environment as unknown as Vite.Environment,
         });
       },
     },
@@ -425,6 +425,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       load(id) {
         if (id === virtual.basename.resolvedId) {
           return `export default ${JSON.stringify(config.basename)};`;
+        }
+      },
+    },
+    {
+      name: "react-router/rsc/virtual-ssr",
+      resolveId(id) {
+        if (id === virtual.ssr.id) {
+          return virtual.ssr.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.ssr.resolvedId) {
+          return `export default ${JSON.stringify(config.ssr)};`;
         }
       },
     },
@@ -603,7 +616,89 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
+    prerender({
+      config() {
+        return {
+          buildDirectory: getClientBuildDirectory(config),
+          concurrency: getPrerenderConcurrencyConfig(config),
+        };
+      },
+      async requests() {
+        const prerenderPaths = await getPrerenderPaths(
+          config.prerender,
+          config.ssr,
+          config.routes,
+          true,
+        );
+
+        return prerenderPaths.flatMap((prerenderPath) =>
+          prerenderPath === "/"
+            ? `http://localhost${config.basename}${prerenderPath.slice(1)}`
+            : [
+                `http://localhost${config.basename}${prerenderPath.slice(1)}`,
+                {
+                  request: `http://localhost${config.basename}${prerenderPath.slice(1)}.manifest`,
+                  metadata: { manifest: true },
+                },
+              ],
+        );
+      },
+      async postProcess(request, response, metadata) {
+        const url = new URL(request.url);
+
+        if (metadata?.manifest) {
+          return [
+            {
+              path: url.pathname,
+              contents: await response.text(),
+            },
+          ];
+        }
+
+        const html = await response.text();
+
+        let files = [
+          {
+            path: url.pathname + "/index.html",
+            contents: html,
+          },
+        ];
+
+        let matches = Array.from(
+          html.matchAll(
+            /<script>\(self\.__FLIGHT_DATA\|\|=\[\]\)\.push\(("[^"]*"(?:.*?)")\)<\/script>/g,
+          ),
+        );
+        if (matches.length) {
+          let rscData = "";
+          for (const match of matches) {
+            rscData += JSON.parse(match[1]);
+          }
+          files.push({
+            path: url.pathname === "/" ? "_.rsc" : url.pathname + ".rsc",
+            contents: rscData,
+          });
+        }
+
+        return files;
+      },
+    }),
   ];
+}
+
+const getClientBuildDirectory = (
+  reactRouterConfig: ResolvedReactRouterConfig,
+) => path.join(reactRouterConfig.buildDirectory, "client");
+
+function getPrerenderConcurrencyConfig(
+  reactRouterConfig: ResolvedReactRouterConfig,
+): number {
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+    concurrency = prerender.unstable_concurrency ?? 1;
+  }
+  return concurrency;
 }
 
 const virtual = {
@@ -611,6 +706,7 @@ const virtual = {
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
+  ssr: create("unstable_rsc/ssr"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
 

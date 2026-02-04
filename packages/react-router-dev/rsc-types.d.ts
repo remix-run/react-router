@@ -10,6 +10,11 @@ declare module "virtual:react-router/unstable_rsc/basename" {
   export default basename;
 }
 
+declare module "virtual:react-router/unstable_rsc/ssr" {
+  const ssr: boolean;
+  export default ssr;
+}
+
 declare module "virtual:react-router/unstable_rsc/react-router-serve-config" {
   const unstable_reactRouterServeConfig: {
     publicPath: string;

@@ -685,10 +685,11 @@ export function RSCHydratedRouter({
   createFromReadableStream,
   fetch: fetchImplementation = fetch,
   payload,
-  routeDiscovery = "eager",
+  routeDiscovery,
   getContext,
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
+  if (!routeDiscovery) routeDiscovery = payload.routeDiscovery;
 
   let { router, routeModules } = React.useMemo(
     () =>
