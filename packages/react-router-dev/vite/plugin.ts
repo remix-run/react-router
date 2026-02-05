@@ -1,6 +1,6 @@
 // We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build since Vite 7+ is ESM only
-import * as Vite from "vite";
+import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import {
@@ -727,14 +727,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       return;
     }
 
+    let vite = getVite();
     if (
       reactRouterConfig.future.unstable_previewServerPrerendering &&
-      Number(Vite.version.split(".")[0]) < 7
+      Number(vite.version.split(".")[0]) < 7
     ) {
       logger.error(
         colors.red(
           "Vite 7 or higher is required for preview server prerendering, got version " +
-            Vite.version,
+            vite.version,
         ),
       );
       process.exit(1);
