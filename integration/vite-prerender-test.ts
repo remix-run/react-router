@@ -166,7 +166,7 @@ for (let previewServerPrerendering of [false, true]) {
     });
 
     test.describe("prerendered file behavior (agnostic of ssr flag)", () => {
-      test.only("Prerenders known static routes when true is specified", async () => {
+      test("Prerenders known static routes when true is specified", async () => {
         let buildStdio = new PassThrough();
         fixture = await createFixture({
           buildStdio,
