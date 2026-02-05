@@ -31,7 +31,7 @@
     "@types/react-dom": "catalog:",
     "eslint": "^8.38.0",
     "typescript": "catalog:",
-    "vite": "7.0.0-beta.0",
+    "vite": "catalog:vite-7",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.1"
   },

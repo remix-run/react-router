@@ -23,7 +23,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "typescript": "catalog:",
-    "vite": "7.0.0-beta.0",
+    "vite": "catalog:vite-7",
     "vite-tsconfig-paths": "^4.2.1"
   },
   "engines": {

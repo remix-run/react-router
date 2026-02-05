@@ -119,7 +119,7 @@
     "react-router": "workspace:^",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
+    "vite": "catalog:vite-7",
     "wireit": "catalog:",
     "wrangler": "^4.23.0"
   },

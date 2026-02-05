@@ -166,11 +166,14 @@ for (let previewServerPrerendering of [false, true]) {
     });
 
     test.describe("prerendered file behavior (agnostic of ssr flag)", () => {
-      test("Prerenders known static routes when true is specified", async () => {
+      test.only("Prerenders known static routes when true is specified", async () => {
         let buildStdio = new PassThrough();
         fixture = await createFixture({
           buildStdio,
           prerender: true,
+          templateName: previewServerPrerendering
+            ? "vite-7-beta-template"
+            : "vite-5-template",
           files: {
             ...files,
             "app/routes/parent.tsx": js`

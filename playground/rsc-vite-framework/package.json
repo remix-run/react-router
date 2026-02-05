@@ -26,7 +26,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:vite-7"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",

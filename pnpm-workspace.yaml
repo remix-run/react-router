@@ -15,7 +15,6 @@ catalog:
   typescript: ^5.4.5
   tsup: ^8.3.0
   wireit: 0.14.9
-  vite: ^7.3.1
 
 catalogs:
   react-canary:
@@ -25,3 +24,5 @@ catalogs:
     react-dom: ^19.2.2
     react-server-dom-parcel: ^19.2.2
     react-server-dom-webpack: ^19.2.2
+  vite-7:
+    vite: ^7.3.1
