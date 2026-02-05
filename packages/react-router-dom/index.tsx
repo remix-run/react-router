@@ -225,6 +225,7 @@ export {
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
   UNSAFE_useRouteId,
+  UNSAFE_flattenRoutes,
 } from "react-router";
 //#endregion
 

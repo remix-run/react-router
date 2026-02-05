@@ -53,6 +53,7 @@ import {
   replace,
   resolvePath,
   UNSAFE_warning as warning,
+  UNSAFE_flattenRoutes,
 } from "@remix-run/router";
 
 import type {
@@ -353,4 +354,5 @@ export {
   useRouteId as UNSAFE_useRouteId,
   useRoutesImpl as UNSAFE_useRoutesImpl,
   logV6DeprecationWarnings as UNSAFE_logV6DeprecationWarnings,
+  UNSAFE_flattenRoutes,
 };

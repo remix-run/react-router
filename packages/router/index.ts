@@ -98,6 +98,7 @@ export {
   convertRouteMatchToUiMatch as UNSAFE_convertRouteMatchToUiMatch,
   decodePath as UNSAFE_decodePath,
   getResolveToMatches as UNSAFE_getResolveToMatches,
+  flattenRoutes as UNSAFE_flattenRoutes,
 } from "./utils";
 
 export {

@@ -602,7 +602,7 @@ interface RouteBranch<
   routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes<
+export function flattenRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   routes: RouteObjectType[],
