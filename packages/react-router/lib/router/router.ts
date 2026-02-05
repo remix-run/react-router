@@ -5380,8 +5380,10 @@ function isSameRoute(
 
   // Otherwise, we look to see if every child in the new route is already
   // represented in the existing route's children
-  return newRoute.children!.every((aChild, i) =>
-    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild)),
+  return (
+    newRoute.children?.every((aChild, i) =>
+      existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild)),
+    ) ?? false
   );
 }
 
