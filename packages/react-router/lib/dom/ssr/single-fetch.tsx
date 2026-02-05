@@ -668,7 +668,7 @@ async function fetchAndDecodeViaTurboStream(
   try {
     res = await fetch(url, await createRequestInit(request));
   } catch (e) {
-    if (isAbortError(e, request.signal, { allowTypeError: args.fetcherKey != null })) {
+    if (isAbortError(e, request.signal, { allowTypeError: true })) {
       throw new DOMException("Aborted", "AbortError");
     }
     throw e;
