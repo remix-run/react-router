@@ -24,8 +24,7 @@ import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
 import { throwIfPotentialCSRFAttack } from "../actions";
-import { FutureConfig } from "../dom/ssr/entry";
-import { normalizeUrl } from "./urls";
+import { getNormalizedPath } from "./urls";
 
 // Add 304 for server side - that is not included in the client side logic
 // because the browser should fill those responses with the cached data
@@ -80,8 +79,8 @@ export async function singleFetchAction(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (url) =>
-        normalizeUrl(url, build.basename, build.future),
+      unstable_normalizePath: (r) =>
+        getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryResult(result);
@@ -174,8 +173,8 @@ export async function singleFetchLoaders(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (url) =>
-        normalizeUrl(url, build.basename, build.future),
+      unstable_normalizePath: (r) =>
+        getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryResult(result);

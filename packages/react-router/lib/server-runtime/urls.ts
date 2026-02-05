@@ -1,51 +1,52 @@
 import type { FutureConfig } from "../dom/ssr/entry";
+import type { Path } from "../router/history";
 import { stripBasename } from "../router/utils";
 
-export function normalizeUrl(
-  url: URL,
+export function getNormalizedPath(
+  request: Request,
   basename: string | undefined,
   future: FutureConfig | null,
-) {
+): Path {
+  basename = basename || "/";
+
+  let url = new URL(request.url);
+  let pathname = url.pathname;
+
   // Strip .data suffix
-  url.pathname = normalizePath(url.pathname, basename || "/", future);
+  if (future?.unstable_trailingSlashAwareDataRequests) {
+    if (pathname.endsWith("/_.data")) {
+      // Handle trailing slash URLs: /about/_.data -> /about/
+      pathname = pathname.replace(/_.data$/, "");
+    } else {
+      pathname = pathname.replace(/\.data$/, "");
+    }
+  } else {
+    if (stripBasename(pathname, basename) === "/_root.data") {
+      pathname = basename;
+    } else if (pathname.endsWith(".data")) {
+      pathname = pathname.replace(/\.data$/, "");
+    }
+
+    if (stripBasename(pathname, basename) !== "/" && pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
+  }
 
   // Strip _routes param
-  url.searchParams.delete("_routes");
+  let searchParams = new URLSearchParams(url.search);
+  searchParams.delete("_routes");
+  let search = searchParams.toString();
+  if (search) {
+    search = `?${search}`;
+  }
 
   // Don't touch index params here - they're needed for router matching and are
   // stripped when creating the loader/action args
 
-  return url;
-}
-
-export function normalizePath(
-  pathname: string,
-  basename: string | undefined,
-  future: FutureConfig | null,
-) {
-  let normalizedBasename = basename || "/";
-  let normalizedPath = pathname;
-  if (future?.unstable_trailingSlashAwareDataRequests) {
-    if (normalizedPath.endsWith("/_.data")) {
-      // Handle trailing slash URLs: /about/_.data -> /about/
-      normalizedPath = normalizedPath.replace(/_.data$/, "");
-    } else {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
-    }
-  } else {
-    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-      normalizedPath = normalizedBasename;
-    } else if (normalizedPath.endsWith(".data")) {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
-    }
-
-    if (
-      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-      normalizedPath.endsWith("/")
-    ) {
-      normalizedPath = normalizedPath.slice(0, -1);
-    }
-  }
-
-  return normalizedPath;
+  return {
+    pathname,
+    search,
+    // No hashes on the server
+    hash: "",
+  };
 }

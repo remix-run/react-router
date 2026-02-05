@@ -39,7 +39,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
 import { throwIfPotentialCSRFAttack } from "../actions";
-import { normalizePath, normalizeUrl } from "./urls";
+import { getNormalizedPath } from "./urls";
 
 export type RequestHandler = (
   request: Request,
@@ -107,11 +107,10 @@ function derive(build: ServerBuild, mode?: string) {
       loadContext = initialContext || {};
     }
 
-    let url = new URL(request.url);
-
-    let normalizedPath = normalizePath(
-      url.pathname,
-      build.basename || "/",
+    let requestUrl = new URL(request.url);
+    let normalizedPath = getNormalizedPath(
+      request,
+      build.basename,
       build.future,
     );
 
@@ -122,7 +121,7 @@ function derive(build: ServerBuild, mode?: string) {
     // pre-rendered site would
     if (!build.ssr) {
       // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPath);
+      let decodedPath = decodeURI(normalizedPath.pathname);
 
       if (build.basename && build.basename !== "/") {
         let strippedPath = stripBasename(decodedPath, build.basename);
@@ -157,7 +156,7 @@ function derive(build: ServerBuild, mode?: string) {
         !build.prerender.includes(decodedPath) &&
         !build.prerender.includes(decodedPath + "/")
       ) {
-        if (url.pathname.endsWith(".data")) {
+        if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
           errorHandler(
             new ErrorResponseImpl(
@@ -187,9 +186,9 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
-    if (url.pathname === manifestUrl) {
+    if (requestUrl.pathname === manifestUrl) {
       try {
-        let res = await handleManifestRequest(build, routes, url);
+        let res = await handleManifestRequest(build, routes, requestUrl);
         return res;
       } catch (e) {
         handleError(e);
@@ -197,16 +196,20 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
-    let matches = matchServerRoutes(routes, normalizedPath, build.basename);
+    let matches = matchServerRoutes(
+      routes,
+      normalizedPath.pathname,
+      build.basename,
+    );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
 
     let response: Response;
-    if (url.pathname.endsWith(".data")) {
+    if (requestUrl.pathname.endsWith(".data")) {
       let singleFetchMatches = matchServerRoutes(
         routes,
-        normalizedPath,
+        normalizedPath.pathname,
         build.basename,
       );
 
@@ -215,7 +218,7 @@ function derive(build: ServerBuild, mode?: string) {
         build,
         staticHandler,
         request,
-        normalizedPath,
+        normalizedPath.pathname,
         loadContext,
         handleError,
       );
@@ -261,7 +264,7 @@ function derive(build: ServerBuild, mode?: string) {
         handleError,
       );
     } else {
-      let { pathname } = url;
+      let { pathname } = requestUrl;
 
       let criticalCss: CriticalCss | undefined = undefined;
       if (build.unstable_getCriticalCss) {
@@ -494,8 +497,8 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (url) =>
-        normalizeUrl(url, build.basename, build.future),
+      unstable_normalizePath: (r) =>
+        getNormalizedPath(r, build.basename, build.future),
     });
 
     if (!isResponse(result)) {
@@ -673,8 +676,8 @@ async function handleResourceRequest(
             }
           }
         : undefined,
-      unstable_normalizeUrl: (url) =>
-        normalizeUrl(url, build.basename, build.future),
+      unstable_normalizePath: (r) =>
+        getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryRouteResult(result);

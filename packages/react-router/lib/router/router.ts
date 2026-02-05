@@ -463,7 +463,7 @@ export interface StaticHandler {
           },
         ) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
-      unstable_normalizeUrl?: (url: URL) => URL;
+      unstable_normalizePath?: (request: Request) => Path;
     },
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -475,7 +475,7 @@ export interface StaticHandler {
       generateMiddlewareResponse?: (
         queryRoute: (r: Request) => Promise<Response>,
       ) => MaybePromise<Response>;
-      unstable_normalizeUrl?: (url: URL) => URL;
+      unstable_normalizePath?: (request: Request) => Path;
     },
   ): Promise<any>;
 }
@@ -3788,15 +3788,12 @@ export function createStaticHandler(
       skipRevalidation,
       dataStrategy,
       generateMiddlewareResponse,
-      unstable_normalizeUrl,
+      unstable_normalizePath,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
-    let url = new URL(request.url);
-    if (unstable_normalizeUrl) {
-      url = unstable_normalizeUrl(url);
-    }
+    let normalizePath = unstable_normalizePath || defaultNormalizePath;
     let method = request.method;
-    let location = createLocation("", createPath(url), null, "default");
+    let location = createLocation("", normalizePath(request), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -4068,15 +4065,12 @@ export function createStaticHandler(
       requestContext,
       dataStrategy,
       generateMiddlewareResponse,
-      unstable_normalizeUrl,
+      unstable_normalizePath,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
-    let url = new URL(request.url);
-    if (unstable_normalizeUrl) {
-      url = unstable_normalizeUrl(url);
-    }
+    let normalizePath = unstable_normalizePath || defaultNormalizePath;
     let method = request.method;
-    let location = createLocation("", createPath(url), null, "default");
+    let location = createLocation("", normalizePath(request), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -4709,6 +4703,15 @@ function isSubmissionNavigation(
     (("formData" in opts && opts.formData != null) ||
       ("body" in opts && opts.body !== undefined))
   );
+}
+
+function defaultNormalizePath(request: Request): Path {
+  let url = new URL(request.url);
+  return {
+    pathname: url.pathname,
+    search: url.search,
+    hash: url.hash,
+  };
 }
 
 function normalizeTo(
