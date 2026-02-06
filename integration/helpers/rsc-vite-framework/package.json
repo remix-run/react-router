@@ -14,6 +14,7 @@
     "@mdx-js/rollup": "^3.1.0",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
+    "@react-router/node": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "catalog:react-canary",
