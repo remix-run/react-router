@@ -127,7 +127,7 @@ for (let [previewServerPrerendering, rsc] of [
     }
   `,
     "app/routes/about.tsx": js`
-    import { useActionData, useLoaderData } from "react-router";
+    import { useLoaderData } from "react-router";
 
     export function meta({ data }) {
       return [{

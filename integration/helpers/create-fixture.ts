@@ -26,10 +26,14 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp", "integration");
 
-(global as any).__webpack_require__ = (global as any).__non_webpack_require__ =
-  () => {
-    return {};
-  };
+(global as any).__webpack_require__ ??= () => {
+  return {};
+};
+
+(global as any).__non_webpack_require__ ??= (p: string) => {
+  return require(p);
+};
+
 const decodeOptions = {
   serverConsumerManifest: {
     moduleMap: new Proxy(

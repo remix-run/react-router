@@ -5,8 +5,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev",
-    "build": "react-router build",
+    "dev": "vite",
+    "build": "vite build",
     "start": "cross-env NODE_ENV=production node start.js",
     "typecheck": "react-router typegen && tsc"
   },

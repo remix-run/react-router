@@ -395,7 +395,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
           }
         } finally {
           previewServer.httpServer.close();
-          process.env.IS_RR_BUILD_REQUEST = "yes";
+          process.env.IS_RR_BUILD_REQUEST = undefined;
         }
       },
     },
