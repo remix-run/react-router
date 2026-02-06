@@ -3057,11 +3057,7 @@ async function getPrerenderBuildAndHandler(
 ) {
   let serverBuildPath = path.join(serverBuildDirectory, serverBuildFile);
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
-  let { createRequestHandler: createHandler } = await import(
-    require.resolve("react-router", {
-      paths: [serverBuildDirectory, viteConfig.root, process.cwd()],
-    })
-  );
+  let { createRequestHandler: createHandler } = require("react-router");
   return {
     build: build as ServerBuild,
     handler: createHandler(build, viteConfig.mode),
