@@ -1037,7 +1037,8 @@ async function fetchAndApplyManifestPatches(
 
   let response = await fetchImplementation(new Request(url, { signal }));
   if (!response.body || response.status < 200 || response.status >= 300) {
-    throw new Error("Unable to fetch new route matches from the server");
+    throw new Response("", { status: 404, statusText: "Not Found" });
+    // throw new Error("Unable to fetch new route matches from the server");
   }
 
   let payload = (await createFromReadableStream(response.body, {

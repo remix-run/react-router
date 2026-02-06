@@ -5,8 +5,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --app",
+    "dev": "react-router dev",
+    "build": "react-router build",
     "start": "cross-env NODE_ENV=production node start.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -24,12 +24,13 @@
     "@vitejs/plugin-rsc": "catalog:",
     "cross-env": "^7.0.3",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
+    "vite": "catalog:vite-7",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.1"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
+    "@react-router/node": "workspace:*",
     "@react-router/serve": "workspace:*",
     "compression": "^1.8.1",
     "express": "^4.21.2",

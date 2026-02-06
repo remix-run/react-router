@@ -245,6 +245,8 @@ export function prerender<Metadata extends Record<string, unknown>>(
         const previewServer = await startPreviewServer(viteConfig);
 
         try {
+          process.env.IS_RR_BUILD_REQUEST = "yes";
+
           const baseUrl = getResolvedUrl(previewServer);
 
           async function prerenderRequest(
@@ -392,15 +394,8 @@ export function prerender<Metadata extends Record<string, unknown>>(
             await finalize.call(null, buildDirectory);
           }
         } finally {
-          await new Promise<void>((resolve, reject) => {
-            previewServer.httpServer.close((err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
+          previewServer.httpServer.close();
+          process.env.IS_RR_BUILD_REQUEST = "yes";
         }
       },
     },
@@ -436,9 +431,11 @@ function defaultHandleError(request: Request, error: Error): void {
     );
   }
 
-  throw new Error(
+  let e = new Error(
     `Prerender: Request failed for ${prerenderPath}: ${error.message}`,
   );
+  e.stack = error.stack;
+  throw e;
 }
 
 async function startPreviewServer(
