@@ -87,6 +87,7 @@ import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 import type { PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
+import { isReactRouterRepo } from "../config/is-react-router-repo";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -3056,7 +3057,11 @@ async function getPrerenderBuildAndHandler(
 ) {
   let serverBuildPath = path.join(serverBuildDirectory, serverBuildFile);
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
-  let { createRequestHandler: createHandler } = await import("react-router");
+  let { createRequestHandler: createHandler } = await import(
+    require.resolve("react-router", {
+      paths: [serverBuildDirectory, viteConfig.root, process.cwd()],
+    })
+  );
   return {
     build: build as ServerBuild,
     handler: createHandler(build, viteConfig.mode),
