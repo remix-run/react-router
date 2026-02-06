@@ -3088,8 +3088,10 @@ export function createRouter(init: RouterInit): Router {
     }
 
     for (let [routeId, result] of Object.entries(results)) {
-      // If this is an abort-related error result, convert to empty data result
-      // This prevents abort errors from bubbling to error boundary
+      // If this is an abort-related error result, skip it entirely so
+      // mergeLoaderData preserves the existing valid data for this route.
+      // Writing { data: undefined } would wipe loaderData and crash hooks
+      // like useRouteLoaderData('root') that expect data to be present.
       // See: https://github.com/remix-run/react-router/issues/14203
       if (
         result.type === ResultType.error &&
@@ -3097,10 +3099,6 @@ export function createRouter(init: RouterInit): Router {
           allowTypeError: fetcherKey != null,
         })
       ) {
-        dataResults[routeId] = {
-          type: ResultType.data,
-          data: undefined,
-        };
         continue;
       }
       if (isRedirectDataStrategyResult(result)) {
