@@ -862,7 +862,7 @@ export async function loader() {
 }
 ```
 
-Whether you set `ssr` to `true` or `false` depends on you and your users needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
+Whether you set `ssr` to `true` or `false` depends on you and your users' needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
 
 ## URL Params in Loaders
 
