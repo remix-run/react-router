@@ -3,6 +3,7 @@ import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
 import type { RouteManifest } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
+import { createPath } from "../../router/history";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -67,6 +68,7 @@ export function getPartialManifest(
 }
 
 export function getPatchRoutesOnNavigationFunction(
+  getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
@@ -78,13 +80,15 @@ export function getPatchRoutesOnNavigationFunction(
     return undefined;
   }
 
-  return async ({ path, patch, signal, fetcherKey }) => {
+  return async ({ path, patch, signal }) => {
     if (discoveredPaths.has(path)) {
       return;
     }
+    // Use navigation location for navigations, fallback to current location for fetchers
+    let errorReloadPath = createPath(getRouter().state.navigation.location || window.location);
     await fetchAndApplyManifestPatches(
       [path],
-      fetcherKey ? window.location.href : path,
+      errorReloadPath,
       manifest,
       routeModules,
       ssr,
