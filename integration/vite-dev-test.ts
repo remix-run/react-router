@@ -37,7 +37,7 @@ test.describe("Vite dev", () => {
     test.describe(`template: ${templateName} viteEnvironmentApi: ${v8_viteEnvironmentApi}`, () => {
       const files: Files = async ({ port }) => ({
         "react-router.config.ts": reactRouterConfig({
-          v8_viteEnvironmentApi,
+          future: { v8_viteEnvironmentApi },
         }),
         "vite.config.ts": await viteConfig.basic({
           port,

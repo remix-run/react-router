@@ -4575,15 +4575,11 @@ test.describe("single-fetch", () => {
     let fixture = await createFixture({
       files: {
         ...files,
-        "react-router.config.ts": js`
-          import type { Config } from "@react-router/dev/config";
-
-          export default {
-            future: {
-              unstable_trailingSlashAwareDataRequests: true,
-            }
-          } satisfies Config;
-        `,
+        "react-router.config.ts": reactRouterConfig({
+          future: {
+            unstable_trailingSlashAwareDataRequests: true,
+          },
+        }),
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
 

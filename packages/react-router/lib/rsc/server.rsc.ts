@@ -38,6 +38,7 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
+import { throwIfPotentialCSRFAttack } from "../actions";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
@@ -77,6 +78,7 @@ const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
 
 type ServerContext = {
   redirect?: Response;
+  request: Request;
   runningAction: boolean;
 };
 
@@ -86,6 +88,16 @@ const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
 
 const ServerStorage = (globalVar.___reactRouterServerStorage___ ??=
   new AsyncLocalStorage<ServerContext>());
+
+export function getRequest() {
+  const ctx = ServerStorage.getStore();
+
+  if (!ctx)
+    throw new Error(
+      "getRequest must be called from within a React Server render context",
+    );
+  return ctx.request;
+}
 
 export const redirect: typeof baseRedirect = (...args) => {
   const response = baseRedirect(...args);
@@ -331,6 +343,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * @category RSC
  * @mode data
  * @param opts Options
+ * @param opts.allowedActionOrigins Origin patterns that are allowed to execute actions.
  * @param opts.basename The basename to use when matching the request.
  * @param opts.createTemporaryReferenceSet A function that returns a temporary
  * reference set for the request, used to track temporary references in the [RSC](https://react.dev/reference/rsc/server-components)
@@ -361,6 +374,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * data for hydration.
  */
 export async function matchRSCServerRequest({
+  allowedActionOrigins,
   createTemporaryReferenceSet,
   basename,
   decodeReply,
@@ -373,6 +387,7 @@ export async function matchRSCServerRequest({
   routes,
   generateResponse,
 }: {
+  allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
   basename?: string;
   decodeReply?: DecodeReplyFunction;
@@ -477,6 +492,7 @@ export async function matchRSCServerRequest({
     onError,
     generateResponse,
     temporaryReferences,
+    allowedActionOrigins,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -754,16 +770,13 @@ async function generateRenderResponse(
     },
   ) => Response,
   temporaryReferences: unknown,
+  allowedActionOrigins: string[] | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
   // will happen in the subsequent revalidation request
   let statusCode = 200;
   let url = new URL(request.url);
-  // TODO: Can this be done with a pathname extension instead of a header?
-  // If not, make sure we strip this at the SSR server and it can only be set
-  // by us to avoid cache-poisoning attempts
-
   let isSubmission = isMutationMethod(request.method);
   let routeIdsToLoad =
     !isSubmission && url.searchParams.has("_routes")
@@ -780,6 +793,7 @@ async function generateRenderResponse(
 
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {
+    request,
     runningAction: false,
   };
 
@@ -798,53 +812,61 @@ async function generateRenderResponse(
         // POST `request` to `query` and process our action there.
         let formState: unknown;
         let skipRevalidation = false;
+        let potentialCSRFAttackError: unknown | undefined;
         if (request.method === "POST") {
-          ctx.runningAction = true;
-          let result = await processServerAction(
-            request,
-            basename,
-            decodeReply,
-            loadServerAction,
-            decodeAction,
-            decodeFormState,
-            onError,
-            temporaryReferences,
-          );
-          ctx.runningAction = false;
+          try {
+            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
 
-          if (isResponse(result)) {
-            return generateRedirectResponse(
-              result,
-              actionResult,
+            ctx.runningAction = true;
+            let result = await processServerAction(
+              request,
               basename,
-              isDataRequest,
-              generateResponse,
+              decodeReply,
+              loadServerAction,
+              decodeAction,
+              decodeFormState,
+              onError,
               temporaryReferences,
-              (ctx.redirect as unknown as Response)?.headers,
-            );
-          }
+            ).finally(() => {
+              ctx.runningAction = false;
+            });
 
-          skipRevalidation = result?.skipRevalidation ?? false;
-          actionResult = result?.actionResult;
-          formState = result?.formState;
-          request = result?.revalidationRequest ?? request;
+            if (isResponse(result)) {
+              return generateRedirectResponse(
+                result,
+                actionResult,
+                basename,
+                isDataRequest,
+                generateResponse,
+                temporaryReferences,
+                (ctx.redirect as unknown as Response)?.headers,
+              );
+            }
 
-          if (ctx.redirect) {
-            return generateRedirectResponse(
-              ctx.redirect,
-              actionResult,
-              basename,
-              isDataRequest,
-              generateResponse,
-              temporaryReferences,
-              undefined,
-            );
+            skipRevalidation = result?.skipRevalidation ?? false;
+            actionResult = result?.actionResult;
+            formState = result?.formState;
+            request = result?.revalidationRequest ?? request;
+
+            if (ctx.redirect) {
+              return generateRedirectResponse(
+                ctx.redirect,
+                actionResult,
+                basename,
+                isDataRequest,
+                generateResponse,
+                temporaryReferences,
+                undefined,
+              );
+            }
+          } catch (error) {
+            potentialCSRFAttackError = error;
           }
         }
 
         let staticContext = await query(
           request,
-          skipRevalidation
+          skipRevalidation || !!potentialCSRFAttackError
             ? {
                 filterMatchesToLoad: () => false,
               }
@@ -861,6 +883,13 @@ async function generateRenderResponse(
             temporaryReferences,
             ctx.redirect?.headers,
           );
+        }
+
+        if (potentialCSRFAttackError) {
+          staticContext.errors ??= {};
+          staticContext.errors[staticContext.matches[0].route.id] =
+            potentialCSRFAttackError;
+          staticContext.statusCode = 400;
         }
 
         return generateStaticContextResponse(

@@ -545,7 +545,12 @@ implementations.forEach((implementation) => {
                       id: "render-route-error-response",
                       path: "render-route-error-response/:id?",
                       lazy: () => import("./routes/render-route-error-response/home"),
-                    }
+                    },
+                    {
+                      id: "get-request",
+                      path: "/get-request",
+                      lazy: () => import("./routes/get-request/get-request"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1549,6 +1554,17 @@ implementations.forEach((implementation) => {
                 return <p>Oh no D:</p>;
               }
             `,
+
+            "src/routes/get-request/get-request.tsx": js`
+              import { unstable_getRequest as getRequest } from "react-router";
+
+              export function action() { return null; }
+
+              export default function GetRequest() {
+                const request = getRequest();
+                return <p>{request.method}</p>;
+              }
+            `,
           },
         });
       });
@@ -1891,6 +1907,20 @@ implementations.forEach((implementation) => {
             `http://localhost:${port}/render-route-error-response/Test`,
           );
           await expect(page.getByText("400 Oh no! Test")).toBeAttached();
+        });
+
+        test("Supports getRequest in server components", async ({ page }) => {
+          await page.goto(`http://localhost:${port}/get-request`);
+          await expect(page.getByText("GET")).toBeAttached();
+
+          const response = await page.request.fetch(
+            `http://localhost:${port}/get-request`,
+            {
+              method: "POST",
+            },
+          );
+          const body = await response.text();
+          expect(body).toContain("<p>POST</p>");
         });
       });
 

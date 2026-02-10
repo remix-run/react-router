@@ -10,7 +10,9 @@ function getFiles({
   v8_viteEnvironmentApi: boolean;
 }): Files {
   return async ({ port }) => ({
-    "react-router.config.ts": reactRouterConfig({ v8_viteEnvironmentApi }),
+    "react-router.config.ts": reactRouterConfig({
+      future: { v8_viteEnvironmentApi },
+    }),
     "vite.config.ts": `
       import { reactRouter } from "@react-router/dev/vite";
       import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";

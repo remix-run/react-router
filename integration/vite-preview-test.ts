@@ -14,7 +14,7 @@ test.describe("Vite preview", () => {
   test("serves built app with vite preview", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -97,7 +97,7 @@ test.describe("Vite preview", () => {
   test("handles navigation between routes", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -173,7 +173,7 @@ test.describe("Vite preview", () => {
   test("handles loader data correctly", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -247,7 +247,7 @@ test.describe("Vite preview", () => {
   }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
@@ -322,7 +322,7 @@ test.describe("Vite preview", () => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
         ssr: false,
-        v8_viteEnvironmentApi: true,
+        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,

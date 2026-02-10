@@ -344,3 +344,14 @@ Sergio Daniel Xalambrí noted that people often ask for server rewrites, which i
 The last topic discussed was a high-voted proposal for scroll restoration on elements other than the window. Matt explained that a full userland implementation is not reliably possible because the router is the only one that truly knows the moment right before a view changes to reliably capture the scroll position. Matt plans to provide guidance and feedback based on previous PR discussions, hoping the community can finalize the implementation.
 
 </details>
+
+<details>
+<summary>2025-12-16 Meeting Notes</summary>
+
+**Trailing Slash Consistency Bug Fix**
+
+Matt outlined a bug fix related to inconsistent request path names provided to the `loader`/`action` on data requests when a URL has a trailing slash. Matt explained that the solution, developed with Jacob, involves changing the format of the data request URL for trailing slash scenarios to resemble the `_root.data` format, which is being put behind a future flag due to potential breaking changes and cache rule implications. The new format will use `/a/b/c/_.data` when the URL is `/a/b/c/`.
+
+Matt also noted that the future flag provides an opportunity to collapse the `_root.data` format into the new trailing slash format, resulting in two standardized formats for data requests in the future. Bryan asked for clarification on various URL and query parameter configurations, and Matt explained the distinction between the new trailing slash format and the use of the index query parameter, confirming that the new format will be opt-in and mostly non-breaking for users upon adoption
+
+</details>

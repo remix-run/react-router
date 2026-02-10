@@ -23,6 +23,7 @@ import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
+import { throwIfPotentialCSRFAttack } from "../actions";
 
 // Add 304 for server side - that is not included in the client side logic
 // because the browser should fill those responses with the cached data
@@ -42,6 +43,17 @@ export async function singleFetchAction(
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
+    try {
+      throwIfPotentialCSRFAttack(
+        request.headers,
+        Array.isArray(build.allowedActionOrigins)
+          ? build.allowedActionOrigins
+          : [],
+      );
+    } catch (e) {
+      return handleQueryError(new Error("Bad Request"), 400);
+    }
+
     let handlerRequest = new Request(handlerUrl, {
       method: request.method,
       body: request.body,
@@ -77,13 +89,13 @@ export async function singleFetchAction(
     return isResponse(result) ? result : staticContextToResponse(result);
   }
 
-  function handleQueryError(error: unknown) {
+  function handleQueryError(error: unknown, status = 500) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs
     return generateSingleFetchResponse(request, build, serverMode, {
       result: { error },
       headers: new Headers(),
-      status: 500,
+      status,
     });
   }
 

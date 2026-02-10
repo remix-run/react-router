@@ -38,6 +38,7 @@ import type { MiddlewareEnabled } from "../types/future";
 import { getManifestPath } from "../dom/ssr/fog-of-war";
 import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
+import { throwIfPotentialCSRFAttack } from "../actions";
 
 export type RequestHandler = (
   request: Request,
@@ -481,6 +482,19 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
+    if (request.method === "POST") {
+      try {
+        throwIfPotentialCSRFAttack(
+          request.headers,
+          Array.isArray(build.allowedActionOrigins)
+            ? build.allowedActionOrigins
+            : [],
+        );
+      } catch (e) {
+        handleError(e);
+        return new Response("Bad Request", { status: 400 });
+      }
+    }
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
       generateMiddlewareResponse: build.future.v8_middleware

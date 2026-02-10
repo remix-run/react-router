@@ -1492,9 +1492,25 @@ export function compilePath(
       .replace(/[\\.*+^${}|()[\]]/g, "\\$&") // Escape special regex chars
       .replace(
         /\/:([\w-]+)(\?)?/g,
-        (_: string, paramName: string, isOptional) => {
+        (
+          match: string,
+          paramName: string,
+          isOptional: string | undefined,
+          index: number,
+          str: string,
+        ) => {
           params.push({ paramName, isOptional: isOptional != null });
-          return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
+
+          if (isOptional) {
+            let nextChar = str.charAt(index + match.length);
+            if (nextChar && nextChar !== "/") {
+              return "/([^\\/]*)";
+            }
+
+            return "(?:/([^\\/]*))?";
+          }
+
+          return "/([^\\/]+)";
         },
       ) // Dynamic segment
       .replace(/\/([\w-]+)\?(\/|$)/g, "(/$1)?$2"); // Optional static segment
@@ -1603,23 +1619,11 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
-    if (isAbsoluteUrl(toPathname)) {
-      pathname = toPathname;
+    toPathname = toPathname.replace(/\/\/+/g, "/");
+    if (toPathname.startsWith("/")) {
+      pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
-      if (toPathname.includes("//")) {
-        let oldPathname = toPathname;
-        toPathname = toPathname.replace(/\/\/+/g, "/");
-        warning(
-          false,
-          `Pathnames cannot have embedded double slashes - normalizing ` +
-            `${oldPathname} -> ${toPathname}`,
-        );
-      }
-      if (toPathname.startsWith("/")) {
-        pathname = resolvePathname(toPathname.substring(1), "/");
-      } else {
-        pathname = resolvePathname(toPathname, fromPathname);
-      }
+      pathname = resolvePathname(toPathname, fromPathname);
     }
   } else {
     pathname = fromPathname;

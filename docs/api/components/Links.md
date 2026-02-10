@@ -45,7 +45,7 @@ export default function Root() {
 ## Signature
 
 ```tsx
-function Links({ nonce }: LinksProps): React.JSX.Element
+function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element
 ```
 
 ## Props
@@ -53,6 +53,12 @@ function Links({ nonce }: LinksProps): React.JSX.Element
 ### nonce
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+element
+
+### crossOrigin
+
+A [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)
 attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
 element
 

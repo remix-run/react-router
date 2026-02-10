@@ -70,6 +70,7 @@ matchRSCServerRequest({
 
 ```tsx
 async function matchRSCServerRequest({
+  allowedActionOrigins,
   createTemporaryReferenceSet,
   basename,
   decodeReply,
@@ -82,6 +83,7 @@ async function matchRSCServerRequest({
   routes,
   generateResponse,
 }: {
+  allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
   basename?: string;
   decodeReply?: DecodeReplyFunction;
@@ -106,6 +108,10 @@ async function matchRSCServerRequest({
 ```
 
 ## Params
+
+### opts.allowedActionOrigins
+
+Origin patterns that are allowed to execute actions.
 
 ### opts.basename
 

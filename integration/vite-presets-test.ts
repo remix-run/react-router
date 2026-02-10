@@ -238,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "allowedActionOrigins",
         "unstable_routeConfig",
       ]);
 
@@ -246,6 +247,7 @@ test.describe("Vite / presets", async () => {
         unstable_optimizeDeps: true,
         unstable_subResourceIntegrity: false,
         unstable_trailingSlashAwareDataRequests: false,
+        unstable_previewServerPrerendering: false,
         v8_middleware: true,
         v8_splitRouteModules: false,
         v8_viteEnvironmentApi: false,

@@ -39,10 +39,10 @@ To provide the same functionality when using `@react-router/serve` we need to op
 A singular instrumentation function has the following shape:
 
 ```tsx
-function intrumentationFunction(doTheActualThing, info) {
+function instrumentationFunction(doTheActualThing, info) {
   // Do some stuff before starting the thing
 
-  // Do the the thing
+  // Do the thing
   await doTheActualThing();
 
   // Do some stuff after the thing finishes
@@ -159,7 +159,7 @@ In both of these cases, we'll handle the instrumentation at the router creation 
 It's important to note that the "handler" function will never throw. If the underlying loader/action throws, React Router will catch the error and return it out to you in case you need to perform some conditional logic in your instrumentation function - but your entire instrumentation function is thus guaranteed to run to completion even if the underlying application code errors.
 
 ```tsx
-function intrumentationFunction(doTheActualThing, info) {
+function instrumentationFunction(doTheActualThing, info) {
   let { status, error } = await doTheActualThing();
   // status is `"success" | "error"`
   // `error` will only be defined if status === "error"
@@ -174,20 +174,20 @@ function intrumentationFunction(doTheActualThing, info) {
 
 You should not be using the instrumentation logic to report errors though, that's better served by `entry.server.tsx`'s `handleError` and `HydratedRouter`/`RouterProvider` `unstable_onError` props.
 
-If your throw from your instrumentation function, we do not want that to impact runtime application behavior so React Router will gracefully swallow that error with a console warning and continue running as if you had returned successfully.
+If you throw from your instrumentation function, we do not want that to impact runtime application behavior so React Router will gracefully swallow that error with a console warning and continue running as if you had returned successfully.
 
 In both of these examples, the handlers and all other instrumentation functions will still run:
 
 ```tsx
 // Throwing before calling the handler - we will detect this and still call the
 // handler internally
-function intrumentationFunction(doTheActualThing, info) {
+function instrumentationFunction(doTheActualThing, info) {
   somethingThatThrows();
   await doTheActualThing();
 }
 
 // Throwing after calling the handler - error will be caught internally
-function intrumentationFunction2(doTheActualThing, info) {
+function instrumentationFunction2(doTheActualThing, info) {
   await doTheActualThing();
   somethingThatThrows();
 }

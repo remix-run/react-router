@@ -216,7 +216,9 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                future: {
+                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                },
               }),
               "vite.config.ts": await viteConfig.basic({
                 port,
@@ -258,7 +260,9 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                future: {
+                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                },
                 basename: base,
               }),
               "vite.config.ts": await viteConfig.basic({
@@ -301,7 +305,9 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                future: {
+                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                },
               }),
               "vite.config.ts": await viteConfig.basic({
                 port,
@@ -343,7 +349,9 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                future: {
+                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                },
               }),
               "vite.config.ts": await viteConfig.basic({
                 port,
@@ -414,7 +422,9 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                future: {
+                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
+                },
               }),
               "vite.config.ts": await viteConfig.basic({
                 port,

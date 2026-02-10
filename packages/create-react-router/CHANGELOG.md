@@ -1,5 +1,13 @@
 # `create-react-router`
 
+## 7.13.0
+
+_No changes_
+
+## 7.12.0
+
+_No changes_
+
 ## 7.11.0
 
 _No changes_
