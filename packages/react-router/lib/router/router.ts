@@ -938,8 +938,7 @@ export function createRouter(init: RouterInit): Router {
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
 
-  let initialLocation = init.history.location;
-  let initialMatches = matchRoutes(dataRoutes, initialLocation, basename);
+  let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
   let initialized: boolean;

@@ -207,6 +207,7 @@ function isLocation(obj: unknown): obj is Location {
     "pathname" in obj &&
     "search" in obj &&
     "hash" in obj &&
+    "state" in obj &&
     "key" in obj
   );
 }
@@ -329,7 +330,7 @@ export function createMemoryHistory(
     },
     replace(to, state) {
       action = Action.Replace;
-      let nextLocation = createMemoryLocation(to, state);
+      let nextLocation = isLocation(to) ? to : createMemoryLocation(to, state);
       entries[index] = nextLocation;
       if (v5Compat && listener) {
         listener({ action, location: nextLocation, delta: 0 });
