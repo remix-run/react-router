@@ -1173,15 +1173,16 @@ export interface LinkProps
   relative?: RelativeRoutingType;
 
   /**
-   * Rewrite path to "rewrite" the URL the router navigates to internally, while
-   * reflecting the `to` URL in the browser.  Useful for contextual navigations
-   * such as opening an image in a model on top of a gallery while keeping the
-   * underlying gallery active.
+   * Masked path for for this navigation, when you want to navigate the router to
+   * one location but display a separate location in the URL bar.
    *
-   * The rewrite location is managed in history state, so if the user shares a URL
-   * or opens in a new tab, the rewrite location will not be included and the user
-   * will land on the non-contextual location. This also means rewrite's are only
-   * intended for SPA uses and SSR renders will not respect the rewrite.
+   * This is useful for contextual navigations such as opening an image in a modal
+   * on top of a gallery while keeping the underlying gallery active. If a user
+   * shares the masked URL, or opens the link in a new tab, they will only load
+   * the masked location without the underlying contextual location.
+   *
+   * This feature relies on `history.state` and is thus only intended for SPA uses
+   * and SSR renders will not respect the masking.
    *
    * ```tsx
    * // routes/gallery.tsx
@@ -1336,10 +1337,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let maskedHref: string | null = null;
 
     if (unstable_mask) {
+      // Inlined version of the `useHref` logic operating off the masked location
+      // instead of the current location
       let resolved = resolveTo(
         unstable_mask,
         [],
-        location.unstable_mask?.pathname || location.pathname,
+        location.unstable_mask ? location.unstable_mask.pathname : "/",
+        true,
       );
 
       // If we're operating within a basename, prepend it to the pathname prior
@@ -1386,7 +1390,11 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         {...prefetchHandlers}
-        href={parsed.absoluteURL || maskedHref || href}
+        href={
+          (!(parsed.isExternal || reloadDocument) ? maskedHref : undefined) ||
+          parsed.absoluteURL ||
+          href
+        }
         onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}

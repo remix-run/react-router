@@ -1516,36 +1516,42 @@ export function createRouter(init: RouterInit): Router {
       opts,
     );
 
-    let currentLocation = state.location;
-
     // If mask is provided, normalize and create a separate path for the router
-    let currentPath: Path = {
-      pathname: currentLocation.pathname,
-      search: currentLocation.search,
-      hash: currentLocation.hash,
-    };
-    let maskPath = opts?.unstable_mask
-      ? typeof opts.unstable_mask === "string"
-        ? {
-            ...currentPath,
-            ...parsePath(opts.unstable_mask),
-          }
-        : {
-            ...(currentLocation.unstable_mask || currentPath),
-            ...opts.unstable_mask,
-          }
-      : undefined;
+    let maskPath: Path | undefined;
+    if (opts?.unstable_mask) {
+      let partialPath =
+        typeof opts.unstable_mask === "string"
+          ? parsePath(opts.unstable_mask)
+          : {
+              ...state.location.unstable_mask,
+              ...opts.unstable_mask,
+            };
+      maskPath = {
+        pathname: "",
+        search: "",
+        hash: "",
+        ...partialPath,
+      };
+    }
 
+    let currentLocation = state.location;
     let nextLocation = createLocation(
       currentLocation,
-      // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
-      // URL from window.location, so we need to encode it here so the behavior
-      // remains the same as POP and non-data-router usages
-      init.history.encodeLocation(path),
+      path,
       opts && opts.state,
       undefined,
       maskPath,
     );
+
+    // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
+    // URL from window.location, so we need to encode it here so the behavior
+    // remains the same as POP and non-data-router usages.  new URL() does all
+    // the same encoding we'd get from a history.pushState/window.location read
+    // without having to touch history
+    nextLocation = {
+      ...nextLocation,
+      ...init.history.encodeLocation(nextLocation),
+    };
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
@@ -1711,7 +1717,6 @@ export function createRouter(init: RouterInit): Router {
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-
     let matches =
       opts?.initialHydration &&
       state.matches &&
@@ -4908,7 +4913,7 @@ function getMatchesToLoad(
   state: RouterState,
   matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
-  location: Path,
+  location: Location,
   lazyRoutePropertiesToSkip: string[],
   initialHydration: boolean,
   isRevalidationRequired: boolean,
@@ -6437,7 +6442,7 @@ function normalizeRedirectLocation(
 // Request instance from the static handler (query/queryRoute)
 function createClientSideRequest(
   history: History,
-  location: string | Path,
+  location: string | Location,
   signal: AbortSignal,
   submission?: Submission,
 ): Request {
@@ -6819,7 +6824,7 @@ function stripHashFromPath(path: To) {
   return createPath({ ...parsedPath, hash: "" });
 }
 
-function isHashChangeOnly(a: Path, b: Path): boolean {
+function isHashChangeOnly(a: Location, b: Location): boolean {
   if (a.pathname !== b.pathname || a.search !== b.search) {
     return false;
   }
@@ -6941,7 +6946,10 @@ function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
 }
 
-function getTargetMatch(matches: AgnosticDataRouteMatch[], location: To) {
+function getTargetMatch(
+  matches: AgnosticDataRouteMatch[],
+  location: Location | string,
+) {
   let search =
     typeof location === "string" ? parsePath(location).search : location.search;
   if (

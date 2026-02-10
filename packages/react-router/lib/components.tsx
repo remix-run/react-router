@@ -1415,8 +1415,8 @@ export function Router({
     hash,
     state,
     key,
-    unstable_mask,
     navigationType,
+    unstable_mask,
   ]);
 
   warning(

@@ -819,7 +819,7 @@ export function useRoutesImpl(
 
   let locationFromContext = useLocation();
 
-  let location: Partial<Path>;
+  let location;
   if (locationArg) {
     let parsedLocationArg =
       typeof locationArg === "string" ? parsePath(locationArg) : locationArg;

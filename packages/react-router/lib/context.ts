@@ -145,7 +145,7 @@ export const AwaitContextProvider = (
 export interface NavigateOptions {
   /** Replace the current entry in the history stack instead of pushing a new one */
   replace?: boolean;
-  /** Rewrite the url */
+  /** Masked URL */
   unstable_mask?: To;
   /** Adds persistent client side routing state to the next location */
   state?: any;
