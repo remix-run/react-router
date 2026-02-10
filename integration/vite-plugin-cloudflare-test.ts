@@ -24,9 +24,10 @@ function defineFiles({
     });
   `,
     "app/routes/env.tsx": tsx`
+    import { env } from "cloudflare:workers";
     import type { Route } from "./+types/env";
-    export function loader({ context }: Route.LoaderArgs) {
-      return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+    export function loader() {
+      return { message: env.VALUE_FROM_CLOUDFLARE };
     }
     export default function EnvRoute({ loaderData }: Route.RouteComponentProps) {
       return <div data-loader-message>{loaderData.message}</div>;
