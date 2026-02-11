@@ -2537,6 +2537,14 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    // If the result was skipped by abort detection in callDataStrategy,
+    // gracefully settle the fetcher with its previous data instead of crashing
+    if (!actionResult) {
+      let currentFetcher = state.fetchers.get(key);
+      updateFetcherState(key, getDoneFetcher(currentFetcher?.data));
+      return;
+    }
+
     // We don't want errors bubbling up to the UI or redirects processed for
     // unmounted fetchers so we just revert them to idle
     if (fetchersQueuedForDeletion.has(key)) {
@@ -2844,6 +2852,14 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    // If the result was skipped by abort detection in callDataStrategy,
+    // gracefully settle the fetcher with its previous data instead of crashing
+    if (result == null) {
+      let currentFetcher = state.fetchers.get(key);
+      updateFetcherState(key, getDoneFetcher(currentFetcher?.data));
+      return;
+    }
+
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       if (pendingNavigationLoadId > originatingLoadId) {
@@ -3146,6 +3162,18 @@ export function createRouter(init: RouterInit): Router {
             f.key,
           );
           let result = results[f.match.route.id];
+          // If the result was skipped by abort detection in callDataStrategy,
+          // synthesize a success result with previous data so downstream
+          // invariant checks don't crash
+          if (result == null) {
+            let existingFetcher = state.fetchers.get(f.key);
+            return {
+              [f.key]: {
+                type: ResultType.data,
+                data: existingFetcher?.data,
+              } as SuccessResult,
+            };
+          }
           // Fetcher results are keyed by fetcher key from here on out, not routeId
           return { [f.key]: result };
         } else {
