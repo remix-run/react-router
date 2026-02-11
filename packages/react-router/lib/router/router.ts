@@ -2469,6 +2469,13 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
+        if (
+          isAbortError(discoverResult.error, fetchRequest.signal, {
+            allowTypeError: false,
+          })
+        ) {
+          return;
+        }
         setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
@@ -2797,6 +2804,13 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
+        if (
+          isAbortError(discoverResult.error, fetchRequest.signal, {
+            allowTypeError: false,
+          })
+        ) {
+          return;
+        }
         setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {

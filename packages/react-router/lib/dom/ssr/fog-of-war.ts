@@ -2,7 +2,6 @@ import * as React from "react";
 import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
 import type { RouteManifest } from "../../router/utils";
-import { isAbortError } from "../../router/abort";
 import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
@@ -304,7 +303,7 @@ export async function fetchAndApplyManifestPatches(
     }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
-    if (signal && isAbortError(e, signal, { allowTypeError: false })) {
+    if (signal?.aborted) {
       return;
     }
     throw e;
