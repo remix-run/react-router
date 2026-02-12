@@ -72,6 +72,11 @@ export default defineConfig([
               `dist/config/default-rsc-entries/${file}`,
             );
           }
+
+          await fsp.copyFile(
+            "config/default-fetch-handler.ts",
+            "dist/config/default-fetch-handler.ts",
+          );
         },
       },
     ],

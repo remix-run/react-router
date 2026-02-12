@@ -16,6 +16,7 @@
     "./config/default-rsc-entries/entry.client": "./dist/config/default-rsc-entries/entry.client.tsx",
     "./config/default-rsc-entries/entry.rsc": "./dist/config/default-rsc-entries/entry.rsc.tsx",
     "./config/default-rsc-entries/entry.ssr": "./dist/config/default-rsc-entries/entry.ssr.tsx",
+    "./config/default-fetch-handler": "./dist/config/default-fetch-handler.ts",
     "./config": {
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
