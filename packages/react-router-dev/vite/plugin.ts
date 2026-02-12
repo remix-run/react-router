@@ -358,6 +358,13 @@ const getReactRouterManifestBuildAssets = (
   invariant(entryChunk, `Chunk not found: ${entryFilePath}`);
 
   let isRootRoute = Boolean(route && route.parentId === undefined);
+  // Keep `#` only for leaf routes to preserve dynamic-import CSS retention
+  // without duplicating parent/layout route styles.
+  let shouldUseForciblyUniqueCssHrefs =
+    route !== null &&
+    !Object.values(ctx.reactRouterConfig.routes).some(
+      (candidateRoute) => candidateRoute.parentId === route.id,
+    );
 
   let routeModuleChunks = routeChunkNames
     .map((routeChunkName) =>
@@ -413,7 +420,10 @@ const getReactRouterManifestBuildAssets = (
             // route-level CSS is removed from the document. We use a hash here
             // because it's a unique `href` value but isn't a unique network
             // request and only adds a single character.
-            return allDynamicCssFiles.has(href) ? `${publicHref}#` : publicHref;
+            return allDynamicCssFiles.has(href) &&
+              shouldUseForciblyUniqueCssHrefs
+              ? `${publicHref}#`
+              : publicHref;
           }),
       ]
         .flat(1)
