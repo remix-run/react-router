@@ -30,6 +30,8 @@ import type {
   DataStrategyFunction,
   FormEncType,
   HTMLFormMethod,
+  PatchRoutesOnNavigationFunction,
+  RouteObject,
   UIMatch,
 } from "../router/utils";
 import {
@@ -72,11 +74,7 @@ import {
   mapRouteProperties,
   hydrationRouteProperties,
 } from "../components";
-import type {
-  RouteObject,
-  NavigateOptions,
-  PatchRoutesOnNavigationFunction,
-} from "../context";
+import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,

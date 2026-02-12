@@ -1,7 +1,9 @@
 import * as React from "react";
-import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
-import type { RouteManifest } from "../../router/utils";
+import type {
+  PatchRoutesOnNavigationFunction,
+  RouteManifest,
+} from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";

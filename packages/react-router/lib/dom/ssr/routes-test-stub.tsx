@@ -2,15 +2,13 @@ import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  DataRouteObject,
+  IndexRouteObject,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
-} from "../../router/utils";
-import type {
-  DataRouteObject,
-  IndexRouteObject,
   NonIndexRouteObject,
-} from "../../context";
+} from "../../router/utils";
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
@@ -18,7 +16,6 @@ import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
 } from "../../router/utils";
-import type { MiddlewareEnabled } from "../../types/future";
 import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
@@ -154,7 +151,7 @@ export function createRoutesStub(
       // the manifest and routeModules during the walk
       let patched = processRoutes(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
-        // types compared to `AgnosticRouteObject`
+        // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
         _context !== undefined
           ? _context

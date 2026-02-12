@@ -1,4 +1,3 @@
-import type { DataRouteMatch, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -20,10 +19,10 @@ import {
   instrumentClientSideRouter,
 } from "./instrumentation";
 import type {
-  AgnosticDataRouteMatch,
-  AgnosticDataRouteObject,
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyMatch,
-  AgnosticRouteObject,
+  RouteObject,
   DataResult,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -42,7 +41,6 @@ import type {
   Submission,
   SuccessResult,
   UIMatch,
-  AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
   LoaderFunctionArgs,
   ActionFunctionArgs,
@@ -50,6 +48,7 @@ import type {
   ActionFunction,
   MiddlewareFunction,
   MiddlewareNextFunction,
+  PatchRoutesOnNavigationFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -109,7 +108,7 @@ export interface Router {
    *
    * Return the routes for this router instance
    */
-  get routes(): AgnosticDataRouteObject[];
+  get routes(): DataRouteObject[];
 
   /**
    * @private
@@ -285,7 +284,7 @@ export interface Router {
    */
   patchRoutes(
     routeId: string | null,
-    children: AgnosticRouteObject[],
+    children: RouteObject[],
     unstable_allowElementMutations?: boolean,
   ): void;
 
@@ -296,7 +295,7 @@ export interface Router {
    * HMR needs to pass in-flight route updates to React Router
    * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
    */
-  _internalSetRoutes(routes: AgnosticRouteObject[]): void;
+  _internalSetRoutes(routes: RouteObject[]): void;
 
   /**
    * @private
@@ -337,7 +336,7 @@ export interface RouterState {
   /**
    * The current set of route matches
    */
-  matches: AgnosticDataRouteMatch[];
+  matches: DataRouteMatch[];
 
   /**
    * Tracks whether we've completed our initial data load
@@ -415,7 +414,7 @@ export interface FutureConfig {}
  * Initialization options for createRouter
  */
 export interface RouterInit {
-  routes: AgnosticRouteObject[];
+  routes: RouteObject[];
   history: History;
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
@@ -426,7 +425,7 @@ export interface RouterInit {
   hydrationData?: HydrationState;
   window?: Window;
   dataStrategy?: DataStrategyFunction;
-  patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
 }
 
 /**
@@ -449,12 +448,12 @@ export interface StaticHandlerContext {
  * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
 export interface StaticHandler {
-  dataRoutes: AgnosticDataRouteObject[];
+  dataRoutes: DataRouteObject[];
   query(
     request: Request,
     opts?: {
       requestContext?: unknown;
-      filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
+      filterMatchesToLoad?: (match: DataRouteMatch) => boolean;
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
@@ -462,7 +461,7 @@ export interface StaticHandler {
         query: (
           r: Request,
           args?: {
-            filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
+            filterMatchesToLoad?: (match: DataRouteMatch) => boolean;
           },
         ) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
@@ -792,7 +791,7 @@ interface FetchLoadMatch {
  */
 interface RevalidatingFetcher extends FetchLoadMatch {
   key: string;
-  match: AgnosticDataRouteMatch | null;
+  match: DataRouteMatch | null;
   matches: DataStrategyMatch[] | null;
   request: Request | null;
   controller: AbortController | null;
@@ -891,7 +890,7 @@ export function createRouter(init: RouterInit): Router {
   if (init.unstable_instrumentations) {
     let instrumentations = init.unstable_instrumentations;
 
-    mapRouteProperties = (route: AgnosticDataRouteObject) => {
+    mapRouteProperties = (route: DataRouteObject) => {
       return {
         ..._mapRouteProperties(route),
         ...getRouteInstrumentationUpdates(
@@ -913,7 +912,7 @@ export function createRouter(init: RouterInit): Router {
     undefined,
     manifest,
   );
-  let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
+  let inFlightDataRoutes: DataRouteObject[] | undefined;
   let basename = init.basename || "/";
   if (!basename.startsWith("/")) {
     basename = `/${basename}`;
@@ -1272,7 +1271,7 @@ export function createRouter(init: RouterInit): Router {
         ) {
           return {
             ...m,
-            route: route as AgnosticDataRouteObject,
+            route: route as DataRouteObject,
           };
         }
         return m;
@@ -1882,7 +1881,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     submission: Submission,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
     initialHydration: boolean,
@@ -2053,7 +2052,7 @@ export function createRouter(init: RouterInit): Router {
   async function handleLoaders(
     request: Request,
     location: Location,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
     overrideNavigation?: Navigation,
@@ -2440,7 +2439,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    requestMatches: AgnosticDataRouteMatch[],
+    requestMatches: DataRouteMatch[],
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
     flushSync: boolean,
@@ -2757,7 +2756,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
     flushSync: boolean,
@@ -3403,7 +3402,7 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
-  function getScrollKey(location: Location, matches: AgnosticDataRouteMatch[]) {
+  function getScrollKey(location: Location, matches: DataRouteMatch[]) {
     if (getScrollRestorationKey) {
       let key = getScrollRestorationKey(
         location,
@@ -3416,7 +3415,7 @@ export function createRouter(init: RouterInit): Router {
 
   function saveScrollPosition(
     location: Location,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
   ): void {
     if (savedScrollPositions && getScrollPosition) {
       let key = getScrollKey(location, matches);
@@ -3426,7 +3425,7 @@ export function createRouter(init: RouterInit): Router {
 
   function getSavedScrollPosition(
     location: Location,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
   ): number | null {
     if (savedScrollPositions) {
       let key = getScrollKey(location, matches);
@@ -3439,13 +3438,13 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function checkFogOfWar(
-    matches: AgnosticDataRouteMatch[] | null,
-    routesToUse: AgnosticDataRouteObject[],
+    matches: DataRouteMatch[] | null,
+    routesToUse: DataRouteObject[],
     pathname: string,
-  ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
+  ): { active: boolean; matches: DataRouteMatch[] | null } {
     if (init.patchRoutesOnNavigation) {
       if (!matches) {
-        let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+        let fogMatches = matchRoutesImpl<DataRouteObject>(
           routesToUse,
           pathname,
           basename,
@@ -3458,7 +3457,7 @@ export function createRouter(init: RouterInit): Router {
           // If we matched a dynamic param or a splat, it might only be because
           // we haven't yet discovered other routes that would match with a
           // higher score.  Call patchRoutesOnNavigation just to be sure
-          let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          let partialMatches = matchRoutesImpl<DataRouteObject>(
             routesToUse,
             pathname,
             basename,
@@ -3474,12 +3473,12 @@ export function createRouter(init: RouterInit): Router {
 
   type DiscoverRoutesSuccessResult = {
     type: "success";
-    matches: AgnosticDataRouteMatch[] | null;
+    matches: DataRouteMatch[] | null;
   };
   type DiscoverRoutesErrorResult = {
     type: "error";
     error: any;
-    partialMatches: AgnosticDataRouteMatch[];
+    partialMatches: DataRouteMatch[];
   };
   type DiscoverRoutesAbortedResult = { type: "aborted" };
   type DiscoverRoutesResult =
@@ -3488,7 +3487,7 @@ export function createRouter(init: RouterInit): Router {
     | DiscoverRoutesAbortedResult;
 
   async function discoverRoutes(
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
     pathname: string,
     signal: AbortSignal,
     fetcherKey?: string,
@@ -3497,7 +3496,7 @@ export function createRouter(init: RouterInit): Router {
       return { type: "success", matches };
     }
 
-    let partialMatches: AgnosticDataRouteMatch[] | null = matches;
+    let partialMatches: DataRouteMatch[] | null = matches;
     while (true) {
       let isNonHMR = inFlightDataRoutes == null;
       let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3539,7 +3538,7 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
-      let newPartialMatches: AgnosticDataRouteMatch[] | null = null;
+      let newPartialMatches: DataRouteMatch[] | null = null;
 
       if (newMatches) {
         if (Object.keys(newMatches[0].params).length === 0) {
@@ -3573,7 +3572,7 @@ export function createRouter(init: RouterInit): Router {
 
       // Perform partial matching if we didn't already do it above
       if (!newPartialMatches) {
-        newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+        newPartialMatches = matchRoutesImpl<DataRouteObject>(
           routesToUse,
           pathname,
           basename,
@@ -3593,16 +3592,13 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  function compareMatches(
-    a: AgnosticDataRouteMatch[],
-    b: AgnosticDataRouteMatch[],
-  ) {
+  function compareMatches(a: DataRouteMatch[], b: DataRouteMatch[]) {
     return (
       a.length === b.length && a.every((m, i) => m.route.id === b[i].route.id)
     );
   }
 
-  function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
+  function _internalSetRoutes(newRoutes: DataRouteObject[]) {
     manifest = {};
     inFlightDataRoutes = convertRoutesToDataRoutes(
       newRoutes,
@@ -3614,7 +3610,7 @@ export function createRouter(init: RouterInit): Router {
 
   function patchRoutes(
     routeId: string | null,
-    children: AgnosticRouteObject[],
+    children: RouteObject[],
     unstable_allowElementMutations = false,
   ): void {
     let isNonHMR = inFlightDataRoutes == null;
@@ -3706,7 +3702,7 @@ export interface CreateStaticHandlerOptions {
 }
 
 export function createStaticHandler(
-  routes: AgnosticRouteObject[],
+  routes: RouteObject[],
   opts?: CreateStaticHandlerOptions,
 ): StaticHandler {
   invariant(
@@ -3725,7 +3721,7 @@ export function createStaticHandler(
   if (opts?.unstable_instrumentations) {
     let instrumentations = opts.unstable_instrumentations;
 
-    mapRouteProperties = (route: AgnosticDataRouteObject) => {
+    mapRouteProperties = (route: DataRouteObject) => {
       return {
         ..._mapRouteProperties(route),
         ...getRouteInstrumentationUpdates(
@@ -3876,7 +3872,7 @@ export function createStaticHandler(
                 revalidationRequest: Request,
                 opts: {
                   filterMatchesToLoad?:
-                    | ((match: AgnosticDataRouteMatch) => boolean)
+                    | ((match: DataRouteMatch) => boolean)
                     | undefined;
                 } = {},
               ) => {
@@ -4186,12 +4182,12 @@ export function createStaticHandler(
   async function queryImpl(
     request: Request,
     location: Location,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
     skipLoaderErrorBubbling: boolean,
-    routeMatch: AgnosticDataRouteMatch | null,
-    filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
+    routeMatch: DataRouteMatch | null,
+    filterMatchesToLoad: ((m: DataRouteMatch) => boolean) | null,
     skipRevalidation: boolean,
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -4252,13 +4248,13 @@ export function createStaticHandler(
 
   async function submit(
     request: Request,
-    matches: AgnosticDataRouteMatch[],
-    actionMatch: AgnosticDataRouteMatch,
+    matches: DataRouteMatch[],
+    actionMatch: DataRouteMatch,
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
     skipLoaderErrorBubbling: boolean,
     isRouteRequest: boolean,
-    filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
+    filterMatchesToLoad: ((m: DataRouteMatch) => boolean) | null,
     skipRevalidation: boolean,
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -4441,12 +4437,12 @@ export function createStaticHandler(
 
   async function loadRouteData(
     request: Request,
-    matches: AgnosticDataRouteMatch[],
+    matches: DataRouteMatch[],
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null,
     skipLoaderErrorBubbling: boolean,
-    routeMatch: AgnosticDataRouteMatch | null,
-    filterMatchesToLoad: ((match: AgnosticDataRouteMatch) => boolean) | null,
+    routeMatch: DataRouteMatch | null,
+    filterMatchesToLoad: ((match: DataRouteMatch) => boolean) | null,
     pendingActionResult?: PendingActionResult,
   ): Promise<
     | Omit<
@@ -4639,7 +4635,7 @@ export function createStaticHandler(
  * @category Utils
  */
 export function getStaticContextFromError(
-  routes: AgnosticDataRouteObject[],
+  routes: DataRouteObject[],
   handlerContext: StaticHandlerContext,
   error: any,
   boundaryId?: string,
@@ -4681,14 +4677,14 @@ function isSubmissionNavigation(
 
 function normalizeTo(
   location: Path,
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   basename: string,
   to: To | null,
   fromRouteId?: string,
   relative?: RelativeRoutingType,
 ) {
-  let contextualMatches: AgnosticDataRouteMatch[];
-  let activeRouteMatch: AgnosticDataRouteMatch | undefined;
+  let contextualMatches: DataRouteMatch[];
+  let activeRouteMatch: DataRouteMatch | undefined;
   if (fromRouteId) {
     // Grab matches up to the calling route so our route-relative logic is
     // relative to the correct source route
@@ -4901,7 +4897,7 @@ function getMatchesToLoad(
   manifest: RouteManifest,
   history: History,
   state: RouterState,
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
   lazyRoutePropertiesToSkip: string[],
@@ -4911,7 +4907,7 @@ function getMatchesToLoad(
   fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
-  routesToUse: AgnosticDataRouteObject[],
+  routesToUse: DataRouteObject[],
   basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
   pendingActionResult?: PendingActionResult,
@@ -5202,7 +5198,7 @@ function routeHasLoaderOrMiddleware(route: RouteObject) {
 // except for when we are loading a route due to `loader.hydrate=true`, in which
 // case we don't want to render a fallback
 function getRouteHydrationStatus(
-  route: AgnosticDataRouteObject,
+  route: DataRouteObject,
   loaderData: RouteData | null | undefined,
   errors: RouteData | null | undefined,
 ): { shouldLoad: boolean; renderFallback: boolean } {
@@ -5237,8 +5233,8 @@ function getRouteHydrationStatus(
 
 function isNewLoader(
   currentLoaderData: RouteData,
-  currentMatch: AgnosticDataRouteMatch,
-  match: AgnosticDataRouteMatch,
+  currentMatch: DataRouteMatch,
+  match: DataRouteMatch,
 ) {
   let isNew =
     // [a] -> [a, b]
@@ -5255,8 +5251,8 @@ function isNewLoader(
 }
 
 function isNewRouteInstance(
-  currentMatch: AgnosticDataRouteMatch,
-  match: AgnosticDataRouteMatch,
+  currentMatch: DataRouteMatch,
+  match: DataRouteMatch,
 ) {
   let currentPath = currentMatch.route.path;
   return (
@@ -5271,7 +5267,7 @@ function isNewRouteInstance(
 }
 
 function shouldRevalidateLoader(
-  loaderMatch: AgnosticDataRouteMatch,
+  loaderMatch: DataRouteMatch,
   arg: ShouldRevalidateFunctionArgs,
 ) {
   if (loaderMatch.route.shouldRevalidate) {
@@ -5286,13 +5282,13 @@ function shouldRevalidateLoader(
 
 function patchRoutesImpl(
   routeId: string | null,
-  children: AgnosticRouteObject[],
-  routesToUse: AgnosticDataRouteObject[],
+  children: RouteObject[],
+  routesToUse: DataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   allowElementMutations: boolean,
 ) {
-  let childrenToPatch: AgnosticDataRouteObject[];
+  let childrenToPatch: DataRouteObject[];
   if (routeId) {
     let route = manifest[routeId];
     invariant(
@@ -5310,10 +5306,10 @@ function patchRoutesImpl(
   // Don't patch in routes we already know about so that `patch` is idempotent
   // to simplify user-land code. This is useful because we re-call the
   // `patchRoutesOnNavigation` function for matched routes with params.
-  let uniqueChildren: AgnosticRouteObject[] = [];
+  let uniqueChildren: RouteObject[] = [];
   let existingChildren: {
-    existingRoute: AgnosticRouteObject;
-    newRoute: AgnosticRouteObject;
+    existingRoute: RouteObject;
+    newRoute: RouteObject;
   }[] = [];
   children.forEach((newRoute) => {
     let existingRoute = childrenToPatch.find((existingRoute) =>
@@ -5367,8 +5363,8 @@ function patchRoutesImpl(
 }
 
 function isSameRoute(
-  newRoute: AgnosticRouteObject,
-  existingRoute: AgnosticRouteObject,
+  newRoute: RouteObject,
+  existingRoute: RouteObject,
 ): boolean {
   // Most optimal check is by id
   if (
@@ -5409,8 +5405,8 @@ function isSameRoute(
 }
 
 const lazyRoutePropertyCache = new WeakMap<
-  AgnosticDataRouteObject,
-  Partial<Record<keyof AgnosticDataRouteObject, Promise<void>>>
+  DataRouteObject,
+  Partial<Record<keyof DataRouteObject, Promise<void>>>
 >();
 
 const loadLazyRouteProperty = ({
@@ -5419,8 +5415,8 @@ const loadLazyRouteProperty = ({
   manifest,
   mapRouteProperties,
 }: {
-  key: keyof AgnosticDataRouteObject;
-  route: AgnosticDataRouteObject;
+  key: keyof DataRouteObject;
+  route: DataRouteObject;
   manifest: RouteManifest;
   mapRouteProperties: MapRoutePropertiesFunction;
 }): Promise<void> | undefined => {
@@ -5491,10 +5487,7 @@ const loadLazyRouteProperty = ({
   return propertyPromise;
 };
 
-const lazyRouteFunctionCache = new WeakMap<
-  AgnosticDataRouteObject,
-  Promise<void>
->();
+const lazyRouteFunctionCache = new WeakMap<DataRouteObject, Promise<void>>();
 
 /**
  * Execute route.lazy functions to lazily load route modules (loader, action,
@@ -5502,7 +5495,7 @@ const lazyRouteFunctionCache = new WeakMap<
  * with dataRoutes so those get updated as well.
  */
 function loadLazyRoute(
-  route: AgnosticDataRouteObject,
+  route: DataRouteObject,
   type: "loader" | "action",
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
@@ -5659,7 +5652,7 @@ function isNonNullable<T>(value: T): value is NonNullable<T> {
 }
 
 function loadLazyMiddlewareForMatches(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
 ): Promise<void[]> | void {
@@ -5714,7 +5707,7 @@ function runServerMiddlewarePipeline(
   ) & {
     // Don't use `DataStrategyFunctionArgs` directly so we can we reduce these
     // back from `DataStrategyMatch` to regular matches for use in the staticHandler
-    matches: AgnosticDataRouteMatch[];
+    matches: DataRouteMatch[];
   },
   handler: () => Promise<Response>,
   errorHandler: (
@@ -5808,7 +5801,7 @@ async function runMiddlewarePipeline<Result>(
   ) & {
     // Don't use `DataStrategyFunctionArgs` directly so we can we reduce these
     // back from `DataStrategyMatch` to regular matches for use in the staticHandler
-    matches: AgnosticDataRouteMatch[];
+    matches: DataRouteMatch[];
   },
   // Handler to generate a Result in the leaf next() function
   handler: () => Promise<Result>,
@@ -6047,8 +6040,8 @@ function getTargetedDataStrategyMatches(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
   request: Request,
-  matches: AgnosticDataRouteMatch[],
-  targetMatch: AgnosticDataRouteMatch,
+  matches: DataRouteMatch[],
+  targetMatch: DataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
@@ -6172,7 +6165,7 @@ async function callLoaderOrAction({
 }: {
   request: Request;
   unstable_pattern: string;
-  match: AgnosticDataRouteMatch;
+  match: DataRouteMatch;
   lazyHandlerPromise: Promise<void> | undefined;
   lazyRoutePromise: Promise<void> | undefined;
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0];
@@ -6391,7 +6384,7 @@ function normalizeRelativeRoutingRedirectResponse(
   response: Response,
   request: Request,
   routeId: string,
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   basename: string,
 ) {
   let location = response.headers.get("Location");
@@ -6526,7 +6519,7 @@ function convertSearchParamsToFormData(
 }
 
 function processRouteLoaderData(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
   isStaticHandler = false,
@@ -6632,7 +6625,7 @@ function processRouteLoaderData(
 
 function processLoaderData(
   state: RouterState,
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
   revalidatingFetchers: RevalidatingFetcher[],
@@ -6688,7 +6681,7 @@ function processLoaderData(
 function mergeLoaderData(
   loaderData: RouteData,
   newLoaderData: RouteData,
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   errors: RouteData | null | undefined,
 ): RouteData {
   // Start with all new entries that are not being reset
@@ -6741,9 +6734,9 @@ function getActionDataForCommit(
 // route specified by routeId) for the closest ancestor error boundary,
 // defaulting to the root match
 function findNearestBoundary(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   routeId?: string,
-): AgnosticDataRouteMatch {
+): DataRouteMatch {
   let eligibleMatches = routeId
     ? matches.slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
     : [...matches];
@@ -6753,9 +6746,9 @@ function findNearestBoundary(
   );
 }
 
-function getShortCircuitMatches(routes: AgnosticDataRouteObject[]): {
-  matches: AgnosticDataRouteMatch[];
-  route: AgnosticDataRouteObject;
+function getShortCircuitMatches(routes: DataRouteObject[]): {
+  matches: DataRouteMatch[];
+  route: DataRouteObject;
 } {
   // Prefer a root layout route if present, otherwise shim in a route object
   let route =
@@ -6974,7 +6967,7 @@ function hasNakedIndexQuery(search: string): boolean {
 }
 
 function getTargetMatch(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   location: Location | string,
 ) {
   let search =

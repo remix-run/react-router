@@ -5,7 +5,7 @@ import { createPath, invariant } from "./history";
 import type { Router } from "./router";
 import type {
   ActionFunctionArgs,
-  AgnosticDataRouteObject,
+  DataRouteObject,
   FormEncType,
   HTMLFormMethod,
   LazyRouteObject,
@@ -141,7 +141,7 @@ const UninstrumentedSymbol = Symbol("Uninstrumented");
 
 export function getRouteInstrumentationUpdates(
   fns: unstable_InstrumentRouteFunction[],
-  route: Readonly<AgnosticDataRouteObject>,
+  route: Readonly<DataRouteObject>,
 ) {
   let aggregated: {
     lazy: InstrumentFunction<RouteLazyInstrumentationInfo>[];
@@ -178,23 +178,23 @@ export function getRouteInstrumentationUpdates(
   );
 
   let updates: {
-    middleware?: AgnosticDataRouteObject["middleware"];
-    loader?: AgnosticDataRouteObject["loader"];
-    action?: AgnosticDataRouteObject["action"];
-    lazy?: AgnosticDataRouteObject["lazy"];
+    middleware?: DataRouteObject["middleware"];
+    loader?: DataRouteObject["loader"];
+    action?: DataRouteObject["action"];
+    lazy?: DataRouteObject["lazy"];
   } = {};
 
   // Instrument lazy functions
   if (typeof route.lazy === "function" && aggregated.lazy.length > 0) {
     let instrumented = wrapImpl(aggregated.lazy, route.lazy, () => undefined);
     if (instrumented) {
-      updates.lazy = instrumented as AgnosticDataRouteObject["lazy"];
+      updates.lazy = instrumented as DataRouteObject["lazy"];
     }
   }
 
   // Instrument the lazy object format
   if (typeof route.lazy === "object") {
-    let lazyObject: LazyRouteObject<AgnosticDataRouteObject> = route.lazy;
+    let lazyObject: LazyRouteObject<DataRouteObject> = route.lazy;
     (["middleware", "loader", "action"] as const).forEach((key) => {
       let lazyFn = lazyObject[key];
       let instrumentations = aggregated[`lazy.${key}`];
