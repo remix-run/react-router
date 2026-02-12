@@ -41,8 +41,8 @@ type MetaMatch<T extends MatchInfo> = Pretty<{
   /** @deprecated Use `MetaMatch.loaderData` instead */
   data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
-  handle?: unknown;
-  error?: unknown;
+  handle?: unknown | undefined;
+  error?: unknown | undefined;
 }>;
 
 // prettier-ignore
@@ -75,7 +75,7 @@ type CreateMetaArgs<T extends RouteInfo> = {
     | T["loaderData"]
     | (HasErrorBoundary<T> extends true ? undefined : never);
   /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
-  error?: unknown;
+  error?: unknown | undefined;
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
   matches: MetaMatches<T["matches"]>;
 };
@@ -137,15 +137,15 @@ type CreateHydrateFallbackProps<
 } & (IsServerFirstRoute<T, RSCEnabled> extends true
   ? {
       /** The data returned from the `loader` */
-      loaderData?: ServerDataFrom<T["module"]["loader"]>;
+      loaderData?: ServerDataFrom<T["module"]["loader"]> | undefined;
       /** The data returned from the `action` following an action submission. */
-      actionData?: ServerDataFrom<T["module"]["action"]>;
+      actionData?: ServerDataFrom<T["module"]["action"]> | undefined;
     }
   : {
       /** The data returned from the `loader` or `clientLoader` */
-      loaderData?: T["loaderData"];
+      loaderData?: T["loaderData"] | undefined;
       /** The data returned from the `action` or `clientAction` following an action submission. */
-      actionData?: T["actionData"];
+      actionData?: T["actionData"] | undefined;
     });
 
 type Match<T extends MatchInfo> = Pretty<{
@@ -187,13 +187,13 @@ type CreateComponentProps<T extends RouteInfo, RSCEnabled extends boolean> = {
       /** The data returned from the `loader` */
       loaderData: ServerDataFrom<T["module"]["loader"]>;
       /** The data returned from the `action` following an action submission. */
-      actionData?: ServerDataFrom<T["module"]["action"]>;
+      actionData?: ServerDataFrom<T["module"]["action"]> | undefined;
     }
   : {
       /** The data returned from the `loader` or `clientLoader` */
       loaderData: T["loaderData"];
       /** The data returned from the `action` or `clientAction` following an action submission. */
-      actionData?: T["actionData"];
+      actionData?: T["actionData"] | undefined;
     });
 
 type CreateErrorBoundaryProps<
@@ -219,15 +219,15 @@ type CreateErrorBoundaryProps<
 } & (IsServerFirstRoute<T, RSCEnabled> extends true
   ? {
       /** The data returned from the `loader` */
-      loaderData?: ServerDataFrom<T["module"]["loader"]>;
+      loaderData?: ServerDataFrom<T["module"]["loader"]> | undefined;
       /** The data returned from the `action` following an action submission. */
-      actionData?: ServerDataFrom<T["module"]["action"]>;
+      actionData?: ServerDataFrom<T["module"]["action"]> | undefined;
     }
   : {
       /** The data returned from the `loader` or `clientLoader` */
-      loaderData?: T["loaderData"];
+      loaderData?: T["loaderData"] | undefined;
       /** The data returned from the `action` or `clientAction` following an action submission. */
-      actionData?: T["actionData"];
+      actionData?: T["actionData"] | undefined;
     });
 
 export type GetAnnotations<
