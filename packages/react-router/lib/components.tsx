@@ -744,6 +744,7 @@ export function RouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
+                  isStatic={false}
                   onError={onError}
                 />
               </Router>
@@ -786,18 +787,20 @@ function getOptimisticRouterState(
 // Memoize to avoid re-renders when updating `ViewTransitionContext`
 const MemoizedDataRoutes = React.memo(DataRoutes);
 
-function DataRoutes({
+export function DataRoutes({
   routes,
   future,
   state,
+  isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
-  onError: ClientOnErrorFunction | undefined;
+  isStatic: boolean;
+  onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, onError, future);
+  return useRoutesImpl(routes, undefined, { state, isStatic, onError, future });
 }
 
 /**
