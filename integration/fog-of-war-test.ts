@@ -1455,6 +1455,58 @@ test.describe("Fog of War", () => {
     expect(wrongManifestRequests).toEqual([]);
   });
 
+  test("preserves query params and hash on manifest version mismatch reload", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/target.tsx": js`
+          import { useSearchParams, useLocation } from "react-router";
+          export default function Target() {
+            let [searchParams] = useSearchParams();
+            let location = useLocation();
+            return (
+              <>
+                <h1 id="target">Target</h1>
+                <p id="query">foo={searchParams.get("foo")}</p>
+                <p id="hash">hash={location.hash}</p>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/", true);
+    await page.waitForSelector("#index");
+
+    // Intercept manifest requests and return 204 with X-Remix-Reload-Document
+    // to simulate a version mismatch
+    await page.route("**/__manifest*", (route) => {
+      route.fulfill({
+        status: 204,
+        headers: { "X-Remix-Reload-Document": "true" },
+      });
+    });
+
+    // Navigate to target with query params and hash
+    await page.evaluate(() => {
+      (window as any).__reactRouterDataRouter.navigate(
+        "/target?foo=bar#section"
+      );
+    });
+
+    // Wait for the reload - the page should reload to the full URL
+    await page.waitForURL(/\/target\?foo=bar#section/);
+    await page.waitForSelector("#target");
+
+    expect(await app.getHtml("#query")).toContain("foo=bar");
+    expect(await app.getHtml("#hash")).toContain("hash=#section");
+  });
+
   test.describe("routeDiscovery=initial", () => {
     test("loads full manifest on initial load", async ({ page }) => {
       let fixture = await createFixture({
