@@ -1386,17 +1386,16 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
+    let isSpaLink = !(parsed.isExternal || reloadDocument);
     let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
         {...prefetchHandlers}
         href={
-          (!(parsed.isExternal || reloadDocument) ? maskedHref : undefined) ||
-          parsed.absoluteURL ||
-          href
+          (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
         }
-        onClick={parsed.isExternal || reloadDocument ? onClick : handleClick}
+        onClick={isSpaLink ? handleClick : onClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
         data-discover={
