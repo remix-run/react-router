@@ -345,6 +345,11 @@ export interface RouterState {
   initialized: boolean;
 
   /**
+   * Tracks whether we should be rendering a HydrateFallback during hydration
+   */
+  renderFallback: boolean;
+
+  /**
    * Current scroll position we should start at for a new view
    *  - number -> scroll position to restore to
    *  - false -> do not restore scroll at all (used during submissions/revalidations)
@@ -941,6 +946,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
   let initialized: boolean;
+  let renderFallback: boolean;
 
   if (initialMatches == null && !init.patchRoutesOnNavigation) {
     // If we do not match a user-provided-route, fall back to the root
@@ -950,6 +956,7 @@ export function createRouter(init: RouterInit): Router {
     });
     let { matches, route } = getShortCircuitMatches(dataRoutes);
     initialized = true;
+    renderFallback = !initialized;
     initialMatches = matches;
     initialErrors = { [route.id]: error };
   } else {
@@ -972,6 +979,7 @@ export function createRouter(init: RouterInit): Router {
 
     if (!initialMatches) {
       initialized = false;
+      renderFallback = !initialized;
       initialMatches = [];
 
       // If partial hydration and fog of war is enabled, we will be running
@@ -990,11 +998,13 @@ export function createRouter(init: RouterInit): Router {
       // All initialMatches need to be loaded before we're ready.  If we have lazy
       // functions around still then we'll need to run them in initialize()
       initialized = false;
+      renderFallback = !initialized;
     } else if (
       !initialMatches.some((m) => routeHasLoaderOrMiddleware(m.route))
     ) {
       // If we've got no loaders or middleware to run, then we're good to go
       initialized = true;
+      renderFallback = !initialized;
     } else {
       // With "partial hydration", we're initialized so long as we were
       // provided with hydrationData for every route with a loader, and no loaders
@@ -1003,21 +1013,23 @@ export function createRouter(init: RouterInit): Router {
         ? init.hydrationData.loaderData
         : null;
       let errors = init.hydrationData ? init.hydrationData.errors : null;
+      let relevantMatches = initialMatches;
+
       // If errors exist, don't consider routes below the boundary
       if (errors) {
         let idx = initialMatches.findIndex(
           (m) => errors![m.route.id] !== undefined,
         );
-        initialized = initialMatches
-          .slice(0, idx + 1)
-          .every(
-            (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors),
-          );
-      } else {
-        initialized = initialMatches.every(
-          (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors),
-        );
+        relevantMatches = relevantMatches.slice(0, idx + 1);
       }
+
+      // Toggle renderFallback based on per-route values
+      renderFallback = false;
+      initialized = relevantMatches.every((m) => {
+        let status = getRouteHydrationStatus(m.route, loaderData, errors);
+        renderFallback = renderFallback || status.renderFallback;
+        return !status.shouldLoad;
+      });
     }
   }
 
@@ -1027,6 +1039,7 @@ export function createRouter(init: RouterInit): Router {
     location: init.history.location,
     matches: initialMatches,
     initialized,
+    renderFallback,
     navigation: IDLE_NAVIGATION,
     // Don't restore on initial updateState() if we were SSR'd
     restoreScrollPosition: init.hydrationData != null ? false : null,
@@ -1443,6 +1456,7 @@ export function createRouter(init: RouterInit): Router {
         historyAction: pendingAction,
         location,
         initialized: true,
+        renderFallback: false,
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
         restoreScrollPosition,
@@ -4968,11 +4982,12 @@ function getMatchesToLoad(
       forceShouldLoad = false;
     } else if (initialHydration) {
       // Only run on hydration if this is a hydrating `clientLoader`
-      forceShouldLoad = shouldLoadRouteOnHydration(
+      let { shouldLoad } = getRouteHydrationStatus(
         route,
         state.loaderData,
         state.errors,
       );
+      forceShouldLoad = shouldLoad;
     } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
       // Always call the loader on new route instances
       forceShouldLoad = true;
@@ -5182,19 +5197,23 @@ function routeHasLoaderOrMiddleware(route: RouteObject) {
   );
 }
 
-function shouldLoadRouteOnHydration(
+// Determine if a given route needs to be loaded during hydration and whether
+// or not re should render the HydrateFallback.  The are usually tightly coupled
+// except for when we are loading a route due to `loader.hydrate=true`, in which
+// case we don't want to render a fallback
+function getRouteHydrationStatus(
   route: AgnosticDataRouteObject,
   loaderData: RouteData | null | undefined,
   errors: RouteData | null | undefined,
-) {
+): { shouldLoad: boolean; renderFallback: boolean } {
   // We dunno if we have a loader - gotta find out!
   if (route.lazy) {
-    return true;
+    return { shouldLoad: true, renderFallback: true };
   }
 
   // No loader or middleware, nothing to run
   if (!routeHasLoaderOrMiddleware(route)) {
-    return false;
+    return { shouldLoad: false, renderFallback: false };
   }
 
   let hasData = loaderData != null && route.id in loaderData;
@@ -5202,16 +5221,18 @@ function shouldLoadRouteOnHydration(
 
   // Don't run if we error'd during SSR
   if (!hasData && hasError) {
-    return false;
+    return { shouldLoad: false, renderFallback: false };
   }
 
-  // Explicitly opting-in to running on hydration
+  // Explicitly opting-in to running on hydration, only showing the fallback if
+  // we don't have data
   if (typeof route.loader === "function" && route.loader.hydrate === true) {
-    return true;
+    return { shouldLoad: true, renderFallback: !hasData };
   }
 
   // Otherwise, run if we're not yet initialized with anything
-  return !hasData && !hasError;
+  let shouldLoad = !hasData && !hasError;
+  return { shouldLoad, renderFallback: shouldLoad };
 }
 
 function isNewLoader(
