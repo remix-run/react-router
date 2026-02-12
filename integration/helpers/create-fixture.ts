@@ -12,6 +12,7 @@ import type { JsonObject } from "type-fest";
 
 import {
   type ServerBuild,
+  type unstable_RSCPayload as RSCPayload,
   createRequestHandler,
   UNSAFE_ServerMode as ServerMode,
   UNSAFE_decodeViaTurboStream as decodeViaTurboStream,
@@ -24,6 +25,61 @@ import { type TemplateName, viteConfig, reactRouterConfig } from "./vite.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp", "integration");
+
+(global as any).__webpack_require__ ??= () => {
+  return {};
+};
+
+(global as any).__non_webpack_require__ ??= (p: string) => {
+  return require(p);
+};
+
+const decodeOptions = {
+  serverConsumerManifest: {
+    moduleMap: new Proxy(
+      {},
+      {
+        get() {
+          return new Proxy(
+            {},
+            {
+              get(_, p) {
+                return {
+                  name: "",
+                  id: "",
+                  chunks: [],
+                };
+              },
+            },
+          );
+        },
+      },
+    ),
+    serverModuleMap: new Proxy({}, {}),
+    moduleLoading: new Proxy({}, {}),
+  },
+};
+
+function normalizeRSCData(payload: RSCPayload) {
+  if (payload.type !== "render") return payload;
+  let data: Record<string, any> = {};
+  for (const [key, value] of Object.entries(payload.loaderData)) {
+    data[key] ??= {
+      data: value,
+    };
+  }
+  for (const [key, value] of Object.entries(payload.actionData ?? {})) {
+    data[key] ??= {
+      data: value,
+    };
+  }
+  for (const [key, value] of Object.entries(payload.errors ?? {})) {
+    data[key] ??= {
+      error: value,
+    };
+  }
+  return data;
+}
 
 export async function spawnTestServer({
   command,
@@ -112,6 +168,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let buildPath = url.pathToFileURL(
     path.join(projectDir, "build/server/index.js"),
   ).href;
+  let isRsc = templateName.includes("rsc");
 
   let getBrowserAsset = async (asset: string) => {
     return readFile(
@@ -178,13 +235,28 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
         return new Response(data);
       },
       async requestSingleFetchData(href: string) {
+        if (isRsc) {
+          if (href === "/_root.data") {
+            href = "/_.data";
+          }
+          href = href.replace(/\.data$/, ".rsc");
+        }
+
         let data = readFileSync(path.join(projectDir, "build/client", href));
         let stream = createReadableStreamFromReadable(Readable.from(data));
+        let createFromReadableStream = await import(
+          // @ts-expect-error - no types
+          "react-server-dom-webpack/client.edge"
+        ).then((m) => m.createFromReadableStream);
         return {
           status: 200,
           statusText: "OK",
           headers: new Headers(),
-          data: (await decodeViaTurboStream(stream, global)).value,
+          data: isRsc
+            ? normalizeRSCData(
+                await createFromReadableStream(stream, decodeOptions),
+              )
+            : (await decodeViaTurboStream(stream, global)).value,
         };
       },
       postDocument: () => {
@@ -228,17 +300,33 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   };
 
   let requestSingleFetchData = async (href: string, init?: RequestInit) => {
+    if (isRsc) {
+      if (href === "/_root.data") {
+        href = "/_.data";
+      }
+      href = href.replace(/\.data$/, ".rsc");
+    }
+
     init = init || {};
     init.signal = init.signal || new AbortController().signal;
     let url = new URL(href, "test://test");
     let request = new Request(url.toString(), init);
     let response = await handler(request);
+    let createFromReadableStream = await import(
+      // @ts-expect-error - no types
+      "react-server-dom-webpack/client.edge"
+    ).then((m) => m.createFromReadableStream);
+
     return {
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
       data: response.body
-        ? (await decodeViaTurboStream(response.body!, global)).value
+        ? isRsc
+          ? normalizeRSCData(
+              await createFromReadableStream(response.body, decodeOptions),
+            )
+          : (await decodeViaTurboStream(response.body!, global)).value
         : null,
     };
   };
@@ -481,7 +569,7 @@ export async function createFixtureProject(
     projectDir,
     init.buildStdio,
     mode,
-    templateName.includes("rsc"),
+    templateName.includes("rsc") && !templateName.includes("framework"),
   );
 
   return projectDir;
@@ -491,7 +579,7 @@ function reactRouterBuild(
   projectDir: string,
   buildStdio?: Writable,
   mode?: ServerMode,
-  isRsc?: boolean,
+  isViteBuildCommand?: boolean,
 ) {
   // We have a "require" instead of a dynamic import in readConfig gated
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
@@ -503,7 +591,10 @@ function reactRouterBuild(
   let reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
   let viteBin = "node_modules/vite/dist/node/cli.js";
 
-  let buildArgs: string[] = [isRsc ? viteBin : reactRouterBin, "build"];
+  let buildArgs: string[] = [
+    isViteBuildCommand ? viteBin : reactRouterBin,
+    "build",
+  ];
 
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,
@@ -517,11 +608,11 @@ function reactRouterBuild(
   });
 
   // These logs are helpful for debugging. Remove comments if needed.
-  // console.log("spawning node " + buildArgs.join(" ") + ":\n");
-  // console.log("  STDOUT:");
-  // console.log("  " + buildSpawn.stdout.toString("utf-8"));
-  // console.log("  STDERR:");
-  // console.log("  " + buildSpawn.stderr.toString("utf-8"));
+  console.log("spawning node " + buildArgs.join(" ") + ":\n");
+  console.log("  STDOUT:");
+  console.log("  " + buildSpawn.stdout.toString("utf-8"));
+  console.log("  STDERR:");
+  console.log("  " + buildSpawn.stderr.toString("utf-8"));
 
   if (buildStdio) {
     buildStdio.write(buildSpawn.stdout.toString("utf-8"));

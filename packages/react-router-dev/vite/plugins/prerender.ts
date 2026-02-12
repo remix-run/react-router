@@ -82,11 +82,7 @@ export interface PrerenderPluginOptions<
   /**
    * Prerender configuration
    */
-  config?:
-    | PrerenderConfig
-    | ((
-        this: Vite.Rollup.PluginContext,
-      ) => PrerenderConfig | Promise<PrerenderConfig>);
+  config?: PrerenderConfig | (() => PrerenderConfig | Promise<PrerenderConfig>);
 
   /**
    * Requests to prerender
@@ -109,9 +105,7 @@ export interface PrerenderPluginOptions<
    */
   requests:
     | PrerenderRequest<Metadata>[]
-    | ((
-        this: Vite.Rollup.PluginContext,
-      ) =>
+    | (() =>
         | PrerenderRequest<Metadata>[]
         | Promise<PrerenderRequest<Metadata>[]>);
 
@@ -142,7 +136,6 @@ export interface PrerenderPluginOptions<
    * ```
    */
   postProcess?: (
-    this: Vite.Rollup.PluginContext,
     request: Request,
     response: Response,
     metadata: Metadata | undefined,
@@ -155,7 +148,6 @@ export interface PrerenderPluginOptions<
    * If it throws, the build fails.
    */
   handleError?: (
-    this: Vite.Rollup.PluginContext,
     request: Request,
     error: Error,
     metadata: Metadata | undefined,
@@ -167,21 +159,14 @@ export interface PrerenderPluginOptions<
    * Use for custom logging with access to request metadata.
    * If not provided, uses default logging.
    */
-  logFile?: (
-    this: Vite.Rollup.PluginContext,
-    outputPath: string,
-    metadata: Metadata | undefined,
-  ) => void;
+  logFile?: (outputPath: string, metadata: Metadata | undefined) => void;
 
   /**
    * Called after all prerendering is complete
    *
    * Use for cleanup or post-processing of output files.
    */
-  finalize?: (
-    this: Vite.Rollup.PluginContext,
-    buildDirectory: string,
-  ) => void | Promise<void>;
+  finalize?: (buildDirectory: string) => void | Promise<void>;
 }
 
 function normalizePrerenderRequest<Metadata extends Record<string, unknown>>(
@@ -232,13 +217,13 @@ export function prerender<Metadata extends Record<string, unknown>>(
     configResolved(resolvedConfig) {
       viteConfig = resolvedConfig;
     },
-    writeBundle: {
+    sharedDuringBuild: true,
+    // @ts-expect-error - needs newer types
+    buildApp: {
+      order: "post",
       async handler() {
-        const pluginContext = this;
         const rawRequests =
-          typeof requests === "function"
-            ? await requests.call(pluginContext)
-            : requests;
+          typeof requests === "function" ? await requests.call(null) : requests;
 
         const prerenderRequests = rawRequests.map(normalizePrerenderRequest);
 
@@ -247,9 +232,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
         }
 
         const prerenderConfig =
-          typeof config === "function"
-            ? await config.call(pluginContext)
-            : config;
+          typeof config === "function" ? await config.call(null) : config;
         const {
           buildDirectory = viteConfig.environments.client.build.outDir,
           concurrency = 1,
@@ -262,6 +245,8 @@ export function prerender<Metadata extends Record<string, unknown>>(
         const previewServer = await startPreviewServer(viteConfig);
 
         try {
+          process.env.IS_RR_BUILD_REQUEST = "yes";
+
           const baseUrl = getResolvedUrl(previewServer);
 
           async function prerenderRequest(
@@ -304,7 +289,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
                   // External redirect: pass to postProcess
                   if (responseURL.origin !== locationUrl.origin) {
                     return await postProcess.call(
-                      pluginContext,
+                      null,
                       request,
                       response,
                       metadata,
@@ -324,7 +309,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
                 }
 
                 return await postProcess.call(
-                  pluginContext,
+                  null,
                   request,
                   response,
                   metadata,
@@ -339,7 +324,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
 
                 // If handleError does not throw, return empty array and continue
                 handleError.call(
-                  pluginContext,
+                  null,
                   request,
                   error instanceof Error
                     ? error
@@ -390,7 +375,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
             const relativePath = path.relative(viteConfig.root, outputPath);
 
             if (logFile) {
-              logFile.call(pluginContext, relativePath, metadata);
+              logFile.call(null, relativePath, metadata);
             }
 
             return relativePath;
@@ -406,18 +391,11 @@ export function prerender<Metadata extends Record<string, unknown>>(
           );
 
           if (finalize) {
-            await finalize.call(pluginContext, buildDirectory);
+            await finalize.call(null, buildDirectory);
           }
         } finally {
-          await new Promise<void>((resolve, reject) => {
-            previewServer.httpServer.close((err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
+          previewServer.httpServer.close();
+          process.env.IS_RR_BUILD_REQUEST = undefined;
         }
       },
     },
@@ -453,9 +431,11 @@ function defaultHandleError(request: Request, error: Error): void {
     );
   }
 
-  throw new Error(
+  let e = new Error(
     `Prerender: Request failed for ${prerenderPath}: ${error.message}`,
   );
+  e.stack = error.stack;
+  throw e;
 }
 
 async function startPreviewServer(

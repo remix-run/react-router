@@ -18,7 +18,7 @@
     "@vitejs/plugin-rsc": "catalog:",
     "cross-env": "^7.0.3",
     "typescript": "catalog:",
-    "vite": "^6.3.0"
+    "vite": "catalog:vite-7"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",

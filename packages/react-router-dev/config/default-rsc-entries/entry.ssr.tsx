@@ -1,6 +1,5 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
-// @ts-expect-error - no types for this, can import from root once on latest 19
-import { renderToReadableStream } from "react-dom/server.edge";
+import { renderToReadableStream } from "react-dom/server";
 import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
   unstable_RSCStaticRouter as RSCStaticRouter,
@@ -31,6 +30,7 @@ export async function generateHTML(
         {
           ...options,
           bootstrapScriptContent,
+          // @ts-expect-error - no types for this yet
           formState,
           signal: request.signal,
         },

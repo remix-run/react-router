@@ -65,5 +65,5 @@ jobs:
         run: npx playwright install --with-deps ${{ matrix.browser }}
 
       - name: 👀 Run Integration Tests ${{ matrix.browser }}
-        run: "pnpm test:integration --project=${{ matrix.browser }}"
+        run: "pnpm test:integration --project=${{ matrix.browser }} prerender"
         timeout-minutes: ${{inputs.timeout}}

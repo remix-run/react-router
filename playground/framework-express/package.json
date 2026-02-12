@@ -30,7 +30,7 @@
     "@types/react-dom": "catalog:",
     "cross-env": "^7.0.3",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
+    "vite": "catalog:vite-7",
     "vite-tsconfig-paths": "^4.2.1"
   },
   "engines": {
