@@ -9,6 +9,7 @@ import {
   parsePath,
   warning,
 } from "./history";
+import { isAbortError } from "./abort";
 import type {
   unstable_ClientInstrumentation,
   unstable_InstrumentRouteFunction,
@@ -1240,7 +1241,9 @@ export function createRouter(init: RouterInit): Router {
       removePageHideEventListener();
     }
     subscribers.clear();
-    pendingNavigationController && pendingNavigationController.abort();
+    if (pendingNavigationController) {
+      pendingNavigationController.abort();
+    }
     state.fetchers.forEach((_, key) => deleteFetcher(key));
     state.blockers.forEach((_, key) => deleteBlocker(key));
   }
@@ -1690,7 +1693,9 @@ export function createRouter(init: RouterInit): Router {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
-    pendingNavigationController && pendingNavigationController.abort();
+    if (pendingNavigationController) {
+      pendingNavigationController.abort();
+    }
     pendingNavigationController = null;
     pendingAction = historyAction;
     isUninterruptedRevalidation =
@@ -2223,7 +2228,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     revalidatingFetchers.forEach((rf) => {
-      abortFetcher(rf.key);
+      abortFetcher(rf.key, "revalidation:reset");
       if (rf.controller) {
         // Fetchers use an independent AbortController so that aborting a fetcher
         // (via deleteFetcher) does not abort the triggering navigation that
@@ -2234,7 +2239,9 @@ export function createRouter(init: RouterInit): Router {
 
     // Proxy navigation abort through to revalidation fetchers
     let abortPendingFetchRevalidations = () =>
-      revalidatingFetchers.forEach((f) => abortFetcher(f.key));
+      revalidatingFetchers.forEach((f) =>
+        abortFetcher(f.key, "revalidation:navigation-abort"),
+      );
     if (pendingNavigationController) {
       pendingNavigationController.signal.addEventListener(
         "abort",
@@ -2355,7 +2362,7 @@ export function createRouter(init: RouterInit): Router {
     href: string | null,
     opts?: RouterFetchOptions,
   ) {
-    abortFetcher(key);
+    abortFetcher(key, "fetcher:start");
 
     let flushSync = (opts && opts.flushSync) === true;
 
@@ -2476,6 +2483,13 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
+        if (
+          isAbortError(discoverResult.error, fetchRequest.signal, {
+            allowTypeError: false,
+          })
+        ) {
+          return;
+        }
         setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
@@ -2541,6 +2555,14 @@ export function createRouter(init: RouterInit): Router {
       if (fetchControllers.get(key) === abortController) {
         fetchControllers.delete(key);
       }
+      return;
+    }
+
+    // If the result was skipped by abort detection in callDataStrategy,
+    // gracefully settle the fetcher with its previous data instead of crashing
+    if (!actionResult) {
+      let currentFetcher = state.fetchers.get(key);
+      updateFetcherState(key, getDoneFetcher(currentFetcher?.data));
       return;
     }
 
@@ -2638,7 +2660,7 @@ export function createRouter(init: RouterInit): Router {
           existingFetcher ? existingFetcher.data : undefined,
         );
         state.fetchers.set(staleKey, revalidatingFetcher);
-        abortFetcher(staleKey);
+        abortFetcher(staleKey, "revalidation:stale-fetcher");
         if (rf.controller) {
           fetchControllers.set(staleKey, rf.controller);
         }
@@ -2647,7 +2669,9 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
 
     let abortPendingFetchRevalidations = () =>
-      revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
+      revalidatingFetchers.forEach((rf) =>
+        abortFetcher(rf.key, "revalidation:action-abort"),
+      );
 
     abortController.signal.addEventListener(
       "abort",
@@ -2726,7 +2750,9 @@ export function createRouter(init: RouterInit): Router {
       loadId > pendingNavigationLoadId
     ) {
       invariant(pendingAction, "Expected pending action");
-      pendingNavigationController && pendingNavigationController.abort();
+      if (pendingNavigationController) {
+        pendingNavigationController.abort();
+      }
 
       completeNavigation(state.navigation.location, {
         matches,
@@ -2792,6 +2818,13 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
+        if (
+          isAbortError(discoverResult.error, fetchRequest.signal, {
+            allowTypeError: false,
+          })
+        ) {
+          return;
+        }
         setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
@@ -2844,6 +2877,14 @@ export function createRouter(init: RouterInit): Router {
     // fetchers, so short circuit here if it was removed from the UI
     if (fetchersQueuedForDeletion.has(key)) {
       updateFetcherState(key, getDoneFetcher(undefined));
+      return;
+    }
+
+    // If the result was skipped by abort detection in callDataStrategy,
+    // gracefully settle the fetcher with its previous data instead of crashing
+    if (result == null) {
+      let currentFetcher = state.fetchers.get(key);
+      updateFetcherState(key, getDoneFetcher(currentFetcher?.data));
       return;
     }
 
@@ -3041,6 +3082,12 @@ export function createRouter(init: RouterInit): Router {
         false,
       );
     } catch (e) {
+      // If the request was aborted, don't treat it as an error - just return
+      // empty results. This prevents abort errors from bubbling to error boundary.
+      // See: https://github.com/remix-run/react-router/issues/14203
+      if (isAbortError(e, request.signal, { allowTypeError: fetcherKey != null })) {
+        return dataResults;
+      }
       // If the outer dataStrategy method throws, just return the error for all
       // matches - and it'll naturally bubble to the root
       matches
@@ -3085,6 +3132,19 @@ export function createRouter(init: RouterInit): Router {
     }
 
     for (let [routeId, result] of Object.entries(results)) {
+      // If this is an abort-related error result, skip it entirely so
+      // mergeLoaderData preserves the existing valid data for this route.
+      // Writing { data: undefined } would wipe loaderData and crash hooks
+      // like useRouteLoaderData('root') that expect data to be present.
+      // See: https://github.com/remix-run/react-router/issues/14203
+      if (
+        result.type === ResultType.error &&
+        isAbortError(result.result, request.signal, {
+          allowTypeError: fetcherKey != null,
+        })
+      ) {
+        continue;
+      }
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
         dataResults[routeId] = {
@@ -3130,6 +3190,18 @@ export function createRouter(init: RouterInit): Router {
             f.key,
           );
           let result = results[f.match.route.id];
+          // If the result was skipped by abort detection in callDataStrategy,
+          // synthesize a success result with previous data so downstream
+          // invariant checks don't crash
+          if (result == null) {
+            let existingFetcher = state.fetchers.get(f.key);
+            return {
+              [f.key]: {
+                type: ResultType.data,
+                data: existingFetcher?.data,
+              } as SuccessResult,
+            };
+          }
           // Fetcher results are keyed by fetcher key from here on out, not routeId
           return { [f.key]: result };
         } else {
@@ -3166,7 +3238,7 @@ export function createRouter(init: RouterInit): Router {
       if (fetchControllers.has(key)) {
         cancelledFetcherLoads.add(key);
       }
-      abortFetcher(key);
+      abortFetcher(key, "interruptActiveLoads");
     });
   }
 
@@ -3212,7 +3284,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function resetFetcher(key: string, opts?: { reason?: unknown }) {
-    abortFetcher(key, opts?.reason);
+    abortFetcher(key, opts?.reason ?? "fetcher:reset");
     updateFetcherState(key, getDoneFetcher(null));
   }
 
@@ -3225,7 +3297,7 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.has(key) &&
       !(fetcher && fetcher.state === "loading" && fetchReloadIds.has(key))
     ) {
-      abortFetcher(key);
+      abortFetcher(key, "fetcher:delete");
     }
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
@@ -3285,7 +3357,7 @@ export function createRouter(init: RouterInit): Router {
         let fetcher = state.fetchers.get(key);
         invariant(fetcher, `Expected fetcher: ${key}`);
         if (fetcher.state === "loading") {
-          abortFetcher(key);
+          abortFetcher(key, "stale-fetch-load");
           fetchReloadIds.delete(key);
           yeetedKeys.push(key);
         }
@@ -6186,11 +6258,28 @@ async function callLoaderOrAction({
     handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>,
   ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
-    let reject: () => void;
+    let reject: (reason?: unknown) => void;
     // This will never resolve so safe to type it as Promise<DataStrategyResult> to
     // satisfy the function return value
     let abortPromise = new Promise<DataStrategyResult>((_, r) => (reject = r));
-    onReject = () => reject();
+    onReject = () => {
+      const reason = request.signal.reason;
+      if (
+        reason instanceof Error ||
+        (typeof DOMException !== "undefined" && reason instanceof DOMException)
+      ) {
+        reject(reason);
+        return;
+      }
+      const abortMessage = typeof reason === "string" ? reason : "Aborted";
+      if (typeof DOMException !== "undefined") {
+        reject(new DOMException(abortMessage, "AbortError"));
+      } else {
+        const abortError = new Error(abortMessage);
+        abortError.name = "AbortError";
+        reject(abortError);
+      }
+    };
     request.signal.addEventListener("abort", onReject);
 
     let actualHandler = (ctx?: unknown) => {
