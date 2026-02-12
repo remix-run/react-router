@@ -410,6 +410,7 @@ export function createStaticRouter(
     get future() {
       return {
         v8_middleware: false,
+        unstable_passThroughRequests: false,
         ...opts?.future,
       };
     },

@@ -67,6 +67,7 @@ import {
   createRedirectErrorDigest,
   createRouteErrorResponseDigest,
 } from "../errors";
+import { getNormalizedPath } from "../server-runtime/urls";
 
 const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
@@ -714,6 +715,7 @@ async function generateResourceResponse(
           return generateErrorResponse(error);
         }
       },
+      unstable_normalizePath: (r) => getNormalizedPath(r, basename, null),
     });
     return response;
   } catch (error) {
@@ -805,6 +807,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
+      unstable_normalizePath: (r) => getNormalizedPath(r, basename, null),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,

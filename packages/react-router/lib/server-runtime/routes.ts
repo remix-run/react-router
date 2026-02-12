@@ -131,13 +131,17 @@ export function createStaticHandlerDataRoutes(
                 return result.data;
               }
             }
-            let val = await callRouteHandler(route.module.loader!, args);
+            let val = await callRouteHandler(
+              route.module.loader!,
+              args,
+              future,
+            );
             return val;
           }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>
-            callRouteHandler(route.module.action!, args)
+            callRouteHandler(route.module.action!, args, future)
         : undefined,
       handle: route.module.handle,
     };
