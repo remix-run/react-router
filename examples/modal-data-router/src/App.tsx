@@ -1,0 +1,380 @@
+import * as React from "react";
+import { createPortal } from "react-dom";
+import {
+  Link,
+  Outlet,
+  RouterProvider,
+  createBrowserRouter,
+  useLoaderData,
+  useNavigate,
+  useParams,
+  type LoaderFunctionArgs,
+} from "react-router";
+
+import { IMAGES, getImageById, loadImage } from "./images";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    Component: Root,
+    children: [
+      {
+        Component: Layout,
+        children: [
+          {
+            index: true,
+            Component: Home,
+          },
+          {
+            path: "gallery",
+            Component: Gallery,
+            async loader({ request }: LoaderFunctionArgs) {
+              // When the gallery route has an img param, we load that image to
+              // show it in a modal
+              let searchParams = new URL(request.url).searchParams;
+              let image = searchParams.has("img")
+                ? loadImage(searchParams.get("img")!)
+                : null;
+              return { image };
+            },
+          },
+          {
+            path: "img/:id",
+            Component: ImageView,
+            async loader({ params }: LoaderFunctionArgs) {
+              return loadImage(params.id!);
+            },
+          },
+          {
+            path: "*",
+            Component: NoMatch,
+          },
+        ],
+      },
+    ],
+  },
+]);
+
+export default function App() {
+  return <RouterProvider router={router} />;
+}
+
+// Root component
+function Root() {
+  return (
+    <div>
+      <h1>Modal Example</h1>
+
+      <p>
+        This is an example of how to create a contextual modal navigation with
+        React Router where the navigation path the user takes determines if the
+        page is rendered in the modal or not (popularized by pinterest,
+        instagram, and others in the 2010s). This type of modal is typically
+        used as a kind of "detail" view to focus on a particular object in a
+        collection (like a pinterest board) while not taking you completely out
+        of context of the parent page. But, when the same URL is visited
+        directly (rather than from the collection page) it renders as it's own
+        full page instead of in a modal.
+      </p>
+
+      <p>
+        In this example, notice how the URL updates when the modal opens (if you
+        are viewing the example in StackBlitz you may need to open in a new
+        browser window). Even though the URL is updated to the specific item in
+        the modal, the background page is still showing behind it.
+      </p>
+
+      <p>
+        Next, copy and paste the URL to a new browser tab and notice that it
+        shows that specific item not in a modal, but directly on the page. This
+        is the view that someone would see if they clicked on a link that you
+        sent them when you had the modal open. They don't have the context you
+        did when you opened the modal, so they don't see it in the context of
+        the background page.
+      </p>
+
+      <Outlet />
+    </div>
+  );
+}
+
+function Layout() {
+  return (
+    <div>
+      <nav>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/gallery">Gallery</Link>
+          </li>
+        </ul>
+      </nav>
+
+      <hr />
+
+      <Outlet />
+    </div>
+  );
+}
+
+function Home() {
+  return (
+    <div>
+      <h2>Home</h2>
+
+      <h3>Featured Images</h3>
+      <ul>
+        <li>
+          <Link to="/img/1">Image 1</Link>
+        </li>
+        <li>
+          <Link to="/img/2">Image 2</Link>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function Gallery() {
+  let data = useLoaderData() as {
+    image: ReturnType<typeof getImageById> | null;
+  };
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <h2>Gallery</h2>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "24px",
+        }}
+      >
+        {IMAGES.map((image) => (
+          // This is the trick! We tell the router to navigate to `/gallery?img=1`
+          // and we can use the search param to overlay a modal on the gallery.
+          // But, we also tell the router to mask the URL displayed in the href
+          // and the URL bar
+          <Link
+            key={image.id}
+            to={`?img=${image.id}`}
+            unstable_mask={`/img/${image.id}`}
+          >
+            <img
+              width={200}
+              height={200}
+              style={{
+                width: "100%",
+                aspectRatio: "1 / 1",
+                height: "auto",
+                borderRadius: "8px",
+              }}
+              src={image.src}
+              alt={image.title}
+            />
+          </Link>
+        ))}
+      </div>
+
+      {/* Display the modal if data was returned */}
+      {data.image ? <Modal image={data.image} /> : null}
+    </div>
+  );
+}
+
+function ImageView() {
+  let { id } = useParams<"id">();
+  let image = getImageById(Number(id));
+
+  if (!image) return <div>Image not found</div>;
+
+  return (
+    <div>
+      <h1>{image.title}</h1>
+      <img width={400} height={400} src={image.src} alt="" />
+    </div>
+  );
+}
+
+function Modal({ image }: { image: ReturnType<typeof getImageById> }) {
+  let navigate = useNavigate();
+  let buttonRef = React.useRef<HTMLButtonElement>(null);
+
+  function onDismiss() {
+    navigate(-1);
+  }
+
+  if (!image) return null;
+
+  return (
+    <Dialog
+      aria-labelledby="label"
+      onDismiss={onDismiss}
+      initialFocusRef={buttonRef as React.RefObject<HTMLElement>}
+    >
+      <div
+        style={{
+          display: "grid",
+          justifyContent: "center",
+          padding: "8px 8px",
+        }}
+      >
+        <h1 id="label" style={{ margin: 0 }}>
+          {image.title}
+        </h1>
+        <img
+          style={{
+            margin: "16px 0",
+            borderRadius: "8px",
+            width: "100%",
+            height: "auto",
+          }}
+          width={400}
+          height={400}
+          src={image.src}
+          alt=""
+        />
+        <button
+          style={{ display: "block" }}
+          ref={buttonRef}
+          onClick={onDismiss}
+        >
+          Close
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
+function NoMatch() {
+  return (
+    <div>
+      <h2>Nothing to see here!</h2>
+      <p>
+        <Link to="/">Go to the home page</Link>
+      </p>
+    </div>
+  );
+}
+
+type DialogProps = {
+  children: React.ReactNode;
+  onDismiss: () => void;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  initialFocusRef?: React.RefObject<HTMLElement>;
+};
+
+function Dialog({
+  children,
+  onDismiss,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
+  initialFocusRef,
+}: DialogProps) {
+  let overlayRef = React.useRef<HTMLDivElement>(null);
+  let contentRef = React.useRef<HTMLDivElement>(null);
+  let previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+
+    let focusTarget = initialFocusRef?.current ?? contentRef.current;
+    if (focusTarget) {
+      focusTarget.focus();
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onDismiss();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        let container = contentRef.current;
+        if (!container) return;
+
+        let focusable = getFocusableElements(container);
+        if (focusable.length === 0) {
+          event.preventDefault();
+          container.focus();
+          return;
+        }
+
+        let activeElement = document.activeElement as HTMLElement | null;
+        let currentIndex = focusable.indexOf(activeElement ?? focusable[0]);
+
+        let nextIndex = currentIndex;
+        if (event.shiftKey) {
+          nextIndex =
+            currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1;
+        } else {
+          nextIndex =
+            currentIndex === focusable.length - 1 ? 0 : currentIndex + 1;
+        }
+
+        event.preventDefault();
+        focusable[nextIndex].focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [initialFocusRef, onDismiss]);
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onDismiss();
+        }
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0, 0, 0, 0.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        ref={contentRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledby}
+        tabIndex={-1}
+        style={{
+          background: "white",
+          borderRadius: "12px",
+          maxWidth: "min(480px, 100%)",
+          width: "100%",
+          padding: "24px",
+          boxShadow:
+            "0 20px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.06)",
+        }}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function getFocusableElements(container: HTMLElement) {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]',
+    ),
+  ).filter((element) => !element.hasAttribute("disabled"));
+}
