@@ -195,7 +195,7 @@ type HistoryState = {
   usr: any;
   key?: string;
   idx: number;
-  unstable_maskFrom?: Path;
+  masked?: Path;
 };
 
 const PopStateEventType = "popstate";
@@ -386,15 +386,15 @@ export function createBrowserHistory(
     window: Window,
     globalHistory: Window["history"],
   ) {
-    let maskFrom = globalHistory.state?.unstable_maskFrom;
-    let { pathname, search, hash } = maskFrom || window.location;
+    let maskedLocation = (globalHistory.state as HistoryState)?.masked;
+    let { pathname, search, hash } = maskedLocation || window.location;
     return createLocation(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
       (globalHistory.state && globalHistory.state.key) || "default",
-      maskFrom
+      maskedLocation
         ? {
             pathname: window.location.pathname,
             search: window.location.search,
@@ -552,7 +552,7 @@ function getHistoryState(location: Location, index: number): HistoryState {
     usr: location.state,
     key: location.key,
     idx: index,
-    unstable_maskFrom: location.unstable_mask
+    masked: location.unstable_mask
       ? {
           pathname: location.pathname,
           search: location.search,

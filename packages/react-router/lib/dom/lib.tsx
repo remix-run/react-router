@@ -1174,6 +1174,54 @@ export interface LinkProps
   relative?: RelativeRoutingType;
 
   /**
+   * Can be a string or a partial {@link Path}:
+   *
+   * ```tsx
+   * <Link to="/some/path" />
+   *
+   * <Link
+   *   to={{
+   *     pathname: "/some/path",
+   *     search: "?query=string",
+   *     hash: "#hash",
+   *   }}
+   * />
+   * ```
+   */
+  to: To;
+
+  /**
+   * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+   * for this navigation.
+   *
+   * ```jsx
+   * <Link to={to} viewTransition>
+   *   Click me
+   * </Link>
+   * ```
+   *
+   * To apply specific styles for the transition, see {@link useViewTransitionState}
+   */
+  viewTransition?: boolean;
+
+  /**
+   * Specify the default revalidation behavior for the navigation.
+   *
+   * ```tsx
+   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+   * ```
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
+
+  /**
    * Masked path for for this navigation, when you want to navigate the router to
    * one location but display a separate location in the URL bar.
    *
@@ -1221,54 +1269,6 @@ export interface LinkProps
    * ```
    */
   unstable_mask?: To;
-
-  /**
-   * Can be a string or a partial {@link Path}:
-   *
-   * ```tsx
-   * <Link to="/some/path" />
-   *
-   * <Link
-   *   to={{
-   *     pathname: "/some/path",
-   *     search: "?query=string",
-   *     hash: "#hash",
-   *   }}
-   * />
-   * ```
-   */
-  to: To;
-
-  /**
-   * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-   * for this navigation.
-   *
-   * ```jsx
-   * <Link to={to} viewTransition>
-   *   Click me
-   * </Link>
-   * ```
-   *
-   * To apply specific styles for the transition, see {@link useViewTransitionState}
-   */
-  viewTransition?: boolean;
-
-  /**
-   * Specify the default revalidation behavior for the navigation.
-   *
-   * ```tsx
-   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
-   * ```
-   *
-   * If no `shouldRevalidate` functions are present on the active routes, then this
-   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
-   * so the route can make the final determination on revalidation. This can be
-   * useful when updating search params and you don't want to trigger a revalidation.
-   *
-   * By default (when not specified), loaders will revalidate according to the routers
-   * standard revalidation behavior.
-   */
-  unstable_defaultShouldRevalidate?: boolean;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1298,11 +1298,11 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.relative} props.relative n/a
  * @param {LinkProps.reloadDocument} props.reloadDocument n/a
  * @param {LinkProps.replace} props.replace n/a
- * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
  * @param {LinkProps.unstable_defaultShouldRevalidate} props.unstable_defaultShouldRevalidate n/a
+ * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -2185,8 +2185,6 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * to use for the link. Defaults to `"route"`.
  * @param options.replace Whether to replace the current [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry instead of pushing a new one. Defaults to `false`.
- * @param options.unstable_mask Masked location to display in the browser instead
- * of the router location. Defaults to `undefined`.
  * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
@@ -2195,6 +2193,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * {@link useViewTransitionState}. Defaults to `false`.
  * @param options.unstable_defaultShouldRevalidate Specify the default revalidation
  * behavior for the navigation. Defaults to `true`.
+ * @param options.unstable_mask Masked location to display in the browser instead
+ * of the router location. Defaults to `undefined`.
  * @param options.unstable_useTransitions Wraps the navigation in
  * [`React.startTransition`](https://react.dev/reference/react/startTransition)
  * for concurrent rendering. Defaults to `false`.
