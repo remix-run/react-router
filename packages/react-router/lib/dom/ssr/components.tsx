@@ -793,8 +793,8 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     // browser URL
     let maskScript = ssr
       ? [
-          "if (window.history.state && window.history.state.unstable_maskFrom) {",
-          "window.history.replaceState({ ...window.history.state, unstable_maskFrom: undefined }, null);",
+          "if (window.history.state && window.history.state.masked) {",
+          "window.history.replaceState({ ...window.history.state, masked: undefined }, null);",
           "}",
         ].join("")
       : "";
