@@ -888,12 +888,15 @@ export function useRoutesImpl(
           pathname: joinPaths([
             parentPathnameBase,
             // Re-encode pathnames that were decoded inside matchRoutes.
-            // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+            // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
             // `new URL()` internally and we need to prevent it from treating
             // them as separators
             navigator.encodeLocation
               ? navigator.encodeLocation(
-                  match.pathname.replace(/\?/g, "%3F").replace(/#/g, "%23"),
+                  match.pathname
+                    .replace(/%/g, "%25")
+                    .replace(/\?/g, "%3F")
+                    .replace(/#/g, "%23"),
                 ).pathname
               : match.pathname,
           ]),
@@ -903,12 +906,13 @@ export function useRoutesImpl(
               : joinPaths([
                   parentPathnameBase,
                   // Re-encode pathnames that were decoded inside matchRoutes
-                  // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+                  // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
                   // `new URL()` internally and we need to prevent it from treating
                   // them as separators
                   navigator.encodeLocation
                     ? navigator.encodeLocation(
                         match.pathnameBase
+                          .replace(/%/g, "%25")
                           .replace(/\?/g, "%3F")
                           .replace(/#/g, "%23"),
                       ).pathname
