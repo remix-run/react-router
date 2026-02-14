@@ -23,7 +23,7 @@ import type {
   DataStrategyFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext } from "../router/utils";
+import { ErrorResponseImpl, createContext, joinPaths } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -1001,7 +1001,9 @@ function getManifestUrl(paths: string[]): URL | null {
   }
 
   if (paths.length === 1) {
-    return new URL(`${paths[0]}.manifest`, window.location.origin);
+    // Normalize double slashes in the single path
+    const normalizedPath = joinPaths([paths[0]]);
+    return new URL(`${normalizedPath}.manifest`, window.location.origin);
   }
 
   const globalVar = window as WindowWithRouterGlobals;
@@ -1009,8 +1011,12 @@ function getManifestUrl(paths: string[]): URL | null {
     /^\/|\/$/g,
     "",
   );
+  // Normalize double slashes in basename
+  basename = joinPaths([basename]);
   let url = new URL(`${basename}/.manifest`, window.location.origin);
-  url.searchParams.set("paths", paths.sort().join(","));
+  // Normalize double slashes in all paths before joining
+  const normalizedPaths = paths.map(path => joinPaths([path]));
+  url.searchParams.set("paths", normalizedPaths.sort().join(","));
 
   return url;
 }
