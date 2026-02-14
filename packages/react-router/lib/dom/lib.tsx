@@ -2310,17 +2310,29 @@ export function useSearchParams(
   );
 
   let navigate = useNavigate();
+
+  // Keep a ref to the latest searchParams so the callback can read
+  // the current value without listing it as a dependency. This makes
+  // setSearchParams reference-stable like React's setState.
+  // The ref is updated in an effect (not during render) to stay safe
+  // under React's concurrent rendering mode.
+  // @see https://github.com/remix-run/react-router/issues/9991
+  let searchParamsRef = React.useRef(searchParams);
+  React.useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
+
   let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOptions) => {
       const newSearchParams = createSearchParams(
         typeof nextInit === "function"
-          ? nextInit(new URLSearchParams(searchParams))
+          ? nextInit(new URLSearchParams(searchParamsRef.current))
           : nextInit,
       );
       hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOptions);
     },
-    [navigate, searchParams],
+    [navigate],
   );
 
   return [searchParams, setSearchParams];
