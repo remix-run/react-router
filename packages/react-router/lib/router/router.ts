@@ -5378,10 +5378,16 @@ function isSameRoute(
     return true;
   }
 
+  // If only one side has children, they're different routes (e.g., sibling
+  // layouts where one has been patched with children and the other hasn't)
+  if (!newRoute.children?.length || !existingRoute.children?.length) {
+    return false;
+  }
+
   // Otherwise, we look to see if every child in the new route is already
   // represented in the existing route's children
-  return newRoute.children!.every((aChild, i) =>
-    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild)),
+  return newRoute.children.every((aChild) =>
+    existingRoute.children!.some((bChild) => isSameRoute(aChild, bChild)),
   );
 }
 
