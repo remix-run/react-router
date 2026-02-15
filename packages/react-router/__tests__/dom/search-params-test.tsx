@@ -295,3 +295,170 @@ describe("useSearchParams", () => {
     `);
   });
 });
+
+describe("useSearchParams setSearchParams stability", () => {
+  let node: HTMLDivElement;
+  beforeEach(() => {
+    node = document.createElement("div");
+    document.body.appendChild(node);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(node);
+    node = null!;
+  });
+
+  it("returns a stable setSearchParams reference across re-renders caused by search param changes", () => {
+    let setSearchParamsRefs: Array<Function> = [];
+
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      setSearchParamsRefs.push(setSearchParams);
+
+      return (
+        <div>
+          <p>The current query is "{searchParams.get("q") || ""}".</p>
+          <button onClick={() => setSearchParams({ q: "new-value" })}>
+            Update
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?q=initial"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    expect(node.innerHTML).toMatch(/The current query is "initial"/);
+    expect(setSearchParamsRefs.length).toBe(1);
+
+    // Click the button to update search params
+    act(() => {
+      node
+        .querySelector("button")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/The current query is "new-value"/);
+    expect(setSearchParamsRefs.length).toBe(2);
+
+    // The setSearchParams reference should be the same across renders
+    expect(setSearchParamsRefs[0]).toBe(setSearchParamsRefs[1]);
+  });
+
+  it("does not cause unnecessary re-renders in child components that depend only on setSearchParams", () => {
+    let childRenderCount = 0;
+
+    let Child = React.memo(function Child({
+      setSearchParams,
+    }: {
+      setSearchParams: Function;
+    }) {
+      childRenderCount++;
+      return (
+        <button
+          onClick={() =>
+            (setSearchParams as any)((prev: URLSearchParams) => {
+              prev.set("count", String(Number(prev.get("count") || "0") + 1));
+              return prev;
+            })
+          }
+        >
+          Increment
+        </button>
+      );
+    });
+
+    function Parent() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      return (
+        <div>
+          <p>Count: {searchParams.get("count") || "0"}</p>
+          <Child setSearchParams={setSearchParams} />
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?count=0"]}>
+          <Routes>
+            <Route path="search" element={<Parent />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    expect(node.innerHTML).toMatch(/Count: 0/);
+    expect(childRenderCount).toBe(1);
+
+    // Click to increment
+    act(() => {
+      node
+        .querySelector("button")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/Count: 1/);
+    // Child should not have re-rendered since setSearchParams is stable
+    expect(childRenderCount).toBe(1);
+  });
+
+  it("provides the latest search params value in functional updates even with a stable reference", () => {
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+
+      return (
+        <div>
+          <p>Count: {searchParams.get("count") || "0"}</p>
+          <button
+            id="increment"
+            onClick={() =>
+              setSearchParams((prev) => {
+                let current = Number(prev.get("count") || "0");
+                return { count: String(current + 1) };
+              })
+            }
+          >
+            Increment
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?count=0"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    expect(node.innerHTML).toMatch(/Count: 0/);
+
+    // Increment multiple times
+    act(() => {
+      node
+        .querySelector("#increment")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/Count: 1/);
+
+    act(() => {
+      node
+        .querySelector("#increment")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/Count: 2/);
+  });
+});

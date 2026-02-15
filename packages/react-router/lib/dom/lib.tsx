@@ -2309,18 +2309,21 @@ export function useSearchParams(
     [location.search],
   );
 
+  let searchParamsRef = React.useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
   let navigate = useNavigate();
   let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOptions) => {
       const newSearchParams = createSearchParams(
         typeof nextInit === "function"
-          ? nextInit(new URLSearchParams(searchParams))
+          ? nextInit(new URLSearchParams(searchParamsRef.current))
           : nextInit,
       );
       hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOptions);
     },
-    [navigate, searchParams],
+    [navigate],
   );
 
   return [searchParams, setSearchParams];
