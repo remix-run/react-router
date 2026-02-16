@@ -585,13 +585,13 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
-              loaderData: data,
-              params,
-              location,
-              matches,
-              error,
-            })
+            data,
+            loaderData: data,
+            params,
+            location,
+            matches,
+            error,
+          })
           : Array.isArray(routeModule.meta)
             ? [...routeModule.meta]
             : routeModule.meta;
@@ -606,10 +606,10 @@ export function Meta(): React.JSX.Element {
     if (!Array.isArray(routeMeta)) {
       throw new Error(
         "The route at " +
-          _match.route.path +
-          " returns an invalid value. All route meta functions must " +
-          "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
+        _match.route.path +
+        " returns an invalid value. All route meta functions must " +
+        "return an array of meta objects." +
+        "\n\nTo reference the meta function API, see https://remix.run/route/meta",
       );
     }
 
@@ -621,7 +621,7 @@ export function Meta(): React.JSX.Element {
 
   return (
     <>
-      {meta.flat().map((metaProps) => {
+      {meta.flat().map((metaProps, index) => {
         if (!metaProps) {
           return null;
         }
@@ -656,10 +656,13 @@ export function Meta(): React.JSX.Element {
         if ("script:ld+json" in metaProps) {
           try {
             let json = JSON.stringify(metaProps["script:ld+json"]);
+            let ldJsonKey = `script:ld+json:${index}`;
+
             return (
               <script
-                key={`script:ld+json:${json}`}
+                key={ldJsonKey}
                 type="application/ld+json"
+                suppressHydrationWarning
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
@@ -667,7 +670,7 @@ export function Meta(): React.JSX.Element {
             return null;
           }
         }
-        return <meta key={JSON.stringify(metaProps)} {...metaProps} />;
+        return <meta key={index} {...metaProps} />;
       })}
     </>
   );
@@ -801,88 +804,86 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
 
     let routeModulesScript = !isStatic
       ? " "
-      : `${
-          manifest.hmr?.runtime
-            ? `import ${JSON.stringify(manifest.hmr.runtime)};`
-            : ""
-        }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
+      : `${manifest.hmr?.runtime
+        ? `import ${JSON.stringify(manifest.hmr.runtime)};`
+        : ""
+      }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
-  .map((match, routeIndex) => {
-    let routeVarName = `route${routeIndex}`;
-    let manifestEntry = manifest.routes[match.route.id];
-    invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
-    let {
-      clientActionModule,
-      clientLoaderModule,
-      clientMiddlewareModule,
-      hydrateFallbackModule,
-      module,
-    } = manifestEntry;
+        .map((match, routeIndex) => {
+          let routeVarName = `route${routeIndex}`;
+          let manifestEntry = manifest.routes[match.route.id];
+          invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
+          let {
+            clientActionModule,
+            clientLoaderModule,
+            clientMiddlewareModule,
+            hydrateFallbackModule,
+            module,
+          } = manifestEntry;
 
-    let chunks: Array<{ module: string; varName: string }> = [
-      ...(clientActionModule
-        ? [
-            {
-              module: clientActionModule,
-              varName: `${routeVarName}_clientAction`,
-            },
-          ]
-        : []),
-      ...(clientLoaderModule
-        ? [
-            {
-              module: clientLoaderModule,
-              varName: `${routeVarName}_clientLoader`,
-            },
-          ]
-        : []),
-      ...(clientMiddlewareModule
-        ? [
-            {
-              module: clientMiddlewareModule,
-              varName: `${routeVarName}_clientMiddleware`,
-            },
-          ]
-        : []),
-      ...(hydrateFallbackModule
-        ? [
-            {
-              module: hydrateFallbackModule,
-              varName: `${routeVarName}_HydrateFallback`,
-            },
-          ]
-        : []),
-      { module, varName: `${routeVarName}_main` },
-    ];
+          let chunks: Array<{ module: string; varName: string }> = [
+            ...(clientActionModule
+              ? [
+                {
+                  module: clientActionModule,
+                  varName: `${routeVarName}_clientAction`,
+                },
+              ]
+              : []),
+            ...(clientLoaderModule
+              ? [
+                {
+                  module: clientLoaderModule,
+                  varName: `${routeVarName}_clientLoader`,
+                },
+              ]
+              : []),
+            ...(clientMiddlewareModule
+              ? [
+                {
+                  module: clientMiddlewareModule,
+                  varName: `${routeVarName}_clientMiddleware`,
+                },
+              ]
+              : []),
+            ...(hydrateFallbackModule
+              ? [
+                {
+                  module: hydrateFallbackModule,
+                  varName: `${routeVarName}_HydrateFallback`,
+                },
+              ]
+              : []),
+            { module, varName: `${routeVarName}_main` },
+          ];
 
-    if (chunks.length === 1) {
-      return `import * as ${routeVarName} from ${JSON.stringify(module)};`;
-    }
+          if (chunks.length === 1) {
+            return `import * as ${routeVarName} from ${JSON.stringify(module)};`;
+          }
 
-    let chunkImportsSnippet = chunks
-      .map((chunk) => `import * as ${chunk.varName} from "${chunk.module}";`)
-      .join("\n");
+          let chunkImportsSnippet = chunks
+            .map((chunk) => `import * as ${chunk.varName} from "${chunk.module}";`)
+            .join("\n");
 
-    let mergedChunksSnippet = `const ${routeVarName} = {${chunks
-      .map((chunk) => `...${chunk.varName}`)
-      .join(",")}};`;
+          let mergedChunksSnippet = `const ${routeVarName} = {${chunks
+            .map((chunk) => `...${chunk.varName}`)
+            .join(",")}};`;
 
-    return [chunkImportsSnippet, mergedChunksSnippet].join("\n");
-  })
-  .join("\n")}
-  ${
-    enableFogOfWar
-      ? // Inline a minimal manifest with the SSR matches
+          return [chunkImportsSnippet, mergedChunksSnippet].join("\n");
+        })
+        .join("\n")}
+  ${enableFogOfWar
+        ? // Inline a minimal manifest with the SSR matches
         `window.__reactRouterManifest = ${JSON.stringify(
           getPartialManifest(manifest, router),
           null,
           2,
         )};`
-      : ""
-  }
+        : ""
+      }
   window.__reactRouterRouteModules = {${matches
-    .map((match, index) => `${JSON.stringify(match.route.id)}:route${index}`)
-    .join(",")}};
+        .map((match, index) => `${JSON.stringify(match.route.id)}:route${index}`)
+        .join(",")}};
 
 import(${JSON.stringify(manifest.entry.module)});`;
 
@@ -913,12 +914,12 @@ import(${JSON.stringify(manifest.entry.module)});`;
     isHydrated || isRSCRouterContext
       ? []
       : dedupe(
-          manifest.entry.imports.concat(
-            getModuleLinkHrefs(matches, manifest, {
-              includeHydrateFallback: true,
-            }),
-          ),
-        );
+        manifest.entry.imports.concat(
+          getModuleLinkHrefs(matches, manifest, {
+            includeHydrateFallback: true,
+          }),
+        ),
+      );
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
