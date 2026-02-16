@@ -609,7 +609,7 @@ export function Meta(): React.JSX.Element {
           _match.route.path +
           " returns an invalid value. All route meta functions must " +
           "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
+          "\n\nTo reference the meta function API, see https://reactrouter.com/start/framework/route-module#meta",
       );
     }
 
