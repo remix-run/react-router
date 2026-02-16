@@ -2334,7 +2334,6 @@ export function createRouter(init: RouterInit): Router {
         );
         state.fetchers.set(rf.key, revalidatingFetcher);
       }
-      // If the fetcher is already in submitting/loading state, leave it as is to preserve concurrency
     });
     return new Map(state.fetchers);
   }
