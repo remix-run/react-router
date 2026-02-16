@@ -2325,11 +2325,16 @@ export function createRouter(init: RouterInit): Router {
   ) {
     revalidatingFetchers.forEach((rf) => {
       let fetcher = state.fetchers.get(rf.key);
-      let revalidatingFetcher = getLoadingFetcher(
-        undefined,
-        fetcher ? fetcher.data : undefined,
-      );
-      state.fetchers.set(rf.key, revalidatingFetcher);
+      // Only update fetchers that are not already in a submitting or loading state
+      // This preserves concurrent fetchers that were submitted independently
+      if (!fetcher || (fetcher.state !== "submitting" && fetcher.state !== "loading")) {
+        let revalidatingFetcher = getLoadingFetcher(
+          undefined,
+          fetcher ? fetcher.data : undefined,
+        );
+        state.fetchers.set(rf.key, revalidatingFetcher);
+      }
+      // If the fetcher is already in submitting/loading state, leave it as is to preserve concurrency
     });
     return new Map(state.fetchers);
   }
