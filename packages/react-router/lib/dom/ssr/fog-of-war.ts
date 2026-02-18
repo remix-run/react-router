@@ -84,15 +84,14 @@ export function getPatchRoutesOnNavigationFunction(
     if (discoveredPaths.has(path)) {
       return;
     }
-    // Use navigation location for navigations to preserve query params and
-    // hash during manifest version mismatch reloads, fallback to current
-    // location for fetchers
-    let errorReloadPath = createPath(
-      getRouter().state.navigation.location || window.location
-    );
+    let { state } = getRouter();
     await fetchAndApplyManifestPatches(
       [path],
-      errorReloadPath,
+      // If we're patching for a fetcher call, reload the current location
+      // Otherwise prefer any ongoing navigation location
+      fetcherKey
+        ? window.location.href
+        : createPath(state.navigation.location || state.location),
       manifest,
       routeModules,
       ssr,
