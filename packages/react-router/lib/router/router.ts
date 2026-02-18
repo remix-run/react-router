@@ -540,6 +540,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   state?: any;
   fromRouteId?: string;
   viewTransition?: boolean;
+  unstable_mask?: To;
 };
 
 // Only allowed for submission navigations
@@ -1528,8 +1529,32 @@ export function createRouter(init: RouterInit): Router {
       opts,
     );
 
+    // If mask is provided, normalize and create a separate path for the router
+    let maskPath: Path | undefined;
+    if (opts?.unstable_mask) {
+      let partialPath =
+        typeof opts.unstable_mask === "string"
+          ? parsePath(opts.unstable_mask)
+          : {
+              ...state.location.unstable_mask,
+              ...opts.unstable_mask,
+            };
+      maskPath = {
+        pathname: "",
+        search: "",
+        hash: "",
+        ...partialPath,
+      };
+    }
+
     let currentLocation = state.location;
-    let nextLocation = createLocation(state.location, path, opts && opts.state);
+    let nextLocation = createLocation(
+      currentLocation,
+      path,
+      opts && opts.state,
+      undefined,
+      maskPath,
+    );
 
     // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
     // URL from window.location, so we need to encode it here so the behavior
