@@ -8,6 +8,7 @@ import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
+import { createPath } from "../../router/history";
 
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
@@ -67,6 +68,7 @@ export function getPartialManifest(
 }
 
 export function getPatchRoutesOnNavigationFunction(
+  getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
@@ -82,9 +84,14 @@ export function getPatchRoutesOnNavigationFunction(
     if (discoveredPaths.has(path)) {
       return;
     }
+    let { state } = getRouter();
     await fetchAndApplyManifestPatches(
       [path],
-      fetcherKey ? window.location.href : path,
+      // If we're patching for a fetcher call, reload the current location
+      // Otherwise prefer any ongoing navigation location
+      fetcherKey
+        ? window.location.href
+        : createPath(state.navigation.location || state.location),
       manifest,
       routeModules,
       ssr,
