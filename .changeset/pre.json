@@ -35,5 +35,15 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "breezy-pans-warn",
+    "clear-stream-timeout",
+    "hot-jokes-allow",
+    "pink-seas-hope",
+    "plenty-olives-rush",
+    "poor-tips-own",
+    "silly-badgers-cough",
+    "twelve-dancers-shop",
+    "warm-clouds-shine"
+  ]
 }
