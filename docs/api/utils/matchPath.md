@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.matchPath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.matchPath.html)
 
 Performs pattern matching on a URL pathname and returns information about
 the match.
@@ -38,7 +38,7 @@ function matchPath<ParamKey extends ParamParseKey<Path>, Path extends string>(
 
 ### pattern
 
-The pattern to match against the URL pathname. This can be a string or a [`PathPattern`](https://api.reactrouter.com/v7/interfaces/react_router.PathPattern.html) object. If a string is provided, it will be
+The pattern to match against the URL pathname. This can be a string or a [`PathPattern`](https://api.reactrouter.com/v7/interfaces/react-router.PathPattern.html) object. If a string is provided, it will be
 treated as a pattern with `caseSensitive` set to `false` and `end` set to
 `true`.
 

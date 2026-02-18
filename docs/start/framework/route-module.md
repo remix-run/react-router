@@ -496,27 +496,27 @@ export function shouldRevalidate(
 
 When using [SPA Mode][spa-mode], there are no server loaders to call on navigations, so `shouldRevalidate` behaves the same as it does in [Data Mode][data-mode-should-revalidate].
 
-[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react-router.ShouldRevalidateFunctionArgs.html)
 
 ---
 
 Next: [Rendering Strategies](./rendering)
 
-[middleware-params]: https://api.reactrouter.com/v7/types/react_router.MiddlewareFunction.html
+[middleware-params]: https://api.reactrouter.com/v7/types/react-router.MiddlewareFunction.html
 [middleware]: ../../how-to/middleware
 [when-middleware-runs]: ../../how-to/middleware#when-middleware-runs
-[loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
-[client-loader-params]: https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunctionArgs
-[action-params]: https://api.reactrouter.com/v7/interfaces/react_router.ActionFunctionArgs
-[client-action-params]: https://api.reactrouter.com/v7/types/react_router.ClientActionFunctionArgs
+[loader-params]: https://api.reactrouter.com/v7/interfaces/react-router.LoaderFunctionArgs
+[client-loader-params]: https://api.reactrouter.com/v7/types/react-router.ClientLoaderFunctionArgs
+[action-params]: https://api.reactrouter.com/v7/interfaces/react-router.ActionFunctionArgs
+[client-action-params]: https://api.reactrouter.com/v7/types/react-router.ClientActionFunctionArgs
 [use-route-error]: ../../api/hooks/useRouteError
 [is-route-error-response]: ../../api/utils/isRouteErrorResponse
 [headers]: https://developer.mozilla.org/en-US/docs/Web/API/Response/headers
 [use-matches]: ../../api/hooks/useMatches
 [link-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
-[meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
-[meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
+[meta-params]: https://api.reactrouter.com/v7/interfaces/react-router.MetaArgs
+[meta-function]: https://api.reactrouter.com/v7/types/react-router.MetaDescriptor.html
 [data-mode-should-revalidate]: ../data/route-object#shouldrevalidate
 [spa-mode]: ../../how-to/spa
 [client-data]: ../../how-to/client-data

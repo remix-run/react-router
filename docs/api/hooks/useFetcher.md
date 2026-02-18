@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useFetcher.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useFetcher.html)
 
 Useful for creating complex, dynamic user interfaces that require multiple,
 concurrent data interactions without causing a navigation.
@@ -93,5 +93,5 @@ function AnotherComp() {
 
 ## Returns
 
-A [`FetcherWithComponents`](https://api.reactrouter.com/v7/types/react_router.FetcherWithComponents.html) object that contains the fetcher's state, data, and components for submitting forms and loading data.
+A [`FetcherWithComponents`](https://api.reactrouter.com/v7/types/react-router.FetcherWithComponents.html) object that contains the fetcher's state, data, and components for submitting forms and loading data.
 

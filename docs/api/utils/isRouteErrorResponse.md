@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.isRouteErrorResponse.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.isRouteErrorResponse.html)
 
-Check if the given error is an [`ErrorResponse`](https://api.reactrouter.com/v7/types/react_router.ErrorResponse.html) generated from a 4xx/5xx
+Check if the given error is an [`ErrorResponse`](https://api.reactrouter.com/v7/types/react-router.ErrorResponse.html) generated from a 4xx/5xx
 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 thrown from an [`action`](../../start/framework/route-module#action) or
 [`loader`](../../start/framework/route-module#loader) function.
@@ -60,5 +60,5 @@ The error to check.
 
 ## Returns
 
-`true` if the error is an [`ErrorResponse`](https://api.reactrouter.com/v7/types/react_router.ErrorResponse.html), `false` otherwise.
+`true` if the error is an [`ErrorResponse`](https://api.reactrouter.com/v7/types/react-router.ErrorResponse.html), `false` otherwise.
 

@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.ScrollRestoration.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.ScrollRestoration.html)
 
 Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the [`Scripts`](../components/Scripts) component.
 
@@ -62,7 +62,7 @@ function ScrollRestoration({
 A function that returns a key to use for scroll restoration. This is useful
 for custom scroll restoration logic, such as using only the pathname so
 that later navigations to prior paths will restore the scroll. Defaults to
-`location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.GetScrollRestorationKeyFunction.html).
+`location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react-router.GetScrollRestorationKeyFunction.html).
 
 ```tsx
 <ScrollRestoration
