@@ -1,5 +1,5 @@
 import type {
-  AgnosticDataRouteObject,
+  DataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
@@ -70,7 +70,7 @@ export function createStaticHandlerDataRoutes(
     string,
     Omit<ServerRoute, "children">[]
   > = groupRoutesByParentId(manifest),
-): AgnosticDataRouteObject[] {
+): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
       // Always include root due to default boundaries
