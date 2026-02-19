@@ -1,24 +1,46 @@
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
-import { renderToReadableStream } from "react-dom/server";
+import * as ReactDOMServer from "react-dom/server";
+
+// ReactDOMServer.renderToReadableStream is not available in Node.js until React 19.2.0+
+if (typeof ReactDOMServer.renderToReadableStream !== "function") {
+  throw new Error(
+    `ReactDOMServer.renderToReadableStream() is not available. ` +
+      `React Router uses this API when @react-router/node is not installed. ` +
+      `Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
+  );
+}
+
+export const streamTimeout = 5_000;
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  _loadContext: AppLoadContext,
+  loadContext: AppLoadContext,
+  // If you have middleware enabled:
+  // loadContext: RouterContextProvider
 ) {
-  let shellRendered = false;
-  const userAgent = request.headers.get("user-agent");
+  // https://httpwg.org/specs/rfc9110.html#HEAD
+  if (request.method.toUpperCase() === "HEAD") {
+    return new Response(null, {
+      status: responseStatusCode,
+      headers: responseHeaders,
+    });
+  }
 
-  const body = await renderToReadableStream(
+  let shellRendered = false;
+  let userAgent = request.headers.get("user-agent");
+
+  const body = await ReactDOMServer.renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
     {
+      signal: AbortSignal.timeout(streamTimeout + 1000),
       onError(error: unknown) {
         responseStatusCode = 500;
-        // Log streaming rendering errors from inside the shell.  Don't log
+        // Log streaming rendering errors from inside the shell. Don't log
         // errors encountered during initial shell rendering since they'll
         // reject and get logged in handleDocumentRequest.
         if (shellRendered) {

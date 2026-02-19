@@ -1000,12 +1000,6 @@ export async function resolveEntryFiles({
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
 
-    if (!deps["@react-router/node"]) {
-      throw new Error(
-        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
-      );
-    }
-
     if (!deps["isbot"]) {
       console.log(
         "adding `isbot@5` to your package.json, you should commit this change",
@@ -1025,7 +1019,9 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = `entry.server.node.tsx`;
+    entryServerFile = deps["@react-router/node"]
+      ? `entry.server.node.tsx`
+      : `entry.server.web.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
