@@ -30,6 +30,9 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  BaseRouteObject,
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
@@ -39,16 +42,22 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  IndexRouteObject,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
+  NonIndexRouteObject,
   ParamParseKey,
   Params,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  RouteMatch,
+  RouteObject,
   RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
@@ -87,18 +96,7 @@ export {
 } from "./lib/router/utils";
 
 // Expose react-router public API
-export type {
-  DataRouteMatch,
-  DataRouteObject,
-  IndexRouteObject,
-  NavigateOptions,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  PatchRoutesOnNavigationFunctionArgs,
-  RouteMatch,
-  RouteObject,
-} from "./lib/context";
+export type { NavigateOptions, Navigator } from "./lib/context";
 export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/context";
 export type {
   AwaitProps,

@@ -20,10 +20,12 @@ import {
 } from "../router/router";
 import {
   type ActionFunction,
-  type AgnosticDataRouteMatch,
+  type DataRouteMatch,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
+  type RouteMatch,
+  type RouteObject,
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
@@ -39,7 +41,6 @@ import {
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import { throwIfPotentialCSRFAttack } from "../actions";
-import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
 import {
@@ -1167,7 +1168,7 @@ async function getRSCRouteMatch({
   parentId,
 }: {
   staticContext: StaticHandlerContext;
-  match: AgnosticDataRouteMatch;
+  match: DataRouteMatch;
   isBelowErrorBoundary: boolean;
   routeIdsToLoad: string[] | null;
   parentId: string | undefined;

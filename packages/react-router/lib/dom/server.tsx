@@ -20,13 +20,12 @@ import {
   IDLE_NAVIGATION,
   createStaticHandler as routerCreateStaticHandler,
 } from "../router/router";
-import type { RouteManifest } from "../router/utils";
+import type { RouteManifest, RouteObject } from "../router/utils";
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
 import { DataRoutes, Router, mapRouteProperties } from "../components";
-import type { RouteObject } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -390,9 +389,9 @@ export function createStaticRouter(
     manifest,
   );
 
-  // Because our context matches may be from a framework-agnostic set of
-  // routes passed to createStaticHandler(), we update them here with our
-  // newly created/enhanced data routes
+  // Because our context matches may be from a set of routes passed to
+  // createStaticHandler(), we update them here with our newly created/enhanced
+  // data routes
   let matches = context.matches.map((match) => {
     let route = manifest[match.route.id] || match.route;
     return {
