@@ -678,35 +678,35 @@ export type BaseRouteObject = {
    */
   lazy?: LazyRouteDefinition<BaseRouteObject>;
   /**
+   * The React Component to render when this route matches.
+   * Mutually exclusive with `element`.
+   */
+  Component?: React.ComponentType | null;
+  /**
    * The React element to render when this Route matches.
    * Mutually exclusive with `Component`.
    */
   element?: React.ReactNode | null;
   /**
-   * The React element to render while this router is loading data.
-   * Mutually exclusive with `HydrateFallback`.
+   * The React Component to render at this route if an error occurs.
+   * Mutually exclusive with `errorElement`.
    */
-  hydrateFallbackElement?: React.ReactNode | null;
+  ErrorBoundary?: React.ComponentType | null;
   /**
    * The React element to render at this route if an error occurs.
    * Mutually exclusive with `ErrorBoundary`.
    */
   errorElement?: React.ReactNode | null;
   /**
-   * The React Component to render when this route matches.
-   * Mutually exclusive with `element`.
-   */
-  Component?: React.ComponentType | null;
-  /**
    * The React Component to render while this router is loading data.
    * Mutually exclusive with `hydrateFallbackElement`.
    */
   HydrateFallback?: React.ComponentType | null;
   /**
-   * The React Component to render at this route if an error occurs.
-   * Mutually exclusive with `errorElement`.
+   * The React element to render while this router is loading data.
+   * Mutually exclusive with `HydrateFallback`.
    */
-  ErrorBoundary?: React.ComponentType | null;
+  hydrateFallbackElement?: React.ReactNode | null;
 };
 
 /**
@@ -714,7 +714,7 @@ export type BaseRouteObject = {
  */
 export type IndexRouteObject = BaseRouteObject & {
   /**
-   * Child Route objects - not valid on index routes
+   * Child Route objects - not valid on index routes.
    */
   children?: undefined;
   /**
@@ -724,15 +724,15 @@ export type IndexRouteObject = BaseRouteObject & {
 };
 
 /**
- * Non-index routes may have children, but cannot have index
+ * Non-index routes may have children, but cannot have `index` set to `true`.
  */
 export type NonIndexRouteObject = BaseRouteObject & {
   /**
-   * Child Route objects
+   * Child Route objects.
    */
   children?: RouteObject[];
   /**
-   * Whether this is an index route.
+   * Whether this is an index route - must be `false` or undefined on non-index routes.
    */
   index?: false;
 };
