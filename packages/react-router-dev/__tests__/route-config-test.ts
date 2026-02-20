@@ -14,7 +14,7 @@ const cleanPathsForSnapshot = (obj: any): any =>
   JSON.parse(
     JSON.stringify(obj, (_key, value) =>
       typeof value === "string" && path.isAbsolute(value)
-        ? normalizePath(value.replace(process.cwd(), "{{CWD}}"))
+        ? normalizePath(value).replace(normalizePath(process.cwd()), "{{CWD}}")
         : value,
     ),
   );
