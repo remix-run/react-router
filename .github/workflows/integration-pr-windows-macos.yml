@@ -11,6 +11,9 @@ on:
       - "packages/react-router-dev/**"
       - "!**/*.md"
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

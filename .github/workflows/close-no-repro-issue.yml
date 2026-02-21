@@ -7,6 +7,10 @@ on:
   issues:
     types: [labeled]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   close-no-repro-issue:
     name: 🚪 Close issue

@@ -23,6 +23,9 @@ on:
         type: number
         default: 45
 
+permissions:
+  contents: read
+
 env:
   CI: true
 
