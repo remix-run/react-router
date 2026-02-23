@@ -21,6 +21,7 @@ import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
 import { useRouteError } from "../../hooks";
+import { withErrorBoundaryProps, withHydrateFallbackProps } from "../../components";
 import type { DataRouteObject } from "../../context";
 
 export interface Route {
@@ -100,7 +101,7 @@ function getRouteComponents(
         ? {
             errorElement: (
               <routeModule.Layout>
-                <ErrorBoundary />
+                {React.createElement(withErrorBoundaryProps(ErrorBoundary))}
               </routeModule.Layout>
             ),
           }
@@ -109,7 +110,7 @@ function getRouteComponents(
         ? {
             hydrateFallbackElement: (
               <routeModule.Layout>
-                <HydrateFallback />
+                {React.createElement(withHydrateFallbackProps(HydrateFallback))}
               </routeModule.Layout>
             ),
           }
@@ -646,7 +647,9 @@ async function loadRouteModuleWithBlockingLinks(
   // since those aren't used on lazily loaded routes
   return {
     Component: getRouteModuleComponent(routeModule),
-    ErrorBoundary: routeModule.ErrorBoundary,
+    ErrorBoundary: routeModule.ErrorBoundary
+      ? withErrorBoundaryProps(routeModule.ErrorBoundary)
+      : undefined,
     clientMiddleware: routeModule.clientMiddleware,
     clientAction: routeModule.clientAction,
     clientLoader: routeModule.clientLoader,

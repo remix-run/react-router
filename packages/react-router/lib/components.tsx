@@ -141,7 +141,7 @@ export function mapRouteProperties(route: RouteObject) {
       }
     }
     Object.assign(updates, {
-      hydrateFallbackElement: React.createElement(route.HydrateFallback),
+      hydrateFallbackElement: React.createElement(withHydrateFallbackProps(route.HydrateFallback)),
       HydrateFallback: undefined,
     });
   }
@@ -157,7 +157,7 @@ export function mapRouteProperties(route: RouteObject) {
       }
     }
     Object.assign(updates, {
-      errorElement: React.createElement(route.ErrorBoundary),
+      errorElement: React.createElement(withErrorBoundaryProps(route.ErrorBoundary)),
       ErrorBoundary: undefined,
     });
   }
@@ -1949,7 +1949,7 @@ function useHydrateFallbackProps() {
 }
 
 export type HydrateFallbackProps = ReturnType<typeof useHydrateFallbackProps>;
-export type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
+export type HydrateFallbackType = React.ComponentType<any>;
 
 export function WithHydrateFallbackProps({
   children,
@@ -1960,7 +1960,9 @@ export function WithHydrateFallbackProps({
   return React.cloneElement(children, props);
 }
 
-export function withHydrateFallbackProps(HydrateFallback: HydrateFallbackType) {
+export function withHydrateFallbackProps(
+  HydrateFallback: React.ComponentType<any>
+) {
   return function WithHydrateFallbackProps() {
     const props = useHydrateFallbackProps();
     return React.createElement(HydrateFallback, props);
@@ -1977,7 +1979,7 @@ function useErrorBoundaryProps() {
 }
 
 export type ErrorBoundaryProps = ReturnType<typeof useErrorBoundaryProps>;
-export type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
+export type ErrorBoundaryType = React.ComponentType<any>;
 
 export function WithErrorBoundaryProps({
   children,
@@ -1988,7 +1990,9 @@ export function WithErrorBoundaryProps({
   return React.cloneElement(children, props);
 }
 
-export function withErrorBoundaryProps(ErrorBoundary: ErrorBoundaryType) {
+export function withErrorBoundaryProps(
+  ErrorBoundary: React.ComponentType<any>
+) {
   return function WithErrorBoundaryProps() {
     const props = useErrorBoundaryProps();
     return React.createElement(ErrorBoundary, props);
