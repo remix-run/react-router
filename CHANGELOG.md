@@ -429,7 +429,7 @@ Date: 2026-02-23
 
 ### URL Masking (unstable)
 
-This release includes a new `<Link unstable_mask>` API which brings first-class support for URL masking to Framework/Data Mode ([RFC](https://github.com/remix-run/react-router/discussions/9864)). This allows the same type of UI you could achieve in Declarative Mode via [manual `backgroundLocation` management](https://github.com/remix-run/react-router/tree/main/examples/modal).
+This release includes a new `<Link unstable_mask>` API which brings first-class support for URL masking to Framework/Data Mode ([RFC](https://github.com/remix-run/react-router/discussions/9864)). This allows the same type of UI you could achieve in Declarative Mode via [manual `backgroundLocation` management](https://github.com/remix-run/react-router/tree/main/examples/modal). That example has been converted to Data Mode using the new API [here](https://github.com/remix-run/react-router/tree/main/examples/modal-data-router).
 
 ### Patch Changes
 
