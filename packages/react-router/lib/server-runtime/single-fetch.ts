@@ -385,14 +385,10 @@ export function encodeViaTurboStream(
     () => controller.abort(new Error("Server Timeout")),
     typeof streamTimeout === "number" ? streamTimeout : 4950,
   );
-
-  let clearStreamTimeout = () => clearTimeout(timeoutId);
-
-  requestSignal.addEventListener("abort", clearStreamTimeout);
+  requestSignal.addEventListener("abort", () => clearTimeout(timeoutId));
 
   return encode(data, {
     signal: controller.signal,
-    onComplete: clearStreamTimeout,
     plugins: [
       (value) => {
         // Even though we sanitized errors on context.errors prior to responding,
