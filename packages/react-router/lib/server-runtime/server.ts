@@ -5,6 +5,7 @@ import {
   isRouteErrorResponse,
   ErrorResponseImpl,
   stripBasename,
+  normalizePathname,
 } from "../router/utils";
 import {
   getStaticContextFromError,
@@ -109,7 +110,23 @@ function derive(build: ServerBuild, mode?: string) {
     let url = new URL(request.url);
 
     let normalizedBasename = build.basename || "/";
-    let normalizedPath = url.pathname;
+    
+    // Normalize pathname to prevent malformed URL attacks
+    // Convert backslashes, collapse multiple slashes, remove trailing slashes
+    let originalPathname = url.pathname;
+    let normalizedPathname = normalizePathname(originalPathname);
+    
+    // Redirect to canonical path if normalization changed the path
+    if (originalPathname !== normalizedPathname) {
+      return new Response(null, {
+        status: 308,
+        headers: {
+          Location: normalizedPathname + url.search,
+        },
+      });
+    }
+    
+    let normalizedPath = normalizedPathname;
     if (build.future.unstable_trailingSlashAwareDataRequests) {
       if (normalizedPath.endsWith("/_.data")) {
         // Handle trailing slash URLs: /about/_.data -> /about/

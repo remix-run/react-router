@@ -2118,4 +2118,94 @@ describe("shared server runtime", () => {
     let result = await handler(request, loadContext);
     expect(await result.text()).toBe(JSON.stringify(loadContext));
   });
+
+  describe("malformed URL handling", () => {
+    let build = mockServerBuild(
+      {
+        root: {
+          path: "/",
+          loader: () => new Response("loader"),
+          default: () => "component",
+        },
+        "routes/signin": {
+          parentId: "root",
+          path: "signin",
+          loader: () => new Response("signin loader"),
+          default: () => "signin component",
+        },
+      },
+      {
+        handleDocumentRequest() {
+          return new Response("document");
+        },
+      },
+    );
+
+    it("redirects URLs with multiple trailing slashes to canonical form", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin///////"),
+      );
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin");
+    });
+
+    it("redirects URLs with backslashes to canonical form", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin\\\\\\\\\\\\"),
+      );
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin");
+    });
+
+    it("redirects malformed .data URLs with multiple slashes", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin////.data"),
+      );
+
+      // First redirect normalizes the path, then .data handling occurs
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin/.data");
+    });
+
+    it("allows valid URLs with single trailing slash", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin/"),
+      );
+
+      // Valid trailing slash should be allowed (normalized to /signin)
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin");
+    });
+
+    it("allows valid URLs without trailing slash", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(new Request("http://localhost:3000/signin"));
+
+      expect(response.status).toBe(200);
+    });
+
+    it("preserves query parameters during redirect", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin////?foo=bar"),
+      );
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin?foo=bar");
+    });
+
+    it("normalizes root path with multiple slashes", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(new Request("http://localhost:3000/////"));
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/");
+    });
+  });
 });
