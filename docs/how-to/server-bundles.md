@@ -62,5 +62,5 @@ When using server bundles, the build manifest contains the following properties:
 - `routeIdToServerBundleId` — An object that maps route IDs to their server bundle ID
 - `routes` — A route manifest that maps route IDs to route metadata. This can be used to drive a custom routing layer in front of your React Router request handlers
 
-[react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
-[server-bundles-function]: https://api.reactrouter.com/v7/types/_react_router_dev.config.ServerBundlesFunction.html
+[react-router-config]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html
+[server-bundles-function]: https://api.reactrouter.com/v7/types/_react-router_dev.config.ServerBundlesFunction.html

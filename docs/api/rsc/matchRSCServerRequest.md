@@ -28,12 +28,12 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.unstable_matchRSCServerRequest.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react-router.unstable_matchRSCServerRequest.html)
 
 Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 and returns an [RSC](https://react.dev/reference/rsc/server-components)
 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-encoding an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
+encoding an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html) for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
 enabled client router.
 
 ```tsx
@@ -139,7 +139,7 @@ implementation for invocation by the router.
 ### opts.generateResponse
 
 A function responsible for using your `renderToReadableStream` to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html).
+encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html).
 
 ### opts.loadServerAction
 
@@ -160,7 +160,7 @@ An instance of [`RouterContextProvider`](../utils/RouterContextProvider) that sh
 
 ### opts.routes
 
-Your [route definitions](https://api.reactrouter.com/v7/types/react_router.unstable_RSCRouteConfigEntry.html).
+Your [route definitions](https://api.reactrouter.com/v7/types/react-router.unstable_RSCRouteConfigEntry.html).
 
 ## Returns
 

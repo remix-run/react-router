@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.matchRoutes.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.matchRoutes.html)
 
 Matches the given routes to a location and returns the match data.
 
@@ -57,7 +57,7 @@ The array of route objects to match against.
 
 ### locationArg
 
-The location to match against, either a string path or a partial [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object
+The location to match against, either a string path or a partial [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html) object
 
 ### basename
 

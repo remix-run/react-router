@@ -286,7 +286,7 @@ function processTypedocModule(
       return;
     }
 
-    let modulePath = moduleName.replace(/[@\-/]/g, "_");
+    let modulePath = moduleName.replace(/[@/]/g, "_");
     let path = `${type}/${modulePath}.${subChild.name}.html`;
     let url = `https://api.reactrouter.com/v7/${path}`;
     lookup.set(apiName, { href: url });

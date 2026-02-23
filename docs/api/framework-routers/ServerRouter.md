@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.ServerRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.ServerRouter.html)
 
 The server entry point for a React Router app in Framework Mode. This
 component is used to generate the HTML in the response from the server. See

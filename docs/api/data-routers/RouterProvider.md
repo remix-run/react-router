@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.RouterProvider.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.RouterProvider.html)
 
-Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html). This component should
+Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html). This component should
 typically be at the top of an app's element tree.
 
 ```tsx
@@ -86,7 +86,7 @@ and is only present for render errors.
 
 ### router
 
-The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) instance to use for navigation and data fetching.
+The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) instance to use for navigation and data fetching.
 
 ### unstable_useTransitions
 

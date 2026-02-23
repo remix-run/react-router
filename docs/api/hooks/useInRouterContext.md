@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useInRouterContext.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useInRouterContext.html)
 
 Returns `true` if this component is a descendant of a [`Router`](../declarative-routers/Router), useful
 to ensure a component is used within a [`Router`](../declarative-routers/Router).
