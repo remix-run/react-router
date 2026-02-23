@@ -621,7 +621,7 @@ export function Meta(): React.JSX.Element {
 
   return (
     <>
-      {meta.flat().map((metaProps) => {
+      {meta.flat().map((metaProps, index) => {
         if (!metaProps) {
           return null;
         }
@@ -656,10 +656,13 @@ export function Meta(): React.JSX.Element {
         if ("script:ld+json" in metaProps) {
           try {
             let json = JSON.stringify(metaProps["script:ld+json"]);
+            let ldJsonKey = `script:ld+json:${index}`;
+
             return (
               <script
-                key={`script:ld+json:${json}`}
+                key={ldJsonKey}
                 type="application/ld+json"
+                suppressHydrationWarning
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
@@ -667,7 +670,7 @@ export function Meta(): React.JSX.Element {
             return null;
           }
         }
-        return <meta key={JSON.stringify(metaProps)} {...metaProps} />;
+        return <meta key={index} {...metaProps} />;
       })}
     </>
   );
