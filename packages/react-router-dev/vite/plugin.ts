@@ -4066,7 +4066,12 @@ export async function getEnvironmentOptionsResolvers(
               : viteUserConfig.build?.rollupOptions?.input) ??
             virtual.serverBuild.id,
           output: {
-            entryFileNames: serverBuildFile,
+            entryFileNames({ name }) {
+              return name === "virtual_react-router/server-build"
+                ? serverBuildFile
+                : // Rollup's default
+                  "[name].js";
+            },
             format: serverModuleFormat,
           },
         },
