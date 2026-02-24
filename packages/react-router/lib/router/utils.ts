@@ -1853,6 +1853,8 @@ export const joinPaths = (paths: string[]): string =>
  * - Collapsing multiple consecutive slashes into one
  * - Removing trailing slashes (except for root "/")
  * - Ensuring the path starts with "/"
+ * @param pathname The pathname to normalize.
+ * @returns The normalized pathname.
  */
 export const normalizePathname = (pathname: string): string => {
   let normalized = pathname

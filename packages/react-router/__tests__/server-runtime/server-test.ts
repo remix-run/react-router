@@ -2148,7 +2148,7 @@ describe("shared server runtime", () => {
       );
 
       expect(response.status).toBe(308);
-      expect(response.headers.get("Location")).toBe("/signin");
+      expect(response.headers.get("Location")).toBe("/signin/");
     });
 
     it("redirects URLs with backslashes to canonical form", async () => {
@@ -2158,7 +2158,7 @@ describe("shared server runtime", () => {
       );
 
       expect(response.status).toBe(308);
-      expect(response.headers.get("Location")).toBe("/signin");
+      expect(response.headers.get("Location")).toBe("/signin/");
     });
 
     it("redirects malformed .data URLs with multiple slashes", async () => {
@@ -2172,15 +2172,14 @@ describe("shared server runtime", () => {
       expect(response.headers.get("Location")).toBe("/signin/.data");
     });
 
-    it("allows valid URLs with single trailing slash", async () => {
+    it("preserves valid URLs with single trailing slash (no redirect)", async () => {
       let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/signin/"),
       );
 
-      // Valid trailing slash should be allowed (normalized to /signin)
-      expect(response.status).toBe(308);
-      expect(response.headers.get("Location")).toBe("/signin");
+      // Intentional trailing slash is preserved - no redirect needed
+      expect(response.status).toBe(200);
     });
 
     it("allows valid URLs without trailing slash", async () => {
@@ -2197,7 +2196,27 @@ describe("shared server runtime", () => {
       );
 
       expect(response.status).toBe(308);
-      expect(response.headers.get("Location")).toBe("/signin?foo=bar");
+      expect(response.headers.get("Location")).toBe("/signin/?foo=bar");
+    });
+
+    it("preserves hash fragments during redirect", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin//#section"),
+      );
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin/#section");
+    });
+
+    it("preserves both query parameters and hash fragments during redirect", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/signin////?foo=bar#section"),
+      );
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("Location")).toBe("/signin/?foo=bar#section");
     });
 
     it("normalizes root path with multiple slashes", async () => {
@@ -2206,6 +2225,13 @@ describe("shared server runtime", () => {
 
       expect(response.status).toBe(308);
       expect(response.headers.get("Location")).toBe("/");
+    });
+
+    it("does not redirect for already normalized URLs", async () => {
+      let handler = createRequestHandler(build);
+      let response = await handler(new Request("http://localhost:3000/signin"));
+
+      expect(response.status).toBe(200);
     });
   });
 });
