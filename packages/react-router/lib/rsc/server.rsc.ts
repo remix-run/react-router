@@ -20,7 +20,6 @@ import {
 } from "../router/router";
 import {
   type ActionFunction,
-  type DataRouteMatch,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
@@ -211,6 +210,8 @@ export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
   );
 
 export type RSCRouteConfig = Array<RSCRouteConfigEntry>;
+
+type RSCRouteDataMatch = RouteMatch<string, RSCRouteConfigEntry>;
 
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
@@ -1134,7 +1135,7 @@ async function getRenderPayload(
   });
 
   let matchesPromise = Promise.all(
-    staticContext.matches.map((match, i) => {
+    (staticContext.matches as RSCRouteDataMatch[]).map((match, i) => {
       let isBelowErrorBoundary = i > deepestRenderedRouteIdx;
       let parentId = parentIds[match.route.id];
       return getRSCRouteMatch({
@@ -1171,24 +1172,24 @@ async function getRSCRouteMatch({
   parentId,
 }: {
   staticContext: StaticHandlerContext;
-  match: DataRouteMatch;
+  match: RSCRouteDataMatch;
   isBelowErrorBoundary: boolean;
   routeIdsToLoad: string[] | null;
   parentId: string | undefined;
 }) {
-  // @ts-expect-error - FIXME: Fix the types here
-  await explodeLazyRoute(match.route);
-  const Layout = (match.route as any).Layout || React.Fragment;
-  const Component = (match.route as any).Component;
-  const ErrorBoundary = (match.route as any).ErrorBoundary;
-  const HydrateFallback = (match.route as any).HydrateFallback;
-  const loaderData = staticContext.loaderData[match.route.id];
-  const actionData = staticContext.actionData?.[match.route.id];
+  const route = match.route;
+  await explodeLazyRoute(route);
+  const Layout = route.Layout || React.Fragment;
+  const Component = route.Component;
+  const ErrorBoundary = route.ErrorBoundary;
+  const HydrateFallback = route.HydrateFallback;
+  const loaderData = staticContext.loaderData[route.id];
+  const actionData = staticContext.actionData?.[route.id];
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
   let shouldLoadRoute =
-    !routeIdsToLoad || routeIdsToLoad.includes(match.route.id);
+    !routeIdsToLoad || routeIdsToLoad.includes(route.id);
   // Only bother rendering Server Components for routes that we're surfacing,
   // so nothing at/below an error boundary and prune routes if included in
   // `routeIdsToLoad`.  This is specifically important when a middleware
@@ -1217,7 +1218,7 @@ async function getRSCRouteMatch({
   let error: unknown = undefined;
 
   if (ErrorBoundary && staticContext.errors) {
-    error = staticContext.errors[match.route.id];
+    error = staticContext.errors[route.id];
   }
   const errorElement = ErrorBoundary
     ? React.createElement(
@@ -1251,33 +1252,37 @@ async function getRSCRouteMatch({
       )
     : undefined;
 
+  const hmrRoute = route as RSCRouteConfigEntry & {
+    __ensureClientRouteModuleForHMR?: unknown;
+  };
+
   return {
-    clientAction: (match.route as any).clientAction,
-    clientLoader: (match.route as any).clientLoader,
+    clientAction: route.clientAction,
+    clientLoader: route.clientLoader,
     element,
     errorElement,
-    handle: (match.route as any).handle,
-    hasAction: !!match.route.action,
+    handle: route.handle,
+    hasAction: !!route.action,
     hasComponent: !!Component,
     hasErrorBoundary: !!ErrorBoundary,
-    hasLoader: !!match.route.loader,
+    hasLoader: !!route.loader,
     hydrateFallbackElement,
-    id: match.route.id,
-    index: match.route.index,
-    links: (match.route as any).links,
-    meta: (match.route as any).meta,
+    id: route.id,
+    index: route.index,
+    links: route.links,
+    meta: route.meta,
     params,
     parentId,
-    path: match.route.path,
+    path: route.path,
     pathname: match.pathname,
     pathnameBase: match.pathnameBase,
-    shouldRevalidate: (match.route as any).shouldRevalidate,
+    shouldRevalidate: route.shouldRevalidate,
     // Add an unused client-only export (if present) so HMR can support
     // switching between server-first and client-only routes during development
-    ...((match.route as any).__ensureClientRouteModuleForHMR
+    ...(hmrRoute.__ensureClientRouteModuleForHMR
       ? {
-          __ensureClientRouteModuleForHMR: (match.route as any)
-            .__ensureClientRouteModuleForHMR,
+          __ensureClientRouteModuleForHMR:
+            hmrRoute.__ensureClientRouteModuleForHMR,
         }
       : {}),
   };
