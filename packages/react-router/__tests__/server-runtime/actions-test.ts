@@ -156,6 +156,27 @@ describe("throwIfPotentialCSRFAttack", () => {
       );
     });
 
+    it("should throw when origin is not a valid URL", () => {
+      let invalidHeaders = [
+        "not-a-valid-url",
+        "ht!tp://example.com",
+        "http://exam ple.com",
+        "example.com",
+        "",
+        "    ",
+      ];
+
+      for (const invalidHeader of invalidHeaders) {
+        const headers = new Headers({
+          origin: invalidHeader,
+          host: "example.com",
+        });
+        expect(() => throwIfPotentialCSRFAttack(headers, undefined)).toThrow(
+          "`origin` header is not a valid URL. Aborting the action.",
+        );
+      }
+    });
+
     it("should handle origin with port number", () => {
       const headers = new Headers({
         origin: "https://example.com:8080",

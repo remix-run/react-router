@@ -42,13 +42,11 @@ matchRoutes(routes, "/dashboard"); // [rootMatch, dashboardMatch]
 ## Signature
 
 ```tsx
-function matchRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
->(
+function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/",
-): AgnosticRouteMatch<string, RouteObjectType>[] | null
+): RouteMatch<string, RouteObjectType>[] | null
 ```
 
 ## Params

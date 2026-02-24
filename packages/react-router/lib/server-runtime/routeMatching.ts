@@ -1,4 +1,4 @@
-import type { Params, AgnosticRouteObject } from "../router/utils";
+import type { Params, RouteObject } from "../router/utils";
 import { matchRoutes } from "../router/utils";
 import type { ServerRoute } from "./routes";
 
@@ -14,7 +14,7 @@ export function matchServerRoutes(
   basename?: string,
 ): RouteMatch<ServerRoute>[] | null {
   let matches = matchRoutes(
-    routes as unknown as AgnosticRouteObject[],
+    routes as unknown as RouteObject[],
     pathname,
     basename,
   );
