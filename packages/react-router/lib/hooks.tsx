@@ -1,11 +1,5 @@
 import * as React from "react";
-import type {
-  DataRouteMatch,
-  NavigateOptions,
-  RouteContextObject,
-  RouteMatch,
-  RouteObject,
-} from "./context";
+import type { NavigateOptions, RouteContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
@@ -34,10 +28,13 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
+  DataRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
   PathPattern,
+  RouteMatch,
+  RouteObject,
   UIMatch,
 } from "./router/utils";
 import {
@@ -763,9 +760,12 @@ export function useRoutes(
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
-  dataRouterState?: DataRouter["state"],
-  onError?: ClientOnErrorFunction,
-  future?: DataRouter["future"],
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -917,9 +917,7 @@ export function useRoutesImpl(
         }),
       ),
     parentMatches,
-    dataRouterState,
-    onError,
-    future,
+    dataRouterOpts,
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -935,6 +933,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
+            unstable_mask: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,
@@ -1182,10 +1181,15 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState: DataRouter["state"] | null = null,
-  onErrorHandler: ClientOnErrorFunction | null = null,
-  future: DataRouter["future"] | null = null,
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
+  let dataRouterState = dataRouterOpts?.state;
+
   if (matches == null) {
     if (!dataRouterState) {
       return null;
@@ -1236,7 +1240,8 @@ export function _renderMatches(
   // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (dataRouterState) {
+  if (dataRouterOpts && dataRouterState) {
+    renderFallback = dataRouterState.renderFallback;
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
@@ -1252,9 +1257,11 @@ export function _renderMatches(
           (!errors || errors[match.route.id] === undefined);
         if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
-          // lazy, or has a loader that hasn't run yet).  Flag that we need to
-          // render a fallback and render up until the appropriate fallback
-          renderFallback = true;
+          // lazy, or has a loader that hasn't run yet) - render up until the
+          // appropriate fallback
+          if (dataRouterOpts.isStatic) {
+            renderFallback = true;
+          }
           if (fallbackIndex >= 0) {
             renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
           } else {
@@ -1266,6 +1273,7 @@ export function _renderMatches(
     }
   }
 
+  let onErrorHandler = dataRouterOpts?.onError;
   let onError =
     dataRouterState && onErrorHandler
       ? (error: unknown, errorInfo?: React.ErrorInfo) => {

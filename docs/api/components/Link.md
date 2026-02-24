@@ -232,3 +232,53 @@ useful when updating search params and you don't want to trigger a revalidation.
 By default (when not specified), loaders will revalidate according to the routers
 standard revalidation behavior.
 
+### unstable_mask
+
+[modes: framework, data]
+
+Masked path for for this navigation, when you want to navigate the router to
+one location but display a separate location in the URL bar.
+
+This is useful for contextual navigations such as opening an image in a modal
+on top of a gallery while keeping the underlying gallery active. If a user
+shares the masked URL, or opens the link in a new tab, they will only load
+the masked location without the underlying contextual location.
+
+This feature relies on `history.state` and is thus only intended for SPA uses
+and SSR renders will not respect the masking.
+
+```tsx
+// routes/gallery.tsx
+export function clientLoader({ request }: Route.LoaderArgs) {
+  let sp = new URL(request.url).searchParams;
+  return {
+    images: getImages(),
+    modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+  };
+}
+
+export default function Gallery({ loaderData }: Route.ComponentProps) {
+  return (
+    <>
+      <GalleryGrid>
+       {loaderData.images.map((image) => (
+         <Link
+           key={image.id}
+           to={`/gallery?image=${image.id}`}
+           unstable_mask={`/images/${image.id}`}
+         >
+           <img src={image.url} alt={image.alt} />
+         </Link>
+       ))}
+      </GalleryGrid>
+
+      {data.modalImage ? (
+        <dialog open>
+          <img src={data.modalImage.url} alt={data.modalImage.alt} />
+        </dialog>
+      ) : null}
+    </>
+  );
+}
+```
+

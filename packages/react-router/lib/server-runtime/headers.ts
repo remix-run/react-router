@@ -1,6 +1,6 @@
 import { splitCookiesString } from "set-cookie-parser";
 
-import type { DataRouteMatch } from "../context";
+import type { DataRouteMatch } from "../router/utils";
 import type { StaticHandlerContext } from "../router/router";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
 import type { ServerBuild } from "./build";
