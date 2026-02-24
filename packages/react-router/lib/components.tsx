@@ -24,9 +24,15 @@ import type {
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
+  DataRouteObject,
   DataStrategyFunction,
+  IndexRouteObject,
   LazyRouteFunction,
+  NonIndexRouteObject,
   Params,
+  PatchRoutesOnNavigationFunction,
+  RouteMatch,
+  RouteObject,
   TrackedPromise,
 } from "./router/utils";
 import {
@@ -36,16 +42,7 @@ import {
   stripBasename,
 } from "./router/utils";
 
-import type {
-  DataRouteObject,
-  IndexRouteObject,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  RouteMatch,
-  RouteObject,
-  ViewTransitionContextObject,
-} from "./context";
+import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
@@ -747,6 +744,7 @@ export function RouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
+                  isStatic={false}
                   onError={onError}
                 />
               </Router>
@@ -789,18 +787,20 @@ function getOptimisticRouterState(
 // Memoize to avoid re-renders when updating `ViewTransitionContext`
 const MemoizedDataRoutes = React.memo(DataRoutes);
 
-function DataRoutes({
+export function DataRoutes({
   routes,
   future,
   state,
+  isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
-  onError: ClientOnErrorFunction | undefined;
+  isStatic: boolean;
+  onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, onError, future);
+  return useRoutesImpl(routes, undefined, { state, isStatic, onError, future });
 }
 
 /**
@@ -1212,6 +1212,9 @@ export interface IndexRouteProps {
   ErrorBoundary?: React.ComponentType | null;
 }
 
+/**
+ * @category Types
+ */
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
@@ -1387,6 +1390,7 @@ export function Router({
     hash = "",
     state = null,
     key = "default",
+    unstable_mask,
   } = locationProp;
 
   let locationContext = React.useMemo(() => {
@@ -1403,10 +1407,20 @@ export function Router({
         hash,
         state,
         key,
+        unstable_mask,
       },
       navigationType,
     };
-  }, [basename, pathname, search, hash, state, key, navigationType]);
+  }, [
+    basename,
+    pathname,
+    search,
+    hash,
+    state,
+    key,
+    navigationType,
+    unstable_mask,
+  ]);
 
   warning(
     locationContext != null,

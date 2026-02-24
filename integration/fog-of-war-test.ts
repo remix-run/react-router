@@ -1455,6 +1455,82 @@ test.describe("Fog of War", () => {
     expect(wrongManifestRequests).toEqual([]);
   });
 
+  test("manifest version mismatch reload should preserve query parameters and hash", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/routes/_index.tsx": js`
+          import { Link, useLocation } from "react-router";
+
+          export default function Index() {
+            const location = useLocation();
+            return (
+              <div>
+                <h1>Home</h1>
+                <p data-location>Location: {location.pathname + location.search + location.hash}</p>
+                <Link to="/other?token=abc123&ref=campaign#section1">Go to Other</Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/other.tsx": js`
+          import { useLocation } from "react-router";
+
+          export default function Other() {
+            const location = useLocation();
+            return (
+              <div>
+                <h1>Other Page</h1>
+                <p data-location2>Location: {location.pathname + location.search + location.hash}</p>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+
+    // Trigger mismatch + hard reload when trying to patch the /other route
+    await page.route(/\/__manifest/, async (route) => {
+      if (route.request().url().includes(encodeURIComponent("/other"))) {
+        await route.fulfill({
+          status: 204,
+          headers: {
+            "X-Remix-Reload-Document": "true",
+          },
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    // Start on home page
+    await app.goto("/");
+    await page.waitForSelector("h1");
+    await expect(page.locator("[data-location]")).toHaveText("Location: /");
+
+    // Click link to /other with query params and hash
+    // This should trigger manifest fetch -> version mismatch -> hard reload
+    await app.clickLink("/other?token=abc123&ref=campaign#section1");
+
+    // Wait for the page to reload and render
+    await page.waitForSelector("[data-location2]", { timeout: 5000 });
+
+    // Query parameters and hash should be preserved after reload
+    await expect(page.locator("[data-location2]")).toHaveText(
+      "Location: /other?token=abc123&ref=campaign#section1",
+    );
+
+    // Also verify the URL in the browser
+    const currentUrl = page.url();
+    expect(currentUrl).toContain("token=abc123");
+    expect(currentUrl).toContain("ref=campaign");
+    expect(currentUrl).toContain("#section1");
+  });
+
   test.describe("routeDiscovery=initial", () => {
     test("loads full manifest on initial load", async ({ page }) => {
       let fixture = await createFixture({

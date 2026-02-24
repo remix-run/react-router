@@ -4,6 +4,7 @@ import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
+  DataRouteMatch,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyResult,
@@ -20,7 +21,6 @@ import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
 import type { RouteModules } from "./routeModules";
-import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 

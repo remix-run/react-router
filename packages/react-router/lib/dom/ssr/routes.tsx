@@ -3,6 +3,7 @@ import * as React from "react";
 import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
+  DataRouteObject,
   LoaderFunctionArgs,
   RouteManifest,
   ShouldRevalidateFunction,
@@ -22,7 +23,6 @@ import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
 import { useRouteError } from "../../hooks";
 import { withErrorBoundaryProps, withHydrateFallbackProps } from "../../components";
-import type { DataRouteObject } from "../../context";
 
 export interface Route {
   index?: boolean;
