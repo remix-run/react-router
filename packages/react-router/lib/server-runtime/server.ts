@@ -108,11 +108,11 @@ function derive(build: ServerBuild, mode?: string) {
     }
 
     let requestUrl = new URL(request.url);
-    let normalizedPath = getNormalizedPath(
+    let normalizedPathname = getNormalizedPath(
       request,
       build.basename,
       build.future,
-    );
+    ).pathname;
 
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
@@ -121,7 +121,7 @@ function derive(build: ServerBuild, mode?: string) {
     // pre-rendered site would
     if (!build.ssr) {
       // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPath.pathname);
+      let decodedPath = decodeURI(normalizedPathname);
 
       if (build.basename && build.basename !== "/") {
         let strippedPath = stripBasename(decodedPath, build.basename);
@@ -196,11 +196,7 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
-    let matches = matchServerRoutes(
-      routes,
-      normalizedPath.pathname,
-      build.basename,
-    );
+    let matches = matchServerRoutes(routes, normalizedPathname, build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
@@ -209,7 +205,7 @@ function derive(build: ServerBuild, mode?: string) {
     if (requestUrl.pathname.endsWith(".data")) {
       let singleFetchMatches = matchServerRoutes(
         routes,
-        normalizedPath.pathname,
+        normalizedPathname,
         build.basename,
       );
 
@@ -218,7 +214,7 @@ function derive(build: ServerBuild, mode?: string) {
         build,
         staticHandler,
         request,
-        normalizedPath.pathname,
+        normalizedPathname,
         loadContext,
         handleError,
       );

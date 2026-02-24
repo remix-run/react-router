@@ -16,7 +16,7 @@ export function getNormalizedPath(
   if (future?.unstable_trailingSlashAwareDataRequests) {
     if (pathname.endsWith("/_.data")) {
       // Handle trailing slash URLs: /about/_.data -> /about/
-      pathname = pathname.replace(/_.data$/, "");
+      pathname = pathname.replace(/_\.data$/, "");
     } else {
       pathname = pathname.replace(/\.data$/, "");
     }

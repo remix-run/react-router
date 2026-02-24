@@ -274,7 +274,7 @@ interface DataFunctionArgs<Context> {
    * Without `future.unstable_passThroughRequests` enabled, this matches `request.url`.
    * With `future.unstable_passThroughRequests` enabled, this is a normalized
    * version of `request.url` with React-Router-specific implementation details
-   * removed (`.data` pathnames, `index`/`_routes` search params)
+   * removed (`.data` suffixes, `index`/`_routes` search params)
    */
   unstable_path: Path;
   /**

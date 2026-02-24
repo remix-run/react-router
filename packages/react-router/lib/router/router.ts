@@ -3723,8 +3723,10 @@ export function createStaticHandler(
   let _mapRouteProperties =
     opts?.mapRouteProperties || defaultMapRouteProperties;
   let mapRouteProperties = _mapRouteProperties;
+  // Currently unused, but available for additional flags in the future
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
-    unstable_passThroughRequests: false,
+    unstable_passThroughRequests: false, // unused in static handler
     ...opts?.future,
   };
 
