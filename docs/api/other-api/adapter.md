@@ -22,7 +22,7 @@ Each adapter has the same API. In the future, we may have helpers specific to th
 
 ## `@react-router/express`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_express.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_express.html)
 
 Here's an example with [Express][express]:
 
@@ -122,7 +122,7 @@ Update the `dev` and `start` scripts to use your new Express server:
 
 ## `@react-router/cloudflare`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_cloudflare.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_cloudflare.html)
 
 Here's an example with Cloudflare:
 
@@ -156,7 +156,7 @@ export default {
 
 While not a direct "adapter" like the above, this package contains utilities for working with Node-based adapters.
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_node.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_node.html)
 
 ### Node Version Support
 

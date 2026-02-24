@@ -12,7 +12,6 @@ import type {
   Router as DataRouter,
   RevalidationState,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
-  RouterState,
   StaticHandlerContext,
 } from "../router/router";
 import {
@@ -21,20 +20,18 @@ import {
   IDLE_NAVIGATION,
   createStaticHandler as routerCreateStaticHandler,
 } from "../router/router";
-import type { RouteManifest } from "../router/utils";
+import type { RouteManifest, RouteObject } from "../router/utils";
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import { Router, mapRouteProperties } from "../components";
-import type { DataRouteObject, RouteObject } from "../context";
+import { DataRoutes, Router, mapRouteProperties } from "../components";
 import {
   DataRouterContext,
   DataRouterStateContext,
   FetchersContext,
   ViewTransitionContext,
 } from "../context";
-import { useRoutesImpl } from "../hooks";
 import { escapeHtml } from "./ssr/markup";
 
 /**
@@ -84,6 +81,7 @@ export function StaticRouter({
     hash: locationProp.hash || "",
     state: locationProp.state != null ? locationProp.state : null,
     key: locationProp.key || "default",
+    unstable_mask: undefined,
   };
 
   let staticNavigator = getStatelessNavigator();
@@ -212,6 +210,7 @@ export function StaticRouterProvider({
                   routes={router.routes}
                   future={router.future}
                   state={state}
+                  isStatic={true}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -227,18 +226,6 @@ export function StaticRouterProvider({
       ) : null}
     </>
   );
-}
-
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: DataRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, undefined, future);
 }
 
 function serializeErrors(
@@ -402,9 +389,9 @@ export function createStaticRouter(
     manifest,
   );
 
-  // Because our context matches may be from a framework-agnostic set of
-  // routes passed to createStaticHandler(), we update them here with our
-  // newly created/enhanced data routes
+  // Because our context matches may be from a set of routes passed to
+  // createStaticHandler(), we update them here with our newly created/enhanced
+  // data routes
   let matches = context.matches.map((match) => {
     let route = manifest[match.route.id] || match.route;
     return {
@@ -436,6 +423,7 @@ export function createStaticRouter(
         actionData: context.actionData,
         errors: context.errors,
         initialized: true,
+        renderFallback: false,
         navigation: IDLE_NAVIGATION,
         restoreScrollPosition: null,
         preventScrollReset: false,

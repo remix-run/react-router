@@ -166,6 +166,16 @@ function createHydratedRouter({
     }
   }
 
+  // We cannot support history-state-driven masking with SSR, so if a hard
+  // reload is performed we remove the mask and hydrate according to the
+  // browser URL
+  if (window.history.state && window.history.state.masked) {
+    window.history.replaceState(
+      { ...window.history.state, masked: undefined },
+      "",
+    );
+  }
+
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
@@ -190,6 +200,7 @@ function createHydratedRouter({
       ssrInfo.context.future.unstable_trailingSlashAwareDataRequests,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,

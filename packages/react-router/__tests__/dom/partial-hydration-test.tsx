@@ -205,6 +205,110 @@ describe("Partial Hydration Behavior", () => {
         </div>"
       `);
     });
+
+    it("supports partial hydration w/patchRoutesOnNavigation and matching splat", async () => {
+      let patchDfd = createDeferred();
+      let parentDfd = createDeferred();
+      let childDfd = createDeferred();
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            HydrateFallback: () => <p>Root Loading...</p>,
+            Component() {
+              return (
+                <>
+                  <h1>Root</h1>
+                  <Outlet />
+                </>
+              );
+            },
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                loader: () => parentDfd.promise,
+                Component() {
+                  let data = useLoaderData() as string;
+                  return (
+                    <>
+                      <h2>{`Parent - ${data}`}</h2>
+                      <Outlet />
+                    </>
+                  );
+                },
+              },
+              {
+                path: "*",
+                Component() {
+                  return <h2>Splat</h2>;
+                },
+              },
+            ],
+          },
+        ],
+        {
+          future: {
+            v7_partialHydration: true,
+          },
+          async patchRoutesOnNavigation({ path, patch }) {
+            await patchDfd.promise;
+            if (path === "/parent/child") {
+              patch("parent", [
+                {
+                  path: "child",
+                  loader: () => childDfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h3>{`Child - ${data}`}</h3>;
+                  },
+                },
+              ]);
+            }
+          },
+          initialEntries: ["/parent/child"],
+        },
+      );
+      let { container } = render(
+        // eslint-disable-next-line react/jsx-pascal-case
+        <ReactRouter_RouterProvider router={router} />,
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Root Loading...
+          </p>
+        </div>"
+      `);
+
+      patchDfd.resolve();
+      parentDfd.resolve("PARENT DATA");
+      await tick();
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Root Loading...
+          </p>
+        </div>"
+      `);
+
+      childDfd.resolve("CHILD DATA");
+      await waitFor(() => screen.getByText(/CHILD DATA/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Parent - PARENT DATA
+          </h2>
+          <h3>
+            Child - CHILD DATA
+          </h3>
+        </div>"
+      `);
+    });
   });
 });
 

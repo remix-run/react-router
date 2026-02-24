@@ -216,7 +216,7 @@ createBrowserRouter([
 ]);
 ```
 
-[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react-router.ShouldRevalidateFunctionArgs.html)
 
 Please note the default behavior is different in [Framework Mode](../modes).
 
@@ -244,5 +244,5 @@ createBrowserRouter([
 
 Next: [Data Loading](./data-loading)
 
-[loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
+[loader-params]: https://api.reactrouter.com/v7/interfaces/react-router.LoaderFunctionArgs
 [middleware]: ../../how-to/middleware

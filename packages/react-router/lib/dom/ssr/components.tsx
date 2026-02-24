@@ -6,7 +6,7 @@ import type {
 import * as React from "react";
 
 import type { RouterState } from "../../router/router";
-import type { AgnosticDataRouteMatch } from "../../router/utils";
+import type { DataRouteMatch } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
@@ -356,7 +356,7 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   return <PrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />;
 }
 
-function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
+function useKeyedPrefetchLinks(matches: DataRouteMatch[]) {
   let { manifest, routeModules } = useFrameworkContext();
 
   let [keyedPrefetchLinks, setKeyedPrefetchLinks] = React.useState<
@@ -387,7 +387,7 @@ function PrefetchPageLinksImpl({
   matches: nextMatches,
   ...linkProps
 }: PageLinkDescriptor & {
-  matches: AgnosticDataRouteMatch[];
+  matches: DataRouteMatch[];
 }) {
   let location = useLocation();
   let { future, manifest, routeModules } = useFrameworkContext();
@@ -609,7 +609,7 @@ export function Meta(): React.JSX.Element {
           _match.route.path +
           " returns an invalid value. All route meta functions must " +
           "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
+          "\n\nTo reference the meta function API, see https://reactrouter.com/start/framework/route-module#meta",
       );
     }
 

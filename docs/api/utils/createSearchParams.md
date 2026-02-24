@@ -8,7 +8,7 @@ title: createSearchParams
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createSearchParams.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createSearchParams.html)
 
 Creates a URLSearchParams object using the given initializer.
 

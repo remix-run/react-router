@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.HashRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.HashRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) that stores the location in the
 [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash) portion

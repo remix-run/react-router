@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RSCRouterContext, type DataRouteObject } from "../context";
+import { RSCRouterContext } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
@@ -9,7 +9,7 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
-import { isRouteErrorResponse } from "../router/utils";
+import { isRouteErrorResponse, type DataRouteObject } from "../router/utils";
 import {
   decodeRedirectErrorDigest,
   decodeRouteErrorResponseDigest,

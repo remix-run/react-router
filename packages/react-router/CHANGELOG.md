@@ -1,5 +1,73 @@
 # `react-router`
 
+## 7.13.1
+
+### Patch Changes
+
+- fix null reference exception in bad codepath leading to invalid route tree comparisons ([#14780](https://github.com/remix-run/react-router/pull/14780))
+
+- fix: clear timeout when turbo-stream encoding completes ([#14810](https://github.com/remix-run/react-router/pull/14810))
+
+- Improve error message when Origin header is invalid ([#14743](https://github.com/remix-run/react-router/pull/14743))
+
+- Fix matchPath optional params matching without a "/" separator. ([#14689](https://github.com/remix-run/react-router/pull/14689))
+  - matchPath("/users/:id?", "/usersblah") now returns null.
+  - matchPath("/test_route/:part?", "/test_route_more") now returns null.
+
+- add RSC unstable_getRequest ([#14758](https://github.com/remix-run/react-router/pull/14758))
+
+- Fix `HydrateFallback` rendering during initial lazy route discovery with matching splat route ([#14740](https://github.com/remix-run/react-router/pull/14740))
+
+- \[UNSTABLE] Add support for `<Link unstable_mask>` in Data Mode which allows users to navigate to a URL in the router but "mask" the URL displayed in the browser. This is useful for contextual routing usages such as displaying an image in a model on top of a gallery, but displaying a browser URL directly to the image that can be shared and loaded without the contextual gallery in the background. ([#14716](https://github.com/remix-run/react-router/pull/14716))
+
+  ```tsx
+  // routes/gallery.tsx
+  export function clientLoader({ request }: Route.LoaderArgs) {
+    let sp = new URL(request.url).searchParams;
+    return {
+      images: getImages(),
+      // When the router location has the image param, load the modal data
+      modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+    };
+  }
+
+  export default function Gallery({ loaderData }: Route.ComponentProps) {
+    return (
+      <>
+        <GalleryGrid>
+          {loaderData.images.map((image) => (
+            <Link
+              key={image.id}
+              {/* Navigate the router to /galley?image=N */}}
+              to={`/gallery?image=${image.id}`}
+              {/* But display /images/N in the URL bar */}}
+              unstable_mask={`/images/${image.id}`}
+            >
+              <img src={image.url} alt={image.alt} />
+            </Link>
+          ))}
+        </GalleryGrid>
+
+        {/* When the modal data exists, display the modal */}
+        {data.modalImage ? (
+          <dialog open>
+            <img src={data.modalImage.url} alt={data.modalImage.alt} />
+          </dialog>
+        ) : null}
+      </>
+    );
+  }
+  ```
+
+  Notes:
+  - The masked location, if present, will be available on `useLocation().unstable_mask` so you can detect whether you are currently masked or not.
+  - Masked URLs only work for SPA use cases, and will be removed from `history.state` during SSR.
+  - This provides a first-class API to mask URLs in Data Mode to achieve the same behavior you could do in Declarative Mode via [manual `backgroundLocation` management](https://github.com/remix-run/react-router/tree/main/examples/modal).
+
+- RSC: Update failed origin checks to return a 400 status and appropriate UI instead of a generic 500 ([#14755](https://github.com/remix-run/react-router/pull/14755))
+
+- Preserve query parameters and hash on manifest version mismatch reload ([#14813](https://github.com/remix-run/react-router/pull/14813))
+
 ## 7.13.0
 
 ### Minor Changes
