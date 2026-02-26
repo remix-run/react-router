@@ -121,8 +121,8 @@ By default, React Router normalizes the `request.url` passed to your `loader`, `
 
 This flag eliminates that normalization and passes the raw HTTP `request` instance to your handlers. This provides a few benefits:
 
-- Allows you to distinguish document from data reqeusts in your handlers (useful for [observability] purposes)
 - Reduces server-side overhead by eliminating multiple `new Request()` calls on the critical path
+- Allows you to distinguish document from data requests in your handlers base don the presence of a `.data` suffix (useful for [observability] purposes)
 
 If you were previously relying on the normalization of `request.url`, you can switch to use the new sibling `unstable_path` parameter which contains a `Path` object (`pathname`, `search`, `hash`) representing the normalized location.
 
