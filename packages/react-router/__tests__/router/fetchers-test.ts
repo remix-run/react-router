@@ -178,11 +178,7 @@ describe("fetchers", () => {
           signal: A.loaders.foo.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: "/foo",
-        unstable_path: {
-          pathname: "/foo",
-          search: "",
-          hash: "",
-        },
+        unstable_url: new URL("http://localhost/foo"),
         context: {},
       });
     });
@@ -231,11 +227,7 @@ describe("fetchers", () => {
           signal: A.loaders.foo.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: "/foo",
-        unstable_path: {
-          pathname: "/foo",
-          search: "?key=value",
-          hash: "",
-        },
+        unstable_url: new URL("http://localhost/foo?key=value"),
         context: {},
       });
 
@@ -289,11 +281,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: "/foo",
-        unstable_path: {
-          pathname: "/foo",
-          search: "",
-          hash: "",
-        },
+        unstable_url: new URL("http://localhost/foo"),
         context: {},
       });
 
@@ -406,7 +394,7 @@ describe("fetchers", () => {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
         }),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
     });
@@ -3408,7 +3396,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 
@@ -3439,7 +3427,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 
@@ -3468,7 +3456,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 
@@ -3497,7 +3485,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 
@@ -3527,7 +3515,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 
@@ -3559,7 +3547,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 
@@ -3590,7 +3578,7 @@ describe("fetchers", () => {
         params: {},
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
-        unstable_path: expect.any(Object),
+        unstable_url: expect.any(URL),
         context: {},
       });
 

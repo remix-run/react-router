@@ -3909,7 +3909,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_path: createDataFunctionPath(location),
+            unstable_url: createDataFunctionUrl(request, location),
             unstable_pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
@@ -4143,7 +4143,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_path: createDataFunctionPath(location),
+          unstable_url: createDataFunctionUrl(request, location),
           unstable_pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
@@ -6182,7 +6182,7 @@ async function callDataStrategyImpl(
     "fetcherKey" | "runClientMiddleware"
   > = {
     request,
-    unstable_path: createDataFunctionPath(path),
+    unstable_url: createDataFunctionUrl(request, path),
     unstable_pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
@@ -6285,7 +6285,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
-          unstable_path: createDataFunctionPath(path),
+          unstable_url: createDataFunctionUrl(request, path),
           unstable_pattern,
           params: match.params,
           context: scopedContext,
@@ -6585,27 +6585,31 @@ function createClientSideRequest(
   return new Request(url, init);
 }
 
-// Create the unstable_path object to pass to loaders/actions/middleware,
-// we strip the `?index` param becuase that is a React Router implementation detail
-function createDataFunctionPath(path: To): Path {
-  let parsed = typeof path === "string" ? parsePath(path) : path;
-  let searchParams = new URLSearchParams(parsed.search);
+// Create the unstable_url object to pass to loaders/actions/middleware.
+// We strip the `?index` param because that is a React Router implementation detail.
+function createDataFunctionUrl(request: Request, path: To): URL {
+  let url = new URL(request.url);
 
-  // Strip naked index param, preserve any other index params with values
-  let indexValues = searchParams.getAll("index");
-  searchParams.delete("index");
-  for (let value of indexValues.filter(Boolean)) {
-    searchParams.append("index", value);
+  let parsed = typeof path === "string" ? parsePath(path) : path;
+  url.pathname = parsed.pathname || "/";
+
+  if (parsed.search) {
+    let searchParams = new URLSearchParams(parsed.search);
+
+    // Strip naked index param, preserve any other index params with values
+    let indexValues = searchParams.getAll("index");
+    searchParams.delete("index");
+    for (let value of indexValues.filter(Boolean)) {
+      searchParams.append("index", value);
+    }
+    url.search = searchParams.size ? `?${searchParams.toString()}` : "";
+  } else {
+    url.search = "";
   }
 
-  // Create fresh here to strip any `state`/`key` fields from `Location` instances
-  // coming in (which satisfy the `To` interface)
-  let search = searchParams.toString();
-  return {
-    pathname: parsed.pathname || "/",
-    search: search ? `?${search}` : "",
-    hash: parsed.hash || "",
-  };
+  url.hash = parsed.hash || "";
+
+  return url;
 }
 
 function convertFormDataToSearchParams(formData: FormData): URLSearchParams {

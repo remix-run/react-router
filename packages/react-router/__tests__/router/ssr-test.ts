@@ -841,7 +841,7 @@ describe("ssr", () => {
       expect(rootLoaderStub).toHaveBeenCalledWith({
         request: new Request("http://localhost/child"),
         unstable_pattern: "/child",
-        unstable_path: { pathname: "/child", search: "", hash: "" },
+        unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
       });
@@ -854,7 +854,7 @@ describe("ssr", () => {
       expect(childLoaderStub).toHaveBeenCalledWith({
         request: new Request("http://localhost/child"),
         unstable_pattern: "/child",
-        unstable_path: { pathname: "/child", search: "", hash: "" },
+        unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
       });
@@ -895,7 +895,7 @@ describe("ssr", () => {
       expect(actionStub).toHaveBeenCalledWith({
         request: expect.any(Request),
         unstable_pattern: "/child",
-        unstable_path: { pathname: "/child", search: "", hash: "" },
+        unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
       });
@@ -912,7 +912,7 @@ describe("ssr", () => {
       expect(rootLoaderStub).toHaveBeenCalledWith({
         request: expect.any(Request),
         unstable_pattern: "/child",
-        unstable_path: { pathname: "/child", search: "", hash: "" },
+        unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
       });
@@ -927,7 +927,7 @@ describe("ssr", () => {
       expect(childLoaderStub).toHaveBeenCalledWith({
         request: expect.any(Request),
         unstable_pattern: "/child",
-        unstable_path: { pathname: "/child", search: "", hash: "" },
+        unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
       });
