@@ -408,9 +408,7 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {
-  unstable_passThroughRequests: boolean;
-}
+export interface FutureConfig {}
 
 /**
  * Initialization options for createRouter
@@ -924,9 +922,9 @@ export function createRouter(init: RouterInit): Router {
   }
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
 
-  // Config driven behavior flags
+  // Currently empty, but available for additional flags in the future
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
-    unstable_passThroughRequests: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -3758,10 +3756,9 @@ export function createStaticHandler(
   let _mapRouteProperties =
     opts?.mapRouteProperties || defaultMapRouteProperties;
   let mapRouteProperties = _mapRouteProperties;
-  // Currently unused, but available for additional flags in the future
+  // Currently empty, but available for additional flags in the future
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
-    unstable_passThroughRequests: false, // unused in static handler
     ...opts?.future,
   };
 
