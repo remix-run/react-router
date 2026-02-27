@@ -109,7 +109,35 @@ function derive(build: ServerBuild, mode?: string) {
     let url = new URL(request.url);
 
     let normalizedBasename = build.basename || "/";
-    let normalizedPath = url.pathname;
+
+    // Normalize pathname to prevent malformed URL attacks.
+    // Converts backslashes, collapses multiple slashes, ensures leading slash.
+    // Intentional single trailing slashes are preserved.
+    let originalPathname = url.pathname;
+
+    // Custom normalization that preserves intentional trailing slashes
+    let normalizedPathname = originalPathname
+      // Convert backslashes to forward slashes
+      .replace(/\\/g, "/")
+      // Collapse multiple consecutive slashes into one
+      .replace(/\/{2,}/g, "/");
+
+    // Ensure path starts with "/"
+    if (!normalizedPathname.startsWith("/")) {
+      normalizedPathname = "/" + normalizedPathname;
+    }
+
+    // Redirect to canonical path if normalization changed the path
+    if (normalizedPathname !== url.pathname) {
+      return new Response(null, {
+        status: 308,
+        headers: {
+          Location: normalizedPathname + url.search + url.hash,
+        },
+      });
+    }
+    
+    let normalizedPath = normalizedPathname;
     if (build.future.unstable_trailingSlashAwareDataRequests) {
       if (normalizedPath.endsWith("/_.data")) {
         // Handle trailing slash URLs: /about/_.data -> /about/
