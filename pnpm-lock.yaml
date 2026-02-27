@@ -115,9 +115,6 @@ importers:
       babel-plugin-dev-expression:
         specifier: ^0.2.3
         version: 0.2.3(@babel/core@7.27.7)
-      chalk:
-        specifier: ^4.1.2
-        version: 4.1.2
       dox:
         specifier: ^1.0.0
         version: 1.0.0
@@ -160,6 +157,9 @@ importers:
       jsonfile:
         specifier: ^6.1.0
         version: 6.1.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -828,9 +828,6 @@ importers:
       arg:
         specifier: ^5.0.1
         version: 5.0.2
-      chalk:
-        specifier: ^4.1.2
-        version: 4.1.2
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -840,6 +837,9 @@ importers:
       log-update:
         specifier: ^5.0.1
         version: 5.0.1
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
       proxy-agent:
         specifier: ^6.3.0
         version: 6.4.0
