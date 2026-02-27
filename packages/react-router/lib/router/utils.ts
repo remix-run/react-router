@@ -271,6 +271,15 @@ interface DataFunctionArgs<Context> {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
   /**
+   * A URL instance representing the application location being navigated to or fetched.
+   * Without `future.unstable_passThroughRequests` enabled, this matches `request.url`.
+   * With `future.unstable_passThroughRequests` enabled, this is a normalized
+   * URL with React-Router-specific implementation details removed (`.data`
+   * suffixes, `index`/`_routes` search params).
+   * The URL includes the origin from the request for convenience.
+   */
+  unstable_url: URL;
+  /**
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */

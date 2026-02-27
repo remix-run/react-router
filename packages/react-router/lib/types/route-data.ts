@@ -2,6 +2,7 @@ import type {
   ClientLoaderFunctionArgs,
   ClientActionFunctionArgs,
 } from "../dom/ssr/routeModules";
+import type { Path } from "../router/history";
 import type {
   DataWithResponseInit,
   RouterContextProvider,
@@ -78,6 +79,15 @@ export type ClientDataFunctionArgs<Params> = {
    **/
   request: Request;
   /**
+   * A URL instance representing the application location being navigated to or fetched.
+   * Without `future.unstable_passThroughRequests` enabled, this matches `request.url`.
+   * With `future.unstable_passThroughRequests` enabled, this is a normalized
+   * URL with React-Router-specific implementation details removed (`.data`
+   * pathnames, `index`/`_routes` search params).
+   * The URL includes the origin from the request for convenience.
+   */
+  unstable_url: URL;
+  /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
    * // app/routes.ts
@@ -111,6 +121,15 @@ export type ClientDataFunctionArgs<Params> = {
 export type ServerDataFunctionArgs<Params> = {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
   request: Request;
+  /**
+   * A URL instance representing the application location being navigated to or fetched.
+   * Without `future.unstable_passThroughRequests` enabled, this matches `request.url`.
+   * With `future.unstable_passThroughRequests` enabled, this is a normalized
+   * URL with React-Router-specific implementation details removed (`.data`
+   * pathnames, `index`/`_routes` search params).
+   * The URL includes the origin from the request for convenience.
+   */
+  unstable_url: URL;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
