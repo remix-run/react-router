@@ -1024,11 +1024,14 @@ export function createRouter(init: RouterInit): Router {
       }
 
       // Toggle renderFallback based on per-route values
+      // Using a `.forEach` is important instead of something like an `.every`
+      // here because we need to evaluate renderFallback for all matches
       renderFallback = false;
-      initialized = relevantMatches.every((m) => {
+      initialized = true;
+      relevantMatches.forEach((m) => {
         let status = getRouteHydrationStatus(m.route, loaderData, errors);
         renderFallback = renderFallback || status.renderFallback;
-        return !status.shouldLoad;
+        initialized = initialized && !status.shouldLoad;
       });
     }
   }
