@@ -5,56 +5,69 @@ import process from "node:process";
 import os from "node:os";
 import { type Key as ActionKey } from "node:readline";
 import { erase, cursor } from "sisteransi";
-import chalk from "chalk";
+import pc from "picocolors";
 
 // https://no-color.org/
-const SUPPORTS_COLOR = chalk.supportsColor && !process.env.NO_COLOR;
+// picocolors natively respects NO_COLOR and FORCE_COLOR env vars
+const SUPPORTS_COLOR = pc.isColorSupported;
 
 export const color = {
   supportsColor: SUPPORTS_COLOR,
-  heading: safeColor(chalk.bold),
-  arg: safeColor(chalk.yellowBright),
-  error: safeColor(chalk.red),
-  warning: safeColor(chalk.yellow),
-  hint: safeColor(chalk.blue),
-  bold: safeColor(chalk.bold),
-  black: safeColor(chalk.black),
-  white: safeColor(chalk.white),
-  blue: safeColor(chalk.blue),
-  cyan: safeColor(chalk.cyan),
-  red: safeColor(chalk.red),
-  yellow: safeColor(chalk.yellow),
-  green: safeColor(chalk.green),
-  blackBright: safeColor(chalk.blackBright),
-  whiteBright: safeColor(chalk.whiteBright),
-  blueBright: safeColor(chalk.blueBright),
-  cyanBright: safeColor(chalk.cyanBright),
-  redBright: safeColor(chalk.redBright),
-  yellowBright: safeColor(chalk.yellowBright),
-  greenBright: safeColor(chalk.greenBright),
-  bgBlack: safeColor(chalk.bgBlack),
-  bgWhite: safeColor(chalk.bgWhite),
-  bgBlue: safeColor(chalk.bgBlue),
-  bgCyan: safeColor(chalk.bgCyan),
-  bgRed: safeColor(chalk.bgRed),
-  bgYellow: safeColor(chalk.bgYellow),
-  bgGreen: safeColor(chalk.bgGreen),
-  bgBlackBright: safeColor(chalk.bgBlackBright),
-  bgWhiteBright: safeColor(chalk.bgWhiteBright),
-  bgBlueBright: safeColor(chalk.bgBlueBright),
-  bgCyanBright: safeColor(chalk.bgCyanBright),
-  bgRedBright: safeColor(chalk.bgRedBright),
-  bgYellowBright: safeColor(chalk.bgYellowBright),
-  bgGreenBright: safeColor(chalk.bgGreenBright),
-  gray: safeColor(chalk.gray),
-  dim: safeColor(chalk.dim),
-  reset: safeColor(chalk.reset),
-  inverse: safeColor(chalk.inverse),
-  hex: (color: string) => safeColor(chalk.hex(color)),
-  underline: chalk.underline,
+  heading: safeColor(pc.bold),
+  arg: safeColor(pc.yellowBright),
+  error: safeColor(pc.red),
+  warning: safeColor(pc.yellow),
+  hint: safeColor(pc.blue),
+  bold: safeColor(pc.bold),
+  black: safeColor(pc.black),
+  white: safeColor(pc.white),
+  blue: safeColor(pc.blue),
+  cyan: safeColor(pc.cyan),
+  red: safeColor(pc.red),
+  yellow: safeColor(pc.yellow),
+  green: safeColor(pc.green),
+  blackBright: safeColor(pc.blackBright),
+  whiteBright: safeColor(pc.whiteBright),
+  blueBright: safeColor(pc.blueBright),
+  cyanBright: safeColor(pc.cyanBright),
+  redBright: safeColor(pc.redBright),
+  yellowBright: safeColor(pc.yellowBright),
+  greenBright: safeColor(pc.greenBright),
+  bgBlack: safeColor(pc.bgBlack),
+  bgWhite: safeColor(pc.bgWhite),
+  bgBlue: safeColor(pc.bgBlue),
+  bgCyan: safeColor(pc.bgCyan),
+  bgRed: safeColor(pc.bgRed),
+  bgYellow: safeColor(pc.bgYellow),
+  bgGreen: safeColor(pc.bgGreen),
+  bgBlackBright: safeColor(pc.bgBlackBright),
+  bgWhiteBright: safeColor(pc.bgWhiteBright),
+  bgBlueBright: safeColor(pc.bgBlueBright),
+  bgCyanBright: safeColor(pc.bgCyanBright),
+  bgRedBright: safeColor(pc.bgRedBright),
+  bgYellowBright: safeColor(pc.bgYellowBright),
+  bgGreenBright: safeColor(pc.bgGreenBright),
+  gray: safeColor(pc.gray),
+  dim: safeColor(pc.dim),
+  reset: safeColor(pc.reset),
+  inverse: safeColor(pc.inverse),
+  hex: (hex: string) => safeColor(hexColor(hex)),
+  underline: pc.underline,
 };
 
-function safeColor(style: chalk.Chalk) {
+/**
+ * Converts a hex color string to an ANSI true-color (24-bit) formatter.
+ * Used by the loading indicator gradient animation.
+ */
+function hexColor(hex: string): (input: string) => string {
+  let h = hex.replace("#", "");
+  let r = parseInt(h.substring(0, 2), 16);
+  let g = parseInt(h.substring(2, 4), 16);
+  let b = parseInt(h.substring(4, 6), 16);
+  return (input: string) => `\x1b[38;2;${r};${g};${b}m${input}\x1b[39m`;
+}
+
+function safeColor(style: (input: string) => string) {
   return SUPPORTS_COLOR ? style : identity;
 }
 
@@ -93,8 +106,8 @@ export function logError(message: string) {
 
 function logBullet(
   logger: typeof log | typeof logError,
-  colorizePrefix: <V>(v: V) => V,
-  colorizeText: <V>(v: V) => V,
+  colorizePrefix: (v: string) => string,
+  colorizeText: (v: string) => string,
   symbol: string,
   prefix: string,
   text?: string | string[],
