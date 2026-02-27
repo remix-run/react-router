@@ -312,7 +312,9 @@ export async function fetchAndApplyManifestPatches(
     }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
-    if (signal?.aborted) return;
+    if (signal?.aborted) {
+      return;
+    }
     throw e;
   }
 
