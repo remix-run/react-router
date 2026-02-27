@@ -1251,15 +1251,11 @@ export function _renderMatches(
 
       if (match.route.id) {
         let { loaderData, errors } = dataRouterState;
-        let needsToRunSpaMiddleware =
-          match.route.middleware &&
-          match.route.middleware.length > 0 &&
-          !match.route.loader;
         let needsToRunLoader =
           match.route.loader &&
           !loaderData.hasOwnProperty(match.route.id) &&
           (!errors || errors[match.route.id] === undefined);
-        if (match.route.lazy || needsToRunSpaMiddleware || needsToRunLoader) {
+        if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
           // lazy, or has a loader that hasn't run yet) - render up until the
           // appropriate fallback

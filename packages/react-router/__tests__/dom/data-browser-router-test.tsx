@@ -336,41 +336,70 @@ function testDomRouter(
         `);
       });
 
-      it("renders hydrateFallbackElement while first data fetch happens when it is only middleware", async () => {
+      it("renders ancestor HydrateFallback during hydration middleware-only execution", async () => {
         let middlewareDfd = createDeferred();
-        let router = createTestRouter(
-          [
-            {
-              path: "/",
-              Component: Outlet,
-              HydrateFallback: () => "Loading...",
-              children: [
-                {
-                  path: "foo",
-                  middleware: [() => middlewareDfd.promise],
-                  Component: () => "Foo",
-                },
-              ],
-            },
-          ],
+        let router = createTestRouter([
           {
-            window: getWindow("/foo"),
+            path: "/",
+            Component: Outlet,
+            HydrateFallback: () => "Loading root...",
+            children: [
+              {
+                index: true,
+                middleware: [() => middlewareDfd.promise],
+                Component: () => "Hello World!",
+              },
+            ],
           },
-        );
+        ]);
 
         let { container } = render(<RouterProvider router={router} />);
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
-            Loading...
+            Loading root...
           </div>"
         `);
 
         middlewareDfd.resolve();
-        await waitFor(() => screen.getByText("Foo"));
+        await waitFor(() => screen.getByText("Hello World!"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
-            Foo
+            Hello World!
+          </div>"
+        `);
+      });
+
+      it("renders self HydrateFallback during hydration middleware-only execution", async () => {
+        let middlewareDfd = createDeferred();
+        let router = createTestRouter([
+          {
+            path: "/",
+            Component: Outlet,
+            children: [
+              {
+                index: true,
+                HydrateFallback: () => "Loading index...",
+                middleware: [() => middlewareDfd.promise],
+                Component: () => "Hello World!",
+              },
+            ],
+          },
+        ]);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading index...
+          </div>"
+        `);
+
+        middlewareDfd.resolve();
+        await waitFor(() => screen.getByText("Hello World!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Hello World!
           </div>"
         `);
       });
