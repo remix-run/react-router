@@ -1268,7 +1268,7 @@ async function getRSCRouteMatch({
     hasLoader: !!route.loader,
     hydrateFallbackElement,
     id: route.id,
-    index: route.index,
+    index: "index" in route ? route.index : undefined,
     links: route.links,
     meta: route.meta,
     params,
