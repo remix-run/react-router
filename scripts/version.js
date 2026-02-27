@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const { execSync } = require("child_process");
-const chalk = require("chalk");
+const pc = require("picocolors");
 const semver = require("semver");
 
 const {
@@ -40,20 +40,18 @@ async function run() {
         packageName = pkg.name;
         pkg.version = version;
       });
-      console.log(
-        chalk.green(`  Updated ${packageName} to version ${version}`),
-      );
+      console.log(pc.green(`  Updated ${packageName} to version ${version}`));
     }
 
     // 3. Commit and tag
     if (!skipGit) {
       execSync(`git commit --all --message="Version ${version}"`);
       execSync(`git tag -a -m "Version ${version}" v${version}`);
-      console.log(chalk.green(`  Committed and tagged version ${version}`));
+      console.log(pc.green(`  Committed and tagged version ${version}`));
     }
   } catch (error) {
     console.log();
-    console.error(chalk.red(`  ${error.message}`));
+    console.error(pc.red(`  ${error.message}`));
     console.log();
     return 1;
   }
