@@ -837,12 +837,29 @@ describe("ssr", () => {
       ]);
       await query(createRequest("/child"));
 
+      expect(rootLoaderStub).toHaveBeenCalledTimes(1);
+      expect(rootLoaderStub).toHaveBeenCalledWith({
+        request: new Request("http://localhost/child"),
+        unstable_pattern: "/child",
+        unstable_url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
-      // @ts-expect-error
-      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(rootLoaderRequest.method).toBe("GET");
       expect(rootLoaderRequest.url).toBe("http://localhost/child");
+
+      expect(childLoaderStub).toHaveBeenCalledTimes(1);
+      expect(childLoaderStub).toHaveBeenCalledWith({
+        request: new Request("http://localhost/child"),
+        unstable_pattern: "/child",
+        unstable_url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
+      // @ts-expect-error
+      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(childLoaderRequest.method).toBe("GET");
       expect(childLoaderRequest.url).toBe("http://localhost/child");
     });
@@ -874,6 +891,14 @@ describe("ssr", () => {
         }),
       );
 
+      expect(actionStub).toHaveBeenCalledTimes(1);
+      expect(actionStub).toHaveBeenCalledWith({
+        request: expect.any(Request),
+        unstable_pattern: "/child",
+        unstable_url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
       // @ts-expect-error
       let actionRequest = actionStub.mock.calls[0][0]?.request;
       expect(actionRequest.method).toBe("POST");
@@ -883,14 +908,31 @@ describe("ssr", () => {
       );
       expect((await actionRequest.formData()).get("key")).toBe("value");
 
+      expect(rootLoaderStub).toHaveBeenCalledTimes(1);
+      expect(rootLoaderStub).toHaveBeenCalledWith({
+        request: expect.any(Request),
+        unstable_pattern: "/child",
+        unstable_url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
-      // @ts-expect-error
-      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(rootLoaderRequest.method).toBe("GET");
       expect(rootLoaderRequest.url).toBe("http://localhost/child");
       expect(rootLoaderRequest.headers.get("test")).toBe("value");
       expect(await rootLoaderRequest.text()).toBe("");
+
+      expect(childLoaderStub).toHaveBeenCalledTimes(1);
+      expect(childLoaderStub).toHaveBeenCalledWith({
+        request: expect.any(Request),
+        unstable_pattern: "/child",
+        unstable_url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
+      // @ts-expect-error
+      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(childLoaderRequest.method).toBe("GET");
       expect(childLoaderRequest.url).toBe("http://localhost/child");
       expect(childLoaderRequest.headers.get("test")).toBe("value");

@@ -129,6 +129,8 @@ export function createRoutesStub(
     if (routerRef.current == null) {
       frameworkContextRef.current = {
         future: {
+          unstable_passThroughRequests:
+            future?.unstable_passThroughRequests === true,
           unstable_subResourceIntegrity:
             future?.unstable_subResourceIntegrity === true,
           v8_middleware: future?.v8_middleware === true,

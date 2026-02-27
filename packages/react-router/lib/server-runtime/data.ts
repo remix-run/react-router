@@ -4,6 +4,7 @@ import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
 } from "../router/utils";
+import type { FutureConfig } from "../router/router";
 import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
 
 /**
@@ -21,9 +22,13 @@ export interface AppLoadContext {
 export async function callRouteHandler(
   handler: LoaderFunction | ActionFunction,
   args: LoaderFunctionArgs | ActionFunctionArgs,
+  future: FutureConfig,
 ) {
   let result = await handler({
-    request: stripRoutesParam(stripIndexParam(args.request)),
+    request: future.unstable_passThroughRequests
+      ? args.request
+      : stripRoutesParam(stripIndexParam(args.request)),
+    unstable_url: args.unstable_url,
     params: args.params,
     context: args.context,
     unstable_pattern: args.unstable_pattern,
@@ -42,11 +47,6 @@ export async function callRouteHandler(
   return result;
 }
 
-// TODO: Document these search params better
-// and stop stripping these in V2. These break
-// support for running in a SW and also expose
-// valuable info to data funcs that is being asked
-// for such as "is this a data request?".
 function stripIndexParam(request: Request) {
   let url = new URL(request.url);
   let indexValues = url.searchParams.getAll("index");
