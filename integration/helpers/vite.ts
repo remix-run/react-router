@@ -23,44 +23,23 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
 
-export const reactRouterConfig = ({
-  ssr,
-  basename,
-  prerender,
-  appDirectory,
-  splitRouteModules,
-  viteEnvironmentApi,
-  v8_middleware,
-  routeDiscovery,
-}: {
-  ssr?: boolean;
-  basename?: string;
-  prerender?: boolean | string[];
-  appDirectory?: string;
-  splitRouteModules?: NonNullable<
-    Config["future"]
-  >["unstable_splitRouteModules"];
-  viteEnvironmentApi?: boolean;
-  v8_middleware?: boolean;
-  routeDiscovery?: Config["routeDiscovery"];
-}) => {
-  let config: Config = {
-    ssr,
-    basename,
-    prerender,
-    appDirectory,
-    routeDiscovery,
-    future: {
-      unstable_splitRouteModules: splitRouteModules,
-      unstable_viteEnvironmentApi: viteEnvironmentApi,
-      v8_middleware,
-    },
-  };
+export const reactRouterConfig = (
+  // Don't support function configs due to JSON.stringify()
+  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles">,
+) => {
+  if (
+    typeof config.prerender === "function" ||
+    (typeof config.prerender === "object" &&
+      !Array.isArray(config.prerender) &&
+      typeof config.prerender.paths === "function")
+  ) {
+    throw new Error("reactRouterConfig() does not support prerender functions");
+  }
 
   return dedent`
     import type { Config } from "@react-router/dev/config";
 
-    export default ${JSON.stringify(config)} satisfies Config;
+    export default ${JSON.stringify(config, null, 2)} satisfies Config;
   `;
 };
 
@@ -155,7 +134,7 @@ export const viteConfig = {
         plugins: [
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
-          ${isRsc ? "reactRouterRSC()," : "reactRouter(),"}
+          ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
           ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
           tsconfigPaths()
@@ -187,7 +166,7 @@ export const EXPRESS_SERVER = (args: {
                 },
               })
             );
-      const app = express();      
+      const app = express();
 
       ${args?.customLogic || ""}
 
@@ -261,7 +240,7 @@ type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
   | "vite-plugin-cloudflare-template";
 
-export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+export type RscBundlerTemplateName = "rsc-vite";
 
 export type TemplateName =
   | FrameworkModeViteMajorTemplateName
@@ -284,7 +263,6 @@ export const viteMajorTemplates = [
 
 export const rscBundlerTemplates = [
   { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
-  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
 ] as const satisfies Array<{
   templateName: RscBundlerTemplateName;
   templateDisplayName: string;
@@ -415,6 +393,28 @@ export const createDev =
 export const dev = createDev([reactRouterBin, "dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
+export const vitePreview = async ({
+  cwd,
+  port,
+}: {
+  cwd: string;
+  port: number;
+}) => {
+  let nodeBin = process.argv[0];
+  let viteBin = path.join(cwd, "node_modules", "vite", "bin", "vite.js");
+  let proc = spawn(
+    nodeBin,
+    [viteBin, "preview", "--port", String(port), "--strict-port"],
+    {
+      cwd,
+      stdio: "pipe",
+      env: { NODE_ENV: "production" },
+    },
+  );
+  await waitForServer(proc, { port });
+  return () => proc.kill();
+};
+
 // Used for testing errors thrown on build when we don't want to start and
 // wait for the server
 export const viteDevCmd = ({ cwd }: { cwd: string }) => {
@@ -449,6 +449,13 @@ type Fixtures = {
     cwd: string;
   }>;
   reactRouterServe: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  vitePreview: (
+    files: Files,
+    templateName?: TemplateName,
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -495,6 +502,18 @@ export const test = base.extend<Fixtures>({
       let { status } = build({ cwd });
       expect(status).toBe(0);
       stop = await reactRouterServe({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  vitePreview: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files, template) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }), template);
+      let { status } = build({ cwd });
+      expect(status).toBe(0);
+      stop = await vitePreview({ cwd, port });
       return { port, cwd };
     });
     stop?.();

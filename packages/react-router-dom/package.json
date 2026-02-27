@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "7.9.6",
+  "version": "7.13.1",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
@@ -48,6 +48,7 @@
     "build": {
       "command": "tsup",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "tsconfig.json",
         "package.json"
@@ -61,11 +62,11 @@
     "react-router": "workspace:*"
   },
   "devDependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "react": ">=18",

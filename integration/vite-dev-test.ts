@@ -17,27 +17,27 @@ const tsx = dedent;
 const fixtures = [
   {
     templateName: "vite-5-template",
-    viteEnvironmentApi: false,
+    v8_viteEnvironmentApi: false,
   },
   {
     templateName: "vite-6-template",
-    viteEnvironmentApi: true,
+    v8_viteEnvironmentApi: true,
   },
   {
     templateName: "rsc-vite-framework",
-    viteEnvironmentApi: true,
+    v8_viteEnvironmentApi: true,
   },
 ] as const satisfies ReadonlyArray<{
   templateName: TemplateName;
-  viteEnvironmentApi: boolean;
+  v8_viteEnvironmentApi: boolean;
 }>;
 
 test.describe("Vite dev", () => {
-  for (const { templateName, viteEnvironmentApi } of fixtures) {
-    test.describe(`template: ${templateName} viteEnvironmentApi: ${viteEnvironmentApi}`, () => {
+  for (const { templateName, v8_viteEnvironmentApi } of fixtures) {
+    test.describe(`template: ${templateName} viteEnvironmentApi: ${v8_viteEnvironmentApi}`, () => {
       const files: Files = async ({ port }) => ({
         "react-router.config.ts": reactRouterConfig({
-          viteEnvironmentApi,
+          future: { v8_viteEnvironmentApi },
         }),
         "vite.config.ts": await viteConfig.basic({
           port,

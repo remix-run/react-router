@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import * as React from "react";
 import type {
+  DataStrategyResult,
   ErrorResponse,
   Fetcher,
   Location,
@@ -456,6 +457,78 @@ function testDomRouter(
               Foo:
               From Foo Loader
             </h1>
+          </div>"
+        `);
+      });
+
+      it("clears the HydrateFallback when dataStrategy returns partial results during hydration", async () => {
+        let dfd = createDeferred<Record<string, DataStrategyResult>>();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: true,
+              HydrateFallback: () => "Loading...",
+              Component: () => (
+                <>
+                  <h1>Root:{useLoaderData()}</h1>
+                  <Outlet />
+                </>
+              ),
+              ErrorBoundary: () => {
+                let error = useRouteError();
+                return (
+                  <pre>
+                    Root:
+                    {error instanceof Error ? error.message : (error as string)}
+                  </pre>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: true,
+                  Component: () => <h2>Index:{useLoaderData()}</h2>,
+                  ErrorBoundary: () => (
+                    <pre>Index:{useRouteError() as string}</pre>
+                  ),
+                },
+              ],
+            },
+          ],
+          {
+            dataStrategy: () => dfd.promise,
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading...
+          </div>"
+        `);
+
+        // Resolve data strategy with only an error at the index route but nothing
+        // for the root route
+        await dfd.resolve({
+          index: {
+            type: "error",
+            result: "INDEX ERROR",
+          },
+        });
+        await tick();
+        await tick();
+
+        // The router stubs in an error for the root route to get out of
+        // displaying the HydrateFallback
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <pre>
+              Root:
+              No result returned from dataStrategy for route root
+            </pre>
           </div>"
         `);
       });
@@ -2549,6 +2622,293 @@ function testDomRouter(
             </form>
           </div>"
         `);
+      });
+    });
+
+    describe("call-site revalidation opt-out", () => {
+      it("accepts unstable_defaultShouldRevalidate on <Link> navigations", async () => {
+        let loaderDefer = createDeferred();
+
+        let router = createTestRouter(
+          [{ path: "/", loader: () => loaderDefer.promise, Component: Home }],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Home() {
+          let data = useLoaderData() as string;
+          let location = useLocation();
+          let navigation = useNavigation();
+          return (
+            <div>
+              <Link to="/?foo=bar" unstable_defaultShouldRevalidate={false}>
+                Change Search Params
+              </Link>
+              <div id="output">
+                <p>{location.pathname + location.search}</p>
+                <p>{navigation.state}</p>
+                <p>{data}</p>
+              </div>
+            </div>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            /
+          </p>
+          <p>
+            idle
+          </p>
+          <p />
+        </div>"
+      `);
+
+        fireEvent.click(screen.getByText("Change Search Params"));
+        await waitFor(() => screen.getByText("idle"));
+        loaderDefer.resolve("SHOULD NOT SEE ME");
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            /?foo=bar
+          </p>
+          <p>
+            idle
+          </p>
+          <p />
+        </div>"
+      `);
+      });
+
+      it("accepts unstable_defaultShouldRevalidate on setSearchParams navigations", async () => {
+        let loaderDefer = createDeferred();
+
+        let router = createTestRouter(
+          [{ path: "/", loader: () => loaderDefer.promise, Component: Home }],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Home() {
+          let data = useLoaderData() as string;
+          let location = useLocation();
+          let navigation = useNavigation();
+          let [, setSearchParams] = useSearchParams();
+          return (
+            <div>
+              <button
+                onClick={() =>
+                  setSearchParams(new URLSearchParams([["foo", "bar"]]), {
+                    unstable_defaultShouldRevalidate: false,
+                  })
+                }
+              >
+                Change Search Params
+              </button>
+              <div id="output">
+                <p>{location.pathname + location.search}</p>
+                <p>{navigation.state}</p>
+                <p>{data}</p>
+              </div>
+            </div>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            /
+          </p>
+          <p>
+            idle
+          </p>
+          <p />
+        </div>"
+      `);
+
+        fireEvent.click(screen.getByText("Change Search Params"));
+        await waitFor(() => screen.getByText("idle"));
+        loaderDefer.resolve("SHOULD NOT SEE ME");
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            /?foo=bar
+          </p>
+          <p>
+            idle
+          </p>
+          <p />
+        </div>"
+      `);
+      });
+
+      it("accepts unstable_defaultShouldRevalidate on <Form method=post> navigations", async () => {
+        let loaderDefer = createDeferred();
+        let actionDefer = createDeferred();
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              loader: () => loaderDefer.promise,
+              action: () => actionDefer.promise,
+              Component: Home,
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Home() {
+          let data = useLoaderData() as string;
+          let actionData = useActionData() as string | undefined;
+          let navigation = useNavigation();
+          return (
+            <div>
+              <Form method="post" unstable_defaultShouldRevalidate={false}>
+                <input name="test" value="value" />
+                <button type="submit">Submit Form</button>
+              </Form>
+              <div id="output">
+                <p>{navigation.state}</p>
+                <p>{data}</p>
+                <p>{actionData}</p>
+              </div>
+            </div>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        await waitFor(() => screen.getByText("submitting"));
+        actionDefer.resolve("Action Data");
+        await waitFor(() => screen.getByText("idle"));
+        loaderDefer.resolve("SHOULD NOT SEE ME");
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p>
+            Action Data
+          </p>
+        </div>"
+      `);
+      });
+
+      it("accepts unstable_defaultShouldRevalidate on fetcher.submit", async () => {
+        let loaderDefer = createDeferred();
+        let actionDefer = createDeferred();
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              loader: () => loaderDefer.promise,
+              action: () => actionDefer.promise,
+              Component: Home,
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Home() {
+          let data = useLoaderData() as string;
+          let fetcher = useFetcher<string>();
+          return (
+            <div>
+              <button
+                onClick={() =>
+                  fetcher.submit(
+                    {},
+                    {
+                      method: "post",
+                      action: "/",
+                      unstable_defaultShouldRevalidate: false,
+                    },
+                  )
+                }
+              >
+                Submit Fetcher
+              </button>
+              <div id="output">
+                <p>{`${fetcher.state}:${fetcher.data}`}</p>
+                <p>{data}</p>
+              </div>
+            </div>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle:undefined
+          </p>
+          <p />
+        </div>"
+      `);
+
+        fireEvent.click(screen.getByText("Submit Fetcher"));
+        await waitFor(() => screen.getByText("submitting:undefined"));
+        actionDefer.resolve("Action Data");
+        await waitFor(() => screen.getByText("idle:Action Data"));
+        loaderDefer.resolve("SHOULD NOT SEE ME");
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle:Action Data
+          </p>
+          <p />
+        </div>"
+      `);
       });
     });
 
@@ -6066,12 +6426,15 @@ function testDomRouter(
             { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
-          expect(container.innerHTML).not.toMatch(/my-key/);
+
+          expect(container.querySelector("pre")?.innerHTML).toBe("");
           fireEvent.click(screen.getByText("Load fetchers"));
           await waitFor(() =>
-            // React `useId()` results in something such as `«r2a»`, `«r2i»`,
-            // `«rt»`, or `«rp»` depending on `DataBrowserRouter`/`DataHashRouter`
-            expect(container.innerHTML).toMatch(/«r[0-9]?[a-z]»,my-key/),
+            // React `useId()` results in something such as `_r_2k_` or `_r_u_`
+            // depending on `DataBrowserRouter`/`DataHashRouter`
+            expect(container.querySelector("pre")?.innerHTML).toMatch(
+              /^_r_[0-9]?[a-z]_,my-key$/,
+            ),
           );
         });
 

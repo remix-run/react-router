@@ -8,7 +8,6 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import { readPackageJSON, sortPackage, updatePackage } from "pkg-types";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
 import cloneDeep from "lodash/cloneDeep";
@@ -86,20 +85,26 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_optimizeDeps: boolean;
+  unstable_passThroughRequests: boolean;
+  unstable_subResourceIntegrity: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
+  /**
+   * Prerender with Vite Preview server
+   */
+  unstable_previewServerPrerendering?: boolean;
   /**
    * Enable route middleware
    */
   v8_middleware: boolean;
-  unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
    */
-  unstable_splitRouteModules: boolean | "enforce";
-  unstable_subResourceIntegrity: boolean;
+  v8_splitRouteModules: boolean | "enforce";
   /**
-   * Use Vite Environment API (experimental)
+   * Use Vite Environment API
    */
-  unstable_viteEnvironmentApi: boolean;
+  v8_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -211,6 +216,48 @@ export type ReactRouterConfig = {
    * SPA without server-rendering. Default's to `true`.
    */
   ssr?: boolean;
+
+  /**
+   * An array of allowed origin hosts for action submissions to UI routes (does not apply
+   * to resource routes). Supports micromatch glob patterns (`*` to match one segment,
+   * `**` to match multiple).
+   *
+   * ```tsx
+   * export default {
+   *   allowedActionOrigins: [
+   *     "example.com",
+   *     "*.example.com", // sub.example.com
+   *     "**.example.com", // sub.domain.example.com
+   *   ],
+   * } satisfies Config;
+   * ```
+   *
+   * If you need to set this value at runtime, you can do in by setting the value
+   * on the server build in your custom server. For example, when using `express`:
+   *
+   * ```ts
+   * import express from "express";
+   * import { createRequestHandler } from "@react-router/express";
+   * import type { ServerBuild } from "react-router";
+   *
+   * export const app = express();
+   *
+   * async function getBuild() {
+   *   let build: ServerBuild = await import(
+   *     "virtual:react-router/server-build"
+   *   );
+   *   return {
+   *     ...build,
+   *     allowedActionOrigins:
+   *       process.env.NODE_ENV === "development"
+   *         ? undefined
+   *         : ["staging.example.com", "www.example.com"],
+   *   };
+   * }
+   *
+   * app.use(createRequestHandler({ build: getBuild }));
+   */
+  allowedActionOrigins?: string[];
 };
 
 export type ResolvedReactRouterConfig = Readonly<{
@@ -277,6 +324,11 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * The allowed origins for actions / mutations. Does not apply to routes
+   * without a component. micromatch glob patterns are supported.
+   */
+  allowedActionOrigins: string[] | false;
   /**
    * The resolved array of route config entries exported from `routes.ts`
    */
@@ -617,17 +669,39 @@ async function resolveConfig({
     }
   }
 
+  // Check for renamed flags and provide helpful error messages
+  let futureConfig = userAndPresetConfigs.future as any;
+  if (futureConfig?.unstable_splitRouteModules !== undefined) {
+    return err(
+      'The "future.unstable_splitRouteModules" flag has been stabilized as "future.v8_splitRouteModules"',
+    );
+  }
+  if (futureConfig?.unstable_viteEnvironmentApi !== undefined) {
+    return err(
+      'The "future.unstable_viteEnvironmentApi" flag has been stabilized as "future.v8_viteEnvironmentApi"',
+    );
+  }
+
   let future: FutureConfig = {
-    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    unstable_splitRouteModules:
-      userAndPresetConfigs.future?.unstable_splitRouteModules ?? false,
+    unstable_passThroughRequests:
+      userAndPresetConfigs.future?.unstable_passThroughRequests ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
-    unstable_viteEnvironmentApi:
-      userAndPresetConfigs.future?.unstable_viteEnvironmentApi ?? false,
+    unstable_trailingSlashAwareDataRequests:
+      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
+      false,
+    unstable_previewServerPrerendering:
+      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
+    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
+    v8_splitRouteModules:
+      userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
+    v8_viteEnvironmentApi:
+      userAndPresetConfigs.future?.v8_viteEnvironmentApi ?? false,
   };
+
+  let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
@@ -642,6 +716,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    allowedActionOrigins,
     unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);
 
@@ -920,6 +995,10 @@ export async function resolveEntryFiles({
       );
     }
 
+    // TODO(v8): Remove - only required for Node 20.18 and below
+    let { readPackageJSON, sortPackage, updatePackage } = await import(
+      "pkg-types"
+    );
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
@@ -961,6 +1040,38 @@ export async function resolveEntryFiles({
     : Path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
+}
+
+export async function resolveRSCEntryFiles({
+  reactRouterConfig,
+}: {
+  reactRouterConfig: ResolvedReactRouterConfig;
+}) {
+  let { appDirectory } = reactRouterConfig;
+
+  let defaultsDirectory = Path.resolve(
+    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "default-rsc-entries",
+  );
+
+  let userEntryClientFile = findEntry(appDirectory, "entry.client", {
+    absolute: true,
+  });
+  let userEntryRSCFile = findEntry(appDirectory, "entry.rsc", {
+    absolute: true,
+  });
+  let userEntrySSRFile = findEntry(appDirectory, "entry.ssr", {
+    absolute: true,
+  });
+
+  let client =
+    userEntryClientFile ?? Path.join(defaultsDirectory, "entry.client.tsx");
+  let rsc = userEntryRSCFile ?? Path.join(defaultsDirectory, "entry.rsc.tsx");
+  let ssr = userEntrySSRFile ?? Path.join(defaultsDirectory, "entry.ssr.tsx");
+
+  return { client, rsc, ssr };
 }
 
 function omitRoutes(

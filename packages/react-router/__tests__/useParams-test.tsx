@@ -1,6 +1,14 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
+import {
+  MemoryRouter,
+  Outlet,
+  Routes,
+  Route,
+  useParams,
+  useLocation,
+  generatePath,
+} from "react-router";
 
 function ShowParams() {
   return <pre>{JSON.stringify(useParams())}</pre>;
@@ -208,5 +216,73 @@ describe("useParams", () => {
         </pre>
       `);
     });
+  });
+
+  test("maintains compatibility with generatePath", () => {
+    let tests = [
+      {
+        path: "/books/42",
+        url: "/books/42",
+        params: {},
+      },
+      {
+        path: "/books/:id",
+        url: "/books/42",
+        params: { id: "42" },
+      },
+      {
+        path: "/books/:id.json",
+        url: "/books/42.json",
+        params: { id: "42" },
+      },
+      {
+        path: "/books/:id/comments",
+        url: "/books/42/comments",
+        params: { id: "42" },
+      },
+      {
+        path: "/books/:id.json/comments",
+        url: "/books/42.json/comments",
+        params: { id: "42" },
+      },
+    ];
+
+    function ShowParamsAndPath({ path }: { path: string }) {
+      return (
+        <>
+          <p>{JSON.stringify(useParams())}</p>
+          <p>{useLocation().pathname}</p>
+          <p>{generatePath(path, useParams())}</p>
+        </>
+      );
+    }
+
+    for (let { path, url, params } of tests) {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={[url]}>
+            <Routes>
+              <Route path={path} element={<ShowParamsAndPath path={path} />} />
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      // eslint-disable-next-line jest/no-interpolation-in-snapshots
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        [
+          <p>
+            ${JSON.stringify(params)}
+          </p>,
+          <p>
+            ${url}
+          </p>,
+          <p>
+            ${url}
+          </p>,
+        ]
+      `);
+    }
   });
 });

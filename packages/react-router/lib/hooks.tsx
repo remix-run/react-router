@@ -1,11 +1,5 @@
 import * as React from "react";
-import type {
-  DataRouteMatch,
-  NavigateOptions,
-  RouteContextObject,
-  RouteMatch,
-  RouteObject,
-} from "./context";
+import type { NavigateOptions, RouteContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
@@ -13,6 +7,7 @@ import {
   ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
+  RSCRouterContext,
   RouteContext,
   RouteErrorContext,
 } from "./context";
@@ -33,10 +28,13 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
+  DataRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
   PathPattern,
+  RouteMatch,
+  RouteObject,
   UIMatch,
 } from "./router/utils";
 import {
@@ -44,10 +42,12 @@ import {
   decodePath,
   getResolveToMatches,
   getRoutePattern,
+  isBrowser,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
+  parseToInfo,
   resolveTo,
   stripBasename,
 } from "./router/utils";
@@ -56,8 +56,12 @@ import type {
   GetLoaderData,
   SerializeFrom,
 } from "./types/route-data";
-import type { unstable_ClientOnErrorFunction } from "./components";
+import type { ClientOnErrorFunction } from "./components";
 import type { RouteModules } from "./types/register";
+import {
+  decodeRedirectErrorDigest,
+  decodeRouteErrorResponseDigest,
+} from "./errors";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -756,9 +760,12 @@ export function useRoutes(
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
-  dataRouterState?: DataRouter["state"],
-  unstable_onError?: unstable_ClientOnErrorFunction,
-  future?: DataRouter["future"],
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -910,9 +917,7 @@ export function useRoutesImpl(
         }),
       ),
     parentMatches,
-    dataRouterState,
-    unstable_onError,
-    future,
+    dataRouterOpts,
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -928,6 +933,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
+            unstable_mask: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,
@@ -1012,6 +1018,8 @@ export class RenderErrorBoundary extends React.Component<
     };
   }
 
+  static contextType = RSCRouterContext;
+
   static getDerivedStateFromError(error: any) {
     return { error: error };
   }
@@ -1062,17 +1070,85 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
-    return this.state.error !== undefined ? (
-      <RouteContext.Provider value={this.props.routeContext}>
-        <RouteErrorContext.Provider
-          value={this.state.error}
-          children={this.props.component}
-        />
-      </RouteContext.Provider>
-    ) : (
-      this.props.children
-    );
+    let error = this.state.error;
+
+    if (
+      this.context &&
+      typeof error === "object" &&
+      error &&
+      "digest" in error &&
+      typeof error.digest === "string"
+    ) {
+      const decoded = decodeRouteErrorResponseDigest(error.digest);
+      if (decoded) error = decoded;
+    }
+
+    let result =
+      error !== undefined ? (
+        <RouteContext.Provider value={this.props.routeContext}>
+          <RouteErrorContext.Provider
+            value={error}
+            children={this.props.component}
+          />
+        </RouteContext.Provider>
+      ) : (
+        this.props.children
+      );
+
+    if (this.context) {
+      return <RSCErrorHandler error={error}>{result}</RSCErrorHandler>;
+    }
+
+    return result;
   }
+}
+
+const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
+function RSCErrorHandler({
+  children,
+  error,
+}: {
+  children: React.ReactNode;
+  error: unknown;
+}) {
+  let { basename } = React.useContext(NavigationContext);
+
+  if (
+    typeof error === "object" &&
+    error &&
+    "digest" in error &&
+    typeof error.digest === "string"
+  ) {
+    let redirect = decodeRedirectErrorDigest(error.digest);
+    if (redirect) {
+      let existingRedirect = errorRedirectHandledMap.get(error);
+      if (existingRedirect) throw existingRedirect;
+
+      let parsed = parseToInfo(redirect.location, basename);
+
+      if (isBrowser && !errorRedirectHandledMap.get(error)) {
+        if (parsed.isExternal || redirect.reloadDocument) {
+          window.location.href = parsed.absoluteURL || parsed.to;
+        } else {
+          const redirectPromise: Promise<void> = Promise.resolve().then(() =>
+            window.__reactRouterDataRouter!.navigate(parsed.to, {
+              replace: redirect.replace,
+            }),
+          );
+          errorRedirectHandledMap.set(error, redirectPromise);
+          throw redirectPromise;
+        }
+      }
+
+      return (
+        <meta
+          httpEquiv="refresh"
+          content={`0;url=${parsed.absoluteURL || parsed.to}`}
+        />
+      );
+    }
+  }
+  return children;
 }
 
 interface RenderedRouteProps {
@@ -1105,10 +1181,15 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState: DataRouter["state"] | null = null,
-  unstable_onError: unstable_ClientOnErrorFunction | null = null,
-  future: DataRouter["future"] | null = null,
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
+  let dataRouterState = dataRouterOpts?.state;
+
   if (matches == null) {
     if (!dataRouterState) {
       return null;
@@ -1159,7 +1240,8 @@ export function _renderMatches(
   // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (dataRouterState && !dataRouterState.initialized) {
+  if (dataRouterOpts && dataRouterState) {
+    renderFallback = dataRouterState.renderFallback;
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
@@ -1179,9 +1261,11 @@ export function _renderMatches(
           (!errors || errors[match.route.id] === undefined);
         if (match.route.lazy || needsToRunSpaMiddleware || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
-          // lazy, or has a loader that hasn't run yet).  Flag that we need to
-          // render a fallback and render up until the appropriate fallback
-          renderFallback = true;
+          // lazy, or has a loader that hasn't run yet) - render up until the
+          // appropriate fallback
+          if (dataRouterOpts.isStatic) {
+            renderFallback = true;
+          }
           if (fallbackIndex >= 0) {
             renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
           } else {
@@ -1193,10 +1277,11 @@ export function _renderMatches(
     }
   }
 
+  let onErrorHandler = dataRouterOpts?.onError;
   let onError =
-    dataRouterState && unstable_onError
+    dataRouterState && onErrorHandler
       ? (error: unknown, errorInfo?: React.ErrorInfo) => {
-          unstable_onError(error, {
+          onErrorHandler(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
             unstable_pattern: getRoutePattern(dataRouterState.matches),

@@ -1,37 +1,20 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
+import tsx from "dedent";
 import getPort from "get-port";
 
-import {
-  type TemplateName,
-  createProject,
-  customDev,
-  EXPRESS_SERVER,
-  viteConfig,
-} from "./helpers/vite.js";
+import * as Express from "./helpers/express";
+import { test } from "./helpers/fixtures";
+import * as Stream from "./helpers/stream";
+import { viteMajorTemplates, getTemplates } from "./helpers/templates";
 
-const templateNames = [
-  "vite-5-template",
-  "rsc-vite-framework",
-] as const satisfies TemplateName[];
+const templates = [
+  ...viteMajorTemplates,
+  ...getTemplates(["rsc-vite-framework"]),
+];
 
-let getFiles = async ({
-  templateName,
-  envDir,
-  port,
-}: {
-  templateName: TemplateName;
-  envDir?: string;
-  port: number;
-}) => {
-  let envPath = `${envDir ? `${envDir}/` : ""}.env`;
-
-  return {
-    "vite.config.js": await viteConfig.basic({ templateName, port, envDir }),
-    "server.mjs": EXPRESS_SERVER({ port, templateName }),
-    [envPath]: `
-      ENV_VAR_FROM_DOTENV_FILE=Content from ${envPath} file
-    `,
-    "app/routes/dotenv.tsx": String.raw`
+test.use({
+  files: {
+    "app/routes/dotenv.tsx": tsx`
       import { useState, useEffect } from "react";
       import { useLoaderData } from "react-router";
 
@@ -59,82 +42,62 @@ let getFiles = async ({
         </>
       }
     `,
-  };
-};
+  },
+});
+
+const envs = [
+  { name: "default", path: ".env" },
+  { name: "custom env dir", path: "custom-env-dir/.env" },
+];
 
 test.describe("Vite .env", () => {
-  for (const templateName of templateNames) {
-    test.describe(`template: ${templateName}`, () => {
-      test.describe("defaults", async () => {
-        let port: number;
-        let cwd: string;
-        let stop: () => void;
+  templates.forEach((template) => {
+    test.describe(`template: ${template.displayName}`, () => {
+      const isRsc = template.name.startsWith("rsc-");
+      test.use({ template: template.name });
+      envs.forEach((env) => {
+        test(env.name, async ({ edit, $, page }) => {
+          await edit({
+            "server.mjs": isRsc ? Express.rsc() : Express.server(),
+            ".env": `
+              VITE_ENV_ROUTE=dotenv
+              ENV_VAR_FROM_DOTENV_FILE=Content from ${env.path} file
+            `,
+            "app/routes.ts": (contents) => {
+              if (template.name === "vite-5-template") return contents;
+              return tsx`
+                import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        test.beforeAll(async () => {
-          port = await getPort();
-          cwd = await createProject(
-            await getFiles({ port, templateName }),
-            templateName,
-          );
-          stop = await customDev({ cwd, port });
-        });
-        test.afterAll(() => stop());
+                const routes: RouteConfig = [];
+                if (import.meta.env.VITE_ENV_ROUTE === "dotenv") {
+                  routes.push(route("dotenv", "routes/dotenv.tsx"));
+                }
 
-        test("express", async ({ page }) => {
-          let pageErrors: unknown[] = [];
-          page.on("pageerror", (error) => pageErrors.push(error));
-
-          await page.goto(`http://localhost:${port}/dotenv`, {
-            waitUntil: "networkidle",
+                export default routes
+              `;
+            },
           });
-          expect(pageErrors).toEqual([]);
+          await $("pnpm build");
 
-          let loaderContent = page.locator(
-            "[data-dotenv-route-loader-content]",
-          );
-          await expect(loaderContent).toHaveText("Content from .env file");
+          const port = await getPort();
+          const url = `http://localhost:${port}`;
 
-          let clientContent = page.locator(
-            "[data-dotenv-route-client-content]",
-          );
-          await expect(clientContent).toHaveText(
-            "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
-          );
-
-          expect(pageErrors).toEqual([]);
-        });
-      });
-
-      test.describe("custom env dir", async () => {
-        let port: number;
-        let cwd: string;
-        let stop: () => void;
-
-        test.beforeAll(async () => {
-          const envDir = "custom-env-dir";
-          port = await getPort();
-          cwd = await createProject(
-            await getFiles({ envDir, port, templateName }),
-            templateName,
-          );
-          stop = await customDev({ cwd, port });
-        });
-        test.afterAll(() => stop());
-
-        test("express", async ({ page }) => {
-          let pageErrors: unknown[] = [];
-          page.on("pageerror", (error) => pageErrors.push(error));
-
-          await page.goto(`http://localhost:${port}/dotenv`, {
-            waitUntil: "networkidle",
+          const server = $("node server.mjs", {
+            env: {
+              PORT: String(port),
+              HMR_PORT: String(await getPort()),
+            },
           });
-          expect(pageErrors).toEqual([]);
+          await Stream.match(server.stdout, url);
+
+          await page.goto(`${url}/dotenv`, { waitUntil: "networkidle" });
+          expect(page.errors).toEqual([]);
 
           let loaderContent = page.locator(
             "[data-dotenv-route-loader-content]",
           );
           await expect(loaderContent).toHaveText(
-            "Content from custom-env-dir/.env file",
+            `Content from ${env.path} file`,
           );
 
           let clientContent = page.locator(
@@ -144,9 +107,9 @@ test.describe("Vite .env", () => {
             "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
           );
 
-          expect(pageErrors).toEqual([]);
+          expect(page.errors).toEqual([]);
         });
       });
     });
-  }
+  });
 });

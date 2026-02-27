@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "7.9.6",
+  "version": "7.13.1",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -112,6 +112,7 @@
     "build": {
       "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
       "files": [
+        "../../pnpm-workspace.yaml",
         "lib/**",
         "*.ts",
         "tsconfig.json",
@@ -133,13 +134,13 @@
     "@types/set-cookie-parser": "^2.4.1",
     "jest-environment-jsdom": "^29.6.2",
     "premove": "^4.0.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-test-renderer": "^19.1.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
     "undici": "^6.19.2",
-    "wireit": "0.14.9"
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "react": ">=18",

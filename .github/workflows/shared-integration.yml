@@ -21,7 +21,7 @@ on:
       timeout:
         required: false
         type: number
-        default: 40
+        default: 45
 
 env:
   CI: true
@@ -38,7 +38,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4

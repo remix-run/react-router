@@ -13,15 +13,15 @@
     "@react-router/node": "*",
     "@react-router/serve": "*",
     "isbot": "^5.1.11",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@react-router/dev": "*",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "eslint": "^8.38.0",
-    "typescript": "^5.1.6"
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -12,6 +12,7 @@ import type {
 import { type Location } from "../router/history";
 import {
   createStaticHandler,
+  isDataWithResponseInit,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
@@ -19,10 +20,12 @@ import {
 } from "../router/router";
 import {
   type ActionFunction,
-  type AgnosticDataRouteMatch,
+  type DataRouteMatch,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
+  type RouteMatch,
+  type RouteObject,
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
@@ -37,7 +40,7 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
-import type { RouteMatch, RouteObject } from "../context";
+import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
 import {
@@ -48,7 +51,7 @@ import {
   UNSAFE_WithErrorBoundaryProps,
   // @ts-ignore There are no types before the tsup build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
-  // TSConfig, it breaks the Parcel build within this repo.
+  // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
 import type {
   Await as AwaitType,
@@ -60,6 +63,13 @@ import type {
   ErrorBoundaryProps,
   HydrateFallbackProps,
 } from "../components";
+
+import {
+  createRedirectErrorDigest,
+  createRouteErrorResponseDigest,
+} from "../errors";
+import { getNormalizedPath } from "../server-runtime/urls";
+
 const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
   UNSAFE_WithComponentProps;
@@ -70,6 +80,7 @@ const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
 
 type ServerContext = {
   redirect?: Response;
+  request: Request;
   runningAction: boolean;
 };
 
@@ -79,6 +90,16 @@ const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
 
 const ServerStorage = (globalVar.___reactRouterServerStorage___ ??=
   new AsyncLocalStorage<ServerContext>());
+
+export function getRequest() {
+  const ctx = ServerStorage.getStore();
+
+  if (!ctx)
+    throw new Error(
+      "getRequest must be called from within a React Server render context",
+    );
+  return ctx.request;
+}
 
 export const redirect: typeof baseRedirect = (...args) => {
   const response = baseRedirect(...args);
@@ -278,7 +299,7 @@ export type DecodeFormStateFunction = (
 
 export type DecodeReplyFunction = (
   reply: FormData | string,
-  { temporaryReferences }: { temporaryReferences: unknown },
+  options: { temporaryReferences: unknown },
 ) => Promise<unknown[]>;
 
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
@@ -324,6 +345,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * @category RSC
  * @mode data
  * @param opts Options
+ * @param opts.allowedActionOrigins Origin patterns that are allowed to execute actions.
  * @param opts.basename The basename to use when matching the request.
  * @param opts.createTemporaryReferenceSet A function that returns a temporary
  * reference set for the request, used to track temporary references in the [RSC](https://react.dev/reference/rsc/server-components)
@@ -354,6 +376,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * data for hydration.
  */
 export async function matchRSCServerRequest({
+  allowedActionOrigins,
   createTemporaryReferenceSet,
   basename,
   decodeReply,
@@ -366,6 +389,7 @@ export async function matchRSCServerRequest({
   routes,
   generateResponse,
 }: {
+  allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
   basename?: string;
   decodeReply?: DecodeReplyFunction;
@@ -379,16 +403,45 @@ export async function matchRSCServerRequest({
   generateResponse: (
     match: RSCMatch,
     {
+      onError,
       temporaryReferences,
     }: {
+      onError(error: unknown): string | undefined;
       temporaryReferences: unknown;
     },
   ) => Response;
 }): Promise<Response> {
-  let requestUrl = new URL(request.url);
+  let url = new URL(request.url);
+
+  basename = basename || "/";
+  let normalizedPath = url.pathname;
+  if (url.pathname.endsWith("/_.rsc")) {
+    normalizedPath = url.pathname.replace(/_\.rsc$/, "");
+  } else if (url.pathname.endsWith(".rsc")) {
+    normalizedPath = url.pathname.replace(/\.rsc$/, "");
+  }
+
+  if (
+    stripBasename(normalizedPath, basename) !== "/" &&
+    normalizedPath.endsWith("/")
+  ) {
+    normalizedPath = normalizedPath.slice(0, -1);
+  }
+  url.pathname = normalizedPath;
+  basename =
+    basename.length > normalizedPath.length ? normalizedPath : basename;
+
+  let routerRequest = new Request(url.toString(), {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    signal: request.signal,
+    duplex: request.body ? "half" : undefined,
+  } as RequestInit);
 
   const temporaryReferences = createTemporaryReferenceSet();
 
+  const requestUrl = new URL(request.url);
   if (isManifestRequest(requestUrl)) {
     let response = await generateManifestResponse(
       routes,
@@ -401,19 +454,6 @@ export async function matchRSCServerRequest({
   }
 
   let isDataRequest = isReactServerRequest(requestUrl);
-
-  const url = new URL(request.url);
-  let routerRequest = request;
-  if (isDataRequest) {
-    url.pathname = url.pathname.replace(/(_root)?\.rsc$/, "");
-    routerRequest = new Request(url.toString(), {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-      signal: request.signal,
-      duplex: request.body ? "half" : undefined,
-    } as RequestInit);
-  }
 
   // Explode lazy functions out the routes so we can use middleware
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
@@ -454,6 +494,7 @@ export async function matchRSCServerRequest({
     onError,
     generateResponse,
     temporaryReferences,
+    allowedActionOrigins,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -467,7 +508,10 @@ async function generateManifestResponse(
   request: Request,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
 ) {
@@ -518,7 +562,7 @@ async function generateManifestResponse(
       }),
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -672,6 +716,7 @@ async function generateResourceResponse(
           return generateErrorResponse(error);
         }
       },
+      unstable_normalizePath: (r) => getNormalizedPath(r, basename, null),
     });
     return response;
   } catch (error) {
@@ -722,19 +767,19 @@ async function generateRenderResponse(
   onError: ((error: unknown) => void) | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
+  allowedActionOrigins: string[] | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
   // will happen in the subsequent revalidation request
   let statusCode = 200;
   let url = new URL(request.url);
-  // TODO: Can this be done with a pathname extension instead of a header?
-  // If not, make sure we strip this at the SSR server and it can only be set
-  // by us to avoid cache-poisoning attempts
-
   let isSubmission = isMutationMethod(request.method);
   let routeIdsToLoad =
     !isSubmission && url.searchParams.has("_routes")
@@ -751,6 +796,7 @@ async function generateRenderResponse(
 
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {
+    request,
     runningAction: false,
   };
 
@@ -762,6 +808,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
+      unstable_normalizePath: (r) => getNormalizedPath(r, basename, null),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
@@ -769,53 +816,61 @@ async function generateRenderResponse(
         // POST `request` to `query` and process our action there.
         let formState: unknown;
         let skipRevalidation = false;
+        let potentialCSRFAttackError: unknown | undefined;
         if (request.method === "POST") {
-          ctx.runningAction = true;
-          let result = await processServerAction(
-            request,
-            basename,
-            decodeReply,
-            loadServerAction,
-            decodeAction,
-            decodeFormState,
-            onError,
-            temporaryReferences,
-          );
-          ctx.runningAction = false;
+          try {
+            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
 
-          if (isResponse(result)) {
-            return generateRedirectResponse(
-              result,
-              actionResult,
+            ctx.runningAction = true;
+            let result = await processServerAction(
+              request,
               basename,
-              isDataRequest,
-              generateResponse,
+              decodeReply,
+              loadServerAction,
+              decodeAction,
+              decodeFormState,
+              onError,
               temporaryReferences,
-              (ctx.redirect as unknown as Response)?.headers,
-            );
-          }
+            ).finally(() => {
+              ctx.runningAction = false;
+            });
 
-          skipRevalidation = result?.skipRevalidation ?? false;
-          actionResult = result?.actionResult;
-          formState = result?.formState;
-          request = result?.revalidationRequest ?? request;
+            if (isResponse(result)) {
+              return generateRedirectResponse(
+                result,
+                actionResult,
+                basename,
+                isDataRequest,
+                generateResponse,
+                temporaryReferences,
+                (ctx.redirect as unknown as Response)?.headers,
+              );
+            }
 
-          if (ctx.redirect) {
-            return generateRedirectResponse(
-              ctx.redirect,
-              actionResult,
-              basename,
-              isDataRequest,
-              generateResponse,
-              temporaryReferences,
-              undefined,
-            );
+            skipRevalidation = result?.skipRevalidation ?? false;
+            actionResult = result?.actionResult;
+            formState = result?.formState;
+            request = result?.revalidationRequest ?? request;
+
+            if (ctx.redirect) {
+              return generateRedirectResponse(
+                ctx.redirect,
+                actionResult,
+                basename,
+                isDataRequest,
+                generateResponse,
+                temporaryReferences,
+                undefined,
+              );
+            }
+          } catch (error) {
+            potentialCSRFAttackError = error;
           }
         }
 
         let staticContext = await query(
           request,
-          skipRevalidation
+          skipRevalidation || !!potentialCSRFAttackError
             ? {
                 filterMatchesToLoad: () => false,
               }
@@ -832,6 +887,13 @@ async function generateRenderResponse(
             temporaryReferences,
             ctx.redirect?.headers,
           );
+        }
+
+        if (potentialCSRFAttackError) {
+          staticContext.errors ??= {};
+          staticContext.errors[staticContext.matches[0].route.id] =
+            potentialCSRFAttackError;
+          staticContext.statusCode = 400;
         }
 
         return generateStaticContextResponse(
@@ -876,7 +938,10 @@ function generateRedirectResponse(
   isDataRequest: boolean,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   temporaryReferences: unknown,
   sideEffectRedirectHeaders: Headers | undefined,
@@ -919,7 +984,7 @@ function generateRedirectResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -928,7 +993,10 @@ async function generateStaticContextResponse(
   basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    options: {
+      onError(error: unknown): string | undefined;
+      temporaryReferences: unknown;
+    },
   ) => Response,
   statusCode: number,
   routeIdsToLoad: string[] | null,
@@ -988,7 +1056,7 @@ async function generateStaticContextResponse(
 
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
-    basename,
+    basename: staticContext.basename,
     actionData: staticContext.actionData,
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
@@ -1034,7 +1102,7 @@ async function generateStaticContextResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences, onError: defaultOnError },
   );
 }
 
@@ -1103,7 +1171,7 @@ async function getRSCRouteMatch({
   parentId,
 }: {
   staticContext: StaticHandlerContext;
-  match: AgnosticDataRouteMatch;
+  match: DataRouteMatch;
   isBelowErrorBoundary: boolean;
   routeIdsToLoad: string[] | null;
   parentId: string | undefined;
@@ -1333,6 +1401,15 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+function defaultOnError(error: unknown) {
+  if (isRedirectResponse(error)) {
+    return createRedirectErrorDigest(error);
+  }
+  if (isResponse(error) || isDataWithResponseInit(error)) {
+    return createRouteErrorResponseDigest(error);
+  }
 }
 
 function isClientReference(x: any) {

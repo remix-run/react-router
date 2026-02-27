@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createBrowserRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createBrowserRouter.html)
 
-Create a new [data router](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application
+Create a new [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) that manages the application
 path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
 and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
 
@@ -47,189 +47,32 @@ Basename path for the application.
 
 ### opts.dataStrategy
 
-Override the default data strategy of running loaders in parallel.
-See [`DataStrategyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.DataStrategyFunction.html).
-
-<docs-warning>This is a low-level API intended for advanced use-cases. This
-overrides React Router's internal handling of
-[`action`](../../start/data/route-object#action)/[`loader`](../../start/data/route-object#loader)
-execution, and if done incorrectly will break your app code. Please use
-with caution and perform the appropriate testing.</docs-warning>
-
-By default, React Router is opinionated about how your data is loaded/submitted -
-and most notably, executes all of your [`loader`](../../start/data/route-object#loader)s
-in parallel for optimal data fetching. While we think this is the right
-behavior for most use-cases, we realize that there is no "one size fits all"
-solution when it comes to data fetching for the wide landscape of
-application requirements.
-
-The `dataStrategy` option gives you full control over how your [`action`](../../start/data/route-object#action)s
-and [`loader`](../../start/data/route-object#loader)s are executed and lays
-the foundation to build in more advanced APIs such as middleware, context,
-and caching layers. Over time, we expect that we'll leverage this API
-internally to bring more first class APIs to React Router, but until then
-(and beyond), this is your way to add more advanced functionality for your
-application's data needs.
-
-The `dataStrategy` function should return a key/value-object of
-`routeId` -> [`DataStrategyResult`](https://api.reactrouter.com/v7/interfaces/react_router.DataStrategyResult.html) and should include entries for any
-routes where a handler was executed. A `DataStrategyResult` indicates if
-the handler was successful or not based on the `DataStrategyResult.type`
-field. If the returned `DataStrategyResult.result` is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
-React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
-or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
-If you need to do custom decoding of a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-but want to preserve the status code, you can use the `data` utility to
-return your decoded data along with a `ResponseInit`.
-
-<details>
-<summary><b>Example <code>dataStrategy</code> Use Cases</b></summary>
-
-**Adding logging**
-
-In the simplest case, let's look at hooking into this API to add some logging
-for when our route [`action`](../../start/data/route-object#action)s/[`loader`](../../start/data/route-object#loader)s
-execute:
+Override the default data strategy of running loaders in parallel -
+see the [docs](../../how-to/data-strategy) for more information.
 
 ```tsx
 let router = createBrowserRouter(routes, {
-  async dataStrategy({ matches, request }) {
-    const matchesToLoad = matches.filter((m) => m.shouldLoad);
+  async dataStrategy({
+    matches,
+    request,
+    runClientMiddleware,
+  }) {
+    const matchesToLoad = matches.filter((m) =>
+      m.shouldCallHandler(),
+    );
+
     const results: Record<string, DataStrategyResult> = {};
-    await Promise.all(
-      matchesToLoad.map(async (match) => {
-        console.log(`Processing ${match.route.id}`);
-        results[match.route.id] = await match.resolve();;
-      })
-    );
-    return results;
-  },
-});
-```
-
-**Middleware**
-
-Let's define a middleware on each route via [`handle`](../../start/data/route-object#handle)
-and call middleware sequentially first, then call all
-[`loader`](../../start/data/route-object#loader)s in parallel - providing
-any data made available via the middleware:
-
-```ts
-const routes = [
-  {
-    id: "parent",
-    path: "/parent",
-    loader({ request }, context) {
-       // ...
-    },
-    handle: {
-      async middleware({ request }, context) {
-        context.parent = "PARENT MIDDLEWARE";
-      },
-    },
-    children: [
-      {
-        id: "child",
-        path: "child",
-        loader({ request }, context) {
-          // ...
-        },
-        handle: {
-          async middleware({ request }, context) {
-            context.child = "CHILD MIDDLEWARE";
-          },
-        },
-      },
-    ],
-  },
-];
-
-let router = createBrowserRouter(routes, {
-  async dataStrategy({ matches, params, request }) {
-    // Run middleware sequentially and let them add data to `context`
-    let context = {};
-    for (const match of matches) {
-      if (match.route.handle?.middleware) {
-        await match.route.handle.middleware(
-          { request, params },
-          context
-        );
-      }
-    }
-
-    // Run loaders in parallel with the `context` value
-    let matchesToLoad = matches.filter((m) => m.shouldLoad);
-    let results = await Promise.all(
-      matchesToLoad.map((match, i) =>
-        match.resolve((handler) => {
-          // Whatever you pass to `handler` will be passed as the 2nd parameter
-          // to your loader/action
-          return handler(context);
-        })
-      )
-    );
-    return results.reduce(
-      (acc, result, i) =>
-        Object.assign(acc, {
-          [matchesToLoad[i].route.id]: result,
+    await runClientMiddleware(() =>
+      Promise.all(
+        matchesToLoad.map(async (match) => {
+          results[match.route.id] = await match.resolve();
         }),
-      {}
+      ),
     );
-  },
-});
-```
-
-**Custom Handler**
-
-It's also possible you don't even want to define a [`loader`](../../start/data/route-object#loader)
-implementation at the route level. Maybe you want to just determine the
-routes and issue a single GraphQL request for all of your data? You can do
-that by setting your `route.loader=true` so it qualifies as "having a
-loader", and then store GQL fragments on `route.handle`:
-
-```ts
-const routes = [
-  {
-    id: "parent",
-    path: "/parent",
-    loader: true,
-    handle: {
-      gql: gql`
-        fragment Parent on Whatever {
-          parentField
-        }
-      `,
-    },
-    children: [
-      {
-        id: "child",
-        path: "child",
-        loader: true,
-        handle: {
-          gql: gql`
-            fragment Child on Whatever {
-              childField
-            }
-          `,
-        },
-      },
-    ],
-  },
-];
-
-let router = createBrowserRouter(routes, {
-  async dataStrategy({ matches, params, request }) {
-    // Compose route fragments into a single GQL payload
-    let gql = getFragmentsFromRouteHandles(matches);
-    let data = await fetchGql(gql);
-    // Parse results back out into individual route level `DataStrategyResult`'s
-    // keyed by `routeId`
-    let results = parseResultsFromGql(data);
     return results;
   },
 });
 ```
-</details>
 
 ### opts.future
 
@@ -265,7 +108,7 @@ function createBrowserRouter(routes, {
 When Server-Rendering and opting-out of automatic hydration, the
 `hydrationData` option allows you to pass in hydration data from your
 server-render. This will almost always be a subset of data from the
-[`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandler.html)'s
+[`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandler.html)'s
 `query` method:
 
 ```tsx
@@ -336,7 +179,7 @@ individual routes prior to router initialization (and on any subsequently
 added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
 mostly useful for observability such as wrapping navigations, fetches,
 as well as route loaders/actions/middlewares with logging and/or performance
-tracing.
+tracing.  See the [docs](../../how-to/instrumentation) for more information.
 
 ```tsx
 let router = createBrowserRouter(routes, {
@@ -381,7 +224,7 @@ async function logExecution(label: string, impl: () => Promise<void>) {
 ### opts.patchRoutesOnNavigation
 
 Lazily define portions of the route tree on navigations.
-See [`PatchRoutesOnNavigationFunction`](https://api.reactrouter.com/v7/types/react_router.PatchRoutesOnNavigationFunction.html).
+See [`PatchRoutesOnNavigationFunction`](https://api.reactrouter.com/v7/types/react-router.PatchRoutesOnNavigationFunction.html).
 
 By default, React Router wants you to provide a full route tree up front via
 `createBrowserRouter(routes)`. This allows React Router to perform synchronous
@@ -683,5 +526,5 @@ override. Defaults to the global `window` instance.
 
 ## Returns
 
-An initialized [data router](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

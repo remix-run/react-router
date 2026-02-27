@@ -30,12 +30,16 @@ import type {
   DataStrategyFunction,
   FormEncType,
   HTMLFormMethod,
+  PatchRoutesOnNavigationFunction,
+  RouteObject,
   UIMatch,
 } from "../router/utils";
 import {
   ErrorResponseImpl,
   joinPaths,
   matchPath,
+  parseToInfo,
+  resolveTo,
   stripBasename,
 } from "../router/utils";
 
@@ -71,11 +75,7 @@ import {
   mapRouteProperties,
   hydrationRouteProperties,
 } from "../components";
-import type {
-  RouteObject,
-  NavigateOptions,
-  PatchRoutesOnNavigationFunction,
-} from "../context";
+import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -96,6 +96,7 @@ import {
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
 import type { unstable_ClientInstrumentation } from "../router/instrumentation";
+import { escapeHtml } from "./ssr/markup";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -242,7 +243,7 @@ export interface DOMRouterOpts {
    * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
    * mostly useful for observability such as wrapping navigations, fetches,
    * as well as route loaders/actions/middlewares with logging and/or performance
-   * tracing.
+   * tracing.  See the [docs](../../how-to/instrumentation) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
@@ -286,189 +287,32 @@ export interface DOMRouterOpts {
    */
   unstable_instrumentations?: unstable_ClientInstrumentation[];
   /**
-   * Override the default data strategy of running loaders in parallel.
-   * See {@link DataStrategyFunction}.
-   *
-   * <docs-warning>This is a low-level API intended for advanced use-cases. This
-   * overrides React Router's internal handling of
-   * [`action`](../../start/data/route-object#action)/[`loader`](../../start/data/route-object#loader)
-   * execution, and if done incorrectly will break your app code. Please use
-   * with caution and perform the appropriate testing.</docs-warning>
-   *
-   * By default, React Router is opinionated about how your data is loaded/submitted -
-   * and most notably, executes all of your [`loader`](../../start/data/route-object#loader)s
-   * in parallel for optimal data fetching. While we think this is the right
-   * behavior for most use-cases, we realize that there is no "one size fits all"
-   * solution when it comes to data fetching for the wide landscape of
-   * application requirements.
-   *
-   * The `dataStrategy` option gives you full control over how your [`action`](../../start/data/route-object#action)s
-   * and [`loader`](../../start/data/route-object#loader)s are executed and lays
-   * the foundation to build in more advanced APIs such as middleware, context,
-   * and caching layers. Over time, we expect that we'll leverage this API
-   * internally to bring more first class APIs to React Router, but until then
-   * (and beyond), this is your way to add more advanced functionality for your
-   * application's data needs.
-   *
-   * The `dataStrategy` function should return a key/value-object of
-   * `routeId` -> {@link DataStrategyResult} and should include entries for any
-   * routes where a handler was executed. A `DataStrategyResult` indicates if
-   * the handler was successful or not based on the `DataStrategyResult.type`
-   * field. If the returned `DataStrategyResult.result` is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
-   * React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
-   * or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
-   * If you need to do custom decoding of a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-   * but want to preserve the status code, you can use the `data` utility to
-   * return your decoded data along with a `ResponseInit`.
-   *
-   * <details>
-   * <summary><b>Example <code>dataStrategy</code> Use Cases</b></summary>
-   *
-   * **Adding logging**
-   *
-   * In the simplest case, let's look at hooking into this API to add some logging
-   * for when our route [`action`](../../start/data/route-object#action)s/[`loader`](../../start/data/route-object#loader)s
-   * execute:
+   * Override the default data strategy of running loaders in parallel -
+   * see the [docs](../../how-to/data-strategy) for more information.
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, request }) {
-   *     const matchesToLoad = matches.filter((m) => m.shouldLoad);
+   *   async dataStrategy({
+   *     matches,
+   *     request,
+   *     runClientMiddleware,
+   *   }) {
+   *     const matchesToLoad = matches.filter((m) =>
+   *       m.shouldCallHandler(),
+   *     );
+   *
    *     const results: Record<string, DataStrategyResult> = {};
-   *     await Promise.all(
-   *       matchesToLoad.map(async (match) => {
-   *         console.log(`Processing ${match.route.id}`);
-   *         results[match.route.id] = await match.resolve();;
-   *       })
-   *     );
-   *     return results;
-   *   },
-   * });
-   * ```
-   *
-   * **Middleware**
-   *
-   * Let's define a middleware on each route via [`handle`](../../start/data/route-object#handle)
-   * and call middleware sequentially first, then call all
-   * [`loader`](../../start/data/route-object#loader)s in parallel - providing
-   * any data made available via the middleware:
-   *
-   * ```ts
-   * const routes = [
-   *   {
-   *     id: "parent",
-   *     path: "/parent",
-   *     loader({ request }, context) {
-   *        // ...
-   *     },
-   *     handle: {
-   *       async middleware({ request }, context) {
-   *         context.parent = "PARENT MIDDLEWARE";
-   *       },
-   *     },
-   *     children: [
-   *       {
-   *         id: "child",
-   *         path: "child",
-   *         loader({ request }, context) {
-   *           // ...
-   *         },
-   *         handle: {
-   *           async middleware({ request }, context) {
-   *             context.child = "CHILD MIDDLEWARE";
-   *           },
-   *         },
-   *       },
-   *     ],
-   *   },
-   * ];
-   *
-   * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, params, request }) {
-   *     // Run middleware sequentially and let them add data to `context`
-   *     let context = {};
-   *     for (const match of matches) {
-   *       if (match.route.handle?.middleware) {
-   *         await match.route.handle.middleware(
-   *           { request, params },
-   *           context
-   *         );
-   *       }
-   *     }
-   *
-   *     // Run loaders in parallel with the `context` value
-   *     let matchesToLoad = matches.filter((m) => m.shouldLoad);
-   *     let results = await Promise.all(
-   *       matchesToLoad.map((match, i) =>
-   *         match.resolve((handler) => {
-   *           // Whatever you pass to `handler` will be passed as the 2nd parameter
-   *           // to your loader/action
-   *           return handler(context);
-   *         })
-   *       )
-   *     );
-   *     return results.reduce(
-   *       (acc, result, i) =>
-   *         Object.assign(acc, {
-   *           [matchesToLoad[i].route.id]: result,
+   *     await runClientMiddleware(() =>
+   *       Promise.all(
+   *         matchesToLoad.map(async (match) => {
+   *           results[match.route.id] = await match.resolve();
    *         }),
-   *       {}
+   *       ),
    *     );
-   *   },
-   * });
-   * ```
-   *
-   * **Custom Handler**
-   *
-   * It's also possible you don't even want to define a [`loader`](../../start/data/route-object#loader)
-   * implementation at the route level. Maybe you want to just determine the
-   * routes and issue a single GraphQL request for all of your data? You can do
-   * that by setting your `route.loader=true` so it qualifies as "having a
-   * loader", and then store GQL fragments on `route.handle`:
-   *
-   * ```ts
-   * const routes = [
-   *   {
-   *     id: "parent",
-   *     path: "/parent",
-   *     loader: true,
-   *     handle: {
-   *       gql: gql`
-   *         fragment Parent on Whatever {
-   *           parentField
-   *         }
-   *       `,
-   *     },
-   *     children: [
-   *       {
-   *         id: "child",
-   *         path: "child",
-   *         loader: true,
-   *         handle: {
-   *           gql: gql`
-   *             fragment Child on Whatever {
-   *               childField
-   *             }
-   *           `,
-   *         },
-   *       },
-   *     ],
-   *   },
-   * ];
-   *
-   * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ matches, params, request }) {
-   *     // Compose route fragments into a single GQL payload
-   *     let gql = getFragmentsFromRouteHandles(matches);
-   *     let data = await fetchGql(gql);
-   *     // Parse results back out into individual route level `DataStrategyResult`'s
-   *     // keyed by `routeId`
-   *     let results = parseResultsFromGql(data);
    *     return results;
    *   },
    * });
    * ```
-   *</details>
    */
   dataStrategy?: DataStrategyFunction;
   /**
@@ -1005,7 +849,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1096,7 +940,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1183,7 +1027,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions === true}
+      unstable_useTransitions={unstable_useTransitions}
     />
   );
 }
@@ -1195,16 +1039,16 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /**
-   * Defines the link discovery behavior
+   * Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+   *
+   * - **render** — default, discover the route when the link renders
+   * - **none** — don't eagerly discover, only discover if the link is clicked
    *
    * ```tsx
    * <Link /> // default ("render")
    * <Link discover="render" />
    * <Link discover="none" />
    * ```
-   *
-   * - **render** — default, discover the route when the link renders
-   * - **none** — don't eagerly discover, only discover if the link is clicked
    */
   discover?: DiscoverBehavior;
 
@@ -1357,6 +1201,72 @@ export interface LinkProps
    * To apply specific styles for the transition, see {@link useViewTransitionState}
    */
   viewTransition?: boolean;
+
+  /**
+   * Specify the default revalidation behavior for the navigation.
+   *
+   * ```tsx
+   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+   * ```
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
+
+  /**
+   * Masked path for for this navigation, when you want to navigate the router to
+   * one location but display a separate location in the URL bar.
+   *
+   * This is useful for contextual navigations such as opening an image in a modal
+   * on top of a gallery while keeping the underlying gallery active. If a user
+   * shares the masked URL, or opens the link in a new tab, they will only load
+   * the masked location without the underlying contextual location.
+   *
+   * This feature relies on `history.state` and is thus only intended for SPA uses
+   * and SSR renders will not respect the masking.
+   *
+   * ```tsx
+   * // routes/gallery.tsx
+   * export function clientLoader({ request }: Route.LoaderArgs) {
+   *   let sp = new URL(request.url).searchParams;
+   *   return {
+   *     images: getImages(),
+   *     modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+   *   };
+   * }
+   *
+   * export default function Gallery({ loaderData }: Route.ComponentProps) {
+   *   return (
+   *     <>
+   *       <GalleryGrid>
+   *        {loaderData.images.map((image) => (
+   *          <Link
+   *            key={image.id}
+   *            to={`/gallery?image=${image.id}`}
+   *            unstable_mask={`/images/${image.id}`}
+   *          >
+   *            <img src={image.url} alt={image.alt} />
+   *          </Link>
+   *        ))}
+   *       </GalleryGrid>
+   *
+   *       {data.modalImage ? (
+   *         <dialog open>
+   *           <img src={data.modalImage.url} alt={data.modalImage.alt} />
+   *         </dialog>
+   *       ) : null}
+   *     </>
+   *   );
+   * }
+   * ```
+   */
+  unstable_mask?: To;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1389,6 +1299,8 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
+ * @param {LinkProps.unstable_defaultShouldRevalidate} props.unstable_defaultShouldRevalidate n/a
+ * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1399,55 +1311,54 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       relative,
       reloadDocument,
       replace,
+      unstable_mask,
       state,
       target,
       to,
       preventScrollReset,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       ...rest
     },
     forwardedRef,
   ) {
-    let { basename, unstable_useTransitions } =
+    let { basename, navigator, unstable_useTransitions } =
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
-    // Rendered into <a href> for absolute URLs
-    let absoluteHref;
-    let isExternal = false;
-
-    if (typeof to === "string" && isAbsolute) {
-      // Render the absolute href server- and client-side
-      absoluteHref = to;
-
-      // Only check for external origins client-side
-      if (isBrowser) {
-        try {
-          let currentUrl = new URL(window.location.href);
-          let targetUrl = to.startsWith("//")
-            ? new URL(currentUrl.protocol + to)
-            : new URL(to);
-          let path = stripBasename(targetUrl.pathname, basename);
-
-          if (targetUrl.origin === currentUrl.origin && path != null) {
-            // Strip the protocol/origin/basename for same-origin absolute URLs
-            to = path + targetUrl.search + targetUrl.hash;
-          } else {
-            isExternal = true;
-          }
-        } catch (e) {
-          // We can't do external URL detection without a valid URL
-          warning(
-            false,
-            `<Link to="${to}"> contains an invalid URL which will probably break ` +
-              `when clicked - please update to a valid URL path.`,
-          );
-        }
-      }
-    }
+    let parsed = parseToInfo(to, basename);
+    to = parsed.to;
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
+    let location = useLocation();
+
+    let maskedHref: string | null = null;
+
+    if (unstable_mask) {
+      // Inlined version of the `useHref` logic operating off the masked location
+      // instead of the current location
+      let resolved = resolveTo(
+        unstable_mask,
+        [],
+        location.unstable_mask ? location.unstable_mask.pathname : "/",
+        true,
+      );
+
+      // If we're operating within a basename, prepend it to the pathname prior
+      // to creating the href.  If this is a root navigation, then just use the raw
+      // basename which allows the basename to have full control over the presence
+      // of a trailing slash on root links
+      if (basename !== "/") {
+        resolved.pathname =
+          resolved.pathname === "/"
+            ? basename
+            : joinPaths([basename, resolved.pathname]);
+      }
+
+      maskedHref = navigator.createHref(resolved);
+    }
+
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,
       rest,
@@ -1455,11 +1366,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
+      unstable_mask,
       state,
       target,
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       unstable_useTransitions,
     });
     function handleClick(
@@ -1471,13 +1384,16 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
+    let isSpaLink = !(parsed.isExternal || reloadDocument);
     let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
         {...prefetchHandlers}
-        href={absoluteHref || href}
-        onClick={isExternal || reloadDocument ? onClick : handleClick}
+        href={
+          (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
+        }
+        onClick={isSpaLink ? handleClick : onClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
         data-discover={
@@ -1860,6 +1776,19 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+
+  /**
+   * Specify the default revalidation behavior after this submission
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  unstable_defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -1874,16 +1803,16 @@ export interface FetcherFormProps extends SharedFormProps {}
  */
 export interface FormProps extends SharedFormProps {
   /**
-   * Defines the link discovery behavior. See {@link DiscoverBehavior}.
+   * Defines the form [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+   *
+   * - **render** — default, discover the route when the form renders
+   * - **none** — don't eagerly discover, only discover if the form is submitted
    *
    * ```tsx
-   * <Link /> // default ("render")
-   * <Link discover="render" />
-   * <Link discover="none" />
+   * <Form /> // default ("render")
+   * <Form discover="render" />
+   * <Form discover="none" />
    * ```
-   *
-   * - **render** — default, discover the route when the link renders
-   * - **none** — don't eagerly discover, only discover if the link is clicked
    */
   discover?: DiscoverBehavior;
 
@@ -1983,6 +1912,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.replace} replace n/a
  * @param {FormProps.state} state n/a
  * @param {FormProps.viewTransition} viewTransition n/a
+ * @param {FormProps.unstable_defaultShouldRevalidate} unstable_defaultShouldRevalidate n/a
  * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
@@ -2000,6 +1930,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       relative,
       preventScrollReset,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       ...props
     },
     forwardedRef,
@@ -2034,6 +1965,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
           relative,
           preventScrollReset,
           viewTransition,
+          unstable_defaultShouldRevalidate,
         });
 
       if (unstable_useTransitions && navigate !== false) {
@@ -2184,9 +2116,9 @@ export function ScrollRestoration({
       {...props}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{
-        __html: `(${restoreScroll})(${JSON.stringify(
-          storageKey || SCROLL_RESTORATION_STORAGE_KEY,
-        )}, ${JSON.stringify(ssrKey)})`,
+        __html: `(${restoreScroll})(${escapeHtml(
+          JSON.stringify(storageKey || SCROLL_RESTORATION_STORAGE_KEY),
+        )}, ${escapeHtml(JSON.stringify(ssrKey))})`,
       }}
     />
   );
@@ -2256,6 +2188,10 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.unstable_defaultShouldRevalidate Specify the default revalidation
+ * behavior for the navigation. Defaults to `true`.
+ * @param options.unstable_mask Masked location to display in the browser instead
+ * of the router location. Defaults to `undefined`.
  * @param options.unstable_useTransitions Wraps the navigation in
  * [`React.startTransition`](https://react.dev/reference/react/startTransition)
  * for concurrent rendering. Defaults to `false`.
@@ -2266,18 +2202,22 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
+    unstable_mask,
     state,
     preventScrollReset,
     relative,
     viewTransition,
+    unstable_defaultShouldRevalidate,
     unstable_useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
+    unstable_mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
+    unstable_defaultShouldRevalidate?: boolean;
     unstable_useTransitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
@@ -2300,10 +2240,12 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
+            unstable_mask,
             state,
             preventScrollReset,
             relative,
             viewTransition,
+            unstable_defaultShouldRevalidate,
           });
 
         if (unstable_useTransitions) {
@@ -2319,12 +2261,14 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
+      unstable_mask,
       state,
       target,
       to,
       preventScrollReset,
       relative,
       viewTransition,
+      unstable_defaultShouldRevalidate,
       unstable_useTransitions,
     ],
   );
@@ -2647,6 +2591,8 @@ export function useSubmit(): SubmitFunction {
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
         await routerFetch(key, currentRouteId, options.action || action, {
+          unstable_defaultShouldRevalidate:
+            options.unstable_defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2656,6 +2602,8 @@ export function useSubmit(): SubmitFunction {
         });
       } else {
         await routerNavigate(options.action || action, {
+          unstable_defaultShouldRevalidate:
+            options.unstable_defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,

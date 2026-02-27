@@ -13,7 +13,7 @@ order: 3
 This file is optional
 </docs-info>
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html)
 
 React Router framework configuration file that lets you customize aspects of your React Router application like server-side rendering, directory locations, and build settings.
 
@@ -29,6 +29,45 @@ export default {
 ```
 
 ## Options
+
+### `allowedActionOrigins`
+
+An array of allowed origin hosts for action submissions to UI routes (does not apply to resource routes). Supports micromatch glob patterns (`*` to match one segment, `**` to match multiple).
+
+```tsx filename=react-router.config.ts
+export default {
+  allowedActionOrigins: [
+    "example.com",
+    "*.example.com", // sub.example.com
+    "**.example.com", // sub.domain.example.com
+  ],
+} satisfies Config;
+```
+
+If you need to set this value at runtime, you can do in by setting the value on the server build in your custom server. For example, when using `express`:
+
+```ts
+import express from "express";
+import { createRequestHandler } from "@react-router/express";
+import type { ServerBuild } from "react-router";
+
+export const app = express();
+
+async function getBuild() {
+  let build: ServerBuild = await import(
+    "virtual:react-router/server-build"
+  );
+  return {
+    ...build,
+    allowedActionOrigins:
+      process.env.NODE_ENV === "development"
+        ? undefined
+        : ["staging.example.com", "www.example.com"],
+  };
+}
+
+app.use(createRequestHandler({ build: getBuild }));
+```
 
 ### `appDirectory`
 
@@ -66,7 +105,11 @@ A function that is called after the full React Router build is complete.
 
 ```tsx filename=react-router.config.ts
 export default {
-  buildEnd: async ({ buildManifest, reactRouterConfig, viteConfig }) => {
+  buildEnd: async ({
+    buildManifest,
+    reactRouterConfig,
+    viteConfig,
+  }) => {
     // Custom build logic here
     console.log("Build completed!");
   },

@@ -1,6 +1,6 @@
 {
   "name": "@react-router/express",
-  "version": "7.9.6",
+  "version": "7.13.1",
   "description": "Express server request handler for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -39,6 +39,7 @@
     "build": {
       "command": "tsup",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "tsconfig.json",
         "package.json"
@@ -58,9 +59,9 @@
     "express": "^4.19.2",
     "node-mocks-http": "^1.10.1",
     "supertest": "^6.3.3",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "express": "^4.17.1 || ^5",

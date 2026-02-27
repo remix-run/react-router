@@ -20,15 +20,15 @@ let stop: () => void;
 const js = String.raw;
 
 test.describe("Build", () => {
-  [false, true].forEach((viteEnvironmentApi) => {
+  [false, true].forEach((v8_viteEnvironmentApi) => {
     viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
       // Vite 5 doesn't support the Environment API
-      if (templateName === "vite-5-template" && viteEnvironmentApi) {
+      if (templateName === "vite-5-template" && v8_viteEnvironmentApi) {
         return;
       }
 
       test.describe(`${templateDisplayName}${
-        viteEnvironmentApi ? " with Vite Environment API" : ""
+        v8_viteEnvironmentApi ? " with Vite Environment API" : ""
       }`, () => {
         test.beforeAll(async () => {
           port = await getPort();
@@ -38,7 +38,7 @@ test.describe("Build", () => {
                 ENV_VAR_FROM_DOTENV_FILE=true
               `,
               "react-router.config.ts": reactRouterConfig({
-                viteEnvironmentApi,
+                future: { v8_viteEnvironmentApi },
               }),
               "vite.config.ts": js`
                 import { defineConfig } from "vite";

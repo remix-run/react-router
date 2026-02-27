@@ -1,5 +1,250 @@
 # `react-router`
 
+## 7.13.1
+
+### Patch Changes
+
+- fix null reference exception in bad codepath leading to invalid route tree comparisons ([#14780](https://github.com/remix-run/react-router/pull/14780))
+
+- fix: clear timeout when turbo-stream encoding completes ([#14810](https://github.com/remix-run/react-router/pull/14810))
+
+- Improve error message when Origin header is invalid ([#14743](https://github.com/remix-run/react-router/pull/14743))
+
+- Fix matchPath optional params matching without a "/" separator. ([#14689](https://github.com/remix-run/react-router/pull/14689))
+  - matchPath("/users/:id?", "/usersblah") now returns null.
+  - matchPath("/test_route/:part?", "/test_route_more") now returns null.
+
+- add RSC unstable_getRequest ([#14758](https://github.com/remix-run/react-router/pull/14758))
+
+- Fix `HydrateFallback` rendering during initial lazy route discovery with matching splat route ([#14740](https://github.com/remix-run/react-router/pull/14740))
+
+- \[UNSTABLE] Add support for `<Link unstable_mask>` in Data Mode which allows users to navigate to a URL in the router but "mask" the URL displayed in the browser. This is useful for contextual routing usages such as displaying an image in a model on top of a gallery, but displaying a browser URL directly to the image that can be shared and loaded without the contextual gallery in the background. ([#14716](https://github.com/remix-run/react-router/pull/14716))
+
+  ```tsx
+  // routes/gallery.tsx
+  export function clientLoader({ request }: Route.LoaderArgs) {
+    let sp = new URL(request.url).searchParams;
+    return {
+      images: getImages(),
+      // When the router location has the image param, load the modal data
+      modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+    };
+  }
+
+  export default function Gallery({ loaderData }: Route.ComponentProps) {
+    return (
+      <>
+        <GalleryGrid>
+          {loaderData.images.map((image) => (
+            <Link
+              key={image.id}
+              {/* Navigate the router to /galley?image=N */}}
+              to={`/gallery?image=${image.id}`}
+              {/* But display /images/N in the URL bar */}}
+              unstable_mask={`/images/${image.id}`}
+            >
+              <img src={image.url} alt={image.alt} />
+            </Link>
+          ))}
+        </GalleryGrid>
+
+        {/* When the modal data exists, display the modal */}
+        {data.modalImage ? (
+          <dialog open>
+            <img src={data.modalImage.url} alt={data.modalImage.alt} />
+          </dialog>
+        ) : null}
+      </>
+    );
+  }
+  ```
+
+  Notes:
+  - The masked location, if present, will be available on `useLocation().unstable_mask` so you can detect whether you are currently masked or not.
+  - Masked URLs only work for SPA use cases, and will be removed from `history.state` during SSR.
+  - This provides a first-class API to mask URLs in Data Mode to achieve the same behavior you could do in Declarative Mode via [manual `backgroundLocation` management](https://github.com/remix-run/react-router/tree/main/examples/modal).
+
+- RSC: Update failed origin checks to return a 400 status and appropriate UI instead of a generic 500 ([#14755](https://github.com/remix-run/react-router/pull/14755))
+
+- Preserve query parameters and hash on manifest version mismatch reload ([#14813](https://github.com/remix-run/react-router/pull/14813))
+
+## 7.13.0
+
+### Minor Changes
+
+- Add `crossOrigin` prop to `Links` component ([#14687](https://github.com/remix-run/react-router/pull/14687))
+
+### Patch Changes
+
+- Fix double slash normalization for useNavigate colon urls ([#14718](https://github.com/remix-run/react-router/pull/14718))
+- Update failed origin checks to return a 400 status instead of a 500 ([#14737](https://github.com/remix-run/react-router/pull/14737))
+- Bugfix #14666: Inline criticalCss is missing nonce ([#14691](https://github.com/remix-run/react-router/pull/14691))
+- Loosen `allowedActionOrigins` glob check so `**` matches all domains ([#14722](https://github.com/remix-run/react-router/pull/14722))
+
+## 7.12.0
+
+### Minor Changes
+
+- Add additional layer of CSRF protection by rejecting submissions to UI routes from external origins. If you need to permit access to specific external origins, you can specify them in the `react-router.config.ts` config `allowedActionOrigins` field. ([#14708](https://github.com/remix-run/react-router/pull/14708))
+
+### Patch Changes
+
+- Fix `generatePath` when used with suffixed params (i.e., "/books/:id.json") ([#14269](https://github.com/remix-run/react-router/pull/14269))
+
+- Export `UNSAFE_createMemoryHistory` and `UNSAFE_createHashHistory` alongside `UNSAFE_createBrowserHistory` for consistency. These are not intended to be used for new apps but intended to help apps usiong `unstable_HistoryRouter` migrate from v6->v7 so they can adopt the newer APIs. ([#14663](https://github.com/remix-run/react-router/pull/14663))
+
+- Escape HTML in scroll restoration keys ([#14705](https://github.com/remix-run/react-router/pull/14705))
+
+- Validate redirect locations ([#14706](https://github.com/remix-run/react-router/pull/14706))
+
+- \[UNSTABLE] Pass `<Scripts nonce>` value through to the underlying `importmap` `script` tag when using `future.unstable_subResourceIntegrity` ([#14675](https://github.com/remix-run/react-router/pull/14675))
+
+- \[UNSTABLE] Add a new `future.unstable_trailingSlashAwareDataRequests` flag to provide consistent behavior of `request.pathname` inside `middleware`, `loader`, and `action` functions on document and data requests when a trailing slash is present in the browser URL. ([#14644](https://github.com/remix-run/react-router/pull/14644))
+
+  Currently, your HTTP and `request` pathnames would be as follows for `/a/b/c` and `/a/b/c/`
+
+  | URL `/a/b/c` | **HTTP pathname** | **`request` pathname\`** |
+  | ------------ | ----------------- | ------------------------ |
+  | **Document** | `/a/b/c`          | `/a/b/c` ✅              |
+  | **Data**     | `/a/b/c.data`     | `/a/b/c` ✅              |
+
+  | URL `/a/b/c/` | **HTTP pathname** | **`request` pathname\`** |
+  | ------------- | ----------------- | ------------------------ |
+  | **Document**  | `/a/b/c/`         | `/a/b/c/` ✅             |
+  | **Data**      | `/a/b/c.data`     | `/a/b/c` ⚠️              |
+
+  With this flag enabled, these pathnames will be made consistent though a new `_.data` format for client-side `.data` requests:
+
+  | URL `/a/b/c` | **HTTP pathname** | **`request` pathname\`** |
+  | ------------ | ----------------- | ------------------------ |
+  | **Document** | `/a/b/c`          | `/a/b/c` ✅              |
+  | **Data**     | `/a/b/c.data`     | `/a/b/c` ✅              |
+
+  | URL `/a/b/c/` | **HTTP pathname**  | **`request` pathname\`** |
+  | ------------- | ------------------ | ------------------------ |
+  | **Document**  | `/a/b/c/`          | `/a/b/c/` ✅             |
+  | **Data**      | `/a/b/c/_.data` ⬅️ | `/a/b/c/` ✅             |
+
+  This a bug fix but we are putting it behind an opt-in flag because it has the potential to be a "breaking bug fix" if you are relying on the URL format for any other application or caching logic.
+
+  Enabling this flag also changes the format of client side `.data` requests from `/_root.data` to `/_.data` when navigating to `/` to align with the new format. This does not impact the `request` pathname which is still `/` in all cases.
+
+- Preserve `clientLoader.hydrate=true` when using `<HydratedRouter unstable_instrumentations>` ([#14674](https://github.com/remix-run/react-router/pull/14674))
+
+## 7.11.0
+
+### Minor Changes
+
+- Stabilize `<HydratedRouter onError>`/`<RouterProvider onError>` ([#14546](https://github.com/remix-run/react-router/pull/14546))
+
+### Patch Changes
+
+- add support for throwing redirect Response's at RSC render time ([#14596](https://github.com/remix-run/react-router/pull/14596))
+
+- Support for throwing `data()` and Response from server component render phase. Response body is not serialized as async work is not allowed as error encoding phase. If you wish to transmit data to the boundary, throw `data()` instead. ([#14632](https://github.com/remix-run/react-router/pull/14632))
+
+- Fix `unstable_useTransitions` prop on `<Router>` component to permit omission for backewards compatibility ([#14646](https://github.com/remix-run/react-router/pull/14646))
+
+- `routeRSCServerRequest` replace `fetchServer` with `serverResponse` ([#14597](https://github.com/remix-run/react-router/pull/14597))
+
+- \[UNSTABLE] Add a new `unstable_defaultShouldRevalidate` flag to various APIs to allow opt-ing out of standard revalidation behaviors. ([#14542](https://github.com/remix-run/react-router/pull/14542))
+
+  If active routes include a `shouldRevalidate` function, then your value will be passed as `defaultShouldRevalidate` in those function so that the route always has the final revalidation determination.
+  - `<Form method="post" unstable_defaultShouldRevalidate={false}>`
+  - `submit(data, { method: "post", unstable_defaultShouldRevalidate: false })`
+  - `<fetcher.Form method="post" unstable_defaultShouldRevalidate={false}>`
+  - `fetcher.submit(data, { method: "post", unstable_defaultShouldRevalidate: false })`
+
+  This is also available on non-submission APIs that may trigger revalidations due to changing search params:
+  - `<Link to="/" unstable_defaultShouldRevalidate={false}>`
+  - `navigate("/?foo=bar", { unstable_defaultShouldRevalidate: false })`
+  - `setSearchParams(params, { unstable_defaultShouldRevalidate: false })`
+
+- Allow redirects to be returned from client side middleware ([#14598](https://github.com/remix-run/react-router/pull/14598))
+
+- Handle `dataStrategy` implementations that return insufficient result sets by adding errors for routes without any available result ([#14627](https://github.com/remix-run/react-router/pull/14627))
+
+## 7.10.1
+
+### Patch Changes
+
+- Update the `useOptimistic` stub we provide for React 18 users to use a stable setter function to avoid potential `useEffect` loops - specifically when using `<Link viewTransition>` ([#14628](https://github.com/remix-run/react-router/pull/14628))
+
+## 7.10.0
+
+### Minor Changes
+
+- Stabilize `fetcher.reset()` ([#14545](https://github.com/remix-run/react-router/pull/14545))
+  - ⚠️ This is a breaking change if you have begun using `fetcher.unstable_reset()`
+
+- Stabilize the `dataStrategy` `match.shouldRevalidateArgs`/`match.shouldCallHandler()` APIs. ([#14592](https://github.com/remix-run/react-router/pull/14592))
+  - The `match.shouldLoad` API is now marked deprecated in favor of these more powerful alternatives
+
+  - If you're using this API in a custom `dataStrategy` today, you can swap to the new API at your convenience:
+
+    ```tsx
+    // Before
+    const matchesToLoad = matches.filter((m) => m.shouldLoad);
+
+    // After
+    const matchesToLoad = matches.filter((m) => m.shouldCallHandler());
+    ```
+
+  - `match.shouldRevalidateArgs` is the argument that will be passed to the route `shouldRevaliate` function
+
+  - Combined with the parameter accepted by `match.shouldCallHandler`, you can define a custom revalidation behavior for your `dataStrategy`:
+
+  ```tsx
+  const matchesToLoad = matches.filter((m) => {
+    const defaultShouldRevalidate = customRevalidationBehavior(
+      match.shouldRevalidateArgs,
+    );
+    return m.shouldCallHandler(defaultShouldRevalidate);
+    // The argument here will override the internal `defaultShouldRevalidate` value
+  });
+  ```
+
+### Patch Changes
+
+- Fix a Framework Mode bug where the `defaultShouldRevalidate` parameter to `shouldRevalidate` would not be correct after `action` returned a 4xx/5xx response (`true` when it should have been `false`) ([#14592](https://github.com/remix-run/react-router/pull/14592))
+  - If your `shouldRevalidate` function relied on that parameter, you may have seen unintended revalidations
+
+- Fix `fetcher.submit` failing with plain objects containing a `tagName` property ([#14534](https://github.com/remix-run/react-router/pull/14534))
+
+- \[UNSTABLE] Add `unstable_pattern` to the parameters for client side `unstable_onError`, refactor how it's called by `RouterProvider` to avoid potential strict mode issues ([#14573](https://github.com/remix-run/react-router/pull/14573))
+
+- Add new `unstable_useTransitions` flag to routers to give users control over the usage of [`React.startTransition`](https://react.dev/reference/react/startTransition) and [`React.useOptimistic`](https://react.dev/reference/react/useOptimistic). ([#14524](https://github.com/remix-run/react-router/pull/14524))
+  - Framework Mode + Data Mode:
+    - `<HydratedRouter unstable_transition>`/`<RouterProvider unstable_transition>`
+    - When left unset (current default behavior)
+      - Router state updates are wrapped in `React.startTransition`
+      - ⚠️ This can lead to buggy behaviors if you are wrapping your own navigations/fetchers in `React.startTransition`
+      - You should set the flag to `true` if you run into this scenario to get the enhanced `useOptimistic` behavior (requires React 19)
+    - When set to `true`
+      - Router state updates remain wrapped in `React.startTransition` (as they are without the flag)
+      - `Link`/`Form` navigations will be wrapped in `React.startTransition`
+      - A subset of router state info will be surfaced to the UI _during_ navigations via `React.useOptimistic` (i.e., `useNavigation()`, `useFetchers()`, etc.)
+        - ⚠️ This is a React 19 API so you must also be React 19 to opt into this flag for Framework/Data Mode
+    - When set to `false`
+      - The router will not leverage `React.startTransition` or `React.useOptimistic` on any navigations or state changes
+  - Declarative Mode
+    - `<BrowserRouter unstable_useTransitions>`
+    - When left unset
+      - Router state updates are wrapped in `React.startTransition`
+    - When set to `true`
+      - Router state updates remain wrapped in `React.startTransition` (as they are without the flag)
+      - `Link`/`Form` navigations will be wrapped in `React.startTransition`
+    - When set to `false`
+      - the router will not leverage `React.startTransition` on any navigations or state changes
+
+- Fix the promise returned from `useNavigate` in Framework/Data Mode so that it properly tracks the duration of `popstate` navigations (i.e., `navigate(-1)`) ([#14524](https://github.com/remix-run/react-router/pull/14524))
+
+- Fix internal type error in useRoute types that surfaces when skipLibCheck is disabled ([#14577](https://github.com/remix-run/react-router/pull/14577))
+
+- Preserve `statusText` on the `ErrorResponse` instance when throwing `data()` from a route handler ([#14555](https://github.com/remix-run/react-router/pull/14555))
+
+- Optimize href() to avoid backtracking regex on splat ([#14329](https://github.com/remix-run/react-router/pull/14329))
+
 ## 7.9.6
 
 ### Patch Changes

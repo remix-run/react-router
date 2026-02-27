@@ -28,9 +28,9 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_RSCStaticRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.unstable_RSCStaticRouter.html)
 
-Pre-renders an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) to HTML. Usually used in
+Pre-renders an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html) to HTML. Usually used in
 [`unstable_routeRSCServerRequest`](../rsc/routeRSCServerRequest)'s `renderHTML` callback.
 
 ```tsx
@@ -43,7 +43,7 @@ import {
 
 routeRSCServerRequest({
   request,
-  fetchServer,
+  serverResponse,
   createFromReadableStream,
   async renderHTML(getPayload) {
     const payload = getPayload();
@@ -69,6 +69,6 @@ function RSCStaticRouter({ getPayload }: RSCStaticRouterProps)
 
 ### getPayload
 
-A function that starts decoding of the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html). Usually passed
+A function that starts decoding of the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html). Usually passed
 through from [`unstable_routeRSCServerRequest`](../rsc/routeRSCServerRequest)'s `renderHTML`.
 

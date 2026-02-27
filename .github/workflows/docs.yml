@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.FORMAT_PAT }}
           ref: ${{ github.event.inputs.branch }}

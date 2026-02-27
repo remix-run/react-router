@@ -238,16 +238,20 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "allowedActionOrigins",
         "unstable_routeConfig",
       ]);
 
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
-        v8_middleware: true,
         unstable_optimizeDeps: true,
-        unstable_splitRouteModules: false,
+        unstable_passThroughRequests: false,
         unstable_subResourceIntegrity: false,
-        unstable_viteEnvironmentApi: false,
+        unstable_trailingSlashAwareDataRequests: false,
+        unstable_previewServerPrerendering: false,
+        v8_middleware: true,
+        v8_splitRouteModules: false,
+        v8_viteEnvironmentApi: false,
       });
 
       // Ensure we get a valid build manifest

@@ -8,7 +8,8 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 export default defineConfig({
   plugins: [
     mdx({ remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter] }),
-    reactRouterRSC(),
+    // @ts-ignore
+    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),
     rsc(),
   ],
 });

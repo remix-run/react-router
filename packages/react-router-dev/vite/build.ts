@@ -51,14 +51,14 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   let config = configResult.value;
 
   let viteMajor = parseInt(vite.version.split(".")[0], 10);
-  if (config.future.unstable_viteEnvironmentApi && viteMajor === 5) {
+  if (config.future.v8_viteEnvironmentApi && viteMajor === 5) {
     throw new Error(
-      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5",
+      "The future.v8_viteEnvironmentApi option is not supported in Vite 5",
     );
   }
 
   const useViteEnvironmentApi =
-    config.future.unstable_viteEnvironmentApi ||
+    config.future.v8_viteEnvironmentApi ||
     (await hasReactRouterRscPlugin({ root, viteBuildOptions }));
 
   return await (useViteEnvironmentApi

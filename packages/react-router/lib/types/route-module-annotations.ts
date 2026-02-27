@@ -76,7 +76,7 @@ type CreateMetaArgs<T extends RouteInfo> = {
     | (HasErrorBoundary<T> extends true ? undefined : never);
   /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
   error?: unknown;
-  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
+  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react-router.UIMatch.html route matches}, including parent route matches. */
   matches: MetaMatches<T["matches"]>;
 };
 type MetaDescriptors = MetaDescriptor[];
@@ -180,7 +180,7 @@ type CreateComponentProps<T extends RouteInfo, RSCEnabled extends boolean> = {
    * }
    **/
   params: T["params"];
-  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
+  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react-router.UIMatch.html route matches}, including parent route matches. */
   matches: Matches<T["matches"]>;
 } & (IsServerFirstRoute<T, RSCEnabled> extends true
   ? {

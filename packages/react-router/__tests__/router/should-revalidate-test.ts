@@ -1,9 +1,9 @@
 import { createMemoryHistory } from "../../lib/router/history";
-import { createRouter } from "../../lib/router/router";
+import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
 import { ErrorResponseImpl, redirect } from "../../lib/router/utils";
 import type { ShouldRevalidateFunctionArgs } from "../../lib/router/utils";
 import { urlMatch } from "./utils/custom-matchers";
-import { cleanup, getFetcherData } from "./utils/data-router-setup";
+import { cleanup, getFetcherData, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
 interface CustomMatchers {
@@ -1200,11 +1200,11 @@ describe("shouldRevalidate", () => {
       async dataStrategy({ request, matches }) {
         let keyedResults = {};
         let matchesToLoad = matches.filter((match) =>
-          match.unstable_shouldCallHandler(
+          match.shouldCallHandler(
             request.method === "POST"
               ? undefined
-              : !match.unstable_shouldRevalidateArgs?.actionStatus ||
-                  match.unstable_shouldRevalidateArgs.actionStatus < 400,
+              : !match.shouldRevalidateArgs?.actionStatus ||
+                  match.shouldRevalidateArgs.actionStatus < 400,
           ),
         );
         await Promise.all(
@@ -1231,5 +1231,419 @@ describe("shouldRevalidate", () => {
     });
 
     router.dispose();
+  });
+
+  describe("call-site revalidation opt out", () => {
+    it("skips revalidation on loading navigation", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      let A = await t.navigate("/?foo=bar", {
+        unstable_defaultShouldRevalidate: false,
+      });
+
+      A.loaders.index.resolve("SHOULD NOT BE CALLED");
+
+      expect(t.router.state).toMatchObject({
+        location: expect.objectContaining({
+          pathname: "/",
+          search: "?foo=bar",
+        }),
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          index: "INDEX",
+        },
+      });
+    });
+
+    it("passes value through to route shouldRevalidate for loading navigations", async () => {
+      let calledWithValue: boolean | undefined = undefined;
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue = defaultShouldRevalidate;
+              return defaultShouldRevalidate;
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      let A = await t.navigate("/?foo=bar", {
+        unstable_defaultShouldRevalidate: false,
+      });
+
+      A.loaders.index.resolve("SHOULD NOT BE CALLED");
+
+      expect(calledWithValue).toBe(false);
+      expect(t.router.state).toMatchObject({
+        location: expect.objectContaining({
+          pathname: "/",
+          search: "?foo=bar",
+        }),
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          index: "INDEX",
+        },
+      });
+    });
+
+    it("skips revalidation on submission navigation", async () => {
+      let key = "key";
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+            action: true,
+          },
+          {
+            id: "fetch",
+            path: "/fetch",
+            loader: true,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      // preload a fetcher
+      let A = await t.fetch("/fetch", key);
+      await A.loaders.fetch.resolve("LOAD");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+
+      // submit action with shouldRevalidate=false
+      let B = await t.navigate(
+        "/",
+        {
+          formMethod: "post",
+          formData: createFormData({}),
+          unstable_defaultShouldRevalidate: false,
+        },
+        ["fetch"],
+      );
+
+      // resolve action — no loaders should trigger
+      await B.actions.index.resolve("ACTION");
+
+      B.loaders.index.resolve("SHOULD NOT BE CALLED");
+      B.loaders.fetch.resolve("SHOULD NOT BE CALLED");
+
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        actionData: {
+          index: "ACTION",
+        },
+        loaderData: {
+          index: "INDEX",
+        },
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+    });
+
+    it("passes value through to route shouldRevalidate on submission navigation", async () => {
+      let key = "key";
+      let calledWithValue1: boolean | undefined = undefined;
+      let calledWithValue2: boolean | undefined = undefined;
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+            action: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue1 = defaultShouldRevalidate;
+              return defaultShouldRevalidate;
+            },
+          },
+          {
+            id: "fetch",
+            path: "/fetch",
+            loader: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue2 = defaultShouldRevalidate;
+              return defaultShouldRevalidate;
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      // preload a fetcher
+      let A = await t.fetch("/fetch", key);
+      await A.loaders.fetch.resolve("LOAD");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+
+      // submit action with shouldRevalidate=false
+      let B = await t.navigate(
+        "/",
+        {
+          formMethod: "post",
+          formData: createFormData({}),
+          unstable_defaultShouldRevalidate: false,
+        },
+        ["fetch"],
+      );
+
+      // resolve action — no loaders should trigger
+      await B.actions.index.resolve("ACTION");
+
+      B.loaders.index.resolve("SHOULD NOT BE CALLED");
+      B.loaders.fetch.resolve("SHOULD NOT BE CALLED");
+
+      expect(calledWithValue1).toBe(false);
+      expect(calledWithValue2).toBe(false);
+
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        actionData: {
+          index: "ACTION",
+        },
+        loaderData: {
+          index: "INDEX",
+        },
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+    });
+
+    it("skips revalidation on fetcher.submit", async () => {
+      let key = "key";
+      let actionKey = "actionKey";
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+          },
+          {
+            id: "fetch",
+            path: "/fetch",
+            action: true,
+            loader: true,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      // preload a fetcher
+      let A = await t.fetch("/fetch", key);
+      await A.loaders.fetch.resolve("LOAD");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+
+      // submit action with shouldRevalidate=false
+      let B = await t.fetch("/fetch", actionKey, "index", {
+        formMethod: "post",
+        formData: createFormData({}),
+        unstable_defaultShouldRevalidate: false,
+      });
+      t.shimHelper(B.loaders, "fetch", "loader", "fetch");
+
+      // resolve action — no loaders should trigger
+      await B.actions.fetch.resolve("ACTION");
+
+      B.loaders.index.resolve("SHOULD NOT BE CALLED");
+      B.loaders.fetch.resolve("SHOULD NOT BE CALLED");
+
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX",
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+      expect(t.fetchers[actionKey]).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
+    });
+
+    it("passes through value on fetcher.submit", async () => {
+      let key = "key";
+      let actionKey = "actionKey";
+      let calledWithValue1: boolean | undefined = undefined;
+      let calledWithValue2: boolean | undefined = undefined;
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue1 = defaultShouldRevalidate;
+              return defaultShouldRevalidate;
+            },
+          },
+          {
+            id: "fetch",
+            path: "/fetch",
+            action: true,
+            loader: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue2 = defaultShouldRevalidate;
+              return defaultShouldRevalidate;
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      // preload a fetcher
+      let A = await t.fetch("/fetch", key);
+      await A.loaders.fetch.resolve("LOAD");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+
+      // submit action with shouldRevalidate=false
+      let B = await t.fetch("/fetch", actionKey, "index", {
+        formMethod: "post",
+        formData: createFormData({}),
+        unstable_defaultShouldRevalidate: false,
+      });
+      t.shimHelper(B.loaders, "fetch", "loader", "fetch");
+
+      // resolve action — no loaders should trigger
+      await B.actions.fetch.resolve("ACTION");
+
+      B.loaders.index.resolve("SHOULD NOT BE CALLED");
+      B.loaders.fetch.resolve("SHOULD NOT BE CALLED");
+
+      expect(calledWithValue1).toBe(false);
+      expect(calledWithValue2).toBe(false);
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX",
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+      expect(t.fetchers[actionKey]).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
+    });
+
+    it("allows route to override call-site value", async () => {
+      let key = "key";
+      let actionKey = "actionKey";
+      let calledWithValue1: boolean | undefined = undefined;
+      let calledWithValue2: boolean | undefined = undefined;
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue1 = defaultShouldRevalidate;
+              return true;
+            },
+          },
+          {
+            id: "fetch",
+            path: "/fetch",
+            action: true,
+            loader: true,
+            shouldRevalidate: ({ defaultShouldRevalidate }) => {
+              calledWithValue2 = defaultShouldRevalidate;
+              return defaultShouldRevalidate;
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+
+      // preload a fetcher
+      let A = await t.fetch("/fetch", key);
+      await A.loaders.fetch.resolve("LOAD");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+
+      // submit action with shouldRevalidate=false
+      let B = await t.fetch("/fetch", actionKey, "index", {
+        formMethod: "post",
+        formData: createFormData({}),
+        unstable_defaultShouldRevalidate: false,
+      });
+      t.shimHelper(B.loaders, "fetch", "loader", "fetch");
+
+      await B.actions.fetch.resolve("ACTION");
+      await B.loaders.index.resolve("INDEX*");
+      B.loaders.fetch.resolve("SHOULD NOT BE CALLED");
+
+      expect(calledWithValue1).toBe(false);
+      expect(calledWithValue2).toBe(false);
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX*",
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "LOAD",
+      });
+      expect(t.fetchers[actionKey]).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
+    });
   });
 });

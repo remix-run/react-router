@@ -30,6 +30,9 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  BaseRouteObject,
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
@@ -39,16 +42,22 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  IndexRouteObject,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
+  NonIndexRouteObject,
   ParamParseKey,
   Params,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  RouteMatch,
+  RouteObject,
   RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
@@ -87,23 +96,12 @@ export {
 } from "./lib/router/utils";
 
 // Expose react-router public API
-export type {
-  DataRouteMatch,
-  DataRouteObject,
-  IndexRouteObject,
-  NavigateOptions,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  PatchRoutesOnNavigationFunctionArgs,
-  RouteMatch,
-  RouteObject,
-} from "./lib/context";
+export type { NavigateOptions, Navigator } from "./lib/context";
 export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/context";
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,
@@ -316,7 +314,8 @@ export {
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 // Re-export of RSC types
-import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+import type { getRequest, matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export declare const unstable_getRequest: typeof getRequest;
 export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
 
 export type {
@@ -349,7 +348,9 @@ export type {
 
 /** @internal */
 export {
+  createMemoryHistory as UNSAFE_createMemoryHistory,
   createBrowserHistory as UNSAFE_createBrowserHistory,
+  createHashHistory as UNSAFE_createHashHistory,
   invariant as UNSAFE_invariant,
 } from "./lib/router/history";
 

@@ -813,7 +813,7 @@ If you refresh the about page, you still see the loading spinner for just a spli
 
 Inside of `react-router.config.ts`, we can add a [`prerender`][pre-rendering] array to the config to tell React Router to pre-render certain urls at build time. In this case we just want to pre-render the about page.
 
-```ts filename=app/react-router.config.ts lines=[5]
+```ts filename=react-router.config.ts lines=[5]
 import { type Config } from "@react-router/dev/config";
 
 export default {
@@ -838,7 +838,7 @@ If you ever do want to introduce server-side rendering into your React Router ap
 
 👉 **Enable server-side rendering**
 
-```ts filename=app/react-router.config.ts lines=[2]
+```ts filename=react-router.config.ts lines=[2]
 export default {
   ssr: true,
   prerender: ["/about"],
@@ -862,7 +862,7 @@ export async function loader() {
 }
 ```
 
-Whether you set `ssr` to `true` or `false` depends on you and your users needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
+Whether you set `ssr` to `true` or `false` depends on you and your users' needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
 
 ## URL Params in Loaders
 
@@ -1942,10 +1942,10 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [root-route]: ../explanation/special-files#roottsx
 [error-boundaries]: ../how-to/error-boundary
 [links]: ../start/framework/route-module#links
-[outlet-component]: https://api.reactrouter.com/v7/functions/react_router.Outlet
+[outlet-component]: https://api.reactrouter.com/v7/functions/react-router.Outlet
 [file-route-conventions]: ../how-to/file-route-conventions
 [contacts-1]: http://localhost:5173/contacts/1
-[link-component]: https://api.reactrouter.com/v7/functions/react_router.Link
+[link-component]: https://api.reactrouter.com/v7/functions/react-router.Link
 [client-loader]: ../start/framework/route-module#clientloader
 [spa]: ../how-to/spa
 [type-safety]: ../explanation/type-safety
@@ -1959,17 +1959,17 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [url-search-params]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
 [loader]: ../start/framework/route-module#loader
 [action]: ../start/framework/route-module#action
-[form-component]: https://api.reactrouter.com/v7/functions/react_router.Form
+[form-component]: https://api.reactrouter.com/v7/functions/react-router.Form
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
 [form-data]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [object-from-entries]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
 [request-form-data]: https://developer.mozilla.org/en-US/docs/Web/API/Request/formData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
-[redirect]: https://api.reactrouter.com/v7/functions/react_router.redirect
+[redirect]: https://api.reactrouter.com/v7/functions/react-router.redirect
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[nav-link]: https://api.reactrouter.com/v7/functions/react_router.NavLink
-[use-navigation]: https://api.reactrouter.com/v7/functions/react_router.useNavigation
-[use-navigate]: https://api.reactrouter.com/v7/functions/react_router.useNavigate
-[use-submit]: https://api.reactrouter.com/v7/functions/react_router.useSubmit
-[use-fetcher]: https://api.reactrouter.com/v7/functions/react_router.useFetcher
+[nav-link]: https://api.reactrouter.com/v7/functions/react-router.NavLink
+[use-navigation]: https://api.reactrouter.com/v7/functions/react-router.useNavigation
+[use-navigate]: https://api.reactrouter.com/v7/functions/react-router.useNavigate
+[use-submit]: https://api.reactrouter.com/v7/functions/react-router.useSubmit
+[use-fetcher]: https://api.reactrouter.com/v7/functions/react-router.useFetcher
 [react-router-apis]: https://api.reactrouter.com/v7/modules/react_router

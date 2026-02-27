@@ -3,5 +3,9 @@ import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vit
 import rsc from "@vitejs/plugin-rsc";
 
 export default defineConfig({
-  plugins: [reactRouterRSC(), rsc()],
+  plugins: [
+    // @ts-ignore
+    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),
+    rsc(),
+  ],
 });

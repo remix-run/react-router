@@ -6,7 +6,7 @@ import type {
 import * as React from "react";
 
 import type { RouterState } from "../../router/router";
-import type { AgnosticDataRouteMatch } from "../../router/utils";
+import type { DataRouteMatch } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
@@ -76,7 +76,8 @@ export function useFrameworkContext(): FrameworkContextObject {
 // Public API
 
 /**
- * Defines the discovery behavior of the link:
+ * Defines the [lazy route discovery](../../explanation/lazy-route-discovery)
+ * behavior of the link/form:
  *
  * - "render" - default, discover the route when the link renders
  * - "none" - don't eagerly discover, only discover if the link is clicked
@@ -226,6 +227,12 @@ export interface LinksProps {
    * element
    */
   nonce?: string | undefined;
+  /**
+   * A [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)
+   * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * element
+   */
+  crossOrigin?: "anonymous" | "use-credentials";
 }
 
 /**
@@ -253,10 +260,11 @@ export interface LinksProps {
  * @mode framework
  * @param props Props
  * @param {LinksProps.nonce} props.nonce n/a
+ * @param {LinksProps.crossOrigin} props.crossOrigin n/a
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
-export function Links({ nonce }: LinksProps): React.JSX.Element {
+export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
@@ -273,6 +281,7 @@ export function Links({ nonce }: LinksProps): React.JSX.Element {
       {typeof criticalCss === "string" ? (
         <style
           {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: criticalCss }}
         />
       ) : null}
@@ -282,13 +291,24 @@ export function Links({ nonce }: LinksProps): React.JSX.Element {
           rel="stylesheet"
           href={criticalCss.href}
           nonce={nonce}
+          crossOrigin={crossOrigin}
         />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
-          <PrefetchPageLinks key={key} nonce={nonce} {...link} />
+          <PrefetchPageLinks
+            key={key}
+            nonce={nonce}
+            {...link}
+            crossOrigin={link.crossOrigin ?? crossOrigin}
+          />
         ) : (
-          <link key={key} nonce={nonce} {...link} />
+          <link
+            key={key}
+            nonce={nonce}
+            {...link}
+            crossOrigin={link.crossOrigin ?? crossOrigin}
+          />
         ),
       )}
     </>
@@ -336,7 +356,7 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   return <PrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />;
 }
 
-function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
+function useKeyedPrefetchLinks(matches: DataRouteMatch[]) {
   let { manifest, routeModules } = useFrameworkContext();
 
   let [keyedPrefetchLinks, setKeyedPrefetchLinks] = React.useState<
@@ -367,10 +387,10 @@ function PrefetchPageLinksImpl({
   matches: nextMatches,
   ...linkProps
 }: PageLinkDescriptor & {
-  matches: AgnosticDataRouteMatch[];
+  matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useFrameworkContext();
+  let { future, manifest, routeModules } = useFrameworkContext();
   let { basename } = useDataRouterContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
@@ -434,7 +454,12 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, basename, "data");
+    let url = singleFetchUrl(
+      page,
+      basename,
+      future.unstable_trailingSlashAwareDataRequests,
+      "data",
+    );
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -451,6 +476,7 @@ function PrefetchPageLinksImpl({
     return [url.pathname + url.search];
   }, [
     basename,
+    future.unstable_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,
@@ -480,7 +506,12 @@ function PrefetchPageLinksImpl({
       {keyedPrefetchLinks.map(({ key, link }) => (
         // these don't spread `linkProps` because they are full link descriptors
         // already with their own props
-        <link key={key} nonce={linkProps.nonce} {...link} />
+        <link
+          key={key}
+          nonce={linkProps.nonce}
+          {...link}
+          crossOrigin={link.crossOrigin ?? linkProps.crossOrigin}
+        />
       ))}
     </>
   );
@@ -578,7 +609,7 @@ export function Meta(): React.JSX.Element {
           _match.route.path +
           " returns an invalid value. All route meta functions must " +
           "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
+          "\n\nTo reference the meta function API, see https://reactrouter.com/start/framework/route-module#meta",
       );
     }
 
@@ -900,6 +931,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
     <>
       {typeof manifest.sri === "object" ? (
         <script
+          {...scriptProps}
           rr-importmap=""
           type="importmap"
           suppressHydrationWarning

@@ -17,6 +17,11 @@ export const routes = [
         lazy: () => import("./routes/about/about"),
       },
       {
+        id: "render-redirect",
+        path: "render-redirect/:id?",
+        lazy: () => import("./routes/render-redirects"),
+      },
+      {
         id: "parent",
         path: "parent",
         lazy: () => import("./routes/parent/parent"),

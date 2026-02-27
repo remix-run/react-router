@@ -1,5 +1,47 @@
 # `@react-router/cloudflare`
 
+## 7.13.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.1`
+
+## 7.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.0`
+
+## 7.12.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.12.0`
+
+## 7.11.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.11.0`
+
+## 7.10.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.1`
+
+## 7.10.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+
 ## 7.9.6
 
 ### Patch Changes

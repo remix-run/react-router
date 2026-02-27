@@ -2,11 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { RouterProvider } from "../components";
-import {
-  RSCRouterContext,
-  type DataRouteMatch,
-  type DataRouteObject,
-} from "../context";
+import { RSCRouterContext } from "../context";
 import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
@@ -18,7 +14,8 @@ import type {
   RSCRenderPayload,
 } from "./server.rsc";
 import type {
-  AgnosticDataRouteObject,
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   RouterContextProvider,
@@ -458,6 +455,8 @@ export function getRSCSingleFetchDataStrategy(
     getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
     ssr,
     basename,
+    // .rsc requests are always trailing slash aware
+    true,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
@@ -520,10 +519,11 @@ function getFetchAndDecodeViaRSC(
   return async (
     args: DataStrategyFunctionArgs<unknown>,
     basename: string | undefined,
+    trailingSlashAware: boolean,
     targetRoutes?: string[],
   ) => {
     let { request, context } = args;
-    let url = singleFetchUrl(request.url, basename, "rsc");
+    let url = singleFetchUrl(request.url, basename, trailingSlashAware, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
       if (targetRoutes) {
@@ -820,6 +820,8 @@ export function RSCHydratedRouter({
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
       unstable_subResourceIntegrity: false,
+      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
+      unstable_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
@@ -844,7 +846,6 @@ export function RSCHydratedRouter({
           <RouterProvider
             router={transitionEnabledRouter}
             flushSync={ReactDOM.flushSync}
-            unstable_useTransitions
           />
         </FrameworkContext.Provider>
       </RSCRouterGlobalErrorBoundary>
@@ -1061,7 +1062,7 @@ async function fetchAndApplyManifestPatches(
 function addToFifoQueue(path: string, queue: Set<string>) {
   if (queue.size >= discoveredPathsMaxSize) {
     let first = queue.values().next().value;
-    queue.delete(first);
+    if (typeof first === "string") queue.delete(first);
   }
   queue.add(path);
 }
@@ -1081,9 +1082,7 @@ function isExternalLocation(location: string) {
   return newLocation.origin !== window.location.origin;
 }
 
-function cloneRoutes(
-  routes: AgnosticDataRouteObject[] | undefined,
-): AgnosticDataRouteObject[] {
+function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {
   if (!routes) return undefined as any;
   return routes.map((route) => ({
     ...route,
@@ -1091,10 +1090,7 @@ function cloneRoutes(
   })) as any;
 }
 
-function diffRoutes(
-  a: AgnosticDataRouteObject[],
-  b: AgnosticDataRouteObject[],
-): boolean {
+function diffRoutes(a: DataRouteObject[], b: DataRouteObject[]): boolean {
   if (a.length !== b.length) return true;
   return a.some((route, index) => {
     if ((route as any).element !== (b[index] as any).element) return true;
