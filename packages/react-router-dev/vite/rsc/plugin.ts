@@ -28,6 +28,10 @@ import {
 import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
+import { prerender } from "../plugins/prerender";
+import { getPrerenderPaths } from "../plugin";
+
+let redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
@@ -80,11 +84,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           validateConfig: (userConfig) => {
             let errors: string[] = [];
             if (userConfig.buildEnd) errors.push("buildEnd");
-            if (userConfig.prerender) errors.push("prerender");
             if (userConfig.presets?.length) errors.push("presets");
             if (userConfig.routeDiscovery) errors.push("routeDiscovery");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.ssr === false) errors.push("ssr: false");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
             if (userConfig.future?.v8_splitRouteModules)
@@ -411,7 +413,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           viteCommand,
           routeIdByFile,
           rootRouteFile,
-          viteEnvironment: this.environment,
+          viteEnvironment: this.environment as unknown as Vite.Environment,
         });
       },
     },
@@ -425,6 +427,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       load(id) {
         if (id === virtual.basename.resolvedId) {
           return `export default ${JSON.stringify(config.basename)};`;
+        }
+      },
+    },
+    {
+      name: "react-router/rsc/virtual-ssr",
+      resolveId(id) {
+        if (id === virtual.ssr.id) {
+          return virtual.ssr.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.ssr.resolvedId) {
+          return `export default ${JSON.stringify(config.ssr)};`;
         }
       },
     },
@@ -603,7 +618,178 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
+    prerender({
+      config() {
+        return {
+          buildDirectory: getClientBuildDirectory(config),
+          concurrency: getPrerenderConcurrencyConfig(config),
+        };
+      },
+      async requests() {
+        const prerenderPaths = new Set(
+          await getPrerenderPaths(
+            config.prerender,
+            config.ssr,
+            config.routes,
+            true,
+          ),
+        );
+
+        let basename =
+          !config.basename || config.basename === "/"
+            ? "/"
+            : config.basename.endsWith("/")
+              ? config.basename
+              : config.basename + "/";
+
+        if (!config.ssr) {
+          prerenderPaths.add(basename);
+        }
+
+        return Array.from(prerenderPaths).flatMap((prerenderPath) =>
+          prerenderPath === "/"
+            ? `http://localhost${basename}${prerenderPath.slice(1)}`
+            : [
+                `http://localhost${basename}${prerenderPath.slice(1)}`,
+                {
+                  request: `http://localhost${basename}${prerenderPath.slice(1)}.manifest`,
+                  metadata: { manifest: true },
+                },
+              ],
+        );
+      },
+      async postProcess(request, response, metadata) {
+        let url = new URL(request.url);
+
+        let isRedirect = redirectStatusCodes.has(response.status);
+
+        if (!isRedirect && response.status !== 200 && response.status !== 202) {
+          throw new Error(
+            `Prerender (data): Received a ${response.status} status code from ` +
+              `\`entry.server.tsx\` while prerendering the \`${url.pathname}\` ` +
+              `path.\n${url.pathname}`,
+            { cause: response },
+          );
+        }
+
+        if (metadata?.manifest) {
+          return [
+            {
+              path: url.pathname,
+              contents: await response.text(),
+            },
+          ];
+        }
+
+        let isHtml = response.headers
+          .get("content-type")
+          ?.includes("text/html");
+        let htmlResponse = isHtml
+          ? isRedirect
+            ? response
+            : response.clone()
+          : null;
+
+        // This isn't ideal but gets the job done as a fallback if the user can't
+        // implement proper redirects via .htaccess or something else.  This is the
+        // approach used by Astro as well, so there's some precedent.
+        // https://github.com/withastro/roadmap/issues/466
+        // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
+        let location = response.headers.get("Location");
+        // A short delay causes Google to interpret the redirect as temporary.
+        // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
+        let delay = response.status === 302 ? 2 : 0;
+        let redirectBody = isRedirect
+          ? `<!doctype html>
+<head>
+<title>Redirecting to: ${location}</title>
+<meta http-equiv="refresh" content="${delay};url=${location}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+	<a href="${location}">
+  Redirecting from <code>${url.pathname}</code> to <code>${location}</code>
+</a>
+</body>
+</html>`
+          : "";
+
+        let files: { path: string; contents: Uint8Array | string }[] = [
+          {
+            path:
+              isHtml || redirectBody
+                ? (url.pathname.endsWith("/")
+                    ? url.pathname
+                    : url.pathname + "/") + "index.html"
+                : url.pathname,
+            contents:
+              redirectBody ||
+              (isHtml
+                ? await response.text()
+                : new Uint8Array(await response.arrayBuffer())),
+          },
+        ];
+
+        if (htmlResponse) {
+          let body = await htmlResponse.text();
+
+          let matches = Array.from(
+            body.matchAll(
+              /<script>\(self\.__FLIGHT_DATA\|\|=\[\]\)\.push\(("(?:[^"\\]|\\.)*")\)<\/script>/gim,
+            ),
+          );
+          if (matches.length) {
+            let rscData = "";
+            for (const match of matches) {
+              rscData += JSON.parse(match[1]);
+            }
+            files.push({
+              path: url.pathname === "/" ? "_.rsc" : url.pathname + ".rsc",
+              contents: rscData,
+            });
+          }
+
+          let basename =
+            !config.basename || config.basename === "/"
+              ? "/"
+              : config.basename.endsWith("/")
+                ? config.basename
+                : config.basename + "/";
+
+          if (!config.ssr && url.pathname === basename) {
+            files.push({
+              path: "__spa-fallback.html",
+              contents: body,
+            });
+          }
+        } else if (!url.pathname.endsWith(".rsc")) {
+          let dataUrl = new URL(url);
+          dataUrl.pathname += ".rsc";
+          return {
+            files,
+            requests: [dataUrl.href],
+          };
+        }
+
+        return files;
+      },
+    }),
   ];
+}
+
+const getClientBuildDirectory = (
+  reactRouterConfig: ResolvedReactRouterConfig,
+) => path.join(reactRouterConfig.buildDirectory, "client");
+
+function getPrerenderConcurrencyConfig(
+  reactRouterConfig: ResolvedReactRouterConfig,
+): number {
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+    concurrency = prerender.unstable_concurrency ?? 1;
+  }
+  return concurrency;
 }
 
 const virtual = {
@@ -611,6 +797,7 @@ const virtual = {
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
+  ssr: create("unstable_rsc/ssr"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
 

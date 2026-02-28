@@ -698,7 +698,9 @@ async function resolveConfig({
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
     v8_viteEnvironmentApi:
-      userAndPresetConfigs.future?.v8_viteEnvironmentApi ?? false,
+      (userAndPresetConfigs.future?.v8_viteEnvironmentApi ||
+        userAndPresetConfigs.future?.unstable_previewServerPrerendering) ??
+      false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;

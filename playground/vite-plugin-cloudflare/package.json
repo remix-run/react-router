@@ -27,7 +27,7 @@
     "@types/react-dom": "catalog:",
     "eslint": "^8.38.0",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
+    "vite": "catalog:vite-7",
     "vite-tsconfig-paths": "^4.2.1",
     "wrangler": "^4.23.0"
   },

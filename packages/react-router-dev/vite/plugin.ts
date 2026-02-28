@@ -87,6 +87,7 @@ import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 import type { PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
+import { isReactRouterRepo } from "../config/is-react-router-repo";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -725,6 +726,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         process.exit(1);
       }
       return;
+    }
+
+    let vite = getVite();
+    if (
+      reactRouterConfig.future.unstable_previewServerPrerendering &&
+      Number(vite.version.split(".")[0]) < 7
+    ) {
+      logger.error(
+        colors.red(
+          "Vite 7 or higher is required for preview server prerendering, got version " +
+            vite.version,
+        ),
+      );
+      process.exit(1);
     }
 
     // This `injectedPluginContext` logic is so we can support injecting an
@@ -2555,15 +2570,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { future } = ctx.reactRouterConfig;
 
-        // Prerender during SSR build only
-        if (
-          future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
-            : !viteConfigEnv.isSsrBuild
-        ) {
-          return [];
-        }
-
         // Skip prerendering if the future flag is disabled
         if (!future.unstable_previewServerPrerendering) {
           return [];
@@ -2824,7 +2830,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
 
           let serverBuildDirectory = future.v8_viteEnvironmentApi
-            ? this.environment.config?.build?.outDir
+            ? viteConfig.environments.ssr?.build?.outDir
             : (ctx.environmentBuildContext?.options.build?.outDir ??
               getServerBuildDirectory(ctx.reactRouterConfig));
 
@@ -3051,7 +3057,7 @@ async function getPrerenderBuildAndHandler(
 ) {
   let serverBuildPath = path.join(serverBuildDirectory, serverBuildFile);
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
-  let { createRequestHandler: createHandler } = await import("react-router");
+  let { createRequestHandler: createHandler } = require("react-router");
   return {
     build: build as ServerBuild,
     handler: createHandler(build, viteConfig.mode),
