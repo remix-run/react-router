@@ -1188,8 +1188,7 @@ async function getRSCRouteMatch({
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
-  let shouldLoadRoute =
-    !routeIdsToLoad || routeIdsToLoad.includes(route.id);
+  let shouldLoadRoute = !routeIdsToLoad || routeIdsToLoad.includes(route.id);
   // Only bother rendering Server Components for routes that we're surfacing,
   // so nothing at/below an error boundary and prune routes if included in
   // `routeIdsToLoad`.  This is specifically important when a middleware
