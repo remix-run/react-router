@@ -127,22 +127,16 @@ function derive(build: ServerBuild, mode?: string) {
       normalizedPathname = "/" + normalizedPathname;
     }
 
-    // Redirect to canonical path if normalization changed the path
-    if (normalizedPathname !== url.pathname) {
-      return new Response(null, {
-        status: 308,
-        headers: {
-          Location: normalizedPathname + url.search + url.hash,
-        },
-      });
-    }
-    
+    // Check if normalization detected malformed patterns
+    let hasMalformedPatterns = normalizedPathname !== originalPathname;
+
+    // Apply trailing slash and .data handling
     let normalizedPath = normalizedPathname;
+    let hasStrippedTrailingSlash = false;
     if (build.future.unstable_trailingSlashAwareDataRequests) {
       if (normalizedPath.endsWith("/_.data")) {
-        // Handle trailing slash URLs: /about/_.data -> /about/
         normalizedPath = normalizedPath.replace(/_.data$/, "");
-      } else {
+      } else if (normalizedPath.endsWith(".data")) {
         normalizedPath = normalizedPath.replace(/\.data$/, "");
       }
     } else {
@@ -157,7 +151,18 @@ function derive(build: ServerBuild, mode?: string) {
         normalizedPath.endsWith("/")
       ) {
         normalizedPath = normalizedPath.slice(0, -1);
+        hasStrippedTrailingSlash = true;
       }
+    }
+
+    // Redirect to canonical path if normalization changed the path
+    if (hasMalformedPatterns || hasStrippedTrailingSlash) {
+      return new Response(null, {
+        status: 308,
+        headers: {
+          Location: normalizedPath + url.search + url.hash,
+        },
+      });
     }
 
     let isSpaMode =

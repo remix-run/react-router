@@ -1847,29 +1847,9 @@ export function resolveTo(
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
-/**
- * Normalizes a pathname by:
- * - Converting backslashes to forward slashes
- * - Collapsing multiple consecutive slashes into one
- * - Removing trailing slashes (except for root "/")
- * - Ensuring the path starts with "/"
- * @param pathname The pathname to normalize.
- * @returns The normalized pathname.
- */
-export const normalizePathname = (pathname: string): string => {
-  let normalized = pathname
-    // Convert backslashes to forward slashes (Windows-style paths)
-    .replace(/\\/g, "/")
-    // Collapse multiple consecutive slashes into one
-    .replace(/\/+/g, "/")
-    // Remove trailing slashes (except for root)
-    .replace(/\/+$/, "")
-    // Ensure path starts with "/"
-    .replace(/^\/*/, "/");
 
-  // If path is empty after normalization, return root
-  return normalized || "/";
-};
+export const normalizePathname = (pathname: string): string =>
+  pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
 
 /*
 lol - this comment is needed because the JSDoc parser for docs.ts gets confused
