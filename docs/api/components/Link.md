@@ -236,7 +236,7 @@ standard revalidation behavior.
 
 [modes: framework, data]
 
-Masked path for for this navigation, when you want to navigate the router to
+Masked path for this navigation, when you want to navigate the router to
 one location but display a separate location in the URL bar.
 
 This is useful for contextual navigations such as opening an image in a modal
