@@ -37,6 +37,7 @@ import {
   useRouteError,
   useSearchParams,
   useSubmit,
+  useViewTransitionState,
 } from "../../index";
 import { createDeferred, tick } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
@@ -8569,6 +8570,85 @@ function testDomRouter(
         fireEvent.click(screen.getByText("/d"));
         await waitFor(() => screen.getByText("D"));
         expect(spy).toHaveBeenCalledTimes(2);
+      });
+
+      it("keeps useViewTransitionState active for both from/to locations during transitions", async () => {
+        let testWindow = getWindow("/list");
+        let transitionFinished = createDeferred<void>();
+        testWindow.document.startViewTransition = (cb) => {
+          let updateCallbackDone = Promise.resolve(cb());
+          return {
+            ready: Promise.resolve(),
+            finished: transitionFinished.promise,
+            updateCallbackDone,
+            skipTransition: () => {
+              void transitionFinished.resolve();
+            },
+          };
+        };
+
+        function Probe() {
+          let from = useViewTransitionState("/list");
+          let to = useViewTransitionState("/details");
+          return (
+            <p data-testid="view-transition-state">{`${from ? 1 : 0}-${to ? 1 : 0}`}</p>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return (
+                  <>
+                    <nav>
+                      <Link to="/list" viewTransition>
+                        /list
+                      </Link>
+                      <Link to="/details" viewTransition>
+                        /details
+                      </Link>
+                    </nav>
+                    <Probe />
+                    <Outlet />
+                  </>
+                );
+              },
+              children: [
+                {
+                  path: "list",
+                  Component: () => <h1>List</h1>,
+                },
+                {
+                  path: "details",
+                  Component: () => <h1>Details</h1>,
+                },
+              ],
+            },
+          ],
+          { window: testWindow },
+        );
+        render(<RouterProvider router={router} />);
+
+        expect(screen.getByTestId("view-transition-state")).toHaveTextContent(
+          "0-0",
+        );
+
+        fireEvent.click(screen.getByText("/details"));
+        await waitFor(() => screen.getByText("Details"));
+        await waitFor(() =>
+          expect(screen.getByTestId("view-transition-state")).toHaveTextContent(
+            "1-1",
+          ),
+        );
+
+        await transitionFinished.resolve();
+        await waitFor(() =>
+          expect(screen.getByTestId("view-transition-state")).toHaveTextContent(
+            "0-0",
+          ),
+        );
       });
 
       it("Does not cause extra re-renders due to ViewTransitionContext updates", async () => {

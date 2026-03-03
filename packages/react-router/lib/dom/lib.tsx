@@ -3311,22 +3311,23 @@ export function usePrompt({
 
 /**
  * This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
- * to the specified location. This can be used to apply finer-grained styles to
- * elements to further customize the view transition. This requires that view
- * transitions have been enabled for the given navigation via {@link LinkProps.viewTransition}
- * (or the `Form`, `submit`, or `navigate` call)
+ * to or from the specified location. This can be used to apply finer-grained
+ * styles to elements to further customize the view transition. This requires
+ * that view transitions have been enabled for the given navigation via
+ * {@link LinkProps.viewTransition} (or the `Form`, `submit`, or `navigate`
+ * call)
  *
  * @public
  * @category Hooks
  * @mode framework
  * @mode data
- * @param to The {@link To} location to check for an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).
+ * @param to The {@link To} location to check for an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to or from.
  * @param options Options
  * @param options.relative The relative routing type to use when resolving the
  * `to` location, defaults to `"route"`. See {@link RelativeRoutingType} for
  * more details.
  * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
- * to the specified {@link Location}, otherwise `false`.
+ * to or from the specified {@link Location}, otherwise `false`.
  */
 export function useViewTransitionState(
   to: To,
