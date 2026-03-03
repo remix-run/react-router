@@ -444,7 +444,17 @@ async function singleFetchLoaderNavigationStrategy(
                 trailingSlashAware,
                 [routeId],
               );
-              return unwrapSingleFetchResult(data, routeId);
+              try {
+                return unwrapSingleFetchResult(data, routeId);
+              } catch (e) {
+                if (
+                  e instanceof SingleFetchNoResultError &&
+                  router.state.loaderData.hasOwnProperty(routeId)
+                ) {
+                  return router.state.loaderData[routeId];
+                }
+                throw e;
+              }
             });
 
             results[routeId] = { type: "data", result };
@@ -463,7 +473,17 @@ async function singleFetchLoaderNavigationStrategy(
         try {
           let result = await handler(async () => {
             let data = await singleFetchDfd.promise;
-            return unwrapSingleFetchResult(data, routeId);
+            try {
+              return unwrapSingleFetchResult(data, routeId);
+            } catch (e) {
+              if (
+                e instanceof SingleFetchNoResultError &&
+                router.state.loaderData.hasOwnProperty(routeId)
+              ) {
+                return router.state.loaderData[routeId];
+              }
+              throw e;
+            }
           });
           results[routeId] = { type: "data", result };
         } catch (e) {
