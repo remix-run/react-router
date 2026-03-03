@@ -3,6 +3,7 @@ import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
 import type { RouteManifest } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
+import { isAbortError } from "../../router/abort";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -240,7 +241,25 @@ export async function fetchAndApplyManifestPatches(
 
   let serverPatches: AssetsManifest["routes"];
   try {
-    let res = await fetch(url, { signal });
+    let res: Response;
+    try {
+      res = await fetch(url, { signal });
+    } catch (e) {
+      if (
+        signal &&
+        !signal.aborted &&
+        e instanceof TypeError &&
+        isAbortError(e, signal, { allowTypeError: true })
+      ) {
+        await Promise.resolve();
+        if (signal.aborted) {
+          return;
+        }
+        res = await fetch(url, { signal });
+      } else {
+        throw e;
+      }
+    }
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);
