@@ -818,13 +818,11 @@ export async function createConfigLoader({
       if (!fsWatcher) {
         fsWatcher = chokidar.watch([root, appDirectory], {
           ignoreInitial: true,
-          ignored: (path) =>
-            isIgnoredByWatcher(path, { root, appDirectory }),
+          ignored: (path) => isIgnoredByWatcher(path, { root, appDirectory }),
         });
 
         fsWatcher.on("error", (error: unknown) => {
-          let message =
-            error instanceof Error ? error.message : String(error);
+          let message = error instanceof Error ? error.message : String(error);
           console.warn(colors.yellow(`File watcher error: ${message}`));
         });
 
@@ -1172,8 +1170,10 @@ export function isIgnoredByWatcher(
 
   let ignoredByPath =
     !dirname.startsWith(appDirectory) &&
-    path !== root &&
-    dirname !== root;
+    // Ensure we're only watching files outside of the app directory
+    // that are at the root level, not nested in subdirectories
+    path !== root && // Watch the root directory itself
+    dirname !== root; // Watch files at the root level
 
   if (ignoredByPath) {
     return true;

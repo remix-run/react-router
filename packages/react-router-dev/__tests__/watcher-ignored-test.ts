@@ -45,16 +45,16 @@ describe("isIgnoredByWatcher", () => {
     expect(isIgnoredByWatcher(filePath, { root, appDirectory })).toBe(true);
   });
 
-  it("ignores Unix socket files at the root level", (done) => {
+  it("ignores Unix socket files at the root level", async () => {
     let socketPath = path.join(root, "overmind.sock");
     let server = net.createServer();
 
-    server.listen(socketPath, () => {
-      expect(isIgnoredByWatcher(socketPath, { root, appDirectory })).toBe(
-        true,
-      );
-      server.close(done);
-    });
+    await new Promise<void>((resolve) => server.listen(socketPath, resolve));
+    try {
+      expect(isIgnoredByWatcher(socketPath, { root, appDirectory })).toBe(true);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
   });
 
   it("ignores paths that cannot be stat'd", () => {
