@@ -811,7 +811,7 @@ export type PathParam<Path extends string> =
       : // look for params in the absence of wildcards
         _PathParam<Path>;
 
-// Recursive helper for finding optional path parameters (those with trailing `?`)
+// Recursive helper for extracting optional path parameters
 type _OptionalPathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _OptionalPathParam<L> | _OptionalPathParam<R>
