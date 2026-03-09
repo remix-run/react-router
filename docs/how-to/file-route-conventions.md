@@ -19,6 +19,12 @@ First install the `@react-router/fs-routes` package:
 npm i @react-router/fs-routes
 ```
 
+To avoid dependency conflicts with react router, install same version as react router:
+
+```shellscript nonumber
+npm i @react-router/fs-routes@x.xx.x
+```
+
 Then use it to provide route config in your `app/routes.ts` file:
 
 ```tsx filename=app/routes.ts
