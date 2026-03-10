@@ -9,15 +9,6 @@ catalogs:
     '@vitejs/plugin-rsc':
       specifier: ~0.5.7
       version: 0.5.7
-    react:
-      specifier: ^19.2.3
-      version: 19.2.3
-    react-dom:
-      specifier: ^19.2.3
-      version: 19.2.3
-    react-server-dom-webpack:
-      specifier: ^19.2.3
-      version: 19.2.3
     tsup:
       specifier: ^8.3.0
       version: 8.5.0
@@ -27,16 +18,6 @@ catalogs:
     wireit:
       specifier: 0.14.9
       version: 0.14.9
-  react-canary:
-    react:
-      specifier: ^19.2.2
-      version: 19.2.3
-    react-dom:
-      specifier: ^19.2.2
-      version: 19.2.3
-    react-server-dom-webpack:
-      specifier: ^19.2.2
-      version: 19.2.3
 
 overrides:
   '@types/react': ^18.0.27
@@ -1076,7 +1057,7 @@ importers:
         version: 0.14.2
       react-server-dom-webpack:
         specifier: 'catalog:'
-        version: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
+        version: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0))
       semver:
         specifier: ^7.3.7
         version: 7.7.2
@@ -1086,9 +1067,6 @@ importers:
       valibot:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.4.5)
-      vite-node:
-        specifier: ^3.2.2
-        version: 3.2.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -1128,10 +1106,10 @@ importers:
         version: 7.7.0
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.7(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.7(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
-        version: 3.6.0(esbuild@0.25.4)
+        version: 3.6.0(esbuild@0.25.0)
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -12138,7 +12116,7 @@ snapshots:
     optionalDependencies:
       react-server-dom-webpack: 19.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.103.0)
 
-  '@vitejs/plugin-rsc@0.5.7(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
+  '@vitejs/plugin-rsc@0.5.7(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@remix-run/node-fetch-server': 0.12.0
       es-module-lexer: 2.0.0
@@ -12152,7 +12130,7 @@ snapshots:
       vite: 6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
     optionalDependencies:
-      react-server-dom-webpack: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
+      react-server-dom-webpack: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0))
 
   '@web3-storage/multipart-parser@1.0.0': {}
 
@@ -13347,13 +13325,6 @@ snapshots:
     dependencies:
       debug: 4.4.1
       esbuild: 0.25.0
-    transitivePeerDependencies:
-      - supports-color
-
-  esbuild-register@3.6.0(esbuild@0.25.4):
-    dependencies:
-      debug: 4.4.1
-      esbuild: 0.25.4
     transitivePeerDependencies:
       - supports-color
 
@@ -14931,7 +14902,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.14.0
+      '@types/node': 20.11.30
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -16522,13 +16493,13 @@ snapshots:
       webpack: 5.103.0
       webpack-sources: 3.3.3
 
-  react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)):
+  react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
       react: 19.3.0-canary-d763f313-20251210
       react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
-      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)
+      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)
       webpack-sources: 3.3.3
 
   react-test-renderer@19.1.0(react@19.2.3):
@@ -17339,17 +17310,17 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  terser-webpack-plugin@5.3.15(@swc/core@1.11.24)(esbuild@0.25.4)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)):
+  terser-webpack-plugin@5.3.15(@swc/core@1.11.24)(esbuild@0.25.0)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
       terser: 5.44.1
-      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.4)
+      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)
     optionalDependencies:
       '@swc/core': 1.11.24
-      esbuild: 0.25.4
+      esbuild: 0.25.0
 
   terser-webpack-plugin@5.3.15(webpack@5.103.0):
     dependencies:
@@ -17495,7 +17466,7 @@ snapshots:
 
   tsx@4.19.3:
     dependencies:
-      esbuild: 0.25.0
+      esbuild: 0.25.4
       get-tsconfig: 4.10.0
     optionalDependencies:
       fsevents: 2.3.3
@@ -17859,27 +17830,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-node@3.2.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0):
-    dependencies:
-      cac: 6.7.14
-      debug: 4.4.1
-      es-module-lexer: 1.7.0
-      pathe: 2.0.3
-      vite: 6.4.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - jiti
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
   vite-node@3.2.4(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0):
     dependencies:
       cac: 6.7.14
@@ -18112,7 +18062,7 @@ snapshots:
       - esbuild
       - uglify-js
 
-  webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4):
+  webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.8
@@ -18136,7 +18086,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.3.15(@swc/core@1.11.24)(esbuild@0.25.4)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.4))
+      terser-webpack-plugin: 5.3.15(@swc/core@1.11.24)(esbuild@0.25.0)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0))
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     transitivePeerDependencies:
