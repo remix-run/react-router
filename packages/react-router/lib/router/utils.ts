@@ -909,6 +909,16 @@ export function matchRoutes<
   return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
+let flattenRoutesCache: {
+  routes: AgnosticRouteObject[];
+  branches: RouteBranch[];
+  version: number;
+} | null = null;
+let flattenRoutesCacheVersion = 0;
+export function invalidateFlattenRoutesCache() {
+  flattenRoutesCacheVersion++;
+}
+
 export function matchRoutesImpl<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
@@ -926,18 +936,32 @@ export function matchRoutesImpl<
     return null;
   }
 
-  let branches = flattenRoutes(routes);
-  rankRouteBranches(branches);
+  let branches: RouteBranch<RouteObjectType>[];
+  if (
+    flattenRoutesCache &&
+    flattenRoutesCache.routes === routes &&
+    flattenRoutesCache.version === flattenRoutesCacheVersion
+  ) {
+    branches = flattenRoutesCache.branches as RouteBranch<RouteObjectType>[];
+  } else {
+    branches = flattenRoutes(routes);
+    rankRouteBranches(branches);
+    flattenRoutesCache = {
+      routes,
+      branches: branches as RouteBranch[],
+      version: flattenRoutesCacheVersion,
+    };
+  }
 
   let matches = null;
+  // Incoming pathnames are generally encoded from either window.location
+  // or from router.navigate, but we want to match against the unencoded
+  // paths in the route definitions.  Memory router locations won't be
+  // encoded here but there also shouldn't be anything to decode so this
+  // should be a safe operation.  This avoids needing matchRoutes to be
+  // history-aware.
+  let decoded = decodePath(pathname);
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    // Incoming pathnames are generally encoded from either window.location
-    // or from router.navigate, but we want to match against the unencoded
-    // paths in the route definitions.  Memory router locations won't be
-    // encoded here but there also shouldn't be anything to decode so this
-    // should be a safe operation.  This avoids needing matchRoutes to be
-    // history-aware.
-    let decoded = decodePath(pathname);
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
       decoded,
@@ -1470,6 +1494,9 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
+const compilePathCache = new Map<string, [RegExp, CompiledPathParam[]]>();
+const COMPILE_PATH_CACHE_MAX = 1000;
+
 export function compilePath(
   path: string,
   caseSensitive = false,
@@ -1482,6 +1509,10 @@ export function compilePath(
       `always follow a \`/\` in the pattern. To get rid of this warning, ` +
       `please change the route path to "${path.replace(/\*$/, "/*")}".`,
   );
+
+  let cacheKey = `${path}|${caseSensitive}|${end}`;
+  let cached = compilePathCache.get(cacheKey);
+  if (cached) return cached;
 
   let params: CompiledPathParam[] = [];
   let regexpSource =
@@ -1539,7 +1570,12 @@ export function compilePath(
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
-  return [matcher, params];
+  if (compilePathCache.size >= COMPILE_PATH_CACHE_MAX) {
+    compilePathCache.clear();
+  }
+  let result: [RegExp, CompiledPathParam[]] = [matcher, params];
+  compilePathCache.set(cacheKey, result);
+  return result;
 }
 
 export function decodePath(value: string) {

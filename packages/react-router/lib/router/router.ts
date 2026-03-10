@@ -69,6 +69,7 @@ import {
   stripBasename,
   RouterContextProvider,
   getRoutePattern,
+  invalidateFlattenRoutesCache,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5359,6 +5360,7 @@ function patchRoutesImpl(
       manifest,
     );
     childrenToPatch.push(...newRoutes);
+    invalidateFlattenRoutesCache();
   }
 
   // When flag is enabled we allow mutations of elements on exiting routes
