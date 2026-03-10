@@ -1470,6 +1470,9 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
+let compilePathCache = new Map<string, [RegExp, CompiledPathParam[]]>();
+const COMPILE_PATH_CACHE_SIZE = 1024;
+
 export function compilePath(
   path: string,
   caseSensitive = false,
@@ -1482,6 +1485,10 @@ export function compilePath(
       `always follow a \`/\` in the pattern. To get rid of this warning, ` +
       `please change the route path to "${path.replace(/\*$/, "/*")}".`,
   );
+
+  let cacheKey = `${path}|${caseSensitive}|${end}`;
+  let cached = compilePathCache.get(cacheKey);
+  if (cached) return cached;
 
   let params: CompiledPathParam[] = [];
   let regexpSource =
@@ -1539,7 +1546,12 @@ export function compilePath(
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
-  return [matcher, params];
+  let result: [RegExp, CompiledPathParam[]] = [matcher, params];
+  if (compilePathCache.size >= COMPILE_PATH_CACHE_SIZE) {
+    compilePathCache.delete(compilePathCache.keys().next().value!);
+  }
+  compilePathCache.set(cacheKey, result);
+  return result;
 }
 
 export function decodePath(value: string) {
