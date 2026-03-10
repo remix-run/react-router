@@ -1471,6 +1471,10 @@ export function matchPath<
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
 let compilePathCache = new Map<string, [RegExp, CompiledPathParam[]]>();
+// Safety cap to prevent unbounded memory growth. In practice, the cache is
+// keyed by route patterns (not resolved paths), so the number of unique entries
+// is bounded by the number of route definitions. When the limit is hit, the
+// oldest entry is evicted (FIFO via Map insertion order).
 const COMPILE_PATH_CACHE_SIZE = 1024;
 
 export function compilePath(
