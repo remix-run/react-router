@@ -1180,7 +1180,8 @@ export function isIgnoredByWatcher(
   }
 
   // Filter out non-regular files (sockets, pipes, etc.) that
-  // crash fs.watch() on macOS with errno -102
+  // crash `fs.watch()` on macOS with errno -102
+  // https://github.com/paulmillr/chokidar/issues/1391
   try {
     let stat = fs.statSync(path, { throwIfNoEntry: false });
     if (stat && !stat.isFile() && !stat.isDirectory()) {
