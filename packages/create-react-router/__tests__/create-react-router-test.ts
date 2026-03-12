@@ -1205,6 +1205,9 @@ async function execCreateReactRouter({
       env: {
         ...process.env,
         ...env,
+        NODE_OPTIONS: [process.env.NODE_OPTIONS, "--no-deprecation"]
+          .filter(Boolean)
+          .join(" "),
         ...(interactive
           ? { CREATE_REACT_ROUTER_FORCE_INTERACTIVE: "true" }
           : {}),
