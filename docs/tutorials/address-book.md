@@ -430,20 +430,22 @@ export default function App({ loaderData }) {
           {contacts.length ? (
             <ul>
               {contacts.map((contact) => (
-                <li key={contact.id}>
-                  <Link to={`contacts/${contact.id}`}>
-                    {contact.first || contact.last ? (
-                      <>
-                        {contact.first} {contact.last}
-                      </>
-                    ) : (
-                      <i>No Name</i>
-                    )}
-                    {contact.favorite ? (
-                      <span>★</span>
-                    ) : null}
-                  </Link>
-                </li>
+                return (
+                  <li key={contact.id}>
+                    <Link to={`contacts/${contact.id}`}>
+                      {contact.first || contact.last ? (
+                        <>
+                          {contact.first} {contact.last}
+                        </>
+                      ) : (
+                        <i>No Name</i>
+                      )}
+                      {contact.favorite ? (
+                        <span>★</span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
               ))}
             </ul>
           ) : (
