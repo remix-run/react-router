@@ -178,7 +178,7 @@ function routeFilesType({
                   t.tsPropertySignature(
                     t.identifier("page"),
                     t.tsTypeAnnotation(
-                      pages
+                      pages.size > 0
                         ? t.tsUnionType(
                             Array.from(pages).map((page) =>
                               t.tsLiteralType(t.stringLiteral(page)),
