@@ -24,6 +24,10 @@ const fixtures = [
     v8_viteEnvironmentApi: true,
   },
   {
+    templateName: "vite-8-template",
+    v8_viteEnvironmentApi: true,
+  },
+  {
     templateName: "rsc-vite-framework",
     v8_viteEnvironmentApi: true,
   },

@@ -70,7 +70,7 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
-import { preloadVite, getVite } from "./vite";
+import { preloadVite, getVite, defineCompilerOptions } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
@@ -1364,10 +1364,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 : []),
             ],
           },
-          esbuild: {
-            jsx: "automatic",
-            jsxDev: viteCommand !== "build",
-          },
+          ...defineCompilerOptions({
+            oxc: {
+              jsx: {
+                runtime: "automatic",
+                development: viteCommand !== "build",
+              },
+            },
+            esbuild: {
+              jsx: "automatic",
+              jsxDev: viteCommand !== "build",
+            },
+          }),
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
@@ -3962,22 +3970,7 @@ export async function getEnvironmentOptionsResolvers(
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
-    // This is a workaround for type errors when running in vite-ecosystem-ci
-    // against rolldown-vite since "preserveEntrySignatures" is not yet
-    // supported. We're doing this instead of using `ts-ignore` so we're still
-    // type checking against regular Vite build options. Once it's supported,
-    // this custom type can be removed and the build config can be inlined.
-    type RollupOptionsWithPreserveEntrySignatures =
-      Vite.BuildOptions["rollupOptions"] extends {
-        preserveEntrySignatures: any;
-      }
-        ? Vite.BuildOptions["rollupOptions"]
-        : Vite.BuildOptions["rollupOptions"] & {
-            // We hard-code the one value we're using. If it's not valid in
-            // Rollup, the build will fail.
-            preserveEntrySignatures: "exports-only";
-          };
-    const rollupOptions: RollupOptionsWithPreserveEntrySignatures = {
+    const rollupOptions = {
       preserveEntrySignatures: "exports-only",
       // Silence Rollup "use client" warnings
       // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
@@ -3995,7 +3988,7 @@ export async function getEnvironmentOptionsResolvers(
           defaultHandler(warning);
         }
       },
-    };
+    } satisfies NonNullable<Vite.BuildOptions["rollupOptions"]>;
 
     return {
       build: {
