@@ -764,9 +764,7 @@ describe("special character tests", () => {
 
     it("handles encoded percent signs in ancestor splat route segments", async () => {
       let ctx = render(
-        <BrowserRouter
-          window={getWindow("/parent/child/percent-%25-sign")}
-        >
+        <BrowserRouter window={getWindow("/parent/child/percent-%25-sign")}>
           <App />
         </BrowserRouter>,
       );
