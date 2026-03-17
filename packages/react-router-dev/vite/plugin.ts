@@ -179,14 +179,21 @@ export type EnvironmentBuildContext = {
   resolveOptions: EnvironmentOptionsResolver;
 };
 
+function isReactRouterServerEnvironment(
+  ctx: ReactRouterPluginContext,
+  environmentName: string,
+): environmentName is SsrEnvironmentName {
+  return ctx.buildManifest?.serverBundles
+    ? isSsrBundleEnvironmentName(environmentName)
+    : environmentName === "ssr";
+}
+
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>,
 ): [SsrEnvironmentName, T][] {
-  return Object.entries(record).filter(([name]) =>
-    ctx.buildManifest?.serverBundles
-      ? isSsrBundleEnvironmentName(name)
-      : name === "ssr",
+  return Object.entries(record).filter(
+    ([name]) => isReactRouterServerEnvironment(ctx, name),
   ) as [SsrEnvironmentName, T][];
 }
 
@@ -1458,9 +1465,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       configEnvironment(name, options) {
         if (
           ctx.reactRouterConfig.future.v8_viteEnvironmentApi &&
-          (ctx.buildManifest?.serverBundles
-            ? isSsrBundleEnvironmentName(name)
-            : name === "ssr")
+          isReactRouterServerEnvironment(ctx, name)
         ) {
           const vite = getVite();
 
@@ -1858,7 +1863,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           if (
             future.v8_viteEnvironmentApi
-              ? this.environment.name === "client"
+              ? !isReactRouterServerEnvironment(ctx, this.environment.name)
               : !viteConfigEnv.isSsrBuild
           ) {
             return;
