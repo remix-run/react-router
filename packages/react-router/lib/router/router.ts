@@ -6501,28 +6501,28 @@ function normalizeRelativeRoutingRedirectResponse(
   return response;
 }
 
+// Match Chrome's behavior:
+// https://github.com/chromium/chromium/blob/216dbeb61db0c667e62082e5f5400a32d6983df3/content/public/common/url_utils.cc#L82
+export const invalidProtocols = [
+  "about:",
+  "blob:",
+  "chrome:",
+  "chrome-untrusted:",
+  "content:",
+  "data:",
+  "devtools:",
+  "file:",
+  "filesystem:",
+  // eslint-disable-next-line no-script-url
+  "javascript:",
+];
+
 function normalizeRedirectLocation(
   location: string,
   currentUrl: URL,
   basename: string,
   historyInstance: History,
 ): string {
-  // Match Chrome's behavior:
-  // https://github.com/chromium/chromium/blob/216dbeb61db0c667e62082e5f5400a32d6983df3/content/public/common/url_utils.cc#L82
-  let invalidProtocols = [
-    "about:",
-    "blob:",
-    "chrome:",
-    "chrome-untrusted:",
-    "content:",
-    "data:",
-    "devtools:",
-    "file:",
-    "filesystem:",
-    // eslint-disable-next-line no-script-url
-    "javascript:",
-  ];
-
   if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
     let normalizedLocation = location;
