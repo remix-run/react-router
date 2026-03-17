@@ -204,6 +204,15 @@ export function getServerEnvironmentValues<T>(
   return getServerEnvironmentEntries(ctx, record).map(([, value]) => value);
 }
 
+function isReactRouterServerEnvironment(
+  ctx: ReactRouterPluginContext,
+  environmentName: string,
+): environmentName is SsrEnvironmentName {
+  return ctx.buildManifest?.serverBundles
+    ? isSsrBundleEnvironmentName(environmentName)
+    : environmentName === "ssr";
+}
+
 const isRouteEntryModuleId = (id: string): boolean => {
   return id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING);
 };
@@ -1819,7 +1828,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           if (
             future.v8_viteEnvironmentApi
-              ? this.environment.name === "client"
+              ? !isReactRouterServerEnvironment(ctx, this.environment.name)
               : !viteConfigEnv.isSsrBuild
           ) {
             return;
@@ -2566,7 +2575,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // Prerender during SSR build only
         if (
           future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
+            ? !isReactRouterServerEnvironment(ctx, this.environment.name)
             : !viteConfigEnv.isSsrBuild
         ) {
           return [];
