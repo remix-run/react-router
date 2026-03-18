@@ -386,7 +386,10 @@ export function encodeViaTurboStream(
     typeof streamTimeout === "number" ? streamTimeout : 4950,
   );
 
-  let clearStreamTimeout = () => clearTimeout(timeoutId);
+  let clearStreamTimeout = () => {
+    clearTimeout(timeoutId);
+    requestSignal.removeEventListener("abort", clearStreamTimeout);
+  };
 
   requestSignal.addEventListener("abort", clearStreamTimeout);
 
