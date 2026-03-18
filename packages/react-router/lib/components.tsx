@@ -1936,7 +1936,7 @@ function useRouteComponentProps() {
 }
 
 export type RouteComponentProps = ReturnType<typeof useRouteComponentProps>;
-export type RouteComponentType = React.ComponentType<RouteComponentProps>;
+type RouteComponentType = React.ComponentType<RouteComponentProps>;
 
 export function WithComponentProps({
   children,
@@ -1963,7 +1963,7 @@ function useHydrateFallbackProps() {
 }
 
 export type HydrateFallbackProps = ReturnType<typeof useHydrateFallbackProps>;
-export type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
+type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
 
 export function WithHydrateFallbackProps({
   children,
@@ -1991,7 +1991,7 @@ function useErrorBoundaryProps() {
 }
 
 export type ErrorBoundaryProps = ReturnType<typeof useErrorBoundaryProps>;
-export type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
+type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
 
 export function WithErrorBoundaryProps({
   children,
