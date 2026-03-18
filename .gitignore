@@ -38,3 +38,4 @@ worker-configuration.d.ts
 /public
 
 .claude/settings.local.json
+.claude/skills

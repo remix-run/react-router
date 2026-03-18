@@ -2760,15 +2760,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // A short delay causes Google to interpret the redirect as temporary.
           // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
           let delay = response.status === 302 ? 2 : 0;
+          let escapedLocation = escapeHtml(location ?? "");
+          let escapedPathname = escapeHtml(pathname);
           html = `<!doctype html>
 <head>
-<title>Redirecting to: ${location}</title>
-<meta http-equiv="refresh" content="${delay};url=${location}">
+<title>Redirecting to: ${escapedLocation}</title>
+<meta http-equiv="refresh" content="${delay};url=${escapedLocation}">
 <meta name="robots" content="noindex">
 </head>
 <body>
-	<a href="${location}">
-    Redirecting from <code>${pathname}</code> to <code>${location}</code>
+	<a href="${escapedLocation}">
+    Redirecting from <code>${escapedPathname}</code> to <code>${escapedLocation}</code>
   </a>
 </body>
 </html>`;
@@ -3353,15 +3355,17 @@ async function prerenderRoute(
     // A short delay causes Google to interpret the redirect as temporary.
     // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
     let delay = response.status === 302 ? 2 : 0;
+    let escapedLocation = escapeHtml(location ?? "");
+    let escapedNormalizedPath = escapeHtml(normalizedPath);
     html = `<!doctype html>
 <head>
-<title>Redirecting to: ${location}</title>
-<meta http-equiv="refresh" content="${delay};url=${location}">
+<title>Redirecting to: ${escapedLocation}</title>
+<meta http-equiv="refresh" content="${delay};url=${escapedLocation}">
 <meta name="robots" content="noindex">
 </head>
 <body>
-	<a href="${location}">
-    Redirecting from <code>${normalizedPath}</code> to <code>${location}</code>
+	<a href="${escapedLocation}">
+    Redirecting from <code>${escapedNormalizedPath}</code> to <code>${escapedLocation}</code>
   </a>
 </body>
 </html>`;
@@ -4320,4 +4324,19 @@ function createSpaModeRequest(
     }),
     metadata: { type: "spa", path: "/" },
   };
+}
+
+// Note: Duplicated from react-router/lib/dom/ssr/markup
+// Must be kept in sync with the original implementation.
+const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
+const ESCAPE_LOOKUP: { [match: string]: string } = {
+  "&": "\\u0026",
+  ">": "\\u003e",
+  "<": "\\u003c",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+function escapeHtml(html: string) {
+  return html.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }

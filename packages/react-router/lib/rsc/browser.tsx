@@ -7,7 +7,11 @@ import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
-import { createRouter, isMutationMethod } from "../router/router";
+import {
+  createRouter,
+  invalidProtocols,
+  isMutationMethod,
+} from "../router/router";
 import type {
   RSCPayload,
   RSCRouteManifest,
@@ -140,6 +144,9 @@ export function createCallServer({
         .then(async (payload) => {
           if (payload.type === "redirect") {
             if (payload.reload || isExternalLocation(payload.location)) {
+              if (hasInvalidProtocol(payload.location)) {
+                throw new Error("Invalid redirect location");
+              }
               window.location.href = payload.location;
               return;
             }
@@ -164,6 +171,9 @@ export function createCallServer({
           ) {
             if (rerender.type === "redirect") {
               if (rerender.reload || isExternalLocation(rerender.location)) {
+                if (hasInvalidProtocol(rerender.location)) {
+                  throw new Error("Invalid redirect location");
+                }
                 window.location.href = rerender.location;
                 return;
               }
@@ -1080,6 +1090,14 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
 function isExternalLocation(location: string) {
   const newLocation = new URL(location, window.location.href);
   return newLocation.origin !== window.location.origin;
+}
+
+function hasInvalidProtocol(location: string): boolean {
+  try {
+    return invalidProtocols.includes(new URL(location).protocol);
+  } catch {
+    return false;
+  }
 }
 
 function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {
