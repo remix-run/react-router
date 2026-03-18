@@ -336,6 +336,13 @@ test.describe("Vite dev", () => {
       });
 
       test("handles multiple set-cookie headers", async ({ dev, page }) => {
+        // TODO(v8): Remove this skip once vite-plugin-rsc supports Node 20
+        test.skip(
+          templateName.includes("rsc") &&
+            parseInt(process.versions.node.split(".")[0], 10) === 20,
+          "vite-plugin-rsc dev cookie handling differs on Node 20.",
+        );
+
         const { port } = await dev(files, templateName);
 
         await page.goto(`http://localhost:${port}/set-cookies`, {
