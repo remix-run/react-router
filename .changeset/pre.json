@@ -35,5 +35,16 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "cold-schools-relate",
+    "fix-createRoutesStub-component-type",
+    "fix-dev-socket-file-crash",
+    "gentle-doors-visit",
+    "kind-shirts-turn",
+    "passthrough-reqeusts",
+    "remove-agnostic-types",
+    "sweet-houses-kick",
+    "twelve-snails-wait",
+    "unstable-url"
+  ]
 }
