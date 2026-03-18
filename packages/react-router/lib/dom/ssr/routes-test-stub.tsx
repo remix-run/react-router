@@ -23,9 +23,6 @@ import type {
   FrameworkContextObject,
 } from "./entry";
 import {
-  type RouteComponentType,
-  type HydrateFallbackType,
-  type ErrorBoundaryType,
   Outlet,
   RouterProvider,
   createMemoryRouter,
@@ -37,9 +34,9 @@ import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
 
 interface StubRouteExtensions {
-  Component?: RouteComponentType;
-  HydrateFallback?: HydrateFallbackType;
-  ErrorBoundary?: ErrorBoundaryType;
+  Component?: React.ComponentType<any>;
+  HydrateFallback?: React.ComponentType<any>;
+  ErrorBoundary?: React.ComponentType<any>;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
