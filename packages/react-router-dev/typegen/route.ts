@@ -27,7 +27,14 @@ export function fullpath(lineage: RouteManifestEntry[]) {
   return (
     "/" +
     lineage
-      .map((route) => route.path?.replace(/^\//, "")?.replace(/\/$/, ""))
+      .map((route) =>
+        route.path
+          ?.replace(/^\//, "")
+          ?.replace(/\/$/, "")
+          // Escape `*` characters in folder names to prevent them from being
+          // treated as splat params during type generation
+          ?.replace(/\*/g, "[*]"),
+      )
       .filter((path) => path !== undefined && path !== "")
       .join("/")
   );
