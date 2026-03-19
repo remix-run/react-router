@@ -1723,6 +1723,12 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 );
 NavLink.displayName = "NavLink";
 
+type HTMLSubmitEvent = React.BaseSyntheticEvent<
+  SubmitEvent,
+  Event,
+  HTMLFormElement
+>;
+
 /**
  * Form props shared by navigations and fetchers
  */
@@ -1777,7 +1783,7 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
    * then this form will not do anything.
    */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  onSubmit?: (event: HTMLSubmitEvent) => void;
 
   /**
    * Specify the default revalidation behavior after this submission
@@ -1857,12 +1863,6 @@ export interface FormProps extends SharedFormProps {
    */
   viewTransition?: boolean;
 }
-
-type HTMLSubmitEvent = React.BaseSyntheticEvent<
-  SubmitEvent,
-  Event,
-  HTMLFormElement
->;
 
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
@@ -1945,7 +1945,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let isAbsolute =
       typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+    let submitHandler = (event: HTMLSubmitEvent) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
       event.preventDefault();
