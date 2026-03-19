@@ -2764,8 +2764,8 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
    * If the fetcher is currently in-flight, the
    * [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
    * will be aborted with the `reason`, if provided.
-   *
-   * @param reason Optional `reason` to provide to [`AbortController.abort()`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
+   * @param opts Options for resetting the fetcher.
+   * @param opts.reason Optional `reason` to provide to [`AbortController.abort()`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort)
    * @returns void
    */
   reset: (opts?: { reason?: unknown }) => void;
