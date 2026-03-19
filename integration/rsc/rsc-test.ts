@@ -1573,7 +1573,9 @@ implementations.forEach((implementation) => {
         test("Supports navigating between server-first/client-first routes starting on a server route", async ({
           page,
         }) => {
-          await page.goto(`http://localhost:${port}/soft-navigation`);
+          await page.goto(`http://localhost:${port}/soft-navigation`, {
+            waitUntil: "networkidle",
+          });
 
           // Load a server route
           await page.waitForSelector("[data-page=home]");
