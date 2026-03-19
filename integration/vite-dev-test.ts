@@ -336,7 +336,7 @@ test.describe("Vite dev", () => {
       });
 
       test("handles multiple set-cookie headers", async ({ dev, page }) => {
-        // TODO(v8): Remove this skip once vite-plugin-rsc supports Node 20
+        // TODO(v8): Remove this skip if we no longer support Node 20
         test.skip(
           templateName.includes("rsc") &&
             parseInt(process.versions.node.split(".")[0], 10) === 20,
