@@ -1240,24 +1240,13 @@ test.describe("Client Data", () => {
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
               page.on("console", (msg) => {
-                if (msg.type() === "time" || msg.type() === "timeEnd") return;
-
                 let text = msg.text();
-                if (
-                  // Chrome logs the 500 as a console error, so skip that since it's not
-                  // what we are asserting against here
-                  /500 \(Internal Server Error\)/.test(text) ||
-                  // Ignore any dev tools messages. This may only happen locally when dev
-                  // tools is installed and not in CI but either way we don't care
-                  /Download the React DevTools/.test(text) ||
-                  (templateName.includes("rsc") &&
-                    /The <Scripts \/> element is a no-op when using RSC and can be safely removed./.test(
-                      text,
-                    ))
-                ) {
-                  return;
+                // Firefox surfaces React performance track labels on the console
+                // during hydration, so only capture the application log this
+                // assertion actually cares about.
+                if (text === "running parent client loader") {
+                  logs.push(text);
                 }
-                logs.push(text);
               });
               await app.goto(
                 "/client-loader-critical/bubbled-server-loader-errors-are-persisted-for-hydrating-routes/parent/child",
