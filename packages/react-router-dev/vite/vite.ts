@@ -6,7 +6,6 @@ import { isReactRouterRepo } from "../config/is-react-router-repo";
 
 const nodeRequire = createRequire(import.meta.url);
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type Vite = typeof import("vite");
 let vite: Vite | undefined;
 

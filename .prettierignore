@@ -1,3 +1,4 @@
+# Prettier ignore patterns.
 /fixtures/
 node_modules/
 pnpm-lock.yaml
