@@ -60,7 +60,7 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
-  test("repeated params", async ({ edit, $ }) => {
+  test("star character in folder name", async ({ edit, $ }) => {`n    await edit({`n      "app/routes.ts": tsx``n        import { type RouteConfig, route } from "@react-router/dev/routes";`n`n        export default [`n          route("*", "routes/star.tsx")`n        ] satisfies RouteConfig;`n      `,,`n      "app/routes/star.tsx": tsx``n        import type { Expect, Equal } from "../expect-type"`n        import type { Route } from "./+types/star"`n`n        export function loader({ params }: Route.LoaderArgs) {`n          type Test = Expect<Equal<typeof params, {}>>`n          return { message: "star route" }`n        }`n`n        export default function Component({ loaderData }: Route.ComponentProps) {`n          type Test = Expect<Equal<typeof loaderData.message, string>>`n          return <h1>{loaderData.message}</h1>`n        }`n      `,,`n    });`n    await $("pnpm typecheck");`n  });`n`n    test("repeated params", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
