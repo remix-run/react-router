@@ -41,6 +41,13 @@ export class PlaywrightFixture {
       throw new Error(
         "Unexpected null response, possible about:blank request or same-URL redirect",
       );
+
+    if (waitForHydration === false) {
+      await this.page.waitForFunction(
+        () => !!document.body && document.body.children.length > 0,
+      );
+    }
+
     return response;
   }
 
