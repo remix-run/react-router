@@ -33,7 +33,8 @@ function isSubmitterElement(
 }
 
 function getSubmitterElement(target: EventTarget | null) {
-  let element = target instanceof Element ? target.closest("button, input") : null;
+  let element =
+    target instanceof Element ? target.closest("button, input") : null;
   return isSubmitterElement(element) ? element : null;
 }
 
@@ -47,13 +48,19 @@ if (
 
 if (typeof document !== "undefined" && globalThis.FormData) {
   let activeSubmitter: SubmitterElement | null = null;
-  let imageInputCoords = new WeakMap<SubmitterElement, { x: string; y: string }>();
+  let imageInputCoords = new WeakMap<
+    SubmitterElement,
+    { x: string; y: string }
+  >();
   let NativeFormData = globalThis.FormData;
 
   let cloneControl = (element: Element) => {
     let clone = element.cloneNode(true) as Element;
 
-    if (element instanceof HTMLInputElement && clone instanceof HTMLInputElement) {
+    if (
+      element instanceof HTMLInputElement &&
+      clone instanceof HTMLInputElement
+    ) {
       clone.checked = element.checked;
       clone.value = element.value;
     } else if (
@@ -82,10 +89,7 @@ if (typeof document !== "undefined" && globalThis.FormData) {
   let getSubmitterEntries = (
     submitter: SubmitterElement,
   ): Array<[string, FormDataEntryValue]> => {
-    if (
-      submitter instanceof HTMLInputElement &&
-      submitter.type === "image"
-    ) {
+    if (submitter instanceof HTMLInputElement && submitter.type === "image") {
       let coords = imageInputCoords.get(submitter) ?? { x: "0", y: "0" };
       let prefix = submitter.name ? `${submitter.name}.` : "";
       return [
@@ -110,13 +114,16 @@ if (typeof document !== "undefined" && globalThis.FormData) {
     }
 
     try {
-      return JSON.stringify(
-        Array.from(new NativeFormData(form, submitter).entries()),
-      ) === JSON.stringify([
-        ["a", "1"],
-        ["b", "2"],
-        ["c", "3"],
-      ]);
+      return (
+        JSON.stringify(
+          Array.from(new NativeFormData(form, submitter).entries()),
+        ) ===
+        JSON.stringify([
+          ["a", "1"],
+          ["b", "2"],
+          ["c", "3"],
+        ])
+      );
     } catch {
       return false;
     }
@@ -129,19 +136,26 @@ if (typeof document !== "undefined" && globalThis.FormData) {
           throw new TypeError("Invalid submitter");
         }
 
-        if (form instanceof HTMLFormElement && submitter && isSubmitterElement(submitter)) {
+        if (
+          form instanceof HTMLFormElement &&
+          submitter &&
+          isSubmitterElement(submitter)
+        ) {
           super();
           let elements = Array.from(form.elements).filter(
             (element): element is Element => element instanceof Element,
           );
           if (
             !elements.some(
-              (element) => element === submitter || element.isSameNode(submitter),
+              (element) =>
+                element === submitter || element.isSameNode(submitter),
             )
           ) {
-            let index = elements.findIndex(
-              (element) =>
-                Boolean(submitter.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING),
+            let index = elements.findIndex((element) =>
+              Boolean(
+                submitter.compareDocumentPosition(element) &
+                  Node.DOCUMENT_POSITION_FOLLOWING,
+              ),
             );
             if (index >= 0) {
               elements.splice(index, 0, submitter);

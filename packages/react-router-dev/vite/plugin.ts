@@ -1735,12 +1735,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               : null);
 
           if (buildManifest?.serverBundles) {
-            let routesByServerBundleId = getRoutesByServerBundleId(buildManifest);
+            let routesByServerBundleId =
+              getRoutesByServerBundleId(buildManifest);
 
             // Load all server bundle files
             for (let bundle of Object.values(buildManifest.serverBundles)) {
               let build: ServerBuild = await import(
-                url.pathToFileURL(path.resolve(ctx.rootDirectory, bundle.file)).href
+                url.pathToFileURL(path.resolve(ctx.rootDirectory, bundle.file))
+                  .href
               );
               bundledHandlers.push({
                 handler: createRequestHandler(build, "production"),
@@ -2456,7 +2458,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return [
           "const exports = {}",
           await readFile(reactRefreshRuntimePath, "utf8"),
-          await readFile(nodeRequire.resolve("./static/refresh-utils.mjs"), "utf8"),
+          await readFile(
+            nodeRequire.resolve("./static/refresh-utils.mjs"),
+            "utf8",
+          ),
           "export default exports",
         ].join("\n");
       },
@@ -2490,7 +2495,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             sourceType: "module",
             allowAwaitOutsideFunction: true,
           },
-          plugins: [[nodeRequire.resolve("react-refresh/babel"), { skipEnvCheck: true }]],
+          plugins: [
+            [
+              nodeRequire.resolve("react-refresh/babel"),
+              { skipEnvCheck: true },
+            ],
+          ],
           sourceMaps: true,
         });
         if (result === null) return;

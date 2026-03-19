@@ -17,8 +17,9 @@ let sendReactRouterResponse: typeof import("../server").sendReactRouterResponse;
 
 // We don't want to test that the React Router server works here,
 // we just want to test the architect adapter
-let mockedCreateRequestHandler =
-  jest.fn() as jest.MockedFunction<typeof import("react-router").createRequestHandler>;
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
 
 (jest as any).unstable_mockModule("react-router", () => ({
   createRequestHandler: mockedCreateRequestHandler,

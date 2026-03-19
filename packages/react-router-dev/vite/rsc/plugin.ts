@@ -511,7 +511,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             sourceType: "module",
             allowAwaitOutsideFunction: true,
           },
-          plugins: [[nodeRequire.resolve("react-refresh/babel"), { skipEnvCheck: true }]],
+          plugins: [
+            [
+              nodeRequire.resolve("react-refresh/babel"),
+              { skipEnvCheck: true },
+            ],
+          ],
           sourceMaps: true,
         });
         if (result === null) return;

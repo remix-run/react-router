@@ -5,10 +5,9 @@ const nodeRequire = createRequire(import.meta.url);
 const jestEnvironmentJsdomDir = path.dirname(
   nodeRequire.resolve("jest-environment-jsdom/package.json"),
 );
-const { JSDOM } = nodeRequire(path.join(
-  jestEnvironmentJsdomDir,
-  "../jsdom",
-)) as typeof import("jsdom");
+const { JSDOM } = nodeRequire(
+  path.join(jestEnvironmentJsdomDir, "../jsdom"),
+) as typeof import("jsdom");
 
 export default function getWindow(initialUrl: string, isHash = false): Window {
   // Need to use our own custom DOM in order to get a working history

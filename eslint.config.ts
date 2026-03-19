@@ -16,12 +16,12 @@ const jsxA11yPlugin = fixupPluginRules(require("eslint-plugin-jsx-a11y"));
 const reactPlugin = fixupPluginRules(require("eslint-plugin-react"));
 const reactHooksPlugin = fixupPluginRules(require("eslint-plugin-react-hooks"));
 const tsEslintPlugin = fixupPluginRules(
-  require("@typescript-eslint/eslint-plugin")
+  require("@typescript-eslint/eslint-plugin"),
 );
 const tsParser = require("@typescript-eslint/parser");
 
 const reactAppTsOverride = reactAppConfig.overrides.find(
-  (config: { files?: string[] }) => config.files?.includes("**/*.ts?(x)")
+  (config: { files?: string[] }) => config.files?.includes("**/*.ts?(x)"),
 );
 
 if (!reactAppTsOverride) {
@@ -35,13 +35,13 @@ function normalizeGlobals(globalsToNormalize: Record<string, unknown>) {
     Object.entries(globalsToNormalize).map(([name, value]) => [
       name.trim(),
       value,
-    ])
+    ]),
   );
 }
 
 function disableGlobals(globalsToDisable: Record<string, unknown>) {
   return Object.fromEntries(
-    Object.keys(globalsToDisable).map((name) => [name, "off"] as const)
+    Object.keys(globalsToDisable).map((name) => [name, "off"] as const),
   );
 }
 
@@ -196,7 +196,9 @@ export default defineConfig([
     },
   },
   {
-    files: ["packages/react-router/lib/server-runtime/**/*.{js,mjs,cjs,jsx,ts,tsx}"],
+    files: [
+      "packages/react-router/lib/server-runtime/**/*.{js,mjs,cjs,jsx,ts,tsx}",
+    ],
     rules: {
       "no-restricted-syntax": "off",
     },

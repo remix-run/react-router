@@ -10,8 +10,9 @@ let createRequestHandler: typeof import("../server").createRequestHandler;
 
 // We don't want to test that the remix server works here (that's what the
 // playwright tests do), we just want to test the express adapter
-let mockedCreateRequestHandler =
-  jest.fn() as jest.MockedFunction<typeof import("react-router").createRequestHandler>;
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
 
 (jest as any).unstable_mockModule("react-router", () => ({
   createRequestHandler: mockedCreateRequestHandler,
