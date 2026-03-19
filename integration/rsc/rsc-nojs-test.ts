@@ -190,7 +190,10 @@ implementations.forEach((implementation) => {
     test("Supports form state without JS", async ({ page }, { project }) => {
       test.skip(project.name !== "chromium");
 
-      await page.goto(`http://localhost:${port}/`);
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      await page.waitForSelector("[data-action-state-increment-result]");
 
       await expect(
         page.locator("[data-action-state-increment-result]"),
