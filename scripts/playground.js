@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-let { existsSync, readdirSync } = require("node:fs");
-let { cp } = require("node:fs/promises");
-let path = require("node:path");
-let prompts = require("prompts");
-let pc = require("picocolors");
+import { existsSync, readdirSync } from "node:fs";
+import { cp } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import prompts from "prompts";
+import pc from "picocolors";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 copyPlayground();
 

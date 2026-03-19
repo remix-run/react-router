@@ -16,7 +16,7 @@ import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 import type { Config } from "@react-router/dev/config";
 
-const require = createRequire(import.meta.url);
+const nodeRequire = createRequire(import.meta.url);
 
 const reactRouterBin = "node_modules/@react-router/dev/bin.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -358,7 +358,7 @@ export const wranglerPagesDev = async ({
   port: number;
 }) => {
   let nodeBin = process.argv[0];
-  let wranglerBin = require.resolve("wrangler/bin/wrangler.js", {
+  let wranglerBin = nodeRequire.resolve("wrangler/bin/wrangler.js", {
     paths: [cwd],
   });
 

@@ -12,6 +12,7 @@ import {
   rm,
   writeFile,
 } from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
@@ -31,10 +32,12 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
-import pick from "lodash/pick";
+import pick from "lodash/pick.js";
 import jsesc from "jsesc";
 import colors from "picocolors";
-import kebabCase from "lodash/kebabCase";
+import kebabCase from "lodash/kebabCase.js";
+
+const nodeRequire = createRequire(import.meta.url);
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -661,7 +664,7 @@ const injectQuery = (url: string, query: string) =>
   url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
 
 let defaultEntriesDir = path.resolve(
-  path.dirname(require.resolve("@react-router/dev/package.json")),
+  path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
   "dist",
   "config",
   "defaults",
@@ -1716,7 +1719,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         async function getHandler(): Promise<RequestHandler> {
           if (cachedHandler) return cachedHandler;
 
-          let serverBuildFiles: string[] = [];
+          let bundledHandlers: Array<{
+            handler: RequestHandler;
+            routes: DataRouteObject[] | null;
+          }> = [];
 
           // Get build manifest to find server bundles
           let buildManifest =
@@ -1729,11 +1735,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               : null);
 
           if (buildManifest?.serverBundles) {
+            let routesByServerBundleId = getRoutesByServerBundleId(buildManifest);
+
             // Load all server bundle files
             for (let bundle of Object.values(buildManifest.serverBundles)) {
-              serverBuildFiles.push(
-                path.resolve(ctx.rootDirectory, bundle.file),
+              let build: ServerBuild = await import(
+                url.pathToFileURL(path.resolve(ctx.rootDirectory, bundle.file)).href
               );
+              bundledHandlers.push({
+                handler: createRequestHandler(build, "production"),
+                routes: createPrerenderRoutes(
+                  routesByServerBundleId[bundle.id] ?? {},
+                ),
+              });
             }
           } else {
             let serverEntryPath = path.resolve(
@@ -1742,22 +1756,44 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             );
 
             // Single server build
-            serverBuildFiles.push(serverEntryPath);
-          }
-
-          // Import all bundles and create handlers
-          let handlers: RequestHandler[] = [];
-          for (let file of serverBuildFiles) {
-            let build: ServerBuild = await import(url.pathToFileURL(file).href);
-            handlers.push(createRequestHandler(build, "production"));
+            let build: ServerBuild = await import(
+              url.pathToFileURL(serverEntryPath).href
+            );
+            bundledHandlers.push({
+              handler: createRequestHandler(build, "production"),
+              routes: null,
+            });
           }
 
           // Return a combined handler that tries each bundle until one handles the request.
           // A 404 response means "not my route", so we try the next bundle.
           cachedHandler = async (request, loadContext) => {
             let response: Response | undefined;
+            let handlersToTry = bundledHandlers;
 
-            for (let handler of handlers) {
+            if (buildManifest?.serverBundles) {
+              let pathname = new URL(request.url).pathname;
+
+              // A non-index bundle can still return a 200 for `/` by rendering only
+              // the root route, so prefer the bundle with the deepest route match.
+              handlersToTry = bundledHandlers
+                .map((entry, index) => ({
+                  entry,
+                  index,
+                  matchDepth:
+                    matchRoutes(
+                      entry.routes ?? [],
+                      pathname,
+                      ctx.reactRouterConfig.basename,
+                    )?.length ?? -1,
+                }))
+                .sort(
+                  (a, b) => b.matchDepth - a.matchDepth || a.index - b.index,
+                )
+                .map(({ entry }) => entry);
+            }
+
+            for (let { handler } of handlersToTry) {
               response = await handler(request, loadContext);
 
               if (response.status !== 404) {
@@ -2410,7 +2446,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (id !== virtualHmrRuntime.resolvedId) return;
 
         let reactRefreshDir = path.dirname(
-          require.resolve("react-refresh/package.json"),
+          nodeRequire.resolve("react-refresh/package.json"),
         );
         let reactRefreshRuntimePath = path.join(
           reactRefreshDir,
@@ -2420,7 +2456,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return [
           "const exports = {}",
           await readFile(reactRefreshRuntimePath, "utf8"),
-          await readFile(require.resolve("./static/refresh-utils.mjs"), "utf8"),
+          await readFile(nodeRequire.resolve("./static/refresh-utils.mjs"), "utf8"),
           "export default exports",
         ].join("\n");
       },
@@ -2454,7 +2490,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             sourceType: "module",
             allowAwaitOutsideFunction: true,
           },
-          plugins: [[require("react-refresh/babel"), { skipEnvCheck: true }]],
+          plugins: [[nodeRequire.resolve("react-refresh/babel"), { skipEnvCheck: true }]],
           sourceMaps: true,
         });
         if (result === null) return;
@@ -3954,7 +3990,7 @@ export async function getEnvironmentOptionsResolvers(
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
 
   let packageRoot = path.dirname(
-    require.resolve("@react-router/dev/package.json"),
+    nodeRequire.resolve("@react-router/dev/package.json"),
   );
   let { moduleSyncEnabled } = await import(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`

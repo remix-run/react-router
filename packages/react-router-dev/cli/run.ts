@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import arg from "arg";
 import semver from "semver";
 import colors from "picocolors";
 
 import * as commands from "./commands";
+import packageJson from "@react-router/dev/package.json" with { type: "json" };
 
 const helpText = `
 ${colors.blueBright("react-router")}
@@ -81,7 +84,10 @@ ${colors.blueBright("react-router")}
  * Programmatic interface for running the react-router CLI with the given command line
  * arguments.
  */
-export async function run(argv: string[] = process.argv.slice(2)) {
+export async function run(
+  argv: string[] = process.argv.slice(2),
+  { isMain = false }: { isMain?: boolean } = {},
+) {
   // Check the node version
   let versions = process.versions;
   let MINIMUM_NODE_VERSION = 20;
@@ -156,12 +162,11 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
   if (flags.version) {
-    let version = require("../../package.json").version;
-    console.log(version);
+    console.log(packageJson.version);
     return;
   }
 
-  flags.interactive = flags.interactive ?? require.main === module;
+  flags.interactive = flags.interactive ?? isMain;
   if (args["--no-typescript"]) {
     flags.typescript = false;
   }

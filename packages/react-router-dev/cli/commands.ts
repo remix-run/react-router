@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import exitHook from "exit-hook";
 import colors from "picocolors";
@@ -16,6 +17,8 @@ import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
+
+const nodeRequire = createRequire(import.meta.url);
 
 export async function routes(
   rootDirectory?: string,
@@ -148,7 +151,7 @@ export async function generateEntry(
   }
 
   let defaultsDirectory = path.resolve(
-    path.dirname(require.resolve("@react-router/dev/package.json")),
+    path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "defaults",

@@ -5,7 +5,13 @@
 import { cursor, erase } from "sisteransi";
 
 import { Prompt, type PromptOptions } from "./prompts-prompt-base";
-import { color, strip, clear, shouldUseAscii, type ActionKey } from "./utils";
+import {
+  color,
+  strip,
+  clear,
+  shouldUseAscii,
+  type ActionKey,
+} from "./utils";
 
 export interface SelectChoice {
   value: unknown;

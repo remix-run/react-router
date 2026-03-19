@@ -1,7 +1,10 @@
+import { createRequire } from "node:module";
 import path from "pathe";
 
 import invariant from "../invariant";
 import { isReactRouterRepo } from "../config/is-react-router-repo";
+
+const nodeRequire = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type Vite = typeof import("vite");
@@ -14,7 +17,7 @@ const viteImportSpecifier = isReactRouterRepo()
     // file, which means that it will always resolve to Vite 6.
     `file:///${path
       .normalize(
-        require.resolve("vite/package.json", { paths: [process.cwd()] }),
+        nodeRequire.resolve("vite/package.json", { paths: [process.cwd()] }),
       )
       .replace("package.json", "dist/node/index.js")}`
   : "vite";

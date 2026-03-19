@@ -6605,7 +6605,8 @@ function createDataFunctionUrl(request: Request, path: To): URL {
     for (let value of indexValues.filter(Boolean)) {
       searchParams.append("index", value);
     }
-    url.search = searchParams.size ? `?${searchParams.toString()}` : "";
+    let search = searchParams.toString();
+    url.search = search ? `?${search}` : "";
   } else {
     url.search = "";
   }

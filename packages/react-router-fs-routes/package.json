@@ -1,5 +1,6 @@
 {
   "name": "@react-router/fs-routes",
+  "type": "module",
   "version": "7.13.1",
   "description": "File system routing conventions for React Router, for use within routes.ts",
   "bugs": {

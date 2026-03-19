@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 
 import * as Path from "pathe";
-import { green, red } from "picocolors";
+import pc from "picocolors";
 import type vite from "vite";
 
 import { type Context, createContext } from "./context";
@@ -12,6 +12,8 @@ import {
   generateRoutes,
   generateServerBuild,
 } from "./generate";
+
+const { green, red } = pc;
 
 async function clearRouteModuleAnnotations(ctx: Context) {
   await fs.rm(

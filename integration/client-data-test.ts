@@ -1142,9 +1142,9 @@ test.describe("Client Data", () => {
                 "/client-loader-critical/client-loader-hydrate-is-automatically-implied-when-no-server-loader-exists-without-hydrate-fallback/parent/child",
               );
               let html = await app.getHtml();
-              expect(html).toMatch(
-                "💿 Hey developer 👋. You can provide a way better UX than this",
-              );
+              // Production builds strip dev-only warning logs, but we should
+              // still render the default root loading shell until hydration runs.
+              expect(html).toMatch("<title>Loading...</title>");
               expect(html).not.toMatch("child-data");
               await page.waitForSelector("#child-data");
               html = await app.getHtml("main");
@@ -1240,7 +1240,7 @@ test.describe("Client Data", () => {
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
               page.on("console", (msg) => {
-                if (msg.type() === "timeStamp") return;
+                if (msg.type() === "time" || msg.type() === "timeEnd") return;
 
                 let text = msg.text();
                 if (

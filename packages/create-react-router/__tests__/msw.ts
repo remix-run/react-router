@@ -4,6 +4,9 @@ import { setupServer } from "msw/node";
 import { http, type RequestHandler } from "msw";
 
 import { githubHandlers } from "./github-mocks";
+const TEST_DIR =
+  process.env.CREATE_REACT_ROUTER_TEST_DIR ??
+  path.join(process.cwd(), "packages/create-react-router/__tests__");
 
 let miscHandlers: Array<RequestHandler> = [
   http.get("https://registry.npmjs.org/react-router/latest", () => {
@@ -26,7 +29,7 @@ let miscHandlers: Array<RequestHandler> = [
   }),
   http.get("https://example.com/template.tar.gz", async () => {
     let fileBuffer = await fsp.readFile(
-      path.join(__dirname, "fixtures", "template.tar.gz"),
+      path.join(TEST_DIR, "fixtures", "template.tar.gz"),
     );
 
     return new Response(fileBuffer, {

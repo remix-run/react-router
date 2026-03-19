@@ -1,5 +1,6 @@
 {
   "name": "@react-router/remix-routes-option-adapter",
+  "type": "module",
   "version": "7.13.1",
   "description": "Adapter for Remix's \"routes\" config option, for use within routes.ts",
   "bugs": {

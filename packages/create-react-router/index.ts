@@ -9,7 +9,6 @@ import arg from "arg";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
 
-import { version as thisReactRouterVersion } from "./package.json";
 import { prompt } from "./prompt";
 import {
   IGNORED_TEMPLATE_DIRECTORIES,
@@ -29,6 +28,7 @@ import {
 } from "./utils";
 import { renderLoadingIndicator } from "./loading-indicator";
 import { copyTemplate, CopyTemplateError } from "./copy-template";
+import pkgJson from "./package.json" with { type: "json" };
 
 async function createReactRouter(argv: string[]) {
   let ctx = await getContext(argv);
@@ -37,7 +37,7 @@ async function createReactRouter(argv: string[]) {
     return;
   }
   if (ctx.versionRequested) {
-    log(thisReactRouterVersion);
+    log(pkgJson.version);
     return;
   }
 
@@ -128,7 +128,7 @@ async function getContext(argv: string[]): Promise<Context> {
     } else {
       log(
         `\n${color.warning(
-          `${selectedReactRouterVersion} is an invalid version specifier. Using React Router v${thisReactRouterVersion}.`,
+          `${selectedReactRouterVersion} is an invalid version specifier. Using React Router v${pkgJson.version}.`,
         )}`,
       );
       selectedReactRouterVersion = undefined;
@@ -157,7 +157,7 @@ async function getContext(argv: string[]): Promise<Context> {
     ),
     projectName,
     prompt,
-    reactRouterVersion: selectedReactRouterVersion || thisReactRouterVersion,
+    reactRouterVersion: selectedReactRouterVersion || pkgJson.version,
     template,
     token,
     versionRequested,

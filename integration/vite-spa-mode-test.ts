@@ -666,7 +666,7 @@ test.describe("SPA Mode", () => {
           expect(html.match(/<html/g)?.length).toBe(1);
           expect(html.match(/<\/html/g)?.length).toBe(1);
           expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
-          expect(html.match(/💿 Hey developer 👋/g)?.length).toBe(1);
+          expect(html.includes(`<body><script>window.__reactRouterContext`)).toBe(true);
         });
 
         test("does not inherit single fetch revalidation behavior", async ({

@@ -1,5 +1,6 @@
 {
   "name": "react-router",
+  "type": "module",
   "version": "7.13.1",
   "description": "Declarative routing for React",
   "keywords": [
@@ -18,88 +19,44 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "types": "./dist/development/index.d.ts",
-  "main": "./dist/development/index.js",
-  "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
+      "types": "./dist/production/index.d.ts",
       "react-server": {
-        "module": "./dist/development/index-react-server.mjs",
-        "default": "./dist/development/index-react-server.js"
+        "module-sync": {
+          "development": "./dist/development/index-react-server.js",
+          "default": "./dist/production/index-react-server.js"
+        },
+        "development": "./dist/development/index-react-server.js",
+        "default": "./dist/production/index-react-server.js"
       },
-      "node": {
-        "types": "./dist/development/index.d.ts",
-        "module": "./dist/development/index.mjs",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
+      "module-sync": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
       },
-      "module": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "import": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "default": {
-        "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
-      }
+      "development": "./dist/development/index.js",
+      "default": "./dist/production/index.js"
     },
     "./dom": {
-      "node": {
-        "types": "./dist/development/dom-export.d.ts",
-        "module": "./dist/development/dom-export.mjs",
-        "module-sync": "./dist/development/dom-export.mjs",
-        "default": "./dist/development/dom-export.js"
+      "types": "./dist/production/dom-export.d.ts",
+      "module-sync": {
+        "development": "./dist/development/dom-export.js",
+        "default": "./dist/production/dom-export.js"
       },
-      "module": {
-        "types": "./dist/development/dom-export.d.mts",
-        "default": "./dist/development/dom-export.mjs"
-      },
-      "import": {
-        "types": "./dist/development/dom-export.d.mts",
-        "default": "./dist/development/dom-export.mjs"
-      },
-      "default": {
-        "types": "./dist/development/dom-export.d.ts",
-        "default": "./dist/development/dom-export.js"
-      }
+      "development": "./dist/development/dom-export.js",
+      "default": "./dist/production/dom-export.js"
     },
     "./internal": {
-      "node": {
-        "types": "./dist/development/lib/types/internal.d.ts"
-      },
-      "import": {
-        "types": "./dist/development/lib/types/internal.d.mts"
-      },
-      "default": {
-        "types": "./dist/development/lib/types/index.d.ts"
-      }
+      "types": "./dist/development/lib/types/internal.d.ts"
     },
     "./internal/react-server-client": {
-      "react-server": {
-        "module": "./dist/development/index-react-server-client.mjs",
-        "default": "./dist/development/index-react-server-client.js"
+      "types": "./dist/production/index-react-server-client.d.ts",
+      "module-sync": {
+        "development": "./dist/development/index-react-server-client.js",
+        "default": "./dist/production/index-react-server-client.js"
       },
-      "node": {
-        "types": "./dist/development/index.d.ts",
-        "module": "./dist/development/index.mjs",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
-      },
-      "module": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "import": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "default": {
-        "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
-      }
+      "development": "./dist/development/index-react-server-client.js",
+      "default": "./dist/production/index-react-server-client.js"
     },
     "./package.json": "./package.json"
   },

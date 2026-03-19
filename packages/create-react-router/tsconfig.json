@@ -4,7 +4,7 @@
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "target": "ES2022",
-    "module": "ES2022",
+    "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
