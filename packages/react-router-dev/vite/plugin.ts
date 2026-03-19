@@ -59,6 +59,7 @@ import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
 import { hasDependency } from "./has-dependency";
+import { getDefaultExternalConditions } from "./external-conditions";
 import {
   type RouteChunkName,
   type RouteChunkExportName,
@@ -4032,9 +4033,10 @@ export async function getEnvironmentOptionsResolvers(
     let maybeDefaultServerConditions = vite.defaultServerConditions || [];
 
     // There is no helpful export with the default external conditions (see
-    // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
-    // we are hardcording the default here.
-    let defaultExternalConditions = ["node"];
+    // https://github.com/vitejs/vite/pull/20279 for more details). Historically
+    // we hardcoded `node` here, but that breaks workers environments by forcing
+    // resolution toward node-specific exports.
+    let defaultExternalConditions = getDefaultExternalConditions();
 
     let baseConditions = [
       ...maybeDevelopmentConditions,

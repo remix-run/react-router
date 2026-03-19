@@ -10,6 +10,7 @@ import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest } from "./node-adapter";
 import { preloadVite } from "./vite";
+import { getDefaultExternalConditions } from "./external-conditions";
 import { type ResolvedReactRouterConfig, loadConfig } from "../config/config";
 
 let serverBuildId = "virtual:react-router/server-build";
@@ -71,8 +72,9 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       // In addition to that, these are external conditions (do not confuse them
       // with server conditions) and there is no helpful export with the default
       // external conditions (see https://github.com/vitejs/vite/pull/20279 for
-      // more details). So, for now, we are hardcording the default here.
-      const externalConditions: string[] = ["node"];
+      // more details). We intentionally avoid hardcoding `node` here because it
+      // breaks workers environments by forcing node-specific resolution.
+      const externalConditions = getDefaultExternalConditions();
 
       let configResult = await loadConfig({
         rootDirectory: config.root ?? process.cwd(),
