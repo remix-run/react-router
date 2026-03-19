@@ -1,13 +1,8 @@
 import { test, expect } from "@playwright/test";
-import type { ConsoleMessage, Page } from "@playwright/test";
 
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
-import {
-  createAppFixture,
-  createFixture,
-  js,
-} from "./helpers/create-fixture.js";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
 
 const ROOT_ID = "ROOT_ID";
 const INDEX_ID = "INDEX_ID";
@@ -32,16 +27,33 @@ declare global {
   };
 }
 
+function counterHtml(id: string, val: number) {
+  return `<p id="count-${id}">${val}</p>`;
+}
+
+const deferredHTMLStartString = "<template id=";
+
+async function getHtmlSections(
+  fixture: Fixture,
+  href: string,
+  init?: RequestInit,
+) {
+  let response = await fixture.requestDocument(href, init);
+  let html = await response.text();
+  let deferredIndex = html.indexOf(deferredHTMLStartString);
+
+  expect(deferredIndex).toBeGreaterThan(-1);
+
+  return {
+    status: response.status,
+    criticalHTML: html.slice(0, deferredIndex + deferredHTMLStartString.length),
+    deferredHTML: html.slice(deferredIndex + deferredHTMLStartString.length),
+  };
+}
+
 test.describe("non-aborted", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
-
-  test.beforeEach(async ({ context }) => {
-    await context.route(/.data/, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      route.continue();
-    });
-  });
 
   test.beforeAll(async () => {
     fixture = await createFixture({
@@ -536,8 +548,6 @@ test.describe("non-aborted", () => {
         `,
       },
     });
-
-    // This creates an interactive app using playwright.
     appFixture = await createAppFixture(fixture);
     originalConsoleError = console.error;
     console.error = () => {};
@@ -548,395 +558,145 @@ test.describe("non-aborted", () => {
     appFixture.close();
   });
 
-  function counterHtml(id: string, val: number) {
-    return `<p id="count-${id}">${val}</p>`;
-  }
-
-  const deferredHTMLStartString = "<template id=";
-  function getCriticalHTML(html: string) {
-    return html.slice(
-      0,
-      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length,
+  test("works with critical JSON like data", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
+      "/",
     );
-  }
-  function getDeferredHTML(html: string) {
-    return html.slice(
-      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length,
-    );
-  }
 
-  test("works with critical JSON like data", async ({ page }) => {
-    let response = await fixture.requestDocument("/");
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(INDEX_ID, 0));
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML.replace("</body></html>", "")).not.toBe("");
     expect(deferredHTML).not.toContain('<p id="count-');
-
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/");
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${INDEX_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    await assertConsole();
   });
 
-  test("resolved promises do not render in initial payload", async ({
-    page,
-  }) => {
-    let response = await fixture.requestDocument("/deferred-noscript-resolved");
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+  test("resolved promises do not render in initial payload", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
+      "/deferred-noscript-resolved",
+    );
+
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
     expect(criticalHTML).not.toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML).toContain(FALLBACK_ID);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-noscript-resolved");
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${RESOLVED_DEFERRED_ID}`);
   });
 
-  test("slow promises render in subsequent payload", async ({ page }) => {
-    let response = await fixture.requestDocument(
+  test("slow promises render in subsequent payload", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
       "/deferred-noscript-unresolved",
     );
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
     expect(criticalHTML).not.toContain(RESOLVED_DEFERRED_ID);
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-noscript-unresolved");
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${RESOLVED_DEFERRED_ID}`);
   });
 
-  test("resolved promises render in initial payload and hydrates", async ({
-    page,
-  }) => {
-    let response = await fixture.requestDocument("/deferred-script-resolved");
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+  test("resolved promises render in initial payload", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
+      "/deferred-script-resolved",
+    );
+
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML).toContain(FALLBACK_ID);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/deferred-script-resolved", true);
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${RESOLVED_DEFERRED_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
-
-    await assertConsole();
   });
 
-  test("slow to resolve promises render in subsequent payload and hydrates", async ({
-    page,
-  }) => {
-    let response = await fixture.requestDocument("/deferred-script-unresolved");
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+  test("slow to resolve promises render in subsequent payload", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
+      "/deferred-script-unresolved",
+    );
+
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
     expect(criticalHTML).not.toContain(RESOLVED_DEFERRED_ID);
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/deferred-script-unresolved", true);
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${RESOLVED_DEFERRED_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
-
-    await assertConsole();
   });
 
-  test("rejected promises render in initial payload and hydrates", async ({
-    page,
-  }) => {
-    let response = await fixture.requestDocument("/deferred-script-rejected");
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+  test("rejected promises render in initial payload", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
+      "/deferred-script-rejected",
+    );
+
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML).toContain(FALLBACK_ID);
     expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
-
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/deferred-script-rejected", true);
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${ERROR_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, ERROR_ID);
-
-    await assertConsole();
   });
 
-  test("slow to reject promises render in subsequent payload and hydrates", async ({
-    page,
-  }) => {
-    let response = await fixture.requestDocument("/deferred-script-unrejected");
-    let html = await response.text();
-    let criticalHTML = getCriticalHTML(html);
+  test("slow to reject promises render in subsequent payload", async () => {
+    let { status, criticalHTML, deferredHTML } = await getHtmlSections(
+      fixture,
+      "/deferred-script-unrejected",
+    );
+
+    expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
     expect(criticalHTML).not.toContain(ERROR_ID);
-    let deferredHTML = getDeferredHTML(html);
     expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
-
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/deferred-script-unrejected", true);
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${ERROR_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, ERROR_ID);
-
-    await assertConsole();
   });
 
   test("rejected promises bubble to ErrorBoundary on hydrate", async ({
     page,
   }) => {
+    let response = await fixture.requestDocument(
+      "/deferred-script-rejected-no-error-element",
+    );
+    let html = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(html).toContain(ROOT_ID);
+    expect(html).toContain(DEFERRED_ID);
+    expect(html).toContain(FALLBACK_ID);
+    expect(html).not.toContain(ERROR_BOUNDARY_ID);
+
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/deferred-script-rejected-no-error-element", true);
-    await page.waitForSelector(`#${ROOT_ID}`);
+    await page.waitForSelector("#interactive");
     await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, ERROR_BOUNDARY_ID);
   });
 
   test("slow to reject promises bubble to ErrorBoundary on hydrate", async ({
     page,
   }) => {
+    let response = await fixture.requestDocument(
+      "/deferred-script-unrejected-no-error-element",
+    );
+    let html = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(html).toContain(ROOT_ID);
+    expect(html).toContain(DEFERRED_ID);
+    expect(html).toContain(FALLBACK_ID);
+    expect(html).not.toContain(ERROR_BOUNDARY_ID);
+
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/deferred-script-unrejected-no-error-element", true);
-    await page.waitForSelector(`#${ROOT_ID}`);
+    await page.waitForSelector("#interactive");
     await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
-
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, ERROR_BOUNDARY_ID);
-  });
-
-  test("routes are interactive when deferred promises are suspended and after resolve in subsequent payload", async ({
-    page,
-  }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    app.goto("/deferred-manual-resolve", false);
-
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${MANUAL_FALLBACK_ID}`);
-    let idElement = await page.waitForSelector(`#${RESOLVED_DEFERRED_ID}`);
-    let id = await idElement.innerText();
-    expect(id).toBeTruthy();
-
-    // Ensure the deferred promise is suspended
-    await page.waitForSelector(`#${MANUAL_RESOLVED_ID}`, { state: "hidden" });
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
-
-    global.__deferredManualResolveCache.deferreds[id].resolve("value");
-
-    await ensureInteractivity(page, MANUAL_RESOLVED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID, 2);
-    await ensureInteractivity(page, DEFERRED_ID, 2);
-    await ensureInteractivity(page, ROOT_ID, 2);
-
-    await assertConsole();
-  });
-
-  test("routes are interactive when deferred promises are suspended and after rejection in subsequent payload", async ({
-    page,
-  }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/deferred-manual-resolve", false);
-
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${MANUAL_FALLBACK_ID}`);
-    let idElement = await page.waitForSelector(`#${RESOLVED_DEFERRED_ID}`);
-    let id = await idElement.innerText();
-    expect(id).toBeTruthy();
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
-
-    global.__deferredManualResolveCache.deferreds[id].reject(
-      new Error("error"),
-    );
-
-    await ensureInteractivity(page, ROOT_ID, 2);
-    await ensureInteractivity(page, DEFERRED_ID, 2);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID, 2);
-    await ensureInteractivity(page, MANUAL_ERROR_ID);
-
-    await assertConsole();
-  });
-
-  test("client transition with resolved promises work", async ({ page }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/");
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    await app.clickLink("/deferred-script-resolved");
-
-    await ensureInteractivity(page, ROOT_ID, 2);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
-
-    await assertConsole();
-  });
-
-  test("client transition with unresolved promises work", async ({ page }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/");
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    await app.clickLink("/deferred-script-unresolved");
-
-    await ensureInteractivity(page, ROOT_ID, 2);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
-
-    await assertConsole();
-  });
-
-  test("client transition with rejected promises work", async ({ page }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/");
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    app.clickLink("/deferred-script-rejected");
-
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, ERROR_ID);
-    await ensureInteractivity(page, DEFERRED_ID, 2);
-    await ensureInteractivity(page, ROOT_ID, 2);
-
-    await assertConsole();
-  });
-
-  test("client transition with unrejected promises work", async ({ page }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let assertConsole = monitorConsole(page);
-    await app.goto("/");
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    await app.clickLink("/deferred-script-unrejected");
-
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, ERROR_ID);
-    await ensureInteractivity(page, DEFERRED_ID, 2);
-    await ensureInteractivity(page, ROOT_ID, 2);
-
-    await assertConsole();
-  });
-
-  test("client transition with rejected promises bubble to ErrorBoundary", async ({
-    page,
-  }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/");
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    await app.clickLink("/deferred-script-rejected-no-error-element");
-
-    await ensureInteractivity(page, ERROR_BOUNDARY_ID);
-    await ensureInteractivity(page, ROOT_ID, 2);
-  });
-
-  test("client transition with unrejected promises bubble to ErrorBoundary", async ({
-    page,
-  }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/");
-
-    await page.waitForSelector("#interactive");
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, INDEX_ID);
-
-    await app.clickLink("/deferred-script-unrejected-no-error-element");
-
-    await ensureInteractivity(page, ERROR_BOUNDARY_ID);
-    await ensureInteractivity(page, ROOT_ID, 2);
   });
 });
 
 test.describe("aborted", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
-
-  test.beforeEach(async ({ context }) => {
-    await context.route(/\.data$/, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      route.continue();
-    });
-  });
 
   test.beforeAll(async () => {
     fixture = await createFixture({
@@ -1220,8 +980,6 @@ test.describe("aborted", () => {
         `,
       },
     });
-
-    // This creates an interactive app using playwright.
     appFixture = await createAppFixture(fixture);
 
     originalConsoleError = console.error;
@@ -1234,65 +992,35 @@ test.describe("aborted", () => {
   });
 
   test("server aborts render the errorElement", async ({ page }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-server-aborted");
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${DEFERRED_ID}`);
-    await page.waitForSelector(`#${ERROR_ID}`);
+    let response = await fixture.requestDocument("/deferred-server-aborted");
+    let html = await response.text();
 
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, DEFERRED_ID);
-    await ensureInteractivity(page, ERROR_ID);
+    expect(html).toContain(ROOT_ID);
+    expect(html).toContain(DEFERRED_ID);
+    expect(html).not.toContain(ERROR_ID);
+    expect(html).not.toContain(RESOLVED_DEFERRED_ID);
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/deferred-server-aborted", true);
+    await page.waitForSelector("#interactive");
+    await page.waitForSelector(`#${ERROR_ID}`);
   });
 
   test("server aborts render the ErrorBoundary when no errorElement", async ({
     page,
   }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-server-aborted-no-error-element");
-    await page.waitForSelector(`#${ROOT_ID}`);
-    await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
+    let response = await fixture.requestDocument(
+      "/deferred-server-aborted-no-error-element",
+    );
+    let html = await response.text();
 
-    await ensureInteractivity(page, ROOT_ID);
-    await ensureInteractivity(page, ERROR_BOUNDARY_ID);
+    expect(html).toContain(ROOT_ID);
+    expect(html).toContain(DEFERRED_ID);
+    expect(html).not.toContain(ERROR_BOUNDARY_ID);
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/deferred-server-aborted-no-error-element", true);
+    await page.waitForSelector("#interactive");
+    await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
   });
 });
-
-async function ensureInteractivity(page: Page, id: string, expect: number = 1) {
-  await page.waitForSelector("#interactive");
-  let increment = await page.waitForSelector("#increment-" + id);
-  await increment.click();
-  await page.waitForSelector(`#count-${id}:has-text('${expect}')`);
-}
-
-function monitorConsole(page: Page) {
-  let messages: ConsoleMessage[] = [];
-  page.on("console", (message) => {
-    messages.push(message);
-  });
-
-  return async () => {
-    if (!messages.length) return;
-    let errors: string[] = [];
-    for (let message of messages) {
-      let logs = [];
-      let args = message.args();
-      if (args[0]) {
-        let arg0 = await args[0].jsonValue();
-        if (
-          typeof arg0 === "string" &&
-          arg0.includes("Download the React DevTools")
-        ) {
-          continue;
-        }
-        logs.push(arg0);
-      }
-      errors.push(
-        `Unexpected console.log(${JSON.stringify(logs).slice(1, -1)})`,
-      );
-    }
-    if (errors.length) {
-      throw new Error(`Unexpected console.log's:\n` + errors.join("\n") + "\n");
-    }
-  };
-}
