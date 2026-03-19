@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import * as ViteNode from "../vite/vite-node";
+import * as ViteRunner from "../vite/vite-runner";
 import type * as Vite from "vite";
 import Path from "pathe";
 import chokidar, {
@@ -422,13 +422,13 @@ function err<T>(error: string): Result<T> {
 
 async function resolveConfig({
   root,
-  viteNodeContext,
+  viteRunnerContext,
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
 }: {
   root: string;
-  viteNodeContext: ViteNode.Context;
+  viteRunnerContext: ViteRunner.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
@@ -441,7 +441,7 @@ async function resolveConfig({
         return err(`${reactRouterConfigFile} no longer exists`);
       }
 
-      let configModule = await viteNodeContext.runner.executeFile(
+      let configModule = await viteRunnerContext.env.runner.import(
         reactRouterConfigFile,
       );
 
@@ -623,7 +623,7 @@ async function resolveConfig({
 
       setAppDirectory(appDirectory);
       let routeConfigExport = (
-        await viteNodeContext.runner.executeFile(
+        await viteRunnerContext.env.runner.import(
           Path.join(appDirectory, routeConfigFile),
         )
       ).default;
@@ -761,7 +761,7 @@ export async function createConfigLoader({
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
   let vite = await import("vite");
-  let viteNodeContext = await ViteNode.createContext({
+  let viteRunnerContext = await ViteRunner.createContext({
     root,
     mode,
     // Filter out any info level logs from vite-node
@@ -783,7 +783,7 @@ export async function createConfigLoader({
   let getConfig = () =>
     resolveConfig({
       root,
-      viteNodeContext,
+      viteRunnerContext,
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
@@ -849,7 +849,7 @@ export async function createConfigLoader({
           let moduleGraphChanged =
             configFileAddedOrRemoved ||
             Boolean(
-              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath),
+              viteRunnerContext.server?.moduleGraph.getModuleById(filepath),
             );
 
           // Bail out if no relevant changes detected
@@ -857,8 +857,8 @@ export async function createConfigLoader({
             return;
           }
 
-          viteNodeContext.devServer?.moduleGraph.invalidateAll();
-          viteNodeContext.runner?.moduleCache.clear();
+          viteRunnerContext.server?.moduleGraph.invalidateAll();
+          viteRunnerContext.env?.runner.clearCache();
 
           let result = await getConfig();
 
@@ -876,7 +876,7 @@ export async function createConfigLoader({
             configFileAddedOrRemoved ||
             (reactRouterConfigFile !== undefined &&
               isEntryFileDependency(
-                viteNodeContext.devServer.moduleGraph,
+                viteRunnerContext.server.moduleGraph,
                 reactRouterConfigFile,
                 filepath,
               ));
@@ -889,7 +889,7 @@ export async function createConfigLoader({
           let routeConfigCodeChanged =
             routeConfigFile !== undefined &&
             isEntryFileDependency(
-              viteNodeContext.devServer.moduleGraph,
+              viteRunnerContext.server.moduleGraph,
               routeConfigFile,
               filepath,
             );
@@ -927,7 +927,7 @@ export async function createConfigLoader({
     },
     close: async () => {
       changeHandlers = [];
-      await viteNodeContext.devServer.close();
+      await viteRunnerContext.server.close();
       await fsWatcher?.close();
     },
   };
