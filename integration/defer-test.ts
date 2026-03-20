@@ -3,7 +3,11 @@ import type { Page } from "@playwright/test";
 
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
+import {
+  createAppFixture,
+  createFixture,
+  js,
+} from "./helpers/create-fixture.js";
 
 const ROOT_ID = "ROOT_ID";
 const INDEX_ID = "INDEX_ID";
@@ -551,7 +555,7 @@ test.describe("non-aborted", () => {
     });
     appFixture = await createAppFixture(fixture);
     originalConsoleError = console.error;
-    console.error = () => { };
+    console.error = () => {};
   });
 
   test.afterAll(() => {

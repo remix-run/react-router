@@ -239,7 +239,7 @@ test.describe("route config", () => {
 
         await expect(async () => {
           // Reload to pick up new route for current path
-          await page.reload({ waitUntil: "networkidle"});
+          await page.reload({ waitUntil: "networkidle" });
           await expect(page.locator("[data-test-route]")).toHaveText(
             "Test route 2",
           );

@@ -41,8 +41,9 @@ test.describe("Client Data", () => {
           export function loader() {
             return { message: 'Parent Server Loader' };
           }
-          ${parentClientLoader
-            ? js`
+          ${
+            parentClientLoader
+              ? js`
                   export async function clientLoader({ serverLoader }) {
                     // Need a small delay to ensure we capture the server-rendered
                     // fallbacks for assertions
@@ -51,16 +52,17 @@ test.describe("Client Data", () => {
                     return { message: data.message + " (mutated by client)" };
                   }
                 `
-            : ""
+              : ""
           }
-          ${parentClientLoaderHydrate
-            ? js`
+          ${
+            parentClientLoaderHydrate
+              ? js`
                   clientLoader.hydrate = true;
                   export function HydrateFallback() {
                     return <p>Parent Fallback</p>
                   }
                 `
-            : ""
+              : ""
           }
           ${parentAdditions || ""}
           export default function Component() {
@@ -81,8 +83,9 @@ test.describe("Client Data", () => {
           export function action() {
             return { message: 'Child Server Action' };
           }
-          ${childClientLoader
-            ? js`
+          ${
+            childClientLoader
+              ? js`
                   export async function clientLoader({ serverLoader }) {
                     // Need a small delay to ensure we capture the server-rendered
                     // fallbacks for assertions
@@ -91,16 +94,17 @@ test.describe("Client Data", () => {
                     return { message: data.message + " (mutated by client)" };
                   }
                 `
-            : ""
+              : ""
           }
-          ${childClientLoaderHydrate
-            ? js`
+          ${
+            childClientLoaderHydrate
+              ? js`
                   clientLoader.hydrate = true;
                   export function HydrateFallback() {
                     return <p>Child Fallback</p>
                   }
                 `
-            : ""
+              : ""
           }
           ${childAdditions || ""}
           export default function Component() {
@@ -1159,7 +1163,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverLoader() on a route that does " +
-                'not have a server loader (routeId: "routes/client-loader-critical.throws-a-400-if-you-call-serverloader-without-a-server-loader.parent.child")',
+                  'not have a server loader (routeId: "routes/client-loader-critical.throws-a-400-if-you-call-serverloader-without-a-server-loader.parent.child")',
               );
             });
 
@@ -1211,7 +1215,7 @@ test.describe("Client Data", () => {
               page,
             }) => {
               let _consoleError = console.error;
-              console.error = () => { };
+              console.error = () => {};
               let app = new PlaywrightFixture(appFixture, page);
 
               await app.goto(
@@ -1232,7 +1236,7 @@ test.describe("Client Data", () => {
             }) => {
               // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
               let _consoleError = console.error;
-              console.error = () => { };
+              console.error = () => {};
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
               page.on("console", (msg) => {
@@ -1350,7 +1354,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverLoader() on a route that does " +
-                'not have a server loader (routeId: "routes/client-loader-lazy.throws-a-400-if-you-call-serverloader-without-a-server-loader.parent.child")',
+                  'not have a server loader (routeId: "routes/client-loader-lazy.throws-a-400-if-you-call-serverloader-without-a-server-loader.parent.child")',
               );
             });
 
@@ -1509,7 +1513,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverAction() on a route that does " +
-                'not have a server action (routeId: "routes/client-action-critical.throws-a-400-if-you-call-serveraction-without-a-server-action.parent.child")',
+                  'not have a server action (routeId: "routes/client-action-critical.throws-a-400-if-you-call-serveraction-without-a-server-action.parent.child")',
               );
             });
           });
@@ -1645,7 +1649,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverAction() on a route that does " +
-                'not have a server action (routeId: "routes/client-action-lazy.throws-a-400-if-you-call-serveraction-without-a-server-action.parent.child")',
+                  'not have a server action (routeId: "routes/client-action-lazy.throws-a-400-if-you-call-serveraction-without-a-server-action.parent.child")',
               );
             });
           });
