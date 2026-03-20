@@ -17,6 +17,9 @@ const js = String.raw;
 test.describe("route config", () => {
   viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
     test.describe(templateDisplayName, () => {
+      // Skip everywhere except chromium
+      test.skip(({ browserName }) => browserName !== "chromium");
+
       test("fails the build if route config is missing", async () => {
         let cwd = await createProject({}, templateName);
         await fs.rm(path.join(cwd, "app/routes.ts"));
