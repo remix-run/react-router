@@ -4033,10 +4033,9 @@ export async function getEnvironmentOptionsResolvers(
     let maybeDefaultServerConditions = vite.defaultServerConditions || [];
 
     // There is no helpful export with the default external conditions (see
-    // https://github.com/vitejs/vite/pull/20279 for more details). Historically
-    // we hardcoded `node` here, but that breaks workers environments by forcing
-    // resolution toward node-specific exports.
-    let defaultExternalConditions = getDefaultExternalConditions();
+    // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
+    // we are hardcording the default here.
+    let defaultExternalConditions = ["node"];
 
     let baseConditions = [
       ...maybeDevelopmentConditions,
