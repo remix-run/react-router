@@ -56,6 +56,7 @@ test(
     // This sets up the Remix modules cache in memory, priming the error case.
     await app.goto("/");
     await app.clickLink("/burgers");
+    await page.waitForSelector("#cheeseburger");
     expect(await page.content()).toContain("cheeseburger");
     await page.goBack();
     await page.waitForSelector("#pizza");

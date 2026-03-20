@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
@@ -605,9 +605,9 @@ async function workflowDev({
   page.on("pageerror", (error) => pageErrors.push(error));
   let edit = createEditor(cwd);
 
-  let requestUrls: string[] = [];
+  let requests: Request[] = [];
   page.on("request", (request) => {
-    requestUrls.push(request.url());
+    requests.push(request);
   });
 
   // setup: initial render at basename
@@ -644,25 +644,45 @@ async function workflowDev({
   await page.getByText("other-loader").click();
   expect(pageErrors).toEqual([]);
 
-  let isAssetRequest = (url: string) =>
-    /\.[jt]sx?/.test(url) ||
-    /\/@id\/__x00__virtual:/.test(url) ||
-    /\/@vite\/client/.test(url) ||
-    /\/@fs\//.test(url);
-
   // verify client asset requests are all under base
   expect(
-    requestUrls
-      .filter((url) => isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${base}`)),
+    requests
+      .filter((request) => isViteAssetRequest(request))
+      .every((request) =>
+        request.url().startsWith(`http://localhost:${port}${base}`),
+      ),
   ).toBe(true);
 
-  // verify client route requests are all under basename
+  // Firefox may request browser-managed resources like `/favicon.ico`
+  // outside the app basename, so only assert on actual route/data requests.
   expect(
-    requestUrls
-      .filter((url) => !isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${basename}`)),
+    requests
+      .filter((request) => isAppRouteRequest(request))
+      .every((request) =>
+        request.url().startsWith(`http://localhost:${port}${basename}`),
+      ),
   ).toBe(true);
+}
+
+function isViteAssetRequest(request: Request) {
+  let url = request.url();
+  return (
+    request.resourceType() === "script" ||
+    request.resourceType() === "stylesheet" ||
+    /\.[jt]sx?(?:\?|$)/.test(url) ||
+    /\/@id\/__x00__virtual:/.test(url) ||
+    /\/@vite\/client/.test(url) ||
+    /\/@fs\//.test(url)
+  );
+}
+
+function isAppRouteRequest(request: Request) {
+  return (
+    request.isNavigationRequest() ||
+    request.resourceType() === "document" ||
+    request.resourceType() === "fetch" ||
+    request.resourceType() === "xhr"
+  );
 }
 
 async function workflowBuild({
