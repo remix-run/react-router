@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
@@ -1001,9 +1002,14 @@ test.describe("aborted", () => {
     expect(html).not.toContain(RESOLVED_DEFERRED_ID);
 
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-server-aborted", true);
-    await page.waitForSelector("#interactive");
+    await app.goto("/deferred-server-aborted");
+    await page.waitForSelector(`#${ROOT_ID}`);
+    await page.waitForSelector(`#${DEFERRED_ID}`);
     await page.waitForSelector(`#${ERROR_ID}`);
+
+    await ensureInteractivity(page, ROOT_ID);
+    await ensureInteractivity(page, DEFERRED_ID);
+    await ensureInteractivity(page, ERROR_ID);
   });
 
   test("server aborts render the ErrorBoundary when no errorElement", async ({
@@ -1019,8 +1025,18 @@ test.describe("aborted", () => {
     expect(html).not.toContain(ERROR_BOUNDARY_ID);
 
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-server-aborted-no-error-element", true);
-    await page.waitForSelector("#interactive");
+    await app.goto("/deferred-server-aborted-no-error-element");
+    await page.waitForSelector(`#${ROOT_ID}`);
     await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
+
+    await ensureInteractivity(page, ROOT_ID);
+    await ensureInteractivity(page, ERROR_BOUNDARY_ID);
   });
 });
+
+async function ensureInteractivity(page: Page, id: string, count: number = 1) {
+  await page.waitForSelector("#interactive");
+  let increment = await page.waitForSelector(`#increment-${id}`);
+  await increment.click();
+  await page.waitForSelector(`#count-${id}:has-text('${count}')`);
+}
