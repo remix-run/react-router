@@ -120,7 +120,7 @@ test.describe("non-aborted", () => {
                   <Scripts />
                   {/* Send arbitrary data so safari renders the initial shell before
                       the document finishes downloading. */}
-                  {Array(10000).fill(null).map((_, i)=><p key={i}>YOOOOOOOOOO   {i}</p>)}
+                  {Array(1000).fill(null).map((_, i)=><p key={i}>YOOOOOOOOOO   {i}</p>)}
                 </body>
               </html>
             );
@@ -689,7 +689,7 @@ test.describe("non-aborted", () => {
     expect(html).not.toContain(ERROR_BOUNDARY_ID);
 
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-script-unrejected-no-error-element", true);
+    await app.goto("/deferred-script-unrejected-no-error-element", false);
     await page.waitForSelector("#interactive");
     await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
   });
