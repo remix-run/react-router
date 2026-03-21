@@ -638,7 +638,9 @@ test.describe("SPA Mode", () => {
                         <Links />
                       </head>
                       <body>
-                        {children}
+                        <div data-layout>
+                          {children}
+                        </div>
                         <ScrollRestoration />
                         <Scripts />
                       </body>
@@ -666,9 +668,7 @@ test.describe("SPA Mode", () => {
           expect(html.match(/<html/g)?.length).toBe(1);
           expect(html.match(/<\/html/g)?.length).toBe(1);
           expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
-          expect(
-            html.includes(`<body><script>window.__reactRouterContext`),
-          ).toBe(true);
+          expect(html).toMatch('<div data-layout="true">');
         });
 
         test("does not inherit single fetch revalidation behavior", async ({
