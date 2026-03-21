@@ -55,7 +55,7 @@
     "@changesets/cli": "^2.26.2",
     "@manypkg/get-packages": "^1.1.3",
     "@mdx-js/rollup": "^3.1.0",
-    "@playwright/test": "^1.49.1",
+    "@playwright/test": "^1.58.2",
     "@remix-run/changelog-github": "^0.0.5",
     "@types/jest": "^29.5.4",
     "@types/jsdom": "^21.1.1",

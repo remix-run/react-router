@@ -712,8 +712,8 @@ test.describe("aborted", () => {
 
           // Exported for use by the server runtime so we can abort the
           // turbo-stream encode() call
-          export const streamTimeout = 250;
-          const renderTimeout = streamTimeout + 250;
+          export const streamTimeout = 1000;
+          const renderTimeout = streamTimeout + 1000;
 
           export default function handleRequest(
             request: Request,
@@ -722,61 +722,12 @@ test.describe("aborted", () => {
             remixContext: EntryContext,
             loadContext: AppLoadContext,
           ) {
-            return isbot(request.headers.get("user-agent") || "")
-              ? handleBotRequest(
-                  request,
-                  responseStatusCode,
-                  responseHeaders,
-                  remixContext
-                )
-              : handleBrowserRequest(
-                  request,
-                  responseStatusCode,
-                  responseHeaders,
-                  remixContext
-                );
-          }
-
-          function handleBotRequest(
-            request: Request,
-            responseStatusCode: number,
-            responseHeaders: Headers,
-            remixContext: EntryContext
-          ) {
-            return new Promise((resolve, reject) => {
-              let didError = false;
-
-              let { pipe, abort } = renderToPipeableStream(
-                <ServerRouter context={remixContext} url={request.url} />,
-                {
-                  onAllReady() {
-                    let body = new PassThrough();
-                    let stream = createReadableStreamFromReadable(body);
-
-                    responseHeaders.set("Content-Type", "text/html");
-
-                    resolve(
-                      new Response(stream, {
-                        headers: responseHeaders,
-                        status: didError ? 500 : responseStatusCode,
-                      })
-                    );
-
-                    pipe(body);
-                  },
-                  onShellError(error: unknown) {
-                    reject(error);
-                  },
-                  onError(error: unknown) {
-                    didError = true;
-
-                    console.error(error);
-                  },
-                }
-              );
-
-              setTimeout(abort, renderTimeout);
-            });
+            return handleBrowserRequest(
+              request,
+              responseStatusCode,
+              responseHeaders,
+              remixContext
+            );
           }
 
           function handleBrowserRequest(
@@ -1002,7 +953,7 @@ test.describe("aborted", () => {
     expect(html).not.toContain(RESOLVED_DEFERRED_ID);
 
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-server-aborted");
+    await app.goto("/deferred-server-aborted", true);
     await page.waitForSelector(`#${ROOT_ID}`);
     await page.waitForSelector(`#${DEFERRED_ID}`);
     await page.waitForSelector(`#${ERROR_ID}`);
@@ -1025,7 +976,7 @@ test.describe("aborted", () => {
     expect(html).not.toContain(ERROR_BOUNDARY_ID);
 
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-server-aborted-no-error-element");
+    await app.goto("/deferred-server-aborted-no-error-element", true);
     await page.waitForSelector(`#${ROOT_ID}`);
     await page.waitForSelector(`#${ERROR_BOUNDARY_ID}`);
 
