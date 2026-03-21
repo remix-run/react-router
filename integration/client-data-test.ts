@@ -1240,7 +1240,7 @@ test.describe("Client Data", () => {
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
               page.on("console", (msg) => {
-                if (msg.type() === "timeStamp") return;
+                if (msg.type() === "time" || msg.type() === "timeEnd") return;
 
                 let text = msg.text();
                 if (
