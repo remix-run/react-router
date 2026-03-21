@@ -5,7 +5,7 @@ import "./root.css";
 
 export const meta = () => [{ title: "React Router Vite" }];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function ServerLayout({ children }: { children: React.ReactNode }) {
   console.log("Layout");
   return (
     <html lang="en">
@@ -51,13 +51,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ServerComponent() {
+export function ServerComponent({}: Route.ServerComponentProps) {
   console.log("Root");
   return (
     <>
       <Outlet />
     </>
   );
+}
+
+// export default function ClientComponent() {
+//   console.log("Root");
+//   return (
+//     <>
+//       <Outlet />
+//     </>
+//   );
+// }
+
+export function HydrateFallback() {
+  return <div>Loading...</div>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
