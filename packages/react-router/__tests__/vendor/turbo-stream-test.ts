@@ -4,10 +4,26 @@ import {
   type EncodePlugin,
 } from "../../vendor/turbo-stream-v2/utils";
 
-async function quickDecode(stream: ReadableStream<Uint8Array>) {
+async function quickDecode<T = unknown>(stream: ReadableStream<Uint8Array>) {
   const decoded = await decode(stream);
   await decoded.done;
-  return decoded.value;
+  return decoded.value as T;
+}
+
+async function readStreamToString(stream: ReadableStream<Uint8Array>) {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+
+  let chunk = await reader.read();
+  while (!chunk.done) {
+    text += decoder.decode(chunk.value, { stream: true });
+    chunk = await reader.read();
+  }
+
+  text += decoder.decode();
+  reader.releaseLock();
+  return text;
 }
 
 test("should encode and decode undefined", async () => {
@@ -52,7 +68,7 @@ test("should encode and decode Date", async () => {
 
 test("should encode and decode invalid Date", async () => {
   const input = new Date("invalid");
-  const output = await quickDecode(encode(input));
+  const output = await quickDecode<Date>(encode(input));
   expect(isNaN(input.getTime())).toBe(true);
   expect(isNaN(output.getTime())).toBe(true);
 });
@@ -237,16 +253,7 @@ test("should encode and decode object and dedupe object key, value, and promise 
   expect(partialResult).toEqual(partialInput);
   expect(await bazResult).toEqual(await bazInput);
 
-  let encoded = "";
-  const stream = encode(input);
-  await stream.pipeThrough(new TextDecoderStream()).pipeTo(
-    new WritableStream({
-      write(chunk) {
-        encoded += chunk;
-      },
-    }),
-  );
-
+  const encoded = await readStreamToString(encode(input));
   expect(Array.from(encoded.matchAll(/"foo"/g))).toHaveLength(1);
   expect(Array.from(encoded.matchAll(/"bar"/g))).toHaveLength(1);
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
@@ -504,15 +511,7 @@ test("should encode and decode objects with multiple promises resolving to the s
   await decoded.done;
 
   // Ensure we aren't duplicating values in the stream
-  let encoded = "";
-  const stream = encode(input);
-  await stream.pipeThrough(new TextDecoderStream()).pipeTo(
-    new WritableStream({
-      write(chunk) {
-        encoded += chunk;
-      },
-    }),
-  );
+  const encoded = await readStreamToString(encode(input));
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
 });
 
@@ -535,15 +534,7 @@ test("should encode and decode objects with reused values", async () => {
   expect(await value.data).toEqual(await input.data);
 
   // Ensure we aren't duplicating values in the stream
-  let encoded = "";
-  const stream = encode(input);
-  await stream.pipeThrough(new TextDecoderStream()).pipeTo(
-    new WritableStream({
-      write(chunk) {
-        encoded += chunk;
-      },
-    }),
-  );
+  const encoded = await readStreamToString(encode(input));
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
   await decoded.done;
 });
@@ -566,15 +557,7 @@ test("should encode and decode objects with multiple promises rejecting to the s
   await decoded.done;
 
   // Ensure we aren't duplicating values in the stream
-  let encoded = "";
-  const stream = encode(input);
-  await stream.pipeThrough(new TextDecoderStream()).pipeTo(
-    new WritableStream({
-      write(chunk) {
-        encoded += chunk;
-      },
-    }),
-  );
+  const encoded = await readStreamToString(encode(input));
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
 });
 
@@ -597,3 +580,42 @@ test("should allow many nested promises without a memory leak", async () => {
   expect(currentDecoded.i).toBe(depth - 1);
   await decoded.done;
 });
+
+test("should encode large payload", async () => {
+  const input = createDeeplyNestedObject();
+  await readStreamToString(encode(input));
+});
+
+test("should encode and decode large payload and yield the event loop", async () => {
+  const input = createDeeplyNestedObject();
+  let i = 0;
+  let interval = setInterval(() => i++, 0);
+  const decoded = await decode(encode(input));
+
+  clearInterval(interval);
+  expect(i > 0).toBe(true);
+
+  let currentInput: Nested | null = input;
+  let currentDecoded = decoded.value as Nested | null;
+
+  while (currentInput && currentDecoded) {
+    expect(currentDecoded.value).toBe(currentInput.value);
+    currentInput = currentInput.next;
+    currentDecoded = currentDecoded.next;
+  }
+
+  expect(currentInput).toBeNull();
+  expect(currentDecoded).toBeNull();
+
+  await decoded.done;
+});
+
+type Nested = { value: number; next: Nested | null };
+function createDeeplyNestedObject(): Nested {
+  const depth = 100000;
+  let current = { value: 0, next: null as any };
+  for (let i = 1; i < depth; i++) {
+    current = { value: i, next: current };
+  }
+  return current;
+}
