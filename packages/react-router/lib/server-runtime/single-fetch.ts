@@ -391,23 +391,27 @@ export function encodeViaTurboStream(
   // user provides their own it's up to them to decouple the aborting of the
   // stream from the aborting of React's `renderToPipeableStream`
   let timeoutId = setTimeout(
-    () => controller.abort(new Error("Server Timeout")),
+    () => {
+      controller.abort(new Error("Server Timeout"));
+      cleanupCallbacks();
+    },
     typeof streamTimeout === "number" ? streamTimeout : 4950,
   );
 
-  let clearStreamTimeout = () => {
-    clearTimeout(timeoutId);
-    requestSignal.removeEventListener("abort", clearStreamTimeout);
-  };
-
-  requestSignal.addEventListener("abort", () => {
-    clearStreamTimeout();
+  let abortControllerOnRequestAbort = () => {
     controller.abort(requestSignal.reason);
-  });
+    cleanupCallbacks();
+  };
+  requestSignal.addEventListener("abort", abortControllerOnRequestAbort);
+
+  let cleanupCallbacks = () => {
+    clearTimeout(timeoutId);
+    requestSignal.removeEventListener("abort", abortControllerOnRequestAbort);
+  };
 
   return encode(data, {
     signal: controller.signal,
-    onComplete: clearStreamTimeout,
+    onComplete: cleanupCallbacks,
     plugins: [
       (value) => {
         // Even though we sanitized errors on context.errors prior to responding,
