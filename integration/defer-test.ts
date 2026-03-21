@@ -551,7 +551,7 @@ test.describe("non-aborted", () => {
     });
     appFixture = await createAppFixture(fixture);
     originalConsoleError = console.error;
-    console.error = () => {};
+    console.error = () => { };
   });
 
   test.afterAll(() => {
