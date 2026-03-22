@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 import {
   createAppFixture,
@@ -89,6 +89,66 @@ function fixtureFactory(
   };
 }
 
+const PREFETCH_WITH_LOADER_ROUTE_ID = "routes/prefetch-with-loader";
+const PREFETCH_WITHOUT_LOADER_ROUTE_ID = "routes/prefetch-without-loader";
+const ROOT_ROUTE_ID = "root";
+const INDEX_ROUTE_ID = "routes/_index";
+
+function getRouteModulePreloadHrefs(fixture: Fixture, routeIds: string[]) {
+  return [
+    ...new Set(routeIds.flatMap((routeId) => getRouteHrefs(fixture, routeId))),
+  ];
+}
+
+function getRouteHrefs(fixture: Fixture, routeId: string) {
+  let route = fixture.build?.assets.routes[routeId];
+  expect(route).toBeDefined();
+  return [route!.module, ...(route!.imports ?? [])];
+}
+
+function getInitialScriptsPreloadHrefs(fixture: Fixture, routeIds: string[]) {
+  return [
+    ...new Set([
+      ...(fixture.build?.assets.entry.imports ?? []),
+      ...getRouteModulePreloadHrefs(fixture, routeIds),
+    ]),
+  ];
+}
+
+function getModulePreloadSelector(hrefs: string[]) {
+  return hrefs
+    .map((href) => `link[rel='modulepreload'][href='${href}']`)
+    .join(",");
+}
+
+async function waitForModulePreloads(page: Page, hrefs: string[]) {
+  for (let href of hrefs) {
+    await page.waitForSelector(`link[rel='modulepreload'][href='${href}']`, {
+      state: "attached",
+    });
+  }
+}
+
+async function expectModulePreloads(
+  page: Page,
+  hrefs: string[],
+  alreadyPresentHrefs: string[] = [],
+) {
+  let alreadyPresentSet = new Set(alreadyPresentHrefs);
+  for (let href of hrefs) {
+    await expect(
+      page.locator(`link[rel='modulepreload'][href='${href}']`),
+    ).toHaveCount(alreadyPresentSet.has(href) ? 2 : 1);
+  }
+}
+
+async function expectOnlyModulePreloads(page: Page, hrefs: string[]) {
+  await expect(page.locator(getModulePreloadSelector(hrefs))).toHaveCount(
+    hrefs.length,
+  );
+  await expectModulePreloads(page, hrefs);
+}
+
 test.describe("prefetch", () => {
   viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
     test.describe(templateDisplayName, () => {
@@ -145,6 +205,14 @@ test.describe("prefetch", () => {
 
         test("adds prefetch tags on hydration", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
+          let moduleHrefs = getRouteModulePreloadHrefs(fixture, [
+            PREFETCH_WITH_LOADER_ROUTE_ID,
+            PREFETCH_WITHOUT_LOADER_ROUTE_ID,
+          ]);
+          let initialScriptsPreloadHrefs = getInitialScriptsPreloadHrefs(
+            fixture,
+            [ROOT_ROUTE_ID, INDEX_ROUTE_ID],
+          );
           await app.goto("/");
 
           // Both data and asset fetch for /prefetch-with-loader
@@ -152,30 +220,23 @@ test.describe("prefetch", () => {
             "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
             { state: "attached" },
           );
-          await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
-            { state: "attached" },
-          );
+          await waitForModulePreloads(page, moduleHrefs);
 
-          // Only asset fetch for /prefetch-without-loader
-          await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
-            { state: "attached" },
+          await expectModulePreloads(
+            page,
+            moduleHrefs,
+            initialScriptsPreloadHrefs,
           );
-
-          // These 2 are common and duped for both - but they've already loaded on
-          // page load so they don't trigger network requests
-          await page.waitForSelector(
-            // Look for either Rollup or Rolldown chunks
-            [
-              "link[rel='modulepreload'][href^='/assets/chunk-']",
-              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
-            ].join(","),
-            { state: "attached" },
-          );
-
-          // Ensure no other links in the #nav element
-          expect(await page.locator("link").count()).toBe(5);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
+            ),
+          ).toHaveCount(1);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-without-loader.data']",
+            ),
+          ).toHaveCount(0);
         });
       });
 
@@ -210,53 +271,57 @@ test.describe("prefetch", () => {
 
         test("adds prefetch tags on hover", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
+          let loaderRouteHrefs = getRouteHrefs(
+            fixture,
+            PREFETCH_WITH_LOADER_ROUTE_ID,
+          );
+          let noLoaderRouteHrefs = getRouteHrefs(
+            fixture,
+            PREFETCH_WITHOUT_LOADER_ROUTE_ID,
+          );
           await app.goto("/");
           await page.hover("a[href='/prefetch-with-loader']");
           await page.waitForSelector(
             "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
             { state: "attached" },
           );
-          // Check href prefix due to hashed filenames
-          await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
-            { state: "attached" },
-          );
-          await page.waitForSelector(
-            // Look for either Rollup or Rolldown chunks
-            [
-              "link[rel='modulepreload'][href^='/assets/chunk-']",
-              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
-            ].join(","),
-            { state: "attached" },
-          );
-          expect(await page.locator("link").count()).toBe(3);
+          await waitForModulePreloads(page, loaderRouteHrefs);
+          await expectOnlyModulePreloads(page, loaderRouteHrefs);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
+            ),
+          ).toHaveCount(1);
 
           await page.hover("a[href='/prefetch-without-loader']");
-          await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
-            { state: "attached" },
-          );
-          await page.waitForSelector(
-            // Look for either Rollup or Rolldown chunks
-            [
-              "link[rel='modulepreload'][href^='/assets/chunk-']",
-              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
-            ].join(","),
-            { state: "attached" },
-          );
-          expect(await page.locator("link").count()).toBe(2);
+          await waitForModulePreloads(page, noLoaderRouteHrefs);
+          await expectOnlyModulePreloads(page, noLoaderRouteHrefs);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
+            ),
+          ).toHaveCount(0);
         });
 
         test("removes prefetch tags after navigating to/from the page", async ({
           page,
         }) => {
           let app = new PlaywrightFixture(appFixture, page);
+          let loaderRouteHrefs = getRouteHrefs(
+            fixture,
+            PREFETCH_WITH_LOADER_ROUTE_ID,
+          );
           await app.goto("/");
 
           // Links added on hover
           await page.hover("a[href='/prefetch-with-loader']");
           await page.waitForSelector("link", { state: "attached" });
-          expect(await page.locator("link").count()).toBe(3);
+          await expectOnlyModulePreloads(page, loaderRouteHrefs);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
+            ),
+          ).toHaveCount(1);
 
           // Links removed upon navigating to the page
           await page.click("a[href='/prefetch-with-loader']");
@@ -309,6 +374,14 @@ test.describe("prefetch", () => {
 
         test("adds prefetch tags on focus", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
+          let loaderRouteHrefs = getRouteHrefs(
+            fixture,
+            PREFETCH_WITH_LOADER_ROUTE_ID,
+          );
+          let noLoaderRouteHrefs = getRouteHrefs(
+            fixture,
+            PREFETCH_WITHOUT_LOADER_ROUTE_ID,
+          );
           await app.goto("/");
           // This click is needed to transfer focus to the main window, allowing
           // subsequent focus events to fire
@@ -318,34 +391,22 @@ test.describe("prefetch", () => {
             "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
             { state: "attached" },
           );
-          await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
-            { state: "attached" },
-          );
-          await page.waitForSelector(
-            // Look for either Rollup or Rolldown chunks
-            [
-              "link[rel='modulepreload'][href^='/assets/chunk-']",
-              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
-            ].join(","),
-            { state: "attached" },
-          );
-          expect(await page.locator("link").count()).toBe(3);
+          await waitForModulePreloads(page, loaderRouteHrefs);
+          await expectOnlyModulePreloads(page, loaderRouteHrefs);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
+            ),
+          ).toHaveCount(1);
 
           await page.focus("a[href='/prefetch-without-loader']");
-          await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
-            { state: "attached" },
-          );
-          await page.waitForSelector(
-            // Look for either Rollup or Rolldown chunks
-            [
-              "link[rel='modulepreload'][href^='/assets/chunk-']",
-              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
-            ].join(","),
-            { state: "attached" },
-          );
-          expect(await page.locator("link").count()).toBe(2);
+          await waitForModulePreloads(page, noLoaderRouteHrefs);
+          await expectOnlyModulePreloads(page, noLoaderRouteHrefs);
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
+            ),
+          ).toHaveCount(0);
         });
       });
 

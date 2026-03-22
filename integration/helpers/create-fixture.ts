@@ -334,20 +334,19 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         );
         app.get("*", (req, res, next) => {
           let dir = path.join(fixture.projectDir, "build", "client");
-          let file;
+          let filePath;
           if (req.path.endsWith(".data")) {
-            file = req.path;
+            filePath = path.join(dir, req.path);
           } else {
-            let mainPath = req.path + "/index.html";
-            let fallbackPath = "__spa-fallback.html";
-            let fallbackPath2 = "index.html";
-            file = existsSync(mainPath)
+            let mainPath = path.join(dir, req.path, "index.html");
+            let fallbackPath = path.join(dir, "__spa-fallback.html");
+            let fallbackPath2 = path.join(dir, "index.html");
+            filePath = existsSync(mainPath)
               ? mainPath
               : existsSync(fallbackPath)
                 ? fallbackPath
                 : fallbackPath2;
           }
-          let filePath = path.join(dir, file);
           if (existsSync(filePath)) {
             res.sendFile(filePath, next);
           } else {
