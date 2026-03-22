@@ -26,6 +26,7 @@ import type {
   DataRouteObject,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
   RouterContextProvider,
+  Path,
 } from "react-router";
 import {
   init as initEsModuleLexer,
@@ -1760,11 +1761,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             for (let build of builds) {
               const matches = matchRoutes(
                 createPrerenderRoutes(build.routes),
-                new URL(request.url).pathname,
-                ctx.reactRouterConfig.basename,
+                getNormalizedPath(
+                  request,
+                  ctx.reactRouterConfig.basename,
+                  ctx.reactRouterConfig.future,
+                ).pathname,
               );
               if (!matches) continue;
-              
 
               let handler = createRequestHandler(build, "production");
               response = await handler(request, loadContext);
@@ -4345,4 +4348,74 @@ const ESCAPE_LOOKUP: { [match: string]: string } = {
 
 function escapeHtml(html: string) {
   return html.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
+}
+
+function getNormalizedPath(
+  request: Request,
+  basename: string | undefined,
+  future?: { unstable_trailingSlashAwareDataRequests: boolean } | null,
+): Path {
+  basename = basename || "/";
+
+  let url = new URL(request.url);
+  let pathname = url.pathname;
+
+  // Strip .data suffix
+  if (future?.unstable_trailingSlashAwareDataRequests) {
+    if (pathname.endsWith("/_.data")) {
+      // Handle trailing slash URLs: /about/_.data -> /about/
+      pathname = pathname.replace(/_\.data$/, "");
+    } else {
+      pathname = pathname.replace(/\.data$/, "");
+    }
+  } else {
+    if (stripBasename(pathname, basename) === "/_root.data") {
+      pathname = basename;
+    } else if (pathname.endsWith(".data")) {
+      pathname = pathname.replace(/\.data$/, "");
+    }
+
+    if (stripBasename(pathname, basename) !== "/" && pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
+  }
+
+  // Strip _routes param
+  let searchParams = new URLSearchParams(url.search);
+  searchParams.delete("_routes");
+  let search = searchParams.toString();
+  if (search) {
+    search = `?${search}`;
+  }
+
+  // Don't touch index params here - they're needed for router matching and are
+  // stripped when creating the loader/action args
+
+  return {
+    pathname,
+    search,
+    // No hashes on the server
+    hash: "",
+  };
+}
+
+function stripBasename(pathname: string, basename: string): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  // We want to leave trailing slash behavior in the user's control, so if they
+  // specify a basename with a trailing slash, we should support it
+  let startIndex = basename.endsWith("/")
+    ? basename.length - 1
+    : basename.length;
+  let nextChar = pathname.charAt(startIndex);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(startIndex) || "/";
 }

@@ -214,6 +214,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
 
   return {
     name: "prerender",
+    sharedDuringBuild: true,
     config: {
       order: "post",
       handler({ builder: { buildApp } = {} }) {
