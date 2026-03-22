@@ -138,6 +138,23 @@ test.describe("cli", () => {
       expect(existsSync(entryClientFile)).toBeTruthy();
     });
 
+    test("rsc generates entry.{ssr,rsc,client}.tsx in the app directory", async () => {
+      const cwd = await createProject({}, "rsc-vite-framework");
+      let entrySSRFile = path.join(cwd, "app", "entry.ssr.tsx");
+      let entryRSCFile = path.join(cwd, "app", "entry.rsc.tsx");
+      let entryClientFile = path.join(cwd, "app", "entry.client.tsx");
+
+      expect(existsSync(entrySSRFile)).toBeFalsy();
+      expect(existsSync(entryRSCFile)).toBeFalsy();
+      expect(existsSync(entryClientFile)).toBeFalsy();
+
+      run(["reveal"], { cwd });
+
+      expect(existsSync(entrySSRFile)).toBeTruthy();
+      expect(existsSync(entryRSCFile)).toBeTruthy();
+      expect(existsSync(entryClientFile)).toBeTruthy();
+    });
+
     test("generates specified entries in the app directory", async () => {
       const cwd = await createProject();
 

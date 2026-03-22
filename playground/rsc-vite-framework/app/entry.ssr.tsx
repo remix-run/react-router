@@ -1,4 +1,5 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
+// @ts-expect-error - on 18 types, requires 19. --- IGNORE ---
 import { renderToReadableStream } from "react-dom/server.edge";
 import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
@@ -9,6 +10,7 @@ export async function generateHTML(
   request: Request,
   serverResponse: Response,
 ): Promise<Response> {
+  console.log("CUSTOM entry.ssr");
   return await routeRSCServerRequest({
     // The incoming request.
     request,

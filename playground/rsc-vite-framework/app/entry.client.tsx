@@ -15,6 +15,8 @@ import {
   type unstable_RSCPayload as RSCPayload,
 } from "react-router/dom";
 
+console.log("CUSTOM entry.client");
+
 setServerCallback(
   createCallServer({
     createFromReadableStream,
@@ -24,6 +26,7 @@ setServerCallback(
 );
 
 createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
+  // @ts-expect-error - on 18 types, requires 19. --- IGNORE ---
   startTransition(async () => {
     const formState =
       payload.type === "render" ? await payload.formState : undefined;
@@ -37,6 +40,7 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
         />
       </StrictMode>,
       {
+        // @ts-expect-error - on 18 types, requires 19. --- IGNORE ---
         formState,
       },
     );
