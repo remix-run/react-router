@@ -289,6 +289,9 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../packages/react-router
+      react-server-dom-webpack:
+        specifier: 'catalog:'
+        version: 19.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.103.0)
       semver:
         specifier: ^7.7.2
         version: 7.7.4

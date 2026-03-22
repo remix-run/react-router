@@ -1746,10 +1746,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
 
           // Import all bundles and create handlers
-          let handlers: RequestHandler[] = [];
+          let builds: ServerBuild[] = [];
           for (let file of serverBuildFiles) {
             let build: ServerBuild = await import(url.pathToFileURL(file).href);
-            handlers.push(createRequestHandler(build, "production"));
+            builds.push(build);
           }
 
           // Return a combined handler that tries each bundle until one handles the request.
@@ -1757,7 +1757,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           cachedHandler = async (request, loadContext) => {
             let response: Response | undefined;
 
-            for (let handler of handlers) {
+            for (let build of builds) {
+              const matches = matchRoutes(
+                createPrerenderRoutes(build.routes),
+                new URL(request.url).pathname,
+                ctx.reactRouterConfig.basename,
+              );
+              if (!matches) continue;
+              
+
+              let handler = createRequestHandler(build, "production");
               response = await handler(request, loadContext);
 
               if (response.status !== 404) {
@@ -2555,15 +2564,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { future } = ctx.reactRouterConfig;
 
-        // Prerender during SSR build only
-        if (
-          future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
-            : !viteConfigEnv.isSsrBuild
-        ) {
-          return [];
-        }
-
         // Skip prerendering if the future flag is disabled
         if (!future.unstable_previewServerPrerendering) {
           return [];
@@ -2825,10 +2825,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
           }
 
-          let serverBuildDirectory = future.v8_viteEnvironmentApi
-            ? this.environment.config?.build?.outDir
-            : (ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx.reactRouterConfig));
+          let serverBuildDirectory = getServerBuildDirectory(
+            ctx.reactRouterConfig,
+          );
 
           // Cleanup - we no longer need the server build assets
           viteConfig.logger.info(

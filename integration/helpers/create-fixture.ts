@@ -157,7 +157,9 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       isSpaMode: init.spaMode,
       prerender: init.prerender,
       requestDocument(href: string) {
-        let file = new URL(href, "test://test").pathname + "/index.html";
+        let pathname = new URL(href, "test://test").pathname;
+        let file =
+          (pathname.endsWith("/") ? pathname : pathname + "/") + "index.html";
         let clientDir = path.join(projectDir, "build", "client");
         let mainPath = path.join(clientDir, file);
         let fallbackPath = path.join(clientDir, "__spa-fallback.html");
