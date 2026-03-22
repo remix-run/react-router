@@ -146,6 +146,7 @@ export default defineConfig([
           disallowTypeAnnotations: false,
         },
       ],
+      "import/no-anonymous-default-export": "off",
     },
   },
   {
