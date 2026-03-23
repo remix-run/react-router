@@ -185,8 +185,6 @@ async function createVirtualRouteModuleCode({
     code += `export { __ensureClientRouteModuleForHMR } from "${clientModuleId}";\n`;
   }
 
-  console.log(id, "------------------", code);
-
   return code;
 }
 
