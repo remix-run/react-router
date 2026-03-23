@@ -84,7 +84,7 @@ async function updateGitignore() {
   let content = await fsp.readFile(gitignorePath, "utf-8");
   let filtered = content
     .split("\n")
-    .filter((line) => !line.trim().startsWith("dist"))
+    .filter((line) => !/dist\/?$/.test(line.trim()))
     .join("\n");
   await fsp.writeFile(gitignorePath, filtered);
   console.log("Updated .gitignore");
