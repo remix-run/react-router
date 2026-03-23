@@ -6,6 +6,7 @@ import colors from "picocolors";
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
+import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import path, { join } from "pathe";
 import invariant from "../../invariant";
@@ -33,6 +34,9 @@ import { getPrerenderPaths } from "../plugin";
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
+let configLoaderPromise: Promise<ConfigLoader>;
+let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
+
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
     arguments &&
@@ -43,7 +47,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       arguments[0].__runningWithinTheReactRouterMonoRepo === true,
   );
   let configLoader: ConfigLoader;
-  let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
   let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
@@ -69,7 +72,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
-        const watch = command === "serve";
+        const watch =
+          command === "serve" && process.env.IS_RR_BUILD_REQUEST !== "yes";
 
         await loadDotenv({
           rootDirectory,
@@ -77,7 +81,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           mode,
         });
 
-        configLoader = await createConfigLoader({
+        configLoaderPromise ??= createConfigLoader({
           rootDirectory,
           mode,
           watch,
@@ -100,6 +104,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             }
           },
         });
+        configLoader = await configLoaderPromise;
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
@@ -339,6 +344,64 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
         );
       },
+      configurePreviewServer(previewServer) {
+        const clientBuildDirectory = getClientBuildDirectory(config);
+        if (
+          (config.prerender || config.ssr === false) &&
+          process.env.IS_RR_BUILD_REQUEST !== "yes"
+        ) {
+          previewServer.middlewares.use(async (req, res, next) => {
+            try {
+              const htmlFileBase = (
+                (req.url || "/") +
+                (req.url?.endsWith("/") ? "" : "/") +
+                "index.html"
+              ).slice(1);
+              const htmlFilePath = path.join(
+                clientBuildDirectory,
+                htmlFileBase,
+              );
+              if (existsSync(htmlFilePath)) {
+                res.setHeader("Content-Type", "text/html");
+                res.end(await readFile(htmlFilePath, "utf-8"));
+
+                return;
+              }
+              next();
+            } catch (error) {
+              next(error);
+            }
+          });
+
+          return () => {
+            if (config.ssr === false) {
+              previewServer.middlewares.use(async (req, res, next) => {
+                try {
+                  res.statusCode = 404;
+
+                  const url = new URL(req.url || "/", `http://localhost`);
+
+                  const htmlFilePath = path.join(
+                    clientBuildDirectory,
+                    url.pathname.endsWith(".rsc")
+                      ? "__spa-fallback.rsc"
+                      : "__spa-fallback.html",
+                  );
+
+                  if (existsSync(htmlFilePath)) {
+                    res.setHeader("Content-Type", "text/html");
+                    res.end(await readFile(htmlFilePath, "utf-8"));
+
+                    return;
+                  }
+                } catch (error) {
+                  next(error);
+                }
+              });
+            }
+          };
+        }
+      },
       async buildEnd() {
         await configLoader.close();
       },
@@ -361,29 +424,31 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         configureServer: logExperimentalNotice,
       };
     })(),
-    {
-      name: "react-router/rsc/typegen",
-      async config(viteUserConfig, { command, mode }) {
-        if (command === "serve") {
-          const vite = await import("vite");
-          typegenWatcherPromise = Typegen.watch(
-            getRootDirectory(viteUserConfig),
-            {
-              mode,
-              rsc: true,
-              // ignore `info` logs from typegen since they are
-              // redundant when Vite plugin logs are active
-              logger: vite.createLogger("warn", {
-                prefix: "[react-router]",
-              }),
-            },
-          );
+    process.env.IS_RR_BUILD_REQUEST !== "yes"
+      ? {
+          name: "react-router/rsc/typegen",
+          async config(viteUserConfig, { command, mode }) {
+            if (command === "serve") {
+              const vite = await import("vite");
+              typegenWatcherPromise ??= Typegen.watch(
+                getRootDirectory(viteUserConfig),
+                {
+                  mode,
+                  rsc: true,
+                  // ignore `info` logs from typegen since they are
+                  // redundant when Vite plugin logs are active
+                  logger: vite.createLogger("warn", {
+                    prefix: "[react-router]",
+                  }),
+                },
+              );
+            }
+          },
+          async buildEnd() {
+            (await typegenWatcherPromise)?.close();
+          },
         }
-      },
-      async buildEnd() {
-        (await typegenWatcherPromise)?.close();
-      },
-    },
+      : null,
 
     {
       name: "react-router/rsc/virtual-route-config",
@@ -642,8 +707,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               ? config.basename
               : config.basename + "/";
 
-        if (!config.ssr) {
-          prerenderPaths.add(basename);
+        if (config.ssr === false) {
+          prerenderPaths.add("/__spa-fallback.html");
         }
 
         return Array.from(prerenderPaths).flatMap((prerenderPath) =>
@@ -663,7 +728,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         let isRedirect = redirectStatusCodes.has(response.status);
 
-        if (!isRedirect && response.status !== 200 && response.status !== 202) {
+        if (
+          !isRedirect &&
+          response.status !== 200 &&
+          response.status !== 202 &&
+          url.pathname !== "/__spa-fallback.html"
+        ) {
           throw new Error(
             `Prerender (data): Received a ${response.status} status code from ` +
               `\`entry.server.tsx\` while prerendering the \`${url.pathname}\` ` +
@@ -718,9 +788,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           {
             path:
               isHtml || redirectBody
-                ? (url.pathname.endsWith("/")
-                    ? url.pathname
-                    : url.pathname + "/") + "index.html"
+                ? url.pathname === "/__spa-fallback.html"
+                  ? "__spa-fallback.html"
+                  : (url.pathname.endsWith("/")
+                      ? url.pathname
+                      : url.pathname + "/") + "index.html"
                 : url.pathname,
             contents:
               redirectBody ||
@@ -746,20 +818,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             files.push({
               path: url.pathname === "/" ? "_.rsc" : url.pathname + ".rsc",
               contents: rscData,
-            });
-          }
-
-          let basename =
-            !config.basename || config.basename === "/"
-              ? "/"
-              : config.basename.endsWith("/")
-                ? config.basename
-                : config.basename + "/";
-
-          if (!config.ssr && url.pathname === basename) {
-            files.push({
-              path: "__spa-fallback.html",
-              contents: body,
             });
           }
         } else if (!url.pathname.endsWith(".rsc")) {
