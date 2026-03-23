@@ -105,7 +105,7 @@ async function assertPrerendered(page: Page, expectedPrerender = true) {
 }
 
 test.describe("rsc prerender", () => {
-  test.only("prerenders single route", async ({ page, vitePreview }) => {
+  test("prerenders single route", async ({ page, vitePreview }) => {
     const { port } = await prerender({
       links: ["/", "/404/not-found"],
       vitePreview,
