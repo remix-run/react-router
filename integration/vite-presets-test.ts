@@ -245,6 +245,7 @@ test.describe("Vite / presets", async () => {
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
+        unstable_passThroughRequests: false,
         unstable_subResourceIntegrity: false,
         unstable_trailingSlashAwareDataRequests: false,
         unstable_previewServerPrerendering: false,

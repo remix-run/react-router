@@ -36,3 +36,6 @@ worker-configuration.d.ts
 
 # v7 reference docs
 /public
+
+.claude/settings.local.json
+.claude/skills

@@ -336,6 +336,74 @@ function testDomRouter(
         `);
       });
 
+      it("renders ancestor HydrateFallback during hydration middleware-only execution", async () => {
+        let middlewareDfd = createDeferred();
+        let router = createTestRouter([
+          {
+            path: "/",
+            Component: Outlet,
+            HydrateFallback: () => "Loading root...",
+            children: [
+              {
+                index: true,
+                middleware: [() => middlewareDfd.promise],
+                Component: () => "Hello World!",
+              },
+            ],
+          },
+        ]);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading root...
+          </div>"
+        `);
+
+        middlewareDfd.resolve();
+        await waitFor(() => screen.getByText("Hello World!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Hello World!
+          </div>"
+        `);
+      });
+
+      it("renders self HydrateFallback during hydration middleware-only execution", async () => {
+        let middlewareDfd = createDeferred();
+        let router = createTestRouter([
+          {
+            path: "/",
+            Component: Outlet,
+            children: [
+              {
+                index: true,
+                HydrateFallback: () => "Loading index...",
+                middleware: [() => middlewareDfd.promise],
+                Component: () => "Hello World!",
+              },
+            ],
+          },
+        ]);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading index...
+          </div>"
+        `);
+
+        middlewareDfd.resolve();
+        await waitFor(() => screen.getByText("Hello World!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Hello World!
+          </div>"
+        `);
+      });
+
       it("does not render hydrateFallback if no data fetch or lazy loading is required", async () => {
         let fooDefer = createDeferred();
         let router = createTestRouter(

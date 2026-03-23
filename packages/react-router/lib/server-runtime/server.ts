@@ -39,6 +39,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
 import { throwIfPotentialCSRFAttack } from "../actions";
+import { getNormalizedPath } from "./urls";
 
 export type RequestHandler = (
   request: Request,
@@ -106,31 +107,12 @@ function derive(build: ServerBuild, mode?: string) {
       loadContext = initialContext || {};
     }
 
-    let url = new URL(request.url);
-
-    let normalizedBasename = build.basename || "/";
-    let normalizedPath = url.pathname;
-    if (build.future.unstable_trailingSlashAwareDataRequests) {
-      if (normalizedPath.endsWith("/_.data")) {
-        // Handle trailing slash URLs: /about/_.data -> /about/
-        normalizedPath = normalizedPath.replace(/_.data$/, "");
-      } else {
-        normalizedPath = normalizedPath.replace(/\.data$/, "");
-      }
-    } else {
-      if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-        normalizedPath = normalizedBasename;
-      } else if (normalizedPath.endsWith(".data")) {
-        normalizedPath = normalizedPath.replace(/\.data$/, "");
-      }
-
-      if (
-        stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-        normalizedPath.endsWith("/")
-      ) {
-        normalizedPath = normalizedPath.slice(0, -1);
-      }
-    }
+    let requestUrl = new URL(request.url);
+    let normalizedPathname = getNormalizedPath(
+      request,
+      build.basename,
+      build.future,
+    ).pathname;
 
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
@@ -139,17 +121,17 @@ function derive(build: ServerBuild, mode?: string) {
     // pre-rendered site would
     if (!build.ssr) {
       // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPath);
+      let decodedPath = decodeURI(normalizedPathname);
 
-      if (normalizedBasename !== "/") {
-        let strippedPath = stripBasename(decodedPath, normalizedBasename);
+      if (build.basename && build.basename !== "/") {
+        let strippedPath = stripBasename(decodedPath, build.basename);
         if (strippedPath == null) {
           errorHandler(
             new ErrorResponseImpl(
               404,
               "Not Found",
               `Refusing to prerender the \`${decodedPath}\` path because it does ` +
-                `not start with the basename \`${normalizedBasename}\``,
+                `not start with the basename \`${build.basename}\``,
             ),
             {
               context: loadContext,
@@ -174,7 +156,7 @@ function derive(build: ServerBuild, mode?: string) {
         !build.prerender.includes(decodedPath) &&
         !build.prerender.includes(decodedPath + "/")
       ) {
-        if (url.pathname.endsWith(".data")) {
+        if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
           errorHandler(
             new ErrorResponseImpl(
@@ -202,11 +184,11 @@ function derive(build: ServerBuild, mode?: string) {
     // Manifest request for fog of war
     let manifestUrl = getManifestPath(
       build.routeDiscovery.manifestPath,
-      normalizedBasename,
+      build.basename,
     );
-    if (url.pathname === manifestUrl) {
+    if (requestUrl.pathname === manifestUrl) {
       try {
-        let res = await handleManifestRequest(build, routes, url);
+        let res = await handleManifestRequest(build, routes, requestUrl);
         return res;
       } catch (e) {
         handleError(e);
@@ -214,19 +196,16 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
-    let matches = matchServerRoutes(routes, normalizedPath, build.basename);
+    let matches = matchServerRoutes(routes, normalizedPathname, build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
 
     let response: Response;
-    if (url.pathname.endsWith(".data")) {
-      let handlerUrl = new URL(request.url);
-      handlerUrl.pathname = normalizedPath;
-
+    if (requestUrl.pathname.endsWith(".data")) {
       let singleFetchMatches = matchServerRoutes(
         routes,
-        handlerUrl.pathname,
+        normalizedPathname,
         build.basename,
       );
 
@@ -235,7 +214,7 @@ function derive(build: ServerBuild, mode?: string) {
         build,
         staticHandler,
         request,
-        handlerUrl,
+        normalizedPathname,
         loadContext,
         handleError,
       );
@@ -281,7 +260,7 @@ function derive(build: ServerBuild, mode?: string) {
         handleError,
       );
     } else {
-      let { pathname } = url;
+      let { pathname } = requestUrl;
 
       let criticalCss: CriticalCss | undefined = undefined;
       if (build.unstable_getCriticalCss) {
@@ -443,10 +422,13 @@ async function handleSingleFetchRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
+  normalizedPath: string,
   loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
+  let handlerUrl = new URL(request.url);
+  handlerUrl.pathname = normalizedPath;
+
   let response =
     request.method !== "GET"
       ? await singleFetchAction(
@@ -511,6 +493,8 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
+      unstable_normalizePath: (r) =>
+        getNormalizedPath(r, build.basename, build.future),
     });
 
     if (!isResponse(result)) {
@@ -688,6 +672,8 @@ async function handleResourceRequest(
             }
           }
         : undefined,
+      unstable_normalizePath: (r) =>
+        getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryRouteResult(result);

@@ -66,7 +66,7 @@
     "@typescript-eslint/parser": "^7.5.0",
     "babel-jest": "^29.7.0",
     "babel-plugin-dev-expression": "^0.2.3",
-    "chalk": "^4.1.2",
+    "picocolors": "^1.1.1",
     "dox": "^1.0.0",
     "eslint": "^8.57.0",
     "eslint-config-react-app": "^7.0.1",

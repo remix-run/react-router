@@ -24,9 +24,15 @@ import type {
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
+  DataRouteObject,
   DataStrategyFunction,
+  IndexRouteObject,
   LazyRouteFunction,
+  NonIndexRouteObject,
   Params,
+  PatchRoutesOnNavigationFunction,
+  RouteMatch,
+  RouteObject,
   TrackedPromise,
 } from "./router/utils";
 import {
@@ -36,16 +42,7 @@ import {
   stripBasename,
 } from "./router/utils";
 
-import type {
-  DataRouteObject,
-  IndexRouteObject,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  RouteMatch,
-  RouteObject,
-  ViewTransitionContextObject,
-} from "./context";
+import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
@@ -1215,6 +1212,9 @@ export interface IndexRouteProps {
   ErrorBoundary?: React.ComponentType | null;
 }
 
+/**
+ * @category Types
+ */
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
@@ -1936,7 +1936,7 @@ function useRouteComponentProps() {
 }
 
 export type RouteComponentProps = ReturnType<typeof useRouteComponentProps>;
-export type RouteComponentType = React.ComponentType<RouteComponentProps>;
+type RouteComponentType = React.ComponentType<RouteComponentProps>;
 
 export function WithComponentProps({
   children,
@@ -1963,7 +1963,7 @@ function useHydrateFallbackProps() {
 }
 
 export type HydrateFallbackProps = ReturnType<typeof useHydrateFallbackProps>;
-export type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
+type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
 
 export function WithHydrateFallbackProps({
   children,
@@ -1991,7 +1991,7 @@ function useErrorBoundaryProps() {
 }
 
 export type ErrorBoundaryProps = ReturnType<typeof useErrorBoundaryProps>;
-export type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
+type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
 
 export function WithErrorBoundaryProps({
   children,

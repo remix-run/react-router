@@ -3,6 +3,7 @@ import * as React from "react";
 import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
+  DataRouteObject,
   LoaderFunctionArgs,
   RouteManifest,
   ShouldRevalidateFunction,
@@ -21,7 +22,6 @@ import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
 import { useRouteError } from "../../hooks";
-import type { DataRouteObject } from "../../context";
 
 export interface Route {
   index?: boolean;
@@ -340,7 +340,13 @@ export function createClientRoutes(
         (routeModule.clientLoader?.hydrate === true || !route.hasLoader);
 
       dataRoute.loader = async (
-        { request, params, context, unstable_pattern }: LoaderFunctionArgs,
+        {
+          request,
+          params,
+          context,
+          unstable_pattern,
+          unstable_url,
+        }: LoaderFunctionArgs,
         singleFetch?: unknown,
       ) => {
         try {
@@ -359,6 +365,7 @@ export function createClientRoutes(
               params,
               context,
               unstable_pattern,
+              unstable_url,
               async serverLoader() {
                 preventInvalidServerHandlerCall("loader", route);
 
@@ -394,7 +401,13 @@ export function createClientRoutes(
       );
 
       dataRoute.action = (
-        { request, params, context, unstable_pattern }: ActionFunctionArgs,
+        {
+          request,
+          params,
+          context,
+          unstable_pattern,
+          unstable_url,
+        }: ActionFunctionArgs,
         singleFetch?: unknown,
       ) => {
         return prefetchStylesAndCallHandler(async () => {
@@ -414,6 +427,7 @@ export function createClientRoutes(
             params,
             context,
             unstable_pattern,
+            unstable_url,
             async serverAction() {
               preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);

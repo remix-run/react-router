@@ -2,15 +2,13 @@ import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  DataRouteObject,
+  IndexRouteObject,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
-} from "../../router/utils";
-import type {
-  DataRouteObject,
-  IndexRouteObject,
   NonIndexRouteObject,
-} from "../../context";
+} from "../../router/utils";
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
@@ -18,7 +16,6 @@ import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
 } from "../../router/utils";
-import type { MiddlewareEnabled } from "../../types/future";
 import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
@@ -26,9 +23,6 @@ import type {
   FrameworkContextObject,
 } from "./entry";
 import {
-  type RouteComponentType,
-  type HydrateFallbackType,
-  type ErrorBoundaryType,
   Outlet,
   RouterProvider,
   createMemoryRouter,
@@ -40,9 +34,9 @@ import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
 
 interface StubRouteExtensions {
-  Component?: RouteComponentType;
-  HydrateFallback?: HydrateFallbackType;
-  ErrorBoundary?: ErrorBoundaryType;
+  Component?: React.ComponentType<any>;
+  HydrateFallback?: React.ComponentType<any>;
+  ErrorBoundary?: React.ComponentType<any>;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
@@ -132,6 +126,8 @@ export function createRoutesStub(
     if (routerRef.current == null) {
       frameworkContextRef.current = {
         future: {
+          unstable_passThroughRequests:
+            future?.unstable_passThroughRequests === true,
           unstable_subResourceIntegrity:
             future?.unstable_subResourceIntegrity === true,
           v8_middleware: future?.v8_middleware === true,
@@ -154,7 +150,7 @@ export function createRoutesStub(
       // the manifest and routeModules during the walk
       let patched = processRoutes(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
-        // types compared to `AgnosticRouteObject`
+        // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
         _context !== undefined
           ? _context

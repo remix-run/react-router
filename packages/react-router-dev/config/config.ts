@@ -86,6 +86,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
+  unstable_passThroughRequests: boolean;
   unstable_subResourceIntegrity: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
@@ -684,6 +685,8 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
+    unstable_passThroughRequests:
+      userAndPresetConfigs.future?.unstable_passThroughRequests ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
     unstable_trailingSlashAwareDataRequests:
@@ -815,17 +818,12 @@ export async function createConfigLoader({
       if (!fsWatcher) {
         fsWatcher = chokidar.watch([root, appDirectory], {
           ignoreInitial: true,
-          ignored: (path) => {
-            let dirname = Path.dirname(path);
+          ignored: (path) => isIgnoredByWatcher(path, { root, appDirectory }),
+        });
 
-            return (
-              !dirname.startsWith(appDirectory) &&
-              // Ensure we're only watching files outside of the app directory
-              // that are at the root level, not nested in subdirectories
-              path !== root && // Watch the root directory itself
-              dirname !== root // Watch files at the root level
-            );
-          },
+        fsWatcher.on("error", (error: unknown) => {
+          let message = error instanceof Error ? error.message : String(error);
+          console.warn(colors.yellow(`File watcher error: ${message}`));
         });
 
         fsWatcher.on("all", async (...args) => {
@@ -1159,6 +1157,38 @@ function isEntryFileDependency(
     ) {
       return true;
     }
+  }
+
+  return false;
+}
+
+export function isIgnoredByWatcher(
+  path: string,
+  { root, appDirectory }: { root: string; appDirectory: string },
+): boolean {
+  let dirname = Path.dirname(path);
+
+  let ignoredByPath =
+    !dirname.startsWith(appDirectory) &&
+    // Ensure we're only watching files outside of the app directory
+    // that are at the root level, not nested in subdirectories
+    path !== root && // Watch the root directory itself
+    dirname !== root; // Watch files at the root level
+
+  if (ignoredByPath) {
+    return true;
+  }
+
+  // Filter out non-regular files (sockets, pipes, etc.) that
+  // crash `fs.watch()` on macOS with errno -102
+  // https://github.com/paulmillr/chokidar/issues/1391
+  try {
+    let stat = fs.statSync(path, { throwIfNoEntry: false });
+    if (stat && !stat.isFile() && !stat.isDirectory()) {
+      return true;
+    }
+  } catch {
+    return true;
   }
 
   return false;

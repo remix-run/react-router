@@ -1,11 +1,5 @@
 import * as React from "react";
-import type {
-  DataRouteMatch,
-  NavigateOptions,
-  RouteContextObject,
-  RouteMatch,
-  RouteObject,
-} from "./context";
+import type { NavigateOptions, RouteContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
@@ -34,10 +28,13 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
+  DataRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
   PathPattern,
+  RouteMatch,
+  RouteObject,
   UIMatch,
 } from "./router/utils";
 import {
@@ -300,7 +297,7 @@ function useIsomorphicLayoutEffect(
  *
  * Be cautious with `navigate(number)`. If your application can load up to a
  * route that has a button that tries to navigate forward/back, there may not be
- * a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * a [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry to go back or forward to, or it can go somewhere you don't expect
  * (like a different domain).
  *
@@ -891,12 +888,15 @@ export function useRoutesImpl(
           pathname: joinPaths([
             parentPathnameBase,
             // Re-encode pathnames that were decoded inside matchRoutes.
-            // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+            // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
             // `new URL()` internally and we need to prevent it from treating
             // them as separators
             navigator.encodeLocation
               ? navigator.encodeLocation(
-                  match.pathname.replace(/\?/g, "%3F").replace(/#/g, "%23"),
+                  match.pathname
+                    .replace(/%/g, "%25")
+                    .replace(/\?/g, "%3F")
+                    .replace(/#/g, "%23"),
                 ).pathname
               : match.pathname,
           ]),
@@ -906,12 +906,13 @@ export function useRoutesImpl(
               : joinPaths([
                   parentPathnameBase,
                   // Re-encode pathnames that were decoded inside matchRoutes
-                  // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+                  // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
                   // `new URL()` internally and we need to prevent it from treating
                   // them as separators
                   navigator.encodeLocation
                     ? navigator.encodeLocation(
                         match.pathnameBase
+                          .replace(/%/g, "%25")
                           .replace(/\?/g, "%3F")
                           .replace(/#/g, "%23"),
                       ).pathname

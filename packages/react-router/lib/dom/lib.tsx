@@ -30,6 +30,8 @@ import type {
   DataStrategyFunction,
   FormEncType,
   HTMLFormMethod,
+  PatchRoutesOnNavigationFunction,
+  RouteObject,
   UIMatch,
 } from "../router/utils";
 import {
@@ -73,11 +75,7 @@ import {
   mapRouteProperties,
   hydrationRouteProperties,
 } from "../components";
-import type {
-  RouteObject,
-  NavigateOptions,
-  PatchRoutesOnNavigationFunction,
-} from "../context";
+import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -1222,7 +1220,7 @@ export interface LinkProps
   unstable_defaultShouldRevalidate?: boolean;
 
   /**
-   * Masked path for for this navigation, when you want to navigate the router to
+   * Masked path for this navigation, when you want to navigate the router to
    * one location but display a separate location in the URL bar.
    *
    * This is useful for contextual navigations such as opening an image in a modal
