@@ -792,6 +792,63 @@ describe("router dataStrategy", () => {
     });
   });
 
+  describe("aborts", () => {
+    it("returns AbortError results when a navigation is interrupted", async () => {
+      let resultsByPathname = new Map<
+        string,
+        Record<string, DataStrategyResult>
+      >();
+      let dataStrategy = mockDataStrategy(({ matches, request }) => {
+        return Promise.all(matches.map((m) => m.resolve())).then((results) => {
+          let keyed = keyedResults(matches, results);
+          resultsByPathname.set(new URL(request.url).pathname, keyed);
+          return keyed;
+        });
+      });
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: true,
+            children: [
+              {
+                id: "foo",
+                path: "foo",
+                loader: true,
+              },
+              {
+                id: "bar",
+                path: "bar",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        dataStrategy,
+        hydrationData: {
+          loaderData: {
+            root: "ROOT",
+          },
+        },
+      });
+
+      let A = await t.navigate("/foo");
+      let B = await t.navigate("/bar");
+      await B.loaders.root.resolve("ROOT*");
+      await B.loaders.bar.resolve("BAR");
+      await tick();
+
+      expect(A.loaders.foo.signal.aborted).toBe(true);
+      let abortedResults = resultsByPathname.get("/foo");
+      expect(abortedResults).toBeDefined();
+      expect(abortedResults?.foo?.type).toBe("error");
+      expect(abortedResults?.foo?.result).toEqual(
+        expect.objectContaining({ name: "AbortError" }),
+      );
+    });
+  });
+
   describe("actions", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>

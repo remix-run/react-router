@@ -88,6 +88,43 @@ test.describe("useFetcher", () => {
           }
         `,
 
+        "app/routes/fetcher-abort.tsx": js`
+          import { Link, useFetcher } from "react-router";
+          import { useEffect, useState } from "react";
+
+          export async function loader() {
+            await new Promise(resolve => setTimeout(resolve, 150));
+            return { ok: true };
+          }
+
+          export default function FetcherAbort() {
+            let fetcher = useFetcher();
+            let [polling, setPolling] = useState(false);
+
+            useEffect(() => {
+              if (!polling) return;
+              let intervalId = setInterval(() => {
+                fetcher.load("/fetcher-abort");
+              }, 50);
+              return () => clearInterval(intervalId);
+            }, [polling, fetcher]);
+
+            return (
+              <div>
+                <button onClick={() => setPolling(true)}>Start Polling</button>
+                <Link to="/target">Go to Target</Link>
+                <p id="fetcher-state">{fetcher.state}</p>
+              </div>
+            );
+          }
+        `,
+
+        "app/routes/target.tsx": js`
+          export default function Target() {
+            return <h1>Target</h1>;
+          }
+        `,
+
         "app/routes/parent.tsx": js`
           import { Outlet } from "react-router";
 
@@ -414,6 +451,18 @@ test.describe("useFetcher", () => {
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
       ]),
     );
+  });
+
+  test("navigation during fetcher polling does not error", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/fetcher-abort");
+    await page.getByRole("button", { name: "Start Polling" }).click();
+    await page.waitForTimeout(200);
+
+    await page.getByRole("link", { name: "Go to Target" }).click();
+    await expect(page).toHaveURL(/\/target/);
+    await expect(page.getByRole("heading", { name: "Target" })).toBeVisible();
   });
 });
 

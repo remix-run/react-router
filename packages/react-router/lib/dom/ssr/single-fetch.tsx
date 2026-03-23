@@ -16,6 +16,7 @@ import {
   data,
   stripBasename,
 } from "../../router/utils";
+import { isAbortError } from "../../router/abort";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
@@ -443,7 +444,17 @@ async function singleFetchLoaderNavigationStrategy(
                 trailingSlashAware,
                 [routeId],
               );
-              return unwrapSingleFetchResult(data, routeId);
+              try {
+                return unwrapSingleFetchResult(data, routeId);
+              } catch (e) {
+                if (
+                  e instanceof SingleFetchNoResultError &&
+                  router.state.loaderData.hasOwnProperty(routeId)
+                ) {
+                  return router.state.loaderData[routeId];
+                }
+                throw e;
+              }
             });
 
             results[routeId] = { type: "data", result };
@@ -462,7 +473,17 @@ async function singleFetchLoaderNavigationStrategy(
         try {
           let result = await handler(async () => {
             let data = await singleFetchDfd.promise;
-            return unwrapSingleFetchResult(data, routeId);
+            try {
+              return unwrapSingleFetchResult(data, routeId);
+            } catch (e) {
+              if (
+                e instanceof SingleFetchNoResultError &&
+                router.state.loaderData.hasOwnProperty(routeId)
+              ) {
+                return router.state.loaderData[routeId];
+              }
+              throw e;
+            }
           });
           results[routeId] = { type: "data", result };
         } catch (e) {
@@ -663,7 +684,15 @@ async function fetchAndDecodeViaTurboStream(
     }
   }
 
-  let res = await fetch(url, await createRequestInit(request));
+  let res: Response;
+  try {
+    res = await fetch(url, await createRequestInit(request));
+  } catch (e) {
+    if (isAbortError(e, request.signal, { allowTypeError: true })) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    throw e;
+  }
 
   // If this error'd without hitting the running server, then bubble a normal
   // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
