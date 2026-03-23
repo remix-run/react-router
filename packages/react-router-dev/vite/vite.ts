@@ -1,4 +1,5 @@
 import path from "pathe";
+import type { DepOptimizationConfig, ESBuildOptions } from "vite";
 
 import invariant from "../invariant";
 import { isReactRouterRepo } from "../config/is-react-router-repo";
@@ -28,4 +29,43 @@ export async function preloadVite(): Promise<void> {
 export function getVite(): Vite {
   invariant(vite, "getVite() called before preloadVite()");
   return vite;
+}
+
+type OxcCompilerOptions = {
+  jsx: {
+    runtime: "automatic";
+    development: boolean;
+  };
+};
+
+type RolldownJsxOptions = "react-jsx";
+
+type OptimizeDepsESBuildOptions = NonNullable<
+  DepOptimizationConfig["esbuildOptions"]
+>;
+
+export function defineCompilerOptions(options: {
+  oxc: OxcCompilerOptions;
+  esbuild: ESBuildOptions;
+}): { oxc: OxcCompilerOptions } | { esbuild: ESBuildOptions } {
+  let vite = getVite();
+  return parseInt(vite.version.split(".")[0], 10) >= 8
+    ? { oxc: options.oxc }
+    : { esbuild: options.esbuild };
+}
+
+export function defineOptimizeDepsCompilerOptions(options: {
+  rolldown: {
+    transform: {
+      jsx: RolldownJsxOptions;
+    };
+  };
+  esbuild: OptimizeDepsESBuildOptions;
+}):
+  | { rolldownOptions: { transform: { jsx: RolldownJsxOptions } } }
+  | { esbuildOptions: OptimizeDepsESBuildOptions } {
+  let vite = getVite();
+  return parseInt(vite.version.split(".")[0], 10) >= 8
+    ? { rolldownOptions: options.rolldown }
+    : { esbuildOptions: options.esbuild };
 }

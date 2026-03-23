@@ -1,5 +1,5 @@
 {
-  "name": "@playground/framework",
+  "name": "@playground/middleware",
   "version": "0.0.0",
   "private": true,
   "sideEffects": false,
@@ -29,15 +29,14 @@
     "@types/express": "^4.17.21",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "tsx": "^4.19.3",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite": "^8.0.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.19.0"
   }
 }

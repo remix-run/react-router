@@ -606,7 +606,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                     "app/routes/client-loader-critical.bubbled-server-loader-errors-are-persisted-for-hydrating-routes.parent.child.tsx": js`
-                      import { useRouteError, useLoaderData } from 'react-router'
+                      import { useLoaderData } from 'react-router'
                       export function loader() {
                         throw new Error('Child Server Error');
                       }

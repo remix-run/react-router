@@ -23,10 +23,9 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite": "^8.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   }
 }

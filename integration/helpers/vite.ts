@@ -90,18 +90,6 @@ export const viteConfig = {
   }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
-        // Detect rolldown-vite. This should ideally use "rolldownVersion"
-        // but that's not exported. Once that's available, this
-        // check should be updated to use it.
-        rollupOptions: "transformWithOxc" in (await import("vite"))
-          ? {
-              onwarn(warning, warn) {
-                // Ignore "The built-in minifier is still under development." warning
-                if (warning.code === "MINIFY_WARNING") return;
-                warn(warning);
-              },
-            }
-          : undefined,
         assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
         assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
         cssCodeSplit: ${
@@ -124,22 +112,35 @@ export const viteConfig = {
       ${args.mdx ? 'import mdx from "@mdx-js/rollup";' : ""}
       ${args.vanillaExtract ? 'import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";' : ""}
       import { envOnlyMacros } from "vite-env-only";
-      import tsconfigPaths from "vite-tsconfig-paths";
 
-      export default async () => ({
-        ${args.port ? await viteConfig.server(args) : ""}
-        ${viteConfig.build(args)}
-        ${args.base ? `base: "${args.base}",` : ""}
-        envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
-        plugins: [
+      export default async () => {
+        let vite = await import("vite");
+        let useNativeTsconfigPaths =
+          parseInt(vite.version.split(".")[0], 10) >= 8;
+        let plugins = [
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
           ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
           ${isRsc ? "rsc()," : ""}
           envOnlyMacros(),
-          tsconfigPaths()
-        ],
-      });
+        ];
+
+        if (!useNativeTsconfigPaths) {
+          let { default: tsconfigPaths } = await import(
+            /* @vite-ignore */ "vite-tsconfig-paths"
+          );
+          plugins.push(tsconfigPaths());
+        }
+
+        return {
+          ${args.port ? await viteConfig.server(args) : ""}
+          ${viteConfig.build(args)}
+          ${args.base ? `base: "${args.base}",` : ""}
+          envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
+          resolve: { tsconfigPaths: useNativeTsconfigPaths },
+          plugins,
+        };
+      };
     `;
   },
 };
@@ -231,8 +232,8 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
   | "vite-6-template"
   | "vite-7-beta-template"
-  | "vite-plugin-cloudflare-template"
-  | "vite-rolldown-template";
+  | "vite-8-template"
+  | "vite-plugin-cloudflare-template";
 
 type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
@@ -252,10 +253,7 @@ export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
   { templateName: "vite-7-beta-template", templateDisplayName: "Vite 7 Beta" },
-  {
-    templateName: "vite-rolldown-template",
-    templateDisplayName: "Vite Rolldown",
-  },
+  { templateName: "vite-8-template", templateDisplayName: "Vite 8" },
 ] as const satisfies Array<{
   templateName: FrameworkModeViteMajorTemplateName;
   templateDisplayName: string;
@@ -315,9 +313,6 @@ export const build = ({
       ...process.env,
       ...colorEnv,
       ...env,
-      // Ensure build can pass in Rolldown. This can be removed once
-      // "preserveEntrySignatures" is supported in rolldown-vite.
-      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 };

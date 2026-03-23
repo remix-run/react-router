@@ -1,4 +1,11 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+  Link,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "react-router";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,6 +17,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <ul>
+          <li>
+            <Link prefetch="intent" to="/">
+              Home
+            </Link>
+          </li>
+          <li>
+            <Link prefetch="intent" to="/products/abc">
+              Product
+            </Link>
+          </li>
+        </ul>
         {children}
         <ScrollRestoration />
         <Scripts />
