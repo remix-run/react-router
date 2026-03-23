@@ -16,6 +16,7 @@
     "playground": "node ./scripts/playground.js",
     "prerelease": "pnpm build",
     "release": "changeset publish",
+    "setup-installable-branch": "node scripts/setup-installable-branch.ts",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "typegen": "pnpm run --recursive --parallel typegen",
