@@ -1767,7 +1767,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   ctx.reactRouterConfig.future,
                 ).pathname,
               );
-              if (!matches) continue;
+              if (
+                !matches &&
+                new URL(request.url).pathname !==
+                  ctx.reactRouterConfig.basename + "__manifest"
+              )
+                continue;
 
               let handler = createRequestHandler(build, "production");
               response = await handler(request, loadContext);
@@ -1781,7 +1786,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return response;
             }
 
-            throw new Error("No handlers were found for the request.");
+            let url = new URL(request.url);
+            throw new Error(
+              "No handlers were found for the request: " +
+                url.pathname +
+                url.search,
+            );
           };
 
           return cachedHandler;
