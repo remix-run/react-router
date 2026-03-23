@@ -113,7 +113,7 @@ async function updatePackageDependencies() {
           )
         ) {
           let packageDirName = name.startsWith("@react-router/")
-            ? name.replace(/^@react-router\//, "")
+            ? name.replace(/^@react-router\//, "react-router-")
             : name;
           pkg.dependencies[name] =
             `remix-run/react-router#${installableBranch}&path:packages/${packageDirName}`;
