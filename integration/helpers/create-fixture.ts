@@ -509,9 +509,6 @@ function reactRouterBuild(
     env: {
       ...process.env,
       NODE_ENV: mode || ServerMode.Production,
-      // Ensure build can pass in Rolldown. This can be removed once
-      // "preserveEntrySignatures" is supported in rolldown-vite.
-      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 

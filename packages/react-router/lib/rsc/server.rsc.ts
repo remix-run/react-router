@@ -559,7 +559,6 @@ async function generateManifestResponse(
       statusCode: 200,
       headers: new Headers({
         "Content-Type": "text/x-component",
-        Vary: "Content-Type",
       }),
       payload,
     },
@@ -977,7 +976,6 @@ function generateRedirectResponse(
   // https://nodejs.org/api/http.html#class-httpclientrequest
   headers.delete("Content-Length");
   headers.set("Content-Type", "text/x-component");
-  headers.set("Vary", "Content-Type");
 
   return generateResponse(
     {

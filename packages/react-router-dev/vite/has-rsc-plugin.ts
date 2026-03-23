@@ -1,5 +1,7 @@
 import type * as Vite from "vite";
 
+import { getVite, preloadVite } from "./vite";
+
 export async function hasReactRouterRscPlugin({
   root,
   viteBuildOptions: { config, logLevel, mode },
@@ -11,7 +13,8 @@ export async function hasReactRouterRscPlugin({
     mode?: string;
   };
 }): Promise<boolean> {
-  const vite = await import("vite");
+  await preloadVite();
+  const vite = getVite();
   const viteConfig = await vite.resolveConfig(
     {
       configFile: config,
