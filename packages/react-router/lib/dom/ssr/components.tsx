@@ -343,6 +343,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  * tags
  */
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
+  let rsc = useIsRSCRouterContext();
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -351,6 +352,12 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
 
   if (!matches) {
     return null;
+  }
+
+  if (rsc) {
+    return (
+      <RSCPrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />
+    );
   }
 
   return <PrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />;
@@ -380,6 +387,62 @@ function useKeyedPrefetchLinks(matches: DataRouteMatch[]) {
   }, [matches, manifest, routeModules]);
 
   return keyedPrefetchLinks;
+}
+
+function RSCPrefetchPageLinksImpl({
+  page,
+  matches: nextMatches,
+  ...linkProps
+}: PageLinkDescriptor & {
+  matches: DataRouteMatch[];
+}) {
+  let location = useLocation();
+  let { future } = useFrameworkContext();
+  let { basename } = useDataRouterContext();
+
+  let dataHrefs = React.useMemo(() => {
+    if (page === location.pathname + location.search + location.hash) {
+      // Because we opt-into revalidation, don't compute this for the current page
+      // since it would always trigger a prefetch of the existing loaders
+      return [];
+    }
+    let url = singleFetchUrl(
+      page,
+      basename,
+      future.unstable_trailingSlashAwareDataRequests,
+      "rsc",
+    );
+
+    let hasSomeRoutesWithShouldRevalidate = false;
+    let targetRoutes: string[] = [];
+    for (let match of nextMatches) {
+      if (typeof match.route.shouldRevalidate === "function") {
+        hasSomeRoutesWithShouldRevalidate = true;
+      } else {
+        targetRoutes.push(match.route.id);
+      }
+    }
+
+    if (hasSomeRoutesWithShouldRevalidate && targetRoutes.length > 0) {
+      url.searchParams.set("_routes", targetRoutes.join(","));
+    }
+
+    return [url.pathname + url.search];
+  }, [
+    basename,
+    future.unstable_trailingSlashAwareDataRequests,
+    page,
+    location,
+    nextMatches,
+  ]);
+
+  return (
+    <>
+      {dataHrefs.map((href) => (
+        <link key={href} rel="prefetch" as="fetch" href={href} {...linkProps} />
+      ))}
+    </>
+  );
 }
 
 function PrefetchPageLinksImpl({
