@@ -47,7 +47,6 @@ export function ServerComponent() {
   // ...
 }
 
-
 export function ErrorBoundary() {
   // previous implementation of ClientErrorBoundary, this is now a client component
 }
