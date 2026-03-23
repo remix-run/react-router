@@ -429,7 +429,7 @@ Date: YYYY-MM-DD
 
 ## v7.13.2
 
-Date: 2026-03-19
+Date: 2026-03-23
 
 ### What's Changed
 
