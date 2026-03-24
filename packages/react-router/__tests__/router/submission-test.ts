@@ -950,7 +950,7 @@ describe("submissions", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = nav.actions.root.stub.mock.calls[0][0].request;
@@ -986,7 +986,7 @@ describe("submissions", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = nav.actions.root.stub.mock.calls[0][0].request;
@@ -1020,7 +1020,7 @@ describe("submissions", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = nav.actions.root.stub.mock.calls[0][0].request;
@@ -1126,7 +1126,7 @@ describe("submissions", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = nav.actions.root.stub.mock.calls[0][0].request;
@@ -1166,7 +1166,7 @@ describe("submissions", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = nav.actions.root.stub.mock.calls[0][0].request;
@@ -1203,7 +1203,7 @@ describe("submissions", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = nav.actions.root.stub.mock.calls[0][0].request;

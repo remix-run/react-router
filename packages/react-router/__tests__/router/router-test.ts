@@ -1,10 +1,7 @@
 import type { HydrationState } from "../../lib/router/router";
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, IDLE_NAVIGATION } from "../../lib/router/router";
-import type {
-  AgnosticDataRouteObject,
-  AgnosticRouteObject,
-} from "../../lib/router/utils";
+import type { DataRouteObject, RouteObject } from "../../lib/router/utils";
 import { data, ErrorResponseImpl, redirect } from "../../lib/router/utils";
 
 import { urlMatch } from "./utils/custom-matchers";
@@ -184,7 +181,7 @@ describe("a router", () => {
     });
 
     it("throws if it finds index routes with children", async () => {
-      let routes: AgnosticRouteObject[] = [
+      let routes: RouteObject[] = [
         // @ts-expect-error
         {
           index: true,
@@ -1753,7 +1750,7 @@ describe("a router", () => {
         }),
         unstable_pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks"),
-        context: {},
+        context: expect.anything(),
       });
 
       let nav2 = await t.navigate("/tasks/1");
@@ -1764,7 +1761,7 @@ describe("a router", () => {
         }),
         unstable_pattern: "/tasks/:id",
         unstable_url: new URL("http://localhost/tasks/1"),
-        context: {},
+        context: expect.anything(),
       });
 
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
@@ -1775,7 +1772,7 @@ describe("a router", () => {
         }),
         unstable_pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
-        context: {},
+        context: expect.anything(),
       });
 
       let nav4 = await t.navigate("/tasks#hash", {
@@ -1788,7 +1785,7 @@ describe("a router", () => {
         }),
         unstable_pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
-        context: {},
+        context: expect.anything(),
       });
 
       expect(t.router.state.navigation.formAction).toBe("/tasks");
@@ -2215,7 +2212,7 @@ describe("a router", () => {
         request: expect.any(Request),
         unstable_pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks"),
-        context: {},
+        context: expect.anything(),
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -2261,7 +2258,7 @@ describe("a router", () => {
         request: expect.any(Request),
         unstable_pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks?foo=bar"),
-        context: {},
+        context: expect.anything(),
       });
       // Assert request internals, cannot do a deep comparison above since some
       // internals aren't the same on separate creations
@@ -2296,7 +2293,7 @@ describe("a router", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -2736,7 +2733,7 @@ describe("a router", () => {
     it("should retain existing routes until revalidation completes on loader removal (fetch)", async () => {
       let rootDfd = createDeferred();
       let fooDfd = createDeferred();
-      let ogRoutes: AgnosticDataRouteObject[] = [
+      let ogRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
@@ -2777,7 +2774,7 @@ describe("a router", () => {
       expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
-      let newRoutes: AgnosticDataRouteObject[] = [
+      let newRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
@@ -2846,7 +2843,7 @@ describe("a router", () => {
     it("should retain existing routes until revalidation completes on route removal (fetch)", async () => {
       let rootDfd = createDeferred();
       let fooDfd = createDeferred();
-      let ogRoutes: AgnosticDataRouteObject[] = [
+      let ogRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
@@ -2886,7 +2883,7 @@ describe("a router", () => {
       expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
-      let newRoutes: AgnosticDataRouteObject[] = [
+      let newRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",

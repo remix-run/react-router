@@ -1,8 +1,11 @@
 import type * as Vite from "vite";
+import { createRequire } from "node:module";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
 import * as babel from "@babel/core";
 import colors from "picocolors";
+
+const nodeRequire = createRequire(import.meta.url);
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
@@ -479,7 +482,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         if (id !== virtual.hmrRuntime.resolvedId) return;
 
         const reactRefreshDir = path.dirname(
-          require.resolve("react-refresh/package.json"),
+          nodeRequire.resolve("react-refresh/package.json"),
         );
         const reactRefreshRuntimePath = join(
           reactRefreshDir,
@@ -490,7 +493,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           "const exports = {}",
           await readFile(reactRefreshRuntimePath, "utf8"),
           await readFile(
-            require.resolve("./static/rsc-refresh-utils.mjs"),
+            nodeRequire.resolve("./static/rsc-refresh-utils.mjs"),
             "utf8",
           ),
           "export default exports",
@@ -527,7 +530,12 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             sourceType: "module",
             allowAwaitOutsideFunction: true,
           },
-          plugins: [[require("react-refresh/babel"), { skipEnvCheck: true }]],
+          plugins: [
+            [
+              nodeRequire.resolve("react-refresh/babel"),
+              { skipEnvCheck: true },
+            ],
+          ],
           sourceMaps: true,
         });
         if (result === null) return;

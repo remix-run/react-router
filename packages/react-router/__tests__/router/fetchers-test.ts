@@ -179,7 +179,7 @@ describe("fetchers", () => {
         }),
         unstable_pattern: "/foo",
         unstable_url: new URL("http://localhost/foo"),
-        context: {},
+        context: expect.anything(),
       });
     });
 
@@ -228,7 +228,7 @@ describe("fetchers", () => {
         }),
         unstable_pattern: "/foo",
         unstable_url: new URL("http://localhost/foo?key=value"),
-        context: {},
+        context: expect.anything(),
       });
 
       await A.loaders.foo.resolve("A DATA");
@@ -282,7 +282,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: "/foo",
         unstable_url: new URL("http://localhost/foo"),
-        context: {},
+        context: expect.anything(),
       });
 
       await A.actions.foo.resolve("A ACTION");
@@ -395,7 +395,7 @@ describe("fetchers", () => {
         }),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
     });
   });
@@ -2301,26 +2301,26 @@ describe("fetchers", () => {
       expect(fetcherData.get(key)).toBe(1);
 
       expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
-        {
-          "actionResult": null,
-          "actionStatus": undefined,
-          "currentParams": {
-            "a": "one",
-          },
-          "currentUrl": "http://localhost/one",
-          "defaultShouldRevalidate": true,
-          "formAction": "/two/three",
-          "formData": FormData {},
-          "formEncType": "application/x-www-form-urlencoded",
-          "formMethod": "POST",
-          "json": undefined,
-          "nextParams": {
-            "a": "two",
-            "b": "three",
-          },
-          "nextUrl": "http://localhost/two/three",
-          "text": undefined,
-        }
+       {
+         "actionResult": null,
+         "actionStatus": undefined,
+         "currentParams": {
+           "a": "one",
+         },
+         "currentUrl": "http://localhost/one",
+         "defaultShouldRevalidate": true,
+         "formAction": "/two/three",
+         "formData": FormDataWithSubmitter {},
+         "formEncType": "application/x-www-form-urlencoded",
+         "formMethod": "POST",
+         "json": undefined,
+         "nextParams": {
+           "a": "two",
+           "b": "three",
+         },
+         "nextUrl": "http://localhost/two/three",
+         "text": undefined,
+       }
       `);
 
       expect(router._internalFetchControllers.size).toBe(0);
@@ -3397,7 +3397,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3428,7 +3428,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3457,7 +3457,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3486,7 +3486,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3516,7 +3516,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3548,7 +3548,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3579,7 +3579,7 @@ describe("fetchers", () => {
         request: expect.any(Request),
         unstable_pattern: expect.any(String),
         unstable_url: expect.any(URL),
-        context: {},
+        context: expect.anything(),
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;

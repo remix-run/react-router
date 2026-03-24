@@ -5,6 +5,9 @@ import type { setupServer } from "msw/node";
 import invariant from "tiny-invariant";
 
 type RequestHandler = Parameters<typeof setupServer>[0];
+const TEST_DIR =
+  process.env.CREATE_REACT_ROUTER_TEST_DIR ??
+  path.join(process.cwd(), "packages/create-react-router/__tests__");
 
 async function isDirectory(d: string) {
   try {
@@ -54,11 +57,11 @@ let sendTarball = async (args: { owner: string; repo: string }) => {
 
   let pathToTarball: string;
   if (owner === "remix-run" && repo === "react-router-templates") {
-    pathToTarball = path.join(__dirname, "fixtures", "templates-repo.tar.gz");
+    pathToTarball = path.join(TEST_DIR, "fixtures", "templates-repo.tar.gz");
   } else if (owner === "fake-react-router-tester" && repo === "nested-dir") {
-    pathToTarball = path.join(__dirname, "fixtures", "nested-dir-repo.tar.gz");
+    pathToTarball = path.join(TEST_DIR, "fixtures", "nested-dir-repo.tar.gz");
   } else {
-    pathToTarball = path.join(__dirname, "fixtures", "template.tar.gz");
+    pathToTarball = path.join(TEST_DIR, "fixtures", "template.tar.gz");
   }
 
   let fileBuffer = await fsp.readFile(pathToTarball);
@@ -158,7 +161,7 @@ let githubHandlers: Array<RequestHandler> = [
         throw new Error(message);
       }
 
-      let localPath = path.join(__dirname, "../../..", contentsPath);
+      let localPath = path.join(TEST_DIR, "../../..", contentsPath);
       let isLocalDir = await isDirectory(localPath);
       let isLocalFile = await isFile(localPath);
 
@@ -235,7 +238,7 @@ let githubHandlers: Array<RequestHandler> = [
 
       // NOTE: we cheat a bit and in the contents/:path handler, we set the sha to the relativePath
       let relativePath = sha;
-      let fullPath = path.join(__dirname, "..", relativePath);
+      let fullPath = path.join(TEST_DIR, "..", relativePath);
       let encoding = "base64" as const;
       let size = (await fsp.stat(fullPath)).size;
       let content = await fsp.readFile(fullPath, { encoding: "utf-8" });
@@ -261,7 +264,7 @@ let githubHandlers: Array<RequestHandler> = [
       if (typeof relativePath !== "string") {
         throw new Error("params.path must be a string");
       }
-      let fullPath = path.join(__dirname, "..", relativePath);
+      let fullPath = path.join(TEST_DIR, "..", relativePath);
       let encoding = "base64" as const;
       let size = (await fsp.stat(fullPath)).size;
       let content = await fsp.readFile(fullPath, { encoding: "utf-8" });

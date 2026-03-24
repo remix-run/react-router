@@ -1,32 +1,38 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { createRequestHandler as createReactRequestHandler } from "react-router";
+import { fileURLToPath } from "node:url";
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
 import lambdaTester from "lambda-tester";
+import "@react-router/node";
 
-import {
-  createRequestHandler,
-  createReactRouterHeaders,
-  createReactRouterRequest,
-  sendReactRouterResponse,
-} from "../server";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+let createRequestHandler: typeof import("../server").createRequestHandler;
+let createReactRouterHeaders: typeof import("../server").createReactRouterHeaders;
+let createReactRouterRequest: typeof import("../server").createReactRouterRequest;
+let sendReactRouterResponse: typeof import("../server").sendReactRouterResponse;
 
 // We don't want to test that the React Router server works here,
 // we just want to test the architect adapter
-jest.mock("react-router", () => {
-  let original = jest.requireActual("react-router");
-  return {
-    ...original,
-    createRequestHandler: jest.fn(),
-  };
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
+
+(jest as any).unstable_mockModule("react-router", () => ({
+  createRequestHandler: mockedCreateRequestHandler,
+}));
+
+beforeAll(async () => {
+  ({
+    createRequestHandler,
+    createReactRouterHeaders,
+    createReactRouterRequest,
+    sendReactRouterResponse,
+  } = await import("../server"));
 });
-let mockedCreateRequestHandler =
-  createReactRequestHandler as jest.MockedFunction<
-    typeof createReactRequestHandler
-  >;
 
 function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
   let now = new Date();

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
+import { createRequire } from "node:module";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
 import Path from "pathe";
@@ -8,10 +9,12 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
+import pick from "lodash/pick.js";
+import omit from "lodash/omit.js";
+import cloneDeep from "lodash/cloneDeep.js";
+import isEqual from "lodash/isEqual.js";
+
+const nodeRequire = createRequire(import.meta.url);
 
 import {
   type RouteManifest,
@@ -963,7 +966,7 @@ export async function resolveEntryFiles({
   let { appDirectory } = reactRouterConfig;
 
   let defaultsDirectory = Path.resolve(
-    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    Path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "defaults",
@@ -1045,7 +1048,7 @@ export async function resolveRSCEntryFiles({
   let { appDirectory } = reactRouterConfig;
 
   let defaultsDirectory = Path.resolve(
-    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    Path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "default-rsc-entries",
