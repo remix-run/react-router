@@ -1,7 +1,7 @@
 {
   "name": "@react-router/dev",
   "type": "module",
-  "version": "7.13.1",
+  "version": "7.13.2",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -130,7 +130,7 @@
     "react-router": "workspace:^",
     "react-server-dom-webpack": "catalog:",
     "typescript": "^5.1.0",
-    "vite": "^5.1.0 || ^6.0.0 || ^7.0.0",
+    "vite": "^5.1.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",
     "wrangler": "^3.28.2 || ^4.0.0"
   },
   "peerDependenciesMeta": {

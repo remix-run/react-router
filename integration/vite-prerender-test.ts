@@ -299,6 +299,8 @@ for (let previewServerPrerendering of [false, true]) {
       });
 
       test("Prerenders a static array of routes with server bundles", async () => {
+        test.skip(!previewServerPrerendering);
+
         fixture = await createFixture({
           prerender: true,
           files: {

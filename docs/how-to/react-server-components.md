@@ -34,8 +34,8 @@ The quickest way to get started is with one of our templates.
 
 These templates come with React Router RSC APIs already configured, offering you out of the box features such as:
 
-- Server Component Routes
 - Server Side Rendering (SSR)
+- Server Components
 - Client Components (via [`"use client"`][use-client-docs] directive)
 - Server Functions (via [`"use server"`][use-server-docs] directive)
 
@@ -171,9 +171,18 @@ export default function Route({
 }
 ```
 
-### Server Component Routes
+### Route Server Components
 
-If a route exports a `ServerComponent` instead of the typical `default` component export, this component along with other route components (`ErrorBoundary`, `HydrateFallback`, `Layout`) will be server components rather than the usual client components.
+If a route exports a `ServerComponent` instead of the typical `default` component export, this will be a server component rather than the usual client component. A default export and `ServerComponent` can not both be exported from the same route module, but you can still export client-only annotations like `clientLoader` and `clientAction` alongside a `ServerComponent`, along with any other component exports such as `ErrorBoundary` or `Layout`.
+
+The following route module components have their own mutually exclusive server component counterparts:
+
+| Server Component Export | Client Component  |
+| ----------------------- | ----------------- |
+| `ServerComponent`       | `default`         |
+| `ServerErrorBoundary`   | `ErrorBoundary`   |
+| `ServerLayout`          | `Layout`          |
+| `ServerHydrateFallback` | `HydrateFallback` |
 
 ```tsx
 import type { Route } from "./+types/route";
@@ -188,7 +197,7 @@ export async function loader() {
 
 export function ServerComponent({
   loaderData,
-}: Route.ComponentProps) {
+}: Route.ServerComponentProps) {
   return (
     <>
       <h1>Server Component Route</h1>
