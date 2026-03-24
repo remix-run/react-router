@@ -1,5 +1,5 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
-// @ts-expect-error - on 18 types, requires 19. --- IGNORE ---
+// @ts-ignore - on 18 types, requires 19. --- IGNORE ---
 import { renderToReadableStream } from "react-dom/server.edge";
 import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
