@@ -18,7 +18,7 @@ In a typical React context, when we refer to "state management", we're primarily
 Popular caching solutions in React include:
 
 - **Redux:** A predictable state container for JavaScript apps.
-- **React Query:** Hooks for fetching, caching, and updating asynchronous data in React.
+- **TanStack Query:** Hooks for fetching, caching, and updating asynchronous data in React.
 - **Apollo:** A comprehensive state management library for JavaScript that integrates with GraphQL.
 
 In certain scenarios, using these libraries may be warranted. However, with React Router's unique server-focused approach, their utility becomes less prevalent. In fact, most React Router applications forgo them entirely.
