@@ -1,4 +1,5 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
+// @ts-expect-error React canary types may not export server.edge
 import { renderToReadableStream } from "react-dom/server.edge";
 import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
