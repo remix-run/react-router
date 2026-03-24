@@ -20,10 +20,6 @@ import GoForward from "./TestSequences/GoForward";
 import ListenPopOnly from "./TestSequences/ListenPopOnly";
 import getWindow from "../utils/getWindow";
 
-// TODO: Do we still need this?
-// const canGoWithoutReload = window.navigator.userAgent.indexOf('Firefox') === -1;
-// const describeGo = canGoWithoutReload ? describe : describe.skip;
-
 describe("a hash history", () => {
   let history: HashHistory;
   let testWindow: Window;
