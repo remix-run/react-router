@@ -24,8 +24,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-1)
     - [Unstable Changes](#unstable-changes-1)
   - [v7.13.1](#v7131)
-  - [What's Changed](#whats-changed-1)
-    - [URL Masking (unstable)](#url-masking-unstable)
+    - [What's Changed](#whats-changed-1)
+      - [URL Masking (unstable)](#url-masking-unstable)
     - [Patch Changes](#patch-changes-2)
     - [Unstable Changes](#unstable-changes-2)
   - [v7.13.0](#v7130)
@@ -408,29 +408,6 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 </details>
 
-<!-- To add a new release, copy from this template:
-
-## v7.X.Y
-
-Date: YYYY-MM-DD
-
-### What's Changed
-
-#### Big New Feature 1
-
-#### Big New Feature 2
-
-### Minor Changes
-
-### Patch Changes
-
-### Unstable Changes
-
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
-
-**Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
--->
-
 ## v7.14.0
 
 Date: 2026-04-02
@@ -576,9 +553,9 @@ This parameter is primarily needed when adopting the new `future.unstable_passth
 
 Date: 2026-02-23
 
-## What's Changed
+### What's Changed
 
-### URL Masking (unstable)
+#### URL Masking (unstable)
 
 This release includes a new `<Link unstable_mask>` API which brings first-class support for URL masking to Framework/Data Mode ([RFC](https://github.com/remix-run/react-router/discussions/9864)). This allows the same type of UI you could achieve in Declarative Mode via [manual `backgroundLocation` management](https://github.com/remix-run/react-router/tree/main/examples/modal). That example has been converted to Data Mode using the new API [here](https://github.com/remix-run/react-router/tree/main/examples/modal-data-router).
 
