@@ -9,8 +9,7 @@
     "build": "react-router build",
     "start:custom": "cross-env NODE_ENV=production node start.js",
     "start": "react-router-serve ./build/server/index.js",
-    "": "Disable typecheck due to not having react 19 types for RSC yet",
-    "_typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.0",
