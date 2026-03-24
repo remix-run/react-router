@@ -290,12 +290,14 @@ function createRouterFromPayload({
     );
     if (previous.length > 0) {
       route.children = previous;
-      let childrenToPatch = patches.get(match.id);
-      if (childrenToPatch) {
-        route.children.push(
-          ...childrenToPatch.map((r) => createRouteFromServerManifest(r)),
-        );
-      }
+    } else if (!route.index) {
+      route.children = [];
+    }
+    let childrenToPatch = patches.get(match.id);
+    if (route.children && childrenToPatch) {
+      route.children.push(
+        ...childrenToPatch.map((r) => createRouteFromServerManifest(r)),
+      );
     }
     return [route];
   }, [] as DataRouteObject[]);
@@ -326,7 +328,10 @@ function createRouterFromPayload({
       isSpaMode: false,
     }),
     async patchRoutesOnNavigation({ path, signal }) {
-      if (discoveredPaths.has(path)) {
+      if (
+        discoveredPaths.has(path) ||
+        payload.routeDiscovery.mode === "initial"
+      ) {
         return;
       }
       await fetchAndApplyManifestPatches(

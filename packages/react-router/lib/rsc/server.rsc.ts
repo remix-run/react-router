@@ -1185,15 +1185,13 @@ async function getRenderPayload(
   );
 
   let patches =
-    routeDiscovery?.mode === "initial"
-      ? isDataRequest
-        ? Promise.resolve([])
-        : getAllRoutePatches(routes, basename).then((patches) =>
-            patches.filter(
-              (patch) =>
-                !staticContext.matches.some((m) => m.route.id === patch.id),
-            ),
-          )
+    routeDiscovery?.mode === "initial" && !isDataRequest
+      ? getAllRoutePatches(routes, basename).then((patches) =>
+          patches.filter(
+            (patch) =>
+              !staticContext.matches.some((m) => m.route.id === patch.id),
+          ),
+        )
       : getAdditionalRoutePatches(
           [staticContext.location.pathname],
           routes,

@@ -412,6 +412,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
                     return;
                   }
+                  res.end();
                 } catch (error) {
                   next(error);
                 }
@@ -735,16 +736,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           prerenderPaths.add("/__spa-fallback.html");
         }
 
-        return Array.from(prerenderPaths).flatMap((prerenderPath) =>
-          prerenderPath === "/"
-            ? `http://localhost${basename}${prerenderPath.slice(1)}`
-            : [
-                `http://localhost${basename}${prerenderPath.slice(1)}`,
-                {
-                  request: `http://localhost${basename}${prerenderPath.slice(1)}.manifest`,
-                  metadata: { manifest: true },
-                },
-              ],
+        return Array.from(prerenderPaths).map(
+          (prerenderPath) =>
+            `http://localhost${basename}${prerenderPath.slice(1)}`,
         );
       },
       async postProcess(request, response, metadata) {
@@ -756,7 +750,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           !isRedirect &&
           response.status !== 200 &&
           response.status !== 202 &&
-          url.pathname !== "/__spa-fallback.html"
+          !(url.pathname === "/__spa-fallback.html" && response.status === 404)
         ) {
           throw new Error(
             `Prerender (data): Received a ${response.status} status code from ` +
@@ -839,8 +833,14 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             for (const match of matches) {
               rscData += JSON.parse(match[1]);
             }
+            console.log({ pathname: url.pathname });
             files.push({
-              path: url.pathname === "/" ? "_.rsc" : url.pathname + ".rsc",
+              path:
+                url.pathname === "/"
+                  ? "_.rsc"
+                  : (url.pathname === "/__spa-fallback.html"
+                      ? "__spa-fallback"
+                      : url.pathname) + ".rsc",
               contents: rscData,
             });
           }
