@@ -82,6 +82,17 @@ test.beforeAll(async () => {
         // Track call count so only the hydration invocation blocks.
         let callCount = 0;
 
+        // Externally-resolvable promise so the test can release the
+        // hydration loader on demand — no fixed timeout needed.
+        let resolveHydrationBlock: () => void;
+        let hydrationBlock = new Promise<void>((r) => {
+          resolveHydrationBlock = r;
+        });
+        // Expose on window so Playwright can call it (guard for SSR).
+        if (typeof window !== "undefined") {
+          (window as any).__resolveHydrationBlock = () => resolveHydrationBlock();
+        }
+
         export async function clientLoader({ serverLoader, request }) {
           callCount++;
           let currentCall = callCount;
@@ -89,11 +100,12 @@ test.beforeAll(async () => {
           let q = url.searchParams.get("q") || "empty";
 
           if (currentCall === 1) {
-            // Block hydration loader. Without this, serverLoader() returns
-            // initialData synchronously during hydration, the loader completes
-            // instantly, and isHydrationRequest is cleared in the finally block
-            // before we can trigger a navigation to expose the bug.
-            await new Promise((resolve) => setTimeout(resolve, 30000));
+            // Block hydration loader until the test releases it.
+            // Without this, serverLoader() returns initialData synchronously
+            // during hydration, the loader completes instantly, and
+            // isHydrationRequest is cleared before we can trigger a
+            // navigation to expose the bug.
+            await hydrationBlock;
           }
           // On second call (PUSH navigation): no delay.
           // But isHydrationRequest is still true because the first call
@@ -155,7 +167,7 @@ test("serverLoader() fetches fresh data when same-route navigation aborts hydrat
   // SSR the search page with ?q=initial.
   // After "load", scripts have executed and React has hydrated the DOM.
   // useLayoutEffect has fired → router.initialize() → hydration POP started.
-  // Both clientLoaders are now blocked in their 30s delays (first call).
+  // The hydration clientLoader is now blocked on the hydrationBlock promise.
   // The SSR HTML is visible and links are clickable (React hydrated the DOM),
   // but router.state.initialized is false (hydration POP hasn't completed).
   await app.goto("/search?q=initial");
@@ -189,8 +201,8 @@ test("serverLoader() fetches fresh data when same-route navigation aborts hydrat
   //   - Search loader: isFirstCall=false → no delay → serverLoader()
   //
   // The search route's isHydrationRequest is STILL TRUE because the first
-  // invocation (hydration) is stuck in its 30s setTimeout and hasn't reached
-  // the finally block that clears it.
+  // invocation (hydration) is blocked on the hydrationBlock promise and
+  // hasn't reached the finally block that clears it.
   //
   // Use { wait: false } — the PUSH may complete with no network request
   // (bug: serverLoader returns initialData from memory).
@@ -234,4 +246,7 @@ test("serverLoader() fetches fresh data when same-route navigation aborts hydrat
     serverQuery,
     "serverLoader() should return fresh data (q=updated), not stale SSR hydration data (q=initial)"
   ).toHaveText("updated");
+
+  // Release the blocked hydration loader so it doesn't hang during teardown.
+  await page.evaluate(() => (window as any).__resolveHydrationBlock());
 });
