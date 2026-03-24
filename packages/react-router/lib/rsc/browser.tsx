@@ -200,17 +200,15 @@ export function createCallServer({
                 window as WindowWithRouterGlobals
               ).__reactRouterDataRouter._internalSetStateDoNotUseOrYouWillBreakYourApp(
                 {
-                  loaderData: Object.assign(
-                    {},
-                    globalVar.__reactRouterDataRouter.state.loaderData,
-                    rerender.loaderData,
-                  ),
+                  loaderData: {
+                    ...globalVar.__reactRouterDataRouter.state.loaderData,
+                    ...rerender.loaderData,
+                  },
                   errors: rerender.errors
-                    ? Object.assign(
-                        {},
-                        globalVar.__reactRouterDataRouter.state.errors,
-                        rerender.errors,
-                      )
+                    ? {
+                        ...globalVar.__reactRouterDataRouter.state.errors,
+                        ...rerender.errors,
+                      }
                     : null,
                 },
               );
