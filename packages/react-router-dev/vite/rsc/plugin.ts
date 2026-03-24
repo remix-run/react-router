@@ -16,7 +16,11 @@ import {
   createConfigLoader,
   resolveRSCEntryFiles,
 } from "../../config/config";
-import { preloadVite } from "../vite";
+import {
+  defineCompilerOptions,
+  defineOptimizeDepsCompilerOptions,
+  preloadVite,
+} from "../vite";
 import { hasDependency } from "../has-dependency";
 import { getOptimizeDepsEntries } from "../optimize-deps-entries";
 import { createVirtualRouteConfig } from "./virtual-route-config";
@@ -165,9 +169,16 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               entryClientFilePath: entries.client,
               reactRouterConfig: config,
             }),
-            esbuildOptions: {
-              jsx: "automatic",
-            },
+            ...defineOptimizeDepsCompilerOptions({
+              rolldown: {
+                transform: {
+                  jsx: "react-jsx",
+                },
+              },
+              esbuild: {
+                jsx: "automatic",
+              },
+            }),
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
               // even if React dependencies are not direct dependencies.
@@ -193,10 +204,18 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react-router > set-cookie-parser",
             ],
           },
-          esbuild: {
-            jsx: "automatic",
-            jsxDev: viteCommand !== "build",
-          },
+          ...defineCompilerOptions({
+            oxc: {
+              jsx: {
+                runtime: "automatic",
+                development: viteCommand !== "build",
+              },
+            },
+            esbuild: {
+              jsx: "automatic",
+              jsxDev: viteCommand !== "build",
+            },
+          }),
           environments: {
             client: {
               build: {
