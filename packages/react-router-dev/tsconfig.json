@@ -1,6 +1,12 @@
 {
   "include": ["**/*.ts", "./rsc-types.d.ts", "package.json"],
-  "exclude": ["dist", "__tests__", "node_modules", "**/*-test.ts"],
+  "exclude": [
+    "dist",
+    "__tests__",
+    "node_modules",
+    "**/*-test.ts",
+    "config/default-rsc-entries"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["vite/client", "@vitejs/plugin-rsc/types"],

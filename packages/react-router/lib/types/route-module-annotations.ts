@@ -120,21 +120,12 @@ type CreateClientActionArgs<T extends RouteInfo> = ClientDataFunctionArgs<
   serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
 };
 
-type IsServerFirstRoute<
-  T extends RouteInfo,
-  RSCEnabled extends boolean,
-> = RSCEnabled extends true
-  ? T["module"] extends { ServerComponent: Func }
-    ? true
-    : false
-  : false;
-
 type CreateHydrateFallbackProps<
   T extends RouteInfo,
   RSCEnabled extends boolean,
 > = {
   params: T["params"];
-} & (IsServerFirstRoute<T, RSCEnabled> extends true
+} & (RSCEnabled extends true
   ? {
       /** The data returned from the `loader` */
       loaderData?: ServerDataFrom<T["module"]["loader"]>;
@@ -182,7 +173,7 @@ type CreateComponentProps<T extends RouteInfo, RSCEnabled extends boolean> = {
   params: T["params"];
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react-router.UIMatch.html route matches}, including parent route matches. */
   matches: Matches<T["matches"]>;
-} & (IsServerFirstRoute<T, RSCEnabled> extends true
+} & (RSCEnabled extends true
   ? {
       /** The data returned from the `loader` */
       loaderData: ServerDataFrom<T["module"]["loader"]>;
@@ -216,7 +207,7 @@ type CreateErrorBoundaryProps<
    **/
   params: T["params"];
   error: unknown;
-} & (IsServerFirstRoute<T, RSCEnabled> extends true
+} & (RSCEnabled extends true
   ? {
       /** The data returned from the `loader` */
       loaderData?: ServerDataFrom<T["module"]["loader"]>;
@@ -230,10 +221,7 @@ type CreateErrorBoundaryProps<
       actionData?: T["actionData"];
     });
 
-export type GetAnnotations<
-  Info extends RouteInfo,
-  RSCEnabled extends boolean,
-> = {
+export type GetAnnotations<Info extends RouteInfo> = {
   // links
   LinkDescriptors: LinkDescriptor[];
   LinksFunction: () => LinkDescriptor[];
@@ -266,13 +254,21 @@ export type GetAnnotations<
   ClientActionArgs: CreateClientActionArgs<Info>;
 
   // HydrateFallback
-  HydrateFallbackProps: CreateHydrateFallbackProps<Info, RSCEnabled>;
+  HydrateFallbackProps: CreateHydrateFallbackProps<Info, false>;
+
+  ServerHydrateFallbackProps: CreateHydrateFallbackProps<Info, true>;
 
   // default (Component)
-  ComponentProps: CreateComponentProps<Info, RSCEnabled>;
+  ComponentProps: CreateComponentProps<Info, false>;
+
+  // ServerComponent
+  ServerComponentProps: CreateComponentProps<Info, true>;
 
   // ErrorBoundary
-  ErrorBoundaryProps: CreateErrorBoundaryProps<Info, RSCEnabled>;
+  ErrorBoundaryProps: CreateErrorBoundaryProps<Info, false>;
+
+  // ServerErrorBoundary
+  ServerErrorBoundaryProps: CreateErrorBoundaryProps<Info, true>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
