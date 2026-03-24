@@ -2,7 +2,7 @@
  * Opens or updates the release PR.
  *
  * Usage:
- *   node scripts/release-pr.ts [--preview]
+ *   node scripts/pr.ts [--preview]
  *
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
@@ -19,9 +19,16 @@ import {
 let args = process.argv.slice(2);
 let preview = args.includes("--preview");
 
-let baseBranch = "release";
-let prBranch = "release-pr/release";
-let prTitle = "Release";
+let currentBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
+if (!preview && !["release", "hotfix"].includes(currentBranch)) {
+  throw new Error(
+    "Error: script must be run from the hotfix or release branch",
+  );
+}
+
+let baseBranch = currentBranch;
+let prBranch = `${currentBranch}-pr`;
+let prTitle = currentBranch === "release" ? "Release" : "Hotfix Release";
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
 let maxBodyLength = 60_000;
@@ -169,7 +176,7 @@ export function generatePrBody(releases: PackageRelease[]): string {
 function generateHeader(): string {
   return (
     "This PR is managed by the " +
-    "[`release-pr`](https://github.com/remix-run/react-router/blob/main/.github/workflows/release-pr.yml) " +
+    "[`release`](https://github.com/remix-run/react-router/blob/main/.github/workflows/release.yml) " +
     "workflow. Do not edit it manually."
   );
 }
