@@ -3,48 +3,31 @@ import * as babel from "../babel";
 import { parse as esModuleLexer } from "es-module-lexer";
 import { removeExports } from "../remove-exports";
 
-const SERVER_ONLY_COMPONENT_EXPORTS = ["ServerComponent"] as const;
+const SERVER_COMPONENT_EXPORTS = [
+  "ServerComponent",
+  "ServerLayout",
+  "ServerHydrateFallback",
+  "ServerErrorBoundary",
+] as const;
 
-const SERVER_ONLY_ROUTE_EXPORTS = [
-  ...SERVER_ONLY_COMPONENT_EXPORTS,
+type ServerComponentExport = (typeof SERVER_COMPONENT_EXPORTS)[number];
+const SERVER_COMPONENT_EXPORTS_SET = new Set(SERVER_COMPONENT_EXPORTS);
+function isServerComponentExport(name: string): name is ServerComponentExport {
+  return SERVER_COMPONENT_EXPORTS_SET.has(name as ServerComponentExport);
+}
+
+const SERVER_ROUTE_EXPORTS = [
+  ...SERVER_COMPONENT_EXPORTS,
   "loader",
   "action",
   "middleware",
   "headers",
 ] as const;
-type ServerOnlyRouteExport = (typeof SERVER_ONLY_ROUTE_EXPORTS)[number];
-const SERVER_ONLY_ROUTE_EXPORTS_SET = new Set(SERVER_ONLY_ROUTE_EXPORTS);
-function isServerOnlyRouteExport(name: string): name is ServerOnlyRouteExport {
-  return SERVER_ONLY_ROUTE_EXPORTS_SET.has(name as ServerOnlyRouteExport);
+type ServerRouteExport = (typeof SERVER_ROUTE_EXPORTS)[number];
+const SERVER_ROUTE_EXPORTS_SET = new Set(SERVER_ROUTE_EXPORTS);
+function isServerRouteExport(name: string): name is ServerRouteExport {
+  return SERVER_ROUTE_EXPORTS_SET.has(name as ServerRouteExport);
 }
-
-const COMMON_COMPONENT_EXPORTS = [
-  "ErrorBoundary",
-  "HydrateFallback",
-  "Layout",
-] as const;
-
-const SERVER_FIRST_COMPONENT_EXPORTS = [
-  ...COMMON_COMPONENT_EXPORTS,
-  ...SERVER_ONLY_COMPONENT_EXPORTS,
-] as const;
-type ServerFirstComponentExport =
-  (typeof SERVER_FIRST_COMPONENT_EXPORTS)[number];
-const SERVER_FIRST_COMPONENT_EXPORTS_SET = new Set(
-  SERVER_FIRST_COMPONENT_EXPORTS,
-);
-function isServerFirstComponentExport(
-  name: string,
-): name is ServerFirstComponentExport {
-  return SERVER_FIRST_COMPONENT_EXPORTS_SET.has(
-    name as ServerFirstComponentExport,
-  );
-}
-
-const CLIENT_COMPONENT_EXPORTS = [
-  ...COMMON_COMPONENT_EXPORTS,
-  "default",
-] as const;
 
 export const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
@@ -55,17 +38,13 @@ export const CLIENT_NON_COMPONENT_EXPORTS = [
   "links",
   "shouldRevalidate",
 ] as const;
-type ClientNonComponentExport = (typeof CLIENT_NON_COMPONENT_EXPORTS)[number];
-const CLIENT_NON_COMPONENT_EXPORTS_SET = new Set(CLIENT_NON_COMPONENT_EXPORTS);
-function isClientNonComponentExport(
-  name: string,
-): name is ClientNonComponentExport {
-  return CLIENT_NON_COMPONENT_EXPORTS_SET.has(name as ClientNonComponentExport);
-}
 
 const CLIENT_ROUTE_EXPORTS = [
   ...CLIENT_NON_COMPONENT_EXPORTS,
-  ...CLIENT_COMPONENT_EXPORTS,
+  "default",
+  "ErrorBoundary",
+  "HydrateFallback",
+  "Layout",
 ] as const;
 type ClientRouteExport = (typeof CLIENT_ROUTE_EXPORTS)[number];
 const CLIENT_ROUTE_EXPORTS_SET = new Set(CLIENT_ROUTE_EXPORTS);
@@ -73,8 +52,15 @@ function isClientRouteExport(name: string): name is ClientRouteExport {
   return CLIENT_ROUTE_EXPORTS_SET.has(name as ClientRouteExport);
 }
 
+const mutuallyExclusiveRouteExports = new Map([
+  ["ErrorBoundary", "ServerErrorBoundary"],
+  ["HydrateFallback", "ServerHydrateFallback"],
+  ["Layout", "ServerLayout"],
+  ["default", "ServerComponent"],
+]);
+
 const ROUTE_EXPORTS = [
-  ...SERVER_ONLY_ROUTE_EXPORTS,
+  ...SERVER_ROUTE_EXPORTS,
   ...CLIENT_ROUTE_EXPORTS,
 ] as const;
 type RouteExport = (typeof ROUTE_EXPORTS)[number];
@@ -149,59 +135,54 @@ async function createVirtualRouteModuleCode({
   viteEnvironment: Vite.Environment;
 }) {
   const isReactServer = hasReactServerCondition(viteEnvironment);
-  const { staticExports, isServerFirstRoute, hasClientExports } =
-    parseRouteExports(routeSource);
+  const { staticExports, hasClientExports } = parseRouteExports(routeSource);
+
+  for (const exportName of staticExports) {
+    if (mutuallyExclusiveRouteExports.has(exportName)) {
+      const conflictingExport = mutuallyExclusiveRouteExports.get(exportName)!;
+      if (staticExports.includes(conflictingExport)) {
+        throw new Error(
+          `Route module cannot export both "${exportName}" and "${conflictingExport}". Please choose one or the other.`,
+        );
+      }
+    }
+  }
 
   const clientModuleId = getVirtualClientModuleId(id);
   const serverModuleId = getVirtualServerModuleId(id);
 
   let code = "";
-  if (isServerFirstRoute) {
-    if (staticExports.some(isServerFirstComponentExport)) {
-      code += `import React from "react";\n`;
-    }
-    for (const staticExport of staticExports) {
-      if (isClientNonComponentExport(staticExport)) {
-        code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-      } else if (
-        isReactServer &&
-        isServerFirstComponentExport(staticExport) &&
-        // Layout wraps all other component exports so doesn't need CSS injected
-        staticExport !== "Layout"
-      ) {
-        code += `import { ${staticExport} as ${staticExport}WithoutCss } from "${serverModuleId}";\n`;
-        code += `export ${staticExport === "ServerComponent" ? "default " : " "}function ${staticExport}(props) {\n`;
-        code += `  return React.createElement(React.Fragment, null,\n`;
-        code += `    import.meta.viteRsc.loadCss(),\n`;
-        code += `    React.createElement(${staticExport}WithoutCss, props),\n`;
-        code += `  );\n`;
-        code += `}\n`;
-      } else if (isReactServer && isRouteExport(staticExport)) {
-        code += `export { ${staticExport} } from "${serverModuleId}";\n`;
-      } else if (isCustomRouteExport(staticExport)) {
-        code += `export { ${staticExport} } from "${isReactServer ? serverModuleId : clientModuleId}";\n`;
-      }
-    }
-    if (viteCommand === "serve" && !hasClientExports) {
-      code += `export { __ensureClientRouteModuleForHMR } from "${clientModuleId}";\n`;
-    }
-  } else {
-    for (const staticExport of staticExports) {
-      if (isClientRouteExport(staticExport)) {
-        code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-      } else if (isReactServer && isServerOnlyRouteExport(staticExport)) {
-        code += `export { ${staticExport} } from "${serverModuleId}";\n`;
-      } else if (isCustomRouteExport(staticExport)) {
-        code += `export { ${staticExport} } from "${isReactServer ? serverModuleId : clientModuleId}";\n`;
-      }
+  if (isReactServer && staticExports.some(isServerComponentExport)) {
+    code += `import React from "react";\n`;
+  }
+  for (const staticExport of staticExports) {
+    if (isReactServer && isServerComponentExport(staticExport)) {
+      code += `import { ${staticExport} as ${staticExport}WithoutCss } from "${serverModuleId}";\n`;
+      code += `export ${staticExport === "ServerComponent" ? "default " : " "}function ${staticExport.replace(/^Server/, "")}(props) {\n`;
+      code += `  return React.createElement(React.Fragment, null,\n`;
+      code += `    import.meta.viteRsc.loadCss(),\n`;
+      code += `    React.createElement(${staticExport}WithoutCss, props),\n`;
+      code += `  );\n`;
+      code += `}\n`;
+    } else if (isReactServer && isServerRouteExport(staticExport)) {
+      code += `export { ${staticExport} } from "${serverModuleId}";\n`;
+    } else if (isClientRouteExport(staticExport)) {
+      code += `export { ${staticExport} } from "${clientModuleId}";\n`;
+    } else if (isCustomRouteExport(staticExport)) {
+      code += `export { ${staticExport} } from "${isReactServer ? serverModuleId : clientModuleId}";\n`;
     }
   }
 
   if (
     isRootRouteFile({ id, rootRouteFile }) &&
-    !staticExports.includes("ErrorBoundary")
+    !staticExports.includes("ErrorBoundary") &&
+    !staticExports.includes("ServerErrorBoundary")
   ) {
     code += `export { ErrorBoundary } from "${clientModuleId}";\n`;
+  }
+
+  if (viteCommand === "serve" && !hasClientExports) {
+    code += `export { __ensureClientRouteModuleForHMR } from "${clientModuleId}";\n`;
   }
 
   return code;
@@ -226,24 +207,19 @@ function createVirtualServerRouteModuleCode({
     );
   }
 
-  const { staticExports, isServerFirstRoute } = parseRouteExports(routeSource);
+  const { staticExports } = parseRouteExports(routeSource);
   const clientModuleId = getVirtualClientModuleId(id);
   const serverRouteModuleAst = babel.parse(routeSource, {
     sourceType: "module",
   });
-  removeExports(
-    serverRouteModuleAst,
-    isServerFirstRoute ? CLIENT_NON_COMPONENT_EXPORTS : CLIENT_ROUTE_EXPORTS,
-  );
+  removeExports(serverRouteModuleAst, CLIENT_ROUTE_EXPORTS);
 
   const generatorResult = babel.generate(serverRouteModuleAst);
 
-  if (!isServerFirstRoute) {
-    for (const staticExport of staticExports) {
-      if (isClientRouteExport(staticExport)) {
-        generatorResult.code += "\n";
-        generatorResult.code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-      }
+  for (const staticExport of staticExports) {
+    if (isClientRouteExport(staticExport)) {
+      generatorResult.code += "\n";
+      generatorResult.code += `export { ${staticExport} } from "${clientModuleId}";\n`;
     }
   }
 
@@ -261,23 +237,20 @@ function createVirtualClientRouteModuleCode({
   rootRouteFile: string;
   viteCommand: ViteCommand;
 }) {
-  const { staticExports, isServerFirstRoute, hasClientExports } =
-    parseRouteExports(routeSource);
-  const exportsToRemove = isServerFirstRoute
-    ? [...SERVER_ONLY_ROUTE_EXPORTS, ...CLIENT_COMPONENT_EXPORTS]
-    : SERVER_ONLY_ROUTE_EXPORTS;
+  const { staticExports, hasClientExports } = parseRouteExports(routeSource);
 
   const clientRouteModuleAst = babel.parse(routeSource, {
     sourceType: "module",
   });
-  removeExports(clientRouteModuleAst, exportsToRemove);
+  removeExports(clientRouteModuleAst, SERVER_ROUTE_EXPORTS);
 
   const generatorResult = babel.generate(clientRouteModuleAst);
   generatorResult.code = '"use client";' + generatorResult.code;
 
   if (
     isRootRouteFile({ id, rootRouteFile }) &&
-    !staticExports.includes("ErrorBoundary")
+    !staticExports.includes("ErrorBoundary") &&
+    !staticExports.includes("ServerErrorBoundary")
   ) {
     const hasRootLayout = staticExports.includes("Layout");
     generatorResult.code += `\nimport { createElement as __rr_createElement } from "react";\n`;
@@ -287,7 +260,7 @@ function createVirtualClientRouteModuleCode({
     generatorResult.code += `}\n`;
   }
 
-  if (viteCommand === "serve" && isServerFirstRoute && !hasClientExports) {
+  if (viteCommand === "serve" && !hasClientExports) {
     generatorResult.code += `\nexport const __ensureClientRouteModuleForHMR = true;`;
   }
 
@@ -297,15 +270,9 @@ function createVirtualClientRouteModuleCode({
 export function parseRouteExports(code: string) {
   const [, exportSpecifiers] = esModuleLexer(code);
   const staticExports = exportSpecifiers.map(({ n: name }) => name);
-  const isServerFirstRoute = staticExports.some(
-    (staticExport) => staticExport === "ServerComponent",
-  );
   return {
     staticExports,
-    isServerFirstRoute,
-    hasClientExports: staticExports.some(
-      isServerFirstRoute ? isClientNonComponentExport : isClientRouteExport,
-    ),
+    hasClientExports: staticExports.some(isClientRouteExport),
   };
 }
 
