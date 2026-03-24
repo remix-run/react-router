@@ -1,5 +1,4 @@
 import "virtual:react-router/unstable_rsc/inject-hmr-runtime";
-import ssr from "virtual:react-router/unstable_rsc/ssr";
 
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
@@ -36,7 +35,6 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
         <RSCHydratedRouter
           createFromReadableStream={createFromReadableStream}
           payload={payload}
-          routeDiscovery={ssr ? "eager" : "lazy"}
         />
       </StrictMode>,
       {

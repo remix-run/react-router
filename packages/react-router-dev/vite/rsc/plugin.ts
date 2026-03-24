@@ -89,7 +89,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             let errors: string[] = [];
             if (userConfig.buildEnd) errors.push("buildEnd");
             if (userConfig.presets?.length) errors.push("presets");
-            if (userConfig.routeDiscovery) errors.push("routeDiscovery");
             if (userConfig.serverBundles) errors.push("serverBundles");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
@@ -496,15 +495,21 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     {
-      name: "react-router/rsc/virtual-ssr",
+      name: "react-router/rsc/virtual-route-discovery",
       resolveId(id) {
-        if (id === virtual.ssr.id) {
-          return virtual.ssr.resolvedId;
+        if (id === virtual.routeDiscovery.id) {
+          return virtual.routeDiscovery.resolvedId;
         }
       },
       load(id) {
-        if (id === virtual.ssr.resolvedId) {
-          return `export default ${JSON.stringify(config.ssr)};`;
+        if (id === virtual.routeDiscovery.resolvedId) {
+          return `export default ${JSON.stringify(
+            config.ssr === false
+              ? {
+                  mode: "initial",
+                }
+              : (config.routeDiscovery ?? { mode: "lazy" }),
+          )};`;
         }
       },
     },
@@ -837,11 +842,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
+  routeDiscovery: create("unstable_rsc/route-discovery"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
-  ssr: create("unstable_rsc/ssr"),
 };
 
 function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {

@@ -23,4 +23,16 @@ declare module "virtual:react-router/unstable_rsc/react-router-serve-config" {
   export default unstable_reactRouterServeConfig;
 }
 
+declare module "virtual:react-router/unstable_rsc/route-discovery" {
+  const routeDiscovery:
+    | {
+        mode: "initial";
+      }
+    | {
+        mode: "lazy";
+        manifestPath?: string;
+      };
+  export default routeDiscovery;
+}
+
 declare module "virtual:react-router/unstable_rsc/inject-hmr-runtime" {}

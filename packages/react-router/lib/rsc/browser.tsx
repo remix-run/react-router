@@ -44,6 +44,21 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
 
+const defaultManifestPath = "/__manifest";
+
+// Safe version of React.use() that will not cause compilation errors against
+// React 18 and will result in a runtime error if used (you can't use RSC against
+// React 18).
+const REACT_USE = "use";
+const useImpl = (React as any)[REACT_USE];
+
+function useSafe<T>(promise: Promise<T> | React.Context<T>): T {
+  if (useImpl) {
+    return useImpl(promise);
+  }
+  throw new Error("React Router v7 requires React 19+ for RSC features.");
+}
+
 export type BrowserCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
   {
@@ -235,8 +250,10 @@ function createRouterFromPayload({
   createFromReadableStream,
   getContext,
   payload,
+  payloadPatches,
 }: {
   payload: RSCPayload;
+  payloadPatches: Awaited<RSCRenderPayload["patches"]> | undefined;
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
   getContext: RouterInit["getContext"] | undefined;
@@ -259,7 +276,7 @@ function createRouterFromPayload({
   populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
 
   let patches = new Map<string, RSCRouteManifest[]>();
-  payload.patches?.forEach((patch) => {
+  payloadPatches?.forEach((patch) => {
     invariant(patch.parentId, "Invalid patch parentId");
     if (!patches.has(patch.parentId)) {
       patches.set(patch.parentId, []);
@@ -634,11 +651,6 @@ export interface RSCHydratedRouterProps {
    */
   payload: RSCPayload;
   /**
-   * `"eager"` or `"lazy"` - Determines if links are eagerly discovered, or
-   * delayed until clicked.
-   */
-  routeDiscovery?: "eager" | "lazy";
-  /**
    * A function that returns an {@link RouterContextProvider} instance
    * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
    * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
@@ -684,7 +696,6 @@ export interface RSCHydratedRouterProps {
  * @param {unstable_RSCHydratedRouterProps.fetch} props.fetch n/a
  * @param {unstable_RSCHydratedRouterProps.getContext} props.getContext n/a
  * @param {unstable_RSCHydratedRouterProps.payload} props.payload n/a
- * @param {unstable_RSCHydratedRouterProps.routeDiscovery} props.routeDiscovery n/a
  * @returns A hydrated {@link DataRouter} that can be used to navigate and
  * render routes.
  */
@@ -692,20 +703,30 @@ export function RSCHydratedRouter({
   createFromReadableStream,
   fetch: fetchImplementation = fetch,
   payload,
-  routeDiscovery = "eager",
   getContext,
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
+
+  let { routeDiscovery, patches } = payload;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  let payloadPatches = patches ? useSafe(patches) : undefined;
 
   let { router, routeModules } = React.useMemo(
     () =>
       createRouterFromPayload({
         payload,
+        payloadPatches,
         fetchImplementation,
         getContext,
         createFromReadableStream,
       }),
-    [createFromReadableStream, payload, fetchImplementation, getContext],
+    [
+      createFromReadableStream,
+      payload,
+      payloadPatches,
+      fetchImplementation,
+      getContext,
+    ],
   );
 
   React.useEffect(() => {
@@ -753,7 +774,7 @@ export function RSCHydratedRouter({
 
   React.useEffect(() => {
     if (
-      routeDiscovery === "lazy" ||
+      routeDiscovery.mode === "initial" ||
       // @ts-expect-error - TS doesn't know about this yet
       window.navigator?.connection?.saveData === true
     ) {
@@ -845,7 +866,14 @@ export function RSCHydratedRouter({
         imports: [],
       },
     },
-    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+    routeDiscovery:
+      payload.routeDiscovery.mode === "initial"
+        ? { mode: "initial", manifestPath: defaultManifestPath }
+        : {
+            mode: "lazy",
+            manifestPath:
+              payload.routeDiscovery.manifestPath || defaultManifestPath,
+          },
     routeModules,
   };
 
@@ -1057,10 +1085,12 @@ async function fetchAndApplyManifestPatches(
   // Track discovered paths so we don't have to fetch them again
   paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 
+  let patches = await payload.patches;
+
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
   React.startTransition(() => {
-    payload.patches.forEach((p) => {
+    patches.forEach((p) => {
       (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
         p.parentId ?? null,
         [createRouteFromServerManifest(p)],

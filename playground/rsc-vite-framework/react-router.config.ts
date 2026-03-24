@@ -1,3 +1,6 @@
 import type { Config } from "@react-router/dev/config";
 
-export default {} satisfies Config;
+export default {
+  ssr: false,
+  prerender: ["/", "/server-loader"],
+} satisfies Config;
