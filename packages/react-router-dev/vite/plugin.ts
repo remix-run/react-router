@@ -1724,7 +1724,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         async function getHandler(): Promise<RequestHandler> {
           if (cachedHandler) return cachedHandler;
 
-          let serverBuildFiles: string[] = [];
+          let bundledHandlers: Array<{
+            handler: RequestHandler;
+            routes: DataRouteObject[] | null;
+          }> = [];
 
           // Get build manifest to find server bundles
           let buildManifest =
@@ -1737,11 +1740,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               : null);
 
           if (buildManifest?.serverBundles) {
+            let routesByServerBundleId =
+              getRoutesByServerBundleId(buildManifest);
+
             // Load all server bundle files
             for (let bundle of Object.values(buildManifest.serverBundles)) {
-              serverBuildFiles.push(
-                path.resolve(ctx.rootDirectory, bundle.file),
+              let build: ServerBuild = await import(
+                url.pathToFileURL(path.resolve(ctx.rootDirectory, bundle.file))
+                  .href
               );
+              bundledHandlers.push({
+                handler: createRequestHandler(build, "production"),
+                routes: createPrerenderRoutes(
+                  routesByServerBundleId[bundle.id] ?? {},
+                ),
+              });
             }
           } else {
             let serverEntryPath = path.resolve(
@@ -1749,23 +1762,44 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "index.js",
             );
 
-            // Single server build
-            serverBuildFiles.push(serverEntryPath);
-          }
-
-          // Import all bundles and create handlers
-          let handlers: RequestHandler[] = [];
-          for (let file of serverBuildFiles) {
-            let build: ServerBuild = await import(url.pathToFileURL(file).href);
-            handlers.push(createRequestHandler(build, "production"));
+            let build: ServerBuild = await import(
+              url.pathToFileURL(serverEntryPath).href
+            );
+            bundledHandlers.push({
+              handler: createRequestHandler(build, "production"),
+              routes: null,
+            });
           }
 
           // Return a combined handler that tries each bundle until one handles the request.
           // A 404 response means "not my route", so we try the next bundle.
           cachedHandler = async (request, loadContext) => {
             let response: Response | undefined;
+            let handlersToTry = bundledHandlers;
 
-            for (let handler of handlers) {
+            if (buildManifest?.serverBundles) {
+              let pathname = new URL(request.url).pathname;
+
+              // A non-index bundle can still return a 200 for `/` by rendering only
+              // the root route, so prefer the bundle with the deepest route match.
+              handlersToTry = bundledHandlers
+                .map((entry, index) => ({
+                  entry,
+                  index,
+                  matchDepth:
+                    matchRoutes(
+                      entry.routes ?? [],
+                      pathname,
+                      ctx.reactRouterConfig.basename,
+                    )?.length ?? -1,
+                }))
+                .sort(
+                  (a, b) => b.matchDepth - a.matchDepth || a.index - b.index,
+                )
+                .map(({ entry }) => entry);
+            }
+
+            for (let { handler } of handlersToTry) {
               response = await handler(request, loadContext);
 
               if (response.status !== 404) {
