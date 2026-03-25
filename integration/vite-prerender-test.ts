@@ -6,7 +6,7 @@ import { test, expect } from "@playwright/test";
 
 import {
   createAppFixture,
-  createFixture,
+  createFixture as _createFixture,
   js,
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
@@ -14,6 +14,17 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
 
 for (let previewServerPrerendering of [false, true]) {
+  let createFixture = (...args: Parameters<typeof _createFixture>) =>
+    _createFixture(
+      {
+        templateName:
+          args[0].templateName ??
+          (previewServerPrerendering ? "vite-6-template" : "vite-5-template"),
+        ...args[0],
+      },
+      args[1],
+    );
+
   let files = {
     "react-router.config.ts": reactRouterConfig({
       prerender: true,

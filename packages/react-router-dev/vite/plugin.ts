@@ -1811,7 +1811,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return response;
             }
 
-            throw new Error("No handlers were found for the request.");
+            let url = new URL(request.url);
+            throw new Error(
+              "No handlers were found for the request: " +
+                url.pathname +
+                url.search,
+            );
           };
 
           return cachedHandler;
@@ -2597,15 +2602,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { future } = ctx.reactRouterConfig;
 
-        // Prerender during SSR build only
-        if (
-          future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
-            : !viteConfigEnv.isSsrBuild
-        ) {
-          return [];
-        }
-
         // Skip prerendering if the future flag is disabled
         if (!future.unstable_previewServerPrerendering) {
           return [];
@@ -2867,10 +2863,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
           }
 
-          let serverBuildDirectory = future.v8_viteEnvironmentApi
-            ? this.environment.config?.build?.outDir
-            : (ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx.reactRouterConfig));
+          let serverBuildDirectory = getServerBuildDirectory(
+            ctx.reactRouterConfig,
+          );
 
           // Cleanup - we no longer need the server build assets
           viteConfig.logger.info(

@@ -16,6 +16,8 @@ import {
 } from "../errors";
 import { escapeHtml } from "../dom/ssr/markup";
 
+const defaultManifestPath = "/__manifest";
+
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
   formState: Promise<any>;
@@ -595,7 +597,14 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         imports: [],
       },
     },
-    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+    routeDiscovery:
+      payload.routeDiscovery.mode === "initial"
+        ? { mode: "initial", manifestPath: defaultManifestPath }
+        : {
+            mode: "lazy",
+            manifestPath:
+              payload.routeDiscovery.manifestPath || defaultManifestPath,
+          },
     routeModules: createRSCRouteModules(payload),
   };
 

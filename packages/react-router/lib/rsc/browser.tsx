@@ -44,6 +44,8 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
 
+const defaultManifestPath = "/__manifest";
+
 export type BrowserCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
   {
@@ -258,14 +260,6 @@ function createRouterFromPayload({
     globalVar.__reactRouterRouteModules ?? {};
   populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
 
-  let patches = new Map<string, RSCRouteManifest[]>();
-  payload.patches?.forEach((patch) => {
-    invariant(patch.parentId, "Invalid patch parentId");
-    if (!patches.has(patch.parentId)) {
-      patches.set(patch.parentId, []);
-    }
-    patches.get(patch.parentId)?.push(patch);
-  });
   let routes = payload.matches.reduceRight((previous, match) => {
     const route: DataRouteObject = createRouteFromServerManifest(
       match,
@@ -273,15 +267,13 @@ function createRouterFromPayload({
     );
     if (previous.length > 0) {
       route.children = previous;
-      let childrenToPatch = patches.get(match.id);
-      if (childrenToPatch) {
-        route.children.push(
-          ...childrenToPatch.map((r) => createRouteFromServerManifest(r)),
-        );
-      }
+    } else if (!route.index) {
+      route.children = [];
     }
     return [route];
   }, [] as DataRouteObject[]);
+
+  let applyPatchesPromise: Promise<void> | undefined;
 
   globalVar.__reactRouterDataRouter = createRouter({
     routes,
@@ -309,6 +301,30 @@ function createRouterFromPayload({
       isSpaMode: false,
     }),
     async patchRoutesOnNavigation({ path, signal }) {
+      if (payload.routeDiscovery.mode === "initial") {
+        if (!applyPatchesPromise) {
+          applyPatchesPromise = (async () => {
+            if (!payload.patches) return;
+            let patches = await payload.patches;
+
+            // Without the `allowElementMutations` flag, this will no-op if the route
+            // already exists so we can just call it for all returned patches
+            React.startTransition(() => {
+              patches.forEach((p) => {
+                (
+                  window as WindowWithRouterGlobals
+                ).__reactRouterDataRouter.patchRoutes(p.parentId ?? null, [
+                  createRouteFromServerManifest(p),
+                ]);
+              });
+            });
+          })();
+        }
+
+        await applyPatchesPromise;
+        return;
+      }
+
       if (discoveredPaths.has(path)) {
         return;
       }
@@ -602,13 +618,14 @@ function getFetchAndDecodeViaRSC(
         }
       }
       return { status: res.status, data: results };
-    } catch (e) {
+    } catch (cause) {
       // Can't clone after consuming the body via decode so we can't include the
       // body here.  In an ideal world we'd look for an RSC  content type here,
       // or even X-Remix-Response but then folks can't statically deploy their
       // prerendered .rsc files to a CDN unless they can tell that CDN to add
       // special headers to those certain files - which is a bit restrictive.
-      throw new Error("Unable to decode RSC response");
+      // @ts-expect-error - TS doesn't know about this yet
+      throw new Error("Unable to decode RSC response", { cause });
     }
   };
 }
@@ -633,11 +650,6 @@ export interface RSCHydratedRouterProps {
    * The decoded {@link unstable_RSCPayload} to hydrate.
    */
   payload: RSCPayload;
-  /**
-   * `"eager"` or `"lazy"` - Determines if links are eagerly discovered, or
-   * delayed until clicked.
-   */
-  routeDiscovery?: "eager" | "lazy";
   /**
    * A function that returns an {@link RouterContextProvider} instance
    * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
@@ -684,7 +696,6 @@ export interface RSCHydratedRouterProps {
  * @param {unstable_RSCHydratedRouterProps.fetch} props.fetch n/a
  * @param {unstable_RSCHydratedRouterProps.getContext} props.getContext n/a
  * @param {unstable_RSCHydratedRouterProps.payload} props.payload n/a
- * @param {unstable_RSCHydratedRouterProps.routeDiscovery} props.routeDiscovery n/a
  * @returns A hydrated {@link DataRouter} that can be used to navigate and
  * render routes.
  */
@@ -692,10 +703,11 @@ export function RSCHydratedRouter({
   createFromReadableStream,
   fetch: fetchImplementation = fetch,
   payload,
-  routeDiscovery = "eager",
   getContext,
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
+
+  let { routeDiscovery } = payload;
 
   let { router, routeModules } = React.useMemo(
     () =>
@@ -753,7 +765,7 @@ export function RSCHydratedRouter({
 
   React.useEffect(() => {
     if (
-      routeDiscovery === "lazy" ||
+      routeDiscovery.mode === "initial" ||
       // @ts-expect-error - TS doesn't know about this yet
       window.navigator?.connection?.saveData === true
     ) {
@@ -845,7 +857,14 @@ export function RSCHydratedRouter({
         imports: [],
       },
     },
-    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+    routeDiscovery:
+      payload.routeDiscovery.mode === "initial"
+        ? { mode: "initial", manifestPath: defaultManifestPath }
+        : {
+            mode: "lazy",
+            manifestPath:
+              payload.routeDiscovery.manifestPath || defaultManifestPath,
+          },
     routeModules,
   };
 
@@ -1057,10 +1076,12 @@ async function fetchAndApplyManifestPatches(
   // Track discovered paths so we don't have to fetch them again
   paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 
+  let patches = await payload.patches;
+
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
   React.startTransition(() => {
-    payload.patches.forEach((p) => {
+    patches.forEach((p) => {
       (window as WindowWithRouterGlobals).__reactRouterDataRouter.patchRoutes(
         p.parentId ?? null,
         [createRouteFromServerManifest(p)],

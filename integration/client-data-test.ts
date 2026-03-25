@@ -149,12 +149,31 @@ test.describe("Client Data", () => {
                   templateName,
                   files: {
                     "react-router.config.ts": reactRouterConfig({
-                      future: { v8_splitRouteModules },
+                      future: { v8_splitRouteModules, v8_middleware: true },
                     }),
                     "app/root.tsx": js`
                       import { Form, Outlet, Scripts } from "react-router"
 
-                      export default function Root({ loaderData }) {
+                      export const middleware = [
+                        async ({ request }, next) => {
+                          let response = await next();
+
+                          if (
+                            request.method === "GET" &&
+                            response instanceof Response &&
+                            response.status === 200 &&
+                            request.headers.get("sec-purpose") === "prefetch" &&
+                            !response.headers.has("Cache-Control")
+                          ) {
+                            let cachedResponse = new Response(response.body, response);
+                            cachedResponse.headers.set("Cache-Control", "max-age=5");
+                            return cachedResponse;
+                          }
+                          return response;
+                        }
+                      ];
+
+                      export default function Root() {
                         return (
                           <html>
                             <head></head>
@@ -1541,7 +1560,9 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
             });
 
-            test("child.clientAction/parent.childLoader", async ({ page }) => {
+            test("child.clientAction/parent.childLoader", async ({
+              page,
+            }) => {
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
               await app.clickLink(

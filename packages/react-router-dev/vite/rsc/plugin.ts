@@ -6,6 +6,7 @@ import colors from "picocolors";
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
+import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import path, { join } from "pathe";
 import invariant from "../../invariant";
@@ -32,6 +33,13 @@ import {
 import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
+import { prerender } from "../plugins/prerender";
+import { getPrerenderPaths } from "../plugin";
+
+const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+
+let configLoaderPromise: Promise<ConfigLoader>;
+let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
@@ -43,7 +51,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       arguments[0].__runningWithinTheReactRouterMonoRepo === true,
   );
   let configLoader: ConfigLoader;
-  let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
   let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
@@ -69,7 +76,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
-        const watch = command === "serve";
+        const watch =
+          command === "serve" && process.env.IS_RR_BUILD_REQUEST !== "yes";
 
         await loadDotenv({
           rootDirectory,
@@ -77,18 +85,15 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           mode,
         });
 
-        configLoader = await createConfigLoader({
+        configLoaderPromise ??= createConfigLoader({
           rootDirectory,
           mode,
           watch,
           validateConfig: (userConfig) => {
             let errors: string[] = [];
             if (userConfig.buildEnd) errors.push("buildEnd");
-            if (userConfig.prerender) errors.push("prerender");
             if (userConfig.presets?.length) errors.push("presets");
-            if (userConfig.routeDiscovery) errors.push("routeDiscovery");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.ssr === false) errors.push("ssr: false");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
             if (userConfig.future?.v8_splitRouteModules)
@@ -102,6 +107,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             }
           },
         });
+        configLoader = await configLoaderPromise;
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
@@ -356,6 +362,65 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
         );
       },
+      configurePreviewServer(previewServer) {
+        const clientBuildDirectory = getClientBuildDirectory(config);
+        if (
+          (config.prerender || config.ssr === false) &&
+          process.env.IS_RR_BUILD_REQUEST !== "yes"
+        ) {
+          previewServer.middlewares.use(async (req, res, next) => {
+            try {
+              const htmlFileBase = (
+                (req.url || "/") +
+                (req.url?.endsWith("/") ? "" : "/") +
+                "index.html"
+              ).slice(1);
+              const htmlFilePath = path.join(
+                clientBuildDirectory,
+                htmlFileBase,
+              );
+              if (existsSync(htmlFilePath)) {
+                res.setHeader("Content-Type", "text/html");
+                res.end(await readFile(htmlFilePath, "utf-8"));
+
+                return;
+              }
+              next();
+            } catch (error) {
+              next(error);
+            }
+          });
+
+          return () => {
+            if (config.ssr === false) {
+              previewServer.middlewares.use(async (req, res, next) => {
+                try {
+                  res.statusCode = 404;
+
+                  const url = new URL(req.url || "/", `http://localhost`);
+
+                  const htmlFilePath = path.join(
+                    clientBuildDirectory,
+                    url.pathname.endsWith(".rsc")
+                      ? "__spa-fallback.rsc"
+                      : "__spa-fallback.html",
+                  );
+
+                  if (existsSync(htmlFilePath)) {
+                    res.setHeader("Content-Type", "text/html");
+                    res.end(await readFile(htmlFilePath, "utf-8"));
+
+                    return;
+                  }
+                  res.end();
+                } catch (error) {
+                  next(error);
+                }
+              });
+            }
+          };
+        }
+      },
       async buildEnd() {
         await configLoader.close();
       },
@@ -378,29 +443,31 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         configureServer: logExperimentalNotice,
       };
     })(),
-    {
-      name: "react-router/rsc/typegen",
-      async config(viteUserConfig, { command, mode }) {
-        if (command === "serve") {
-          const vite = await import("vite");
-          typegenWatcherPromise = Typegen.watch(
-            getRootDirectory(viteUserConfig),
-            {
-              mode,
-              rsc: true,
-              // ignore `info` logs from typegen since they are
-              // redundant when Vite plugin logs are active
-              logger: vite.createLogger("warn", {
-                prefix: "[react-router]",
-              }),
-            },
-          );
+    process.env.IS_RR_BUILD_REQUEST !== "yes"
+      ? {
+          name: "react-router/rsc/typegen",
+          async config(viteUserConfig, { command, mode }) {
+            if (command === "serve") {
+              const vite = await import("vite");
+              typegenWatcherPromise ??= Typegen.watch(
+                getRootDirectory(viteUserConfig),
+                {
+                  mode,
+                  rsc: true,
+                  // ignore `info` logs from typegen since they are
+                  // redundant when Vite plugin logs are active
+                  logger: vite.createLogger("warn", {
+                    prefix: "[react-router]",
+                  }),
+                },
+              );
+            }
+          },
+          async buildEnd() {
+            (await typegenWatcherPromise)?.close();
+          },
         }
-      },
-      async buildEnd() {
-        (await typegenWatcherPromise)?.close();
-      },
-    },
+      : null,
 
     {
       name: "react-router/rsc/virtual-route-config",
@@ -444,6 +511,25 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       load(id) {
         if (id === virtual.basename.resolvedId) {
           return `export default ${JSON.stringify(config.basename)};`;
+        }
+      },
+    },
+    {
+      name: "react-router/rsc/virtual-route-discovery",
+      resolveId(id) {
+        if (id === virtual.routeDiscovery.id) {
+          return virtual.routeDiscovery.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.routeDiscovery.resolvedId) {
+          return `export default ${JSON.stringify(
+            config.ssr === false
+              ? {
+                  mode: "initial",
+                }
+              : (config.routeDiscovery ?? { mode: "lazy" }),
+          )};`;
         }
       },
     },
@@ -622,11 +708,161 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
+    prerender({
+      config() {
+        return {
+          buildDirectory: getClientBuildDirectory(config),
+          concurrency: getPrerenderConcurrencyConfig(config),
+        };
+      },
+      logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      async requests() {
+        const prerenderPaths = new Set(
+          await getPrerenderPaths(
+            config.prerender,
+            config.ssr,
+            config.routes,
+            true,
+          ),
+        );
+
+        let basename =
+          !config.basename || config.basename === "/"
+            ? "/"
+            : config.basename.endsWith("/")
+              ? config.basename
+              : config.basename + "/";
+
+        if (config.ssr === false) {
+          prerenderPaths.add("/__spa-fallback.html");
+        }
+
+        return Array.from(prerenderPaths).map(
+          (prerenderPath) =>
+            `http://localhost${basename}${prerenderPath.slice(1)}`,
+        );
+      },
+      async postProcess(request, response, metadata) {
+        let url = new URL(request.url);
+
+        let isRedirect = redirectStatusCodes.has(response.status);
+
+        if (
+          !isRedirect &&
+          response.status !== 200 &&
+          response.status !== 202 &&
+          !(url.pathname === "/__spa-fallback.html" && response.status === 404)
+        ) {
+          throw new Error(
+            `Prerender (data): Received a ${response.status} status code from ` +
+              `\`entry.server.tsx\` while prerendering the \`${url.pathname}\` ` +
+              `path.\n${url.pathname}`,
+            { cause: response },
+          );
+        }
+
+        if (metadata?.manifest) {
+          return [
+            {
+              path: url.pathname,
+              contents: await response.text(),
+            },
+          ];
+        }
+
+        let isHtml = response.headers
+          .get("content-type")
+          ?.includes("text/html");
+        let htmlResponse = isHtml
+          ? isRedirect
+            ? response
+            : response.clone()
+          : null;
+
+        // This isn't ideal but gets the job done as a fallback if the user can't
+        // implement proper redirects via .htaccess or something else.  This is the
+        // approach used by Astro as well, so there's some precedent.
+        // https://github.com/withastro/roadmap/issues/466
+        // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
+        let location = response.headers.get("Location");
+        // A short delay causes Google to interpret the redirect as temporary.
+        // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
+        let delay = response.status === 302 ? 2 : 0;
+        let redirectBody = isRedirect
+          ? `<!doctype html>
+<head>
+<title>Redirecting to: ${location}</title>
+<meta http-equiv="refresh" content="${delay};url=${location}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+	<a href="${location}">
+  Redirecting from <code>${url.pathname}</code> to <code>${location}</code>
+</a>
+</body>
+</html>`
+          : "";
+
+        let files: { path: string; contents: Uint8Array | string }[] = [
+          {
+            path:
+              isHtml || redirectBody
+                ? url.pathname === "/__spa-fallback.html"
+                  ? "__spa-fallback.html"
+                  : (url.pathname.endsWith("/")
+                      ? url.pathname
+                      : url.pathname + "/") + "index.html"
+                : url.pathname,
+            contents:
+              redirectBody ||
+              (isHtml
+                ? await response.text()
+                : new Uint8Array(await response.arrayBuffer())),
+          },
+        ];
+
+        if (htmlResponse) {
+          let body = await htmlResponse.text();
+
+          let matches = Array.from(
+            body.matchAll(
+              /<script>\(self\.__FLIGHT_DATA\|\|=\[\]\)\.push\(("(?:[^"\\]|\\.)*")\)<\/script>/gim,
+            ),
+          );
+          if (matches.length) {
+            let rscData = "";
+            for (const match of matches) {
+              rscData += JSON.parse(match[1]);
+            }
+
+            files.push({
+              path:
+                url.pathname === "/"
+                  ? "_.rsc"
+                  : (url.pathname === "/__spa-fallback.html"
+                      ? "__spa-fallback"
+                      : url.pathname) + ".rsc",
+              contents: rscData,
+            });
+          }
+        } else if (!url.pathname.endsWith(".rsc")) {
+          let dataUrl = new URL(url);
+          dataUrl.pathname += ".rsc";
+          return {
+            files,
+            requests: [dataUrl.href],
+          };
+        }
+
+        return files;
+      },
+    }),
   ];
 }
 
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
+  routeDiscovery: create("unstable_rsc/route-discovery"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
@@ -728,3 +964,18 @@ if (import.meta.hot && !inWebWorker) {
     });
   });
 }`;
+
+const getClientBuildDirectory = (
+  reactRouterConfig: ResolvedReactRouterConfig,
+) => path.join(reactRouterConfig.buildDirectory, "client");
+
+function getPrerenderConcurrencyConfig(
+  reactRouterConfig: ResolvedReactRouterConfig,
+): number {
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+    concurrency = prerender.unstable_concurrency ?? 1;
+  }
+  return concurrency;
+}

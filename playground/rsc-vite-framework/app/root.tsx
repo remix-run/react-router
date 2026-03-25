@@ -24,7 +24,7 @@ export const middleware: MiddlewareFunction[] = [
 
 export const meta = () => [{ title: "React Router Vite" }];
 
-export const shouldRevalidate = () => false;
+// export const shouldRevalidate = () => false;
 
 export function ServerLayout({ children }: { children: React.ReactNode }) {
   console.log("Layout");
