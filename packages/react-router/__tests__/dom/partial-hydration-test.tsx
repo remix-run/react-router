@@ -200,6 +200,59 @@ describe("Partial Hydration Behavior", () => {
       `);
     });
 
+    it("handles a race condition where router initializes before router subscriber is registered", async () => {
+      let loaderDfd = createDeferred();
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          loader: () => loaderDfd.promise,
+          HydrateFallback: () => <p>Hydrating...</p>,
+          Component: () => <p>Content</p>,
+        },
+      ]);
+
+      // Simulate the race: drop the subscriber so
+      // the router's initialization fires with no listener attached.
+      let unsubscribe: (() => void) | undefined;
+      let originalSubscribe = router.subscribe.bind(router);
+      jest
+        .spyOn(router, "subscribe")
+        .mockImplementation((fn: any) => (unsubscribe = originalSubscribe(fn)));
+
+      let { container, rerender } = render(
+        // eslint-disable-next-line react/jsx-pascal-case
+        <ReactRouter_RouterProvider router={router} />,
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Hydrating...
+          </p>
+        </div>"
+      `);
+
+      // Simulates the race where RouterProvider's useLayoutEffect missed the initialization event
+      unsubscribe!();
+
+      await act(async () => {
+        loaderDfd.resolve("data");
+      });
+
+      // Simulate Suspense Boundary re-rendering RouterProvider
+      // eslint-disable-next-line react/jsx-pascal-case
+      rerender(<ReactRouter_RouterProvider router={router} />);
+
+      await waitFor(() => screen.getByText("Content"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Content
+          </p>
+        </div>"
+      `);
+    });
+
     it("supports partial hydration w/patchRoutesOnNavigation and matching splat", async () => {
       let patchDfd = createDeferred();
       let parentDfd = createDeferred();

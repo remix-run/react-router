@@ -618,6 +618,26 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  let logWarningAndSetState = React.useCallback(
+    (newState: RouterState, warning: string) => {
+      console.warn(warning);
+      setStateImpl(newState);
+    },
+    [setStateImpl],
+  );
+
+  // Track race conditions where we finish initializing prior to the layout
+  // effect above running to register our listener. If we manually detect a
+  // change in `state.initialized`, automatically sync state.
+  let initialized = state.initialized;
+  React.useLayoutEffect(() => {
+    if (!initialized && router.state.initialized) {
+      logWarningAndSetState(router.state, "RouterProvider missed a router initialization event, likely because it is " +
+        "rendered inside a <Suspense> boundary. This can cause <HydrateFallback> to " +
+        "show indefinitely. Router state has been automatically re-synced.");
+    }
+  }, [initialized, router.state, logWarningAndSetState]);
+
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
