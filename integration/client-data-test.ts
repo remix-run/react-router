@@ -1602,13 +1602,13 @@ test.describe("Client Data", () => {
             });
 
             test("child.clientAction/parent.childLoader/child.clientLoader", async ({
+              browserName,
               page,
             }) => {
               // flakey in firefox so skip it
-              test.skip(
-                ({ browserName }) => browserName === "firefox",
-                "This test is currently flakey in firefox.",
-              );
+              if (browserName === "firefox") {
+                return;
+              }
 
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
