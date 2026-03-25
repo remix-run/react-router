@@ -250,10 +250,8 @@ function createRouterFromPayload({
   createFromReadableStream,
   getContext,
   payload,
-  payloadPatches,
 }: {
   payload: RSCPayload;
-  payloadPatches: Awaited<RSCRenderPayload["patches"]> | undefined;
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
   getContext: RouterInit["getContext"] | undefined;
@@ -275,14 +273,6 @@ function createRouterFromPayload({
     globalVar.__reactRouterRouteModules ?? {};
   populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
 
-  let patches = new Map<string, RSCRouteManifest[]>();
-  payloadPatches?.forEach((patch) => {
-    invariant(patch.parentId, "Invalid patch parentId");
-    if (!patches.has(patch.parentId)) {
-      patches.set(patch.parentId, []);
-    }
-    patches.get(patch.parentId)?.push(patch);
-  });
   let routes = payload.matches.reduceRight((previous, match) => {
     const route: DataRouteObject = createRouteFromServerManifest(
       match,
@@ -293,14 +283,10 @@ function createRouterFromPayload({
     } else if (!route.index) {
       route.children = [];
     }
-    let childrenToPatch = patches.get(match.id);
-    if (route.children && childrenToPatch) {
-      route.children.push(
-        ...childrenToPatch.map((r) => createRouteFromServerManifest(r)),
-      );
-    }
     return [route];
   }, [] as DataRouteObject[]);
+
+  let applyPatchesPromise: Promise<void> | undefined;
 
   globalVar.__reactRouterDataRouter = createRouter({
     routes,
@@ -328,10 +314,31 @@ function createRouterFromPayload({
       isSpaMode: false,
     }),
     async patchRoutesOnNavigation({ path, signal }) {
-      if (
-        discoveredPaths.has(path) ||
-        payload.routeDiscovery.mode === "initial"
-      ) {
+      if (payload.routeDiscovery.mode === "initial") {
+        if (!applyPatchesPromise) {
+          applyPatchesPromise = (async () => {
+            if (!payload.patches) return;
+            let patches = await payload.patches;
+
+            // Without the `allowElementMutations` flag, this will no-op if the route
+            // already exists so we can just call it for all returned patches
+            React.startTransition(() => {
+              patches.forEach((p) => {
+                (
+                  window as WindowWithRouterGlobals
+                ).__reactRouterDataRouter.patchRoutes(p.parentId ?? null, [
+                  createRouteFromServerManifest(p),
+                ]);
+              });
+            });
+          })();
+        }
+
+        await applyPatchesPromise;
+        return;
+      }
+
+      if (discoveredPaths.has(path)) {
         return;
       }
       await fetchAndApplyManifestPatches(
@@ -712,26 +719,17 @@ export function RSCHydratedRouter({
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let { routeDiscovery, patches } = payload;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  let payloadPatches = patches ? useSafe(patches) : undefined;
+  let { routeDiscovery } = payload;
 
   let { router, routeModules } = React.useMemo(
     () =>
       createRouterFromPayload({
         payload,
-        payloadPatches,
         fetchImplementation,
         getContext,
         createFromReadableStream,
       }),
-    [
-      createFromReadableStream,
-      payload,
-      payloadPatches,
-      fetchImplementation,
-      getContext,
-    ],
+    [createFromReadableStream, payload, fetchImplementation, getContext],
   );
 
   React.useEffect(() => {
