@@ -1604,6 +1604,12 @@ test.describe("Client Data", () => {
             test("child.clientAction/parent.childLoader/child.clientLoader", async ({
               page,
             }) => {
+              // flakey in firefox so skip it
+              test.skip(
+                ({ browserName }) => browserName === "firefox",
+                "This test is currently flakey in firefox.",
+              );
+
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
               await app.clickLink(
