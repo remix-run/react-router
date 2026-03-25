@@ -1560,9 +1560,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
             });
 
-            test("child.clientAction/parent.childLoader", async ({
-              page,
-            }) => {
+            test("child.clientAction/parent.childLoader", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
               await app.clickLink(
