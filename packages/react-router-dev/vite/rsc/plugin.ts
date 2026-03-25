@@ -715,6 +715,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           concurrency: getPrerenderConcurrencyConfig(config),
         };
       },
+      logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
       async requests() {
         const prerenderPaths = new Set(
           await getPrerenderPaths(
