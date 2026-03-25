@@ -46,19 +46,6 @@ import { populateRSCRouteModules } from "./route-modules";
 
 const defaultManifestPath = "/__manifest";
 
-// Safe version of React.use() that will not cause compilation errors against
-// React 18 and will result in a runtime error if used (you can't use RSC against
-// React 18).
-const REACT_USE = "use";
-const useImpl = (React as any)[REACT_USE];
-
-function useSafe<T>(promise: Promise<T> | React.Context<T>): T {
-  if (useImpl) {
-    return useImpl(promise);
-  }
-  throw new Error("React Router v7 requires React 19+ for RSC features.");
-}
-
 export type BrowserCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
   {
@@ -631,13 +618,14 @@ function getFetchAndDecodeViaRSC(
         }
       }
       return { status: res.status, data: results };
-    } catch (e) {
+    } catch (cause) {
       // Can't clone after consuming the body via decode so we can't include the
       // body here.  In an ideal world we'd look for an RSC  content type here,
       // or even X-Remix-Response but then folks can't statically deploy their
       // prerendered .rsc files to a CDN unless they can tell that CDN to add
       // special headers to those certain files - which is a bit restrictive.
-      throw new Error("Unable to decode RSC response");
+      // @ts-expect-error - TS doesn't know about this yet
+      throw new Error("Unable to decode RSC response", { cause });
     }
   };
 }
