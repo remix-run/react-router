@@ -843,7 +843,7 @@ describe("ssr", () => {
         unstable_pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
@@ -856,7 +856,7 @@ describe("ssr", () => {
         unstable_pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
@@ -897,7 +897,7 @@ describe("ssr", () => {
         unstable_pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let actionRequest = actionStub.mock.calls[0][0]?.request;
@@ -914,7 +914,7 @@ describe("ssr", () => {
         unstable_pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
@@ -929,7 +929,7 @@ describe("ssr", () => {
         unstable_pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;

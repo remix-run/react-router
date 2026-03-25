@@ -1,13 +1,13 @@
-const fs = require("node:fs");
-const { execSync } = require("child_process");
-const pc = require("picocolors");
-const semver = require("semver");
+import fs from "node:fs";
+import { execSync } from "node:child_process";
+import pc from "picocolors";
+import semver from "semver";
 
-const {
+import {
   ensureCleanWorkingDirectory,
   invariant,
   updatePackageConfig,
-} = require("./utils");
+} from "./utils.js";
 
 async function run() {
   try {

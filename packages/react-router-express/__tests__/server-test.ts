@@ -1,29 +1,27 @@
 import { Readable } from "node:stream";
-import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import express from "express";
 import { createRequest, createResponse } from "node-mocks-http";
 import supertest from "supertest";
 
-import {
-  createRemixHeaders,
-  createRemixRequest,
-  createRequestHandler,
-} from "../server";
+let createRemixHeaders: typeof import("../server").createRemixHeaders;
+let createRemixRequest: typeof import("../server").createRemixRequest;
+let createRequestHandler: typeof import("../server").createRequestHandler;
 
 // We don't want to test that the remix server works here (that's what the
 // playwright tests do), we just want to test the express adapter
-jest.mock("react-router", () => {
-  let original = jest.requireActual("react-router");
-  return {
-    ...original,
-    createRequestHandler: jest.fn(),
-  };
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
+
+(jest as any).unstable_mockModule("react-router", () => ({
+  createRequestHandler: mockedCreateRequestHandler,
+}));
+
+beforeAll(async () => {
+  ({ createRemixHeaders, createRemixRequest, createRequestHandler } =
+    await import("../server"));
 });
-let mockedCreateRequestHandler =
-  createRemixRequestHandler as jest.MockedFunction<
-    typeof createRemixRequestHandler
-  >;
 
 function createApp() {
   let app = express();

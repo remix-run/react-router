@@ -6,10 +6,7 @@ import type {
   RouterNavigateOptions,
   RouterInit,
 } from "../../../lib/router/router";
-import type {
-  AgnosticDataRouteObject,
-  AgnosticRouteMatch,
-} from "../../../lib/router/utils";
+import type { DataRouteObject, RouteMatch } from "../../../lib/router/utils";
 import { createRouter, IDLE_FETCHER } from "../../../lib/router/router";
 import {
   createMemoryHistory,
@@ -17,8 +14,8 @@ import {
   parsePath,
 } from "../../../lib/router/history";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
+  IndexRouteObject,
+  NonIndexRouteObject,
 } from "../../../lib/router/utils";
 import {
   matchRoutes,
@@ -32,7 +29,7 @@ import { isRedirect, tick } from "./utils";
 // indicating they want a stub.  They get enhanced back to AgnosticRouteObjects
 // by our test harness
 export type TestIndexRouteObject = Pick<
-  AgnosticIndexRouteObject,
+  IndexRouteObject,
   | "id"
   | "index"
   | "path"
@@ -47,7 +44,7 @@ export type TestIndexRouteObject = Pick<
 };
 
 export type TestNonIndexRouteObject = Pick<
-  AgnosticNonIndexRouteObject,
+  NonIndexRouteObject,
   | "id"
   | "index"
   | "path"
@@ -235,7 +232,7 @@ export function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: AgnosticDataRouteObject = {
+      let enhancedRoute: DataRouteObject = {
         middleware: undefined,
         ...r,
         loader: undefined,
@@ -299,7 +296,7 @@ export function setup({
           );
         };
       }
-      if (!r.index && r.children) {
+      if (!r.index && "children" in r && r.children) {
         enhancedRoute.children = enhanceRoutes(r.children);
       }
       return enhancedRoute;
@@ -413,7 +410,7 @@ export function setup({
   }
 
   function getHelpers(
-    matches: AgnosticRouteMatch<string, AgnosticDataRouteObject>[],
+    matches: RouteMatch<string, DataRouteObject>[],
     navigationId: number,
     addHelpers: (routeId: string, helpers: InternalHelpers) => void,
   ): Record<string, Helpers> {
@@ -426,8 +423,8 @@ export function setup({
     );
   }
 
-  let inFlightRoutes: AgnosticDataRouteObject[] | undefined;
-  function _internalSetRoutes(routes: AgnosticDataRouteObject[]) {
+  let inFlightRoutes: DataRouteObject[] | undefined;
+  function _internalSetRoutes(routes: DataRouteObject[]) {
     inFlightRoutes = routes;
     currentRouter?._internalSetRoutes(routes);
   }

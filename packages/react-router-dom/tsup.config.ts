@@ -11,7 +11,7 @@ export default defineConfig([
   {
     clean: true,
     entry,
-    format: ["cjs", "esm"],
+    format: ["esm"],
     outDir: "dist",
     dts: true,
     banner: {

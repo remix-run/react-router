@@ -11,7 +11,7 @@
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["vite/client", "@vitejs/plugin-rsc/types"],
     "target": "ES2022",
-    "module": "ES2022",
+    "module": "ESNext",
     "moduleResolution": "Bundler",
 
     "strict": true,

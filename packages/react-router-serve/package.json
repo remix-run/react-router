@@ -1,5 +1,6 @@
 {
   "name": "@react-router/serve",
+  "type": "module",
   "version": "7.13.2",
   "description": "Production application server for React Router",
   "bugs": {

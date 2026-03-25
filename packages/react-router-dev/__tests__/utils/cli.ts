@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import type { Stats } from "node:fs";
 import { statSync } from "node:fs";
 import path from "node:path";
@@ -5,6 +6,8 @@ import execa from "execa";
 import glob from "fast-glob";
 
 import captureError from "./captureError";
+
+const nodeRequire = createRequire(import.meta.url);
 
 export const isExecaError = (error: unknown): error is execa.ExecaError => {
   if (!(error instanceof Error)) return false;
@@ -82,7 +85,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
     [
       ...(isBuildUpToDate
         ? [builtJS]
-        : ["--require", require.resolve("esbuild-register"), sourceTS]),
+        : ["--require", nodeRequire.resolve("esbuild-register"), sourceTS]),
       ...args,
     ],
     {

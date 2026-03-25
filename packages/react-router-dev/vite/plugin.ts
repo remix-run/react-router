@@ -12,6 +12,7 @@ import {
   rm,
   writeFile,
 } from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
@@ -31,10 +32,12 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
-import pick from "lodash/pick";
+import pick from "lodash/pick.js";
 import jsesc from "jsesc";
 import colors from "picocolors";
-import kebabCase from "lodash/kebabCase";
+import kebabCase from "lodash/kebabCase.js";
+
+const nodeRequire = createRequire(import.meta.url);
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -661,7 +664,7 @@ const injectQuery = (url: string, query: string) =>
   url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
 
 let defaultEntriesDir = path.resolve(
-  path.dirname(require.resolve("@react-router/dev/package.json")),
+  path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
   "dist",
   "config",
   "defaults",
@@ -2457,7 +2460,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (id !== virtualHmrRuntime.resolvedId) return;
 
         let reactRefreshDir = path.dirname(
-          require.resolve("react-refresh/package.json"),
+          nodeRequire.resolve("react-refresh/package.json"),
         );
         let reactRefreshRuntimePath = path.join(
           reactRefreshDir,
@@ -2467,7 +2470,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return [
           "const exports = {}",
           await readFile(reactRefreshRuntimePath, "utf8"),
-          await readFile(require.resolve("./static/refresh-utils.mjs"), "utf8"),
+          await readFile(
+            nodeRequire.resolve("./static/refresh-utils.mjs"),
+            "utf8",
+          ),
           "export default exports",
         ].join("\n");
       },
@@ -2501,7 +2507,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             sourceType: "module",
             allowAwaitOutsideFunction: true,
           },
-          plugins: [[require("react-refresh/babel"), { skipEnvCheck: true }]],
+          plugins: [
+            [
+              nodeRequire.resolve("react-refresh/babel"),
+              { skipEnvCheck: true },
+            ],
+          ],
           sourceMaps: true,
         });
         if (result === null) return;
@@ -3991,7 +4002,7 @@ export async function getEnvironmentOptionsResolvers(
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
 
   let packageRoot = path.dirname(
-    require.resolve("@react-router/dev/package.json"),
+    nodeRequire.resolve("@react-router/dev/package.json"),
   );
   let { moduleSyncEnabled } = await import(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`

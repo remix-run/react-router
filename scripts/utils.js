@@ -1,9 +1,9 @@
-const fsp = require("fs").promises;
-const path = require("path");
-const { execSync } = require("child_process");
-const jsonfile = require("jsonfile");
+import { execSync } from "node:child_process";
+import { promises as fsp } from "node:fs";
+import path from "node:path";
+import jsonfile from "jsonfile";
 
-const { ROOT_DIR, EXAMPLES_DIR } = require("./constants");
+import { EXAMPLES_DIR, ROOT_DIR } from "./constants.js";
 
 /**
  * @param {string} packageName
@@ -82,7 +82,7 @@ function invariant(cond, message) {
   if (!cond) throw new Error(message);
 }
 
-module.exports = {
+export {
   fileExists,
   packageJson,
   getPackageVersion,

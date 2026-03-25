@@ -1,4 +1,4 @@
 import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const moduleSyncEnabled = require("#module-sync-enabled").default;
+const nodeRequire = createRequire(import.meta.url);
+const moduleSyncEnabled = nodeRequire("#module-sync-enabled").default;
 export { moduleSyncEnabled };

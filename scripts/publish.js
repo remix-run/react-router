@@ -1,9 +1,11 @@
-const path = require("path");
-const { execSync } = require("child_process");
+import { execSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const jsonfile = require("jsonfile");
-const semver = require("semver");
+import jsonfile from "jsonfile";
+import semver from "semver";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 
 /**
