@@ -833,7 +833,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             for (const match of matches) {
               rscData += JSON.parse(match[1]);
             }
-            console.log({ pathname: url.pathname });
+
             files.push({
               path:
                 url.pathname === "/"
