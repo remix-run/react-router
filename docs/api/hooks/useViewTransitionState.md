@@ -23,7 +23,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useViewTransitionState.html)
 
 This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-to the specified location. This can be used to apply finer-grained styles to
+and the specified location matches either side of the navigation (the URL you are
+navigating **to** or the URL you are navigating **from**). This can be used to apply finer-grained styles to
 elements to further customize the view transition. This requires that view
 transitions have been enabled for the given navigation via [`LinkProps.viewTransition`](https://api.reactrouter.com/v7/interfaces/react-router.LinkProps.html#viewTransition)
 (or the `Form`, `submit`, or `navigate` call)
@@ -45,7 +46,7 @@ function useViewTransitionState(
 
 ### to
 
-The [`To`](https://api.reactrouter.com/v7/types/react-router.To.html) location to check for an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).
+The [`To`](https://api.reactrouter.com/v7/types/react-router.To.html) location to compare against the active transition's current and next URLs.
 
 ### options.relative
 
@@ -55,5 +56,5 @@ more details.
 ## Returns
 
 `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-to the specified [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html), otherwise `false`.
+and the resolved path matches the transition's destination or source pathname, otherwise `false`.
 
