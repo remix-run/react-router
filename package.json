@@ -4,6 +4,9 @@
   "scripts": {
     "build": "pnpm run --filter=\"./packages/**/*\" build",
     "watch": "pnpm build && pnpm run --filter=\"./packages/**/*\" --parallel build --watch",
+    "changes:preview": "node ./scripts/changes/version.ts --preview",
+    "changes:validate": "node ./scripts/changes/validate.ts",
+    "changes:version": "node ./scripts/changes/version.ts",
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
