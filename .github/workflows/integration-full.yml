@@ -31,7 +31,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[20.19, 22]"
+      node_version: "[22.12, 24]"
       browser: '["chromium", "firefox"]'
 
   integration-windows:
@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "windows-latest"
-      node_version: "[22]"
+      node_version: "[24]"
       browser: '["msedge"]'
       timeout: 90
 
@@ -50,5 +50,5 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "macos-latest"
-      node_version: "[20.19, 22]"
+      node_version: "[22.12, 24]"
       browser: '["webkit"]'
