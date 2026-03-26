@@ -112,9 +112,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData1.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -124,9 +121,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -152,9 +146,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData2.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -164,9 +155,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -271,9 +259,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData1.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -283,9 +268,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -311,9 +293,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData2.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -323,9 +302,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },

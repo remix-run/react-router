@@ -634,7 +634,6 @@ export function Meta(): React.JSX.Element {
 
     let match: MetaMatch = {
       id: routeId,
-      data,
       loaderData: data,
       meta: [],
       params: _match.params,
@@ -648,7 +647,6 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
               loaderData: data,
               params,
               location,

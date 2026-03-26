@@ -131,10 +131,6 @@ export interface MetaMatch<
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
-  /** @deprecated Use `MetaMatch.loaderData` instead */
-  data: Loader extends LoaderFunction | ClientLoaderFunction
-    ? SerializeFrom<Loader>
-    : unknown;
   loaderData: Loader extends LoaderFunction | ClientLoaderFunction
     ? SerializeFrom<Loader>
     : unknown;
@@ -165,12 +161,6 @@ export interface MetaArgs<
     LoaderFunction | ClientLoaderFunction | unknown
   > = Record<string, unknown>,
 > {
-  /** @deprecated Use `MetaArgs.loaderData` instead */
-  data:
-    | (Loader extends LoaderFunction | ClientLoaderFunction
-        ? SerializeFrom<Loader>
-        : unknown)
-    | undefined;
   loaderData:
     | (Loader extends LoaderFunction | ClientLoaderFunction
         ? SerializeFrom<Loader>

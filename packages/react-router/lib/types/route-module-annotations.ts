@@ -38,8 +38,6 @@ type MetaMatch<T extends MatchInfo> = Pretty<{
   params: Record<string, string | undefined>;
   pathname: string;
   meta: MetaDescriptor[];
-  /** @deprecated Use `MetaMatch.loaderData` instead */
-  data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
   handle?: unknown;
   error?: unknown;
@@ -62,14 +60,6 @@ type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
   /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
   params: T["params"];
-  /**
-   * The return value for this route's server loader function
-   *
-   * @deprecated Use `Route.MetaArgs.loaderData` instead
-   */
-  data:
-    | T["loaderData"]
-    | (HasErrorBoundary<T> extends true ? undefined : never);
   /** The return value for this route's server loader function */
   loaderData:
     | T["loaderData"]
@@ -143,8 +133,6 @@ type Match<T extends MatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
-  /** @deprecated Use `Match.loaderData` instead */
-  data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
   handle: unknown;
 }>;
@@ -328,35 +316,5 @@ type __tests = [
       }>["loaderData"],
       undefined
     >
-  >,
-  // Test that MetaArgs.data (deprecated) also follows the same pattern
-  Expect<
-    Equal<
-      CreateMetaArgs<{
-        module: {
-          loader: () => { test: string };
-        };
-        loaderData: { test: string };
-        params: unknown;
-        actionData: unknown;
-        matches: [];
-      }>["data"],
-      { test: string }
-    >
-  >,
-  Expect<
-    Equal<
-      CreateMetaArgs<{
-        module: {
-          loader: () => { test: string };
-          ErrorBoundary: Func;
-        };
-        loaderData: { test: string };
-        params: unknown;
-        actionData: unknown;
-        matches: [];
-      }>["data"],
-      { test: string } | undefined
-    >
-  >,
+  >
 ];

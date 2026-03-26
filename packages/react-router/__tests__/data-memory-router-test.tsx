@@ -811,7 +811,6 @@ describe("createMemoryRouter", () => {
     await waitFor(() => screen.getByText("Bar"));
     expect(spy).toHaveBeenCalledWith("Layout", [
       {
-        data: undefined,
         loaderData: undefined,
         handle: undefined,
         id: "0",
@@ -819,7 +818,6 @@ describe("createMemoryRouter", () => {
         pathname: "/",
       },
       {
-        data: "BAR LOADER",
         loaderData: "BAR LOADER",
         handle: {
           key: "value",
