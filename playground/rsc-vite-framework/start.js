@@ -1,4 +1,4 @@
-import { createRequestListener } from "@mjackson/node-fetch-server";
+import { createRequestListener } from "@remix-run/node-fetch-server";
 import express from "express";
 import reactRouterRequestHandler from "./build/server/index.js";
 

@@ -379,9 +379,9 @@ importers:
 
   integration/helpers/rsc-vite:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -431,12 +431,12 @@ importers:
 
   integration/helpers/rsc-vite-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@react-router/serve':
         specifier: workspace:*
         version: link:../../../packages/react-router-serve
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1242,9 +1242,9 @@ importers:
 
   packages/react-router-node:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: ^0.2.0
-        version: 0.2.0
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
     devDependencies:
       react-router:
         specifier: workspace:*
@@ -1276,15 +1276,15 @@ importers:
 
   packages/react-router-serve:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@react-router/express':
         specifier: workspace:*
         version: link:../react-router-express
       '@react-router/node':
         specifier: workspace:*
         version: link:../react-router-node
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1675,9 +1675,9 @@ importers:
 
   playground/rsc-vite:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1727,9 +1727,9 @@ importers:
 
   playground/rsc-vite-7-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1797,9 +1797,9 @@ importers:
 
   playground/rsc-vite-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.13.0
+        version: 0.13.0
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -3927,12 +3927,6 @@ packages:
     resolution: {integrity: sha512-q4xOtUXpCzeouE8GaJ8StT4rDxm/U5j6lkMHL2srb2Q3Y7cobE0aXyPzXVVlbeIMBi+5R5MpbiaVE5/vJUdnHg==}
     peerDependencies:
       rollup: '>=2'
-
-  '@mjackson/node-fetch-server@0.2.0':
-    resolution: {integrity: sha512-EMlH1e30yzmTpGLQjlFmaDAjyOeZhng1/XCd7DExR8PNAnG/G1tyruZxEoUe11ClnwGhGrtsdnyyUx1frSzjng==}
-
-  '@mjackson/node-fetch-server@0.6.1':
-    resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
 
   '@mswjs/interceptors@0.37.6':
     resolution: {integrity: sha512-wK+5pLK5XFmgtH3aQ2YVvA3HohS3xqV/OxuVOdNx9Wpnz7VE/fnC+e1A7ln6LFYeck7gOJ/dsZV6OLplOtAJ2w==}
@@ -12187,10 +12181,6 @@ snapshots:
       vfile: 6.0.1
     transitivePeerDependencies:
       - supports-color
-
-  '@mjackson/node-fetch-server@0.2.0': {}
-
-  '@mjackson/node-fetch-server@0.6.1': {}
 
   '@mswjs/interceptors@0.37.6':
     dependencies:
