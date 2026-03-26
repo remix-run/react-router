@@ -3345,7 +3345,7 @@ async function prerenderData(
   }
 
   // Write out the .data file
-  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...dataRequestPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, data);
   viteConfig.logger.info(
@@ -3409,7 +3409,7 @@ async function prerenderRoute(
   // Write out the HTML file
   let outfile = path.join(
     clientBuildDirectory,
-    ...normalizedPath.split("/"),
+    ...prerenderPath.split("/"),
     "index.html",
   );
   await mkdir(path.dirname(outfile), { recursive: true });
@@ -3445,7 +3445,10 @@ async function prerenderResourceRoute(
   }
 
   // Write out the resource route file
-  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
+  let outfile = path.join(
+    clientBuildDirectory,
+    ...`${prerenderPath}/`.replace(/\/\/+/g, "/").replace(/\/$/g, "").split("/")
+  );
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, content);
   viteConfig.logger.info(
