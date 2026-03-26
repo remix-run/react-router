@@ -985,6 +985,7 @@ function createRouteFromServerManifest(
       match.hasLoader,
       false,
     );
+    dataRoute.loader.unstable_batch = match.clientLoader?.unstable_batch;
   }
 
   return dataRoute;
