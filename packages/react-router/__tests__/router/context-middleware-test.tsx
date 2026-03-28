@@ -1787,6 +1787,46 @@ describe("context/middleware", () => {
         await router.navigate("/redirect");
         expect(router.state.location.pathname).toBe("/target");
       });
+
+      it("allows fetcher.load to follow redirects thrown from parent middleware", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "source",
+              path: "/source",
+            },
+            {
+              path: "/parent",
+              middleware: [
+                async () => {
+                  throw redirect("/target");
+                },
+              ],
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader() {
+                    return "CHILD";
+                  },
+                },
+              ],
+            },
+            {
+              path: "/target",
+            },
+          ],
+        });
+
+        await router.navigate("/source");
+        await router.fetch("key", "source", "/parent/child");
+
+        expect(router.state.location.pathname).toBe("/target");
+      });
     });
   });
 
