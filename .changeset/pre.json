@@ -37,5 +37,14 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "mighty-books-sing",
+    "olive-suns-rest",
+    "rsc-module-api",
+    "slimy-tips-explode",
+    "support-vite-8",
+    "sweet-trees-visit",
+    "weak-maps-double",
+    "weak-poems-press"
+  ]
 }
