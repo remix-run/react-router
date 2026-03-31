@@ -618,6 +618,23 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  // Fire onError for any errors already present in the initial router state.
+  // These errors may have been resolved before the subscriber was registered
+  // (e.g., synchronous loader errors during router.initialize()).
+  React.useEffect(() => {
+    if (onError && router.state.errors) {
+      Object.values(router.state.errors).forEach((error) =>
+        onError(error, {
+          location: router.state.location,
+          params: router.state.matches[0]?.params ?? {},
+          unstable_pattern: getRoutePattern(router.state.matches),
+        }),
+      );
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
