@@ -150,9 +150,10 @@ The same `future` option works for [`createHashRouter`][create-hash-router] and 
 
 ### 2. TypeScript: augment `Future` for loader/action `context`
 
-TypeScript does not infer `future: { v8_middleware: true }` from `createBrowserRouter(...)` into your loader/action types. Add a module augmentation file (for example `src/react-router.d.ts`) **in addition** to the runtime flag:
+In order to properly type your `context` param in your `loader`/`action`/`middleware` functions, you will need a small module augmentation to override the default context type of `any`:
 
 ```ts
+// src/react-router.d.ts
 declare module "react-router" {
   interface Future {
     v8_middleware: true;
@@ -192,7 +193,7 @@ const routes = [
     Component: Root,
     children: [
       {
-        path: "profile",
+        path: "dashboard",
         middleware: [authMiddleware], // 👈
         loader: dashboardLoader,
         Component: Dashboard,
