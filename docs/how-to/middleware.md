@@ -130,25 +130,7 @@ function getLoadContext(req, res) {
 
 ## Quick Start (Data Mode)
 
-### 1. Enable the middleware future flag
-
-Pass [`future.v8_middleware: true`][future-flags] when you create the router:
-
-```tsx
-import { createBrowserRouter } from "react-router/dom";
-
-const router = createBrowserRouter(routes, {
-  future: {
-    v8_middleware: true,
-  },
-});
-```
-
-The same `future` option works for [`createHashRouter`][create-hash-router] and [`createMemoryRouter`][create-memory-router].
-
-<docs-warning>If you use a custom server or [`createStaticHandler`][create-static-handler] for SSR, the server build must also use `future.v8_middleware: true` (and an updated [`getLoadContext`][getloadcontext] when applicable).</docs-warning>
-
-### 2. TypeScript: augment `Future` for loader/action `context`
+### 1. TypeScript: augment `Future` for loader/action `context`
 
 In order to properly type your `context` param in your `loader`/`action`/`middleware` functions, you will need a small module augmentation to override the default context type of `any`:
 
@@ -163,7 +145,7 @@ declare module "react-router" {
 
 Without this, `context` stays loosely typed even when middleware is enabled at runtime.
 
-### 3. Create a context
+### 2. Create a context
 
 Middleware uses a `context` provider to pass data through the middleware chain into loaders and actions. Create typed context with [`createContext`][createContext]:
 
@@ -174,7 +156,7 @@ import type { User } from "~/types";
 export const userContext = createContext<User | null>(null);
 ```
 
-### 4. Add `middleware` to route objects
+### 3. Add `middleware` to route objects
 
 Attach `middleware` arrays to your route objects:
 
@@ -240,7 +222,7 @@ export default function Dashboard() {
 }
 ```
 
-### 5. Add a `getContext` function (optional)
+### 4. Add a `getContext` function (optional)
 
 To seed every navigation or fetcher call with shared values, pass [`getContext`][getContext] when creating the router:
 
@@ -248,9 +230,6 @@ To seed every navigation or fetcher call with shared values, pass [`getContext`]
 let sessionContext = createContext();
 
 const router = createBrowserRouter(routes, {
-  future: {
-    v8_middleware: true,
-  },
   getContext() {
     let context = new RouterContextProvider();
     context.set(sessionContext, getSession());
