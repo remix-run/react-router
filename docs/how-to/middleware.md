@@ -9,8 +9,6 @@ title: Middleware
 <br/>
 <br/>
 
-<docs-info>In Framework Mode, you must opt-into middleware via the [`future.v8_middleware`][future-flags] flag because it contains a minor [breaking change][getloadcontext] to the `getLoadContext` function and the loader/action `context` parameter.</docs-info>
-
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
 Middleware runs in a nested chain, executing from parent routes to child routes on the way "down" to your route handlers, then from child routes back to parent routes on the way "up" after a [`Response`][Response] is generated.
@@ -132,12 +130,24 @@ function getLoadContext(req, res) {
 
 ## Quick Start (Data Mode)
 
-<docs-info>Note there is no future flag in Data Mode because you can opt-into middleware by adding it to your routes, no breaking changes exist that require a future flag.</docs-info>
+### 1. TypeScript: augment `Future` for loader/action `context`
 
-### 1. Create a context
+In order to properly type your `context` param in your `loader`/`action`/`middleware` functions, you will need a small module augmentation to override the default context type of `any`:
 
-Middleware uses a `context` provider instance to provide data down the middleware chain.
-You can create type-safe context objects using [`createContext`][createContext]:
+```ts
+// src/react-router.d.ts
+declare module "react-router" {
+  interface Future {
+    v8_middleware: true;
+  }
+}
+```
+
+Without this, `context` stays loosely typed even when middleware is enabled at runtime.
+
+### 2. Create a context
+
+Middleware uses a `context` provider to pass data through the middleware chain into loaders and actions. Create typed context with [`createContext`][createContext]:
 
 ```ts
 import { createContext } from "react-router";
@@ -146,10 +156,16 @@ import type { User } from "~/types";
 export const userContext = createContext<User | null>(null);
 ```
 
-### 2. Add middleware to your routes
+### 3. Add `middleware` to route objects
+
+Attach `middleware` arrays to your route objects:
 
 ```tsx
-import { redirect } from "react-router";
+import {
+  redirect,
+  useLoaderData,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { userContext } from "~/context";
 
 const routes = [
@@ -159,10 +175,10 @@ const routes = [
     Component: Root,
     children: [
       {
-        path: "profile",
+        path: "dashboard",
         middleware: [authMiddleware], // 👈
-        loader: profileLoader,
-        Component: Profile,
+        loader: dashboardLoader,
+        Component: Dashboard,
       },
       {
         path: "login",
@@ -187,15 +203,15 @@ async function authMiddleware({ context }) {
   context.set(userContext, user);
 }
 
-export async function profileLoader({
+export async function dashboardLoader({
   context,
-}: Route.LoaderArgs) {
+}: LoaderFunctionArgs) {
   const user = context.get(userContext);
   const profile = await getProfile(user);
   return { profile };
 }
 
-export default function Profile() {
+export default function Dashboard() {
   let loaderData = useLoaderData();
   return (
     <div>
@@ -206,9 +222,9 @@ export default function Profile() {
 }
 ```
 
-### 3. Add a `getContext` function (optional)
+### 4. Add a `getContext` function (optional)
 
-If you wish to include a base context on all navigations/fetches, you can add an [`getContext`][getContext] function to your router. This will be called to populate a fresh context on every navigation/fetch.
+To seed every navigation or fetcher call with shared values, pass [`getContext`][getContext] when creating the router:
 
 ```tsx
 let sessionContext = createContext();
@@ -222,7 +238,7 @@ const router = createBrowserRouter(routes, {
 });
 ```
 
-<docs-info>This API exists to mirror the `getLoadContext` API on the server in Framework Mode, which exists as a way to hand off values from your HTTP server to the React Router handler. This [`getContext`][getContext] API can be used to hand off global values from the [`window`][window]/[`document`][document] to React Router, but because they're all running in the same context (the browser), you can achieve effectively the same behavior with root route middleware. Therefore, you may not need this API the same way you would on the server - but it's provided for consistency.</docs-warning>
+<docs-info>This mirrors Framework mode’s server-side [`getLoadContext`][getloadcontext]. In the browser, root `middleware` can often do the same job, but `getContext` is available when you want to seed every request up front.</docs-info>
 
 ## Core Concepts
 
@@ -250,7 +266,7 @@ Client middleware runs in the browser in framework and data mode for client-side
 async function clientMiddleware({ request }, next) {
   console.log(request.method, request.url);
   await next();
-  console.log(response.status, request.method, request.url);
+  console.log(`Finished ${request.method} ${request.url}`);
 }
 
 // Framework mode
@@ -720,6 +736,10 @@ export async function loader({
 [common-patterns]: #common-patterns
 [server-client]: #server-vs-client-middleware
 [rr-config]: ../api/framework-conventions/react-router.config.ts
+[create-browser-router]: ../api/data-routers/createBrowserRouter
+[create-hash-router]: ../api/data-routers/createHashRouter
+[create-memory-router]: ../api/data-routers/createMemoryRouter
+[create-static-handler]: ../api/data-routers/createStaticHandler
 [framework-action]: ../start/framework/route-module#action
 [framework-loader]: ../start/framework/route-module#loader
 [getloadcontext]: #changes-to-getloadcontextapploadcontext
