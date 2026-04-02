@@ -179,14 +179,21 @@ export type EnvironmentBuildContext = {
   resolveOptions: EnvironmentOptionsResolver;
 };
 
+export function isReactRouterServerEnvironmentName(
+  ctx: Pick<ReactRouterPluginContext, "buildManifest">,
+  name: string,
+): name is SsrEnvironmentName {
+  return ctx.buildManifest?.serverBundles
+    ? isSsrBundleEnvironmentName(name)
+    : name === "ssr";
+}
+
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>,
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
-    ctx.buildManifest?.serverBundles
-      ? isSsrBundleEnvironmentName(name)
-      : name === "ssr",
+    isReactRouterServerEnvironmentName(ctx, name),
   ) as [SsrEnvironmentName, T][];
 }
 
@@ -1458,9 +1465,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       configEnvironment(name, options) {
         if (
           ctx.reactRouterConfig.future.v8_viteEnvironmentApi &&
-          (ctx.buildManifest?.serverBundles
-            ? isSsrBundleEnvironmentName(name)
-            : name === "ssr")
+          isReactRouterServerEnvironmentName(ctx, name)
         ) {
           const vite = getVite();
 
@@ -1855,12 +1860,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // the SSR build and move server-only assets to client assets directory
         async handler() {
           let { future } = ctx.reactRouterConfig;
+          let isReactRouterServerBuild = future.v8_viteEnvironmentApi
+            ? isReactRouterServerEnvironmentName(ctx, this.environment.name)
+            : viteConfigEnv.isSsrBuild;
 
-          if (
-            future.v8_viteEnvironmentApi
-              ? this.environment.name === "client"
-              : !viteConfigEnv.isSsrBuild
-          ) {
+          if (!isReactRouterServerBuild) {
             return;
           }
           invariant(viteConfig);
