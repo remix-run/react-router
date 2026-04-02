@@ -1036,7 +1036,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
   );
 }
 
-function dedupe(array: any[]) {
+function dedupe<T>(array: readonly T[]): T[] {
   return [...new Set(array)];
 }
 
