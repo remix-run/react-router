@@ -811,6 +811,23 @@ export type PathParam<Path extends string> =
       : // look for params in the absence of wildcards
         _PathParam<Path>;
 
+// Recursive helper for extracting optional path parameters
+type _OptionalPathParam<Path extends string> =
+  Path extends `${infer L}/${infer R}`
+    ? _OptionalPathParam<L> | _OptionalPathParam<R>
+    : Path extends `:${infer Param}`
+      ? Param extends `${infer Optional}?${string}`
+        ? RegexMatchPlus<ParamChar, Optional>
+        : never
+      : never;
+
+type OptionalPathParam<Path extends string> =
+  Path extends "*" | "/*"
+    ? "*"
+    : Path extends `${infer Rest}/*`
+      ? "*" | _OptionalPathParam<Rest>
+      : _OptionalPathParam<Path>;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
   Expect<Equal<PathParam<"/a/b/*">, "*">>,
@@ -821,7 +838,22 @@ type _tests = [
   Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
   Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
   Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
+
+  // OptionalPathParam tests
+  Expect<Equal<OptionalPathParam<"/:a">, never>>,
+  Expect<Equal<OptionalPathParam<"/:a?">, "a">>,
+  Expect<Equal<OptionalPathParam<"/:a/:b?">, "b">>,
+  Expect<Equal<OptionalPathParam<"/:a?/:b?">, "a" | "b">>,
+  Expect<Equal<OptionalPathParam<"/:a?.xml">, "a">>,
+  Expect<Equal<OptionalPathParam<"/a/b/*">, "*">>,
+  Expect<Equal<OptionalPathParam<"/:a/*">, "*">>,
 ];
+
+type GeneratePathParams<Path extends string> = {
+  [key in Exclude<PathParam<Path>, OptionalPathParam<Path>>]: string | null;
+} & {
+  [key in OptionalPathParam<Path>]?: string | null | undefined;
+};
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise, return the union of the
@@ -1365,9 +1397,7 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any,
+  params: GeneratePathParams<Path> = {} as GeneratePathParams<Path>,
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
