@@ -19,7 +19,15 @@ import {
   type ThisEncode,
 } from "./utils";
 
-export function flatten(this: ThisEncode, input: unknown): number | [number] {
+const TIME_LIMIT_MS = 1;
+const getNow = () => Date.now();
+const yieldToMain = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 0));
+
+export async function flatten(
+  this: ThisEncode,
+  input: unknown,
+): Promise<number | [number]> {
   const { indices } = this;
   const existing = indices.get(input);
   if (existing) return [existing];
@@ -33,21 +41,51 @@ export function flatten(this: ThisEncode, input: unknown): number | [number] {
 
   const index = this.index++;
   indices.set(input, index);
-  stringify.call(this, input, index);
+
+  const stack: [unknown, number][] = [[input, index]];
+  await stringify.call(this, stack);
+
   return index;
 }
 
-function stringify(this: ThisEncode, input: unknown, index: number) {
-  const { deferred, plugins, postPlugins } = this;
+async function stringify(this: ThisEncode, stack: [unknown, number][]) {
+  const { deferred, indices, plugins, postPlugins } = this;
   const str = this.stringified;
 
-  const stack: [unknown, number][] = [[input, index]];
+  let lastYieldTime = getNow();
+
+  // Helper to assign index and schedule for processing if needed
+  const flattenValue = (value: unknown): number | [number] => {
+    const existing = indices.get(value);
+    if (existing) return [existing];
+
+    if (value === undefined) return UNDEFINED;
+    if (value === null) return NULL;
+    if (Number.isNaN(value)) return NAN;
+    if (value === Number.POSITIVE_INFINITY) return POSITIVE_INFINITY;
+    if (value === Number.NEGATIVE_INFINITY) return NEGATIVE_INFINITY;
+    if (value === 0 && 1 / value < 0) return NEGATIVE_ZERO;
+
+    const index = this.index++;
+    indices.set(value, index);
+    stack.push([value, index]);
+    return index;
+  };
+
+  let i = 0;
   while (stack.length > 0) {
+    // Yield to main thread if time limit exceeded
+    const now = getNow();
+    if (++i % 6000 === 0 && now - lastYieldTime >= TIME_LIMIT_MS) {
+      await yieldToMain();
+      lastYieldTime = getNow();
+    }
+
     const [input, index] = stack.pop()!;
 
     const partsForObj = (obj: any) =>
       Object.keys(obj)
-        .map((k) => `"_${flatten.call(this, k)}":${flatten.call(this, obj[k])}`)
+        .map((k) => `"_${flattenValue(k)}":${flattenValue(obj[k])}`)
         .join(",");
     let error: Error | null = null;
 
@@ -87,9 +125,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
               const [pluginIdentifier, ...rest] = pluginResult;
               str[index] = `[${JSON.stringify(pluginIdentifier)}`;
               if (rest.length > 0) {
-                str[index] += `,${rest
-                  .map((v) => flatten.call(this, v))
-                  .join(",")}`;
+                str[index] += `,${rest.map((v) => flattenValue(v)).join(",")}`;
               }
               str[index] += "]";
               break;
@@ -102,8 +138,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
           if (isArray) {
             for (let i = 0; i < input.length; i++)
               result +=
-                (i ? "," : "") +
-                (i in input ? flatten.call(this, input[i]) : HOLE);
+                (i ? "," : "") + (i in input ? flattenValue(input[i]) : HOLE);
             str[index] = `${result}]`;
           } else if (input instanceof Date) {
             const dateTime = input.getTime();
@@ -119,7 +154,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
           } else if (input instanceof Set) {
             if (input.size > 0) {
               str[index] = `["${TYPE_SET}",${[...input]
-                .map((val) => flatten.call(this, val))
+                .map((val) => flattenValue(val))
                 .join(",")}]`;
             } else {
               str[index] = `["${TYPE_SET}"]`;
@@ -127,10 +162,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
           } else if (input instanceof Map) {
             if (input.size > 0) {
               str[index] = `["${TYPE_MAP}",${[...input]
-                .flatMap(([k, v]) => [
-                  flatten.call(this, k),
-                  flatten.call(this, v),
-                ])
+                .flatMap(([k, v]) => [flattenValue(k), flattenValue(v)])
                 .join(",")}]`;
             } else {
               str[index] = `["${TYPE_MAP}"]`;
@@ -165,9 +197,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
               const [pluginIdentifier, ...rest] = pluginResult;
               str[index] = `[${JSON.stringify(pluginIdentifier)}`;
               if (rest.length > 0) {
-                str[index] += `,${rest
-                  .map((v) => flatten.call(this, v))
-                  .join(",")}`;
+                str[index] += `,${rest.map((v) => flattenValue(v)).join(",")}`;
               }
               str[index] += "]";
               break;
@@ -192,9 +222,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
             const [pluginIdentifier, ...rest] = pluginResult;
             str[index] = `[${JSON.stringify(pluginIdentifier)}`;
             if (rest.length > 0) {
-              str[index] += `,${rest
-                .map((v) => flatten.call(this, v))
-                .join(",")}`;
+              str[index] += `,${rest.map((v) => flattenValue(v)).join(",")}`;
             }
             str[index] += "]";
             break;

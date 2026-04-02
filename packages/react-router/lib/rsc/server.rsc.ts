@@ -246,12 +246,13 @@ export type RSCRenderPayload = {
   errors: Record<string, any> | null;
   loaderData: Record<string, any>;
   location: Location;
+  routeDiscovery: RouteDiscovery;
   matches: RSCRouteMatch[];
   // Additional routes we should patch into the router for subsequent navigations.
   // Mostly a collection of pathless/index routes that may be needed for complete
   // matching on upward navigations.  Only needed on the initial document request,
   // for SPA navigations the manifest call will handle these patches.
-  patches?: RSCRouteManifest[];
+  patches?: Promise<RSCRouteManifest[]>;
   nonce?: string;
   formState?: unknown;
 };
@@ -259,7 +260,7 @@ export type RSCRenderPayload = {
 export type RSCManifestPayload = {
   type: "manifest";
   // Routes we should patch into the router for subsequent navigations.
-  patches: RSCRouteManifest[];
+  patches: Promise<RSCRouteManifest[]>;
 };
 
 export type RSCActionPayload = {
@@ -304,6 +305,15 @@ export type DecodeReplyFunction = (
 ) => Promise<unknown[]>;
 
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
+
+export type RouteDiscovery =
+  | {
+      mode: "lazy";
+      manifestPath?: string | undefined;
+    }
+  | {
+      mode: "initial";
+    };
 
 /**
  * Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
@@ -371,6 +381,7 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * @param opts.requestContext An instance of {@link RouterContextProvider}
  * that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
  * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+ * @param opts.routeDiscovery The route discovery configuration, used to determine how the router should discover new routes during navigations.
  * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
  * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  * that contains the [RSC](https://react.dev/reference/rsc/server-components)
@@ -382,6 +393,7 @@ export async function matchRSCServerRequest({
   basename,
   decodeReply,
   requestContext,
+  routeDiscovery,
   loadServerAction,
   decodeAction,
   decodeFormState,
@@ -401,6 +413,7 @@ export async function matchRSCServerRequest({
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
+  routeDiscovery?: RouteDiscovery;
   generateResponse: (
     match: RSCMatch,
     {
@@ -450,6 +463,7 @@ export async function matchRSCServerRequest({
       request,
       generateResponse,
       temporaryReferences,
+      routeDiscovery,
     );
     return response;
   }
@@ -496,6 +510,7 @@ export async function matchRSCServerRequest({
     generateResponse,
     temporaryReferences,
     allowedActionOrigins,
+    routeDiscovery,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -515,7 +530,26 @@ async function generateManifestResponse(
     },
   ) => Response,
   temporaryReferences: unknown,
+  routeDiscovery: RouteDiscovery | undefined,
 ) {
+  if (routeDiscovery?.mode === "initial") {
+    let payload: RSCManifestPayload = {
+      type: "manifest",
+      patches: getAllRoutePatches(routes, basename),
+    };
+    return generateResponse(
+      {
+        statusCode: 200,
+        headers: new Headers({
+          "Content-Type": "text/x-component",
+          Vary: "Content-Type",
+        }),
+        payload,
+      },
+      { temporaryReferences, onError: defaultOnError },
+    );
+  }
+
   let url = new URL(request.url);
   let pathParam = url.searchParams.get("paths");
   let pathnames = pathParam
@@ -541,17 +575,15 @@ async function generateManifestResponse(
     });
   let payload: RSCManifestPayload = {
     type: "manifest",
-    patches: (
-      await Promise.all([
-        ...matchedRoutes.map((route) => getManifestRoute(route)),
-        getAdditionalRoutePatches(
-          pathnames,
-          routes,
-          basename,
-          Array.from(routeIds),
-        ),
-      ])
-    ).flat(1),
+    patches: Promise.all([
+      ...matchedRoutes.map((route) => getManifestRoute(route)),
+      getAdditionalRoutePatches(
+        pathnames,
+        routes,
+        basename,
+        Array.from(routeIds),
+      ),
+    ]).then((r) => r.flat(1)),
   };
 
   return generateResponse(
@@ -559,7 +591,6 @@ async function generateManifestResponse(
       statusCode: 200,
       headers: new Headers({
         "Content-Type": "text/x-component",
-        Vary: "Content-Type",
       }),
       payload,
     },
@@ -775,6 +806,7 @@ async function generateRenderResponse(
   ) => Response,
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
+  routeDiscovery: RouteDiscovery | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -911,6 +943,7 @@ async function generateRenderResponse(
           temporaryReferences,
           skipRevalidation,
           ctx.redirect?.headers,
+          routeDiscovery,
         );
       },
     }),
@@ -977,7 +1010,6 @@ function generateRedirectResponse(
   // https://nodejs.org/api/http.html#class-httpclientrequest
   headers.delete("Content-Length");
   headers.set("Content-Type", "text/x-component");
-  headers.set("Vary", "Content-Type");
 
   return generateResponse(
     {
@@ -1009,6 +1041,7 @@ async function generateStaticContextResponse(
   temporaryReferences: unknown,
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
+  routeDiscovery: RouteDiscovery | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1058,6 +1091,7 @@ async function generateStaticContextResponse(
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
     basename: staticContext.basename,
+    routeDiscovery: routeDiscovery ?? { mode: "lazy" },
     actionData: staticContext.actionData,
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
@@ -1073,6 +1107,7 @@ async function generateStaticContextResponse(
       routeIdsToLoad,
       isDataRequest,
       staticContext,
+      routeDiscovery,
     );
 
   let payload: RSCRenderPayload | RSCActionPayload;
@@ -1090,7 +1125,7 @@ async function generateStaticContextResponse(
     payload = {
       ...baseRenderPayload,
       matches: [],
-      patches: [],
+      patches: Promise.resolve([]),
     };
   } else {
     // Await the full RSC render on all normal requests
@@ -1114,6 +1149,7 @@ async function getRenderPayload(
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
   staticContext: StaticHandlerContext,
+  routeDiscovery: RouteDiscovery | undefined,
 ) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
@@ -1148,18 +1184,24 @@ async function getRenderPayload(
     }),
   );
 
-  let patchesPromise = getAdditionalRoutePatches(
-    [staticContext.location.pathname],
-    routes,
-    basename,
-    staticContext.matches.map((m) => m.route.id),
-  );
-
-  let [matches, patches] = await Promise.all([matchesPromise, patchesPromise]);
+  let patches =
+    routeDiscovery?.mode === "initial" && !isDataRequest
+      ? getAllRoutePatches(routes, basename).then((patches) =>
+          patches.filter(
+            (patch) =>
+              !staticContext.matches.some((m) => m.route.id === patch.id),
+          ),
+        )
+      : getAdditionalRoutePatches(
+          [staticContext.location.pathname],
+          routes,
+          basename,
+          staticContext.matches.map((m) => m.route.id),
+        );
 
   return {
     ...baseRenderPayload,
-    matches,
+    matches: await matchesPromise,
     patches,
   };
 }
@@ -1345,6 +1387,32 @@ async function explodeLazyRoute(route: RSCRouteConfigEntry) {
     }
     route.lazy = undefined;
   }
+}
+
+async function getAllRoutePatches(
+  routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
+): Promise<RSCRouteManifest[]> {
+  let patches: RSCRouteManifest[] = [];
+
+  async function traverse(
+    route: RSCRouteConfigEntry,
+    parentId: string | undefined,
+  ) {
+    let manifestRoute = await getManifestRoute({ ...route, parentId });
+    patches.push(manifestRoute);
+    if ("children" in route && route.children?.length) {
+      for (let child of route.children) {
+        await traverse(child, route.id);
+      }
+    }
+  }
+
+  for (let route of routes) {
+    await traverse(route, undefined);
+  }
+
+  return patches.filter((p) => !!p.parentId);
 }
 
 async function getAdditionalRoutePatches(

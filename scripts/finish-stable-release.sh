@@ -44,6 +44,7 @@ if [[ -n $(git show-ref refs/heads/changeset-release/release-next) ]]; then
 fi
 
 ./scripts/delete-pre-tags.sh
+./scripts/delete-nightly-tags.sh
 
 set +e
 set +x

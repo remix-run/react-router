@@ -41,6 +41,13 @@ export class PlaywrightFixture {
       throw new Error(
         "Unexpected null response, possible about:blank request or same-URL redirect",
       );
+
+    if (waitForHydration === false) {
+      await this.page.waitForFunction(
+        () => !!document.body && document.body.children.length > 0,
+      );
+    }
+
     return response;
   }
 
@@ -226,7 +233,7 @@ export class PlaywrightFixture {
 }
 
 export async function getHtml(page: Page, selector?: string) {
-  let html = await page.content();
+  let html = await getPageContent(page);
   let selectedHtml = selector
     ? await selectHtml(html, selector)
     : await prettyHtml(html);
@@ -249,6 +256,29 @@ export async function selectHtml(source: string, selector: string) {
 
 export async function prettyHtml(source: string) {
   return prettier.format(source, { parser: "html" });
+}
+
+async function getPageContent(page: Page) {
+  // Some tests intentionally use `goto(..., false)` so they can inspect the
+  // server-rendered document before hydration settles. In that brief window,
+  // Playwright can throw while the new document is still swapping in.
+  for (let i = 0; ; i++) {
+    try {
+      return await page.content();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.includes(
+          "Unable to retrieve content because the page is navigating and changing the content.",
+        ) ||
+        i >= 9
+      ) {
+        throw error;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  }
 }
 
 async function doAndWait(

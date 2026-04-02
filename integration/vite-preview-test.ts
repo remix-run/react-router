@@ -18,7 +18,7 @@ test.describe("Vite preview", () => {
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
-        templateName: "vite-6-template",
+        templateName: "vite-8-template",
       }),
       "app/root.tsx": tsx`
         import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -80,7 +80,7 @@ test.describe("Vite preview", () => {
       `,
     });
 
-    const { port } = await vitePreview(files, "vite-6-template");
+    const { port } = await vitePreview(files, "vite-8-template");
     await page.goto(`http://localhost:${port}/`, {
       waitUntil: "networkidle",
     });
@@ -101,7 +101,7 @@ test.describe("Vite preview", () => {
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
-        templateName: "vite-6-template",
+        templateName: "vite-8-template",
       }),
       "app/root.tsx": tsx`
         import { Links, Meta, Outlet, Scripts, Link } from "react-router";
@@ -147,7 +147,7 @@ test.describe("Vite preview", () => {
       `,
     });
 
-    const { port } = await vitePreview(files, "vite-6-template");
+    const { port } = await vitePreview(files, "vite-8-template");
     await page.goto(`http://localhost:${port}/`, {
       waitUntil: "networkidle",
     });
@@ -177,7 +177,7 @@ test.describe("Vite preview", () => {
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
-        templateName: "vite-6-template",
+        templateName: "vite-8-template",
       }),
       "app/root.tsx": tsx`
         import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -193,6 +193,9 @@ test.describe("Vite preview", () => {
                 <div id="content">
                   <Outlet />
                 </div>
+                {Array.from({ length: 100 }).map((_, i) => (
+                  <p key={i}>Filler content {i + 1}</p>
+                ))}
                 <Scripts />
               </body>
             </html>
@@ -222,7 +225,7 @@ test.describe("Vite preview", () => {
       `,
     });
 
-    const { port } = await vitePreview(files, "vite-6-template");
+    const { port } = await vitePreview(files, "vite-8-template");
     await page.goto(`http://localhost:${port}/`, {
       waitUntil: "networkidle",
     });
@@ -251,7 +254,7 @@ test.describe("Vite preview", () => {
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
-        templateName: "vite-6-template",
+        templateName: "vite-8-template",
       }),
       "app/root.tsx": tsx`
         import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -300,7 +303,7 @@ test.describe("Vite preview", () => {
       `,
     });
 
-    const { port } = await vitePreview(files, "vite-6-template");
+    const { port } = await vitePreview(files, "vite-8-template");
     await page.goto(`http://localhost:${port}/products/123`, {
       waitUntil: "networkidle",
     });
@@ -326,7 +329,7 @@ test.describe("Vite preview", () => {
       }),
       "vite.config.ts": await viteConfig.basic({
         port,
-        templateName: "vite-6-template",
+        templateName: "vite-8-template",
       }),
       "app/root.tsx": tsx`
         import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -371,7 +374,7 @@ test.describe("Vite preview", () => {
       `,
     });
 
-    const { port } = await vitePreview(files, "vite-6-template");
+    const { port } = await vitePreview(files, "vite-8-template");
     await page.goto(`http://localhost:${port}/`, {
       waitUntil: "networkidle",
     });

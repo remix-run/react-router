@@ -70,7 +70,7 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
-import { preloadVite, getVite } from "./vite";
+import { preloadVite, getVite, defineCompilerOptions } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
@@ -1364,10 +1364,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 : []),
             ],
           },
-          esbuild: {
-            jsx: "automatic",
-            jsxDev: viteCommand !== "build",
-          },
+          ...defineCompilerOptions({
+            oxc: {
+              jsx: {
+                runtime: "automatic",
+                development: viteCommand !== "build",
+              },
+            },
+            esbuild: {
+              jsx: "automatic",
+              jsxDev: viteCommand !== "build",
+            },
+          }),
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
@@ -1716,7 +1724,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         async function getHandler(): Promise<RequestHandler> {
           if (cachedHandler) return cachedHandler;
 
-          let serverBuildFiles: string[] = [];
+          let bundledHandlers: Array<{
+            handler: RequestHandler;
+            routes: DataRouteObject[] | null;
+          }> = [];
 
           // Get build manifest to find server bundles
           let buildManifest =
@@ -1729,11 +1740,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               : null);
 
           if (buildManifest?.serverBundles) {
+            let routesByServerBundleId =
+              getRoutesByServerBundleId(buildManifest);
+
             // Load all server bundle files
             for (let bundle of Object.values(buildManifest.serverBundles)) {
-              serverBuildFiles.push(
-                path.resolve(ctx.rootDirectory, bundle.file),
+              let build: ServerBuild = await import(
+                url.pathToFileURL(path.resolve(ctx.rootDirectory, bundle.file))
+                  .href
               );
+              bundledHandlers.push({
+                handler: createRequestHandler(build, "production"),
+                routes: createPrerenderRoutes(
+                  routesByServerBundleId[bundle.id] ?? {},
+                ),
+              });
             }
           } else {
             let serverEntryPath = path.resolve(
@@ -1741,23 +1762,44 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "index.js",
             );
 
-            // Single server build
-            serverBuildFiles.push(serverEntryPath);
-          }
-
-          // Import all bundles and create handlers
-          let handlers: RequestHandler[] = [];
-          for (let file of serverBuildFiles) {
-            let build: ServerBuild = await import(url.pathToFileURL(file).href);
-            handlers.push(createRequestHandler(build, "production"));
+            let build: ServerBuild = await import(
+              url.pathToFileURL(serverEntryPath).href
+            );
+            bundledHandlers.push({
+              handler: createRequestHandler(build, "production"),
+              routes: null,
+            });
           }
 
           // Return a combined handler that tries each bundle until one handles the request.
           // A 404 response means "not my route", so we try the next bundle.
           cachedHandler = async (request, loadContext) => {
             let response: Response | undefined;
+            let handlersToTry = bundledHandlers;
 
-            for (let handler of handlers) {
+            if (buildManifest?.serverBundles) {
+              let pathname = new URL(request.url).pathname;
+
+              // A non-index bundle can still return a 200 for `/` by rendering only
+              // the root route, so prefer the bundle with the deepest route match.
+              handlersToTry = bundledHandlers
+                .map((entry, index) => ({
+                  entry,
+                  index,
+                  matchDepth:
+                    matchRoutes(
+                      entry.routes ?? [],
+                      pathname,
+                      ctx.reactRouterConfig.basename,
+                    )?.length ?? -1,
+                }))
+                .sort(
+                  (a, b) => b.matchDepth - a.matchDepth || a.index - b.index,
+                )
+                .map(({ entry }) => entry);
+            }
+
+            for (let { handler } of handlersToTry) {
               response = await handler(request, loadContext);
 
               if (response.status !== 404) {
@@ -1769,7 +1811,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return response;
             }
 
-            throw new Error("No handlers were found for the request.");
+            let url = new URL(request.url);
+            throw new Error(
+              "No handlers were found for the request: " +
+                url.pathname +
+                url.search,
+            );
           };
 
           return cachedHandler;
@@ -2555,15 +2602,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { future } = ctx.reactRouterConfig;
 
-        // Prerender during SSR build only
-        if (
-          future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
-            : !viteConfigEnv.isSsrBuild
-        ) {
-          return [];
-        }
-
         // Skip prerendering if the future flag is disabled
         if (!future.unstable_previewServerPrerendering) {
           return [];
@@ -2825,10 +2863,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
           }
 
-          let serverBuildDirectory = future.v8_viteEnvironmentApi
-            ? this.environment.config?.build?.outDir
-            : (ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx.reactRouterConfig));
+          let serverBuildDirectory = getServerBuildDirectory(
+            ctx.reactRouterConfig,
+          );
 
           // Cleanup - we no longer need the server build assets
           viteConfig.logger.info(
@@ -3966,22 +4003,7 @@ export async function getEnvironmentOptionsResolvers(
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
-    // This is a workaround for type errors when running in vite-ecosystem-ci
-    // against rolldown-vite since "preserveEntrySignatures" is not yet
-    // supported. We're doing this instead of using `ts-ignore` so we're still
-    // type checking against regular Vite build options. Once it's supported,
-    // this custom type can be removed and the build config can be inlined.
-    type RollupOptionsWithPreserveEntrySignatures =
-      Vite.BuildOptions["rollupOptions"] extends {
-        preserveEntrySignatures: any;
-      }
-        ? Vite.BuildOptions["rollupOptions"]
-        : Vite.BuildOptions["rollupOptions"] & {
-            // We hard-code the one value we're using. If it's not valid in
-            // Rollup, the build will fail.
-            preserveEntrySignatures: "exports-only";
-          };
-    const rollupOptions: RollupOptionsWithPreserveEntrySignatures = {
+    const rollupOptions = {
       preserveEntrySignatures: "exports-only",
       // Silence Rollup "use client" warnings
       // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
@@ -3999,7 +4021,7 @@ export async function getEnvironmentOptionsResolvers(
           defaultHandler(warning);
         }
       },
-    };
+    } satisfies NonNullable<Vite.BuildOptions["rollupOptions"]>;
 
     return {
       build: {

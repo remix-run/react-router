@@ -157,7 +157,9 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       isSpaMode: init.spaMode,
       prerender: init.prerender,
       requestDocument(href: string) {
-        let file = new URL(href, "test://test").pathname + "/index.html";
+        let pathname = new URL(href, "test://test").pathname;
+        let file =
+          (pathname.endsWith("/") ? pathname : pathname + "/") + "index.html";
         let clientDir = path.join(projectDir, "build", "client");
         let mainPath = path.join(clientDir, file);
         let fallbackPath = path.join(clientDir, "__spa-fallback.html");
@@ -334,20 +336,19 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         );
         app.get("*", (req, res, next) => {
           let dir = path.join(fixture.projectDir, "build", "client");
-          let file;
+          let filePath;
           if (req.path.endsWith(".data")) {
-            file = req.path;
+            filePath = path.join(dir, req.path);
           } else {
-            let mainPath = req.path + "/index.html";
-            let fallbackPath = "__spa-fallback.html";
-            let fallbackPath2 = "index.html";
-            file = existsSync(mainPath)
+            let mainPath = path.join(dir, req.path, "index.html");
+            let fallbackPath = path.join(dir, "__spa-fallback.html");
+            let fallbackPath2 = path.join(dir, "index.html");
+            filePath = existsSync(mainPath)
               ? mainPath
               : existsSync(fallbackPath)
                 ? fallbackPath
                 : fallbackPath2;
           }
-          let filePath = path.join(dir, file);
           if (existsSync(filePath)) {
             res.sendFile(filePath, next);
           } else {
@@ -510,9 +511,6 @@ function reactRouterBuild(
     env: {
       ...process.env,
       NODE_ENV: mode || ServerMode.Production,
-      // Ensure build can pass in Rolldown. This can be removed once
-      // "preserveEntrySignatures" is supported in rolldown-vite.
-      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 
