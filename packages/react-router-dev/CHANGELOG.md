@@ -1,5 +1,81 @@
 # `@react-router/dev`
 
+## 7.14.0
+
+### Minor Changes
+
+- Add support for Vite 8 ([#14876](https://github.com/remix-run/react-router/pull/14876))
+
+### Patch Changes
+
+- support for prerendering multiple server bundles with v8\_viteEnvironmentApi ([#14921](https://github.com/remix-run/react-router/pull/14921))
+
+- rsc framework mode prerender / spa mode support ([#14907](https://github.com/remix-run/react-router/pull/14907))
+
+- UNSTABLE RSC FRAMEWORK MODE BREAKING CHANGE - Existing route module exports remain unchanged from stable v7 non-RSC mode, but new exports are added for RSC mode. If you want to use RSC features, you will need to update your route modules to export the new annotations. ([#14901](https://github.com/remix-run/react-router/pull/14901))
+
+  If you are using RSC framework mode currently, you will need to update your route modules to the new conventions. The following route module components have their own mutually exclusive server component counterparts:
+
+  | Server Component Export | Client Component  |
+  | ----------------------- | ----------------- |
+  | `ServerComponent`       | `default`         |
+  | `ServerErrorBoundary`   | `ErrorBoundary`   |
+  | `ServerLayout`          | `Layout`          |
+  | `ServerHydrateFallback` | `HydrateFallback` |
+
+  If you were previously exporting a `ServerComponent`, your `ErrorBoundary`, `Layout`, and `HydrateFallback` were also server components. If you want to keep those as server components, you can rename them and prefix them with `Server`. If you were previously importing the implementations of those components from a client module, you can simply inline them.
+
+  Example:
+
+  Before
+
+  ```tsx
+  import { ErrorBoundary as ClientErrorBoundary } from "./client";
+
+  export function ServerComponent() {
+    // ...
+  }
+
+  export function ErrorBoundary() {
+    return <ClientErrorBoundary />;
+  }
+
+  export function Layout() {
+    // ...
+  }
+
+  export function HydrateFallback() {
+    // ...
+  }
+  ```
+
+  After
+
+  ```tsx
+  export function ServerComponent() {
+    // ...
+  }
+
+  export function ErrorBoundary() {
+    // previous implementation of ClientErrorBoundary, this is now a client component
+  }
+
+  export function ServerLayout() {
+    // rename previous Layout export to ServerLayout to make it a server component
+  }
+
+  export function ServerHydrateFallback() {
+    // rename previous HydrateFallback export to ServerHydrateFallback to make it a server component
+  }
+  ```
+
+- update the reveal command to support rsc for `entry.client`, `entry.rsc`, `entry.ssr` ([#14904](https://github.com/remix-run/react-router/pull/14904))
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+  - `@react-router/node@7.14.0`
+  - `@react-router/serve@7.14.0`
+
 ## 7.13.2
 
 ### Patch Changes
@@ -13,6 +89,7 @@
   By default, React Router normalizes the `request.url` passed to your `loader`, `action`, and `middleware` functions by removing React Router's internal implementation details (`.data` suffixes, `index` + `_routes` query params).
 
   Enabling this flag removes that normalization and passes the raw HTTP `request` instance to your handlers. This provides a few benefits:
+
   - Reduces server-side overhead by eliminating multiple `new Request()` calls on the critical path
   - Allows you to distinguish document from data requests in your handlers base don the presence of a `.data` suffix (useful for observability purposes)
 
@@ -88,25 +165,25 @@
 
   | URL `/a/b/c` | **HTTP pathname** | **`request` pathname\`** |
   | ------------ | ----------------- | ------------------------ |
-  | **Document** | `/a/b/c`          | `/a/b/c` ✅              |
-  | **Data**     | `/a/b/c.data`     | `/a/b/c` ✅              |
+  | **Document** | `/a/b/c`          | `/a/b/c` ✅               |
+  | **Data**     | `/a/b/c.data`     | `/a/b/c` ✅               |
 
   | URL `/a/b/c/` | **HTTP pathname** | **`request` pathname\`** |
   | ------------- | ----------------- | ------------------------ |
-  | **Document**  | `/a/b/c/`         | `/a/b/c/` ✅             |
+  | **Document**  | `/a/b/c/`         | `/a/b/c/` ✅              |
   | **Data**      | `/a/b/c.data`     | `/a/b/c` ⚠️              |
 
   With this flag enabled, these pathnames will be made consistent though a new `_.data` format for client-side `.data` requests:
 
   | URL `/a/b/c` | **HTTP pathname** | **`request` pathname\`** |
   | ------------ | ----------------- | ------------------------ |
-  | **Document** | `/a/b/c`          | `/a/b/c` ✅              |
-  | **Data**     | `/a/b/c.data`     | `/a/b/c` ✅              |
+  | **Document** | `/a/b/c`          | `/a/b/c` ✅               |
+  | **Data**     | `/a/b/c.data`     | `/a/b/c` ✅               |
 
   | URL `/a/b/c/` | **HTTP pathname**  | **`request` pathname\`** |
   | ------------- | ------------------ | ------------------------ |
-  | **Document**  | `/a/b/c/`          | `/a/b/c/` ✅             |
-  | **Data**      | `/a/b/c/_.data` ⬅️ | `/a/b/c/` ✅             |
+  | **Document**  | `/a/b/c/`          | `/a/b/c/` ✅              |
+  | **Data**      | `/a/b/c/_.data` ⬅️ | `/a/b/c/` ✅              |
 
   This a bug fix but we are putting it behind an opt-in flag because it has the potential to be a "breaking bug fix" if you are relying on the URL format for any other application or caching logic.
 
@@ -364,6 +441,7 @@
 - Stabilize middleware and context APIs. ([#14215](https://github.com/remix-run/react-router/pull/14215))
 
   We have removed the `unstable_` prefix from the following APIs and they are now considered stable and ready for production use:
+
   - [`RouterContextProvider`](https://reactrouter.com/api/utils/RouterContextProvider)
   - [`createContext`](https://reactrouter.com/api/utils/createContext)
   - `createBrowserRouter` [`getContext`](https://reactrouter.com/api/data-routers/createBrowserRouter#optsgetcontext) option
@@ -1106,6 +1184,7 @@
   ```
 
   This initial implementation targets type inference for:
+
   - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
@@ -1120,6 +1199,7 @@
   ```
 
   Check out our docs for more:
+
   - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
   - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
@@ -1319,6 +1399,7 @@
 - Vite: Provide `Unstable_ServerBundlesFunction` and `Unstable_VitePluginConfig` types ([#8654](https://github.com/remix-run/remix/pull/8654))
 
 - Vite: add `--sourcemapClient` and `--sourcemapServer` flags to `remix vite:build` ([#8613](https://github.com/remix-run/remix/pull/8613))
+
   - `--sourcemapClient`
 
   - `--sourcemapClient=inline`
@@ -1655,6 +1736,7 @@
 - Add support for `clientLoader`/`clientAction`/`HydrateFallback` route exports ([RFC](https://github.com/remix-run/remix/discussions/7634)) ([#8173](https://github.com/remix-run/remix/pull/8173))
 
   Remix now supports loaders/actions that run on the client (in addition to, or instead of the loader/action that runs on the server). While we still recommend server loaders/actions for the majority of your data needs in a Remix app - these provide some levers you can pull for more advanced use-cases such as:
+
   - Leveraging a data source local to the browser (i.e., `localStorage`)
   - Managing a client-side cache of server data (like `IndexedDB`)
   - Bypassing the Remix server in a BFF setup and hitting your API directly from the browser
@@ -2058,6 +2140,7 @@
 - Output esbuild metafiles for bundle analysis ([#6772](https://github.com/remix-run/remix/pull/6772))
 
   Written to server build directory (`build/` by default):
+
   - `metafile.css.json`
   - `metafile.js.json` (browser JS)
   - `metafile.server.json` (server JS)
@@ -2155,6 +2238,7 @@
 - built-in tls support ([#6483](https://github.com/remix-run/remix/pull/6483))
 
   New options:
+
   - `--tls-key` / `tlsKey`: TLS key
   - `--tls-cert` / `tlsCert`: TLS Certificate
 
@@ -2425,6 +2509,7 @@
   ```
 
   The dev server will:
+
   - force `NODE_ENV=development` and warn you if it was previously set to something else
   - rebuild your app whenever your Remix app code changes
   - restart your app server whenever rebuilds succeed
