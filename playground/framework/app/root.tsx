@@ -6,6 +6,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import type { Route } from "./+types/root";
+
+export function loader({ params }: Route.LoaderArgs) {
+  return { name: `Super cool product #${params.id}` };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

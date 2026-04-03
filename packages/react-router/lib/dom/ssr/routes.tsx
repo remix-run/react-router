@@ -4,6 +4,7 @@ import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
   DataRouteObject,
+  LoaderFunction,
   LoaderFunctionArgs,
   RouteManifest,
   ShouldRevalidateFunction,
@@ -360,6 +361,11 @@ export function createClientRoutes(
               return fetchServerLoader(singleFetch);
             }
 
+            let batchLoaderPromise: unknown;
+            if (routeModule.clientLoader.unstable_batch) {
+              batchLoaderPromise = fetchServerLoader(singleFetch);
+            }
+
             return routeModule.clientLoader({
               request,
               params,
@@ -380,7 +386,7 @@ export function createClientRoutes(
                 }
 
                 // Call the server loader for client-side navigations
-                return fetchServerLoader(singleFetch);
+                return batchLoaderPromise || fetchServerLoader(singleFetch);
               },
             });
           });
@@ -399,6 +405,8 @@ export function createClientRoutes(
         route.hasLoader,
         isSpaMode,
       );
+      dataRoute.loader.unstable_batch =
+        routeModule.clientLoader?.unstable_batch;
 
       dataRoute.action = (
         {
@@ -494,14 +502,28 @@ export function createClientRoutes(
                   )
                 : await getLazyRoute();
               invariant(clientLoader, "No `clientLoader` export found");
-              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
-                clientLoader({
+              let loader: LoaderFunction = (
+                args: LoaderFunctionArgs,
+                singleFetch?: unknown,
+              ) => {
+                let batchLoaderPromise: unknown;
+                if (clientLoader.unstable_batch) {
+                  batchLoaderPromise = fetchServerLoader(singleFetch);
+                }
+
+                return clientLoader({
                   ...args,
                   async serverLoader() {
                     preventInvalidServerHandlerCall("loader", route);
-                    return fetchServerLoader(singleFetch);
+                    return batchLoaderPromise || fetchServerLoader(singleFetch);
                   },
                 });
+              };
+
+              loader.unstable_batch =
+                clientLoader.unstable_batch;
+
+              return loader;
             }
           : undefined,
         action: route.hasClientAction

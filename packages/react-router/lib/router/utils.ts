@@ -329,14 +329,16 @@ export type MiddlewareFunction<Result = unknown> = (
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = DefaultContext>
-  extends DataFunctionArgs<Context> {}
+export interface LoaderFunctionArgs<
+  Context = DefaultContext,
+> extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = DefaultContext>
-  extends DataFunctionArgs<Context> {}
+export interface ActionFunctionArgs<
+  Context = DefaultContext,
+> extends DataFunctionArgs<Context> {}
 
 /**
  * Loaders and actions can return anything
@@ -353,7 +355,7 @@ export type LoaderFunction<Context = DefaultContext> = {
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown,
   ): DataFunctionReturnValue;
-} & { hydrate?: boolean };
+} & { hydrate?: boolean; unstable_batch?: boolean };
 
 /**
  * Route action function signature
@@ -506,8 +508,9 @@ export interface DataStrategyMatch extends RouteMatch<string, DataRouteObject> {
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = DefaultContext>
-  extends DataFunctionArgs<Context> {
+export interface DataStrategyFunctionArgs<
+  Context = DefaultContext,
+> extends DataFunctionArgs<Context> {
   /**
    * Matches for this route extended with Data strategy APIs
    */
