@@ -2,6 +2,16 @@
   "name": "@react-router/dev",
   "version": "7.14.0",
   "description": "Dev tools and CLI for React Router",
+  "keywords": [
+    "react",
+    "router",
+    "route",
+    "routing",
+    "history",
+    "link",
+    "vite",
+    "vite-plugin"
+  ],
   "homepage": "https://reactrouter.com",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -43,6 +53,17 @@
   },
   "bin": {
     "react-router": "bin.js"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "rolldown": {
+      "type": "incompatible",
+      "reason": "Uses Vite-specific APIs"
+    },
+    "rollup": {
+      "type": "incompatible",
+      "reason": "Uses Vite-specific APIs"
+    }
   },
   "scripts": {
     "build": "wireit",
