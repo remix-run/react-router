@@ -1771,13 +1771,6 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   preventScrollReset?: boolean;
 
   /**
-   * A function to call when the form is submitted. If you call
-   * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
-   * then this form will not do anything.
-   */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
-
-  /**
    * Specify the default revalidation behavior after this submission
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
