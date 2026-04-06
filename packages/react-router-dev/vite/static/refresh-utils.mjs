@@ -3,9 +3,29 @@
 
 function debounce(fn, delay) {
   let handle;
+  let running = false;
+  let queued = false;
+
+  async function execute() {
+    if (running) {
+      queued = true;
+      return;
+    }
+    running = true;
+    try {
+      await fn();
+    } finally {
+      running = false;
+      if (queued) {
+        queued = false;
+        handle = setTimeout(execute, delay);
+      }
+    }
+  }
+
   return () => {
     clearTimeout(handle);
-    handle = setTimeout(fn, delay);
+    handle = setTimeout(execute, delay);
   };
 }
 
@@ -15,14 +35,15 @@ const enqueueUpdate = debounce(async () => {
   if (routeUpdates.size > 0) {
     manifest = JSON.parse(JSON.stringify(__reactRouterManifest));
 
+    let processedIds = [];
     for (let route of routeUpdates.values()) {
-      manifest.routes[route.id] = route;
       let imported = window.__reactRouterRouteModuleUpdates.get(route.id);
       if (!imported) {
-        throw Error(
-          `[react-router:hmr] No module update found for route ${route.id}`,
-        );
+        // Module not loaded yet — skip this route for now. It will be
+        // processed on the next enqueueUpdate call once the module arrives.
+        continue;
       }
+      manifest.routes[route.id] = route;
       let routeModule = {
         ...imported,
         // react-refresh takes care of updating these in-place,
@@ -41,29 +62,38 @@ const enqueueUpdate = debounce(async () => {
           : imported.HydrateFallback,
       };
       window.__reactRouterRouteModules[route.id] = routeModule;
+      processedIds.push(route.id);
     }
 
-    let needsRevalidation = new Set(
-      Array.from(routeUpdates.values())
-        .filter(
-          (route) =>
-            route.hasLoader ||
-            route.hasClientLoader ||
-            route.hasClientMiddleware,
-        )
-        .map((route) => route.id),
-    );
+    if (processedIds.length > 0) {
+      let needsRevalidation = new Set(
+        processedIds
+          .map((id) => routeUpdates.get(id))
+          .filter(
+            (route) =>
+              route.hasLoader ||
+              route.hasClientLoader ||
+              route.hasClientMiddleware,
+          )
+          .map((route) => route.id),
+      );
 
-    let routes = __reactRouterDataRouter.createRoutesForHMR(
-      needsRevalidation,
-      manifest.routes,
-      window.__reactRouterRouteModules,
-      window.__reactRouterContext.ssr,
-      window.__reactRouterContext.isSpaMode,
-    );
-    __reactRouterDataRouter._internalSetRoutes(routes);
-    routeUpdates.clear();
-    window.__reactRouterRouteModuleUpdates.clear();
+      let routes = __reactRouterDataRouter.createRoutesForHMR(
+        needsRevalidation,
+        manifest.routes,
+        window.__reactRouterRouteModules,
+        window.__reactRouterContext.ssr,
+        window.__reactRouterContext.isSpaMode,
+      );
+      __reactRouterDataRouter._internalSetRoutes(routes);
+
+      for (let id of processedIds) {
+        routeUpdates.delete(id);
+        window.__reactRouterRouteModuleUpdates.delete(id);
+      }
+    } else {
+      manifest = null;
+    }
   }
 
   try {
