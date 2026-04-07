@@ -360,13 +360,14 @@ export function configRoutesToRouteManifest(
   let routeManifest: RouteManifest = {};
 
   function walk(route: RouteConfigEntry, parentId?: string) {
-    let id = route.id || createRouteId(route.file);
+    let normalizedFile = Path.isAbsolute(route.file)
+      ? Path.relative(appDirectory, route.file)
+      : route.file;
+    let id = route.id || createRouteId(normalizedFile);
     let manifestItem: RouteManifestEntry = {
       id,
       parentId,
-      file: Path.isAbsolute(route.file)
-        ? Path.relative(appDirectory, route.file)
-        : route.file,
+      file: normalizedFile,
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
