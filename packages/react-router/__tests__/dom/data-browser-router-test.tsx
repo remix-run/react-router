@@ -30,6 +30,7 @@ import {
   useAsyncError,
   useFetcher,
   useFetchers,
+  useFormAction,
   useLoaderData,
   useLocation,
   useNavigate,
@@ -7714,6 +7715,71 @@ function testDomRouter(
             </div>"
           `);
         });
+        it("fetcher.submit with useFormAction() should not double basename", async () => {
+          function Comp() {
+            let fetcher = useFetcher();
+            let action = useFormAction();
+            return (
+              <>
+                <p>{`data:${fetcher.data}`}</p>
+                <p>{`action:${action}`}</p>
+                <button
+                  onClick={() =>
+                    fetcher.submit({}, { method: "post", action })
+                  }
+                >
+                  submit
+                </button>
+              </>
+            );
+          }
+
+          function ErrorComp() {
+            let error = useRouteError() as any;
+            return <p>{`error:${error.status || error.message}`}</p>;
+          }
+
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: "article",
+                    Component: Comp,
+                    ErrorBoundary: ErrorComp,
+                    action: () => "ARTICLE_ACTION",
+                  },
+                ],
+              },
+            ],
+            {
+              basename: "/base",
+              window: getWindow("/base/article"),
+            },
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          // Verify initial render shows correct action URL
+          expect(screen.getByText("action:/base/article")).toBeDefined();
+
+          fireEvent.click(screen.getByText("submit"));
+          await waitFor(() => screen.getByText(/ARTICLE_ACTION/));
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:ARTICLE_ACTION
+              </p>
+              <p>
+                action:/base/article
+              </p>
+              <button>
+                submit
+              </button>
+            </div>"
+          `);
+        });
+
         it("prepends the basename to fetcher.Form paths", async () => {
           let router = createTestRouter(
             [
