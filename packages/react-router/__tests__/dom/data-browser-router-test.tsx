@@ -567,20 +567,14 @@ function testDomRouter(
           new Promise((resolve) => setTimeout(resolve, ms));
 
         // Kick off some async data load _before_ any react stuff
-        let suspensePromise = new Promise(async (r) => {
-          await sleep(100);
-          r("DATA");
-        });
+        let suspensePromise = sleep(100).then(() => "DATA");
 
         // Create a router that will initialize shortly after the suspense boundary resolves
         let router = createTestRouter([
           {
             path: "/",
-            async loader() {
-              // Only fails when this is around 200ms - passes if you bump it to ~500ms
-              await sleep(200);
-              return "LOADER";
-            },
+            // Only fails when this is around 200ms - passes if you bump it to ~500ms
+            loader: () => sleep(200).then(() => "LOADER"),
             Component: () => <p>Data:{useLoaderData()}</p>,
             HydrateFallback: () => "Hydrate Fallback",
           },
@@ -589,7 +583,7 @@ function testDomRouter(
 
         // Render a component that will suspend until `suspensePromise` resolves, then
         // renders RouterProvider which sets up listeners for the router state
-        function AppRoutes() {
+        function App() {
           // @ts-expect-error Needs React 19 types
           React.use(suspensePromise);
           return <RouterProvider router={router} />;
@@ -600,7 +594,7 @@ function testDomRouter(
         await act(async () => {
           render(
             <React.Suspense fallback="Suspense Fallback">
-              <AppRoutes />
+              <App />
             </React.Suspense>,
           );
         });
