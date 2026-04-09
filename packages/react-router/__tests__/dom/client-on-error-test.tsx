@@ -613,4 +613,34 @@ describe(`handleError`, () => {
     await waitFor(() => screen.getByText("FETCH"));
     expect(spy.mock.calls.length).toBe(1);
   });
+
+  it("handles immediate errors already present in initial router state", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            throw new Error("immediate loader error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      { hydrationData: { errors: { "0": new Error("immediate loader error!") }, loaderData: {} } },
+    );
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:immediate loader error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      unstable_pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
 });
