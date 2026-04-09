@@ -624,9 +624,13 @@ export function RouterProvider({
   let initialized = state.initialized;
   React.useLayoutEffect(() => {
     if (!initialized && router.state.initialized) {
-      logErrorsAndSetState(router.state);
+      setState(router.state, {
+        deletedFetchers: [],
+        flushSync: false,
+        newErrors: null,
+      });
     }
-  }, [initialized, logErrorsAndSetState, router.state]);
+  }, [initialized, setState, router.state]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
