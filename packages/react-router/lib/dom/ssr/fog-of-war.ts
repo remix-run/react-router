@@ -4,7 +4,11 @@ import type {
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
+import {
+  joinPaths,
+  matchRoutes,
+  removeDoubleSlashes,
+} from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -204,12 +208,7 @@ export function getManifestPath(
   basename: string | undefined,
 ) {
   let manifestPath = _manifestPath || "/__manifest";
-
-  if (basename == null) {
-    return manifestPath;
-  }
-
-  return `${basename}${manifestPath}`.replace(/\/+/g, "/");
+  return basename == null ? manifestPath : joinPaths([basename, manifestPath]);
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
