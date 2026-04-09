@@ -15,6 +15,7 @@ import {
   redirect,
   data,
   stripBasename,
+  removeTrailingSlash,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
@@ -639,9 +640,9 @@ export function singleFetchUrl(
     if (url.pathname === "/") {
       url.pathname = `_root.${extension}`;
     } else if (basename && stripBasename(url.pathname, basename) === "/") {
-      url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
+      url.pathname = `${removeTrailingSlash(basename)}/_root.${extension}`;
     } else {
-      url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+      url.pathname = `${removeTrailingSlash(url.pathname)}.${extension}`;
     }
   }
 
