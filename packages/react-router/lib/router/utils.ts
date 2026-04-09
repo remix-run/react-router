@@ -1937,6 +1937,9 @@ export type RedirectFunction = (
  * Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
  * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * This utility accepts absolute URLs and can navigate to external domains, so
+ * the application should validate any user-supplied inputs to redirects.
+ *
  * @example
  * import { redirect } from "react-router";
  *
@@ -1978,6 +1981,9 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  * that will force a document reload to the new location. Sets the status code
  * and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
  * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
+ *
+ * This utility accepts absolute URLs and can navigate to external domains, so
+ * the application should validate any user-supplied inputs to redirects.
  *
  * ```tsx filename=routes/logout.tsx
  * import { redirectDocument } from "react-router";
