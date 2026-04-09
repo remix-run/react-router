@@ -106,6 +106,7 @@ export const viteConfig = {
           ? "import { reactRouter } from '@react-router/dev/vite';"
           : [
               "import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';",
+              "import react from '@vitejs/plugin-react';",
               "import rsc from '@vitejs/plugin-rsc';",
             ].join("\n")
       }
@@ -121,7 +122,7 @@ export const viteConfig = {
           ${args.mdx ? "mdx()," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
           ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
-          ${isRsc ? "rsc()," : ""}
+          ${isRsc ? "react(), rsc()," : ""}
           envOnlyMacros(),
         ];
 

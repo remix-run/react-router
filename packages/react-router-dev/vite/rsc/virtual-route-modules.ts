@@ -1,7 +1,293 @@
+import {
+  init as initEsModuleLexer,
+  parse as esModuleLexer,
+} from "es-module-lexer";
 import type * as Vite from "vite";
+
 import * as babel from "../babel";
-import { parse as esModuleLexer } from "es-module-lexer";
+import type { Cache } from "../cache";
 import { removeExports } from "../remove-exports";
+import {
+  type RouteChunkExportName,
+  detectRouteChunks as _detectRouteChunks,
+} from "../route-chunks";
+import { getVite, preloadVite } from "../vite";
+
+const ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR = `
+import * as ___EnsureClientRouteModuleForHMR_REACT___ from "react";
+export function EnsureClientRouteModuleForHMR___() { return ___EnsureClientRouteModuleForHMR_REACT___.createElement(___EnsureClientRouteModuleForHMR_REACT___.Fragment, null) }
+`;
+
+export function virtualRouteModulesPlugin({
+  environments: { client = ["client", "ssr"], server = ["rsc"] } = {},
+  isRouteModule,
+}: {
+  environments?: {
+    client?: string[];
+    server?: string[];
+  };
+  isRouteModule(filename: string): boolean;
+}) {
+  let clientEnvironments = new Set(client);
+  let serverEnvironments = new Set(server);
+  let cache: Cache = new Map();
+
+  async function createClientRouteEntry(id: string, code: string) {
+    let result = "";
+
+    let routeChunks = detectRouteChunks(cache, id, code);
+    let { staticExports } = await parseRouteExports(code);
+
+    validateRouteModuleExports(staticExports);
+
+    let needsReactImport = false;
+    for (let exportName of staticExports) {
+      if (isServerRouteExport(exportName)) {
+        continue;
+      }
+
+      if (
+        (exportName === "clientAction" || exportName === "clientLoader") &&
+        routeChunks.hasRouteChunkByExportName[
+          exportName as RouteChunkExportName
+        ]
+      ) {
+        result += `export const ${exportName} = async (...args) => import("${createId(id, "client-route-module", exportName)}").then(mod => mod.${exportName}(...args));\n`;
+      } else if (exportName === "HydrateFallback") {
+        needsReactImport = true;
+        result += `export const ${exportName} = React.lazy(() => import("${createId(
+          id,
+          "client-route-module",
+          routeChunks.hasRouteChunkByExportName[
+            exportName as RouteChunkExportName
+          ]
+            ? exportName
+            : "shared",
+        )}").then(mod => ({ default: mod.${exportName} })));\n`;
+      } else {
+        result += `export { ${exportName} } from "${createId(
+          id,
+          "client-route-module",
+          routeChunks.hasRouteChunkByExportName[
+            exportName as RouteChunkExportName
+          ]
+            ? exportName
+            : "shared",
+        )}";\n`;
+      }
+    }
+
+    if (needsReactImport) {
+      result = `import * as React from "react";\n${result}`;
+    }
+
+    return {
+      code: '"use client";\n' + result,
+    };
+  }
+
+  async function createServerRouteEntry(id: string, code: string) {
+    let result = "";
+
+    let routeChunks = detectRouteChunks(cache, id, code);
+    let { staticExports } = await parseRouteExports(code);
+
+    validateRouteModuleExports(staticExports);
+
+    let needsReactImport = false;
+
+    for (let exportName of staticExports) {
+      if (isClientRouteExport(exportName)) {
+        result += `export { ${exportName} } from "${createId(
+          id,
+          "client-route-module",
+          routeChunks.hasRouteChunkByExportName[
+            exportName as RouteChunkExportName
+          ]
+            ? exportName
+            : "shared",
+        )}";\n`;
+      } else if (isServerComponentExport(exportName)) {
+        needsReactImport = true;
+        result += `import { ${exportName} as ${exportName}WithoutCss } from "${createId(id, "server-route-module")}";\n`;
+        result += `export function ${exportName}(props) {\n`;
+        result += `  return React.createElement(React.Fragment, null,\n`;
+        result += `    import.meta.viteRsc.loadCss(),\n`;
+        result += `    React.createElement(EnsureClientRouteModuleForHMR___, null),\n`;
+        result += `    React.createElement(${exportName}WithoutCss, props),\n`;
+        result += `  );\n`;
+        result += `}\n`;
+      } else {
+        result += `export { ${exportName} } from "${createId(id, "server-route-module")}";\n`;
+      }
+    }
+
+    if (needsReactImport) {
+      result = `import * as React from "react";
+import { EnsureClientRouteModuleForHMR___ } from "${createId(id, "client-route-module", "shared")}";\n
+${result}`;
+    }
+
+    return {
+      code: result,
+    };
+  }
+
+  function createServerRouteModule(code: string) {
+    const ast = babel.parse(code, {
+      sourceType: "module",
+    });
+    removeExports(ast, CLIENT_ROUTE_EXPORTS);
+    return babel.generate(ast);
+  }
+
+  async function createClientRouteModuleChunk(
+    id: string,
+    code: string,
+    chunk: "shared" | string,
+  ) {
+    let routeChunks = detectRouteChunks(cache, id, code);
+
+    const ast = babel.parse(code, {
+      sourceType: "module",
+    });
+    if (chunk === "shared") {
+      removeExports(ast, [
+        ...SERVER_ROUTE_EXPORTS,
+        ...routeChunks.chunkedExports,
+      ]);
+    } else {
+      const { staticExports } = await parseRouteExports(code);
+      const toRemove = new Set([...SERVER_ROUTE_EXPORTS, ...staticExports]);
+      toRemove.delete(chunk);
+      removeExports(ast, Array.from(toRemove));
+    }
+
+    const generated = babel.generate(ast);
+
+    let result = '"use client";\n' + generated.code;
+
+    if (chunk === "shared") {
+      result += ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR;
+    }
+
+    result += `if (import.meta.hot) {\n`;
+    result += `  import.meta.hot.accept((mod) => {
+      if (!mod.default) {
+        __reactRouterDataRouter.revalidate();
+      }
+    });\n`;
+    result += `}\n`;
+
+    return {
+      code: result,
+    };
+  }
+
+  return {
+    name: "react-router-rsc-virtual-route-modules",
+    transform: {
+      order: "pre",
+      async handler(_code, id) {
+        const [filename, ...rest] = id.split("?");
+
+        if (!isRouteModule(filename)) {
+          return;
+        }
+
+        let isClientEnvironment = clientEnvironments.has(this.environment.name);
+        let isServerEnvironment = serverEnvironments.has(this.environment.name);
+
+        if (!isClientEnvironment && !isServerEnvironment) {
+          return;
+        }
+
+        await preloadVite();
+        let code = (
+          await getVite().transformWithEsbuild(_code, id, {
+            target: "esnext",
+            format: "esm",
+          })
+        ).code;
+
+        let searchParams =
+          rest.length > 0 ? new URLSearchParams(rest.join("?")) : null;
+
+        let clientRouteModuleType = searchParams?.get("client-route-module");
+        let isServerRouteModule = searchParams?.has("server-route-module");
+
+        if (clientRouteModuleType) {
+          return await createClientRouteModuleChunk(
+            id,
+            code,
+            clientRouteModuleType,
+          );
+        }
+
+        if (isServerRouteModule) {
+          return createServerRouteModule(code);
+        }
+
+        if (isClientEnvironment) {
+          return await createClientRouteEntry(id, code);
+        }
+
+        return await createServerRouteEntry(id, code);
+      },
+    },
+  } satisfies Vite.Plugin;
+}
+
+function createId(
+  id: string,
+  type: "client-route-module",
+  value: string,
+): string;
+function createId(id: string, type: "server-route-module"): string;
+function createId(
+  id: string,
+  type: "client-route-module" | "server-route-module",
+  value?: string,
+): string {
+  let [base, ...rest] = id.split("?");
+  const searchParams = new URLSearchParams(rest.join("?"));
+  searchParams.delete("client-route-module");
+  searchParams.delete("server-route-module");
+  searchParams.set(type, value || "");
+  return `${base}?${searchParams.toString()}`;
+}
+
+export async function parseRouteExports(code: string) {
+  await initEsModuleLexer;
+  const [, exportSpecifiers] = esModuleLexer(code);
+  const staticExports = exportSpecifiers.map(({ n: name }) => name);
+  return {
+    staticExports,
+    hasClientExports: staticExports.some(isClientRouteExport),
+  };
+}
+
+const CLIENT_NON_COMPONENT_EXPORTS = [
+  "clientAction",
+  "clientLoader",
+  "clientMiddleware",
+  "handle",
+  "meta",
+  "links",
+  "shouldRevalidate",
+] as const;
+const CLIENT_ROUTE_EXPORTS = [
+  ...CLIENT_NON_COMPONENT_EXPORTS,
+  "default",
+  "ErrorBoundary",
+  "HydrateFallback",
+  "Layout",
+] as const;
+type ClientRouteExport = (typeof CLIENT_ROUTE_EXPORTS)[number];
+const CLIENT_ROUTE_EXPORTS_SET = new Set(CLIENT_ROUTE_EXPORTS);
+function isClientRouteExport(name: string): name is ClientRouteExport {
+  return CLIENT_ROUTE_EXPORTS_SET.has(name as ClientRouteExport);
+}
 
 const SERVER_COMPONENT_EXPORTS = [
   "ServerComponent",
@@ -29,280 +315,81 @@ function isServerRouteExport(name: string): name is ServerRouteExport {
   return SERVER_ROUTE_EXPORTS_SET.has(name as ServerRouteExport);
 }
 
-export const CLIENT_NON_COMPONENT_EXPORTS = [
+const CLIENT_MODULE_CHUNKS = new Set([
   "clientAction",
   "clientLoader",
   "clientMiddleware",
-  "handle",
-  "meta",
-  "links",
-  "shouldRevalidate",
-] as const;
-
-const CLIENT_ROUTE_EXPORTS = [
-  ...CLIENT_NON_COMPONENT_EXPORTS,
-  "default",
-  "ErrorBoundary",
   "HydrateFallback",
-  "Layout",
-] as const;
-type ClientRouteExport = (typeof CLIENT_ROUTE_EXPORTS)[number];
-const CLIENT_ROUTE_EXPORTS_SET = new Set(CLIENT_ROUTE_EXPORTS);
-function isClientRouteExport(name: string): name is ClientRouteExport {
-  return CLIENT_ROUTE_EXPORTS_SET.has(name as ClientRouteExport);
-}
+]);
 
-const mutuallyExclusiveRouteExports = new Map([
+const MUTUALLY_EXCLUSIVE_ROUTE_EXPORTS = new Map([
   ["ErrorBoundary", "ServerErrorBoundary"],
   ["HydrateFallback", "ServerHydrateFallback"],
   ["Layout", "ServerLayout"],
   ["default", "ServerComponent"],
 ]);
 
-const ROUTE_EXPORTS = [
-  ...SERVER_ROUTE_EXPORTS,
-  ...CLIENT_ROUTE_EXPORTS,
-] as const;
-type RouteExport = (typeof ROUTE_EXPORTS)[number];
-const ROUTE_EXPORTS_SET = new Set(ROUTE_EXPORTS);
-function isRouteExport(name: string): name is RouteExport {
-  return ROUTE_EXPORTS_SET.has(name as RouteExport);
-}
-function isCustomRouteExport(name: string) {
-  return !isRouteExport(name);
-}
-
-function hasReactServerCondition(viteEnvironment: Vite.Environment) {
-  return viteEnvironment.config.resolve.conditions.includes("react-server");
-}
-
-type ViteCommand = Vite.ConfigEnv["command"];
-
-export function transformVirtualRouteModules({
-  id,
-  code,
-  viteCommand,
-  routeIdByFile,
-  rootRouteFile,
-  viteEnvironment,
-}: {
-  id: string;
-  code: string;
-  viteCommand: ViteCommand;
-  routeIdByFile: Map<string, string>;
-  rootRouteFile: string;
-  viteEnvironment: Vite.Environment;
-}) {
-  if (isVirtualRouteModuleId(id) || routeIdByFile.has(id)) {
-    return createVirtualRouteModuleCode({
-      id,
-      code,
-      rootRouteFile,
-      viteCommand,
-      viteEnvironment,
-    });
-  }
-
-  if (isVirtualServerRouteModuleId(id)) {
-    return createVirtualServerRouteModuleCode({
-      id,
-      code,
-      viteEnvironment,
-    });
-  }
-
-  if (isVirtualClientRouteModuleId(id)) {
-    return createVirtualClientRouteModuleCode({
-      id,
-      code,
-      rootRouteFile,
-      viteCommand,
-    });
-  }
-}
-
-async function createVirtualRouteModuleCode({
-  id,
-  code: routeSource,
-  rootRouteFile,
-  viteCommand,
-  viteEnvironment,
-}: {
-  id: string;
-  code: string;
-  rootRouteFile: string;
-  viteCommand: ViteCommand;
-  viteEnvironment: Vite.Environment;
-}) {
-  const isReactServer = hasReactServerCondition(viteEnvironment);
-  const { staticExports, hasClientExports } = parseRouteExports(routeSource);
-
-  for (const exportName of staticExports) {
-    if (mutuallyExclusiveRouteExports.has(exportName)) {
-      const conflictingExport = mutuallyExclusiveRouteExports.get(exportName)!;
-      if (staticExports.includes(conflictingExport)) {
-        throw new Error(
-          `Route module cannot export both "${exportName}" and "${conflictingExport}". Please choose one or the other.`,
-        );
-      }
+function validateRouteModuleExports(toValidate: string[]) {
+  let errors: [string, string][] = [];
+  for (let [clientExport, serverExport] of MUTUALLY_EXCLUSIVE_ROUTE_EXPORTS) {
+    if (
+      toValidate.includes(clientExport) &&
+      toValidate.includes(serverExport)
+    ) {
+      errors.push([clientExport, serverExport]);
     }
   }
-
-  const clientModuleId = getVirtualClientModuleId(id);
-  const serverModuleId = getVirtualServerModuleId(id);
-
-  let code = "";
-  if (isReactServer && staticExports.some(isServerComponentExport)) {
-    code += `import React from "react";\n`;
-  }
-  for (const staticExport of staticExports) {
-    if (isReactServer && isServerComponentExport(staticExport)) {
-      code += `import { ${staticExport} as ${staticExport}WithoutCss } from "${serverModuleId}";\n`;
-      code += `export ${staticExport === "ServerComponent" ? "default " : " "}function ${staticExport.replace(/^Server/, "")}(props) {\n`;
-      code += `  return React.createElement(React.Fragment, null,\n`;
-      code += `    import.meta.viteRsc.loadCss(),\n`;
-      code += `    React.createElement(${staticExport}WithoutCss, props),\n`;
-      code += `  );\n`;
-      code += `}\n`;
-    } else if (isReactServer && isServerRouteExport(staticExport)) {
-      code += `export { ${staticExport} } from "${serverModuleId}";\n`;
-    } else if (isClientRouteExport(staticExport)) {
-      code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-    } else if (isCustomRouteExport(staticExport)) {
-      code += `export { ${staticExport} } from "${isReactServer ? serverModuleId : clientModuleId}";\n`;
-    }
-  }
-
-  if (
-    isRootRouteFile({ id, rootRouteFile }) &&
-    !staticExports.includes("ErrorBoundary") &&
-    !staticExports.includes("ServerErrorBoundary")
-  ) {
-    code += `export { ErrorBoundary } from "${clientModuleId}";\n`;
-  }
-
-  if (viteCommand === "serve" && !hasClientExports) {
-    code += `export { __ensureClientRouteModuleForHMR } from "${clientModuleId}";\n`;
-  }
-
-  return code;
-}
-
-function createVirtualServerRouteModuleCode({
-  id,
-  code: routeSource,
-  viteEnvironment,
-}: {
-  id: string;
-  code: string;
-  viteEnvironment: Vite.Environment;
-}) {
-  if (!hasReactServerCondition(viteEnvironment)) {
+  if (errors.length > 0) {
     throw new Error(
-      [
-        "Virtual server route module was loaded outside of the RSC environment.",
-        `Environment Name: ${viteEnvironment.name}`,
-        `Module ID: ${id}`,
-      ].join("\n"),
+      `Invalid route module exports. The following pairs of exports are mutually exclusive and cannot be exported from the same module:\n` +
+        errors
+          .map(
+            ([clientExport, serverExport]) =>
+              `- ${clientExport} and ${serverExport}`,
+          )
+          .join("\n"),
     );
   }
-
-  const { staticExports } = parseRouteExports(routeSource);
-  const clientModuleId = getVirtualClientModuleId(id);
-  const serverRouteModuleAst = babel.parse(routeSource, {
-    sourceType: "module",
-  });
-  removeExports(serverRouteModuleAst, CLIENT_ROUTE_EXPORTS);
-
-  const generatorResult = babel.generate(serverRouteModuleAst);
-
-  for (const staticExport of staticExports) {
-    if (isClientRouteExport(staticExport)) {
-      generatorResult.code += "\n";
-      generatorResult.code += `export { ${staticExport} } from "${clientModuleId}";\n`;
-    }
-  }
-
-  return generatorResult;
 }
 
-function createVirtualClientRouteModuleCode({
-  id,
-  code: routeSource,
-  rootRouteFile,
-  viteCommand,
-}: {
-  id: string;
-  code: string;
-  rootRouteFile: string;
-  viteCommand: ViteCommand;
-}) {
-  const { staticExports, hasClientExports } = parseRouteExports(routeSource);
+type RouteChunks = ReturnType<typeof _detectRouteChunks>;
 
-  const clientRouteModuleAst = babel.parse(routeSource, {
-    sourceType: "module",
-  });
-  removeExports(clientRouteModuleAst, SERVER_ROUTE_EXPORTS);
+function detectRouteChunks(
+  cache: Cache,
+  id: string,
+  code: string,
+): RouteChunks {
+  function noRouteChunks(): RouteChunks {
+    return {
+      chunkedExports: [],
+      hasRouteChunks: false,
+      hasRouteChunkByExportName: {
+        clientAction: false,
+        clientLoader: false,
+        clientMiddleware: false,
+        HydrateFallback: false,
+      },
+    };
+  }
 
-  const generatorResult = babel.generate(clientRouteModuleAst);
-  generatorResult.code = '"use client";' + generatorResult.code;
+  // If this is the root route, we disable chunking since the chunks would never
+  // be loaded on demand during navigation. Because the root route is matched
+  // for all requests, all of its chunks would always be loaded up front during
+  // the initial page load. Instead of firing off multiple requests to resolve
+  // the root route code, we want it to be downloaded in a single request.
+  // if (isRootRouteModuleId(ctx, id)) {
+  //   return noRouteChunks();
+  // }
 
   if (
-    isRootRouteFile({ id, rootRouteFile }) &&
-    !staticExports.includes("ErrorBoundary") &&
-    !staticExports.includes("ServerErrorBoundary")
+    !Array.from(CLIENT_MODULE_CHUNKS).some((exportName) =>
+      code.includes(exportName),
+    )
   ) {
-    const hasRootLayout = staticExports.includes("Layout");
-    generatorResult.code += `\nimport { createElement as __rr_createElement } from "react";\n`;
-    generatorResult.code += `import { UNSAFE_RSCDefaultRootErrorBoundary } from "react-router";\n`;
-    generatorResult.code += `export function ErrorBoundary() {\n`;
-    generatorResult.code += `  return __rr_createElement(UNSAFE_RSCDefaultRootErrorBoundary, { hasRootLayout: ${hasRootLayout} });\n`;
-    generatorResult.code += `}\n`;
+    return noRouteChunks();
   }
 
-  if (viteCommand === "serve" && !hasClientExports) {
-    generatorResult.code += `\nexport const __ensureClientRouteModuleForHMR = true;`;
-  }
+  let [filename] = id.split("?");
 
-  return generatorResult;
-}
-
-export function parseRouteExports(code: string) {
-  const [, exportSpecifiers] = esModuleLexer(code);
-  const staticExports = exportSpecifiers.map(({ n: name }) => name);
-  return {
-    staticExports,
-    hasClientExports: staticExports.some(isClientRouteExport),
-  };
-}
-
-function getVirtualClientModuleId(id: string): string {
-  return `${id.split("?")[0]}?client-route-module`;
-}
-
-function getVirtualServerModuleId(id: string): string {
-  return `${id.split("?")[0]}?server-route-module`;
-}
-
-function isVirtualRouteModuleId(id: string): boolean {
-  return /(\?|&)route-module(&|$)/.test(id);
-}
-
-export function isVirtualClientRouteModuleId(id: string): boolean {
-  return /(\?|&)client-route-module(&|$)/.test(id);
-}
-
-function isVirtualServerRouteModuleId(id: string): boolean {
-  return /(\?|&)server-route-module(&|$)/.test(id);
-}
-
-function isRootRouteFile({
-  id,
-  rootRouteFile,
-}: {
-  id: string;
-  rootRouteFile: string;
-}): boolean {
-  const filePath = id.split("?")[0];
-  return filePath === rootRouteFile;
+  return _detectRouteChunks(code, cache, filename);
 }

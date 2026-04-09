@@ -25,7 +25,11 @@ type Dependencies = {
   exportedVariableDeclarators: Set<VariableDeclarator>;
 };
 
-function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
+export function codeToAst(
+  code: string,
+  cache: Cache,
+  cacheKey: string,
+): Babel.File {
   // We use structuredClone to allow AST mutation without modifying the cache.
   return structuredClone(
     getOrSetFromCache(cache, `${cacheKey}::codeToAst`, code, () =>
@@ -461,7 +465,7 @@ function setsIntersect(set1: Set<any>, set2: Set<any>): boolean {
   return false;
 }
 
-export function hasChunkableExport(
+function hasChunkableExport(
   code: string,
   exportName: string,
   cache: Cache,
