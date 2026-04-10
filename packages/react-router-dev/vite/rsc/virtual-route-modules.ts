@@ -11,7 +11,6 @@ import {
   type RouteChunkExportName,
   detectRouteChunks as _detectRouteChunks,
 } from "../route-chunks";
-import { getVite, preloadVite } from "../vite";
 
 const ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR = `
 import * as ___EnsureClientRouteModuleForHMR_REACT___ from "react";
@@ -22,6 +21,7 @@ export function virtualRouteModulesPlugin({
   environments: { client = ["client", "ssr"], server = ["rsc"] } = {},
   isRouteModule,
   isRootRouteModule,
+  transformToJs,
 }: {
   environments?: {
     client?: string[];
@@ -29,6 +29,7 @@ export function virtualRouteModulesPlugin({
   };
   isRouteModule(filename: string): boolean;
   isRootRouteModule(filename: string): boolean;
+  transformToJs: (code: string, filename: string) => Promise<string>;
 }) {
   let clientEnvironments = new Set(client);
   let serverEnvironments = new Set(server);
@@ -202,7 +203,7 @@ ${result}`;
       result += ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR;
     }
 
-    result += `if (import.meta.hot) {\n`;
+    result += `\nif (import.meta.hot) {\n`;
     result += `  import.meta.hot.accept((mod) => {
       if (!mod.default) {
         __reactRouterDataRouter.revalidate();
@@ -233,14 +234,7 @@ ${result}`;
           return;
         }
 
-        await preloadVite();
-        let code = (
-          await getVite().transformWithEsbuild(_code, id, {
-            target: "esnext",
-            format: "esm",
-            jsx: "automatic",
-          })
-        ).code;
+        let code = await transformToJs(_code, filename);
 
         let searchParams =
           rest.length > 0 ? new URLSearchParams(rest.join("?")) : null;

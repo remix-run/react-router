@@ -18,6 +18,7 @@ import {
 import {
   defineCompilerOptions,
   defineOptimizeDepsCompilerOptions,
+  getVite,
   preloadVite,
 } from "../vite";
 import { hasDependency } from "../has-dependency";
@@ -70,6 +71,22 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
   function isRootRouteModule(id: string): boolean {
     return path.normalize(id) === path.normalize(rootRouteFile);
+  }
+
+  async function transformToJs(
+    code: string,
+    filename: string,
+  ): Promise<string> {
+    await preloadVite();
+    let vite = getVite();
+    return (
+      await vite.transformWithEsbuild(code, filename, {
+        target: "esnext",
+        format: "esm",
+        jsx: "automatic",
+        jsxDev: viteCommand !== "build",
+      })
+    ).code;
   }
 
   return [
@@ -469,6 +486,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
       isRouteModule,
       isRootRouteModule,
+      transformToJs,
     }),
     {
       name: "react-router/rsc/virtual-basename",
