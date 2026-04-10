@@ -598,7 +598,13 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               `if (import.meta.hot) {
   import.meta.hot.accept();
   import.meta.hot.on('rsc:update', () => {
-    __reactRouterDataRouter.revalidate()
+    // Defer revalidation to the next animation frame so React Fast Refresh
+    // can apply pending client component updates first. Without this delay,
+    // the RSC payload (showing updated text) can arrive and be reconciled
+    // against a DOM that still has the old text, causing a hydration mismatch.
+    requestAnimationFrame(() => {
+      __reactRouterDataRouter.revalidate()
+    })
   })
 }`,
             ].join("\n")
