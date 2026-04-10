@@ -205,7 +205,7 @@ ${result}`;
 
     result += `\nif (import.meta.hot) {\n`;
     result += `  import.meta.hot.accept((mod) => {
-      if (!mod.default) {
+      if (typeof __reactRouterDataRouter === "object" && !mod.default) {
         __reactRouterDataRouter.revalidate();
       }
     });\n`;
