@@ -68,6 +68,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     return false;
   }
 
+  function isRootRouteModule(id: string): boolean {
+    return path.normalize(id) === path.normalize(rootRouteFile);
+  }
+
   return [
     {
       name: "react-router/rsc",
@@ -464,6 +468,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         server: ["rsc"],
       },
       isRouteModule,
+      isRootRouteModule,
     }),
     {
       name: "react-router/rsc/virtual-basename",

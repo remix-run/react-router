@@ -21,12 +21,14 @@ export function EnsureClientRouteModuleForHMR___() { return ___EnsureClientRoute
 export function virtualRouteModulesPlugin({
   environments: { client = ["client", "ssr"], server = ["rsc"] } = {},
   isRouteModule,
+  isRootRouteModule,
 }: {
   environments?: {
     client?: string[];
     server?: string[];
   };
   isRouteModule(filename: string): boolean;
+  isRootRouteModule(filename: string): boolean;
 }) {
   let clientEnvironments = new Set(client);
   let serverEnvironments = new Set(server);
@@ -86,7 +88,11 @@ export function virtualRouteModulesPlugin({
     };
   }
 
-  async function createServerRouteEntry(id: string, code: string) {
+  async function createServerRouteEntry(
+    id: string,
+    code: string,
+    isRootRouteModule: boolean,
+  ) {
     let result = "";
 
     let routeChunks = detectRouteChunks(cache, id, code);
@@ -128,6 +134,14 @@ import { EnsureClientRouteModuleForHMR___ } from "${createId(id, "client-route-m
 ${result}`;
     }
 
+    if (
+      isRootRouteModule &&
+      !staticExports.includes("ErrorBoundary") &&
+      !staticExports.includes("ServerErrorBoundary")
+    ) {
+      result += `export { ErrorBoundary } from "${createId(id, "client-route-module", "shared")}";\n`;
+    }
+
     return {
       code: result,
     };
@@ -145,19 +159,21 @@ ${result}`;
     id: string,
     code: string,
     chunk: "shared" | string,
+    isRootRouteModule: boolean,
   ) {
     let routeChunks = detectRouteChunks(cache, id, code);
 
     const ast = babel.parse(code, {
       sourceType: "module",
     });
+    const { staticExports } = await parseRouteExports(code);
+
     if (chunk === "shared") {
       removeExports(ast, [
         ...SERVER_ROUTE_EXPORTS,
         ...routeChunks.chunkedExports,
       ]);
     } else {
-      const { staticExports } = await parseRouteExports(code);
       const toRemove = new Set([...SERVER_ROUTE_EXPORTS, ...staticExports]);
       toRemove.delete(chunk);
       removeExports(ast, Array.from(toRemove));
@@ -168,6 +184,21 @@ ${result}`;
     let result = '"use client";\n' + generated.code;
 
     if (chunk === "shared") {
+      if (
+        isRootRouteModule &&
+        !staticExports.includes("ErrorBoundary") &&
+        !staticExports.includes("ServerErrorBoundary")
+      ) {
+        const hasRootLayout =
+          staticExports.includes("Layout") ||
+          staticExports.includes("ServerLayout");
+        result += `\nimport { createElement as __rr_createElement } from "react";\n`;
+        result += `import { UNSAFE_RSCDefaultRootErrorBoundary } from "react-router";\n`;
+        result += `export function ErrorBoundary() {\n`;
+        result += `  return __rr_createElement(UNSAFE_RSCDefaultRootErrorBoundary, { hasRootLayout: ${hasRootLayout} });\n`;
+        result += `}\n`;
+      }
+
       result += ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR;
     }
 
@@ -207,6 +238,7 @@ ${result}`;
           await getVite().transformWithEsbuild(_code, id, {
             target: "esnext",
             format: "esm",
+            jsx: "automatic",
           })
         ).code;
 
@@ -221,6 +253,7 @@ ${result}`;
             id,
             code,
             clientRouteModuleType,
+            isRootRouteModule(filename),
           );
         }
 
@@ -232,7 +265,11 @@ ${result}`;
           return await createClientRouteEntry(id, code);
         }
 
-        return await createServerRouteEntry(id, code);
+        return await createServerRouteEntry(
+          id,
+          code,
+          isRootRouteModule(filename),
+        );
       },
     },
   } satisfies Vite.Plugin;
