@@ -843,10 +843,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         virtual.serverManifest.id,
       )};
       export const assetsBuildDirectory = ${JSON.stringify(
-        path.relative(
+        getVite().normalizePath(path.relative(
           ctx.rootDirectory,
           getClientBuildDirectory(ctx.reactRouterConfig),
-        ),
+        )),
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
