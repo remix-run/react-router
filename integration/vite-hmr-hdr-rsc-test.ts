@@ -384,6 +384,9 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     );
     await waitPromise;
     // await page.waitForLoadState("networkidle");
+    await expect(page.locator("#index [data-mounted]")).toHaveText(
+      "Mounted: yes",
+    );
     await expect(hmrStatus).toHaveText("Client Route HMR: 0");
     // adding/removing client component exports causes an HMR invalidation and a
     // page reload. some browsers maintain input state, so we forcibly clear
@@ -408,6 +411,9 @@ test.describe("Vite HMR & HDR (RSC)", () => {
         .replace("Client Route HMR: 1", "Server Route HMR: 0"),
     );
     await waitForServerRouteReload;
+    await expect(page.locator("#index [data-mounted]")).toHaveText(
+      "Mounted: yes",
+    );
     await expect(hmrStatus).toHaveText("Server Route HMR: 0");
     // adding/removing client component exports causes an HMR invalidation and a
     // page reload. some browsers maintain input state, so we forcibly clear
