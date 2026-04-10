@@ -465,7 +465,7 @@ function setsIntersect(set1: Set<any>, set2: Set<any>): boolean {
   return false;
 }
 
-function hasChunkableExport(
+export function hasChunkableExport(
   code: string,
   exportName: string,
   cache: Cache,
