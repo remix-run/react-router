@@ -137,7 +137,7 @@ In order to properly type your `context` param in your `loader`/`action`/`middle
 ```ts
 // src/react-router.d.ts
 
-import "react-router"
+import "react-router";
 
 declare module "react-router" {
   interface Future {
