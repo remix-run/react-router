@@ -110,7 +110,7 @@ function withHotAccept(lines: string[]) {
     ...lines,
     "if (import.meta.hot) {",
     "  import.meta.hot.accept((mod) => {",
-    "      if (!mod.default) {",
+    '      if (typeof __reactRouterDataRouter === "object" && !mod.default) {',
     "        __reactRouterDataRouter.revalidate();",
     "      }",
     "    });",
