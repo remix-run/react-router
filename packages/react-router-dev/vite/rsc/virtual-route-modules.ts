@@ -21,6 +21,8 @@ export function virtualRouteModulesPlugin({
   environments: { client = ["client", "ssr"], server = ["rsc"] } = {},
   isRouteModule,
   isRootRouteModule,
+  order,
+  shouldTransform = () => true,
   transformToJs,
 }: {
   environments?: {
@@ -29,6 +31,8 @@ export function virtualRouteModulesPlugin({
   };
   isRouteModule(filename: string): boolean;
   isRootRouteModule(filename: string): boolean;
+  order?: "pre" | "post";
+  shouldTransform?(filename: string): boolean;
   transformToJs: (code: string, filename: string) => Promise<string>;
 }) {
   let clientEnvironments = new Set(client);
@@ -219,11 +223,11 @@ ${result}`;
   return {
     name: "react-router-rsc-virtual-route-modules",
     transform: {
-      order: "pre",
+      ...(order ? { order } : {}),
       async handler(_code, id) {
         const [filename, ...rest] = id.split("?");
 
-        if (!isRouteModule(filename)) {
+        if (!isRouteModule(filename) || !shouldTransform(filename)) {
           return;
         }
 
@@ -298,7 +302,7 @@ export async function parseRouteExports(code: string) {
   };
 }
 
-const CLIENT_NON_COMPONENT_EXPORTS = [
+export const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
   "clientMiddleware",
