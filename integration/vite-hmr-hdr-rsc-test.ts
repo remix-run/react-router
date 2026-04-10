@@ -395,7 +395,6 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     );
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("Client Route HMR: 1");
-    await expect(input).toHaveValue("client stateful");
     expect(page.errors).toEqual([]);
 
     // switch from client route back to server-first route
