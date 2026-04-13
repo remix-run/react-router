@@ -20,7 +20,6 @@
     "lint": "eslint --cache .",
     "playground": "node ./scripts/playground.js",
     "prerelease": "pnpm build",
-    "release": "changeset publish",
     "setup-installable-branch": "node scripts/setup-installable-branch.ts",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
@@ -34,9 +33,10 @@
     "vite-ecosystem-ci:before-test": "pnpm playwright install",
     "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration",
     "changeset": "changeset",
-    "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
-    "publish": "node scripts/publish.js",
-    "version": "node ./scripts/version"
+    "__disabled_release": "changeset publish",
+    "__disabled_changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
+    "__disabled_publish": "node scripts/publish.js",
+    "__disabled_version": "node ./scripts/version"
   },
   "jest": {
     "projects": [
