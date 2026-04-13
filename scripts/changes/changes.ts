@@ -475,7 +475,7 @@ function generateBumpTypeSection(
   );
 
   for (let change of changes) {
-    lines.push(formatChangelogEntry(change.content));
+    lines.push(formatChangelogEntry(change));
     if (includeBlankLine) {
       lines.push("");
     }
