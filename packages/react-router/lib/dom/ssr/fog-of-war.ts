@@ -26,7 +26,7 @@ const discoveredPaths = new Set<string>();
 
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
-const URL_LIMIT = 7680;
+export const URL_LIMIT = 7680;
 
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
