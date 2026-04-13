@@ -20,7 +20,12 @@ import {
   IDLE_NAVIGATION,
   createStaticHandler as routerCreateStaticHandler,
 } from "../router/router";
-import type { RouteManifest, RouteObject } from "../router/utils";
+import type {
+  DataRouteObject,
+  RouteBranch,
+  RouteManifest,
+  RouteObject,
+} from "../router/utils";
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
@@ -207,6 +212,7 @@ export function StaticRouterProvider({
                 unstable_useTransitions={false}
               >
                 <DataRoutes
+                  manifest={router.manifest}
                   routes={router.routes}
                   future={router.future}
                   state={state}
@@ -372,12 +378,14 @@ export function createStaticHandler(
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
+ * @param opts.branches Optional pre-computed route branches
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
@@ -434,6 +442,12 @@ export function createStaticRouter(
     },
     get routes() {
       return dataRoutes;
+    },
+    get branches() {
+      return opts.branches;
+    },
+    get manifest() {
+      return manifest;
     },
     get window() {
       return undefined;
