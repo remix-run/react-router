@@ -1671,6 +1671,43 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0(@types/node@20.19.37)(esbuild@0.27.4)(jiti@2.4.2)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
 
+  playground/performance:
+    dependencies:
+      '@react-router/node':
+        specifier: workspace:*
+        version: link:../../packages/react-router-node
+      '@react-router/serve':
+        specifier: workspace:*
+        version: link:../../packages/react-router-serve
+      isbot:
+        specifier: ^5.1.11
+        version: 5.1.11
+      react:
+        specifier: 'catalog:'
+        version: 19.2.3
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.3(react@19.2.3)
+      react-router:
+        specifier: workspace:*
+        version: link:../../packages/react-router
+    devDependencies:
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../../packages/react-router-dev
+      '@types/react':
+        specifier: ^18.0.27
+        version: 18.2.18
+      '@types/react-dom':
+        specifier: ^18.0.10
+        version: 18.2.7
+      typescript:
+        specifier: 'catalog:'
+        version: 5.4.5
+      vite:
+        specifier: ^8.0.0
+        version: 8.0.0(@types/node@22.14.0)(esbuild@0.27.4)(jiti@2.4.2)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
+
   playground/rsc-vite:
     dependencies:
       '@mjackson/node-fetch-server':
