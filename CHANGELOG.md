@@ -174,15 +174,9 @@ Date: 2026-04-13
 
 ### Patch Changes
 
-- `react-router` - Fix a potential race condition that can occur when rendering a `HydrateFallback` and initial loaders land before the `router.subscribe` call happens in the `RouterProvider` layout effect
-- `react-router` - Normalize double-slashes in redirect paths
-- `@react-router/architect` - Add TypeScript 6 support to peer dependency ranges
-- `@react-router/cloudflare` - Add TypeScript 6 support to peer dependency ranges
-- `@react-router/dev` - Add TypeScript 6 support to peer dependency ranges
-- `@react-router/express` - Add TypeScript 6 support to peer dependency ranges
-- `@react-router/fs-routes` - Add TypeScript 6 support to peer dependency ranges
-- `@react-router/node` - Add TypeScript 6 support to peer dependency ranges
-- `@react-router/remix-routes-option-adapter` - Add TypeScript 6 support to peer dependency ranges
+- `react-router` - Fix a potential race condition that can occur when rendering a `HydrateFallback` and initial loaders land before the `router.subscribe` call happens in the `RouterProvider` layout effect ([#14497](https://github.com/remix-run/react-router/pull/14497))
+- `react-router` - Normalize double-slashes in redirect paths ([#14962](https://github.com/remix-run/react-router/pull/14962))
+- `@react-router/dev` - Add TypeScript 6 support to peer dependency ranges ([#14935](https://github.com/remix-run/react-router/pull/14935))
 
 **Full Changelog**: [`v7.14.0...v7.14.1`](https://github.com/remix-run/react-router/compare/react-router@7.14.0...react-router@7.14.1)
 
