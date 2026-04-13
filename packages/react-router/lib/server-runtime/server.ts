@@ -559,6 +559,7 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
+      branches: staticHandler._branches,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
