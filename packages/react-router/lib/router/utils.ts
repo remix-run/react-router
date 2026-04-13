@@ -807,15 +807,7 @@ type _RequiredPathParam<Path extends string> =
         : // otherwise, there aren't any params present
           never;
 
-type RequiredPathParam<Path extends string> =
-  // check if path is just a wildcard
-  Path extends "*" | "/*"
-    ? "*"
-    : // look for wildcard at the end of the path
-      Path extends `${infer Rest}/*`
-      ? "*" | _RequiredPathParam<Rest>
-      : // look for params in the absence of wildcards
-        _RequiredPathParam<Path>;
+type RequiredPathParam<Path extends string> = _RequiredPathParam<Path>;
 
 // Recursive helper for finding optional path parameters in the absence of wildcards
 type _OptionalPathParam<Path extends string> =
@@ -838,6 +830,12 @@ type OptionalPathParam<Path extends string> =
       : // look for params in the absence of wildcards
         _OptionalPathParam<Path>;
 
+type GeneratePathParams<Path extends string> = {
+  [key in RequiredPathParam<Path>]: string | null;
+} & {
+  [key in OptionalPathParam<Path>]?: string | null | undefined;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
   Expect<Equal<PathParam<"/a/b/*">, "*">>,
@@ -848,12 +846,12 @@ type _tests = [
   Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
   Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
   Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
-  Expect<Equal<RequiredPathParam<"/a/b/*">, "*">>,
+  Expect<Equal<RequiredPathParam<"/a/b/*">, never>>,
   Expect<Equal<RequiredPathParam<":a">, "a">>,
   Expect<Equal<RequiredPathParam<"/a/:b">, "b">>,
   Expect<Equal<RequiredPathParam<"/a/blahblahblah:b">, never>>,
   Expect<Equal<RequiredPathParam<"/:a/:b">, "a" | "b">>,
-  Expect<Equal<RequiredPathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
+  Expect<Equal<RequiredPathParam<"/:a/b/:c/*">, "a" | "c">>,
   Expect<Equal<RequiredPathParam<"/:lang.xml">, "lang">>,
   Expect<Equal<OptionalPathParam<"/a/b/*">, "*">>,
   Expect<Equal<OptionalPathParam<":a?">, "a">>,
@@ -874,6 +872,16 @@ type _tests = [
   Expect<Equal<PathParam<"/:a?/:b?">, "a" | "b">>,
   Expect<Equal<RequiredPathParam<"/:a?/:b?">, never>>,
   Expect<Equal<OptionalPathParam<"/:a?/:b?">, "a" | "b">>,
+  Expect<Equal<PathParam<"/:id?/:id">, "id">>,
+  Expect<Equal<RequiredPathParam<"/:id?/:id">, "id">>,
+  Expect<Equal<OptionalPathParam<"/:id?/:id">, "id">>,
+  Expect<Equal<GeneratePathParams<"/:lang/login">["lang"], string | null>>,
+  Expect<
+    Equal<GeneratePathParams<"/:lang?/login">["lang"], string | null | undefined>
+  >,
+  Expect<Equal<GeneratePathParams<"/:id/*">["id"], string | null>>,
+  Expect<Equal<GeneratePathParams<"/:id/*">["*"], string | null | undefined>>,
+  Expect<Equal<GeneratePathParams<"/:id?/:id">["id"], string | null>>,
 ];
 
 // Attempt to parse the given string segment. If it fails, then just return the
@@ -1418,11 +1426,7 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in RequiredPathParam<Path>]: string;
-  } & {
-    [key in OptionalPathParam<Path>]?: string | null | undefined;
-  } = {} as any,
+  params: GeneratePathParams<Path> = {} as GeneratePathParams<Path>,
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
