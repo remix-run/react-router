@@ -1,5 +1,12 @@
 # `react-router`
 
+## v7.14.1
+
+### Patch Changes
+
+- Fix a potential race condition that can occur when rendering a `HydrateFallback` and initial loaders land before the `router.subscribe` call happens in the `RouterProvider` layout effect
+- Normalize double-slashes in redirect paths
+
 ## 7.14.0
 
 ### Patch Changes
