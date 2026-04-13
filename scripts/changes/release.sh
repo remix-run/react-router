@@ -17,12 +17,14 @@ if [[ "${COMMAND}" == "start" ]]; then
     exit 1
   fi
 
+  set +e
   git ls-remote --exit-code --heads origin release
   EXIT_CODE=$?
   if [[ $EXIT_CODE == '0' ]]; then
     echo "Error: Remote branch 'release' already exists."
     exit 1
   fi
+  set -e
 
   git checkout main
   git pull
