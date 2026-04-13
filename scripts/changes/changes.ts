@@ -11,6 +11,7 @@ import {
   getPackagePath,
   packageNameToDirectoryName,
 } from "../utils/packages.ts";
+import { getCommitSubject, getFileSha, parsePrNumber } from "../utils/git.ts";
 
 const bumpTypes = ["major", "minor", "patch", "unstable"] as const;
 type BumpType = (typeof bumpTypes)[number];
@@ -38,6 +39,8 @@ interface ChangeFile {
   file: string;
   bump: BumpType;
   content: string;
+  gitSha?: string;
+  prNumber?: number;
 }
 
 interface ValidationError {
@@ -171,7 +174,9 @@ function parsePackageChanges(packageDirName: string): ParsedPackageChanges {
     }
 
     // File is valid, add to changes
-    changes.push({ file, bump, content });
+    let gitSha = getFileSha(filePath).substring(0, 7);
+    let prNumber = parsePrNumber(getCommitSubject(gitSha)) ?? undefined;
+    changes.push({ file, bump, content, gitSha, prNumber });
   }
 
   if (errors.length > 0) {
@@ -394,16 +399,22 @@ function hasBreakingChangePrefix(content: string): boolean {
 /**
  * Formats a changelog entry from change file content
  */
-function formatChangelogEntry(content: string): string {
-  let lines = content.trim().split("\n");
+function formatChangelogEntry(change: ChangeFile): string {
+  let lines = change.content.trim().split("\n");
+  let base = "https://github.com/remix-run/react-router";
+  let link = change.prNumber
+    ? ` ([#${change.prNumber}](${base}/pull/${change.prNumber}))`
+    : change.gitSha
+      ? ` ([[${change.gitSha}](${base}/commit/${change.gitSha}))`
+      : "";
 
   if (lines.length === 1) {
-    return `- ${lines[0]}`;
+    return `- ${lines[0]}${link}`;
   }
 
   // Multi-line: first line is bullet, rest are indented
   let [firstLine, ...restLines] = lines;
-  let formatted = [`- ${firstLine}`];
+  let formatted = [`- ${firstLine}${link}`];
 
   for (let line of restLines) {
     // Add proper indentation for continuation lines

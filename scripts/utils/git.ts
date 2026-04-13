@@ -129,3 +129,38 @@ export function getRemoteTagTarget(tag: string): string | null {
 export function tagExists(tag: string): boolean {
   return getLocalTagTarget(tag) !== null || getRemoteTagTarget(tag) !== null;
 }
+
+/**
+ * Gets the git SHA of the commit that last modified a file.
+ * Falls back to HEAD if the file has no git history (e.g., untracked or newly staged).
+ */
+export function getFileSha(filePath: string): string {
+  let normalizedPath = filePath.replaceAll("\\", "/");
+  try {
+    let sha = execGit(["log", "-1", "--format=%H", "--", normalizedPath]);
+    if (sha) return sha;
+  } catch {}
+  return execGit(["rev-parse", "HEAD"]);
+}
+
+/**
+ * Gets the subject line (first line) of a commit message for a given SHA.
+ */
+export function getCommitSubject(sha: string): string {
+  return execGit(["log", "-1", "--format=%s", sha]);
+}
+
+/**
+ * Parses a GitHub PR number from a commit subject line.
+ * Supports squash merge format "description (#123)" and
+ * merge commit format "Merge pull request #123 from ...".
+ */
+export function parsePrNumber(subject: string): number | null {
+  let squashMatch = subject.match(/\(#(\d+)\)\s*$/);
+  if (squashMatch) return parseInt(squashMatch[1], 10);
+
+  let mergeMatch = subject.match(/^Merge pull request #(\d+)/i);
+  if (mergeMatch) return parseInt(mergeMatch[1], 10);
+
+  return null;
+}
