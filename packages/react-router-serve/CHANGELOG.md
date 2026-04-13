@@ -1,5 +1,14 @@
 # `@react-router/serve`
 
+## v7.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+  - [`@react-router/express@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.14.1)
+  - [`@react-router/node@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.14.1)
+
 ## 7.14.0
 
 ### Patch Changes

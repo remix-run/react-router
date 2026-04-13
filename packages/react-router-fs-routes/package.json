@@ -1,6 +1,6 @@
 {
   "name": "@react-router/fs-routes",
-  "version": "7.14.0",
+  "version": "7.14.1",
   "description": "File system routing conventions for React Router, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -49,7 +49,7 @@
   },
   "peerDependencies": {
     "@react-router/dev": "workspace:^",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {

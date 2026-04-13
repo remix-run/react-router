@@ -1681,7 +1681,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
-    toPathname = toPathname.replace(/\/\/+/g, "/");
+    toPathname = removeDoubleSlashes(toPathname);
     if (toPathname.startsWith("/")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
@@ -1699,7 +1699,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 }
 
 function resolvePathname(relativePath: string, fromPathname: string): string {
-  let segments = fromPathname.replace(/\/+$/, "").split("/");
+  let segments = removeTrailingSlash(fromPathname).split("/");
   let relativeSegments = relativePath.split("/");
 
   relativeSegments.forEach((segment) => {
@@ -1853,11 +1853,17 @@ export function resolveTo(
   return path;
 }
 
+export const removeDoubleSlashes = (path: string): string =>
+  path.replace(/\/\/+/g, "/");
+
 export const joinPaths = (paths: string[]): string =>
-  paths.join("/").replace(/\/\/+/g, "/");
+  removeDoubleSlashes(paths.join("/"));
+
+export const removeTrailingSlash = (path: string): string =>
+  path.replace(/\/+$/, "");
 
 export const normalizePathname = (pathname: string): string =>
-  pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
+  removeTrailingSlash(pathname).replace(/^\/*/, "/");
 
 /*
 lol - this comment is needed because the JSDoc parser for docs.ts gets confused
@@ -2132,13 +2138,8 @@ for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 */
 
 export function getRoutePattern(matches: RouteMatch[]) {
-  return (
-    matches
-      .map((m) => m.route.path)
-      .filter(Boolean)
-      .join("/")
-      .replace(/\/\/*/g, "/") || "/"
-  );
+  let parts = matches.map((m) => m.route.path).filter(Boolean) as string[];
+  return joinPaths(parts) || "/";
 }
 
 export const isBrowser =

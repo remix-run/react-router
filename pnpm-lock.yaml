@@ -147,7 +147,7 @@ importers:
         version: 7.37.5(eslint@10.1.0(jiti@2.4.2))
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.0-canary-8b2e903a-20260320(eslint@10.1.0(jiti@2.4.2))
+        version: 7.1.0-canary-705268dc-20260409(eslint@10.1.0(jiti@2.4.2))
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -1670,6 +1670,43 @@ importers:
       vite:
         specifier: ^8.0.0
         version: 8.0.0(@types/node@20.19.37)(esbuild@0.27.4)(jiti@2.4.2)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
+
+  playground/performance:
+    dependencies:
+      '@react-router/node':
+        specifier: workspace:*
+        version: link:../../packages/react-router-node
+      '@react-router/serve':
+        specifier: workspace:*
+        version: link:../../packages/react-router-serve
+      isbot:
+        specifier: ^5.1.11
+        version: 5.1.11
+      react:
+        specifier: 'catalog:'
+        version: 19.2.3
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.3(react@19.2.3)
+      react-router:
+        specifier: workspace:*
+        version: link:../../packages/react-router
+    devDependencies:
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../../packages/react-router-dev
+      '@types/react':
+        specifier: ^18.0.27
+        version: 18.2.18
+      '@types/react-dom':
+        specifier: ^18.0.10
+        version: 18.2.7
+      typescript:
+        specifier: 'catalog:'
+        version: 5.4.5
+      vite:
+        specifier: ^8.0.0
+        version: 8.0.0(@types/node@22.14.0)(esbuild@0.27.4)(jiti@2.4.2)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
 
   playground/rsc-vite:
     dependencies:
@@ -5170,7 +5207,7 @@ packages:
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
-    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   better-path-resolve@1.0.0:
     resolution: {integrity: sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g==}
@@ -5997,8 +6034,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.0-canary-8b2e903a-20260320:
-    resolution: {integrity: sha512-sCplMf3uhC9zDoi7ELzcQwLq/7sBA5apUi/uCPqxw63etZ0f0bX8gdK7KVrOJm+D39vDno8KoJyLHno6/i4ckw==}
+  eslint-plugin-react-hooks@7.1.0-canary-705268dc-20260409:
+    resolution: {integrity: sha512-1aCvpk6uXAllUERwNHOtcV2e86xO8h+om8fhcpfet0q1Re4exZ1fb/CFblHkw84WFyML76Ry84bysxbDE6Wvpw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
@@ -14522,7 +14559,7 @@ snapshots:
     dependencies:
       eslint: 10.1.0(jiti@2.4.2)
 
-  eslint-plugin-react-hooks@7.1.0-canary-8b2e903a-20260320(eslint@10.1.0(jiti@2.4.2)):
+  eslint-plugin-react-hooks@7.1.0-canary-705268dc-20260409(eslint@10.1.0(jiti@2.4.2)):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
