@@ -534,9 +534,11 @@ export function generateChangelogContent(
   if (release.dependencyBumps.length > 0) {
     let hasPatchChanges = release.changes.some((c) => c.bump === "patch");
     if (!hasPatchChanges) {
-      let subheadingPrefix = "#".repeat(headingLevel);
+      let subheadingPrefix = "#".repeat(subheadingLevel);
       lines.push(`${subheadingPrefix} Patch Changes`);
       lines.push("");
+    } else if (lines[lines.length - 1].endsWith("\n")) {
+      lines[lines.length - 1] = lines[lines.length - 1].trimEnd();
     }
 
     lines.push("- Updated dependencies:");

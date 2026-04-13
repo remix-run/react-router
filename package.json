@@ -4,6 +4,8 @@
   "scripts": {
     "build": "pnpm run --filter=\"./packages/**/*\" build",
     "watch": "pnpm build && pnpm run --filter=\"./packages/**/*\" --parallel build --watch",
+    "changes:publish": "node ./scripts/changes/publish.ts",
+    "changes:pr": "node ./scripts/changes/pr.ts",
     "changes:preview": "node ./scripts/changes/version.ts --preview",
     "changes:validate": "node ./scripts/changes/validate.ts",
     "changes:version": "node ./scripts/changes/version.ts",

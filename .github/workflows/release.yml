@@ -55,14 +55,14 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: "package.json"
+          node-version: 24 # Needed to run typescript scripts directly
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Update PR
-        run: node scripts/changes/pr.ts
+        run: pnpm changes:pr
         env:
           GITHUB_TOKEN: ${{ secrets.FORMAT_PAT }}
 
@@ -94,6 +94,6 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm and create releases
-        run: node ./scripts/publish.ts
+        run: pnpm changes:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

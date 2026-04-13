@@ -19,16 +19,14 @@ import {
 let args = process.argv.slice(2);
 let preview = args.includes("--preview");
 
-let currentBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
-if (!preview && !["release", "hotfix"].includes(currentBranch)) {
+let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
+if (!preview && !["release", "hotfix"].includes(baseBranch)) {
   throw new Error(
     "Error: script must be run from the hotfix or release branch",
   );
 }
 
-let baseBranch = currentBranch;
-let prBranch = `${currentBranch}-pr`;
-let prTitle = currentBranch === "release" ? "Release" : "Hotfix Release";
+let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
 let maxBodyLength = 60_000;
@@ -81,6 +79,7 @@ async function main() {
 
   // Generate content
   let commitMessage = generateCommitMessage(releases);
+  let prTitle = `${baseBranch === "hotfix" ? "Hotfix Release" : "Release"} ${releases[0].nextVersion}`;
   let prBody = generatePrBody(releases);
 
   if (preview) {

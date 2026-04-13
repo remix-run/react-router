@@ -35,7 +35,10 @@ let rootDir = getRootDir();
 
 let args = process.argv.slice(2);
 let skipCiCheck = args.includes("--skip-ci-check");
-let dryRun = args.includes("--dry-run");
+
+// TODO: Temporarily hardcoded to dryRun mode for initial testing
+// let dryRun = args.includes("--dry-run");
+let dryRun = true;
 
 interface PublishedPackage {
   packageName: string;
