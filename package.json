@@ -16,6 +16,8 @@
     "docs": "pnpm run docs:typedoc && pnpm run docs:jsdoc",
     "docs:typedoc": "typedoc",
     "docs:jsdoc": "node --experimental-strip-types scripts/docs.ts",
+    "experimental:version": "node ./scripts/experimental.ts version",
+    "experimental:publish": "node ./scripts/experimental.ts publish",
     "format": "prettier --ignore-path .prettierignore --write .",
     "format:check": "prettier --ignore-path .prettierignore --check .",
     "lint": "eslint --cache .",
