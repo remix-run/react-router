@@ -1,5 +1,5 @@
 /**
- * Interactive script to create a change file, mimicking `pnpm changeset`.
+ * Interactive script to create a change file
  *
  * Usage:
  *   node scripts/changes/add.ts

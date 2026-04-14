@@ -1,8 +1,8 @@
 /**
- * Checks whether the current PR contains a changeset file and posts (or
+ * Checks whether the current PR contains a change file and posts (or
  * updates) a sticky comment on the PR with the result.
  *
- * Usage (called by the changeset-check GitHub Actions workflow):
+ * Usage (called by the changes-file GitHub Actions workflow):
  *   node scripts/changes/check-pr.ts
  *
  * Usage:
@@ -18,7 +18,7 @@ import {
   updatePrComment,
 } from "../utils/github.ts";
 
-const COMMENT_MARKER = "<!-- changeset-check -->";
+const COMMENT_MARKER = "<!-- change-file-check -->";
 
 const COMMENT_FOUND = `${COMMENT_MARKER}
 ## ✅ Change File Found
@@ -37,7 +37,7 @@ pnpm run changes:add
 
 > This script requires Node 24+. If you are on a lower version, please [add a file manually](https://reactrouter.com/community/contributing#change-files)
 
-> Not every PR needs a changeset — you can skip this step if the change is internal-only
+> Not every PR needs a change file — you can skip this step if the change is internal-only
 > (tests, tooling, docs)\
 `;
 
