@@ -32,12 +32,7 @@
     "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
     "vite-ecosystem-ci:build": "pnpm build",
     "vite-ecosystem-ci:before-test": "pnpm playwright install",
-    "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration",
-    "changeset": "changeset",
-    "__disabled_release": "changeset publish",
-    "__disabled_changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
-    "__disabled_publish": "node scripts/publish.js",
-    "__disabled_version": "node ./scripts/version"
+    "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration"
   },
   "jest": {
     "projects": [
@@ -59,7 +54,6 @@
     "@babel/preset-env": "^7.27.2",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
-    "@changesets/cli": "^2.26.2",
     "@eslint/compat": "^2.0.3",
     "@manypkg/get-packages": "^1.1.3",
     "@mdx-js/rollup": "^3.1.0",
@@ -107,8 +101,6 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch",
-      "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch",
       "@mdx-js/rollup": "patches/@mdx-js__rollup.patch"
     },
     "overrides": {
