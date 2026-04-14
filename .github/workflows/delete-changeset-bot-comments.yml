@@ -1,0 +1,34 @@
+name: 🗑️ Delete Changeset Bot Comments
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete-comments:
+    name: 🗑️ Delete Changeset Bot Comments
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🗑️ Delete changeset-bot comments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/changes/delete-changeset-bot-comments.ts

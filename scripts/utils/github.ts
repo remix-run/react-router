@@ -81,6 +81,29 @@ export async function createRelease(
 }
 
 /**
+ * List open PRs
+ */
+export async function listOpenPrs(
+  options: { createdAfter?: Date; base?: string; author?: string } = {},
+) {
+  let response = await request("GET /repos/{owner}/{repo}/pulls", {
+    ...requestOptions(),
+    state: "open",
+    sort: "created",
+    direction: "desc",
+    per_page: 100,
+    ...(options.base ? { base: options.base } : {}),
+  });
+
+  return response.data.filter(
+    (pr) =>
+      (!options.createdAfter ||
+        new Date(pr.created_at) >= options.createdAfter) &&
+      (!options.author || pr.user?.login === options.author),
+  );
+}
+
+/**
  * Find an open PR from a specific branch to a base branch
  */
 export async function findOpenPr(head: string, base: string) {
