@@ -19,6 +19,7 @@
     "format:check": "prettier --ignore-path .prettierignore --check .",
     "lint": "eslint --cache .",
     "playground": "node ./scripts/playground.js",
+    "pr-preview": "node ./scripts/pr-preview.ts",
     "prerelease": "pnpm build",
     "setup-installable-branch": "node scripts/setup-installable-branch.ts",
     "test": "jest",
