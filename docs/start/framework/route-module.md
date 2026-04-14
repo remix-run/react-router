@@ -411,6 +411,10 @@ export default function Root() {
 }
 ```
 
+See also:
+
+- [Styling][styling]
+
 ## `meta`
 
 Route meta defines [meta tags][meta-element] to be rendered in the `<Meta />` component, usually placed in the `<head>`.
@@ -520,3 +524,4 @@ Next: [Rendering Strategies](./rendering)
 [data-mode-should-revalidate]: ../data/route-object#shouldrevalidate
 [spa-mode]: ../../how-to/spa
 [client-data]: ../../how-to/client-data
+[styling]: ../../explanation/styling
