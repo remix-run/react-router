@@ -41,9 +41,7 @@ This is useful when you want a stylesheet URL from Vite and need React Router to
 import dashboardHref from "./dashboard.css?url";
 
 export function links() {
-  return [
-    { rel: "stylesheet", href: dashboardHref },
-  ];
+  return [{ rel: "stylesheet", href: dashboardHref }];
 }
 ```
 
