@@ -1,12 +1,12 @@
 import * as assert from "node:assert";
-// import * as esbuild from "esbuild";
 import * as ts from "typescript";
 
 import { virtualRouteModulesPlugin } from "../vite/rsc/virtual-route-modules";
 
 const plugin = virtualRouteModulesPlugin({
-  isRouteModule() {
-    return true;
+  enforceSplitRouteModules: () => false,
+  getRouteIdForFile() {
+    return "test-route-id";
   },
   isRootRouteModule() {
     return false;
@@ -17,12 +17,6 @@ const plugin = virtualRouteModulesPlugin({
       module: ts.ModuleKind.ESNext,
       jsx: ts.JsxEmit.ReactJSX,
     });
-    // const result = await esbuild.transform(code, {
-    //   target: "esnext",
-    //   format: "esm",
-    //   jsx: "automatic",
-    // });
-    // return result.code;
   },
 });
 
@@ -105,27 +99,13 @@ const transform = plugin.transform.handler.bind({
   environment: { name: "rsc" },
 } as any);
 
-function withHotAccept(lines: string[]) {
-  return [
-    ...lines,
-    "if (import.meta.hot) {",
-    "  import.meta.hot.accept((mod) => {",
-    '      if (typeof __reactRouterDataRouter === "object" && !mod.default) {',
-    "        __reactRouterDataRouter.revalidate();",
-    "      }",
-    "    });",
-    "}",
-    "",
-  ];
-}
-
 function withSharedChunkHmr(lines: string[]) {
-  return withHotAccept([
+  return [
     ...lines,
     'import * as ___EnsureClientRouteModuleForHMR_REACT___ from "react";',
     "export function EnsureClientRouteModuleForHMR___() { return ___EnsureClientRouteModuleForHMR_REACT___.createElement(___EnsureClientRouteModuleForHMR_REACT___.Fragment, null) }",
     "",
-  ]);
+  ];
 }
 
 describe("route entry", () => {
@@ -474,13 +454,13 @@ describe("client-route-module=clientLoader", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function clientLoader() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 
@@ -491,13 +471,13 @@ describe("client-route-module=clientLoader", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function clientLoader() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 
@@ -508,13 +488,13 @@ describe("client-route-module=clientLoader", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function clientLoader() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 });
@@ -527,13 +507,13 @@ describe("client-route-module=clientAction", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function clientAction() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 
@@ -544,13 +524,13 @@ describe("client-route-module=clientAction", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function clientAction() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 
@@ -561,13 +541,13 @@ describe("client-route-module=clientAction", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function clientAction() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 });
@@ -580,13 +560,13 @@ describe("client-route-module=HydrateFallback", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function HydrateFallback() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 
@@ -597,13 +577,13 @@ describe("client-route-module=HydrateFallback", () => {
     );
     assert.ok(transformed);
     expect(transformed.code).toBe(
-      withHotAccept([
+      [
         '"use client";',
         'import "./side-effect.css";',
         'import { client } from "./client";',
         'import { shared } from "./shared";',
         "export function HydrateFallback() {\n  console.log(client, shared);\n}",
-      ]).join("\n"),
+      ].join("\n"),
     );
   });
 });

@@ -62,10 +62,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     );
   }
 
-  function isRouteModule(id: string): boolean {
-    return getRouteIdForFile(id) !== undefined;
-  }
-
   function isRootRouteModule(id: string): boolean {
     return path.normalize(id) === path.normalize(rootRouteFile);
   }
@@ -168,8 +164,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.serverBundles) errors.push("serverBundles");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
-            if (userConfig.future?.v8_splitRouteModules)
-              errors.push("future.v8_splitRouteModules");
             if (userConfig.future?.v8_viteEnvironmentApi === false)
               errors.push("future.v8_viteEnvironmentApi: false");
             if (userConfig.future?.unstable_subResourceIntegrity)
@@ -534,21 +528,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         client: ["client", "ssr"],
         server: ["rsc"],
       },
-      order: "pre",
-      isRouteModule,
+      getRouteIdForFile,
       isRootRouteModule,
       shouldTransform: (filename) => !isMdxRouteModule(filename),
       transformToJs,
-    }),
-    virtualRouteModulesPlugin({
-      environments: {
-        client: ["client", "ssr"],
-        server: ["rsc"],
-      },
-      isRouteModule,
-      isRootRouteModule,
-      shouldTransform: isMdxRouteModule,
-      transformToJs,
+      enforceSplitRouteModules: () => config.future.v8_splitRouteModules === "enforce"
     }),
     {
       name: "react-router/rsc/virtual-basename",
@@ -604,7 +588,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     // against a DOM that still has the old text, causing a hydration mismatch.
     requestAnimationFrame(() => {
       __reactRouterDataRouter.revalidate()
-    })
+    });
   })
 }`,
             ].join("\n")

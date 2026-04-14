@@ -9,6 +9,7 @@ import type { Cache } from "../cache";
 import { removeExports } from "../remove-exports";
 import {
   type RouteChunkExportName,
+  type RouteChunkName,
   detectRouteChunks as _detectRouteChunks,
 } from "../route-chunks";
 
@@ -18,18 +19,18 @@ export function EnsureClientRouteModuleForHMR___() { return ___EnsureClientRoute
 `;
 
 export function virtualRouteModulesPlugin({
+  enforceSplitRouteModules,
   environments: { client = ["client", "ssr"], server = ["rsc"] } = {},
-  isRouteModule,
+  getRouteIdForFile,
   isRootRouteModule,
-  order,
-  shouldTransform = () => true,
   transformToJs,
 }: {
+  enforceSplitRouteModules: () => boolean;
   environments?: {
     client?: string[];
     server?: string[];
   };
-  isRouteModule(filename: string): boolean;
+  getRouteIdForFile(filename: string): string | undefined;
   isRootRouteModule(filename: string): boolean;
   order?: "pre" | "post";
   shouldTransform?(filename: string): boolean;
@@ -39,10 +40,15 @@ export function virtualRouteModulesPlugin({
   let serverEnvironments = new Set(server);
   let cache: Cache = new Map();
 
-  async function createClientRouteEntry(id: string, code: string) {
+  async function createClientRouteEntry(
+    id: string,
+    code: string,
+    isRootRouteModule: boolean,
+    routeId: string,
+  ) {
     let result = "";
 
-    let routeChunks = detectRouteChunks(cache, id, code);
+    let routeChunks = detectRouteChunks(cache, id, code, isRootRouteModule);
     let { staticExports } = await parseRouteExports(code);
 
     validateRouteModuleExports(staticExports);
@@ -88,6 +94,28 @@ export function virtualRouteModulesPlugin({
       result = `import * as React from "react";\n${result}`;
     }
 
+    if (enforceSplitRouteModules() && !isRootRouteModule) {
+      let { hasRouteChunkByExportName } = routeChunks;
+      let hasClientAction = staticExports.includes("clientAction");
+      let hasClientLoader = staticExports.includes("clientLoader");
+      let hasClientMiddleware = staticExports.includes("clientMiddleware");
+      let hasHydrateFallback = staticExports.includes("HydrateFallback");
+
+      validateRouteChunks({
+        id: routeId,
+        valid: {
+          clientAction:
+            !hasClientAction || hasRouteChunkByExportName.clientAction,
+          clientLoader:
+            !hasClientLoader || hasRouteChunkByExportName.clientLoader,
+          clientMiddleware:
+            !hasClientMiddleware || hasRouteChunkByExportName.clientMiddleware,
+          HydrateFallback:
+            !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
+        },
+      });
+    }
+
     return {
       code: '"use client";\n' + result,
     };
@@ -97,10 +125,11 @@ export function virtualRouteModulesPlugin({
     id: string,
     code: string,
     isRootRouteModule: boolean,
+    routeId: string,
   ) {
     let result = "";
 
-    let routeChunks = detectRouteChunks(cache, id, code);
+    let routeChunks = detectRouteChunks(cache, id, code, isRootRouteModule);
     let { staticExports } = await parseRouteExports(code);
 
     validateRouteModuleExports(staticExports);
@@ -147,6 +176,28 @@ ${result}`;
       result += `export { ErrorBoundary } from "${createId(id, "client-route-module", "shared")}";\n`;
     }
 
+    if (enforceSplitRouteModules() && !isRootRouteModule) {
+      let { hasRouteChunkByExportName } = routeChunks;
+      let hasClientAction = staticExports.includes("clientAction");
+      let hasClientLoader = staticExports.includes("clientLoader");
+      let hasClientMiddleware = staticExports.includes("clientMiddleware");
+      let hasHydrateFallback = staticExports.includes("HydrateFallback");
+
+      validateRouteChunks({
+        id: routeId,
+        valid: {
+          clientAction:
+            !hasClientAction || hasRouteChunkByExportName.clientAction,
+          clientLoader:
+            !hasClientLoader || hasRouteChunkByExportName.clientLoader,
+          clientMiddleware:
+            !hasClientMiddleware || hasRouteChunkByExportName.clientMiddleware,
+          HydrateFallback:
+            !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
+        },
+      });
+    }
+
     return {
       code: result,
     };
@@ -164,9 +215,11 @@ ${result}`;
     id: string,
     code: string,
     chunk: "shared" | string,
+    routeId: string,
     isRootRouteModule: boolean,
+    isDevMode: boolean,
   ) {
-    let routeChunks = detectRouteChunks(cache, id, code);
+    let routeChunks = detectRouteChunks(cache, id, code, isRootRouteModule);
 
     const ast = babel.parse(code, {
       sourceType: "module",
@@ -207,13 +260,42 @@ ${result}`;
       result += ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR;
     }
 
-    result += `\nif (import.meta.hot) {\n`;
-    result += `  import.meta.hot.accept((mod) => {
-      if (typeof __reactRouterDataRouter === "object" && !mod.default) {
-        __reactRouterDataRouter.revalidate();
-      }
-    });\n`;
-    result += `}\n`;
+    let hasAction = staticExports.includes("action");
+    let hasLoader = staticExports.includes("loader");
+    let hasComponent =
+      staticExports.includes("default") ||
+      staticExports.includes("ServerComponent");
+    let hasErrorBoundary =
+      staticExports.includes("ErrorBoundary") ||
+      staticExports.includes("ServerErrorBoundary");
+
+    if (isDevMode) {
+      result += `export function ReactRouterHMRMeta___() {return null;};\n`;
+      result += `Object.assign(ReactRouterHMRMeta___, {
+        hasAction: ${JSON.stringify(hasAction)},
+        hasComponent: ${JSON.stringify(hasComponent)},
+        hasErrorBoundary: ${JSON.stringify(hasErrorBoundary)},
+        hasLoader: ${JSON.stringify(hasLoader)},
+        hasClientLoader: ${JSON.stringify(staticExports.includes("clientLoader"))},
+      });\n`;
+      result += `\nif (import.meta.hot) {\n`;
+      result += `  import.meta.hot.accept((mod) => {
+          if (typeof __reactRouterDataRouter === "object") {
+            __reactRouterDataRouter._updateRoutesForHMR(new Map([[${JSON.stringify(routeId)}, {
+              routeModule: mod,
+              ...mod.ReactRouterHMRMeta___,
+            }]]));
+
+            if (${chunk === "shared" ? "!mod.default || " : ""}mod.clientLoader || (
+              mod.ReactRouterHMRMeta___.hasClientLoader || ReactRouterHMRMeta___.hasClientLoader
+            )) {
+              __reactRouterDataRouter.revalidate();
+            }
+          }
+        });
+      `;
+      result += `}\n`;
+    }
 
     return {
       code: result,
@@ -223,11 +305,13 @@ ${result}`;
   return {
     name: "react-router-rsc-virtual-route-modules",
     transform: {
-      ...(order ? { order } : {}),
+      order: "pre",
       async handler(_code, id) {
         const [filename, ...rest] = id.split("?");
 
-        if (!isRouteModule(filename) || !shouldTransform(filename)) {
+        const routeId = getRouteIdForFile(filename);
+
+        if (!routeId) {
           return;
         }
 
@@ -251,7 +335,9 @@ ${result}`;
             id,
             code,
             clientRouteModuleType,
+            routeId,
             isRootRouteModule(filename),
+            this.environment.mode === "dev",
           );
         }
 
@@ -260,13 +346,19 @@ ${result}`;
         }
 
         if (isClientEnvironment) {
-          return await createClientRouteEntry(id, code);
+          return await createClientRouteEntry(
+            id,
+            code,
+            isRootRouteModule(filename),
+            routeId,
+          );
         }
 
         return await createServerRouteEntry(
           id,
           code,
           isRootRouteModule(filename),
+          routeId,
         );
       },
     },
@@ -393,6 +485,7 @@ function detectRouteChunks(
   cache: Cache,
   id: string,
   code: string,
+  isRootRouteModule: boolean,
 ): RouteChunks {
   function noRouteChunks(): RouteChunks {
     return {
@@ -412,9 +505,9 @@ function detectRouteChunks(
   // for all requests, all of its chunks would always be loaded up front during
   // the initial page load. Instead of firing off multiple requests to resolve
   // the root route code, we want it to be downloaded in a single request.
-  // if (isRootRouteModuleId(ctx, id)) {
-  //   return noRouteChunks();
-  // }
+  if (isRootRouteModule) {
+    return noRouteChunks();
+  }
 
   if (
     !Array.from(CLIENT_MODULE_CHUNKS).some((exportName) =>
@@ -427,4 +520,36 @@ function detectRouteChunks(
   let [filename] = id.split("?");
 
   return _detectRouteChunks(code, cache, filename);
+}
+
+function validateRouteChunks({
+  id,
+  valid,
+}: {
+  id: string;
+  valid: Record<Exclude<RouteChunkName, "main">, boolean>;
+}): void {
+  let invalidChunks = Object.entries(valid)
+    .filter(([_, isValid]) => !isValid)
+    .map(([chunkName]) => chunkName);
+
+  if (invalidChunks.length === 0) {
+    return;
+  }
+
+  let plural = invalidChunks.length > 1;
+
+  throw new Error(
+    [
+      `Error splitting route module: ${id}`,
+
+      invalidChunks.map((name) => `- ${name}`).join("\n"),
+
+      `${plural ? "These exports" : "This export"} could not be split into ${
+        plural ? "their own chunks" : "its own chunk"
+      } because ${
+        plural ? "they share" : "it shares"
+      } code with other exports. You should extract any shared code into its own module and then import it within the route module.`,
+    ].join("\n\n"),
+  );
 }
