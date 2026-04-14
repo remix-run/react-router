@@ -1,3 +1,12 @@
+# We use this singular file for all of our releases because we can only specify
+# a singular GitHub workflow file in npm's Trusted Publishing configuration.
+# See https://docs.npmjs.com/trusted-publishers for more info.
+#
+# Specific jobs only run on the proper trigger:
+#
+# - Change file driven stable releases (push to release/hotfix branches)
+# - Experimental releases (from a workflow_dispatch trigger)
+
 name: 🚢 Release/Publish
 
 on:
@@ -5,6 +14,10 @@ on:
     branches:
       - "release"
       - "hotfix"
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,7 +26,7 @@ concurrency:
 jobs:
   check:
     name: Check release readiness
-    if: github.repository == 'remix-run/react-router'
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       has_change_files: ${{ steps.check.outputs.has_change_files }}
@@ -38,7 +51,7 @@ jobs:
   pull_request:
     name: Open pull request
     needs: check
-    if: needs.check.outputs.has_change_files == 'true'
+    if: github.event_name == 'push' && needs.check.outputs.has_change_files == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -69,7 +82,7 @@ jobs:
   publish:
     name: Publish
     needs: check
-    if: needs.check.outputs.has_change_files == 'false'
+    if: github.event_name == 'push' && needs.check.outputs.has_change_files == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -97,3 +110,44 @@ jobs:
         run: pnpm changes:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  experimental-release:
+    name: 🧪 Experimental Release
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          # checkout using a custom token so that we can push later on
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: ⤴️ Update version
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+          pnpm run experimental:version
+          git push origin --tags
+
+      - name: 🏗 Build
+        run: pnpm build
+
+      - name: 🚀 Publish
+        run: pnpm run experimental:publish
