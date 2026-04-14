@@ -190,6 +190,22 @@ export async function updatePrComment(commentId: number, body: string) {
 }
 
 /**
+ * Get all files changed in a PR
+ */
+export async function getPrFiles(prNumber: number) {
+  let response = await request(
+    "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+    {
+      ...requestOptions(),
+      pull_number: prNumber,
+      per_page: 100,
+    },
+  );
+
+  return response.data;
+}
+
+/**
  * Delete a comment on a PR
  */
 export async function deletePrComment(commentId: number) {
