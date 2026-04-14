@@ -2871,6 +2871,16 @@ export function createRouter(init: RouterInit): Router {
     );
     let result = results[match.route.id];
 
+    if (!result) {
+      // If this error came from a parent middleware before the loader ran,
+      // then it won't be tied to the fetcher target route
+      for (let match of matches) {
+        if (results[match.route.id]) {
+          result = results[match.route.id];
+          break;
+        }
+      }
+    }
     // We can delete this so long as we weren't aborted by our our own fetcher
     // re-load which would have put _new_ controller is in fetchControllers
     if (fetchControllers.get(key) === abortController) {
