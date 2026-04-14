@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
+    "@types/prompts": "^2.4.9",
     "@types/semver": "^7.7.0"
   },
   "engines": {
