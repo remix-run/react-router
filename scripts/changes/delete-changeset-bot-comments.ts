@@ -15,7 +15,7 @@ import {
 } from "../utils/github.ts";
 
 const CHANGESET_BOT = "changeset-bot[bot]";
-const CUTOFF = new Date(2026, 3, 1);
+const CUTOFF = new Date(2026, 0, 1);
 
 const ADD_CHANGE_FILE =
   "👋 We've moved away from Changesets to our own internal " +
