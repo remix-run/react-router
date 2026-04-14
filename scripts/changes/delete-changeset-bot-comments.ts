@@ -15,7 +15,7 @@ import {
 } from "../utils/github.ts";
 
 const CHANGESET_BOT = "changeset-bot[bot]";
-const CUTOFF = new Date(2026, 0, 1);
+const CUTOFF = new Date(2026, 4, 1);
 
 const ADD_CHANGE_FILE =
   "👋 We've moved away from Changesets to our own internal " +
@@ -42,8 +42,6 @@ console.log(
 let prs = await listOpenPrs({
   createdAfter: CUTOFF,
   base: "dev",
-  // TODO: For testing
-  author: "brophdawg11",
 });
 console.log(`Found ${prs.length} open PR${prs.length === 1 ? "" : "s"}.\n`);
 
