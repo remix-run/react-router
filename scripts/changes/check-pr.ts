@@ -21,12 +21,12 @@ import {
 const COMMENT_MARKER = "<!-- change-file-check -->";
 
 const COMMENT_FOUND = `${COMMENT_MARKER}
-## ✅ Change File Found
+### ✅ Change File Found
 
 A \`.changes\` file has been found in this PR. Thanks!`;
 
 const COMMENT_MISSING = `${COMMENT_MARKER}
-## 📝 No Change File Found
+### 📝 No Change File Found
 
 This PR doesn't include a change file which is used for automated release notes.
 If your change affects users, please add one (or more) and commit the generated file(s).
