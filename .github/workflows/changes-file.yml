@@ -1,0 +1,41 @@
+name: 📝 Change File Check
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 📝 Change File Check
+    # TODO: Temporarily only run on my PRs for testing purposes
+    if: github.repository == 'remix-run/react-router' && github.event.pull_request.user.login == 'brophdawg11'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📝 Check change file and update PR comment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/changes/check-pr.ts ${{ github.event.pull_request.number }}

@@ -67,6 +67,19 @@ All commits that fix bugs or add features need one or more tests.
 
 <docs-error>Do not merge code without tests!</docs-error>
 
+### Change Files
+
+In order to facilitate release notes generation, every PR with a user-facing impact should include one or more change files. You can generate these vis `pnpm run changes:add` (requires node 24+).
+
+This tool will generate change files in the relevant `packages/<package>/.changes/` directories. Change files are markdown files with a short description of the change. They should be named using the format `<type>.<short-description>.md` where type is either `patch`, `minor`, `major`, or `unstable`. For example:
+
+```sh
+patch.fix-fetcher-redirects.md
+minor.add-some-new-api.md
+major.require-node-24.md
+unstable.update-unstable-api.md
+```
+
 ### Docs + Examples
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
