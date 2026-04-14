@@ -19,13 +19,13 @@ const CUTOFF = new Date(2026, 0, 1);
 
 const ADD_CHANGE_FILE =
   "👋 We've moved away from Changesets to our own internal " +
-  "[changes process](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files)]. " +
+  "[changes process](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files). " +
   "Please manually add a change file to this branch, or you can merge in the " +
   "latest `dev` branch and run `pnpm run changes:add` to add a change file.";
 
 const MIGRATE_CHANGE_FILE =
   "👋 We've moved away from Changesets to our own internal " +
-  "[changes process](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files)]. " +
+  "[changes process](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files). " +
   "Please convert your changesets file to a change file in the proper package directory " +
   "(i.e., `packages/react-router/.changes/patch.fix-some-bug.md`).";
 
