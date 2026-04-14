@@ -121,19 +121,15 @@ pnpm lint
 pnpm typecheck
 ```
 
-### 6. Create a Changeset
+### 6. Create a Change file
 
-Create `.changeset/<descriptive-name>.md`:
+Create a change file at `packages/<package>/.changes/<type>.<unique-meaningful-name>.md`. `<type>` should be either `patch`, `minor`, `major` or `unstable` to indicate the type of API change being made.
+
+Format:
 
 ```markdown
----
-"react-router": patch
----
-
 fix: <brief description of what was fixed>
 ```
-
-Use `patch` for bug fixes. Only include packages in the frontmatter that were actually changed.
 
 ### 7. Report Results
 

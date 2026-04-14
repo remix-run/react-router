@@ -123,7 +123,7 @@ This table gives a high-level overview of the stages, but please see the individ
   - Because the alpha release may contain other work committed to `dev` but not yet released in a stable version, it may not be ideal for testing in all cases
   - In these cases, PR authors may also add the contents for a `.patch` file in a comment that folks can use via [patch-package](https://www.npmjs.com/package/patch-package) or [pnpm patch](https://pnpm.io/cli/patch)
 - Feedback from alpha testers is considered essential for further progress
-- The PR should also contain a changeset documenting the new API for the release notes
+- The PR should also contain a changes file documenting the new API for the release notes
 - SC members will review and approve the PR via GitHub reviews
 - Approval at this stage communicates:
   - The feature is valuable for React Router

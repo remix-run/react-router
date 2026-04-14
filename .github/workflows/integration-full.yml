@@ -9,7 +9,7 @@ on:
       - main
       - dev
     paths-ignore:
-      - ".changeset/**"
+      - "packages/*/.changes/**"
       - "decisions/**"
       - "docs/**"
       - "examples/**"
