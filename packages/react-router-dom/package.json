@@ -59,7 +59,7 @@
     }
   },
   "dependencies": {
-    "react-router": "workspace:*"
+    "react-router": "remix-run/react-router#preview/pr-14977&path:packages/react-router"
   },
   "devDependencies": {
     "react": "catalog:",

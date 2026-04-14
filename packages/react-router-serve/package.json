@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "^0.2.0",
-    "@react-router/express": "workspace:*",
-    "@react-router/node": "workspace:*",
+    "@react-router/express": "remix-run/react-router#preview/pr-14977&path:packages/react-router-express",
+    "@react-router/node": "remix-run/react-router#preview/pr-14977&path:packages/react-router-node",
     "compression": "^1.8.1",
     "express": "^4.19.2",
     "get-port": "5.1.1",
