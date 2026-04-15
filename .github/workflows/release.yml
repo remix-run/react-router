@@ -51,7 +51,7 @@ jobs:
   pull_request:
     name: Open pull request
     needs: check
-    if: github.event_name == 'push' && needs.check.outputs.has_change_files == 'true'
+    if: needs.check.outputs.has_change_files == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -82,7 +82,7 @@ jobs:
   publish:
     name: Publish
     needs: check
-    if: github.event_name == 'push' && needs.check.outputs.has_change_files == 'false'
+    if: needs.check.outputs.has_change_files == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -110,6 +110,34 @@ jobs:
         run: pnpm changes:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  comment:
+    name: 📝 Comment on released issues/pull requests
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # enable commenting on released issues
+      pull-requests: write # enable commenting on released pull requests
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24 # Needed for node TS support
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📝 Comment on released issues and pull requests
+        run: pnpm run release-comments
 
   experimental-release:
     name: 🧪 Experimental Release
