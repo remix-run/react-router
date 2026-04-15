@@ -121,9 +121,24 @@ function getPackages(): Package[] {
     });
 }
 
+// Common English stop words that add no meaning to a filename slug
+const STOP_WORDS = new Set([
+  "a", "an", "the",
+  "and", "or", "but", "so", "nor", "yet",
+  "in", "on", "at", "by", "for", "to", "of", "from", "with", "into", "onto",
+  "about", "as", "via",
+  "is", "are", "was", "were", "be", "been", "being",
+  "have", "has", "had",
+  "do", "does", "did",
+  "it", "its", "this", "that", "these", "those",
+  "we", "us", "our", "i", "me", "my", "you", "your",
+  "he", "him", "his", "she", "her", "they", "them", "their",
+  "now", "then", "also", "just",
+]);
+
 /**
- * Converts a free-text description into a kebab-case slug of at most 6 words.
- * Non-alphanumeric characters (other than spaces) are stripped before slugging.
+ * Converts a free-text description into a kebab-case slug of at most 6
+ * meaningful words. Stop words and non-alphanumeric characters are stripped.
  */
 function toSlug(description: string): string {
   return (
@@ -132,6 +147,7 @@ function toSlug(description: string): string {
       .replace(/[^a-z0-9\s]/g, "")
       .trim()
       .split(/\s+/)
+      .filter((w) => !STOP_WORDS.has(w))
       .slice(0, 6)
       .join("-") || "change"
   );
