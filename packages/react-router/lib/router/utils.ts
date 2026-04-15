@@ -770,49 +770,63 @@ export type RouteManifest<R = DataRouteObject> = Record<string, R | undefined>;
 
 // prettier-ignore
 type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-// prettier-ignore
-type Regez_AZ = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+type Regex_AZ = Uppercase<Regex_az>;
 type Regex_09 = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-type Regex_w = Regex_az | Regez_AZ | Regex_09 | "_";
-type ParamChar = Regex_w | "-";
+type Regex_w = Regex_az | Regex_AZ | Regex_09 | "_";
 
-// Emulates regex `+`
-type RegexMatchPlus<
-  CharPattern extends string,
-  T extends string,
-> = T extends `${infer First}${infer Rest}`
-  ? First extends CharPattern
-    ? RegexMatchPlus<CharPattern, Rest> extends never
-      ? First
-      : `${First}${RegexMatchPlus<CharPattern, Rest>}`
-    : never
-  : never;
+// prettier-ignore
+/** Emulates Regex `+` operator */
+type RegexMatchPlus<char extends string, T extends string> = 
+  _RegexMatchPlus<char, T> extends infer result extends string ?
+    result extends '' ? never : result
+  :
+  never
 
-// Recursive helper for finding path parameters in the absence of wildcards
-type _PathParam<Path extends string> =
-  // split path into individual path segments
-  Path extends `${infer L}/${infer R}`
-    ? _PathParam<L> | _PathParam<R>
-    : // find params after `:`
-      Path extends `:${infer Param}`
-      ? Param extends `${infer Optional}?${string}`
-        ? RegexMatchPlus<ParamChar, Optional>
-        : RegexMatchPlus<ParamChar, Param>
-      : // otherwise, there aren't any params present
-        never;
+// prettier-ignore
+type _RegexMatchPlus<char extends string, T extends string> =
+  T extends `${infer head extends char}${infer rest}` ?
+    `${head}${_RegexMatchPlus<char, rest>}`
+  :
+  ''
 
-export type PathParam<Path extends string> =
+type ParamNameChar = Regex_w | "-";
+
+type Simplify<T> = { [K in keyof T]: T[K] } & {};
+
+// prettier-ignore
+type GeneratePathParams<path extends string> = Simplify<
+  & ParseParams<path>
+  & { [key in string]: string | null | undefined }
+>
+
+// prettier-ignore
+type ParseParams<path extends string> =
   // check if path is just a wildcard
-  Path extends "*" | "/*"
-    ? "*"
-    : // look for wildcard at the end of the path
-      Path extends `${infer Rest}/*`
-      ? "*" | _PathParam<Rest>
-      : // look for params in the absence of wildcards
-        _PathParam<Path>;
+  path extends '*' ? { '*': string } :
+  // look for wildcard at the end of the path
+  path extends `${infer rest}/*` ? { '*': string } & ParseParams<rest> :
+  // look for params in the absence of wildcards
+  _ParseParams<path>;
+
+// prettier-ignore
+type _ParseParams<path extends string> =
+  // split path into individual path segments
+  path extends `${infer left}/${infer right}` ?
+    _ParseParams<left> & _ParseParams<right> :
+  // look for optional param in segment
+  path extends `:${infer param}?${string}` ?
+    { [key in RegexMatchPlus<ParamNameChar, param>]?: string | null | undefined } :
+  // look for required param in segment
+  path extends `:${infer param}` ?
+    { [key in RegexMatchPlus<ParamNameChar, param>]: string } :
+  {};
+
+// prettier-ignore
+export type PathParam<path extends string> = (keyof ParseParams<path>) & string;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
+  // PathParam
   Expect<Equal<PathParam<"/a/b/*">, "*">>,
   Expect<Equal<PathParam<":a">, "a">>,
   Expect<Equal<PathParam<"/a/:b">, "b">>,
@@ -821,6 +835,28 @@ type _tests = [
   Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
   Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
   Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
+
+  // ParseParams
+  Expect<Equal<ParseParams<"/a/b/*">, { "*": string }>>,
+  Expect<Equal<ParseParams<":a">, { a: string }>>,
+  Expect<Equal<ParseParams<"/a/:b">, { b: string }>>,
+  Expect<Equal<ParseParams<"/a/blahblahblah:b">, {}>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:b">>, { a: string; b: string }>>,
+  Expect<
+    Equal<
+      Simplify<ParseParams<"/:a/b/:c/*">>,
+      { a: string; c: string; "*": string }
+    >
+  >,
+  Expect<Equal<ParseParams<"/:lang.xml">, { lang: string }>>,
+  Expect<
+    Equal<ParseParams<"/:lang?.xml">, { lang?: string | null | undefined }>
+  >,
+  Expect<Equal<Simplify<ParseParams<"/:a/:a">>, { a: string }>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:a?">>, { a: string }>>,
+  Expect<
+    Equal<Simplify<ParseParams<"/:a?/:a?">>, { a?: string | null | undefined }>
+  >,
 ];
 
 // Attempt to parse the given string segment. If it fails, then just return the
@@ -1365,9 +1401,7 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any,
+  params: GeneratePathParams<Path> = {} as any,
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
@@ -1394,15 +1428,14 @@ export function generatePath<Path extends string>(
 
       // only apply the splat if it's the last segment
       if (isLastSegment && segment === "*") {
-        const star = "*" as PathParam<Path>;
         // Apply the splat
-        return stringify(params[star]);
+        return stringify(params["*" as keyof typeof params]);
       }
 
       const keyMatch = segment.match(/^:([\w-]+)(\??)(.*)/);
       if (keyMatch) {
         const [, key, optional, suffix] = keyMatch;
-        let param = params[key as PathParam<Path>];
+        let param = params[key as keyof typeof params];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
         return encodeURIComponent(stringify(param)) + suffix;
       }
@@ -1477,13 +1510,10 @@ type Mutable<T> = {
  * @returns A path match object if the pattern matches the pathname,
  * or `null` if it does not match.
  */
-export function matchPath<
-  ParamKey extends ParamParseKey<Path>,
-  Path extends string,
->(
+export function matchPath<Path extends string>(
   pattern: PathPattern<Path> | Path,
   pathname: string,
-): PathMatch<ParamKey> | null {
+): PathMatch<ParamParseKey<Path>> | null {
   if (typeof pattern === "string") {
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
