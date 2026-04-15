@@ -28,10 +28,10 @@ the match.
 ## Signature
 
 ```tsx
-function matchPath<ParamKey extends ParamParseKey<Path>, Path extends string>(
+function matchPath<Path extends string>(
   pattern: PathPattern<Path> | Path,
   pathname: string,
-): PathMatch<ParamKey> | null
+): PathMatch<ParamParseKey<Path>> | null
 ```
 
 ## Params
