@@ -530,9 +530,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
       getRouteIdForFile,
       isRootRouteModule,
-      shouldTransform: (filename) => !isMdxRouteModule(filename),
       transformToJs,
-      enforceSplitRouteModules: () => config.future.v8_splitRouteModules === "enforce"
+      enforceSplitRouteModules: () =>
+        config.future.v8_splitRouteModules === "enforce",
     }),
     {
       name: "react-router/rsc/virtual-basename",

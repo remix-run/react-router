@@ -119,7 +119,7 @@ export const viteConfig = {
         let useNativeTsconfigPaths =
           parseInt(vite.version.split(".")[0], 10) >= 8;
         let plugins = [
-          ${args.mdx ? "mdx()," : ""}
+          ${args.mdx ? "{enforce: 'pre', ...mdx()}," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
           ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
           ${isRsc ? "react(), rsc()," : ""}

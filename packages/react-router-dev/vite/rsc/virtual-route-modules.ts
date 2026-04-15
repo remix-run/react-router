@@ -24,6 +24,7 @@ export function virtualRouteModulesPlugin({
   getRouteIdForFile,
   isRootRouteModule,
   transformToJs,
+  shouldTransform,
 }: {
   enforceSplitRouteModules: () => boolean;
   environments?: {
@@ -287,7 +288,7 @@ ${result}`;
             }]]));
 
             if (${chunk === "shared" ? "!mod.default || " : ""}mod.clientLoader || (
-              mod.ReactRouterHMRMeta___.hasClientLoader || ReactRouterHMRMeta___.hasClientLoader
+              mod.ReactRouterHMRMeta___.hasClientLoader || ReactRouterHMRMeta___.hasClientLoader || ReactRouterHMRMeta___.hasLoader
             )) {
               __reactRouterDataRouter.revalidate();
             }
@@ -304,63 +305,62 @@ ${result}`;
 
   return {
     name: "react-router-rsc-virtual-route-modules",
-    transform: {
-      order: "pre",
-      async handler(_code, id) {
-        const [filename, ...rest] = id.split("?");
+    enforce: "pre",
+    async transform(_code, id) {
+      const [filename, ...rest] = id.split("?");
 
-        const routeId = getRouteIdForFile(filename);
+      const routeId = getRouteIdForFile(filename);
 
-        if (!routeId) {
-          return;
-        }
+      if (!routeId || (shouldTransform && !shouldTransform?.(filename))) {
+        return;
+      }
 
-        let isClientEnvironment = clientEnvironments.has(this.environment.name);
-        let isServerEnvironment = serverEnvironments.has(this.environment.name);
+      let isClientEnvironment = clientEnvironments.has(this.environment.name);
+      let isServerEnvironment = serverEnvironments.has(this.environment.name);
 
-        if (!isClientEnvironment && !isServerEnvironment) {
-          return;
-        }
+      if (!isClientEnvironment && !isServerEnvironment) {
+        return;
+      }
 
-        let code = await transformToJs(_code, filename);
+      // this.
+      let code = await transformToJs(_code, filename);
 
-        let searchParams =
-          rest.length > 0 ? new URLSearchParams(rest.join("?")) : null;
+      let searchParams =
+        rest.length > 0 ? new URLSearchParams(rest.join("?")) : null;
 
-        let clientRouteModuleType = searchParams?.get("client-route-module");
-        let isServerRouteModule = searchParams?.has("server-route-module");
+      let clientRouteModuleType = searchParams?.get("client-route-module");
+      let isServerRouteModule = searchParams?.has("server-route-module");
 
-        if (clientRouteModuleType) {
-          return await createClientRouteModuleChunk(
-            id,
-            code,
-            clientRouteModuleType,
-            routeId,
-            isRootRouteModule(filename),
-            this.environment.mode === "dev",
-          );
-        }
+      if (clientRouteModuleType) {
+        return await createClientRouteModuleChunk(
+          id,
+          code,
+          clientRouteModuleType,
+          routeId,
+          isRootRouteModule(filename),
+          this.environment.mode === "dev",
+        );
+      }
 
-        if (isServerRouteModule) {
-          return createServerRouteModule(code);
-        }
+      if (isServerRouteModule) {
+        return createServerRouteModule(code);
+      }
 
-        if (isClientEnvironment) {
-          return await createClientRouteEntry(
-            id,
-            code,
-            isRootRouteModule(filename),
-            routeId,
-          );
-        }
-
-        return await createServerRouteEntry(
+      if (isClientEnvironment) {
+        return await createClientRouteEntry(
           id,
           code,
           isRootRouteModule(filename),
           routeId,
         );
-      },
+      }
+
+      return await createServerRouteEntry(
+        id,
+        code,
+        isRootRouteModule(filename),
+        routeId,
+      );
     },
   } satisfies Vite.Plugin;
 }
