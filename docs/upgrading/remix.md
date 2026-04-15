@@ -399,5 +399,5 @@ Congratulations! You are now on React Router v7. Go ahead and run your applicati
 [server-actions]: ../start/framework/actions#server-actions
 [ts-module-augmentation]: https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
 [type-safety]: ../explanation/type-safety
-[codemod]: https://codemod.com/registry/remix-2-react-router-upgrade
+[codemod]: https://app.codemod.com/registry/remix/2/react-router/upgrade
 [jrestall]: https://github.com/jrestall

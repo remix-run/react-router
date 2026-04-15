@@ -4,18 +4,26 @@
   "scripts": {
     "build": "pnpm run --filter=\"./packages/**/*\" build",
     "watch": "pnpm build && pnpm run --filter=\"./packages/**/*\" --parallel build --watch",
+    "changes:add": "node ./scripts/changes/add.ts",
+    "changes:publish": "node ./scripts/changes/publish.ts",
+    "changes:pr": "node ./scripts/changes/pr.ts",
+    "changes:preview": "node ./scripts/changes/version.ts --preview",
+    "changes:validate": "node ./scripts/changes/validate.ts",
+    "changes:version": "node ./scripts/changes/version.ts",
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
     "docs": "pnpm run docs:typedoc && pnpm run docs:jsdoc",
     "docs:typedoc": "typedoc",
     "docs:jsdoc": "node --experimental-strip-types scripts/docs.ts",
+    "experimental:version": "node ./scripts/experimental.ts version",
+    "experimental:publish": "node ./scripts/experimental.ts publish",
     "format": "prettier --ignore-path .prettierignore --write .",
     "format:check": "prettier --ignore-path .prettierignore --check .",
     "lint": "eslint --cache .",
     "playground": "node ./scripts/playground.js",
+    "pr-preview": "node ./scripts/pr-preview.ts",
     "prerelease": "pnpm build",
-    "release": "changeset publish",
     "setup-installable-branch": "node scripts/setup-installable-branch.ts",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
@@ -27,11 +35,7 @@
     "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
     "vite-ecosystem-ci:build": "pnpm build",
     "vite-ecosystem-ci:before-test": "pnpm playwright install",
-    "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration",
-    "changeset": "changeset",
-    "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
-    "publish": "node scripts/publish.js",
-    "version": "node ./scripts/version"
+    "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration"
   },
   "jest": {
     "projects": [
@@ -53,12 +57,10 @@
     "@babel/preset-env": "^7.27.2",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
-    "@changesets/cli": "^2.26.2",
     "@eslint/compat": "^2.0.3",
     "@manypkg/get-packages": "^1.1.3",
     "@mdx-js/rollup": "^3.1.0",
     "@playwright/test": "^1.58.2",
-    "@remix-run/changelog-github": "^0.0.5",
     "@types/jest": "^29.5.4",
     "@types/jsdom": "^21.1.1",
     "@types/react": "catalog:",
@@ -101,8 +103,6 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch",
-      "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch",
       "@mdx-js/rollup": "patches/@mdx-js__rollup.patch"
     },
     "overrides": {

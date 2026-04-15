@@ -1,5 +1,91 @@
 # `@react-router/dev`
 
+## v7.14.1
+
+### Patch Changes
+
+- Add TypeScript 6 support to peer dependency ranges
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+  - [`@react-router/node@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.14.1)
+  - [`@react-router/serve@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.14.1)
+
+## 7.14.0
+
+### Minor Changes
+
+- Add support for Vite 8 ([#14876](https://github.com/remix-run/react-router/pull/14876))
+
+### Patch Changes
+
+- support for prerendering multiple server bundles with v8_viteEnvironmentApi ([#14921](https://github.com/remix-run/react-router/pull/14921))
+
+- rsc framework mode prerender / spa mode support ([#14907](https://github.com/remix-run/react-router/pull/14907))
+
+- UNSTABLE RSC FRAMEWORK MODE BREAKING CHANGE - Existing route module exports remain unchanged from stable v7 non-RSC mode, but new exports are added for RSC mode. If you want to use RSC features, you will need to update your route modules to export the new annotations. ([#14901](https://github.com/remix-run/react-router/pull/14901))
+
+  If you are using RSC framework mode currently, you will need to update your route modules to the new conventions. The following route module components have their own mutually exclusive server component counterparts:
+
+  | Server Component Export | Client Component  |
+  | ----------------------- | ----------------- |
+  | `ServerComponent`       | `default`         |
+  | `ServerErrorBoundary`   | `ErrorBoundary`   |
+  | `ServerLayout`          | `Layout`          |
+  | `ServerHydrateFallback` | `HydrateFallback` |
+
+  If you were previously exporting a `ServerComponent`, your `ErrorBoundary`, `Layout`, and `HydrateFallback` were also server components. If you want to keep those as server components, you can rename them and prefix them with `Server`. If you were previously importing the implementations of those components from a client module, you can simply inline them.
+
+  Example:
+
+  Before
+
+  ```tsx
+  import { ErrorBoundary as ClientErrorBoundary } from "./client";
+
+  export function ServerComponent() {
+    // ...
+  }
+
+  export function ErrorBoundary() {
+    return <ClientErrorBoundary />;
+  }
+
+  export function Layout() {
+    // ...
+  }
+
+  export function HydrateFallback() {
+    // ...
+  }
+  ```
+
+  After
+
+  ```tsx
+  export function ServerComponent() {
+    // ...
+  }
+
+  export function ErrorBoundary() {
+    // previous implementation of ClientErrorBoundary, this is now a client component
+  }
+
+  export function ServerLayout() {
+    // rename previous Layout export to ServerLayout to make it a server component
+  }
+
+  export function ServerHydrateFallback() {
+    // rename previous HydrateFallback export to ServerHydrateFallback to make it a server component
+  }
+  ```
+
+- update the reveal command to support rsc for `entry.client`, `entry.rsc`, `entry.ssr` ([#14904](https://github.com/remix-run/react-router/pull/14904))
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+  - `@react-router/node@7.14.0`
+  - `@react-router/serve@7.14.0`
+
 ## 7.13.2
 
 ### Patch Changes

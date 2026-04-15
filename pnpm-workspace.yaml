@@ -3,6 +3,7 @@ packages:
   - "integration/helpers/*"
   - "packages/*"
   - "playground/*"
+  - "scripts"
 
 catalog:
   "@types/react": ^18.0.27

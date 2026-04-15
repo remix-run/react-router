@@ -1,5 +1,20 @@
 # `@react-router/node`
 
+## v7.14.1
+
+### Patch Changes
+
+- Add TypeScript 6 support to peer dependency ranges
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+
+## 7.14.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+
 ## 7.13.2
 
 ### Patch Changes
