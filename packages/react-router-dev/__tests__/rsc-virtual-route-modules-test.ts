@@ -95,7 +95,7 @@ const unsplittableModule = js`
   export function HydrateFallback() { console.log(client, shared, test); }
 `;
 
-const transform = plugin.transform.handler.bind({
+const transform = plugin.transform.bind({
   environment: { name: "rsc" },
 } as any);
 
@@ -110,7 +110,7 @@ function withSharedChunkHmr(lines: string[]) {
 
 describe("route entry", () => {
   describe("client environment", () => {
-    const transform = plugin.transform.handler.bind({
+    const transform = plugin.transform.bind({
       environment: { name: "client" },
     } as any);
 
