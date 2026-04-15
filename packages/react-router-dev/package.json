@@ -76,7 +76,7 @@
     "@babel/preset-typescript": "^7.27.1",
     "@babel/traverse": "^7.27.7",
     "@babel/types": "^7.27.7",
-    "@react-router/node": "workspace:*",
+    "@react-router/node": "remix-run/react-router#preview/pr-14965&path:packages/react-router-node",
     "@remix-run/node-fetch-server": "^0.13.0",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
