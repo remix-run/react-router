@@ -11,6 +11,23 @@ title: HTTP Headers
 
 Headers are primarily defined with the route module `headers` export. You can also set headers in `entry.server.tsx`.
 
+## Reading request headers
+
+Request headers from the incoming `Request` are available on the `request` argument that's passed to your route's `loader` and `action` functions:
+
+```tsx filename=some-route.tsx
+export async function loader({ request }: Route.LoaderArgs) {
+  // Standard Headers methods are available
+  const acceptLanguage = request.headers.get("Accept-Language");
+  const userAgent = request.headers.get("User-Agent");
+  const isJsonRequest = request.headers.get("Content-Type")?.includes("application/json");
+
+  return { acceptLanguage, userAgent, isJsonRequest };
+}
+```
+
+`request.headers` is a standard [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) instance, so you can also iterate over it, call `.has(name)`, etc. The same `request` object is available on `action` for reading headers from form submissions and JSON requests.
+
 ## From Route Modules
 
 ```tsx filename=some-route.tsx
