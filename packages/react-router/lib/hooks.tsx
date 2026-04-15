@@ -184,9 +184,9 @@ export function useNavigationType(): NavigationType {
  * @param pattern The pattern to match against the current {@link Location}
  * @returns The path match object if the pattern matches, `null` otherwise
  */
-export function useMatch<
-  Path extends string,
->(pattern: PathPattern<Path> | Path): PathMatch<ParamParseKey<Path>> | null {
+export function useMatch<Path extends string>(
+  pattern: PathPattern<Path> | Path,
+): PathMatch<ParamParseKey<Path>> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
