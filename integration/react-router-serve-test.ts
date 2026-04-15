@@ -1,3 +1,5 @@
+import path from "node:path";
+import { readFile, writeFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
@@ -81,4 +83,58 @@ test.describe("react-router-serve", () => {
       });
     });
   }
+
+  test.describe("cross-platform build output", () => {
+    let fixture: Fixture;
+    let appFixture: AppFixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
+        templateName: "vite-5-template",
+        useReactRouterServe: true,
+        files: {
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+
+            export default function Index() {
+              return <Link to="/burgers">Other Route</Link>;
+            }
+          `,
+
+          "app/routes/burgers.tsx": js`
+            export default function Burgers() {
+              return <div>cheeseburger</div>;
+            }
+          `,
+        },
+      });
+
+      let serverBuildPath = path.join(fixture.projectDir, "build/server/index.js");
+      let serverBuild = await readFile(serverBuildPath, "utf8");
+
+      // Simulate a Windows-produced build artifact copied to Linux by using
+      // backslashes in assetsBuildDirectory.
+      let windowsBuild = serverBuild.replace(
+        /export const assetsBuildDirectory = "([^"]+)";/,
+        (_, assetsBuildDirectory: string) => {
+          let windowsPath = assetsBuildDirectory.replace(/\//g, "\\\\");
+          return `export const assetsBuildDirectory = "${windowsPath}";`;
+        },
+      );
+
+      await writeFile(serverBuildPath, windowsBuild, "utf8");
+      appFixture = await createAppFixture(fixture);
+    });
+
+    test.afterAll(() => {
+      appFixture.close();
+    });
+
+    test("serves /assets from Windows-style build metadata", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await app.clickLink("/burgers");
+      await page.waitForSelector("text=cheeseburger");
+    });
+  });
 });
