@@ -192,7 +192,147 @@ describe("useSearchParams", () => {
     );
   });
 
-  it("does not reflect functional update mutation when navigation is blocked", () => {
+  // @see https://github.com/remix-run/react-router/issues/9991
+  it("returns a stable setSearchParams reference across renders", () => {
+    let setSearchParamsRefs: Function[] = [];
+
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      setSearchParamsRefs.push(setSearchParams);
+
+      return (
+        <div>
+          <p>The current query is "{searchParams.get("q") || ""}".</p>
+          <button onClick={() => setSearchParams({ q: "updated" })}>
+            Update
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?q=initial"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    expect(node.innerHTML).toMatch(/The current query is "initial"/);
+    expect(setSearchParamsRefs.length).toBe(1);
+
+    act(() => {
+      node
+        .querySelector("button")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/The current query is "updated"/);
+    expect(setSearchParamsRefs.length).toBe(2);
+    expect(setSearchParamsRefs[0]).toBe(setSearchParamsRefs[1]);
+  });
+
+  // @see https://github.com/remix-run/react-router/issues/9991
+  it("does not re-trigger useEffect when search params change", () => {
+    let effectCount = 0;
+
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+
+      React.useEffect(() => {
+        effectCount++;
+      }, [setSearchParams]);
+
+      return (
+        <div>
+          <p>The current query is "{searchParams.get("q") || ""}".</p>
+          <button onClick={() => setSearchParams({ q: "updated" })}>
+            Update
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?q=initial"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    expect(effectCount).toBe(1);
+
+    act(() => {
+      node
+        .querySelector("button")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(effectCount).toBe(1);
+  });
+
+  // @see https://github.com/remix-run/react-router/issues/9991
+  it("provides current search params to functional updates after stabilization", () => {
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+
+      return (
+        <div>
+          <p>a={searchParams.get("a") || ""} b={searchParams.get("b") || ""}</p>
+          <button
+            id="set-a"
+            onClick={() => setSearchParams({ a: "1" })}
+          >
+            Set A
+          </button>
+          <button
+            id="set-b"
+            onClick={() =>
+              setSearchParams((prev) => {
+                prev.set("b", "2");
+                return prev;
+              })
+            }
+          >
+            Set B
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    act(() => {
+      node
+        .querySelector("#set-a")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/a=1/);
+
+    act(() => {
+      node
+        .querySelector("#set-b")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/b=2/);
+  });
+
+    it("does not reflect functional update mutation when navigation is blocked", () => {
     let router = createBrowserRouter([
       {
         path: "/",
