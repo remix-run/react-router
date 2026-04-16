@@ -869,40 +869,19 @@ test.describe("typegen", () => {
     });
   });
 
-  test("pathless layout with only nested layout children generates valid TypeScript", async ({ edit, $ }) => {
+  test("layout without pages", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`
-        import { type RouteConfig, layout, route } from "@react-router/dev/routes";
+        import { type RouteConfig, layout } from "@react-router/dev/routes";
 
         export default [
-          layout("routes/_parent-layout.tsx", [
-            layout("routes/_child-layout.tsx", [
-              route("page-a", "routes/page-a.tsx"),
-              route("page-b", "routes/page-b.tsx"),
-            ]),
-          ]),
+          layout("routes/layout.tsx", []),
         ] satisfies RouteConfig;
       `,
-      "app/routes/_parent-layout.tsx": tsx`
+      "app/routes/layout.tsx": tsx`
         import { Outlet } from "react-router"
         export default function Component() {
           return <div><Outlet /></div>
-        }
-      `,
-      "app/routes/_child-layout.tsx": tsx`
-        import { Outlet } from "react-router"
-        export default function Component() {
-          return <div><Outlet /></div>
-        }
-      `,
-      "app/routes/page-a.tsx": tsx`
-        export default function Component() {
-          return <h1>Page A</h1>
-        }
-      `,
-      "app/routes/page-b.tsx": tsx`
-        export default function Component() {
-          return <h1>Page B</h1>
         }
       `,
     });
