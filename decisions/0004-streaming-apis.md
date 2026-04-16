@@ -84,7 +84,7 @@ function exampleLoader3() {
   <br/>
   <ul>
     <li><code>deferred()</code> - This is just a bit of a weird word that doesn't have much pre-existing semantic meaning. Is this the <code>jQuery.Deferred</code> thing from back in the day? Remix in general wants to avoid needlessly introducing net-new language to an already convoluted landscape!</li>
-    <li><code>stream()</code> - We also thought <code>stream</code> might be a good name since that's what the call is telling Remix to do - stream the responses down to the browser. But - this is also potentially misleading because stream is ambiguous in ths case. Developers may mistakenly think that this gives them back a <code>Stream</code> instance and they can arbitrarily send multiple chunks of data down to the browser over time. This is not how the current API works - but also seems like a really interesting idea for Remix to consider in the future, so we wanted to keep the <code>stream()</code> name available for future use cases.</li>
+    <li><code>stream()</code> - We also thought <code>stream</code> might be a good name since that's what the call is telling Remix to do - stream the responses down to the browser. But - this is also potentially misleading because stream is ambiguous in this case. Developers may mistakenly think that this gives them back a <code>Stream</code> instance and they can arbitrarily send multiple chunks of data down to the browser over time. This is not how the current API works - but also seems like a really interesting idea for Remix to consider in the future, so we wanted to keep the <code>stream()</code> name available for future use cases.</li>
   </ul>
 </details>
 
