@@ -50,7 +50,7 @@
     }
   },
   "dependencies": {
-    "@react-router/node": "workspace:*"
+    "@react-router/node": "remix-run/react-router#preview/dev&path:packages/react-router-node"
   },
   "devDependencies": {
     "@types/express": "^4.17.9",
