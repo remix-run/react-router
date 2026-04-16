@@ -1,7 +1,7 @@
 import type { Route } from "./+types/route";
 
 export function clientLoader() {
-  return "hello, world from client loader";
+  return "hello, world from client loader!";
 }
 
 export default function ClientLoaderWithoutServerLoaderRoute({
@@ -9,7 +9,7 @@ export default function ClientLoaderWithoutServerLoaderRoute({
 }: Route.ComponentProps) {
   return (
     <main>
-      <h1>Client loader without server loader</h1>
+      <h1>Client loader without server loader!</h1>
       <p>Loader data: {loaderData}</p>
     </main>
   );

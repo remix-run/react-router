@@ -21,6 +21,7 @@
     "@types/react": "catalog:react-canary",
     "@types/react-dom": "catalog:react-canary",
     "@vitejs/plugin-rsc": "catalog:",
+    "@vitejs/plugin-react": "^6.0.1",
     "cross-env": "^7.0.3",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
