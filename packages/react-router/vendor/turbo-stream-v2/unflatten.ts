@@ -182,11 +182,8 @@ function hydrate(this: ThisDecode, index: number): any {
             }
             continue;
           case TYPE_ERROR:
-            const [, message, errorType] = value;
-            let error =
-              errorType && globalObj && globalObj[errorType]
-                ? new globalObj[errorType](message)
-                : new Error(message);
+            const [, message] = value;
+            let error = new Error(message);
             hydrated[index] = error;
             set(error);
             continue;
