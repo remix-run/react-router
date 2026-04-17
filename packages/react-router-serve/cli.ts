@@ -49,6 +49,10 @@ type NormalizedBuild = {
   assetsBuildDirectory: string;
 };
 
+function normalizeCrossPlatformPath(pathValue: string): string {
+  return path.normalize(pathValue.replace(/\\/g, "/"));
+}
+
 function isRSCServerBuild(build: unknown): build is RSCServerBuildModule {
   return Boolean(
     typeof build === "object" &&
@@ -96,11 +100,15 @@ async function run() {
       publicPath: config.publicPath,
       assetsBuildDirectory: path.resolve(
         path.dirname(buildPath),
-        config.assetsBuildDirectory,
+        normalizeCrossPlatformPath(config.assetsBuildDirectory),
       ),
     } satisfies NormalizedBuild;
   } else {
-    build = buildModule as ServerBuild;
+    let serverBuild = buildModule as ServerBuild;
+    build = {
+      ...serverBuild,
+      assetsBuildDirectory: normalizeCrossPlatformPath(serverBuild.assetsBuildDirectory),
+    };
   }
 
   let onListen = () => {
