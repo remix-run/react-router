@@ -1474,6 +1474,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 // impact consumers because for them `ssrExternals` is undefined and
                 // Cloudflare's "noExternal: true" config remains intact.
                 options.resolve?.noExternal === true ? undefined : ssrExternals,
+              // Only add "node" to externalConditions for Node.js environments.
+              // Non-Node runtimes like Cloudflare Workers signal via
+              // `noExternal: true` and their adapter plugins set their own
+              // conditions (e.g. "workerd", "worker").
+              ...(options.resolve?.noExternal !== true
+                ? {
+                    externalConditions: [
+                      ...(options.resolve?.externalConditions ?? []),
+                      "node",
+                    ],
+                  }
+                : {}),
             },
             optimizeDeps:
               options.optimizeDeps?.noDiscovery === false
@@ -4059,7 +4071,10 @@ export async function getEnvironmentOptionsResolvers(
 
     // There is no helpful export with the default external conditions (see
     // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
-    // we are hardcording the default here.
+    // we are hardcoding the default here. When `v8_viteEnvironmentApi` is
+    // enabled, external conditions are set per-environment in the
+    // `configEnvironment` hook so that non-Node runtimes (e.g. Cloudflare
+    // Workers) are not forced to use the "node" condition.
     let defaultExternalConditions = ["node"];
 
     let baseConditions = [
@@ -4075,7 +4090,9 @@ export async function getEnvironmentOptionsResolvers(
             ? undefined
             : ssrExternals,
         conditions: [...baseConditions, ...maybeDefaultServerConditions],
-        externalConditions: [...baseConditions, ...defaultExternalConditions],
+        externalConditions: ctx.reactRouterConfig.future.v8_viteEnvironmentApi
+          ? [...baseConditions]
+          : [...baseConditions, ...defaultExternalConditions],
       },
       build: {
         // We move SSR-only assets to client assets. Note that the
