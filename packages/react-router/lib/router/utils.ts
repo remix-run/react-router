@@ -1020,6 +1020,7 @@ export function matchRoutesImpl<
   locationArg: Partial<Location> | string,
   basename: string,
   allowPartial: boolean,
+  precomputedBranches?: RouteBranch<RouteObjectType>[],
 ): RouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
@@ -1030,10 +1031,10 @@ export function matchRoutesImpl<
     return null;
   }
 
-  let branches = flattenRoutes(routes);
-  rankRouteBranches(branches);
+  let branches = precomputedBranches ?? flattenAndRankRoutes(routes);
 
   let matches = null;
+  let decoded = decodePath(pathname);
   for (let i = 0; matches == null && i < branches.length; ++i) {
     // Incoming pathnames are generally encoded from either window.location
     // or from router.navigate, but we want to match against the unencoded
@@ -1041,7 +1042,6 @@ export function matchRoutesImpl<
     // encoded here but there also shouldn't be anything to decode so this
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
-    let decoded = decodePath(pathname);
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
       decoded,
@@ -1102,10 +1102,20 @@ interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   route: RouteObjectType;
 }
 
-interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteBranch<
+  RouteObjectType extends RouteObject = RouteObject,
+> {
   path: string;
   score: number;
   routesMeta: RouteMeta<RouteObjectType>[];
+}
+
+export function flattenAndRankRoutes<
+  RouteObjectType extends RouteObject = RouteObject,
+>(routes: RouteObjectType[]): RouteBranch<RouteObjectType>[] {
+  let branches = flattenRoutes(routes);
+  rankRouteBranches(branches);
+  return branches;
 }
 
 function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(

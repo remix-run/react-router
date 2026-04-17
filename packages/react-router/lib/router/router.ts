@@ -49,6 +49,7 @@ import type {
   MiddlewareFunction,
   MiddlewareNextFunction,
   PatchRoutesOnNavigationFunction,
+  RouteBranch,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -69,6 +70,7 @@ import {
   RouterContextProvider,
   getRoutePattern,
   removeDoubleSlashes,
+  flattenAndRankRoutes,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,7 +453,33 @@ export interface StaticHandlerContext {
  * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
 export interface StaticHandler {
+  /**
+   * The set of data routes managed by this handler
+   */
   dataRoutes: DataRouteObject[];
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * The route branches derived from the data routes, used for internal route
+   * matching in Framework Mode
+   */
+  _branches: RouteBranch<DataRouteObject>[];
+  /**
+   * Perform a query for a given request - executing all matched route
+   * loaders/actions.  Used for document requests.
+   *
+   * @param request The request to query
+   * @param opts Optional query options
+   * @param opts.dataStrategy Alternate dataStrategy implementation
+   * @param opts.filterMatchesToLoad Predicate function to filter which matches should be loaded
+   * @param opts.generateMiddlewareResponse To enable middleware, provide a function
+   * to generate a response to bubble back up the middleware chain
+   * @param opts.requestContext Context object to pass to loaders/actions
+   * @param opts.skipLoaderErrorBubbling Skip loader error bubbling
+   * @param opts.skipRevalidation Skip revalidation after action submission
+   * @param opts.unstable_normalizePath Normalize the request path
+   */
   query(
     request: Request,
     opts?: {
@@ -471,6 +499,19 @@ export interface StaticHandler {
       unstable_normalizePath?: (request: Request) => Path;
     },
   ): Promise<StaticHandlerContext | Response>;
+  /**
+   * Perform a query for a specific route.  Used for resource requests.
+   *
+   * @param request The request to query
+   * @param opts Optional queryRoute options
+   * @param opts.dataStrategy Alternate dataStrategy implementation
+   * @param opts.generateMiddlewareResponse To enable middleware, provide a function
+   * to generate a response to bubble back up the middleware chain
+   * @param opts.requestContext Context object to pass to loaders/actions
+   * @param opts.routeId The ID of the route to query
+   * @param opts.unstable_normalizePath Normalize the request path
+
+   */
   queryRoute(
     request: Request,
     opts?: {
@@ -3803,6 +3844,9 @@ export function createStaticHandler(
     undefined,
     manifest,
   );
+  // Pre-compute flattened/ranked route branches when the flag is enabled.
+  // Skipped in development mode because routes can be added dynamically (HMR).
+  let routeBranches = flattenAndRankRoutes(dataRoutes);
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -3845,7 +3889,13 @@ export function createStaticHandler(
     let normalizePath = unstable_normalizePath || defaultNormalizePath;
     let method = request.method;
     let location = createLocation("", normalizePath(request), null, "default");
-    let matches = matchRoutes(dataRoutes, location, basename);
+    let matches = matchRoutesImpl(
+      dataRoutes,
+      location,
+      basename,
+      false,
+      routeBranches,
+    );
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
 
@@ -4122,7 +4172,13 @@ export function createStaticHandler(
     let normalizePath = unstable_normalizePath || defaultNormalizePath;
     let method = request.method;
     let location = createLocation("", normalizePath(request), null, "default");
-    let matches = matchRoutes(dataRoutes, location, basename);
+    let matches = matchRoutesImpl(
+      dataRoutes,
+      location,
+      basename,
+      false,
+      routeBranches,
+    );
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
 
@@ -4698,6 +4754,7 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
+    _branches: routeBranches,
     query,
     queryRoute,
   };

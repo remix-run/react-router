@@ -43,6 +43,7 @@ import {
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
+import { URL_LIMIT } from "../dom/ssr/fog-of-war";
 
 const defaultManifestPath = "/__manifest";
 
@@ -1017,10 +1018,6 @@ const nextPaths = new Set<string>();
 // subsequent navigations to the same path
 const discoveredPathsMaxSize = 1000;
 const discoveredPaths = new Set<string>();
-
-// 7.5k to come in under the ~8k limit for most browsers
-// https://stackoverflow.com/a/417184
-const URL_LIMIT = 7680;
 
 function getManifestUrl(paths: string[]): URL | null {
   if (paths.length === 0) {
