@@ -4827,7 +4827,11 @@ function normalizeTo(
   }
 
   // If we're operating within a basename, prepend it to the pathname.
+  // First strip the basename if it's already present (e.g., when `to` came
+  // from useFormAction() which includes the basename) to avoid doubling.
   if (basename !== "/") {
+    path.pathname =
+      stripBasename(path.pathname, basename) || path.pathname;
     path.pathname = prependBasename({ basename, pathname: path.pathname });
   }
 
