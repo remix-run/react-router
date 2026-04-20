@@ -1,5 +1,51 @@
 # `react-router`
 
+## v7.14.2
+
+### Patch Changes
+
+- Remove the un-documented custom error serialization logic from the internal turbo-stream implementation. React Router only automatically handles serialization of `Error` and it's standard subtypes (`SyntaxError`, `TypeError`, etc.). ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- Properly handle parent middleware redirects during `fetcher.load` ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- Remove redundant `Omit<RouterProviderProps, "flushSync">` from `react-router/dom` `RouterProvider` ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- Improved types for `generatePath`'s `param` arg ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+  Type errors when required params are omitted:
+
+  ```ts
+  // Before
+  // Passes type checks, but throws at runtime 💥
+  generatePath(":required", { required: null });
+
+  // After
+  generatePath(":required", { required: null });
+  //                          ^^^^^^^^ Type 'null' is not assignable to type 'string'.ts(2322)
+  ```
+
+  Allow omission of optional params:
+
+  ```ts
+  // Before
+  generatePath(":optional?", {});
+  //                         ^^ Property 'optional' is missing in type '{}' but required in type '{ optional: string | null | undefined; }'.ts(2741)
+
+  // After
+  generatePath(":optional?", {});
+  ```
+
+  Allows extra keys:
+
+  ```ts
+  // Before
+  generatePath(":a", { a: "1", b: "2" });
+  //                           ^ Object literal may only specify known properties, and 'b' does not exist in type '{ a: string; }'.ts(2353)
+
+  // After
+  generatePath(":a", { a: "1", b: "2" });
+  ```
+
 ## v7.14.1
 
 ### Patch Changes

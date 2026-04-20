@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.14.2](#v7142)
   - [v7.14.1](#v7141)
   - [v7.14.0](#v7140)
   - [v7.13.2](#v7132)
@@ -167,6 +168,69 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.14.2
+
+Date: 2026-04-20
+
+### Patch Changes
+
+- `react-router` - Remove the un-documented custom error serialization logic from the internal turbo-stream implementation. React Router only automatically handles serialization of `Error` and it's standard subtypes (`SyntaxError`, `TypeError`, etc.). ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- `react-router` - Properly handle parent middleware redirects during `fetcher.load` ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- `react-router` - Remove redundant `Omit<RouterProviderProps, "flushSync">` from `react-router/dom` `RouterProvider` ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- `react-router` - Improved types for `generatePath`'s `param` arg ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+  Type errors when required params are omitted:
+
+  ```ts
+  // Before
+  // Passes type checks, but throws at runtime 💥
+  generatePath(":required", { required: null });
+
+  // After
+  generatePath(":required", { required: null });
+  //                          ^^^^^^^^ Type 'null' is not assignable to type 'string'.ts(2322)
+  ```
+
+  Allow omission of optional params:
+
+  ```ts
+  // Before
+  generatePath(":optional?", {});
+  //                         ^^ Property 'optional' is missing in type '{}' but required in type '{ optional: string | null | undefined; }'.ts(2741)
+
+  // After
+  generatePath(":optional?", {});
+  ```
+
+  Allows extra keys:
+
+  ```ts
+  // Before
+  generatePath(":a", { a: "1", b: "2" });
+  //                           ^ Object literal may only specify known properties, and 'b' does not exist in type '{ a: string; }'.ts(2353)
+
+  // After
+  generatePath(":a", { a: "1", b: "2" });
+  ```
+
+- `@react-router/dev` - Fix typegen for layouts without pages ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+  Previously, typegen could produce `pages: ;` in `.react-router/types/+routes.ts` when a route corresponded to 0 pages.
+  Now, `pages: never;` is correctly generated for those cases.
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `@react-router/dev` - For `unstable_reactRouterRSC` Vite plugin consumers, require `@vitejs/plugin-react` in user Vite config, and more reliably split route modules. ([#14965](https://github.com/remix-run/react-router/pull/14965)) ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+  - ⚠️ This is a breaking change if you have begun using the `unstable_reactRouterRSC` Vite plugin - please install `@vitejs/plugin-react` and add the `react` plugin to your Vite plugins array.
+
+**Full Changelog**: [`v7.14.1...v7.14.2`](https://github.com/remix-run/react-router/compare/react-router@7.14.1...react-router@7.14.2)
 
 ## v7.14.1
 
