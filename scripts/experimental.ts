@@ -39,15 +39,16 @@ async function bumpVersion() {
   let sha = logAndExec("git rev-parse --short HEAD", true);
   invariant(sha != null, "Failed to get git SHA");
   let version = `0.0.0-experimental-${sha}`;
+  let branch = `experimental/${version}`;
   if (dryRun) {
     console.log(
       colorize(
-        `  [Dry Run] Would create and switch to branch experimental/${version}\n`,
+        `  [Dry Run] Would create and switch to branch ${branch}\n`,
         colors.yellow,
       ),
     );
   } else {
-    logAndExec(`git checkout -b experimental/${version}`);
+    logAndExec(`git checkout -b ${branch}`);
   }
 
   for (let packageDirName of packageDirNames) {
