@@ -1,6 +1,9 @@
 import * as React from "react";
 
-import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
+import {
+  SUPPORTED_ERROR_TYPES,
+  decode,
+} from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
@@ -757,8 +760,13 @@ export function decodeViaTurboStream(
             string | undefined,
           ];
           let Constructor = Error;
-          // @ts-expect-error
-          if (name && name in global && typeof global[name] === "function") {
+          if (
+            name &&
+            SUPPORTED_ERROR_TYPES.includes(name) &&
+            name in global &&
+            // @ts-expect-error
+            typeof global[name] === "function"
+          ) {
             // @ts-expect-error
             Constructor = global[name];
           }

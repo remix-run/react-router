@@ -1,0 +1,1 @@
+Remove the un-documented custom error serialization logic from the internal turbo-stream implementation. React Router only automatically handles serialization of `Error` and it's standard subtypes (`SyntaxError`, `TypeError`, etc.).
