@@ -172,6 +172,9 @@ async function stringify(this: ThisEncode, stack: [unknown, number][]) {
             deferred[index] = input;
           } else if (input instanceof Error) {
             str[index] = `["${TYPE_ERROR}",${JSON.stringify(input.message)}`;
+            if (input.name !== "Error") {
+              str[index] += `,${JSON.stringify(input.name)}`;
+            }
             str[index] += "]";
           } else if (Object.getPrototypeOf(input) === null) {
             str[index] = `["${TYPE_NULL_OBJECT}",{${partsForObj(input)}}]`;

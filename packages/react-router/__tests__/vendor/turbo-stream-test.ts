@@ -185,7 +185,7 @@ test("should encode and decode an Error", async () => {
 test("should encode and decode an EvalError", async () => {
   const input = new EvalError("foo");
   const output = await quickDecode(encode(input));
-  expect(output).toEqual(new Error("foo"));
+  expect(output).toEqual(input);
 });
 
 test("should encode and decode array", async () => {
