@@ -164,7 +164,10 @@ function isSsrBundleEnvironmentName(
   return name.startsWith(SSR_BUNDLE_PREFIX);
 }
 
-type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
+type EnvironmentOptions = Pick<
+  Vite.EnvironmentOptions,
+  "build" | "define" | "resolve"
+>;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -255,6 +258,7 @@ type ReactRouterPluginContext = {
   viteManifestEnabled: boolean;
   reactRouterManifest: ReactRouterManifest | null;
   prerenderPaths: Set<string> | null;
+  prerenderBuild: boolean;
 };
 
 let virtualHmrRuntime = VirtualModule.create("hmr-runtime");
@@ -786,6 +790,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       publicPath,
       viteManifestEnabled,
       buildManifest,
+      prerenderBuild: injectedPluginContext?.prerenderBuild ?? false,
     };
   };
 
@@ -1431,7 +1436,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                       builder.environments,
                     );
 
+                    ctx.prerenderBuild =
+                      reactRouterConfig.prerender != null &&
+                      reactRouterConfig.prerender !== false;
+
                     await Promise.all(serverEnvironments.map(builder.build));
+
+                    if (ctx.prerenderBuild) {
+                      ctx.prerenderBuild = false;
+                      await Promise.all(serverEnvironments.map(builder.build));
+                    }
 
                     await cleanViteManifests(environments, ctx);
 
@@ -2003,7 +2017,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // enable some build-time-only logic
           process.env.IS_RR_BUILD_REQUEST = "yes";
 
-          if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
+          if (isPrerenderingEnabled(ctx)) {
             // If we have prerender routes, that takes precedence over SPA mode
             // which is ssr:false and only the root route being rendered
             await handlePrerender(
@@ -2609,7 +2623,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let requests: PrerenderRequest<PrerenderMetadata>[] = [];
 
-        if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
+        if (isPrerenderingEnabled(ctx)) {
           invariant(ctx.prerenderPaths !== null, "Prerender paths missing");
           invariant(
             ctx.reactRouterManifest !== null,
@@ -3052,11 +3066,14 @@ async function getRouteMetadata(
   return info;
 }
 
-function isPrerenderingEnabled(
-  reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"],
-) {
+function isPrerenderingEnabled({
+  prerenderBuild,
+  reactRouterConfig,
+}: ReactRouterPluginContext) {
   return (
-    reactRouterConfig.prerender != null && reactRouterConfig.prerender !== false
+    prerenderBuild &&
+    reactRouterConfig.prerender != null &&
+    reactRouterConfig.prerender !== false
   );
 }
 
@@ -3078,9 +3095,7 @@ function isSpaModeEnabled(
   // It's now a MPA and we can prerender down past the root, which unlocks the
   // ability to use loaders on any routes and prerender the UI with build-time
   // loaderData
-  return (
-    reactRouterConfig.ssr === false && !isPrerenderingEnabled(reactRouterConfig)
-  );
+  return reactRouterConfig.ssr === false && !reactRouterConfig.prerender;
 }
 
 async function getPrerenderBuildAndHandler(
@@ -4068,6 +4083,11 @@ export async function getEnvironmentOptionsResolvers(
     ];
 
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
+      define: {
+        "process.env.IS_RR_BUILD_REQUEST": ctx.prerenderBuild
+          ? '"yes"'
+          : "undefined",
+      },
       resolve: {
         external:
           // If `v8_viteEnvironmentApi` is `true`, `resolve.external` is set in the `configEnvironment` hook

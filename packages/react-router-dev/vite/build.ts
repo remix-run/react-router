@@ -225,7 +225,16 @@ async function viteBuild(
     environmentOptionsResolvers,
   );
 
+  ctx.prerenderBuild =
+    reactRouterConfig.prerender != null &&
+    reactRouterConfig.prerender !== false;
+
   await Promise.all(serverEnvironmentNames.map(buildEnvironment));
+
+  if (ctx.prerenderBuild) {
+    ctx.prerenderBuild = false;
+    await Promise.all(serverEnvironmentNames.map(buildEnvironment));
+  }
 
   await cleanViteManifests(environmentsOptions, ctx);
 
