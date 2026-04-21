@@ -74,7 +74,7 @@ export interface Location<State = any> extends Path {
    * The masked location displayed in the URL bar, which differs from the URL the
    * router is operating on
    */
-  unstable_mask: Path | undefined;
+  unstable_mask?: Path;
 }
 
 /**
