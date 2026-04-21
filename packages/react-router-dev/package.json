@@ -80,7 +80,7 @@
     "@remix-run/node-fetch-server": "^0.13.0",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
-    "chokidar": "^4.0.0",
+    "chokidar": "^5.0.0",
     "dedent": "^1.5.3",
     "es-module-lexer": "^1.3.1",
     "exit-hook": "2.2.1",

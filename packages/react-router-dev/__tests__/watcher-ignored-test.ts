@@ -3,7 +3,7 @@ import fs from "node:fs";
 import net from "node:net";
 import os from "node:os";
 
-import { isIgnoredByWatcher } from "../config/config";
+import { isIgnoredByWatcher } from "../config/is-ignored-by-watcher";
 
 describe("isIgnoredByWatcher", () => {
   let tmpDir: string;
