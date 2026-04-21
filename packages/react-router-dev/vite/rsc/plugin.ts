@@ -138,6 +138,18 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   return [
     {
       name: "react-router/rsc",
+      // @ts-expect-error - missing Vite types
+      buildApp: {
+        order: "post",
+        async handler() {
+          // find and run prerender
+          const plugin = resolvedViteConfig?.plugins.find(
+            (p) => p.name === "react-router:prerender",
+          );
+          invariant(plugin, "Prerender plugin could not be located");
+          await plugin.api.prerender();
+        },
+      },
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
         await preloadVite();

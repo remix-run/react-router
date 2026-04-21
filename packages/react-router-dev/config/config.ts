@@ -693,7 +693,9 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
     unstable_previewServerPrerendering:
-      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
+      userAndPresetConfigs.future?.unstable_previewServerPrerendering ??
+      userAndPresetConfigs.future?.v8_viteEnvironmentApi ??
+      false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,

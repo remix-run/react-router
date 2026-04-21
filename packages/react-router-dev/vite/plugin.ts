@@ -1443,6 +1443,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     await Promise.all(serverEnvironments.map(builder.build));
 
                     if (ctx.prerenderBuild) {
+                      // find and run prerender
+                      const plugin = viteConfig?.plugins.find(
+                        (p) => p.name === "react-router:prerender",
+                      );
+                      invariant(
+                        plugin,
+                        "Prerender plugin could not be located",
+                      );
+                      await plugin.api.prerender();
+
                       ctx.prerenderBuild = false;
                       await Promise.all(serverEnvironments.map(builder.build));
                     }
@@ -3502,7 +3512,7 @@ export async function getPrerenderPaths(
   if (pathsConfig === true) {
     let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
     if (logWarning && !ssr && paramRoutes.length > 0) {
-      console.warn(
+      warnOnce(
         colors.yellow(
           [
             "⚠️ Paths with dynamic/splat params cannot be prerendered when " +
@@ -4388,4 +4398,13 @@ const ESCAPE_LOOKUP: { [match: string]: string } = {
 
 function escapeHtml(html: string) {
   return html.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
+}
+
+const alreadyWarned: { [message: string]: boolean } = {};
+
+function warnOnce(message: string): void {
+  if (!alreadyWarned[message]) {
+    alreadyWarned[message] = true;
+    console.warn(message);
+  }
 }

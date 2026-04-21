@@ -213,199 +213,177 @@ export function prerender<Metadata extends Record<string, unknown>>(
   let viteConfig: Vite.ResolvedConfig;
 
   return {
-    name: "prerender",
+    name: "react-router:prerender",
     sharedDuringBuild: true,
-    config: {
-      order: "post",
-      handler({ builder: { buildApp } = {} }) {
-        return {
-          builder: {
-            async buildApp(builder) {
-              await buildApp?.(builder);
+    api: {
+      async prerender() {
+        const rawRequests =
+          typeof requests === "function" ? await requests() : requests;
 
-              const rawRequests =
-                typeof requests === "function" ? await requests() : requests;
+        const prerenderRequests = rawRequests.map(normalizePrerenderRequest);
 
-              const prerenderRequests = rawRequests.map(
-                normalizePrerenderRequest,
-              );
+        if (prerenderRequests.length === 0) {
+          return;
+        }
 
-              if (prerenderRequests.length === 0) {
-                return;
+        const prerenderConfig =
+          typeof config === "function" ? await config() : config;
+        const {
+          buildDirectory = viteConfig.environments.client.build.outDir,
+          concurrency = 1,
+          retryCount = 0,
+          retryDelay = 500,
+          maxRedirects = 0,
+          timeout = 10000,
+        } = prerenderConfig ?? {};
+
+        let ogIsBuildRequest = process.env.IS_RR_BUILD_REQUEST;
+        process.env.IS_RR_BUILD_REQUEST = "yes";
+        try {
+          const previewServer = await startPreviewServer(viteConfig);
+
+          try {
+            const baseUrl = getResolvedUrl(previewServer);
+
+            async function prerenderRequest(
+              input: string | Request,
+              metadata: Metadata | undefined,
+            ): Promise<PostProcessResult<Metadata>> {
+              let attemptCount = 0;
+              let redirectCount = 0;
+
+              const request = new Request(input);
+              const url = new URL(request.url);
+
+              if (url.origin !== baseUrl.origin) {
+                url.hostname = baseUrl.hostname;
+                url.protocol = baseUrl.protocol;
+                url.port = baseUrl.port;
               }
 
-              const prerenderConfig =
-                typeof config === "function" ? await config() : config;
-              const {
-                buildDirectory = viteConfig.environments.client.build.outDir,
-                concurrency = 1,
-                retryCount = 0,
-                retryDelay = 500,
-                maxRedirects = 0,
-                timeout = 10000,
-              } = prerenderConfig ?? {};
-
-              let ogIsBuildRequest = process.env.IS_RR_BUILD_REQUEST;
-              process.env.IS_RR_BUILD_REQUEST = "yes";
-              try {
-                const previewServer = await startPreviewServer(viteConfig);
-
+              async function attempt(
+                url: URL,
+              ): Promise<PostProcessResult<Metadata>> {
                 try {
-                  const baseUrl = getResolvedUrl(previewServer);
+                  const signal = AbortSignal.timeout(timeout);
+                  const prerenderReq = new Request(url, request);
+                  const response = await fetch(prerenderReq, {
+                    redirect: "manual",
+                    signal,
+                  });
 
-                  async function prerenderRequest(
-                    input: string | Request,
-                    metadata: Metadata | undefined,
-                  ): Promise<PostProcessResult<Metadata>> {
-                    let attemptCount = 0;
-                    let redirectCount = 0;
+                  if (
+                    response.status >= 300 &&
+                    response.status < 400 &&
+                    response.headers.has("location") &&
+                    ++redirectCount <= maxRedirects
+                  ) {
+                    const location = response.headers.get("location")!;
+                    const responseURL = new URL(response.url);
+                    const locationUrl = new URL(location, response.url);
 
-                    const request = new Request(input);
-                    const url = new URL(request.url);
-
-                    if (url.origin !== baseUrl.origin) {
-                      url.hostname = baseUrl.hostname;
-                      url.protocol = baseUrl.protocol;
-                      url.port = baseUrl.port;
+                    // External redirect: pass to postProcess
+                    if (responseURL.origin !== locationUrl.origin) {
+                      return await postProcess(request, response, metadata);
                     }
 
-                    async function attempt(
-                      url: URL,
-                    ): Promise<PostProcessResult<Metadata>> {
-                      try {
-                        const signal = AbortSignal.timeout(timeout);
-                        const prerenderReq = new Request(url, request);
-                        const response = await fetch(prerenderReq, {
-                          redirect: "manual",
-                          signal,
-                        });
+                    // Internal redirect within limit: follow it
+                    const redirectUrl = new URL(location, url);
+                    return await attempt(redirectUrl);
+                  }
 
-                        if (
-                          response.status >= 300 &&
-                          response.status < 400 &&
-                          response.headers.has("location") &&
-                          ++redirectCount <= maxRedirects
-                        ) {
-                          const location = response.headers.get("location")!;
-                          const responseURL = new URL(response.url);
-                          const locationUrl = new URL(location, response.url);
-
-                          // External redirect: pass to postProcess
-                          if (responseURL.origin !== locationUrl.origin) {
-                            return await postProcess(
-                              request,
-                              response,
-                              metadata,
-                            );
-                          }
-
-                          // Internal redirect within limit: follow it
-                          const redirectUrl = new URL(location, url);
-                          return await attempt(redirectUrl);
-                        }
-
-                        if (
-                          response.status >= 500 &&
-                          ++attemptCount <= retryCount
-                        ) {
-                          await new Promise((resolve) =>
-                            setTimeout(resolve, retryDelay),
-                          );
-                          return attempt(url);
-                        }
-
-                        return await postProcess(request, response, metadata);
-                      } catch (error) {
-                        if (++attemptCount <= retryCount) {
-                          await new Promise((resolve) =>
-                            setTimeout(resolve, retryDelay),
-                          );
-                          return attempt(url);
-                        }
-
-                        // If handleError does not throw, return empty array and continue
-                        handleError(
-                          request,
-                          error instanceof Error
-                            ? error
-                            : new Error(error?.toString() ?? "Unknown error"),
-                          metadata,
-                        );
-
-                        return [];
-                      }
-                    }
-
+                  if (response.status >= 500 && ++attemptCount <= retryCount) {
+                    await new Promise((resolve) =>
+                      setTimeout(resolve, retryDelay),
+                    );
                     return attempt(url);
                   }
 
-                  async function prerender(
-                    input: string | Request,
-                    metadata: Metadata | undefined,
-                  ): Promise<void> {
-                    const result = await prerenderRequest(input, metadata);
-                    const { files, requests } =
-                      normalizePostProcessResult(result);
-
-                    for (const file of files) {
-                      await writePrerenderFile(file, metadata);
-                    }
-
-                    for (const followUp of requests) {
-                      const normalized = normalizePrerenderRequest(followUp);
-                      await prerender(normalized.request, normalized.metadata);
-                    }
+                  return await postProcess(request, response, metadata);
+                } catch (error) {
+                  if (++attemptCount <= retryCount) {
+                    await new Promise((resolve) =>
+                      setTimeout(resolve, retryDelay),
+                    );
+                    return attempt(url);
                   }
 
-                  async function writePrerenderFile(
-                    file: PrerenderFile,
-                    metadata: Metadata | undefined,
-                  ) {
-                    // Removes leading slash if present (e.g. pathname "/about" -> "about")
-                    const normalizedPath = file.path.startsWith("/")
-                      ? file.path.slice(1)
-                      : file.path;
-                    const outputPath = path.join(
-                      buildDirectory,
-                      ...normalizedPath.split("/"),
-                    );
-
-                    await mkdir(path.dirname(outputPath), { recursive: true });
-                    await writeFile(outputPath, file.contents);
-
-                    const relativePath = path.relative(
-                      viteConfig.root,
-                      outputPath,
-                    );
-
-                    if (logFile) {
-                      logFile(relativePath, metadata);
-                    }
-
-                    return relativePath;
-                  }
-
-                  const pMap = await import("p-map");
-                  await pMap.default(
-                    prerenderRequests,
-                    async ({ request, metadata }) => {
-                      await prerender(request, metadata);
-                    },
-                    { concurrency },
+                  // If handleError does not throw, return empty array and continue
+                  handleError(
+                    request,
+                    error instanceof Error
+                      ? error
+                      : new Error(error?.toString() ?? "Unknown error"),
+                    metadata,
                   );
 
-                  if (finalize) {
-                    await finalize(buildDirectory);
-                  }
-                } finally {
-                  await previewServer.close();
+                  return [];
                 }
-              } finally {
-                process.env.IS_RR_BUILD_REQUEST = ogIsBuildRequest;
               }
-            },
-          },
-        };
+
+              return attempt(url);
+            }
+
+            async function prerender(
+              input: string | Request,
+              metadata: Metadata | undefined,
+            ): Promise<void> {
+              const result = await prerenderRequest(input, metadata);
+              const { files, requests } = normalizePostProcessResult(result);
+
+              for (const file of files) {
+                await writePrerenderFile(file, metadata);
+              }
+
+              for (const followUp of requests) {
+                const normalized = normalizePrerenderRequest(followUp);
+                await prerender(normalized.request, normalized.metadata);
+              }
+            }
+
+            async function writePrerenderFile(
+              file: PrerenderFile,
+              metadata: Metadata | undefined,
+            ) {
+              // Removes leading slash if present (e.g. pathname "/about" -> "about")
+              const normalizedPath = file.path.startsWith("/")
+                ? file.path.slice(1)
+                : file.path;
+              const outputPath = path.join(
+                buildDirectory,
+                ...normalizedPath.split("/"),
+              );
+
+              await mkdir(path.dirname(outputPath), { recursive: true });
+              await writeFile(outputPath, file.contents);
+
+              const relativePath = path.relative(viteConfig.root, outputPath);
+
+              if (logFile) {
+                logFile(relativePath, metadata);
+              }
+
+              return relativePath;
+            }
+
+            const pMap = await import("p-map");
+            await pMap.default(
+              prerenderRequests,
+              async ({ request, metadata }) => {
+                await prerender(request, metadata);
+              },
+              { concurrency },
+            );
+
+            if (finalize) {
+              await finalize(buildDirectory);
+            }
+          } finally {
+            await previewServer.close();
+          }
+        } finally {
+          process.env.IS_RR_BUILD_REQUEST = ogIsBuildRequest;
+        }
       },
     },
     configResolved(resolvedConfig) {
