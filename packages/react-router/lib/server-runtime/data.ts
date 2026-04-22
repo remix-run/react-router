@@ -31,7 +31,7 @@ export async function callRouteHandler(
     unstable_url: args.unstable_url,
     params: args.params,
     context: args.context,
-    unstable_pattern: args.unstable_pattern,
+    pattern: args.pattern,
   });
 
   // If they returned a redirect via data(), re-throw it as a Response

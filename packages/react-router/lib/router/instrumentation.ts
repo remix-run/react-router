@@ -18,35 +18,35 @@ import type {
 } from "./utils";
 
 // Public APIs
-export type unstable_ServerInstrumentation = {
-  handler?: unstable_InstrumentRequestHandlerFunction;
-  route?: unstable_InstrumentRouteFunction;
+export type ServerInstrumentation = {
+  handler?: InstrumentRequestHandlerFunction;
+  route?: InstrumentRouteFunction;
 };
 
-export type unstable_ClientInstrumentation = {
-  router?: unstable_InstrumentRouterFunction;
-  route?: unstable_InstrumentRouteFunction;
+export type ClientInstrumentation = {
+  router?: InstrumentRouterFunction;
+  route?: InstrumentRouteFunction;
 };
 
-export type unstable_InstrumentRequestHandlerFunction = (
+export type InstrumentRequestHandlerFunction = (
   handler: InstrumentableRequestHandler,
 ) => void;
 
-export type unstable_InstrumentRouterFunction = (
+export type InstrumentRouterFunction = (
   router: InstrumentableRouter,
 ) => void;
 
-export type unstable_InstrumentRouteFunction = (
+export type InstrumentRouteFunction = (
   route: InstrumentableRoute,
 ) => void;
 
-export type unstable_InstrumentationHandlerResult =
+export type InstrumentationHandlerResult =
   | { status: "success"; error: undefined }
   | { status: "error"; error: Error };
 
 // Shared
 type InstrumentFunction<T> = (
-  handler: () => Promise<unstable_InstrumentationHandlerResult>,
+  handler: () => Promise<InstrumentationHandlerResult>,
   info: T,
 ) => Promise<void>;
 
@@ -90,7 +90,7 @@ type RouteLazyInstrumentationInfo = undefined;
 type RouteHandlerInstrumentationInfo = Readonly<{
   request: ReadonlyRequest;
   params: LoaderFunctionArgs["params"];
-  unstable_pattern: string;
+  pattern: string;
   context: ReadonlyContext;
 }>;
 
@@ -140,7 +140,7 @@ type RequestHandlerInstrumentationInfo = Readonly<{
 const UninstrumentedSymbol = Symbol("Uninstrumented");
 
 export function getRouteInstrumentationUpdates(
-  fns: unstable_InstrumentRouteFunction[],
+  fns: InstrumentRouteFunction[],
   route: Readonly<DataRouteObject>,
 ) {
   let aggregated: {
@@ -255,7 +255,7 @@ export function getRouteInstrumentationUpdates(
 
 export function instrumentClientSideRouter(
   router: Router,
-  fns: unstable_InstrumentRouterFunction[],
+  fns: InstrumentRouterFunction[],
 ): Router {
   let aggregated: {
     navigate: InstrumentFunction<RouterNavigationInstrumentationInfo>[];
@@ -327,7 +327,7 @@ export function instrumentClientSideRouter(
 
 export function instrumentHandler(
   handler: RequestHandler,
-  fns: unstable_InstrumentRequestHandlerFunction[],
+  fns: InstrumentRequestHandlerFunction[],
 ): RequestHandler {
   let aggregated: {
     request: InstrumentFunction<RequestHandlerInstrumentationInfo>[];
@@ -407,7 +407,7 @@ async function recurseRight<T extends InstrumentationInfo>(
     // handler, we need to ensure the handlers still gets called
     let handlerPromise: ReturnType<typeof recurseRight> | undefined = undefined;
     let callHandler =
-      async (): Promise<unstable_InstrumentationHandlerResult> => {
+      async (): Promise<InstrumentationHandlerResult> => {
         if (handlerPromise) {
           console.error("You cannot call instrumented handlers more than once");
         } else {
@@ -451,11 +451,11 @@ function getHandlerInfo(
     | ActionFunctionArgs
     | Parameters<MiddlewareFunction>[0],
 ): RouteHandlerInstrumentationInfo {
-  let { request, context, params, unstable_pattern } = args;
+  let { request, context, params, pattern } = args;
   return {
     request: getReadonlyRequest(request),
     params: { ...params },
-    unstable_pattern,
+    pattern,
     context: getReadonlyContext(context),
   };
 }

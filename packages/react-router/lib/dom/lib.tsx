@@ -95,7 +95,7 @@ import {
   useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
-import type { unstable_ClientInstrumentation } from "../router/instrumentation";
+import type { ClientInstrumentation } from "../router/instrumentation";
 import { escapeHtml } from "./ssr/markup";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +247,7 @@ export interface DOMRouterOpts {
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   unstable_instrumentations: [logging]
+   *   instrumentations: [logging]
    * });
    *
    *
@@ -285,7 +285,7 @@ export interface DOMRouterOpts {
    * }
    * ```
    */
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   /**
    * Override the default data strategy of running loaders in parallel -
    * see the [docs](../../how-to/data-strategy) for more information.
@@ -635,7 +635,7 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
- * @param {DOMRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
+ * @param {DOMRouterOpts.instrumentations} opts.instrumentations n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
  * @returns An initialized {@link DataRouter| data router} to pass to {@link RouterProvider | `<RouterProvider>`}
@@ -656,7 +656,7 @@ export function createBrowserRouter(
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
-    unstable_instrumentations: opts?.unstable_instrumentations,
+    instrumentations: opts?.instrumentations,
   }).initialize();
 }
 
@@ -673,7 +673,7 @@ export function createBrowserRouter(
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
- * @param {DOMRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
+ * @param {DOMRouterOpts.instrumentations} opts.instrumentations n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
@@ -695,7 +695,7 @@ export function createHashRouter(
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
-    unstable_instrumentations: opts?.unstable_instrumentations,
+    instrumentations: opts?.instrumentations,
   }).initialize();
 }
 

@@ -840,7 +840,7 @@ describe("ssr", () => {
       expect(rootLoaderStub).toHaveBeenCalledTimes(1);
       expect(rootLoaderStub).toHaveBeenCalledWith({
         request: new Request("http://localhost/child"),
-        unstable_pattern: "/child",
+        pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
@@ -853,7 +853,7 @@ describe("ssr", () => {
       expect(childLoaderStub).toHaveBeenCalledTimes(1);
       expect(childLoaderStub).toHaveBeenCalledWith({
         request: new Request("http://localhost/child"),
-        unstable_pattern: "/child",
+        pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
@@ -894,7 +894,7 @@ describe("ssr", () => {
       expect(actionStub).toHaveBeenCalledTimes(1);
       expect(actionStub).toHaveBeenCalledWith({
         request: expect.any(Request),
-        unstable_pattern: "/child",
+        pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
@@ -911,7 +911,7 @@ describe("ssr", () => {
       expect(rootLoaderStub).toHaveBeenCalledTimes(1);
       expect(rootLoaderStub).toHaveBeenCalledWith({
         request: expect.any(Request),
-        unstable_pattern: "/child",
+        pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},
@@ -926,7 +926,7 @@ describe("ssr", () => {
       expect(childLoaderStub).toHaveBeenCalledTimes(1);
       expect(childLoaderStub).toHaveBeenCalledWith({
         request: expect.any(Request),
-        unstable_pattern: "/child",
+        pattern: "/child",
         unstable_url: new URL("http://localhost/child"),
         params: {},
         context: {},

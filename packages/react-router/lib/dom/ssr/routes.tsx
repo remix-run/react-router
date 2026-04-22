@@ -344,7 +344,7 @@ export function createClientRoutes(
           request,
           params,
           context,
-          unstable_pattern,
+          pattern,
           unstable_url,
         }: LoaderFunctionArgs,
         singleFetch?: unknown,
@@ -364,7 +364,7 @@ export function createClientRoutes(
               request,
               params,
               context,
-              unstable_pattern,
+              pattern,
               unstable_url,
               async serverLoader() {
                 preventInvalidServerHandlerCall("loader", route);
@@ -405,7 +405,7 @@ export function createClientRoutes(
           request,
           params,
           context,
-          unstable_pattern,
+          pattern,
           unstable_url,
         }: ActionFunctionArgs,
         singleFetch?: unknown,
@@ -426,7 +426,7 @@ export function createClientRoutes(
             request,
             params,
             context,
-            unstable_pattern,
+            pattern,
             unstable_url,
             async serverAction() {
               preventInvalidServerHandlerCall("action", route);

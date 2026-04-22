@@ -1751,7 +1751,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks"),
         context: {},
       });
@@ -1762,7 +1762,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks/:id",
+        pattern: "/tasks/:id",
         unstable_url: new URL("http://localhost/tasks/1"),
         context: {},
       });
@@ -1773,7 +1773,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
@@ -1786,7 +1786,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
@@ -2213,7 +2213,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks"),
         context: {},
       });
@@ -2259,7 +2259,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
         unstable_url: new URL("http://localhost/tasks?foo=bar"),
         context: {},
       });
@@ -2294,7 +2294,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
+        pattern: expect.any(String),
         unstable_url: expect.any(URL),
         context: {},
       });

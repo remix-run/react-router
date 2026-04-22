@@ -9,10 +9,10 @@ import {
   warning,
 } from "./history";
 import type {
-  unstable_ClientInstrumentation,
-  unstable_InstrumentRouteFunction,
-  unstable_InstrumentRouterFunction,
-  unstable_ServerInstrumentation,
+  ClientInstrumentation,
+  InstrumentRouteFunction,
+  InstrumentRouterFunction,
+  ServerInstrumentation,
 } from "./instrumentation";
 import {
   getRouteInstrumentationUpdates,
@@ -423,7 +423,7 @@ export interface RouterInit {
   history: History;
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -934,8 +934,8 @@ export function createRouter(init: RouterInit): Router {
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
-  if (init.unstable_instrumentations) {
-    let instrumentations = init.unstable_instrumentations;
+  if (init.instrumentations) {
+    let instrumentations = init.instrumentations;
 
     mapRouteProperties = (route: DataRouteObject) => {
       return {
@@ -943,7 +943,7 @@ export function createRouter(init: RouterInit): Router {
         ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)
-            .filter(Boolean) as unstable_InstrumentRouteFunction[],
+            .filter(Boolean) as InstrumentRouteFunction[],
           route,
         ),
       };
@@ -3775,12 +3775,12 @@ export function createRouter(init: RouterInit): Router {
     },
   };
 
-  if (init.unstable_instrumentations) {
+  if (init.instrumentations) {
     router = instrumentClientSideRouter(
       router,
-      init.unstable_instrumentations
+      init.instrumentations
         .map((i) => i.router)
-        .filter(Boolean) as unstable_InstrumentRouterFunction[],
+        .filter(Boolean) as InstrumentRouterFunction[],
     );
   }
 
@@ -3795,7 +3795,7 @@ export function createRouter(init: RouterInit): Router {
 export interface CreateStaticHandlerOptions {
   basename?: string;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  unstable_instrumentations?: Pick<unstable_ServerInstrumentation, "route">[];
+  instrumentations?: Pick<ServerInstrumentation, "route">[];
   future?: Partial<FutureConfig>;
 }
 
@@ -3822,8 +3822,8 @@ export function createStaticHandler(
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
-  if (opts?.unstable_instrumentations) {
-    let instrumentations = opts.unstable_instrumentations;
+  if (opts?.instrumentations) {
+    let instrumentations = opts.instrumentations;
 
     mapRouteProperties = (route: DataRouteObject) => {
       return {
@@ -3831,7 +3831,7 @@ export function createStaticHandler(
         ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)
-            .filter(Boolean) as unstable_InstrumentRouteFunction[],
+            .filter(Boolean) as InstrumentRouteFunction[],
           route,
         ),
       };
@@ -3974,7 +3974,7 @@ export function createStaticHandler(
           {
             request,
             unstable_url: createDataFunctionUrl(request, location),
-            unstable_pattern: getRoutePattern(matches),
+            pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
             // If we're calling middleware then it must be enabled so we can cast
@@ -4214,7 +4214,7 @@ export function createStaticHandler(
         {
           request,
           unstable_url: createDataFunctionUrl(request, location),
-          unstable_pattern: getRoutePattern(matches),
+          pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
           // If we're calling middleware then it must be enabled so we can cast
@@ -6101,7 +6101,7 @@ function getDataStrategyMatch(
   manifest: RouteManifest,
   request: Request,
   path: To,
-  unstable_pattern: string,
+  pattern: string,
   match: DataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
@@ -6172,7 +6172,7 @@ function getDataStrategyMatch(
         return callLoaderOrAction({
           request,
           path,
-          unstable_pattern,
+          pattern,
           match,
           lazyHandlerPromise: _lazyPromises?.handler,
           lazyRoutePromise: _lazyPromises?.route,
@@ -6254,7 +6254,7 @@ async function callDataStrategyImpl(
   > = {
     request,
     unstable_url: createDataFunctionUrl(request, path),
-    unstable_pattern: getRoutePattern(matches),
+    pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
     matches,
@@ -6313,7 +6313,7 @@ async function callDataStrategyImpl(
 async function callLoaderOrAction({
   request,
   path,
-  unstable_pattern,
+  pattern,
   match,
   lazyHandlerPromise,
   lazyRoutePromise,
@@ -6322,7 +6322,7 @@ async function callLoaderOrAction({
 }: {
   request: Request;
   path: To;
-  unstable_pattern: string;
+  pattern: string;
   match: DataRouteMatch;
   lazyHandlerPromise: Promise<void> | undefined;
   lazyRoutePromise: Promise<void> | undefined;
@@ -6357,7 +6357,7 @@ async function callLoaderOrAction({
         {
           request,
           unstable_url: createDataFunctionUrl(request, path),
-          unstable_pattern,
+          pattern,
           params: match.params,
           context: scopedContext,
         },

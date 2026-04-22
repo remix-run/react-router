@@ -78,7 +78,7 @@ and is only present for render errors.
 
 ```tsx
 <RouterProvider onError=(error, info) => {
-  let { location, params, unstable_pattern, errorInfo } = info;
+  let { location, params, pattern, errorInfo } = info;
   console.error(error, location, errorInfo);
   reportToErrorService(error, location, errorInfo);
 }} />

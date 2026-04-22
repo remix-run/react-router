@@ -27,7 +27,7 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
-import type { unstable_ClientInstrumentation } from "../router/instrumentation";
+import type { ClientInstrumentation } from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -79,10 +79,10 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   getContext,
-  unstable_instrumentations,
+  instrumentations,
 }: {
   getContext?: RouterInit["getContext"];
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
 }): DataRouter {
   initSsrInfo();
 
@@ -185,7 +185,7 @@ function createHydratedRouter({
     getContext,
     hydrationData,
     hydrationRouteProperties,
-    unstable_instrumentations,
+    instrumentations,
     mapRouteProperties,
     future: {
       v8_passThroughRequests:
@@ -287,12 +287,12 @@ export interface HydratedRouterProps {
    * startTransition(() => {
    *   hydrateRoot(
    *     document,
-   *     <HydratedRouter unstable_instrumentations={[logging]} />
+   *     <HydratedRouter instrumentations={[logging]} />
    *   );
    * });
    * ```
    */
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   /**
    * An error handler function that will be called for any middleware, loader, action,
    * or render errors that are encountered in your application.  This is useful for
@@ -305,7 +305,7 @@ export interface HydratedRouterProps {
    *
    * ```tsx
    * <HydratedRouter onError=(error, info) => {
-   *   let { location, params, unstable_pattern, errorInfo } = info;
+   *   let { location, params, pattern, errorInfo } = info;
    *   console.error(error, location, errorInfo);
    *   reportToErrorService(error, location, errorInfo);
    * }} />
@@ -349,7 +349,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       getContext: props.getContext,
-      unstable_instrumentations: props.unstable_instrumentations,
+      instrumentations: props.instrumentations,
     });
   }
 

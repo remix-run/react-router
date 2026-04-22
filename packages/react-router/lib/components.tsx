@@ -72,7 +72,7 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
-import type { unstable_ClientInstrumentation } from "./router/instrumentation";
+import type { ClientInstrumentation } from "./router/instrumentation";
 
 /**
  * Webpack can fail to compile against react versions without this export -
@@ -210,7 +210,7 @@ export interface MemoryRouterOpts {
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   unstable_instrumentations: [logging]
+   *   instrumentations: [logging]
    * });
    *
    *
@@ -248,7 +248,7 @@ export interface MemoryRouterOpts {
    * }
    * ```
    */
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   /**
    * Override the default data strategy of running loaders in parallel -
    * see the [docs](../../how-to/data-strategy) for more information.
@@ -301,7 +301,7 @@ export interface MemoryRouterOpts {
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
- * @param {MemoryRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
+ * @param {MemoryRouterOpts.instrumentations} opts.instrumentations n/a
  * @param {MemoryRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @returns An initialized {@link DataRouter} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
@@ -323,7 +323,7 @@ export function createMemoryRouter(
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
-    unstable_instrumentations: opts?.unstable_instrumentations,
+    instrumentations: opts?.instrumentations,
   }).initialize();
 }
 
@@ -362,7 +362,7 @@ export interface ClientOnErrorFunction {
     info: {
       location: Location;
       params: Params;
-      unstable_pattern: string;
+      pattern: string;
       errorInfo?: React.ErrorInfo;
     },
   ): void;
@@ -398,7 +398,7 @@ export interface RouterProviderProps {
    *
    * ```tsx
    * <RouterProvider onError=(error, info) => {
-   *   let { location, params, unstable_pattern, errorInfo } = info;
+   *   let { location, params, pattern, errorInfo } = info;
    *   console.error(error, location, errorInfo);
    *   reportToErrorService(error, location, errorInfo);
    * }} />
@@ -493,7 +493,7 @@ export function RouterProvider({
           onError(error, {
             location: newState.location,
             params: newState.matches[0]?.params ?? {},
-            unstable_pattern: getRoutePattern(newState.matches),
+            pattern: getRoutePattern(newState.matches),
           }),
         );
       }
@@ -1674,7 +1674,7 @@ export function Await<Resolve>({
         dataRouterContext.onError(error, {
           location: dataRouterStateContext.location,
           params: dataRouterStateContext.matches[0]?.params || {},
-          unstable_pattern: getRoutePattern(dataRouterStateContext.matches),
+          pattern: getRoutePattern(dataRouterStateContext.matches),
           errorInfo,
         });
       }

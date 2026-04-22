@@ -40,7 +40,7 @@ import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import type { MiddlewareEnabled } from "../types/future";
 import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
-import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
+import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import { getNormalizedPath } from "./urls";
@@ -62,7 +62,7 @@ function derive(build: ServerBuild, mode?: string) {
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
-    unstable_instrumentations: build.entry.module.unstable_instrumentations,
+    instrumentations: build.entry.module.instrumentations,
     future: build.future,
   });
 
@@ -304,12 +304,12 @@ function derive(build: ServerBuild, mode?: string) {
     return response;
   };
 
-  if (build.entry.module.unstable_instrumentations) {
+  if (build.entry.module.instrumentations) {
     requestHandler = instrumentHandler(
       requestHandler,
-      build.entry.module.unstable_instrumentations
+      build.entry.module.instrumentations
         .map((i) => i.handler)
-        .filter(Boolean) as unstable_InstrumentRequestHandlerFunction[],
+        .filter(Boolean) as InstrumentRequestHandlerFunction[],
     );
   }
 
