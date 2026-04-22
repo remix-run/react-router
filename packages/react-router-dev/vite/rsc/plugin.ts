@@ -805,8 +805,8 @@ function getPrerenderConcurrencyConfig(
 ): number {
   let concurrency = 1;
   let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
-    concurrency = prerender.unstable_concurrency ?? 1;
+  if (typeof prerender === "object" && "concurrency" in prerender) {
+    concurrency = prerender.concurrency ?? 1;
   }
   return concurrency;
 }

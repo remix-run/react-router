@@ -162,7 +162,7 @@ export type ReactRouterConfig = {
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    *
-   * `unstable_concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
+   * `concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
    * Setting it to a value more than 1 enables concurrent prerendering.
    * Setting it to a value higher than one can increase the speed of the build,
    * but may consume more resources, and send more concurrent requests to the
@@ -172,7 +172,7 @@ export type ReactRouterConfig = {
     | PrerenderPaths
     | {
         paths: PrerenderPaths;
-        unstable_concurrency?: number;
+        concurrency?: number;
       };
   /**
    * An array of React Router plugin config presets to ease integration with
@@ -546,14 +546,14 @@ async function resolveConfig({
 
     let isValidConcurrencyConfig =
       typeof prerender != "object" ||
-      !("unstable_concurrency" in prerender) ||
-      (typeof prerender.unstable_concurrency === "number" &&
-        Number.isInteger(prerender.unstable_concurrency) &&
-        prerender.unstable_concurrency > 0);
+      !("concurrency" in prerender) ||
+      (typeof prerender.concurrency === "number" &&
+        Number.isInteger(prerender.concurrency) &&
+        prerender.concurrency > 0);
 
     if (!isValidConcurrencyConfig) {
       return err(
-        "The `prerender.unstable_concurrency` config must be a positive integer if specified.",
+        "The `prerender.concurrency` config must be a positive integer if specified.",
       );
     }
   }
