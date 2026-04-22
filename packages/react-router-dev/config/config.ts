@@ -87,7 +87,6 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
   v8_passThroughRequests: boolean;
-  unstable_subResourceIntegrity: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
    * Prerender with Vite Preview server
@@ -218,6 +217,12 @@ export type ReactRouterConfig = {
   ssr?: boolean;
 
   /**
+   * Enable subresource integrity hashes on asset script tags. Defaults to
+   * `false`.
+   */
+  subResourceIntegrity?: boolean;
+
+  /**
    * An array of allowed origin hosts for action submissions to UI routes (does not apply
    * to resource routes). Supports micromatch glob patterns (`*` to match one segment,
    * `**` to match multiple).
@@ -324,6 +329,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * Whether to generate subresource integrity hashes for asset script tags.
+   */
+  subResourceIntegrity: boolean;
   /**
    * The allowed origins for actions / mutations. Does not apply to routes
    * without a component. micromatch glob patterns are supported.
@@ -692,8 +701,6 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     v8_passThroughRequests:
       userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
-    unstable_subResourceIntegrity:
-      userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
     unstable_trailingSlashAwareDataRequests:
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
@@ -709,6 +716,7 @@ async function resolveConfig({
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+  let subResourceIntegrity = userAndPresetConfigs.subResourceIntegrity ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
@@ -723,6 +731,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    subResourceIntegrity,
     allowedActionOrigins,
     unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);

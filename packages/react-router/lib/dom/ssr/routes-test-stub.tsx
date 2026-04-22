@@ -128,8 +128,6 @@ export function createRoutesStub(
         future: {
           v8_passThroughRequests:
             future?.v8_passThroughRequests === true,
-          unstable_subResourceIntegrity:
-            future?.unstable_subResourceIntegrity === true,
           v8_middleware: future?.v8_middleware === true,
           unstable_trailingSlashAwareDataRequests:
             future?.unstable_trailingSlashAwareDataRequests === true,

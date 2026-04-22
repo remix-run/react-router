@@ -43,7 +43,6 @@ export function mockServerBuild(
     ssr: true,
     future: {
       v8_middleware: false,
-      unstable_subResourceIntegrity: false,
       ...opts.future,
     },
     prerender: [],

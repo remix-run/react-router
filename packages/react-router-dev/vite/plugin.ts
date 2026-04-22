@@ -1107,7 +1107,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let sri: ReactRouterManifest["sri"] = undefined;
-    if (ctx.reactRouterConfig.future.unstable_subResourceIntegrity) {
+    if (ctx.reactRouterConfig.subResourceIntegrity) {
       sri = await generateSriManifest(ctx);
     }
 

@@ -238,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "subResourceIntegrity",
         "allowedActionOrigins",
         "unstable_routeConfig",
       ]);
@@ -245,7 +246,6 @@ test.describe("Vite / presets", async () => {
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
-        unstable_subResourceIntegrity: false,
         unstable_trailingSlashAwareDataRequests: false,
         unstable_previewServerPrerendering: false,
         v8_middleware: true,

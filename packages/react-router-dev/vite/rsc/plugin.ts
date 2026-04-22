@@ -166,8 +166,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               errors.push("future.v8_middleware: false");
             if (userConfig.future?.v8_viteEnvironmentApi === false)
               errors.push("future.v8_viteEnvironmentApi: false");
-            if (userConfig.future?.unstable_subResourceIntegrity)
-              errors.push("future.unstable_subResourceIntegrity");
+            if (userConfig.subResourceIntegrity)
+              errors.push("subResourceIntegrity");
             if (errors.length) {
               return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
             }
