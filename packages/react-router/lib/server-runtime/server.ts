@@ -66,6 +66,8 @@ function derive(build: ServerBuild, mode?: string) {
     future: build.future,
   });
 
+  console.log(staticHandler._internalRouteBranches);
+
   let errorHandler =
     build.entry.module.handleError ||
     ((error, { request }) => {
@@ -196,7 +198,7 @@ function derive(build: ServerBuild, mode?: string) {
           build,
           staticHandler.dataRoutes,
           requestUrl,
-          staticHandler._branches,
+          staticHandler._internalRouteBranches,
         );
         return res;
       } catch (e) {
@@ -208,7 +210,7 @@ function derive(build: ServerBuild, mode?: string) {
     let matches = matchServerRoutes(
       build.routes,
       staticHandler.dataRoutes,
-      staticHandler._branches,
+      staticHandler._internalRouteBranches,
       normalizedPathname,
       build.basename,
     );

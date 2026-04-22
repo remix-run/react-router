@@ -464,7 +464,7 @@ export interface StaticHandler {
    * The route branches derived from the data routes, used for internal route
    * matching in Framework Mode
    */
-  _branches: RouteBranch<DataRouteObject>[];
+  _internalRouteBranches: RouteBranch<DataRouteObject>[];
   /**
    * Perform a query for a given request - executing all matched route
    * loaders/actions.  Used for document requests.
@@ -4744,7 +4744,7 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
-    _branches: routeBranches,
+    _internalRouteBranches: routeBranches,
     query,
     queryRoute,
   };

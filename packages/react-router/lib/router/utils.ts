@@ -1066,6 +1066,13 @@ interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   route: RouteObjectType;
 }
 
+/**
+ * @private
+ * PRIVATE - DO NOT USE
+ *
+ * A "branch" of routes that match a given route pattern.
+ * This is an internal interface not intended for direct external usage.
+ */
 export interface RouteBranch<
   RouteObjectType extends RouteObject = RouteObject,
 > {
