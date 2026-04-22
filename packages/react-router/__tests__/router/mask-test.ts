@@ -16,7 +16,7 @@ describe("location masking", () => {
 
     // Navigate to /gallery?photo=123 but mask browser URL as /images/123
     let A = await t.navigate("/gallery?photo=123", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
     });
 
     // The loader should receive the router location URL in the request
@@ -29,7 +29,7 @@ describe("location masking", () => {
     expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",
@@ -54,7 +54,7 @@ describe("location masking", () => {
 
     // Navigate to /gallery?photo=123 with mask
     let A = await t.navigate("/gallery?photo=123", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
     });
     await A.loaders.gallery.resolve("GALLERY DATA");
 
@@ -71,7 +71,7 @@ describe("location masking", () => {
     expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",
@@ -91,7 +91,7 @@ describe("location masking", () => {
     });
 
     let A = await t.navigate("/gallery?photo=123", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
       replace: true,
     });
 
@@ -101,7 +101,7 @@ describe("location masking", () => {
     expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",
@@ -119,7 +119,7 @@ describe("location masking", () => {
     });
 
     let A = await t.navigate("/gallery?photo=123#header", {
-      unstable_mask: "/images/123#preview",
+      mask: "/images/123#preview",
     });
 
     expect(A.loaders.gallery).toBeDefined();
@@ -135,7 +135,7 @@ describe("location masking", () => {
       pathname: "/gallery",
       search: "?photo=123",
       hash: "#header",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "#preview",
@@ -153,7 +153,7 @@ describe("location masking", () => {
     });
 
     let A = await t.navigate("/gallery?photo=123", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
       state: { customData: "test" },
     });
 
@@ -163,7 +163,7 @@ describe("location masking", () => {
       pathname: "/gallery",
       search: "?photo=123",
       state: { customData: "test" },
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",
@@ -181,7 +181,7 @@ describe("location masking", () => {
     });
 
     let A = await t.navigate("/gallery?photo=123", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
       formMethod: "post",
       formData: createFormData({ test: "value" }),
     });
@@ -204,7 +204,7 @@ describe("location masking", () => {
     expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",
@@ -226,7 +226,7 @@ describe("location masking", () => {
     });
 
     let A = await t.navigate("/gallery?photo=123", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
     });
 
     expect(A.loaders.gallery).toBeDefined();
@@ -235,7 +235,7 @@ describe("location masking", () => {
     expect(t.router.state.location).toMatchObject({
       pathname: "/gallery",
       search: "?photo=123",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",
@@ -257,14 +257,14 @@ describe("location masking", () => {
 
     // Navigate to non-existent route with mask
     await t.navigate("/nonexistent", {
-      unstable_mask: "/images/123",
+      mask: "/images/123",
     });
 
     // Should get a 404 error
     expect(t.router.state.errors).toBeDefined();
     expect(t.router.state.location).toMatchObject({
       pathname: "/nonexistent",
-      unstable_mask: {
+      mask: {
         pathname: "/images/123",
         search: "",
         hash: "",

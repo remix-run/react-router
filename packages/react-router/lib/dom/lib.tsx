@@ -1249,7 +1249,7 @@ export interface LinkProps
    *          <Link
    *            key={image.id}
    *            to={`/gallery?image=${image.id}`}
-   *            unstable_mask={`/images/${image.id}`}
+   *            mask={`/images/${image.id}`}
    *          >
    *            <img src={image.url} alt={image.alt} />
    *          </Link>
@@ -1266,7 +1266,7 @@ export interface LinkProps
    * }
    * ```
    */
-  unstable_mask?: To;
+  mask?: To;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1300,7 +1300,7 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
  * @param {LinkProps.defaultShouldRevalidate} props.defaultShouldRevalidate n/a
- * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
+ * @param {LinkProps.mask} props.mask [modes: framework, data] n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1311,7 +1311,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       relative,
       reloadDocument,
       replace,
-      unstable_mask,
+      mask,
       state,
       target,
       to,
@@ -1335,13 +1335,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let maskedHref: string | null = null;
 
-    if (unstable_mask) {
+    if (mask) {
       // Inlined version of the `useHref` logic operating off the masked location
       // instead of the current location
       let resolved = resolveTo(
-        unstable_mask,
+        mask,
         [],
-        location.unstable_mask ? location.unstable_mask.pathname : "/",
+        location.mask ? location.mask.pathname : "/",
         true,
       );
 
@@ -1366,7 +1366,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
-      unstable_mask,
+      mask,
       state,
       target,
       preventScrollReset,
@@ -2190,7 +2190,7 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * {@link useViewTransitionState}. Defaults to `false`.
  * @param options.defaultShouldRevalidate Specify the default revalidation
  * behavior for the navigation. Defaults to `true`.
- * @param options.unstable_mask Masked location to display in the browser instead
+ * @param options.mask Masked location to display in the browser instead
  * of the router location. Defaults to `undefined`.
  * @param options.useTransitions Wraps the navigation in
  * [`React.startTransition`](https://react.dev/reference/react/startTransition)
@@ -2202,7 +2202,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
-    unstable_mask,
+    mask,
     state,
     preventScrollReset,
     relative,
@@ -2212,7 +2212,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    unstable_mask?: To;
+    mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
@@ -2240,7 +2240,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
-            unstable_mask,
+            mask,
             state,
             preventScrollReset,
             relative,
@@ -2261,7 +2261,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
-      unstable_mask,
+      mask,
       state,
       target,
       to,

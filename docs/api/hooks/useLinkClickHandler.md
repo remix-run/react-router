@@ -34,7 +34,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
-    unstable_mask,
+    mask,
     state,
     preventScrollReset,
     relative,
@@ -44,7 +44,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    unstable_mask?: To;
+    mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
@@ -91,7 +91,7 @@ Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/Vie
 
 Specify the default revalidation behavior for the navigation. Defaults to `true`.
 
-### options.unstable_mask
+### options.mask
 
 Masked location to display in the browser instead of the router location. Defaults to `undefined`.
 

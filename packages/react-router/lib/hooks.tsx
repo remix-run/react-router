@@ -936,7 +936,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
-            unstable_mask: undefined,
+            mask: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,

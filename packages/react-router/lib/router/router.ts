@@ -585,7 +585,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   state?: any;
   fromRouteId?: string;
   viewTransition?: boolean;
-  unstable_mask?: To;
+  mask?: To;
 };
 
 // Only allowed for submission navigations
@@ -1580,13 +1580,13 @@ export function createRouter(init: RouterInit): Router {
 
     // If mask is provided, normalize and create a separate path for the router
     let maskPath: Path | undefined;
-    if (opts?.unstable_mask) {
+    if (opts?.mask) {
       let partialPath =
-        typeof opts.unstable_mask === "string"
-          ? parsePath(opts.unstable_mask)
+        typeof opts.mask === "string"
+          ? parsePath(opts.mask)
           : {
-              ...state.location.unstable_mask,
-              ...opts.unstable_mask,
+              ...state.location.mask,
+              ...opts.mask,
             };
       maskPath = {
         pathname: "",
