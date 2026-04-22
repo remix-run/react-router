@@ -478,7 +478,7 @@ export interface StaticHandler {
    * @param opts.requestContext Context object to pass to loaders/actions
    * @param opts.skipLoaderErrorBubbling Skip loader error bubbling
    * @param opts.skipRevalidation Skip revalidation after action submission
-   * @param opts.unstable_normalizePath Normalize the request path
+   * @param opts.normalizePath Normalize the request path
    */
   query(
     request: Request,
@@ -496,7 +496,7 @@ export interface StaticHandler {
           },
         ) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
-      unstable_normalizePath?: (request: Request) => Path;
+      normalizePath?: (request: Request) => Path;
     },
   ): Promise<StaticHandlerContext | Response>;
   /**
@@ -509,7 +509,7 @@ export interface StaticHandler {
    * to generate a response to bubble back up the middleware chain
    * @param opts.requestContext Context object to pass to loaders/actions
    * @param opts.routeId The ID of the route to query
-   * @param opts.unstable_normalizePath Normalize the request path
+   * @param opts.normalizePath Normalize the request path
 
    */
   queryRoute(
@@ -521,7 +521,7 @@ export interface StaticHandler {
       generateMiddlewareResponse?: (
         queryRoute: (r: Request) => Promise<Response>,
       ) => MaybePromise<Response>;
-      unstable_normalizePath?: (request: Request) => Path;
+      normalizePath?: (request: Request) => Path;
     },
   ): Promise<any>;
 }
@@ -3883,12 +3883,17 @@ export function createStaticHandler(
       skipRevalidation,
       dataStrategy,
       generateMiddlewareResponse,
-      unstable_normalizePath,
+      normalizePath,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
-    let normalizePath = unstable_normalizePath || defaultNormalizePath;
+    let normalizePathImpl = normalizePath || defaultNormalizePath;
     let method = request.method;
-    let location = createLocation("", normalizePath(request), null, "default");
+    let location = createLocation(
+      "",
+      normalizePathImpl(request),
+      null,
+      "default",
+    );
     let matches = matchRoutesImpl(
       dataRoutes,
       location,
@@ -4166,12 +4171,17 @@ export function createStaticHandler(
       requestContext,
       dataStrategy,
       generateMiddlewareResponse,
-      unstable_normalizePath,
+      normalizePath,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
-    let normalizePath = unstable_normalizePath || defaultNormalizePath;
+    let normalizePathImpl = normalizePath || defaultNormalizePath;
     let method = request.method;
-    let location = createLocation("", normalizePath(request), null, "default");
+    let location = createLocation(
+      "",
+      normalizePathImpl(request),
+      null,
+      "default",
+    );
     let matches = matchRoutesImpl(
       dataRoutes,
       location,

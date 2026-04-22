@@ -510,7 +510,7 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
-      unstable_normalizePath: (r) =>
+      normalizePath: (r) =>
         getNormalizedPath(r, build.basename, build.future),
     });
 
@@ -689,7 +689,7 @@ async function handleResourceRequest(
             }
           }
         : undefined,
-      unstable_normalizePath: (r) =>
+      normalizePath: (r) =>
         getNormalizedPath(r, build.basename, build.future),
     });
 
