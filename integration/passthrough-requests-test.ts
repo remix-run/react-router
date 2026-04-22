@@ -39,17 +39,17 @@ const files = {
     import { Form, Link } from "react-router";
 
     export function loader({ request, url }) {
-      let url = new URL(request.url);
+      let passthroughUrl = new URL(request.url);
       return {
-        url: url.pathname + url.search,
+        url: passthroughUrl.pathname + passthroughUrl.search,
         path: url.pathname + url.search
       };
     }
 
     export function action({ request, url }) {
-      let url = new URL(request.url);
+      let passthroughUrl = new URL(request.url);
       return {
-        url: url.pathname + url.search,
+        url: passthroughUrl.pathname + passthroughUrl.search,
         path: url.pathname + url.search
       };
     }
@@ -78,9 +78,9 @@ const files = {
   `,
   "app/routes/page.tsx": js`
     export function loader({ request, url }) {
-      let url = new URL(request.url);
+      let passthroughUrl = new URL(request.url);
       return {
-        url: url.pathname + url.search,
+        url: passthroughUrl.pathname + passthroughUrl.search,
         path: url.pathname + url.search
       };
     }
