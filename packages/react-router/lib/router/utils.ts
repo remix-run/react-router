@@ -278,7 +278,7 @@ interface DataFunctionArgs<Context> {
    * suffixes, `index`/`_routes` search params).
    * The URL includes the origin from the request for convenience.
    */
-  unstable_url: URL;
+  url: URL;
   /**
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.

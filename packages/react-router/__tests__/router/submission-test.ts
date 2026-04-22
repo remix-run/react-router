@@ -949,7 +949,7 @@ describe("submissions", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -985,7 +985,7 @@ describe("submissions", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1019,7 +1019,7 @@ describe("submissions", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1125,7 +1125,7 @@ describe("submissions", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1165,7 +1165,7 @@ describe("submissions", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1202,7 +1202,7 @@ describe("submissions", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 

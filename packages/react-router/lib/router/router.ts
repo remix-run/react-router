@@ -3973,7 +3973,7 @@ export function createStaticHandler(
         let response = await runServerMiddlewarePipeline(
           {
             request,
-            unstable_url: createDataFunctionUrl(request, location),
+            url: createDataFunctionUrl(request, location),
             pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
@@ -4213,7 +4213,7 @@ export function createStaticHandler(
       let response = await runServerMiddlewarePipeline(
         {
           request,
-          unstable_url: createDataFunctionUrl(request, location),
+          url: createDataFunctionUrl(request, location),
           pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
@@ -6253,7 +6253,7 @@ async function callDataStrategyImpl(
     "fetcherKey" | "runClientMiddleware"
   > = {
     request,
-    unstable_url: createDataFunctionUrl(request, path),
+    url: createDataFunctionUrl(request, path),
     pattern: getRoutePattern(matches),
     params: matches[0].params,
     context: scopedContext,
@@ -6356,7 +6356,7 @@ async function callLoaderOrAction({
       return handler(
         {
           request,
-          unstable_url: createDataFunctionUrl(request, path),
+          url: createDataFunctionUrl(request, path),
           pattern,
           params: match.params,
           context: scopedContext,
@@ -6656,7 +6656,7 @@ function createClientSideRequest(
   return new Request(url, init);
 }
 
-// Create the unstable_url object to pass to loaders/actions/middleware.
+// Create the normalized URL instance to pass to loaders/actions/middleware.
 // We strip the `?index` param because that is a React Router implementation detail.
 function createDataFunctionUrl(request: Request, path: To): URL {
   let url = new URL(request.url);

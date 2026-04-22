@@ -38,19 +38,19 @@ const files = {
   "app/routes/_index.tsx": js`
     import { Form, Link } from "react-router";
 
-    export function loader({ request, unstable_url }) {
+    export function loader({ request, url }) {
       let url = new URL(request.url);
       return {
         url: url.pathname + url.search,
-        path: unstable_url.pathname + unstable_url.search
+        path: url.pathname + url.search
       };
     }
 
-    export function action({ request, unstable_url }) {
+    export function action({ request, url }) {
       let url = new URL(request.url);
       return {
         url: url.pathname + url.search,
-        path: unstable_url.pathname + unstable_url.search
+        path: url.pathname + url.search
       };
     }
 
@@ -77,11 +77,11 @@ const files = {
     }
   `,
   "app/routes/page.tsx": js`
-    export function loader({ request, unstable_url }) {
+    export function loader({ request, url }) {
       let url = new URL(request.url);
       return {
         url: url.pathname + url.search,
-        path: unstable_url.pathname + unstable_url.search
+        path: url.pathname + url.search
       };
     }
 

@@ -86,7 +86,7 @@ export type ClientDataFunctionArgs<Params> = {
    * pathnames, `index`/`_routes` search params).
    * The URL includes the origin from the request for convenience.
    */
-  unstable_url: URL;
+  url: URL;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -129,7 +129,7 @@ export type ServerDataFunctionArgs<Params> = {
    * pathnames, `index`/`_routes` search params).
    * The URL includes the origin from the request for convenience.
    */
-  unstable_url: URL;
+  url: URL;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example

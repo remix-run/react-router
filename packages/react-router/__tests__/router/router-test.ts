@@ -1752,7 +1752,7 @@ describe("a router", () => {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks"),
+        url: new URL("http://localhost/tasks"),
         context: {},
       });
 
@@ -1763,7 +1763,7 @@ describe("a router", () => {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
         pattern: "/tasks/:id",
-        unstable_url: new URL("http://localhost/tasks/1"),
+        url: new URL("http://localhost/tasks/1"),
         context: {},
       });
 
@@ -1774,7 +1774,7 @@ describe("a router", () => {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
+        url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
 
@@ -1787,7 +1787,7 @@ describe("a router", () => {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
+        url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
 
@@ -2214,7 +2214,7 @@ describe("a router", () => {
         params: {},
         request: expect.any(Request),
         pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks"),
+        url: new URL("http://localhost/tasks"),
         context: {},
       });
 
@@ -2260,7 +2260,7 @@ describe("a router", () => {
         params: {},
         request: expect.any(Request),
         pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks?foo=bar"),
+        url: new URL("http://localhost/tasks?foo=bar"),
         context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
@@ -2295,7 +2295,7 @@ describe("a router", () => {
         params: {},
         request: expect.any(Request),
         pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        url: expect.any(URL),
         context: {},
       });
 
