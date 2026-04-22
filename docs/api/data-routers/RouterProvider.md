@@ -49,7 +49,7 @@ function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
   onError,
-  unstable_useTransitions,
+  useTransitions,
 }: RouterProviderProps): React.ReactElement
 ```
 
@@ -88,7 +88,7 @@ and is only present for render errors.
 
 The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) instance to use for navigation and data fetching.
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).

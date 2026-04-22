@@ -38,7 +38,7 @@ function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-  unstable_useTransitions,
+  useTransitions,
 }: RouterProps): React.ReactElement | null
 ```
 
@@ -72,7 +72,7 @@ or a custom navigator that implements the [`Navigator`](https://api.reactrouter.
 Whether this router is static or not (used for SSR). If `true`, the router
 will not be reactive to location changes.
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).

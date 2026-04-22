@@ -43,7 +43,7 @@ function HistoryRouter({
   basename,
   children,
   history,
-  unstable_useTransitions,
+  useTransitions,
 }: HistoryRouterProps)
 ```
 
@@ -61,7 +61,7 @@ Application basename
 
 A `History` implementation for use by the router
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).

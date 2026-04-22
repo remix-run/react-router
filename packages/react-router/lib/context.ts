@@ -15,9 +15,9 @@ import type { TrackedPromise, RouteMatch } from "./router/utils";
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
-  // `NavigationContext` needs `future`/`unstable_useTransitions` since it doesn't
+  // `NavigationContext` needs `future`/`useTransitions` since it doesn't
   // have a `router` in all cases
-  extends Omit<NavigationContextObject, "future" | "unstable_useTransitions"> {
+  extends Omit<NavigationContextObject, "future" | "useTransitions"> {
   router: Router;
   staticContext?: StaticHandlerContext;
   onError?: ClientOnErrorFunction;
@@ -111,7 +111,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  unstable_useTransitions: boolean | undefined;
+  useTransitions: boolean | undefined;
   // TODO: Re-introduce a singular `FutureConfig` once we land our first
   // future.unstable_ or future.v8_ flag
   future: {};

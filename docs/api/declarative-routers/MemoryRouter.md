@@ -32,7 +32,7 @@ function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
-  unstable_useTransitions,
+  useTransitions,
 }: MemoryRouterProps): React.ReactElement
 ```
 
@@ -54,7 +54,7 @@ Initial entries in the in-memory history stack
 
 Index of `initialEntries` the application should initialize to
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).

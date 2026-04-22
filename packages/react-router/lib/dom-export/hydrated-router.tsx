@@ -330,7 +330,7 @@ export interface HydratedRouterProps {
    *
    * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
 }
 
 /**
@@ -437,7 +437,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
         <RemixErrorBoundary location={location}>
           <RouterProvider
             router={router}
-            unstable_useTransitions={props.unstable_useTransitions}
+            useTransitions={props.useTransitions}
             onError={props.onError}
           />
         </RemixErrorBoundary>

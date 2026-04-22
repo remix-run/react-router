@@ -32,7 +32,7 @@ of the URL so it is not sent to the server.
 function HashRouter({
   basename,
   children,
-  unstable_useTransitions,
+  useTransitions,
   window,
 }: HashRouterProps)
 ```
@@ -47,7 +47,7 @@ Application basename
 
 ``<Route>`` components describing your route configuration
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).

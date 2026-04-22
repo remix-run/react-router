@@ -40,7 +40,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     relative,
     viewTransition,
     defaultShouldRevalidate,
-    unstable_useTransitions,
+    useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
@@ -50,7 +50,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
     defaultShouldRevalidate?: boolean;
-    unstable_useTransitions?: boolean;
+    useTransitions?: boolean;
   } = ,
 ): (event: React.MouseEvent<E, MouseEvent>) => void {}
 ```
@@ -95,7 +95,7 @@ Specify the default revalidation behavior for the navigation. Defaults to `true`
 
 Masked location to display in the browser instead of the router location. Defaults to `undefined`.
 
-### options.unstable_useTransitions
+### options.useTransitions
 
 Wraps the navigation in [`React.startTransition`](https://react.dev/reference/react/startTransition)
 for concurrent rendering. Defaults to `false`.
