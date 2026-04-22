@@ -3,6 +3,7 @@ import path from "node:path";
 import util from "node:util";
 
 import fg from "fast-glob";
+// @ts-expect-error
 import dox from "dox";
 import prettier from "prettier";
 import { ReflectionKind, type JSONOutput } from "typedoc";
@@ -737,7 +738,7 @@ function resolveLinkTags(text: string): string {
   // Match {@link ApiName} as well as {@link ApiName | description}
   const linkPattern = /\{@link\s+([^}]+)\}/g;
 
-  return text.replace(linkPattern, (match, linkContent) => {
+  return text.replace(linkPattern, (_, linkContent: string) => {
     // Split on the pipe in case a different link text is specified after.
     // This is not standard JSDoc syntax but instead something typedoc picks up
     // from TSDoc. See:

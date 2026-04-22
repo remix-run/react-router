@@ -122,18 +122,13 @@ export default [
 
 Test both states (on/off) for future flags. Don't break existing behavior without a flag.
 
-## Changesets
+## Change Files
 
-When making changes that affect users, create a changeset at `.changeset/<unique-meaningful-name>.md`. If iterating on a change that hasn't shipped yet, update the existing changeset file instead of creating a new one.
+When making changes that affect users, create a change file at `packages/<package>/.changes/<type>.<unique-meaningful-name>.md`. `<type>` should be either `patch`, `minor`, `major` or `unstable` to indicate the type of API change being made. If iterating on a change that hasn't shipped yet, update the existing change file instead of creating a new one.
 
 Format:
 
 ```markdown
----
-"react-router": patch
-"@react-router/dev": minor
----
-
 Brief description of the change
 
 - Additional details if needed

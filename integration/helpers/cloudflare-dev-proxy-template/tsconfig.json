@@ -14,6 +14,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "noEmit": true
+    "noEmit": true,
+    "rootDirs": [".", ".react-router/types/"]
   }
 }

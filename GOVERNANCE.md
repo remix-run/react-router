@@ -123,7 +123,7 @@ This table gives a high-level overview of the stages, but please see the individ
   - Because the alpha release may contain other work committed to `dev` but not yet released in a stable version, it may not be ideal for testing in all cases
   - In these cases, PR authors may also add the contents for a `.patch` file in a comment that folks can use via [patch-package](https://www.npmjs.com/package/patch-package) or [pnpm patch](https://pnpm.io/cli/patch)
 - Feedback from alpha testers is considered essential for further progress
-- The PR should also contain a changeset documenting the new API for the release notes
+- The PR should also contain a changes file documenting the new API for the release notes
 - SC members will review and approve the PR via GitHub reviews
 - Approval at this stage communicates:
   - The feature is valuable for React Router
@@ -135,7 +135,7 @@ This table gives a high-level overview of the stages, but please see the individ
 
 - A proposal enters **Stage 3 — Beta** once it receives **Stage 2 — Alpha** PR approvals from 2 SC members and is merged to `dev`
   - An SC member authoring the `unstable_` PR counts as an implicit approval, so in those cases explicit approval is required from 1 additional SC member
-- This will include the feature in `nightly` releases and the next normal SemVer release for broader beta testing under the `unstable_` flag
+- This will include the feature in the next normal SemVer release for broader beta testing behind the `unstable_` flag
 
 ### Stage 4 — Stabilization
 
@@ -151,7 +151,7 @@ This table gives a high-level overview of the stages, but please see the individ
 
 - A proposal enters **Stage 5 — Stable** once it receives **Stage 4 — Stabilization** PR approvals from at least 50% of the SC members and is merged to `dev`
   - An SC member authoring the stabilization PR counts as an implicit approval
-- This will include the stable feature in `nightly` releases and the next normal SemVer release
+- This will include the stable feature in the next normal SemVer release
 
 ## Meeting Notes
 

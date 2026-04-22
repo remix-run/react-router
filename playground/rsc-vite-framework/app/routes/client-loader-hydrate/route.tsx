@@ -17,7 +17,7 @@ export default function ClientLoaderHydrateRoute({
 }: Route.ComponentProps) {
   return (
     <main>
-      <h1 className={styles.heading}>Client loader</h1>
+      <h1 className={styles.heading}>Client loader!</h1>
       <p>Loader data: {loaderData}</p>
     </main>
   );

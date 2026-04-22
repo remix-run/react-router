@@ -184,10 +184,9 @@ export function useNavigationType(): NavigationType {
  * @param pattern The pattern to match against the current {@link Location}
  * @returns The path match object if the pattern matches, `null` otherwise
  */
-export function useMatch<
-  ParamKey extends ParamParseKey<Path>,
-  Path extends string,
->(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
+export function useMatch<Path extends string>(
+  pattern: PathPattern<Path> | Path,
+): PathMatch<ParamParseKey<Path>> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -197,7 +196,7 @@ export function useMatch<
 
   let { pathname } = useLocation();
   return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
+    () => matchPath<Path>(pattern, decodePath(pathname)),
     [pathname, pattern],
   );
 }
@@ -667,7 +666,7 @@ export function useParams<
 > {
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];
-  return routeMatch ? (routeMatch.params as any) : {};
+  return (routeMatch?.params ?? {}) as any;
 }
 
 /**

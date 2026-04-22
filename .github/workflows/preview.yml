@@ -3,6 +3,9 @@
 # Commits to `dev` push builds to a `preview/dev` branch:
 #   pnpm install "remix-run/react-router#preview/dev&path:packages/react-router"
 #
+# Pull Requests create `preview/pr-{number}` branches:
+#   pnpm install "remix-run/react-router#preview/pr-12345&path:packages/react-router"
+#
 # Can also be dispatched manually with base/installable branches to provide
 # `experimental` branches from PRs or otherwise.
 
@@ -20,6 +23,8 @@ on:
       installableBranch:
         description: Installable Branch
         required: true
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
 
 concurrency:
   # Include `event_name` here because when a pull_request is merged (closed), the
@@ -30,16 +35,23 @@ concurrency:
 
 jobs:
   preview:
-    if: github.repository == 'remix-run/react-router'
+    # Don't run on PRs from forked repos
+    if: github.repository == 'remix-run/react-router' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (push)
         if: github.event_name == 'push'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Checkout (pull_request)
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Checkout (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.baseBranch }}
 
@@ -47,7 +59,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: "package.json"
           cache: pnpm
@@ -68,6 +80,17 @@ jobs:
           git push --force --set-upstream origin preview/dev
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
+      # Build and force push over the PR preview/pr-{number} branch + comment on the PR
+      - name: Build/push branch (pull_request)
+        if: github.event_name == 'pull_request' && github.event.pull_request.state == 'open'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pnpm run setup-installable-branch preview/pr-${{ github.event.pull_request.number }}
+          git push --force --set-upstream origin preview/pr-${{ github.event.pull_request.number }}
+          echo "pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
+          pnpm run pr-preview comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
+
       # Build and normal push for experimental releases to avoid unintended force
       # pushes over remote branches in case of a branch name collision
       - name: Build/push branch (workflow_dispatch)
@@ -76,3 +99,11 @@ jobs:
           pnpm run setup-installable-branch ${{ inputs.installableBranch }}
           git push --set-upstream origin ${{ inputs.installableBranch }}
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
+
+      # Cleanup PR preview/pr-{number} branches when the PR is closed
+      - name: Cleanup preview branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.state == 'closed'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pnpm run pr-preview cleanup ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
