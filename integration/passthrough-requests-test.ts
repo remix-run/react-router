@@ -61,7 +61,7 @@ const files = {
           <Form method="post">
             <button type="submit">Submit</button>
           </Form>
-          <Link to="/page?b=2" unstable_defaultShouldRevalidate={false}>
+          <Link to="/page?b=2" defaultShouldRevalidate={false}>
             Go to new page
           </Link>
           <p data-loader-url>{loaderData.url}</p>

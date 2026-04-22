@@ -576,7 +576,7 @@ type BaseNavigateOrFetchOptions = {
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   flushSync?: boolean;
-  unstable_defaultShouldRevalidate?: boolean;
+  defaultShouldRevalidate?: boolean;
 };
 
 // Only allowed for navigations
@@ -1682,7 +1682,7 @@ export function createRouter(init: RouterInit): Router {
       enableViewTransition: opts && opts.viewTransition,
       flushSync,
       callSiteDefaultShouldRevalidate:
-        opts && opts.unstable_defaultShouldRevalidate,
+        opts && opts.defaultShouldRevalidate,
     });
   }
 
@@ -2490,7 +2490,7 @@ export function createRouter(init: RouterInit): Router {
         flushSync,
         preventScrollReset,
         submission,
-        opts && opts.unstable_defaultShouldRevalidate,
+        opts && opts.defaultShouldRevalidate,
       );
       return;
     }

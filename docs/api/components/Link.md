@@ -214,14 +214,14 @@ for this navigation.
 
 To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
 
-### unstable_defaultShouldRevalidate
+### defaultShouldRevalidate
 
 [modes: framework, data, declarative]
 
 Specify the default revalidation behavior for the navigation.
 
 ```tsx
-<Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+<Link to="/some/path" defaultShouldRevalidate={false} />
 ```
 
 If no `shouldRevalidate` functions are present on the active routes, then this

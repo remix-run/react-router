@@ -857,7 +857,7 @@ test.describe("single-fetch", () => {
 
           export default function Comp({ loaderData, actionData }) {
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={false}>
+              <Form method="post" defaultShouldRevalidate={false}>
                 <button type="submit" name="name" value="value">Submit</button>
                 <p id="data">{loaderData.count}</p>
                 {actionData ? <p id="action-data">{actionData.count}</p> : null}
@@ -911,7 +911,7 @@ test.describe("single-fetch", () => {
           export default function Comp({ loaderData }) {
             let navigation = useNavigation();
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={true}>
+              <Form method="post" defaultShouldRevalidate={true}>
                 <button type="submit" name="throw" value="5xx">Throw 5xx</button>
                 <p id="data">{loaderData.count}</p>
                 {navigation.state === "idle" ? <p id="idle">idle</p> : null}
@@ -970,7 +970,7 @@ test.describe("single-fetch", () => {
 
           export default function Comp({ loaderData, actionData }) {
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={false}>
+              <Form method="post" defaultShouldRevalidate={false}>
                 <button type="submit" name="name" value="value">Submit</button>
                 <p id="data">{loaderData.count}</p>
                 {actionData ? <p id="action-data">{actionData.count}</p> : null}
@@ -1028,7 +1028,7 @@ test.describe("single-fetch", () => {
           export default function Comp({ loaderData }) {
             let navigation = useNavigation();
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={true}>
+              <Form method="post" defaultShouldRevalidate={true}>
                 <button type="submit" name="throw" value="5xx">Throw 5xx</button>
                 <p id="data">{loaderData.count}</p>
                 {navigation.state === "idle" ? <p id="idle">idle</p> : null}

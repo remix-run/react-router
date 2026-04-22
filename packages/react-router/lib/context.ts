@@ -86,7 +86,7 @@ export interface NavigateOptions {
   /** Enables a {@link https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API View Transition} for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the {@link useViewTransitionState `useViewTransitionState()`} hook.  */
   viewTransition?: boolean;
   /** Specifies the default revalidation behavior after this submission */
-  unstable_defaultShouldRevalidate?: boolean;
+  defaultShouldRevalidate?: boolean;
 }
 
 /**
