@@ -25,7 +25,7 @@ export async function callRouteHandler(
   future: FutureConfig,
 ) {
   let result = await handler({
-    request: future.unstable_passThroughRequests
+    request: future.v8_passThroughRequests
       ? args.request
       : stripRoutesParam(stripIndexParam(args.request)),
     unstable_url: args.unstable_url,

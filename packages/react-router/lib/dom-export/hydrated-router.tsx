@@ -188,8 +188,8 @@ function createHydratedRouter({
     unstable_instrumentations,
     mapRouteProperties,
     future: {
-      unstable_passThroughRequests:
-        ssrInfo.context.future.unstable_passThroughRequests,
+      v8_passThroughRequests:
+        ssrInfo.context.future.v8_passThroughRequests,
     },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,

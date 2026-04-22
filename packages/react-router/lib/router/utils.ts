@@ -272,8 +272,8 @@ interface DataFunctionArgs<Context> {
   request: Request;
   /**
    * A URL instance representing the application location being navigated to or fetched.
-   * Without `future.unstable_passThroughRequests` enabled, this matches `request.url`.
-   * With `future.unstable_passThroughRequests` enabled, this is a normalized
+   * Without `future.v8_passThroughRequests` enabled, this matches `request.url`.
+   * With `future.v8_passThroughRequests` enabled, this is a normalized
    * URL with React-Router-specific implementation details removed (`.data`
    * suffixes, `index`/`_routes` search params).
    * The URL includes the origin from the request for convenience.

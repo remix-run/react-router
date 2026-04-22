@@ -412,7 +412,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  unstable_passThroughRequests: boolean;
+  v8_passThroughRequests: boolean;
 }
 
 /**
@@ -968,7 +968,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    unstable_passThroughRequests: false,
+    v8_passThroughRequests: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -3816,7 +3816,7 @@ export function createStaticHandler(
   // Currently unused in the static handler, but available for additional flags in the future
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
-    unstable_passThroughRequests: false, // unused in static handler
+    v8_passThroughRequests: false, // unused in static handler
     ...opts?.future,
   };
 

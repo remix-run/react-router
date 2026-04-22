@@ -55,7 +55,7 @@ export async function singleFetchAction(
       return handleQueryError(new Error("Bad Request"), 400);
     }
 
-    let handlerRequest = build.future.unstable_passThroughRequests
+    let handlerRequest = build.future.v8_passThroughRequests
       ? request
       : new Request(handlerUrl, {
           method: request.method,
@@ -152,7 +152,7 @@ export async function singleFetchLoaders(
   let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
   try {
-    let handlerRequest = build.future.unstable_passThroughRequests
+    let handlerRequest = build.future.v8_passThroughRequests
       ? request
       : new Request(handlerUrl, {
           headers: request.headers,

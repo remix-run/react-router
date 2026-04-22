@@ -97,14 +97,14 @@ const files = {
 };
 
 test.describe("pass through requests", () => {
-  test("sends proper arguments to loaders when future.unstable_passThroughRequests is disabled", async ({
+  test("sends proper arguments to loaders when future.v8_passThroughRequests is disabled", async ({
     page,
   }) => {
     let fixture = await createFixture({
       files: {
         "react-router.config.ts": reactRouterConfig({
           future: {
-            unstable_passThroughRequests: false,
+            v8_passThroughRequests: false,
           },
         }),
         ...files,
@@ -160,14 +160,14 @@ test.describe("pass through requests", () => {
     requests = [];
   });
 
-  test("sends proper arguments to loaders when future.unstable_passThroughRequests is enabled", async ({
+  test("sends proper arguments to loaders when future.v8_passThroughRequests is enabled", async ({
     page,
   }) => {
     let fixture = await createFixture({
       files: {
         "react-router.config.ts": reactRouterConfig({
           future: {
-            unstable_passThroughRequests: true,
+            v8_passThroughRequests: true,
           },
         }),
         ...files,

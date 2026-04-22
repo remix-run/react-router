@@ -583,7 +583,7 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
       v8_middleware: false,
       unstable_subResourceIntegrity: false,
       unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-      unstable_passThroughRequests: true, // always on for RSC
+      v8_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,

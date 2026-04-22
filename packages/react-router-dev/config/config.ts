@@ -86,7 +86,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
-  unstable_passThroughRequests: boolean;
+  v8_passThroughRequests: boolean;
   unstable_subResourceIntegrity: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
@@ -681,12 +681,17 @@ async function resolveConfig({
       'The "future.unstable_viteEnvironmentApi" flag has been stabilized as "future.v8_viteEnvironmentApi"',
     );
   }
+  if (futureConfig?.unstable_passThroughRequests !== undefined) {
+    return err(
+      'The "future.unstable_passThroughRequests" flag has been stabilized as "future.v8_passThroughRequests"',
+    );
+  }
 
   let future: FutureConfig = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    unstable_passThroughRequests:
-      userAndPresetConfigs.future?.unstable_passThroughRequests ?? false,
+    v8_passThroughRequests:
+      userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
     unstable_subResourceIntegrity:
       userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
     unstable_trailingSlashAwareDataRequests:

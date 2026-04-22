@@ -119,13 +119,9 @@ export default {
 
 No code changes are required unless you have custom Vite configuration that needs to be updated for the [Environment API][vite-environment]. Most users won't need to make any changes.
 
-## Unstable Future Flags (Optional)
+## `future.v8_passThroughRequests`
 
-We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
-
-### future.unstable_passThroughRequests
-
-[MODES: framework]
+[MODES: framework, data]
 
 <br/>
 <br/>
@@ -137,20 +133,34 @@ By default, React Router normalizes the `request.url` passed to your `loader`, `
 This flag eliminates that normalization and passes the raw HTTP `request` instance to your handlers. This provides a few benefits:
 
 - Reduces server-side overhead by eliminating multiple `new Request()` calls on the critical path
-- Allows you to distinguish document from data requests in your handlers base don the presence of a `.data` suffix (useful for [observability] purposes)
+- Allows you to distinguish document from data requests in your handlers based on the presence of a `.data` suffix (useful for [observability] purposes)
 
 If you were previously relying on the normalization of `request.url`, you can switch to use the new sibling `unstable_url` parameter which contains a `URL` instance representing the normalized location.
 
 👉 **Enable the Flag**
+
+In Framework mode:
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
 export default {
   future: {
-    unstable_passThroughRequests: true,
+    v8_passThroughRequests: true,
   },
 } satisfies Config;
+```
+
+In Data mode:
+
+```ts
+import { createBrowserRouter } from "react-router/dom";
+
+const router = createBrowserRouter(routes, {
+  future: {
+    v8_passThroughRequests: true,
+  },
+});
 ```
 
 **Update your Code**
@@ -187,7 +197,6 @@ export async function loader({
 ```
 
 [api-development-strategy]: ../community/api-development-strategy
-[unstable]: ../community/api-development-strategy#unstable-flags
 [observability]: ../how-to/instrumentation
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [vite-environment]: https://vite.dev/guide/api-environment
