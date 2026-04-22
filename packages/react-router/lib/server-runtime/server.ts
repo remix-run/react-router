@@ -66,8 +66,6 @@ function derive(build: ServerBuild, mode?: string) {
     future: build.future,
   });
 
-  console.log(staticHandler._internalRouteBranches);
-
   let errorHandler =
     build.entry.module.handleError ||
     ((error, { request }) => {
@@ -197,8 +195,8 @@ function derive(build: ServerBuild, mode?: string) {
         let res = await handleManifestRequest(
           build,
           staticHandler.dataRoutes,
-          requestUrl,
           staticHandler._internalRouteBranches,
+          requestUrl,
         );
         return res;
       } catch (e) {
@@ -362,8 +360,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 async function handleManifestRequest(
   build: ServerBuild,
   dataRoutes: DataRouteObject[],
-  url: URL,
   branches: RouteBranch<DataRouteObject>[],
+  url: URL,
 ) {
   if (build.assets.version !== url.searchParams.get("version")) {
     return new Response(null, {
