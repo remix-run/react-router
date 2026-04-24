@@ -4,8 +4,8 @@ import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
 } from "../router/utils";
-import type { FutureConfig } from "../router/router";
 import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
+import type { FutureConfig } from "../dom/ssr/entry";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
