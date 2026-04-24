@@ -411,9 +411,7 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {
-  v8_passThroughRequests: boolean;
-}
+export interface FutureConfig {}
 
 /**
  * Initialization options for createRouter
@@ -968,7 +966,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    v8_passThroughRequests: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -1681,8 +1678,7 @@ export function createRouter(init: RouterInit): Router {
       replace: opts && opts.replace,
       enableViewTransition: opts && opts.viewTransition,
       flushSync,
-      callSiteDefaultShouldRevalidate:
-        opts && opts.defaultShouldRevalidate,
+      callSiteDefaultShouldRevalidate: opts && opts.defaultShouldRevalidate,
     });
   }
 
@@ -3816,7 +3812,6 @@ export function createStaticHandler(
   // Currently unused in the static handler, but available for additional flags in the future
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
-    v8_passThroughRequests: false, // unused in static handler
     ...opts?.future,
   };
 

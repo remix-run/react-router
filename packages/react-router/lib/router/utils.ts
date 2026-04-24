@@ -271,12 +271,12 @@ interface DataFunctionArgs<Context> {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
   /**
-   * A URL instance representing the application location being navigated to or fetched.
-   * Without `future.v8_passThroughRequests` enabled, this matches `request.url`.
-   * With `future.v8_passThroughRequests` enabled, this is a normalized
-   * URL with React-Router-specific implementation details removed (`.data`
-   * suffixes, `index`/`_routes` search params).
-   * The URL includes the origin from the request for convenience.
+   * A URL instance representing the application location being navigated to or
+   * fetched. By default, this matches `request.url`.
+   *
+   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
+   * normalized URL with React-Router-specific implementation details removed
+   * (`.data` suffixes, `index`/`_routes` search params).
    */
   url: URL;
   /**
@@ -776,7 +776,7 @@ type Regex_w = Regex_az | Regex_AZ | Regex_09 | "_";
 
 // prettier-ignore
 /** Emulates Regex `+` operator */
-type RegexMatchPlus<char extends string, T extends string> = 
+type RegexMatchPlus<char extends string, T extends string> =
   _RegexMatchPlus<char, T> extends infer result extends string ?
     result extends '' ? never : result
   :

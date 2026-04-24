@@ -79,12 +79,12 @@ export type ClientDataFunctionArgs<Params> = {
    **/
   request: Request;
   /**
-   * A URL instance representing the application location being navigated to or fetched.
-   * Without `future.v8_passThroughRequests` enabled, this matches `request.url`.
-   * With `future.v8_passThroughRequests` enabled, this is a normalized
-   * URL with React-Router-specific implementation details removed (`.data`
-   * pathnames, `index`/`_routes` search params).
-   * The URL includes the origin from the request for convenience.
+   * A URL instance representing the application location being navigated to or
+   * fetched. By default, this matches `request.url`.
+   *
+   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
+   * normalized URL with React-Router-specific implementation details removed
+   * (`.data` suffixes, `index`/`_routes` search params).
    */
   url: URL;
   /**
@@ -122,12 +122,12 @@ export type ServerDataFunctionArgs<Params> = {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
   request: Request;
   /**
-   * A URL instance representing the application location being navigated to or fetched.
-   * Without `future.v8_passThroughRequests` enabled, this matches `request.url`.
-   * With `future.v8_passThroughRequests` enabled, this is a normalized
-   * URL with React-Router-specific implementation details removed (`.data`
-   * pathnames, `index`/`_routes` search params).
-   * The URL includes the origin from the request for convenience.
+   * A URL instance representing the application location being navigated to or
+   * fetched. By default, this matches `request.url`.
+   *
+   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
+   * normalized URL with React-Router-specific implementation details removed
+   * (`.data` suffixes, `index`/`_routes` search params).
    */
   url: URL;
   /**

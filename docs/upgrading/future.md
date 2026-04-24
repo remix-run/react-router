@@ -121,7 +121,7 @@ No code changes are required unless you have custom Vite configuration that need
 
 ## `future.v8_passThroughRequests`
 
-[MODES: framework, data]
+[MODES: framework]
 
 <br/>
 <br/>
@@ -139,8 +139,6 @@ If you were previously relying on the normalization of `request.url`, you can sw
 
 👉 **Enable the Flag**
 
-In Framework mode:
-
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
@@ -149,18 +147,6 @@ export default {
     v8_passThroughRequests: true,
   },
 } satisfies Config;
-```
-
-In Data mode:
-
-```ts
-import { createBrowserRouter } from "react-router/dom";
-
-const router = createBrowserRouter(routes, {
-  future: {
-    v8_passThroughRequests: true,
-  },
-});
 ```
 
 **Update your Code**
@@ -196,7 +182,14 @@ export async function loader({
 }
 ```
 
+## Unstable Future Flags (Optional)
+
+We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
+
+_No current unstable flags to document_
+
 [api-development-strategy]: ../community/api-development-strategy
+[unstable]: ../community/api-development-strategy#unstable-flags
 [observability]: ../how-to/instrumentation
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [vite-environment]: https://vite.dev/guide/api-environment
