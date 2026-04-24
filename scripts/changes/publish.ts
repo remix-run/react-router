@@ -54,35 +54,11 @@ interface PublishSummary {
 }
 
 /**
- * Read published packages from pnpm's publish summary file.
- * See https://pnpm.io/cli/publish#--report-summary
- */
-function readPublishSummary(): PublishedPackage[] {
-  let summaryPath = path.join(rootDir, "pnpm-publish-summary.json");
-
-  if (!fs.existsSync(summaryPath)) {
-    throw new Error(
-      `pnpm-publish-summary.json not found. This is unexpected after a successful publish.`,
-    );
-  }
-
-  let summary: PublishSummary = JSON.parse(
-    fs.readFileSync(summaryPath, "utf-8"),
-  );
-
-  return summary.publishedPackages.map((pkg) => ({
-    packageName: pkg.name,
-    version: pkg.version,
-    tag: getGitTag(pkg.name, pkg.version),
-  }));
-}
-
-/**
  * Check if a specific version of a package is published on npm.
  */
 async function isVersionPublished(
   packageName: string,
-  version: string,
+  version: string
 ): Promise<boolean> {
   return new Promise((resolve) => {
     cp.exec(
@@ -91,7 +67,7 @@ async function isVersionPublished(
       (_error, stdout) => {
         // If we get output that matches the version, it exists
         resolve(stdout.trim() === version);
-      },
+      }
     );
   });
 }
@@ -131,7 +107,7 @@ async function getUnpublishedPackages(): Promise<PublishedPackage[]> {
     localPackages.map(async (pkg) => ({
       pkg,
       isPublished: await isVersionPublished(pkg.npmName, pkg.localVersion),
-    })),
+    }))
   );
 
   // Filter to unpublished packages
@@ -150,7 +126,10 @@ async function getUnpublishedPackages(): Promise<PublishedPackage[]> {
 }
 
 function getGithubReleaseBody(version: string) {
-  return `See the changelog for release notes: https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v${version.replace(/\./g, "")}`;
+  return `See the changelog for release notes: https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v${version.replace(
+    /\./g,
+    ""
+  )}`;
 }
 
 async function main() {
@@ -170,15 +149,41 @@ async function main() {
   // Publish packages to npm
   console.log("Publishing packages to npm...\n");
 
-  // Single-phase publish: everything as latest
-  let publishCommand =
-    'pnpm publish --recursive --filter "./packages/*" --access public --no-git-checks --report-summary';
+  // Multi-phase publish to handle differing tags
+  let publishCommand = "pnpm publish --access public";
+  let packageInfo = [
+    {
+      dir: "./packages/react-router",
+      tag: "version-6",
+    },
+    {
+      dir: "./packages/react-router-dom",
+      tag: "version-6",
+    },
+    {
+      dir: "./packages/router",
+      tag: "latest",
+    },
+    {
+      dir: "./packages/react-router-native",
+      tag: "latest",
+    },
+    {
+      dir: "./packages/react-router-dom-v5-compat",
+      tag: "latest",
+    },
+  ] as const;
 
   // In dry run mode, query npm to determine what would be published
   // and preview the GitHub releases. This is designed to be run against
   // the contents of the "Release" PR / `pnpm changes:version` output.
   if (dryRun) {
     console.log("Would run:");
+    for (let pkg of packageInfo) {
+      console.log(`  $ cd ${pkg.dir}`);
+      console.log(`  $ ${publishCommand} --tag ${pkg.tag}`);
+      console.log(`  $ cd ../..`);
+    }
     console.log(`  $ ${publishCommand}`);
     console.log();
 
@@ -193,7 +198,9 @@ async function main() {
     }
 
     console.log(
-      `${unpublished.length} package${unpublished.length === 1 ? "" : "s"} would be published:\n`,
+      `${unpublished.length} package${
+        unpublished.length === 1 ? "" : "s"
+      } would be published:\n`
     );
     for (let pkg of unpublished) {
       console.log(`  • ${pkg.packageName}@${pkg.version}`);
@@ -203,7 +210,7 @@ async function main() {
     let rrPkg = unpublished.find((pkg) => pkg.packageName === "react-router");
     if (!rrPkg) {
       throw new Error(
-        "Expected react-router to be among the unpublished packages in dry run mode.",
+        "Expected react-router to be among the unpublished packages in dry run mode."
       );
     }
 
@@ -220,26 +227,21 @@ async function main() {
     console.log();
 
     console.log(
-      "🔍 Dry run complete. No packages published, no git tags or GitHub releases created.",
+      "🔍 Dry run complete. No packages published, no git tags or GitHub releases created."
     );
     return;
   }
 
   // Publish to npm
-  logAndExec(publishCommand);
-  let published = readPublishSummary();
-
-  if (published.length === 0) {
-    console.log("\nNo packages were published.");
-    return;
+  for (let pkg of packageInfo) {
+    logAndExec(
+      `${publishCommand} --tag ${pkg.tag}`,
+      false,
+      path.join(rootDir, pkg.dir)
+    );
   }
 
-  console.log(
-    `\n${published.length} package${published.length === 1 ? "" : "s"} published:`,
-  );
-  for (let pkg of published) {
-    console.log(`  • ${pkg.packageName}@${pkg.version}`);
-  }
+  console.log("Done publishing");
 
   // Configure git
   console.log("\nConfiguring git...");
@@ -247,14 +249,16 @@ async function main() {
   logAndExec('git config user.email "hello@remix.run"');
 
   // Create tags (skip if already exist)
-  console.log(`\nCreating tag${published.length === 1 ? "" : "s"}...`);
+  console.log(`\nCreating tags...`);
   let tagsCreated = 0;
-  for (let pkg of published) {
-    if (tagExists(pkg.tag)) {
-      console.log(`  ⊘ ${pkg.tag} (already exists)`);
+  for (let pkg of packageInfo) {
+    let pkgJson = readJson(getPackageFile(pkg.dir, "package.json"));
+    let tag = getGitTag(pkgJson.name, pkgJson.version);
+    if (tagExists(tag)) {
+      console.log(`  ⊘ ${tag} (already exists)`);
     } else {
-      cp.execSync(`git tag ${pkg.tag}`);
-      console.log(`  ✓ ${pkg.tag}`);
+      logAndExec(`git tag ${tag}`);
+      console.log(`  ✓ ${tag}`);
       tagsCreated++;
     }
   }
@@ -269,27 +273,33 @@ async function main() {
 
   // Create GitHub releases (skip if already exists)
   console.log("\nCreating GitHub releases...");
-  let failedReleases: Array<{ pkg: PublishedPackage; error: string }> = [];
+  let failedReleases: Array<{
+    pkg: { name: string; version: string };
+    error: string;
+  }> = [];
 
-  for (let pkg of published) {
-    if (pkg.packageName !== "react-router") {
+  for (let pkg of packageInfo) {
+    let pkgJson = readJson(getPackageFile(pkg.dir, "package.json"));
+    if (pkgJson.name !== "react-router") {
       continue;
     }
 
     let result = await createRelease(
-      pkg.packageName,
-      pkg.version,
-      getGithubReleaseBody(pkg.version),
+      pkgJson.name,
+      pkgJson.version,
+      getGithubReleaseBody(pkgJson.version)
     );
     if (result.status === "created") {
-      console.log(`  ✓ ${pkg.packageName} v${pkg.version}`);
+      console.log(`  ✓ ${pkgJson.name} v${pkgJson.version}`);
     } else if (result.status === "skipped") {
       console.log(
-        `  ⊘ ${pkg.packageName} v${pkg.version} (${result.reason.toLowerCase()})`,
+        `  ⊘ ${pkgJson.name} v${
+          pkgJson.version
+        } (${result.reason.toLowerCase()})`
       );
     } else {
-      console.log(`  ✗ ${pkg.packageName} v${pkg.version} (failed)`);
-      failedReleases.push({ pkg, error: result.error });
+      console.log(`  ✗ ${pkgJson.name} v${pkgJson.version} (failed)`);
+      failedReleases.push({ pkg: pkgJson, error: result.error });
     }
   }
 
@@ -297,7 +307,7 @@ async function main() {
   if (failedReleases.length > 0) {
     console.error("\n⚠️  Some GitHub releases failed to create:");
     for (let { pkg, error } of failedReleases) {
-      console.error(`  • ${pkg.packageName} v${pkg.version}: ${error}`);
+      console.error(`  • ${pkg.name} v${pkg.version}: ${error}`);
     }
     console.error("\nYou may need to create these releases manually.");
     process.exit(1);

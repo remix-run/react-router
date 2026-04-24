@@ -63,10 +63,10 @@ console.log(
     preview
       ? "PREVIEWING VERSION"
       : skipCommit
-        ? "UPDATING VERSION"
-        : "PREPARING RELEASE",
-    colors.lightBlue,
-  ),
+      ? "UPDATING VERSION"
+      : "PREPARING RELEASE",
+    colors.lightBlue
+  )
 );
 console.log("═".repeat(80));
 console.log();
@@ -75,10 +75,11 @@ console.log();
 for (let release of releases) {
   console.log(
     colorize(`${release.packageName}:`, colors.gray) +
-      ` ${release.currentVersion} → ${release.nextVersion}`,
+      ` ${release.currentVersion} → ${release.nextVersion}`
   );
 
   // Update package.json
+  // FIXME: NEed to update the router version separate from RR version since it's not 6.x
   updatePackageJson(release.packageDirName, release.nextVersion);
 
   // Update CHANGELOG.md
@@ -109,7 +110,7 @@ let rootContent = generateChangelogContent(
         .map((c) => ({
           ...c,
           content: `\`${r.packageName}\` - ${c.content}`,
-        })),
+        }))
     ),
   },
   {
@@ -119,7 +120,7 @@ let rootContent = generateChangelogContent(
     ],
     skipSort: true,
     includeDate: true,
-  },
+  }
 );
 updateChangelog("/", rootContent);
 updateTableOfContents();
@@ -153,13 +154,13 @@ function updateChangelog(packageDirName: string, newContent: string) {
 
   if (preview) {
     console.log(
-      `  • Would update ${path.relative(process.cwd(), changelogPath)}:\n`,
+      `  • Would update ${path.relative(process.cwd(), changelogPath)}:\n`
     );
     console.log(
       newContent
         .split("\n")
         .map((line) => `    ${line}`)
-        .join("\n"),
+        .join("\n")
     );
     return;
   }
@@ -199,7 +200,9 @@ function deleteChangeFiles(packageDirName: string) {
       console.log(`  • No change files to delete`);
     } else {
       console.log(
-        `  • Would delete ${changeFiles.length} change file${changeFiles.length === 1 ? "" : "s"}:`,
+        `  • Would delete ${changeFiles.length} change file${
+          changeFiles.length === 1 ? "" : "s"
+        }:`
       );
       console.log(changeFiles.map((f) => `    - ${f}`).join("\n"));
     }
@@ -211,7 +214,9 @@ function deleteChangeFiles(packageDirName: string) {
   }
 
   console.log(
-    `  ✓ Deleted ${changeFiles.length} change file${changeFiles.length === 1 ? "" : "s"}`,
+    `  ✓ Deleted ${changeFiles.length} change file${
+      changeFiles.length === 1 ? "" : "s"
+    }`
   );
 }
 
@@ -233,7 +238,7 @@ function updateTableOfContents() {
   // links inside the TOC don't skew the duplicate-anchor counters
   let contentWithoutDetails = content.replace(
     /<details>[\s\S]*?<\/details>/,
-    "",
+    ""
   );
 
   // Build TOC: include h1, h2 (versions), and h4+ items nested under
@@ -313,7 +318,7 @@ function commitChanges() {
       console.log("Release commit has been created locally.");
       console.log();
       console.log(
-        "To publish, push and the publish workflow will handle the rest:",
+        "To publish, push and the publish workflow will handle the rest:"
       );
       console.log();
       console.log("  git push");
