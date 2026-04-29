@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import * as Path from "pathe";
 import * as v from "valibot";
 import pick from "lodash/pick";
@@ -5,11 +6,14 @@ import pick from "lodash/pick";
 import invariant from "../invariant";
 
 declare global {
-  var __reactRouterAppDirectory: string;
+  var __reactRouterAppDirectoryContext: AsyncLocalStorage<string> | undefined;
 }
 
-export function setAppDirectory(directory: string) {
-  globalThis.__reactRouterAppDirectory = directory;
+const appDirectoryContext = (globalThis.__reactRouterAppDirectoryContext ??=
+  new AsyncLocalStorage<string>());
+
+export function withAppDirectory<T>(directory: string, callback: () => T): T {
+  return appDirectoryContext.run(directory, callback);
 }
 
 /**
@@ -17,8 +21,9 @@ export function setAppDirectory(directory: string) {
  * This is designed to support resolving file system routes.
  */
 export function getAppDirectory() {
-  invariant(globalThis.__reactRouterAppDirectory);
-  return globalThis.__reactRouterAppDirectory;
+  let appDirectory = appDirectoryContext.getStore();
+  invariant(appDirectory);
+  return appDirectory;
 }
 
 export interface RouteManifestEntry {

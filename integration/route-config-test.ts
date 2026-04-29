@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { expect } from "@playwright/test";
+import { resolveConfig } from "vite";
 
 import {
   type Files,
@@ -269,6 +270,151 @@ test.describe("route config", () => {
         await expect(page.locator("[data-test-route]")).toHaveText(
           "Test route",
         );
+      });
+
+      test.describe("concurrent Vite config resolution keeps route config isolated", () => {
+        async function expectConcurrentConfigResolution(
+          ...appDirectories: string[]
+        ) {
+          let results = await Promise.allSettled(
+            appDirectories.map((appDirectory) =>
+              resolveConfig(
+                {
+                  configFile: path.join(appDirectory, "vite.config.ts"),
+                  mode: "development",
+                  root: appDirectory,
+                },
+                "build",
+              ),
+            ),
+          );
+
+          let failures = results.filter(
+            (result): result is PromiseRejectedResult =>
+              result.status === "rejected",
+          );
+
+          expect(
+            failures.map((failure) => failure.reason?.stack ?? failure.reason),
+          ).toEqual([]);
+        }
+
+        test("when apps mix manual routes and flatRoutes", async () => {
+          let appA = await createProject(
+            {
+              "app/routes.ts": js`
+                import { route, type RouteConfig } from "@react-router/dev/routes";
+
+                export default [route("login", "./routes/login.tsx")] satisfies RouteConfig;
+              `,
+              "app/routes/login.tsx": js`
+                export default function Login() {
+                  return <h1>Login</h1>;
+                }
+              `,
+            },
+            templateName,
+          );
+
+          let appB = await createProject(
+            {
+              "app/routes.ts": js`
+                import { type RouteConfig } from "@react-router/dev/routes";
+                import { flatRoutes } from "@react-router/fs-routes";
+
+                await new Promise((resolve) => setTimeout(resolve, 25));
+
+                export default flatRoutes() satisfies RouteConfig;
+              `,
+              "app/routes/dashboard.tsx": js`
+                export default function Dashboard() {
+                  return <h1>Dashboard</h1>;
+                }
+              `,
+            },
+            templateName,
+          );
+
+          let appC = await createProject(
+            {
+              "app/routes.ts": js`
+                import { type RouteConfig } from "@react-router/dev/routes";
+                import { flatRoutes } from "@react-router/fs-routes";
+
+                await new Promise((resolve) => setTimeout(resolve, 50));
+
+                export default flatRoutes() satisfies RouteConfig;
+              `,
+              "app/routes/settings.tsx": js`
+                export default function Settings() {
+                  return <h1>Settings</h1>;
+                }
+              `,
+            },
+            templateName,
+          );
+
+          await expectConcurrentConfigResolution(appC, appB, appA);
+        });
+
+        test("when all apps use flatRoutes", async () => {
+          let appA = await createProject(
+            {
+              "app/routes.ts": js`
+                import { type RouteConfig } from "@react-router/dev/routes";
+                import { flatRoutes } from "@react-router/fs-routes";
+
+                export default flatRoutes() satisfies RouteConfig;
+              `,
+              "app/routes/login.tsx": js`
+                export default function Login() {
+                  return <h1>Login</h1>;
+                }
+              `,
+            },
+            templateName,
+          );
+
+          let appB = await createProject(
+            {
+              "app/routes.ts": js`
+                import { type RouteConfig } from "@react-router/dev/routes";
+                import { flatRoutes } from "@react-router/fs-routes";
+
+                await new Promise((resolve) => setTimeout(resolve, 25));
+
+                export default flatRoutes() satisfies RouteConfig;
+              `,
+              "app/routes/dashboard.tsx": js`
+                export default function Dashboard() {
+                  return <h1>Dashboard</h1>;
+                }
+              `,
+            },
+            templateName,
+          );
+
+          let appC = await createProject(
+            {
+              "app/routes.ts": js`
+                import { type RouteConfig } from "@react-router/dev/routes";
+                import { flatRoutes } from "@react-router/fs-routes";
+
+                await new Promise((resolve) => setTimeout(resolve, 50));
+
+                export default flatRoutes() satisfies RouteConfig;
+              `,
+              "app/routes/settings.tsx": js`
+                export default function Settings() {
+                  return <h1>Settings</h1>;
+                }
+              `,
+            },
+            templateName,
+          );
+
+          await expectConcurrentConfigResolution(appC, appB, appA);
+        });
       });
     });
   });
