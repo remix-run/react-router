@@ -70,6 +70,7 @@
     "@typescript-eslint/parser": "^8.57.1",
     "babel-jest": "^29.7.0",
     "babel-plugin-dev-expression": "^0.2.3",
+    "basic-ftp": "5.2.0",
     "dox": "^1.0.0",
     "eslint": "^10.0.3",
     "eslint-config-react-app": "^7.0.1",
