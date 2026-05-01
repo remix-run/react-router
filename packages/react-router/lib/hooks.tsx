@@ -1258,7 +1258,14 @@ export function _renderMatches(
           match.route.loader &&
           !loaderData.hasOwnProperty(match.route.id) &&
           (!errors || errors[match.route.id] === undefined);
-        if (match.route.lazy || needsToRunLoader) {
+        // A lazy route is only "not ready" if its data hasn't already been
+        // preloaded (e.g. from SSR/prerendered loaderData). If loaderData
+        // already contains this route's data, the lazy module was resolved
+        // during SSR and we can hydrate directly without showing the fallback.
+        // See: https://github.com/remix-run/react-router/issues/14955
+        let lazyNeedsLoading =
+          match.route.lazy && !loaderData.hasOwnProperty(match.route.id);
+        if (lazyNeedsLoading || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
           // lazy, or has a loader that hasn't run yet) - render up until the
           // appropriate fallback
