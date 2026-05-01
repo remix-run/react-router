@@ -7,6 +7,7 @@ import type * as Vite from "vite";
 import * as babel from "../babel";
 import type { Cache } from "../cache";
 import { removeExports } from "../remove-exports";
+import { stripForEsModuleLexer } from "../strip-for-es-module-lexer";
 import {
   type RouteChunkExportName,
   type RouteChunkName,
@@ -386,7 +387,12 @@ function createId(
 
 export async function parseRouteExports(code: string) {
   await initEsModuleLexer;
-  const [, exportSpecifiers] = esModuleLexer(code);
+  let exportSpecifiers;
+  try {
+    [, exportSpecifiers] = esModuleLexer(code);
+  } catch {
+    [, exportSpecifiers] = esModuleLexer(stripForEsModuleLexer(code));
+  }
   const staticExports = exportSpecifiers.map(({ n: name }) => name);
   return {
     staticExports,
