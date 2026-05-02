@@ -1063,6 +1063,103 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([expect.stringMatching(/\/action\.data$/)]);
   });
 
+  test("call-site revalidation opt-out handles parent routes w/o shouldRevalidate", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          let count = 0
+          export function loader() {
+            return {
+              count: ++count
+            };
+          }
+      
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/parent.tsx": js`
+          import { Link, Outlet, unstable_useRoute } from "react-router";
+
+          export function loader() {
+            return {
+              count: 0
+            }
+          }
+
+          export default function Component() {
+            const rootRoute = unstable_useRoute('root')
+            return (
+              <>
+                <Link to='/parent/a' unstable_defaultShouldRevalidate={false}>Click</Link>
+                <p id="root-data-parent">{rootRoute.loaderData.count}</p>
+                <Outlet/>
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.a.tsx": js`
+          import { unstable_useRoute } from "react-router";
+
+          let count = 0
+          export function loader() {
+            return {
+              count: ++count
+            }
+          }
+          export default function Component({ loaderData }) {
+            const rootRoute = unstable_useRoute('root')
+            return (
+              <>
+                <p id="data">{loaderData.count}</p>
+                <p id="root-data-child">{rootRoute.loaderData.count}</p>
+              </>
+            );
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/parent");
+    expect(await app.getHtml("#root-data-parent")).toContain("1");
+
+    expect(urls).toEqual([]);
+    await app.clickLink("/parent/a");
+
+    await page.waitForSelector("#root-data-child");
+    expect(await app.getHtml("#root-data-parent")).toContain("1");
+    expect(await app.getHtml("#root-data-child")).toContain("1");
+    expect(await app.getHtml("#data")).toContain("1");
+    expect(urls.length).toBe(1);
+    expect(urls[0]).toContain(".data?_routes=routes%2Fparent.a");
+  });
+
   test("returns headers correctly for singular loader and action calls", async () => {
     let fixture = await createFixture({
       files: {

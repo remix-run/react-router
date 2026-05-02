@@ -1,0 +1,1 @@
+This fixes a bug when unstable_defaultShouldRevalidate={false} is used and a matched route does not export a shouldRevalidate function. The current code skips counting the route as a route to opt out when determining when to set the _routes query param.

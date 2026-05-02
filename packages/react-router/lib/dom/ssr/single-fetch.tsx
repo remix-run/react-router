@@ -428,8 +428,7 @@ async function singleFetchLoaderNavigationStrategy(
           // If this route opted out, don't include in the .data request
           foundOptOutRoute ||=
             m.shouldRevalidateArgs != null && // This is a revalidation,
-            hasLoader && // for a route with a server loader,
-            hasShouldRevalidate === true; // and a shouldRevalidate function
+            hasLoader; // for a route with a server loader
           return;
         }
 
