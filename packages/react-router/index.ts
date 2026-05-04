@@ -128,6 +128,11 @@ export {
   renderMatches,
 } from "./lib/components";
 export type { NavigateFunction } from "./lib/hooks";
+export type {
+  unstable_RouterState,
+  unstable_RouterStateVariant,
+  unstable_RouterStateMatch,
+} from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -151,6 +156,7 @@ export {
   useRouteLoaderData,
   useRoutes,
   useRoute as unstable_useRoute,
+  useRouterState as unstable_useRouterState,
 } from "./lib/hooks";
 
 // Expose old RR DOM API

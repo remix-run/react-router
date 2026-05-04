@@ -649,6 +649,8 @@ export type NavigationStates = {
   Idle: {
     state: "idle";
     location: undefined;
+    matches: undefined;
+    historyAction: undefined;
     formMethod: undefined;
     formAction: undefined;
     formEncType: undefined;
@@ -659,6 +661,8 @@ export type NavigationStates = {
   Loading: {
     state: "loading";
     location: Location;
+    matches: DataRouteMatch[];
+    historyAction: NavigationType;
     formMethod: Submission["formMethod"] | undefined;
     formAction: Submission["formAction"] | undefined;
     formEncType: Submission["formEncType"] | undefined;
@@ -669,6 +673,8 @@ export type NavigationStates = {
   Submitting: {
     state: "submitting";
     location: Location;
+    matches: DataRouteMatch[];
+    historyAction: NavigationType;
     formMethod: Submission["formMethod"];
     formAction: Submission["formAction"];
     formEncType: Submission["formEncType"];
@@ -879,6 +885,8 @@ const redirectPreserveMethodStatusCodes = new Set([307, 308]);
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
   location: undefined,
+  matches: undefined,
+  historyAction: undefined,
   formMethod: undefined,
   formAction: undefined,
   formEncType: undefined,
@@ -1825,7 +1833,10 @@ export function createRouter(init: RouterInit): Router {
       initialHydration?: boolean;
       submission?: Submission;
       fetcherSubmission?: Submission;
-      overrideNavigation?: Navigation;
+      overrideNavigation?: Omit<
+        NavigationStates["Loading"],
+        "matches" | "historyAction"
+      >;
       pendingError?: ErrorResponseImpl;
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
@@ -1852,7 +1863,6 @@ export function createRouter(init: RouterInit): Router {
     pendingViewTransitionEnabled = (opts && opts.enableViewTransition) === true;
 
     let routesToUse = dataRoutes.activeRoutes;
-    let loadingNavigation = opts && opts.overrideNavigation;
     let matches =
       opts?.initialHydration &&
       state.matches &&
@@ -1910,6 +1920,15 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    let loadingNavigation: Navigation | undefined =
+      opts && opts.overrideNavigation
+        ? {
+            ...opts.overrideNavigation,
+            matches,
+            historyAction,
+          }
+        : undefined;
+
     // Create a controller/Request for this navigation
     pendingNavigationController = new AbortController();
     let request = createClientSideRequest(
@@ -1944,6 +1963,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
+        historyAction,
         scopedContext,
         fogOfWar.active,
         opts && opts.initialHydration === true,
@@ -1978,7 +1998,12 @@ export function createRouter(init: RouterInit): Router {
 
       matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
-      loadingNavigation = getLoadingNavigation(location, opts.submission);
+      loadingNavigation = getLoadingNavigation(
+        location,
+        matches,
+        historyAction,
+        opts.submission,
+      );
       flushSync = false;
       // No need to do fog of war matching again on loader execution
       fogOfWar.active = false;
@@ -2001,6 +2026,7 @@ export function createRouter(init: RouterInit): Router {
       request,
       location,
       matches,
+      historyAction,
       scopedContext,
       fogOfWar.active,
       loadingNavigation,
@@ -2037,6 +2063,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: DataRouteMatch[],
+    historyAction: NavigationType,
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
     initialHydration: boolean,
@@ -2045,7 +2072,12 @@ export function createRouter(init: RouterInit): Router {
     interruptActiveLoads();
 
     // Put us in a submitting state
-    let navigation = getSubmittingNavigation(location, submission);
+    let navigation = getSubmittingNavigation(
+      location,
+      matches,
+      historyAction,
+      submission,
+    );
     updateState({ navigation }, { flushSync: opts.flushSync === true });
 
     if (isFogOfWar) {
@@ -2212,6 +2244,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     matches: DataRouteMatch[],
+    historyAction: NavigationType,
     scopedContext: RouterContextProvider,
     isFogOfWar: boolean,
     overrideNavigation?: Navigation,
@@ -2225,7 +2258,8 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
-      overrideNavigation || getLoadingNavigation(location, submission);
+      overrideNavigation ||
+      getLoadingNavigation(location, matches, historyAction, submission);
 
     // If this was a redirect from an action we don't have a "submission" but
     // we have it on the loading navigation so use that if available
@@ -3193,9 +3227,13 @@ export function createRouter(init: RouterInit): Router {
       });
     } else {
       // If we have a navigation submission, we will preserve it through the
-      // redirect navigation
+      // redirect navigation.  `matches` for the redirect destination haven't
+      // been computed yet — handleLoaders will overwrite this with the real
+      // matches (and historyAction) before the state update lands.
       let overrideNavigation = getLoadingNavigation(
         redirectLocation,
+        [],
+        redirectNavigationType,
         submission,
       );
       await startNavigation(redirectNavigationType, redirectLocation, {
@@ -7336,12 +7374,16 @@ function getSubmissionFromNavigation(
 
 function getLoadingNavigation(
   location: Location,
+  matches: DataRouteMatch[],
+  historyAction: NavigationType,
   submission?: Submission,
 ): NavigationStates["Loading"] {
   if (submission) {
     let navigation: NavigationStates["Loading"] = {
       state: "loading",
       location,
+      matches,
+      historyAction,
       formMethod: submission.formMethod,
       formAction: submission.formAction,
       formEncType: submission.formEncType,
@@ -7354,6 +7396,8 @@ function getLoadingNavigation(
     let navigation: NavigationStates["Loading"] = {
       state: "loading",
       location,
+      matches,
+      historyAction,
       formMethod: undefined,
       formAction: undefined,
       formEncType: undefined,
@@ -7367,11 +7411,15 @@ function getLoadingNavigation(
 
 function getSubmittingNavigation(
   location: Location,
+  matches: DataRouteMatch[],
+  historyAction: NavigationType,
   submission: Submission,
 ): NavigationStates["Submitting"] {
   let navigation: NavigationStates["Submitting"] = {
     state: "submitting",
     location,
+    matches,
+    historyAction,
     formMethod: submission.formMethod,
     formAction: submission.formAction,
     formEncType: submission.formEncType,

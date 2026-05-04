@@ -1402,6 +1402,7 @@ enum DataRouterStateHook {
   UseNavigateStable = "useNavigate",
   UseRouteId = "useRouteId",
   UseRoute = "useRoute",
+  UseRouterState = "unstable_useRouterState",
 }
 
 function getDataRouterConsoleError(
@@ -2001,4 +2002,135 @@ export function useRoute<Args extends UseRouteArgs>(
     loaderData: state.loaderData[id],
     actionData: state.actionData?.[id],
   } as UseRouteResult<Args>;
+}
+
+/**
+ * A single route match returned from {@link unstable_useRouterState}. Limited
+ * to `id` and `pathname` for now; this is a subset of {@link UIMatch}.
+ */
+export interface unstable_RouterStateMatch {
+  id: string;
+  pathname: string;
+}
+
+/**
+ * The shape of the `active` or `pending` variant returned from
+ * {@link unstable_useRouterState}.
+ */
+export interface unstable_RouterStateVariant<Path extends string = string> {
+  location: Location;
+  searchParams: URLSearchParams;
+  params: Params<ParamParseKey<Path>>;
+  matches: unstable_RouterStateMatch[];
+  type: NavigationType;
+}
+
+/**
+ * The return shape of {@link unstable_useRouterState}.
+ *
+ * `active` reflects the currently-committed location. `pending` reflects the
+ * in-flight navigation (if any). When a `path` argument is provided, each
+ * variant is `null` when that path does not match the corresponding location.
+ */
+export interface unstable_RouterState<Path extends string = string> {
+  active: unstable_RouterStateVariant<Path> | null;
+  pending: unstable_RouterStateVariant<Path> | null;
+}
+
+function toRouterStateMatches(
+  matches: readonly { route: { id: string }; pathname: string }[],
+): unstable_RouterStateMatch[] {
+  return matches.map((m) => ({ id: m.route.id, pathname: m.pathname }));
+}
+
+export function useRouterState(): unstable_RouterState;
+export function useRouterState<Path extends string>(
+  path: PathPattern<Path> | Path,
+): unstable_RouterState<Path>;
+/**
+ * A unified hook for reading router state: current (`active`) and in-flight
+ * (`pending`) locations, search params, params, matches, and navigation type.
+ *
+ * An optional `path` argument scopes matching — variants are `null` when the
+ * path doesn't match, and `params` are typed from the pattern.
+ *
+ * @example
+ * import { unstable_useRouterState as useRouterState } from "react-router";
+ *
+ * // Without a path — always-present `active`, `pending` during navigation
+ * let { active, pending } = useRouterState();
+ *
+ * // With a path — `active`/`pending` may be null when the path doesn't match
+ * let { active, pending } = useRouterState("/projects/:id");
+ * active?.params.id; // typed as string
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param path Optional path pattern to match against. When provided,
+ * `active`/`pending` are `null` if the corresponding location doesn't match.
+ * @returns The current router state with `active` and `pending` variants
+ */
+export function useRouterState<Path extends string>(
+  path?: PathPattern<Path> | Path,
+): unstable_RouterState<Path> {
+  let state = useDataRouterState(DataRouterStateHook.UseRouterState);
+  let { location, navigationType } = React.useContext(LocationContext);
+
+  return React.useMemo<unstable_RouterState<Path>>(() => {
+    let active: unstable_RouterStateVariant<Path> | null;
+    if (path != null) {
+      let match = matchPath<Path>(path, decodePath(location.pathname));
+      active = match
+        ? {
+            location,
+            searchParams: new URLSearchParams(location.search),
+            params: match.params as Params<ParamParseKey<Path>>,
+            matches: toRouterStateMatches(state.matches),
+            type: navigationType,
+          }
+        : null;
+    } else {
+      let leaf = state.matches[state.matches.length - 1];
+      active = {
+        location,
+        searchParams: new URLSearchParams(location.search),
+        params: (leaf?.params ?? {}) as Params<ParamParseKey<Path>>,
+        matches: toRouterStateMatches(state.matches),
+        type: navigationType,
+      };
+    }
+
+    let pending: unstable_RouterStateVariant<Path> | null = null;
+    let nav = state.navigation;
+    if (nav.state !== "idle") {
+      let pendingLocation = nav.location;
+      let pendingMatches = nav.matches;
+      let pendingType = nav.historyAction;
+      if (path != null) {
+        let match = matchPath<Path>(path, decodePath(pendingLocation.pathname));
+        if (match) {
+          pending = {
+            location: pendingLocation,
+            searchParams: new URLSearchParams(pendingLocation.search),
+            params: match.params as Params<ParamParseKey<Path>>,
+            matches: toRouterStateMatches(pendingMatches),
+            type: pendingType,
+          };
+        }
+      } else {
+        let leaf = pendingMatches[pendingMatches.length - 1];
+        pending = {
+          location: pendingLocation,
+          searchParams: new URLSearchParams(pendingLocation.search),
+          params: (leaf?.params ?? {}) as Params<ParamParseKey<Path>>,
+          matches: toRouterStateMatches(pendingMatches),
+          type: pendingType,
+        };
+      }
+    }
+
+    return { active, pending };
+  }, [path, state.matches, state.navigation, location, navigationType]);
 }
