@@ -788,7 +788,7 @@ export interface BrowserRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
   useTransitions?: boolean;
   /**
@@ -878,7 +878,7 @@ export interface HashRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
   useTransitions?: boolean;
   /**
@@ -973,7 +973,7 @@ export interface HistoryRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
   useTransitions?: boolean;
 }
