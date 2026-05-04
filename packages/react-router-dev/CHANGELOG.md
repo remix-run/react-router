@@ -1,5 +1,20 @@
 # `@react-router/dev`
 
+## v7.15.0
+
+### Minor Changes
+
+- Stabilize `future.unstable_passThroughRequests` as `future.v8_passThroughRequests` ([#14999](https://github.com/remix-run/react-router/pull/14999))
+- Stabilize `prerender.unstable_concurrency` as `prerender.concurrency` ([#14999](https://github.com/remix-run/react-router/pull/14999))
+- Stabilize `future.unstable_subResourceIntegrity` as a top-level `subResourceIntegrity` config option in `react-router.config.ts` ([#14999](https://github.com/remix-run/react-router/pull/14999))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.0)
+  - [`@react-router/node@7.15.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.0)
+  - [`@react-router/serve@7.15.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.15.0)
+
 ## v7.14.2
 
 ### Patch Changes
