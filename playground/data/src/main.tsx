@@ -4,10 +4,13 @@ import {
   Link,
   NavLink,
   Outlet,
+  Route,
+  Routes,
   createBrowserRouter,
   unstable_useRouterState as useRouterState,
   useLoaderData,
   useParams,
+  useLocation,
 } from "react-router";
 import { RouterProvider } from "react-router/dom";
 
@@ -34,6 +37,13 @@ const router = createBrowserRouter([
         id: "about",
         path: "about",
         Component: About,
+      },
+      {
+        // Splat path so the data router matches `/declarative` and any
+        // sub-paths beneath it; descendant `<Routes>` handle the rest.
+        id: "declarative-shell",
+        path: "declarative/*",
+        Component: DeclarativeShell,
       },
       {
         id: "projects",
@@ -93,6 +103,7 @@ function RootLayout() {
       <nav style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <NavLink to="/">Home</NavLink>
         <NavLink to="/about">About</NavLink>
+        <NavLink to="/declarative">Declarative</NavLink>
         <NavLink to="/projects">Projects</NavLink>
         <NavLink to="/projects/alpha">Alpha</NavLink>
         <NavLink to="/projects/beta?tab=overview">Beta (?tab=overview)</NavLink>
@@ -179,6 +190,66 @@ function About() {
     <div>
       <h2>About</h2>
       <p>A simple sibling route — watch the panel update as you navigate.</p>
+    </div>
+  );
+}
+
+// Declarative `<Routes>`/`<Route>` mounted underneath a data route. The data
+// router matches up through `declarative/*`; matching beyond that happens at
+// React render time. `useRouterState()` reads from data router state, so even
+// inside descendant routes it still reports the full URL, the data router's
+// matches (capped at `declarative-shell`), and the data router's navigation
+// type.
+function DeclarativeShell() {
+  return (
+    <div>
+      <h2>Declarative routes</h2>
+      <p>
+        These children are rendered via descendant <code>&lt;Routes&gt;</code>{" "}
+        — not the data router. The hook still reflects data router state.
+      </p>
+      <nav style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+        <NavLink end to="/declarative">
+          Index
+        </NavLink>
+        <NavLink to="/declarative/foo">Foo</NavLink>
+        <NavLink to="/declarative/bar/123">Bar 123</NavLink>
+      </nav>
+      <Routes>
+        <Route index element={<DeclarativeChild label="index" />} />
+        <Route path="foo" element={<DeclarativeChild label="foo" />} />
+        <Route
+          path="bar/:barId"
+          element={<DeclarativeChild label="bar/:barId" />}
+        />
+      </Routes>
+    </div>
+  );
+}
+
+function DeclarativeChild({ label }: { label: string }) {
+  const state = useRouterState();
+  const location = useLocation();
+  const declarativeParams = useParams();
+  return (
+    <div
+      style={{
+        padding: 8,
+        border: "1px solid #ddd",
+        borderRadius: 4,
+        background: "#fff",
+      }}
+    >
+      <h3 style={{ marginTop: 0 }}>Declarative child: {label}</h3>
+      <p style={{ marginTop: 0 }}>
+        <code>useParams()</code> from this declarative route:{" "}
+        <code>{JSON.stringify(declarativeParams)}</code>
+      </p>
+      <RouterStatePanel
+        title="useRouterState() — from inside <Routes>"
+        state={state}
+      />
+      <p>{JSON.stringify(location)}</p>
     </div>
   );
 }

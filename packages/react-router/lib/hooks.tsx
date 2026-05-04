@@ -2061,16 +2061,15 @@ function toRouterStateMatches(
  */
 export function useRouterState(): unstable_RouterState {
   let state = useDataRouterState(DataRouterStateHook.UseRouterState);
-  let { location, navigationType } = React.useContext(LocationContext);
 
   return React.useMemo<unstable_RouterState>(() => {
     let leaf = state.matches[state.matches.length - 1];
     let active: unstable_RouterStateVariant = {
-      location,
-      searchParams: new URLSearchParams(location.search),
+      location: state.location,
+      searchParams: new URLSearchParams(state.location.search),
       params: leaf?.params ?? {},
       matches: toRouterStateMatches(state.matches),
-      type: navigationType,
+      type: state.historyAction,
     };
 
     let pending: unstable_RouterStateVariant | null = null;
@@ -2087,5 +2086,5 @@ export function useRouterState(): unstable_RouterState {
     }
 
     return { active, pending };
-  }, [state.matches, state.navigation, location, navigationType]);
+  }, [state.location, state.historyAction, state.matches, state.navigation]);
 }
