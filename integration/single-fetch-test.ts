@@ -1088,7 +1088,7 @@ test.describe("single-fetch", () => {
                   <nav>
                     <Link to="/">Home</Link>
                     <Link to="/page">Page (default)</Link>
-                    <Link to="/page?optout" unstable_defaultShouldRevalidate={false}>Page (opt-out)</Link>
+                    <Link to="/page?optout" defaultShouldRevalidate={false}>Page (opt-out)</Link>
                   </nav>
                   <pre id="data">
                     {JSON.stringify(useMatches().map(m => [m.id, m.data]))}

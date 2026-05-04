@@ -553,6 +553,12 @@ async function resolveConfig({
       );
     }
 
+    if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+      return err(
+        "The `prerender.unstable_concurrency` config field has been stabilized as `prerender.concurrency`",
+      );
+    }
+
     let isValidConcurrencyConfig =
       typeof prerender != "object" ||
       !("concurrency" in prerender) ||
@@ -679,21 +685,28 @@ async function resolveConfig({
   }
 
   // Check for renamed flags and provide helpful error messages
-  let futureConfig = userAndPresetConfigs.future as any;
-  if (futureConfig?.unstable_splitRouteModules !== undefined) {
-    return err(
-      'The "future.unstable_splitRouteModules" flag has been stabilized as "future.v8_splitRouteModules"',
-    );
-  }
-  if (futureConfig?.unstable_viteEnvironmentApi !== undefined) {
-    return err(
-      'The "future.unstable_viteEnvironmentApi" flag has been stabilized as "future.v8_viteEnvironmentApi"',
-    );
-  }
-  if (futureConfig?.unstable_passThroughRequests !== undefined) {
-    return err(
-      'The "future.unstable_passThroughRequests" flag has been stabilized as "future.v8_passThroughRequests"',
-    );
+  let futureConfig = userAndPresetConfigs.future;
+  if (futureConfig) {
+    if ("unstable_splitRouteModules" in futureConfig) {
+      return err(
+        "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
+      );
+    }
+    if ("unstable_viteEnvironmentApi" in futureConfig) {
+      return err(
+        "The `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi`",
+      );
+    }
+    if ("unstable_passThroughRequests" in futureConfig) {
+      return err(
+        "The `future.unstable_passThroughRequests` flag has been stabilized as `future.v8_passThroughRequests`",
+      );
+    }
+    if ("unstable_subResourceIntegrity" in futureConfig) {
+      return err(
+        "The `future.unstable_subResourceIntegrity` flag has been stabilized and moved to a top-level `config.subResourceIntegrity` field",
+      );
+    }
   }
 
   let future: FutureConfig = {
