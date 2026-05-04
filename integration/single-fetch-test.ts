@@ -1068,16 +1068,15 @@ test.describe("single-fetch", () => {
   }) => {
     let fixture = await createFixture({
       files: {
-        ...files,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router";
+          import { Link, Links, Meta, Outlet, Scripts, useMatches } from "react-router";
+
           let count = 0
+
           export function loader() {
-            return {
-              count: ++count
-            };
+            return { count: ++count };
           }
-      
+
           export default function Root() {
             return (
               <html lang="en">
@@ -1086,6 +1085,14 @@ test.describe("single-fetch", () => {
                   <Links />
                 </head>
                 <body>
+                  <nav>
+                    <Link to="/">Home</Link>
+                    <Link to="/page">Page (default)</Link>
+                    <Link to="/page?optout" unstable_defaultShouldRevalidate={false}>Page (opt-out)</Link>
+                  </nav>
+                  <pre id="data">
+                    {JSON.stringify(useMatches().map(m => [m.id, m.data]))}
+                  </pre>
                   <Outlet />
                   <Scripts />
                 </body>
@@ -1093,43 +1100,15 @@ test.describe("single-fetch", () => {
             );
           }
         `,
-        "app/routes/parent.tsx": js`
-          import { Link, Outlet, unstable_useRoute } from "react-router";
+        "app/routes/page.tsx": js`
+          let count = 0
 
           export function loader() {
-            return {
-              count: 0
-            }
+            return { count: ++count }
           }
 
           export default function Component() {
-            const rootRoute = unstable_useRoute('root')
-            return (
-              <>
-                <Link to='/parent/a' unstable_defaultShouldRevalidate={false}>Click</Link>
-                <p id="root-data-parent">{rootRoute.loaderData.count}</p>
-                <Outlet/>
-              </>
-            );
-          }
-        `,
-        "app/routes/parent.a.tsx": js`
-          import { unstable_useRoute } from "react-router";
-
-          let count = 0
-          export function loader() {
-            return {
-              count: ++count
-            }
-          }
-          export default function Component({ loaderData }) {
-            const rootRoute = unstable_useRoute('root')
-            return (
-              <>
-                <p id="data">{loaderData.count}</p>
-                <p id="root-data-child">{rootRoute.loaderData.count}</p>
-              </>
-            );
+            return <h2>Page</h2>
           }
         `,
       },
@@ -1138,7 +1117,8 @@ test.describe("single-fetch", () => {
     let urls: string[] = [];
     page.on("request", (req) => {
       if (req.url().includes(".data")) {
-        urls.push(req.url());
+        let url = new URL(req.url());
+        urls.push(url.pathname + url.search);
       }
     });
 
@@ -1146,18 +1126,31 @@ test.describe("single-fetch", () => {
 
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/parent");
-    expect(await app.getHtml("#root-data-parent")).toContain("1");
+    await app.goto("/"); // root increments to 1
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":1}],["routes/_index",null]]',
+    );
 
-    expect(urls).toEqual([]);
-    await app.clickLink("/parent/a");
+    await app.clickLink("/page"); // root increments to 2
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":2}],["routes/page",{"count":1}]]',
+    );
+    expect(urls).toEqual(["/page.data"]);
+    urls.splice(0, urls.length);
 
-    await page.waitForSelector("#root-data-child");
-    expect(await app.getHtml("#root-data-parent")).toContain("1");
-    expect(await app.getHtml("#root-data-child")).toContain("1");
-    expect(await app.getHtml("#data")).toContain("1");
-    expect(urls.length).toBe(1);
-    expect(urls[0]).toContain(".data?_routes=routes%2Fparent.a");
+    await app.clickLink("/"); // root increments to 3
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":3}],["routes/_index",null]]',
+    );
+    expect(urls).toEqual(["/_root.data"]);
+    urls.splice(0, urls.length);
+
+    await app.clickLink("/page?optout");
+    // root stays at 3, page is a fresh load so increments to 2
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":3}],["routes/page",{"count":2}]]',
+    );
+    expect(urls).toEqual(["/page.data?optout=&_routes=routes%2Fpage"]);
   });
 
   test("returns headers correctly for singular loader and action calls", async () => {

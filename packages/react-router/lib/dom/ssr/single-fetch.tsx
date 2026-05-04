@@ -415,8 +415,7 @@ async function singleFetchLoaderNavigationStrategy(
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
         let routeId = m.route.id;
-        let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(m);
+        let { hasLoader, hasClientLoader } = getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.shouldRevalidateArgs ||
