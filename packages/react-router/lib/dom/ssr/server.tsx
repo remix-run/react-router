@@ -90,7 +90,9 @@ export function ServerRouter({
     }
   }
 
-  let router = createStaticRouter(routes, context.staticHandlerContext);
+  let router = createStaticRouter(routes, context.staticHandlerContext, {
+    branches: context.branches,
+  });
 
   return (
     <>

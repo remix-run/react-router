@@ -1,8 +1,4 @@
----
-"react-router": patch
----
-
-Improve server-side route matching performance by pre-computing flattened/cached route branches
+Improve server-side route matching performance by pre-computing flattened/cached route branches ([#14967](https://github.com/remix-run/react-router/pull/14967))
 
 - Performance benchmark
   - 100 route app, 3000 requests @ 10x concurrency across 38 distinct paths

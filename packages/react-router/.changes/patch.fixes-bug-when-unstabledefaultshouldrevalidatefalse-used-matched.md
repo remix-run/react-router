@@ -1,0 +1,1 @@
+Fix a bug with `unstable_defaultShouldRevalidate={false}` where parent routes that did not export a `shouldRevalidate` function could be incorrectly included in the single fetch call for new child route data

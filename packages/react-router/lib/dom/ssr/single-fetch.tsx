@@ -166,7 +166,6 @@ export function StreamTransfer({
 type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
   hasClientLoader: boolean;
-  hasShouldRevalidate: boolean;
 };
 
 type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
@@ -192,11 +191,9 @@ export function getTurboStreamSingleFetchDataStrategy(
     (match: DataRouteMatch) => {
       let manifestRoute = manifest.routes[match.route.id];
       invariant(manifestRoute, "Route not found in manifest");
-      let routeModule = routeModules[match.route.id];
       return {
         hasLoader: manifestRoute.hasLoader,
         hasClientLoader: manifestRoute.hasClientLoader,
-        hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
       };
     },
     fetchAndDecodeViaTurboStream,
@@ -415,8 +412,7 @@ async function singleFetchLoaderNavigationStrategy(
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
         let routeId = m.route.id;
-        let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(m);
+        let { hasLoader, hasClientLoader } = getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.shouldRevalidateArgs ||
@@ -428,8 +424,7 @@ async function singleFetchLoaderNavigationStrategy(
           // If this route opted out, don't include in the .data request
           foundOptOutRoute ||=
             m.shouldRevalidateArgs != null && // This is a revalidation,
-            hasLoader && // for a route with a server loader,
-            hasShouldRevalidate === true; // and a shouldRevalidate function
+            hasLoader; // for a route with a server loader
           return;
         }
 

@@ -460,7 +460,6 @@ export function getRSCSingleFetchDataStrategy(
       hasComponent: boolean;
       hasAction: boolean;
       hasClientAction: boolean;
-      hasShouldRevalidate: boolean;
     };
   };
 
@@ -475,7 +474,6 @@ export function getRSCSingleFetchDataStrategy(
         hasComponent: M.route.hasComponent,
         hasAction: M.route.hasAction,
         hasClientAction: M.route.hasClientAction,
-        hasShouldRevalidate: M.route.hasShouldRevalidate,
       };
     },
     // pass map into fetchAndDecode so it can add payloads
@@ -888,7 +886,6 @@ type DataRouteObjectWithManifestInfo = DataRouteObject & {
   hasClientLoader: boolean;
   hasAction: boolean;
   hasClientAction: boolean;
-  hasShouldRevalidate: boolean;
 };
 
 function createRouteFromServerManifest(
@@ -975,7 +972,6 @@ function createRouteFromServerManifest(
     hasClientLoader: match.clientLoader != null,
     hasAction: match.hasAction,
     hasClientAction: match.clientAction != null,
-    hasShouldRevalidate: match.shouldRevalidate != null,
   };
 
   if (typeof dataRoute.loader === "function") {

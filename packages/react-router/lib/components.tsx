@@ -31,6 +31,7 @@ import type {
   NonIndexRouteObject,
   Params,
   PatchRoutesOnNavigationFunction,
+  RouteManifest,
   RouteMatch,
   RouteObject,
   TrackedPromise,
@@ -756,6 +757,7 @@ export function RouterProvider({
               >
                 <MemoizedDataRoutes
                   routes={router.routes}
+                  manifest={router.manifest}
                   future={router.future}
                   state={state}
                   isStatic={false}
@@ -803,18 +805,26 @@ const MemoizedDataRoutes = React.memo(DataRoutes);
 
 export function DataRoutes({
   routes,
+  manifest,
   future,
   state,
   isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
+  manifest: RouteManifest;
   future: DataRouter["future"];
   state: RouterState;
   isStatic: boolean;
   onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, { state, isStatic, onError, future });
+  return useRoutesImpl(routes, undefined, {
+    manifest,
+    state,
+    isStatic,
+    onError,
+    future,
+  });
 }
 
 /**
