@@ -2022,6 +2022,9 @@ importers:
       '@octokit/request':
         specifier: ^9.1.3
         version: 9.2.4
+      react-router:
+        specifier: workspace:^
+        version: link:../packages/react-router
       semver:
         specifier: ^7.7.2
         version: 7.7.4
