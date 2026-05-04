@@ -2029,11 +2029,10 @@ export interface unstable_RouterStateVariant {
  * The return shape of {@link unstable_useRouterState}.
  *
  * `active` reflects the currently-committed location. `pending` reflects the
- * in-flight navigation (if any). When a `routeId` argument is provided, each
- * variant is `null` when no match in the corresponding location has that id.
+ * in-flight navigation (if any).
  */
 export interface unstable_RouterState {
-  active: unstable_RouterStateVariant | null;
+  active: unstable_RouterStateVariant;
   pending: unstable_RouterStateVariant | null;
 }
 
@@ -2047,85 +2046,46 @@ function toRouterStateMatches(
  * A unified hook for reading router state: current (`active`) and in-flight
  * (`pending`) locations, search params, params, matches, and navigation type.
  *
- * An optional `routeId` argument scopes matching — variants are `null` when
- * no match in the corresponding location has that id. `params` come from the
- * scoped match (or the leaf match when no `routeId` is provided).
- *
  * @example
  * import { unstable_useRouterState as useRouterState } from "react-router";
  *
- * // Without a route id — always-present `active`, `pending` during navigation
  * let { active, pending } = useRouterState();
- *
- * // With a route id — `active`/`pending` may be null when the id isn't matched
- * let { active, pending } = useRouterState("project");
- * active?.params.projectId;
+ * active.params; // params from the leaf match
+ * pending?.location.pathname; // populated during in-flight navigations
  *
  * @public
  * @category Hooks
  * @mode framework
  * @mode data
- * @param routeId Optional route id to scope to. When provided, `active` and
- * `pending` are `null` if no match in the corresponding location has this id.
  * @returns The current router state with `active` and `pending` variants
  */
-export function useRouterState(routeId?: string): unstable_RouterState {
+export function useRouterState(): unstable_RouterState {
   let state = useDataRouterState(DataRouterStateHook.UseRouterState);
   let { location, navigationType } = React.useContext(LocationContext);
 
   return React.useMemo<unstable_RouterState>(() => {
-    let active: unstable_RouterStateVariant | null;
-    if (routeId != null) {
-      let match = state.matches.find((m) => m.route.id === routeId);
-      active = match
-        ? {
-            location,
-            searchParams: new URLSearchParams(location.search),
-            params: match.params,
-            matches: toRouterStateMatches(state.matches),
-            type: navigationType,
-          }
-        : null;
-    } else {
-      let leaf = state.matches[state.matches.length - 1];
-      active = {
-        location,
-        searchParams: new URLSearchParams(location.search),
-        params: leaf?.params ?? {},
-        matches: toRouterStateMatches(state.matches),
-        type: navigationType,
-      };
-    }
+    let leaf = state.matches[state.matches.length - 1];
+    let active: unstable_RouterStateVariant = {
+      location,
+      searchParams: new URLSearchParams(location.search),
+      params: leaf?.params ?? {},
+      matches: toRouterStateMatches(state.matches),
+      type: navigationType,
+    };
 
     let pending: unstable_RouterStateVariant | null = null;
     let nav = state.navigation;
     if (nav.state !== "idle") {
-      let pendingLocation = nav.location;
-      let pendingMatches = nav.matches;
-      let pendingType = nav.historyAction;
-      if (routeId != null) {
-        let match = pendingMatches.find((m) => m.route.id === routeId);
-        if (match) {
-          pending = {
-            location: pendingLocation,
-            searchParams: new URLSearchParams(pendingLocation.search),
-            params: match.params,
-            matches: toRouterStateMatches(pendingMatches),
-            type: pendingType,
-          };
-        }
-      } else {
-        let leaf = pendingMatches[pendingMatches.length - 1];
-        pending = {
-          location: pendingLocation,
-          searchParams: new URLSearchParams(pendingLocation.search),
-          params: leaf?.params ?? {},
-          matches: toRouterStateMatches(pendingMatches),
-          type: pendingType,
-        };
-      }
+      let pendingLeaf = nav.matches[nav.matches.length - 1];
+      pending = {
+        location: nav.location,
+        searchParams: new URLSearchParams(nav.location.search),
+        params: pendingLeaf?.params ?? {},
+        matches: toRouterStateMatches(nav.matches),
+        type: nav.historyAction,
+      };
     }
 
     return { active, pending };
-  }, [routeId, state.matches, state.navigation, location, navigationType]);
+  }, [state.matches, state.navigation, location, navigationType]);
 }

@@ -99,25 +99,11 @@ function RootLayout() {
         <NavLink to="/projects/gamma/tasks/42">Gamma › Task 42</NavLink>
       </nav>
 
-      <RouterStatePanel
-        title="useRouterState() — no path"
-        state={state}
-      />
-
-      <ProjectStatePanel />
+      <RouterStatePanel title="useRouterState()" state={state} />
 
       <hr style={{ margin: "16px 0" }} />
       <Outlet />
     </div>
-  );
-}
-
-function ProjectStatePanel() {
-  // Usage WITH a routeId argument — `active`/`pending` are null when no match
-  // in the current/pending location has this route id.
-  const state = useRouterState("project");
-  return (
-    <RouterStatePanel title='useRouterState("project")' state={state} />
   );
 }
 
@@ -152,7 +138,7 @@ function Variant({
   variant,
 }: {
   label: string;
-  variant: ReturnType<typeof useRouterState>["active"];
+  variant: ReturnType<typeof useRouterState>["pending"];
 }) {
   return (
     <div
@@ -180,9 +166,9 @@ function Home() {
     <div>
       <h2>Home</h2>
       <p>
-        Click around the nav above. The two panels show the unified router
-        state — try clicking <Link to="/projects/alpha">Alpha</Link> to watch
-        the <code>pending</code> column populate during the loader delay.
+        Click around the nav above. The panel shows the unified router state —
+        try clicking <Link to="/projects/alpha">Alpha</Link> to watch the{" "}
+        <code>pending</code> column populate during the loader delay.
       </p>
     </div>
   );
@@ -192,10 +178,7 @@ function About() {
   return (
     <div>
       <h2>About</h2>
-      <p>
-        This route does not have id <code>"project"</code>, so the scoped
-        panel above shows <code>active: null</code>.
-      </p>
+      <p>A simple sibling route — watch the panel update as you navigate.</p>
     </div>
   );
 }
