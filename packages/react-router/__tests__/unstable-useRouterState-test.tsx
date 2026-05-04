@@ -115,20 +115,18 @@ describe("unstable_useRouterState", () => {
     });
   });
 
-  describe("with a path argument", () => {
-    it("returns an active variant when the path matches", () => {
-      let captured: unstable_RouterState<"/projects/:id"> | undefined;
+  describe("with a routeId argument", () => {
+    it("returns an active variant when the routeId is matched", () => {
+      let captured: unstable_RouterState | undefined;
       let router = createMemoryRouter(
         createRoutesFromElements(
           <Route
+            id="project"
             path="/projects/:id"
             element={
               <Capture
-                onState={(s) => {
-                  captured =
-                    s as unstable_RouterState<"/projects/:id">;
-                }}
-                path="/projects/:id"
+                onState={(s) => (captured = s)}
+                routeId="project"
               />
             }
           />,
@@ -140,16 +138,17 @@ describe("unstable_useRouterState", () => {
       expect(captured?.active?.params.id).toBe("abc");
     });
 
-    it("returns null for active when the path does not match", () => {
+    it("returns null for active when the routeId is not matched", () => {
       let captured: unstable_RouterState | undefined;
       let router = createMemoryRouter(
         createRoutesFromElements(
           <Route
+            id="about"
             path="/about"
             element={
               <Capture
                 onState={(s) => (captured = s)}
-                path="/projects/:id"
+                routeId="project"
               />
             }
           />,
@@ -162,7 +161,7 @@ describe("unstable_useRouterState", () => {
       expect(captured?.pending).toBeNull();
     });
 
-    it("populates `pending` only when the pending location matches", async () => {
+    it("populates `pending` only when the pending location matches the routeId", async () => {
       let barDefer = createDeferred();
       let captured: unstable_RouterState | undefined;
 
@@ -171,6 +170,7 @@ describe("unstable_useRouterState", () => {
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo</h1>} />
             <Route
+              id="bar"
               path="bar/:id"
               loader={() => barDefer.promise}
               element={<h1>Bar</h1>}
@@ -182,7 +182,7 @@ describe("unstable_useRouterState", () => {
       render(<RouterProvider router={router} />);
 
       function Layout() {
-        captured = unstable_useRouterState("/bar/:id");
+        captured = unstable_useRouterState("bar");
         return (
           <div>
             <MemoryNavigate to="/bar/7">Go</MemoryNavigate>
@@ -206,7 +206,7 @@ describe("unstable_useRouterState", () => {
       expect(captured?.pending).toBeNull();
     });
 
-    it("returns null for `pending` when the pending location does not match the path", async () => {
+    it("returns null for `pending` when the pending location does not match the routeId", async () => {
       let fooDefer = createDeferred();
       let captured: unstable_RouterState | undefined;
 
@@ -226,7 +226,7 @@ describe("unstable_useRouterState", () => {
       render(<RouterProvider router={router} />);
 
       function Layout() {
-        captured = unstable_useRouterState("/bar/:id");
+        captured = unstable_useRouterState("missing");
         return (
           <div>
             <MemoryNavigate to="/foo">Go</MemoryNavigate>
@@ -237,7 +237,7 @@ describe("unstable_useRouterState", () => {
 
       fireEvent.click(screen.getByText("Go"));
 
-      // Pending navigation is active but doesn't match `/bar/:id`
+      // Pending navigation is active but no match has id "missing"
       expect(captured?.active).toBeNull();
       expect(captured?.pending).toBeNull();
 
@@ -271,12 +271,14 @@ describe("unstable_useRouterState", () => {
 
 function Capture({
   onState,
-  path,
+  routeId,
 }: {
   onState: (state: unstable_RouterState) => void;
-  path?: string;
+  routeId?: string;
 }) {
-  let state = path ? unstable_useRouterState(path) : unstable_useRouterState();
+  let state = routeId
+    ? unstable_useRouterState(routeId)
+    : unstable_useRouterState();
   onState(state);
   return null;
 }
