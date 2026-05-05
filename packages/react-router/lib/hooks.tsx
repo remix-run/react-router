@@ -1472,9 +1472,12 @@ export function useRouteId() {
  * @mode data
  * @returns The current {@link Navigation} object
  */
-export function useNavigation(): Navigation {
+export function useNavigation(): Omit<Navigation, "matches" | "historyAction"> {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
-  return state.navigation;
+  return React.useMemo<Omit<Navigation, "matches" | "historyAction">>(() => {
+    let { matches, historyAction, ...rest } = state.navigation;
+    return rest;
+  }, [state.navigation]);
 }
 
 /**
