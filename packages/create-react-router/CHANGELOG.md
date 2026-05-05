@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## v7.15.0
+
+### Patch Changes
+
+- _No changes_
+
 ## v7.14.2
 
 ### Patch Changes

@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.15.0](#v7150)
   - [v7.14.2](#v7142)
   - [v7.14.1](#v7141)
   - [v7.14.0](#v7140)
@@ -168,6 +169,81 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.15.0
+
+Date: 2026-05-05
+
+### Minor Changes
+
+- `react-router` - Stabilize `unstable_defaultShouldRevalidate` as `defaultShouldRevalidate` on `<Link>`, `<Form>`, `useLinkClickHandler`, `useSubmit`, `fetcher.submit`, and `setSearchParams` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Stabilize the instrumentation APIs. `unstable_instrumentations` is now `instrumentations` and `unstable_pattern` is now `pattern` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - The `unstable_ServerInstrumentation`, `unstable_ClientInstrumentation`, `unstable_InstrumentRequestHandlerFunction`, `unstable_InstrumentRouterFunction`, `unstable_InstrumentRouteFunction`, and `unstable_InstrumentationHandlerResult` types have had their `unstable_` prefixes removed
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Stabilize `unstable_mask` as `mask` on `<Link>`, `useLinkClickHandler`, and `useNavigate`, and rename the corresponding `Location.unstable_mask` field to `Location.mask` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Stabilize the `unstable_normalizePath` option on `staticHandler.query` and `staticHandler.queryRoute` as `normalizePath` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Stabilize `future.unstable_passThroughRequests` as `future.v8_passThroughRequests` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Remove `unstable_subResourceIntegrity` from the runtime `FutureConfig` type; the flag is now controlled by the top-level `subResourceIntegrity` option in `react-router.config.ts` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Stabilize `unstable_url` as `url` on `loader`, `action`, and `middleware` function args ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `react-router` - Stabilize `unstable_useTransitions` as `useTransitions` on `<BrowserRouter>`, `<HashRouter>`, `<HistoryRouter>`, `<MemoryRouter>`, `<Router>`, `<RouterProvider>`, `<HydratedRouter>`, and `useLinkClickHandler` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `@react-router/dev` - Stabilize `future.unstable_passThroughRequests` as `future.v8_passThroughRequests` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `@react-router/dev` - Stabilize `prerender.unstable_concurrency` as `prerender.concurrency` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- `@react-router/dev` - Stabilize `future.unstable_subResourceIntegrity` as a top-level `subResourceIntegrity` config option in `react-router.config.ts` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+### Patch Changes
+
+- `react-router` - Add `nonce` to `<Scripts>` `<link rel="modulepreload">` elements (if provided) ([af5d49b](https://github.com/remix-run/react-router/commit/af5d49b))
+
+- `react-router` - Fix a bug with `unstable_defaultShouldRevalidate={false}` where parent routes that did not export a `shouldRevalidate` function could be incorrectly included in the single fetch call for new child route data ([#15012](https://github.com/remix-run/react-router/pull/15012))
+
+- `react-router` - Improve server-side route matching performance by pre-computing flattened/cached route branches ([#14967](https://github.com/remix-run/react-router/pull/14967)) ([af5d49b](https://github.com/remix-run/react-router/commit/af5d49b))
+
+  - Performance benchmarks showed roughly a 10-15% improvement in server-side request handling performance
+
+- `react-router` - Mark `mask` as an optional field in `Location` for easier mocking in unit tests ([#14999](https://github.com/remix-run/react-router/pull/14999))
+
+- `react-router` - Cache flattened/ranked route branches to optimize server-side route matching ([#14967](https://github.com/remix-run/react-router/pull/14967))
+
+- `react-router` - Improve route matching performance in Framework/Data Mode ([#14971](https://github.com/remix-run/react-router/pull/14971)) ([af5d49b](https://github.com/remix-run/react-router/commit/af5d49b))
+
+  - Avoiding unnecessary calls to `matchRoutes` in data router scenarios
+    - This includes adding back the optimization that was removed in `7.6.0` ([#13562](https://github.com/remix-run/react-router/pull/13562))
+    - The issues that prompted the revert have been addressed by using the available router `matches` but always updating `match.route` to the latest route in the `manifest`
+  - Leverage pre-computed pre-computing flattened/cached route branches during client side route matching
+  - Performance benchmarks showed roughly a 15-30% improvement in server-side request handling performance
+
+**Full Changelog**: [`v7.14.2...v7.15.0`](https://github.com/remix-run/react-router/compare/react-router@7.14.2...react-router@7.15.0)
 
 ## v7.14.2
 
