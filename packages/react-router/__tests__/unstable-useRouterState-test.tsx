@@ -8,7 +8,6 @@ import {
   RouterProvider,
   Routes,
   createMemoryRouter,
-  createRoutesFromElements,
   unstable_useRouterState,
 } from "react-router";
 import type { unstable_RouterState } from "react-router";
@@ -20,12 +19,15 @@ describe("unstable_useRouterState", () => {
   it("returns active state for the current location", () => {
     let captured: unstable_RouterState | undefined;
     let router = createMemoryRouter(
-      createRoutesFromElements(
-        <Route
-          path="/projects/:id"
-          element={<Capture onState={(s) => (captured = s)} />}
-        />,
-      ),
+      [
+        {
+          path: "/projects/:id",
+          Component() {
+            captured = unstable_useRouterState();
+            return null;
+          },
+        },
+      ],
       { initialEntries: ["/projects/123?tab=readme"] },
     );
     render(<RouterProvider router={router} />);
@@ -40,17 +42,30 @@ describe("unstable_useRouterState", () => {
   it("returns simplified matches with id and pathname only", () => {
     let captured: unstable_RouterState | undefined;
     let router = createMemoryRouter(
-      createRoutesFromElements(
-        <Route id="root" path="/" element={<Outlet />}>
-          <Route id="projects" path="projects" element={<Outlet />}>
-            <Route
-              id="project"
-              path=":id"
-              element={<Capture onState={(s) => (captured = s)} />}
-            />
-          </Route>
-        </Route>,
-      ),
+      [
+        {
+          id: "root",
+          path: "/",
+          element: <Outlet />,
+          children: [
+            {
+              id: "projects",
+              path: "projects",
+              element: <Outlet />,
+              children: [
+                {
+                  id: "project",
+                  path: ":id",
+                  Component() {
+                    captured = unstable_useRouterState();
+                    return null;
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
       { initialEntries: ["/projects/42"] },
     );
     render(<RouterProvider router={router} />);
@@ -65,20 +80,6 @@ describe("unstable_useRouterState", () => {
   it("populates `pending` during in-flight navigations", async () => {
     let barDefer = createDeferred();
     let captured: unstable_RouterState | undefined;
-    let router = createMemoryRouter(
-      createRoutesFromElements(
-        <Route path="/" element={<Layout />}>
-          <Route path="foo" element={<h1>Foo</h1>} />
-          <Route
-            path="bar/:id"
-            loader={() => barDefer.promise}
-            element={<h1>Bar</h1>}
-          />
-        </Route>,
-      ),
-      { initialEntries: ["/foo"] },
-    );
-    render(<RouterProvider router={router} />);
 
     function Layout() {
       captured = unstable_useRouterState();
@@ -89,6 +90,25 @@ describe("unstable_useRouterState", () => {
         </div>
       );
     }
+
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          element: <Layout />,
+          children: [
+            { path: "foo", element: <h1>Foo</h1> },
+            {
+              path: "bar/:id",
+              loader: () => barDefer.promise,
+              element: <h1>Bar</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/foo"] },
+    );
+    render(<RouterProvider router={router} />);
 
     expect(captured?.active.location.pathname).toBe("/foo");
     expect(captured?.pending).toBeNull();
@@ -128,13 +148,3 @@ describe("unstable_useRouterState", () => {
     spy.mockRestore();
   });
 });
-
-function Capture({
-  onState,
-}: {
-  onState: (state: unstable_RouterState) => void;
-}) {
-  let state = unstable_useRouterState();
-  onState(state);
-  return null;
-}
