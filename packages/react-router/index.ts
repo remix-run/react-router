@@ -127,11 +127,11 @@ export {
   createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
 export type {
+  NavigateFunction,
   unstable_RouterState,
-  unstable_RouterStateVariant,
-  unstable_RouterStateMatch,
+  unstable_RouterStateActiveVariant,
+  unstable_RouterStatePendingVariant,
 } from "./lib/hooks";
 export {
   useBlocker,

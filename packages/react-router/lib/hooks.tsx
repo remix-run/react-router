@@ -25,6 +25,7 @@ import type {
   Router as DataRouter,
   RevalidationState,
   Navigation,
+  NavigationStates,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
@@ -2008,25 +2009,43 @@ export function useRoute<Args extends UseRouteArgs>(
 }
 
 /**
- * A single route match returned from {@link unstable_useRouterState}. Limited
- * to `id` and `pathname` for now; this is a subset of {@link UIMatch}.
+ * A single route match returned from {@link unstable_useRouterState}. Mirrors
+ * {@link UIMatch} minus the data-related fields (`data`, `loaderData`).
  */
-export interface unstable_RouterStateMatch {
-  id: string;
-  pathname: string;
-}
+type unstable_RouterStateMatch<Handle = unknown> = Omit<
+  UIMatch<unknown, Handle>,
+  "data" | "loaderData"
+>;
 
 /**
- * The shape of the `active` or `pending` variant returned from
+ * The shape of the `active` variant returned from
  * {@link unstable_useRouterState}.
  */
-export interface unstable_RouterStateVariant {
+export type unstable_RouterStateActiveVariant = {
   location: Location;
   searchParams: URLSearchParams;
   params: Params;
   matches: unstable_RouterStateMatch[];
   type: NavigationType;
-}
+};
+
+/**
+ * The shape of the `pending` variant returned from
+ * {@link unstable_useRouterState}. Extends
+ * {@link unstable_RouterStateActiveVariant} with the navigation `state` and
+ * submission fields mirroring {@link useNavigation} — submission fields are
+ * populated when the in-flight navigation was triggered by a form submission,
+ * otherwise `undefined`.
+ */
+export type unstable_RouterStatePendingVariant =
+  unstable_RouterStatePendingVariants[keyof unstable_RouterStatePendingVariants];
+
+type unstable_RouterStatePendingVariants = {
+  Loading: unstable_RouterStateActiveVariant &
+    Omit<NavigationStates["Loading"], "matches" | "historyAction">;
+  Submitting: unstable_RouterStateActiveVariant &
+    Omit<NavigationStates["Submitting"], "matches" | "historyAction">;
+};
 
 /**
  * The return shape of {@link unstable_useRouterState}.
@@ -2034,15 +2053,18 @@ export interface unstable_RouterStateVariant {
  * `active` reflects the currently-committed location. `pending` reflects the
  * in-flight navigation (if any).
  */
-export interface unstable_RouterState {
-  active: unstable_RouterStateVariant;
-  pending: unstable_RouterStateVariant | null;
-}
+export type unstable_RouterState = {
+  active: unstable_RouterStateActiveVariant;
+  pending: unstable_RouterStatePendingVariant | null;
+};
 
-function toRouterStateMatches(
-  matches: readonly { route: { id: string }; pathname: string }[],
-): unstable_RouterStateMatch[] {
-  return matches.map((m) => ({ id: m.route.id, pathname: m.pathname }));
+function toRouterStateMatch(match: DataRouteMatch): unstable_RouterStateMatch {
+  return {
+    id: match.route.id,
+    pathname: match.pathname,
+    params: match.params,
+    handle: match.route.handle,
+  };
 }
 
 /**
@@ -2067,25 +2089,46 @@ export function useRouterState(): unstable_RouterState {
 
   return React.useMemo<unstable_RouterState>(() => {
     let leaf = state.matches[state.matches.length - 1];
-    let active: unstable_RouterStateVariant = {
+    let active: unstable_RouterStateActiveVariant = {
+      type: state.historyAction,
       location: state.location,
       searchParams: new URLSearchParams(state.location.search),
       params: leaf?.params ?? {},
-      matches: toRouterStateMatches(state.matches),
-      type: state.historyAction,
+      matches: state.matches.map((m) => toRouterStateMatch(m)),
     };
 
-    let pending: unstable_RouterStateVariant | null = null;
+    let pending: unstable_RouterStatePendingVariant | null = null;
     let nav = state.navigation;
     if (nav.state !== "idle") {
-      let pendingLeaf = nav.matches[nav.matches.length - 1];
-      pending = {
+      let shared = {
+        type: nav.historyAction,
         location: nav.location,
         searchParams: new URLSearchParams(nav.location.search),
-        params: pendingLeaf?.params ?? {},
-        matches: toRouterStateMatches(nav.matches),
-        type: nav.historyAction,
+        params: nav.matches[nav.matches.length - 1]?.params ?? {},
+        matches: nav.matches.map((m) => toRouterStateMatch(m)),
       };
+      pending =
+        nav.state === "loading"
+          ? {
+              ...shared,
+              state: "loading",
+              formMethod: nav.formMethod,
+              formAction: nav.formAction,
+              formEncType: nav.formEncType,
+              formData: nav.formData,
+              json: nav.json,
+              text: nav.text,
+            }
+          : {
+              ...shared,
+              state: "submitting",
+              formMethod: nav.formMethod,
+              formAction: nav.formAction,
+              formEncType: nav.formEncType,
+              formData: nav.formData,
+              json: nav.json,
+              text: nav.text,
+            };
     }
 
     return { active, pending };

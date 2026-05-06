@@ -39,13 +39,14 @@ describe("unstable_useRouterState", () => {
     expect(captured?.pending).toBeNull();
   });
 
-  it("returns simplified matches with id and pathname only", () => {
+  it("returns matches with id, pathname, params, and handle (no data fields)", () => {
     let captured: unstable_RouterState | undefined;
     let router = createMemoryRouter(
       [
         {
           id: "root",
           path: "/",
+          handle: { breadcrumb: "Home" },
           element: <Outlet />,
           children: [
             {
@@ -56,6 +57,7 @@ describe("unstable_useRouterState", () => {
                 {
                   id: "project",
                   path: ":id",
+                  handle: { breadcrumb: "Project" },
                   Component() {
                     captured = unstable_useRouterState();
                     return null;
@@ -71,10 +73,30 @@ describe("unstable_useRouterState", () => {
     render(<RouterProvider router={router} />);
 
     expect(captured?.active.matches).toEqual([
-      { id: "root", pathname: "/" },
-      { id: "projects", pathname: "/projects" },
-      { id: "project", pathname: "/projects/42" },
+      {
+        id: "root",
+        pathname: "/",
+        params: { id: "42" },
+        handle: { breadcrumb: "Home" },
+      },
+      {
+        id: "projects",
+        pathname: "/projects",
+        params: { id: "42" },
+        handle: undefined,
+      },
+      {
+        id: "project",
+        pathname: "/projects/42",
+        params: { id: "42" },
+        handle: { breadcrumb: "Project" },
+      },
     ]);
+    // None of the data-related fields from UIMatch should be present
+    captured?.active.matches.forEach((m) => {
+      expect(m).not.toHaveProperty("data");
+      expect(m).not.toHaveProperty("loaderData");
+    });
   });
 
   it("populates `pending` during in-flight navigations", async () => {
@@ -126,6 +148,110 @@ describe("unstable_useRouterState", () => {
       expect(captured?.active.location.pathname).toBe("/bar/9"),
     );
     expect(captured?.pending).toBeNull();
+  });
+
+  it("populates submission fields on `pending` during form submissions", async () => {
+    let actionDefer = createDeferred();
+    let captured: unstable_RouterState | undefined;
+
+    let formData = new FormData();
+    formData.append("name", "Ryan");
+
+    function Layout() {
+      captured = unstable_useRouterState();
+      return (
+        <div>
+          <MemoryNavigate to="/submit" formMethod="post" formData={formData}>
+            <button type="submit">Submit</button>
+          </MemoryNavigate>
+          <Outlet />
+        </div>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          element: <Layout />,
+          children: [
+            { index: true, element: <h1>Home</h1> },
+            {
+              path: "submit",
+              action: () => actionDefer.promise,
+              element: <h1>Done</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+    render(<RouterProvider router={router} />);
+
+    expect(captured?.pending).toBeNull();
+
+    fireEvent.click(screen.getByText("Submit"));
+
+    expect(captured?.pending).not.toBeNull();
+    expect(captured?.pending?.state).toBe("submitting");
+    expect(captured?.pending?.location.pathname).toBe("/submit");
+    expect(captured?.pending?.formMethod).toBe("POST");
+    expect(captured?.pending?.formAction).toBe("/submit");
+    expect(captured?.pending?.formEncType).toBe("application/x-www-form-urlencoded");
+    expect(captured?.pending?.formData?.get("name")).toBe("Ryan");
+    expect(captured?.pending?.json).toBeUndefined();
+    expect(captured?.pending?.text).toBeUndefined();
+
+    actionDefer.resolve({});
+    await waitFor(() => expect(captured?.pending).toBeNull());
+  });
+
+  it("leaves submission fields undefined on `pending` during plain navigations", async () => {
+    let loaderDefer = createDeferred();
+    let captured: unstable_RouterState | undefined;
+
+    function Layout() {
+      captured = unstable_useRouterState();
+      return (
+        <div>
+          <MemoryNavigate to="/bar">Go</MemoryNavigate>
+          <Outlet />
+        </div>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          element: <Layout />,
+          children: [
+            { index: true, element: <h1>Home</h1> },
+            {
+              path: "bar",
+              loader: () => loaderDefer.promise,
+              element: <h1>Bar</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+    render(<RouterProvider router={router} />);
+
+    fireEvent.click(screen.getByText("Go"));
+
+    expect(captured?.pending).not.toBeNull();
+    expect(captured?.pending?.state).toBe("loading");
+    expect(captured?.pending?.formMethod).toBeUndefined();
+    expect(captured?.pending?.formAction).toBeUndefined();
+    expect(captured?.pending?.formEncType).toBeUndefined();
+    expect(captured?.pending?.formData).toBeUndefined();
+    expect(captured?.pending?.json).toBeUndefined();
+    expect(captured?.pending?.text).toBeUndefined();
+
+    loaderDefer.resolve({});
+    await waitFor(() => expect(captured?.pending).toBeNull());
   });
 
   it("throws when used without a data router", () => {
