@@ -15,6 +15,7 @@ import {
   createStaticHandler,
   isRedirectResponse,
   isResponse,
+  isMutationMethod,
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
@@ -446,26 +447,25 @@ async function handleSingleFetchRequest(
   let handlerUrl = new URL(request.url);
   handlerUrl.pathname = normalizedPath;
 
-  let response =
-    request.method !== "GET"
-      ? await singleFetchAction(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        )
-      : await singleFetchLoaders(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        );
+  let response = isMutationMethod(request.method)
+    ? await singleFetchAction(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      )
+    : await singleFetchLoaders(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      );
 
   return response;
 }
@@ -481,7 +481,7 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
-    if (request.method === "POST") {
+    if (isMutationMethod(request.method)) {
       try {
         throwIfPotentialCSRFAttack(
           request.headers,

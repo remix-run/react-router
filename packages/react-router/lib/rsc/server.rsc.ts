@@ -850,7 +850,7 @@ async function generateRenderResponse(
         let formState: unknown;
         let skipRevalidation = false;
         let potentialCSRFAttackError: unknown | undefined;
-        if (request.method === "POST") {
+        if (isMutationMethod(request.method)) {
           try {
             throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
 
