@@ -2,16 +2,6 @@
 title: HTTP Headers
 ---
 
-- [HTTP Headers](#http-headers)
-  - [Reading request headers](#reading-request-headers)
-  - [Setting response headers](#setting-response-headers)
-    - [From Route Modules](#from-route-modules)
-    - [From loaders and actions](#from-loaders-and-actions)
-    - [Merging with parent headers](#merging-with-parent-headers)
-      - [Appending](#appending)
-      - [Setting](#setting)
-    - [From `entry.server.tsx`](#from-entryservertsx)
-
 # HTTP Headers
 
 [MODES: framework]
