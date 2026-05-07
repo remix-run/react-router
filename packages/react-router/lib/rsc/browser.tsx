@@ -917,31 +917,32 @@ function createRouteFromServerManifest(
     index: match.index,
     loader: match.clientLoader
       ? async (args, singleFetch) => {
-          try {
-            let result = await match.clientLoader!({
-              ...args,
-              serverLoader: () => {
-                preventInvalidServerHandlerCall(
-                  "loader",
-                  match.id,
-                  match.hasLoader,
-                );
-                // On the first call, resolve with the server result
-                if (isHydrationRequest) {
-                  if (hasInitialData) {
-                    return initialData;
-                  }
-                  if (hasInitialError) {
-                    throw initialError;
-                  }
+          // Capture and clear immediately so that if this call is aborted
+          // mid-flight, subsequent calls won't see a stale `true` value
+          let _isHydrationRequest = isHydrationRequest;
+          isHydrationRequest = false;
+
+          let result = await match.clientLoader!({
+            ...args,
+            serverLoader: () => {
+              preventInvalidServerHandlerCall(
+                "loader",
+                match.id,
+                match.hasLoader,
+              );
+              // On the first call, resolve with the server result
+              if (_isHydrationRequest) {
+                if (hasInitialData) {
+                  return initialData;
                 }
-                return callSingleFetch(singleFetch);
-              },
-            });
-            return result;
-          } finally {
-            isHydrationRequest = false;
-          }
+                if (hasInitialError) {
+                  throw initialError;
+                }
+              }
+              return callSingleFetch(singleFetch);
+            },
+          });
+          return result;
         }
       : // We always make the call in this RSC world since even if we don't
         // have a `loader` we may need to get the `element` implementation
