@@ -614,7 +614,7 @@ describe(`handleError`, () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  it("handles immediate errors already present in initial router state (SPA)", async () => {
+  it("handles initial load synchronous loader errors in SPA mode", async () => {
     let spy = jest.fn();
     let router = createMemoryRouter([
       {
