@@ -1751,8 +1751,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks"),
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks"),
         context: {},
       });
 
@@ -1762,8 +1762,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks/:id",
-        unstable_url: new URL("http://localhost/tasks/1"),
+        pattern: "/tasks/:id",
+        url: new URL("http://localhost/tasks/1"),
         context: {},
       });
 
@@ -1773,8 +1773,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
 
@@ -1786,8 +1786,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks?foo=bar#hash"),
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
 
@@ -2213,8 +2213,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks"),
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks"),
         context: {},
       });
 
@@ -2259,8 +2259,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: "/tasks",
-        unstable_url: new URL("http://localhost/tasks?foo=bar"),
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks?foo=bar"),
         context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
@@ -2294,8 +2294,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 

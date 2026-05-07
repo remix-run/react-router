@@ -86,8 +86,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
-  unstable_passThroughRequests: boolean;
-  unstable_subResourceIntegrity: boolean;
+  v8_passThroughRequests: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
    * Prerender with Vite Preview server
@@ -162,7 +161,7 @@ export type ReactRouterConfig = {
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    *
-   * `unstable_concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
+   * `concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
    * Setting it to a value more than 1 enables concurrent prerendering.
    * Setting it to a value higher than one can increase the speed of the build,
    * but may consume more resources, and send more concurrent requests to the
@@ -172,7 +171,7 @@ export type ReactRouterConfig = {
     | PrerenderPaths
     | {
         paths: PrerenderPaths;
-        unstable_concurrency?: number;
+        concurrency?: number;
       };
   /**
    * An array of React Router plugin config presets to ease integration with
@@ -216,6 +215,12 @@ export type ReactRouterConfig = {
    * SPA without server-rendering. Default's to `true`.
    */
   ssr?: boolean;
+
+  /**
+   * Enable subresource integrity hashes on asset script tags. Defaults to
+   * `false`.
+   */
+  subResourceIntegrity?: boolean;
 
   /**
    * An array of allowed origin hosts for action submissions to UI routes (does not apply
@@ -324,6 +329,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * Whether to generate subresource integrity hashes for asset script tags.
+   */
+  subResourceIntegrity: boolean;
   /**
    * The allowed origins for actions / mutations. Does not apply to routes
    * without a component. micromatch glob patterns are supported.
@@ -544,16 +553,22 @@ async function resolveConfig({
       );
     }
 
+    if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+      return err(
+        "The `prerender.unstable_concurrency` config field has been stabilized as `prerender.concurrency`",
+      );
+    }
+
     let isValidConcurrencyConfig =
       typeof prerender != "object" ||
-      !("unstable_concurrency" in prerender) ||
-      (typeof prerender.unstable_concurrency === "number" &&
-        Number.isInteger(prerender.unstable_concurrency) &&
-        prerender.unstable_concurrency > 0);
+      !("concurrency" in prerender) ||
+      (typeof prerender.concurrency === "number" &&
+        Number.isInteger(prerender.concurrency) &&
+        prerender.concurrency > 0);
 
     if (!isValidConcurrencyConfig) {
       return err(
-        "The `prerender.unstable_concurrency` config must be a positive integer if specified.",
+        "The `prerender.concurrency` config must be a positive integer if specified.",
       );
     }
   }
@@ -670,25 +685,35 @@ async function resolveConfig({
   }
 
   // Check for renamed flags and provide helpful error messages
-  let futureConfig = userAndPresetConfigs.future as any;
-  if (futureConfig?.unstable_splitRouteModules !== undefined) {
-    return err(
-      'The "future.unstable_splitRouteModules" flag has been stabilized as "future.v8_splitRouteModules"',
-    );
-  }
-  if (futureConfig?.unstable_viteEnvironmentApi !== undefined) {
-    return err(
-      'The "future.unstable_viteEnvironmentApi" flag has been stabilized as "future.v8_viteEnvironmentApi"',
-    );
+  let futureConfig = userAndPresetConfigs.future;
+  if (futureConfig) {
+    if ("unstable_splitRouteModules" in futureConfig) {
+      return err(
+        "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
+      );
+    }
+    if ("unstable_viteEnvironmentApi" in futureConfig) {
+      return err(
+        "The `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi`",
+      );
+    }
+    if ("unstable_passThroughRequests" in futureConfig) {
+      return err(
+        "The `future.unstable_passThroughRequests` flag has been stabilized as `future.v8_passThroughRequests`",
+      );
+    }
+    if ("unstable_subResourceIntegrity" in futureConfig) {
+      return err(
+        "The `future.unstable_subResourceIntegrity` flag has been stabilized and moved to a top-level `config.subResourceIntegrity` field",
+      );
+    }
   }
 
   let future: FutureConfig = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    unstable_passThroughRequests:
-      userAndPresetConfigs.future?.unstable_passThroughRequests ?? false,
-    unstable_subResourceIntegrity:
-      userAndPresetConfigs.future?.unstable_subResourceIntegrity ?? false,
+    v8_passThroughRequests:
+      userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
     unstable_trailingSlashAwareDataRequests:
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
@@ -704,6 +729,7 @@ async function resolveConfig({
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+  let subResourceIntegrity = userAndPresetConfigs.subResourceIntegrity ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
@@ -718,6 +744,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    subResourceIntegrity,
     allowedActionOrigins,
     unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);

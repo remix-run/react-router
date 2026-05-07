@@ -62,7 +62,6 @@ function RSCHydratedRouter({
   createFromReadableStream,
   fetch: fetchImplementation = fetch,
   payload,
-  routeDiscovery = "eager",
   getContext,
 }: RSCHydratedRouterProps)
 ```
@@ -89,9 +88,4 @@ navigation or fetcher call.
 ### payload
 
 The decoded [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html) to hydrate.
-
-### routeDiscovery
-
-`"eager"` or `"lazy"` - Determines if links are eagerly discovered, or
-delayed until clicked.
 

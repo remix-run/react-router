@@ -177,8 +177,8 @@ describe("fetchers", () => {
         request: new Request("http://localhost/foo", {
           signal: A.loaders.foo.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/foo",
-        unstable_url: new URL("http://localhost/foo"),
+        pattern: "/foo",
+        url: new URL("http://localhost/foo"),
         context: {},
       });
     });
@@ -226,8 +226,8 @@ describe("fetchers", () => {
         request: new Request("http://localhost/foo?key=value", {
           signal: A.loaders.foo.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/foo",
-        unstable_url: new URL("http://localhost/foo?key=value"),
+        pattern: "/foo",
+        url: new URL("http://localhost/foo?key=value"),
         context: {},
       });
 
@@ -280,8 +280,8 @@ describe("fetchers", () => {
       expect(A.actions.foo.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: "/foo",
-        unstable_url: new URL("http://localhost/foo"),
+        pattern: "/foo",
+        url: new URL("http://localhost/foo"),
         context: {},
       });
 
@@ -393,8 +393,8 @@ describe("fetchers", () => {
         request: new Request("http://localhost/foo", {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
     });
@@ -3395,8 +3395,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -3426,8 +3426,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -3455,8 +3455,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -3484,8 +3484,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -3514,8 +3514,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -3546,8 +3546,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -3577,8 +3577,8 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 

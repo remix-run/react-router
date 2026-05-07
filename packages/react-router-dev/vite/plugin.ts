@@ -1107,7 +1107,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let sri: ReactRouterManifest["sri"] = undefined;
-    if (ctx.reactRouterConfig.future.unstable_subResourceIntegrity) {
+    if (ctx.reactRouterConfig.subResourceIntegrity) {
       sri = await generateSriManifest(ctx);
     }
 
@@ -3263,8 +3263,8 @@ async function handlePrerender(
 
   let concurrency = 1;
   let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
-    concurrency = prerender.unstable_concurrency ?? 1;
+  if (typeof prerender === "object" && "concurrency" in prerender) {
+    concurrency = prerender.concurrency ?? 1;
   }
 
   const pMap = await import("p-map");
@@ -4270,8 +4270,8 @@ function getPrerenderConcurrencyConfig(
 ): number {
   let concurrency = 1;
   let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
-    concurrency = prerender.unstable_concurrency ?? 1;
+  if (typeof prerender === "object" && "concurrency" in prerender) {
+    concurrency = prerender.concurrency ?? 1;
   }
   return concurrency;
 }

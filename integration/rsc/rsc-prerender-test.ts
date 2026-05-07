@@ -37,7 +37,7 @@ function prerender({
     | PrerenderPaths
     | {
         paths: PrerenderPaths;
-        unstable_concurrency?: number;
+        concurrency?: number;
       };
   ssr?: boolean;
   vitePreview: (

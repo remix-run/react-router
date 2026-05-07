@@ -19,7 +19,7 @@ test.describe("CSub-Resource Integrity", () => {
     fixture = await createFixture({
       files: {
         "react-router.config.ts": reactRouterConfig({
-          future: { unstable_subResourceIntegrity: true },
+          subResourceIntegrity: true,
         }),
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -70,5 +70,18 @@ test.describe("CSub-Resource Integrity", () => {
     expect(
       await page.locator('script[type="importmap"]').getAttribute("nonce"),
     ).toBe("test-nonce-123");
+  });
+
+  test("includes a nonce on modulepreload links", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    let modulePreloads = page.locator('link[rel="modulepreload"]');
+    let count = await modulePreloads.count();
+    expect(count).toBeGreaterThan(0);
+    for (let i = 0; i < count; i++) {
+      expect(await modulePreloads.nth(i).getAttribute("nonce")).toBe(
+        "test-nonce-123",
+      );
+    }
   });
 });

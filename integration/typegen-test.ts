@@ -868,4 +868,23 @@ test.describe("typegen", () => {
       });
     });
   });
+
+  test("layout without pages", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, layout } from "@react-router/dev/routes";
+
+        export default [
+          layout("routes/layout.tsx", []),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/layout.tsx": tsx`
+        import { Outlet } from "react-router"
+        export default function Component() {
+          return <div><Outlet /></div>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
 });

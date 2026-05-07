@@ -75,6 +75,7 @@ async function matchRSCServerRequest({
   basename,
   decodeReply,
   requestContext,
+  routeDiscovery,
   loadServerAction,
   decodeAction,
   decodeFormState,
@@ -94,6 +95,7 @@ async function matchRSCServerRequest({
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
+  routeDiscovery?: RouteDiscovery;
   generateResponse: (
     match: RSCMatch,
     {
@@ -157,6 +159,10 @@ The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) to mat
 
 An instance of [`RouterContextProvider`](../utils/RouterContextProvider) that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
 [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+
+### opts.routeDiscovery
+
+The route discovery configuration, used to determine how the router should discover new routes during navigations.
 
 ### opts.routes
 

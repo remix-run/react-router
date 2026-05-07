@@ -1,5 +1,6 @@
 {
   "include": ["**/*.ts", "**/*.tsx", "./.react-router/types/**/*"],
+  "exclude": ["vite.config.ts"],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "strict": true,

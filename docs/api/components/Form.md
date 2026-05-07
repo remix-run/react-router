@@ -144,7 +144,7 @@ Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/Vie
 for this navigation. To apply specific styles during the transition, see
 [`useViewTransitionState`](../hooks/useViewTransitionState).
 
-### unstable_defaultShouldRevalidate
+### defaultShouldRevalidate
 
 Specify the default revalidation behavior after this submission
 
