@@ -1351,7 +1351,7 @@ test.describe("Client Data", () => {
             // When a same-route navigation aborts the pending hydration
             // POP, serverLoader() must fetch fresh data — not return the
             // stale SSR initialData captured for the original URL.
-            test.only("serverLoader() fetches fresh data when a same-route navigation aborts hydration", async ({
+            test("serverLoader() fetches fresh data when a same-route navigation aborts hydration", async ({
               page,
             }) => {
               let app = new PlaywrightFixture(appFixture, page);
