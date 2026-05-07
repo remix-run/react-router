@@ -2087,50 +2087,52 @@ function toRouterStateMatch(match: DataRouteMatch): unstable_RouterStateMatch {
 export function useRouterState(): unstable_RouterState {
   let state = useDataRouterState(DataRouterStateHook.UseRouterState);
 
-  return React.useMemo<unstable_RouterState>(() => {
+  let active = React.useMemo<unstable_RouterStateActiveVariant>(() => {
     let leaf = state.matches[state.matches.length - 1];
-    let active: unstable_RouterStateActiveVariant = {
+    return {
       type: state.historyAction,
       location: state.location,
       searchParams: new URLSearchParams(state.location.search),
       params: leaf?.params ?? {},
       matches: state.matches.map((m) => toRouterStateMatch(m)),
     };
+  }, [state.location, state.historyAction, state.matches]);
 
-    let pending: unstable_RouterStatePendingVariant | null = null;
+  let pending = React.useMemo<unstable_RouterStatePendingVariant | null>(() => {
     let nav = state.navigation;
-    if (nav.state !== "idle") {
-      let shared = {
-        type: nav.historyAction,
-        location: nav.location,
-        searchParams: new URLSearchParams(nav.location.search),
-        params: nav.matches[nav.matches.length - 1]?.params ?? {},
-        matches: nav.matches.map((m) => toRouterStateMatch(m)),
-      };
-      pending =
-        nav.state === "loading"
-          ? {
-              ...shared,
-              state: "loading",
-              formMethod: nav.formMethod,
-              formAction: nav.formAction,
-              formEncType: nav.formEncType,
-              formData: nav.formData,
-              json: nav.json,
-              text: nav.text,
-            }
-          : {
-              ...shared,
-              state: "submitting",
-              formMethod: nav.formMethod,
-              formAction: nav.formAction,
-              formEncType: nav.formEncType,
-              formData: nav.formData,
-              json: nav.json,
-              text: nav.text,
-            };
-    }
+    if (nav.state === "idle") return null;
+    let shared = {
+      type: nav.historyAction,
+      location: nav.location,
+      searchParams: new URLSearchParams(nav.location.search),
+      params: nav.matches[nav.matches.length - 1]?.params ?? {},
+      matches: nav.matches.map((m) => toRouterStateMatch(m)),
+    };
+    return nav.state === "loading"
+      ? {
+          ...shared,
+          state: "loading",
+          formMethod: nav.formMethod,
+          formAction: nav.formAction,
+          formEncType: nav.formEncType,
+          formData: nav.formData,
+          json: nav.json,
+          text: nav.text,
+        }
+      : {
+          ...shared,
+          state: "submitting",
+          formMethod: nav.formMethod,
+          formAction: nav.formAction,
+          formEncType: nav.formEncType,
+          formData: nav.formData,
+          json: nav.json,
+          text: nav.text,
+        };
+  }, [state.navigation]);
 
-    return { active, pending };
-  }, [state.location, state.historyAction, state.matches, state.navigation]);
+  return React.useMemo<unstable_RouterState>(
+    () => ({ active, pending }),
+    [active, pending],
+  );
 }

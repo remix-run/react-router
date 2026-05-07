@@ -254,6 +254,63 @@ describe("unstable_useRouterState", () => {
     await waitFor(() => expect(captured?.pending).toBeNull());
   });
 
+  it("preserves identity of `active` across pending-only changes (and vice versa)", async () => {
+    let barDefer = createDeferred();
+    let snapshots: unstable_RouterState[] = [];
+
+    function Layout() {
+      snapshots.push(unstable_useRouterState());
+      return (
+        <div>
+          <MemoryNavigate to="/bar">Go</MemoryNavigate>
+          <Outlet />
+        </div>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          element: <Layout />,
+          children: [
+            { index: true, element: <h1>Home</h1> },
+            {
+              path: "bar",
+              loader: () => barDefer.promise,
+              element: <h1>Bar</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+    render(<RouterProvider router={router} />);
+
+    let initial = snapshots[snapshots.length - 1];
+
+    fireEvent.click(screen.getByText("Go"));
+
+    let mid = snapshots[snapshots.length - 1];
+    // `pending` started, but `active` is still on the same location, so its
+    // identity should be preserved.
+    expect(mid.active).toBe(initial.active);
+    expect(mid.pending).not.toBe(initial.pending);
+
+    barDefer.resolve({});
+    await waitFor(() =>
+      expect(snapshots[snapshots.length - 1].active.location.pathname).toBe(
+        "/bar",
+      ),
+    );
+
+    let final = snapshots[snapshots.length - 1];
+    // `active` moved, so it should have a new identity, but `pending` is back
+    // to `null` and should match the initial `null` reference.
+    expect(final.active).not.toBe(mid.active);
+    expect(final.pending).toBe(initial.pending);
+  });
+
   it("throws when used without a data router", () => {
     function Probe() {
       unstable_useRouterState();
