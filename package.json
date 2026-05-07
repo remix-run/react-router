@@ -99,7 +99,7 @@
     "vitest": "^4.1.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "pnpm": {
     "patchedDependencies": {
