@@ -9,8 +9,6 @@ title: HTTP Headers
 <br/>
 <br/>
 
-Headers are primarily defined with the route module `headers` export. You can also set headers in `entry.server.tsx`.
-
 ## Reading request headers
 
 The `request` sent to route handlers is a standard Web Fetch [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request), so you can read headers directly from the [`request.headers`](https://developer.mozilla.org/en-US/docs/Web/API/Request/headers) property:
@@ -28,6 +26,8 @@ export async function loader({
 ```
 
 ## Setting response headers
+
+Headers are primarily defined with the route module `headers` export. You can also set headers in `entry.server.tsx`.
 
 ### From Route Modules
 
