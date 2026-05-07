@@ -912,13 +912,16 @@ import(${JSON.stringify(manifest.entry.module)});`;
   let preloads =
     isHydrated || isRSCRouterContext
       ? []
-      : dedupe(
-          manifest.entry.imports.concat(
-            getModuleLinkHrefs(matches, manifest, {
-              includeHydrateFallback: true,
-            }),
+      : [
+          // Dedupe through a Set
+          ...new Set(
+            manifest.entry.imports.concat(
+              getModuleLinkHrefs(matches, manifest, {
+                includeHydrateFallback: true,
+              }),
+            ),
           ),
-        );
+        ];
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
@@ -971,10 +974,6 @@ import(${JSON.stringify(manifest.entry.module)});`;
       {initialScripts}
     </>
   );
-}
-
-function dedupe<T>(array: readonly T[]): T[] {
-  return [...new Set(array)];
 }
 
 export function mergeRefs<T = any>(
