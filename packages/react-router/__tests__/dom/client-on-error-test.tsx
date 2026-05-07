@@ -614,23 +614,21 @@ describe(`handleError`, () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  it("handles immediate errors already present in initial router state", async () => {
+  it("handles immediate errors already present in initial router state (SPA)", async () => {
     let spy = jest.fn();
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          loader() {
-            throw new Error("immediate loader error!");
-          },
-          Component: () => <h1>Home</h1>,
-          ErrorBoundary: () => (
-            <h1>Error:{(useRouteError() as Error).message}</h1>
-          ),
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw new Error("immediate loader error!");
         },
-      ],
-      { hydrationData: { errors: { "0": new Error("immediate loader error!") }, loaderData: {} } },
-    );
+        Component: () => <h1>Home</h1>,
+        HydrateFallback: () => <h1>Loading...</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+      },
+    ]);
 
     render(<RouterProvider router={router} onError={spy} />);
 
@@ -639,8 +637,38 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
-      unstable_pattern: "/",
+      pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire onError for errors from hydrationData", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            throw new Error("hydration error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      {
+        hydrationData: {
+          errors: { "0": new Error("hydration error!") },
+          loaderData: {},
+        },
+      },
+    );
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:hydration error!"));
+
+    expect(spy).not.toHaveBeenCalled();
   });
 });

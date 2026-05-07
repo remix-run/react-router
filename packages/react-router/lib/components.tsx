@@ -628,28 +628,10 @@ export function RouterProvider({
       setState(router.state, {
         deletedFetchers: [],
         flushSync: false,
-        newErrors: null,
+        newErrors: router.state.errors, // Initial data load errors
       });
     }
   }, [initialized, setState, router.state]);
-
-  // Fire onError for errors that are already present in the initial router
-  // state (e.g., loaders that throw synchronously before the subscriber is
-  // set up). The subscriber only fires on subsequent state updates, so errors
-  // in the initial state would otherwise be silently swallowed.
-  React.useEffect(() => {
-    if (onError && router.state.errors) {
-      Object.values(router.state.errors).forEach((error) =>
-        onError(error, {
-          location: router.state.location,
-          params: router.state.matches[0]?.params ?? {},
-          pattern: getRoutePattern(router.state.matches),
-        }),
-      );
-    }
-    // Only run on mount — intentionally omitting onError and router from deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
