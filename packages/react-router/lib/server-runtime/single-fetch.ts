@@ -19,6 +19,7 @@ import {
   SingleFetchRedirectSymbol,
 } from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
+import { makeRequestSignalGcSafe } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
@@ -56,12 +57,12 @@ export async function singleFetchAction(
     }
 
     let handlerRequest = build.future.v8_passThroughRequests
-      ? request
+      ? makeRequestSignalGcSafe(request)
       : new Request(handlerUrl, {
           method: request.method,
           body: request.body,
           headers: request.headers,
-          signal: request.signal,
+          signal: makeRequestSignalGcSafe(request).signal,
           ...(request.body ? { duplex: "half" } : undefined),
         });
 
@@ -152,10 +153,10 @@ export async function singleFetchLoaders(
 
   try {
     let handlerRequest = build.future.v8_passThroughRequests
-      ? request
+      ? makeRequestSignalGcSafe(request)
       : new Request(handlerUrl, {
           headers: request.headers,
-          signal: request.signal,
+          signal: makeRequestSignalGcSafe(request).signal,
         });
 
     let result = await staticHandler.query(handlerRequest, {

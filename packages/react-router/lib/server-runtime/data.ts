@@ -26,8 +26,8 @@ export async function callRouteHandler(
 ) {
   let result = await handler({
     request: future.v8_passThroughRequests
-      ? args.request
-      : stripRoutesParam(stripIndexParam(args.request)),
+      ? makeRequestSignalGcSafe(args.request)
+      : makeRequestSignalGcSafe(stripRoutesParam(stripIndexParam(args.request))),
     url: args.url,
     params: args.params,
     context: args.context,
@@ -45,6 +45,17 @@ export async function callRouteHandler(
   }
 
   return result;
+}
+
+// undici wraps the signal passed to the Request constructor. When the request
+// object is garbage collected, the wrapped signal stops working. This is
+// problematic when a loader or action holds the signal while waiting for it to
+// be aborted (e.g., for SSE). To fix this, we hold a reference to the request
+// in its own signal so that the request is not garbage collected while the
+// signal is still in use.
+export function makeRequestSignalGcSafe(request: Request): Request {
+  Object.defineProperty(request.signal, "__request", { value: request });
+  return request;
 }
 
 function stripIndexParam(request: Request) {
@@ -65,7 +76,7 @@ function stripIndexParam(request: Request) {
     method: request.method,
     body: request.body,
     headers: request.headers,
-    signal: request.signal,
+    signal: makeRequestSignalGcSafe(request).signal,
   };
 
   if (init.body) {
@@ -82,7 +93,7 @@ function stripRoutesParam(request: Request) {
     method: request.method,
     body: request.body,
     headers: request.headers,
-    signal: request.signal,
+    signal: makeRequestSignalGcSafe(request).signal,
   };
 
   if (init.body) {
