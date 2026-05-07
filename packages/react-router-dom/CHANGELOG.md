@@ -1,5 +1,222 @@
 # react-router-dom
 
+## v7.15.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.0)
+
+## v7.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.2`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.2)
+
+## v7.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+
+## 7.14.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+
+## 7.13.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.2`
+
+## 7.13.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.1`
+
+## 7.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.0`
+
+## 7.12.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.12.0`
+
+## 7.11.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.11.0`
+
+## 7.10.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.1`
+
+## 7.10.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+
+## 7.9.6
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.6`
+
+## 7.9.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.5`
+
+## 7.9.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.4`
+
+## 7.9.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.3`
+
+## 7.9.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.2`
+
+## 7.9.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.1`
+
+## 7.9.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.9.0`
+
+## 7.8.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.2`
+
+## 7.8.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.1`
+
+## 7.8.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.0`
+
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.1`
+
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+
+## 7.6.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.3`
+
+## 7.6.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+
+## 7.6.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.1`
+
+## 7.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.0`
+
 ## 7.4.1
 
 ### Patch Changes
@@ -89,7 +306,6 @@
 ### Major Changes
 
 - Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
-
   - `defer`
   - `AbortedDeferredError`
   - `type TypedDeferredData`

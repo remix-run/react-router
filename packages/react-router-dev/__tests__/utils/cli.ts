@@ -1,7 +1,8 @@
-import execa from "execa";
+import type { Stats } from "node:fs";
+import { statSync } from "node:fs";
 import path from "node:path";
+import execa from "execa";
 import glob from "fast-glob";
-import fse from "fs-extra";
 
 import captureError from "./captureError";
 
@@ -14,9 +15,9 @@ export const isExecaError = (error: unknown): error is execa.ExecaError => {
  * Read the details (`stat`) for a file or directory,
  * or return `undefined` if the file or directory does not exist.
  */
-const safeStat = (fileOrDir: string): fse.Stats | undefined => {
+const safeStat = (fileOrDir: string): Stats | undefined => {
   try {
-    return fse.statSync(fileOrDir);
+    return statSync(fileOrDir);
   } catch (error: unknown) {
     let systemError = error as { code?: string };
     if (!systemError.code) throw error;
@@ -64,7 +65,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
 
   let buildDir = path.resolve(
     __dirname,
-    "../../../../build/node_modules/@react-router/dev"
+    "../../../../build/node_modules/@react-router/dev",
   );
   let builtJS = path.resolve(buildDir, "dist/cli/index.js");
   let buildModified = await mtimeDir(buildDir);
@@ -87,7 +88,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
     {
       ...options,
       env: { ...process.env, NO_COLOR: "1", ...(options?.env ?? {}) },
-    }
+    },
   );
   return result;
 };

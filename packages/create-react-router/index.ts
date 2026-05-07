@@ -1,8 +1,8 @@
 import process from "node:process";
-import fs from "node:fs";
+import { existsSync } from "node:fs";
+import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import fse from "fs-extra";
 import stripAnsi from "strip-ansi";
 import execa from "execa";
 import arg from "arg";
@@ -89,7 +89,7 @@ async function getContext(argv: string[]): Promise<Context> {
       "--no-motion": Boolean,
       "--overwrite": Boolean,
     },
-    { argv, permissive: true }
+    { argv, permissive: true },
   );
 
   let {
@@ -123,13 +123,13 @@ async function getContext(argv: string[]): Promise<Context> {
       // do nothing, we're good
     } else if (semver.coerce(selectedReactRouterVersion)) {
       selectedReactRouterVersion = semver.coerce(
-        selectedReactRouterVersion
+        selectedReactRouterVersion,
       )!.version;
     } else {
       log(
         `\n${color.warning(
-          `${selectedReactRouterVersion} is an invalid version specifier. Using React Router v${thisReactRouterVersion}.`
-        )}`
+          `${selectedReactRouterVersion} is an invalid version specifier. Using React Router v${thisReactRouterVersion}.`,
+        )}`,
       );
       selectedReactRouterVersion = undefined;
     }
@@ -137,8 +137,8 @@ async function getContext(argv: string[]): Promise<Context> {
 
   let context: Context = {
     tempDir: path.join(
-      await fs.promises.realpath(os.tmpdir()),
-      `create-react-router--${Math.random().toString(36).substr(2, 8)}`
+      await realpath(os.tmpdir()),
+      `create-react-router--${Math.random().toString(36).substr(2, 8)}`,
     ),
     cwd,
     overwrite,
@@ -151,9 +151,9 @@ async function getContext(argv: string[]): Promise<Context> {
     noMotion,
     pkgManager: validatePackageManager(
       pkgManager ??
-        // npm, pnpm, Yarn, and Bun set the user agent environment variable that can be used
+        // npm, pnpm, Yarn, Bun and Deno (v2.0.5+) set the user agent environment variable that can be used
         // to determine which package manager ran the command.
-        (process.env.npm_config_user_agent ?? "npm").split("/")[0]
+        (process.env.npm_config_user_agent ?? "npm").split("/")[0],
     ),
     projectName,
     prompt,
@@ -191,8 +191,8 @@ interface Context {
 async function introStep(ctx: Context) {
   log(
     `\n${" ".repeat(9)}${color.green(
-      color.bold("create-react-router")
-    )} ${color.bold(`v${ctx.reactRouterVersion}`)}`
+      color.bold("create-react-router"),
+    )} ${color.bold(`v${ctx.reactRouterVersion}`)}`,
   );
 
   if (!ctx.interactive) {
@@ -279,7 +279,7 @@ async function copyTemplateToTempDirStep(ctx: Context) {
               ? err.message
               : "Something went wrong. Run `create-react-router --debug` to see more info.\n\n" +
                   "Open an issue to report the problem at " +
-                  "https://github.com/remix-run/react-router/issues/new"
+                  "https://github.com/remix-run/react-router/issues/new",
           );
           throw err;
         },
@@ -321,7 +321,7 @@ async function copyTempDirToAppDirStep(ctx: Context) {
     if (ctx.overwrite) {
       info(
         "Overwrite:",
-        `overwriting files due to \`--overwrite\`:${getFileList("           ")}`
+        `overwriting files due to \`--overwrite\`:${getFileList("           ")}`,
       );
     } else if (!ctx.interactive) {
       error(
@@ -329,10 +329,10 @@ async function copyTempDirToAppDirStep(ctx: Context) {
         `Destination directory contains files that would be overwritten\n` +
           `         and no \`--overwrite\` flag was included in a non-interactive\n` +
           `         environment. The following files would be overwritten:` +
-          getFileList("           ")
+          getFileList("           "),
       );
       throw new Error(
-        "File collisions detected in a non-interactive environment"
+        "File collisions detected in a non-interactive environment",
       );
     } else {
       if (ctx.debug) {
@@ -358,8 +358,8 @@ async function copyTempDirToAppDirStep(ctx: Context) {
     }
   }
 
-  await fse.copy(ctx.tempDir, ctx.cwd, {
-    filter(src, dest) {
+  await cp(ctx.tempDir, ctx.cwd, {
+    filter(src) {
       // We never copy .git/ or node_modules/ directories since it's highly
       // unlikely we want them copied - and because templates are primarily
       // being pulled from git tarballs which won't have .git/ and shouldn't
@@ -374,6 +374,7 @@ async function copyTempDirToAppDirStep(ctx: Context) {
       }
       return true;
     },
+    recursive: true,
   });
 
   await updatePackageJSON(ctx);
@@ -433,7 +434,7 @@ async function installDependenciesStep(ctx: Context) {
 }
 
 async function gitInitQuestionStep(ctx: Context) {
-  if (fs.existsSync(path.join(ctx.cwd, ".git"))) {
+  if (existsSync(path.join(ctx.cwd, ".git"))) {
     info("Nice!", `Git has already been initialized`);
     return;
   }
@@ -458,7 +459,7 @@ async function gitInitStep(ctx: Context) {
     return;
   }
 
-  if (fs.existsSync(path.join(ctx.cwd, ".git"))) {
+  if (existsSync(path.join(ctx.cwd, ".git"))) {
     log("");
     info("Nice!", `Git has already been initialized`);
     return;
@@ -503,29 +504,21 @@ async function doneStep(ctx: Context) {
   }
   log(
     `${prefix}Check out ${color.bold(
-      "README.md"
-    )} for development and deploy instructions.`
+      "README.md",
+    )} for development and deploy instructions.`,
   );
   await sleep(100);
   log(
-    `\n${prefix}Join the community at ${color.cyan(`https://rmx.as/discord`)}\n`
+    `\n${prefix}Join the community at ${color.cyan(`https://rmx.as/discord`)}\n`,
   );
   await sleep(200);
 }
 
-type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
-
-const packageManagerExecScript: Record<PackageManager, string> = {
-  npm: "npx",
-  yarn: "yarn",
-  pnpm: "pnpm exec",
-  bun: "bunx",
-};
+const validPackageManagers = ["npm", "yarn", "pnpm", "bun", "deno"] as const;
+type PackageManager = (typeof validPackageManagers)[number];
 
 function validatePackageManager(pkgManager: string): PackageManager {
-  return packageManagerExecScript.hasOwnProperty(pkgManager)
-    ? (pkgManager as PackageManager)
-    : "npm";
+  return validPackageManagers.find((name) => pkgManager === name) ?? "npm";
 }
 
 async function installDependencies({
@@ -550,17 +543,17 @@ async function installDependencies({
 
 async function updatePackageJSON(ctx: Context) {
   let packageJSONPath = path.join(ctx.cwd, "package.json");
-  if (!fs.existsSync(packageJSONPath)) {
+  if (!existsSync(packageJSONPath)) {
     let relativePath = path.relative(process.cwd(), ctx.cwd);
     error(
       "Oh no!",
       "The provided template must be a React Router project with a `package.json` " +
-        `file, but that file does not exist in ${color.bold(relativePath)}.`
+        `file, but that file does not exist in ${color.bold(relativePath)}.`,
     );
     throw new Error(`package.json does not exist in ${ctx.cwd}`);
   }
 
-  let contents = await fs.promises.readFile(packageJSONPath, "utf-8");
+  let contents = await readFile(packageJSONPath, "utf-8");
   let packageJSON: any;
   try {
     packageJSON = JSON.parse(contents);
@@ -571,7 +564,7 @@ async function updatePackageJSON(ctx: Context) {
     error(
       "Oh no!",
       "The provided template must be a React Router project with a `package.json` " +
-        `file, but that file is invalid.`
+        `file, but that file is invalid.`,
     );
     throw err;
   }
@@ -584,7 +577,7 @@ async function updatePackageJSON(ctx: Context) {
       error(
         "Oh no!",
         "The provided template must be a React Router project with a `package.json` " +
-          `file, but its ${pkgKey} value is invalid.`
+          `file, but its ${pkgKey} value is invalid.`,
       );
       throw new Error(`package.json ${pkgKey} are invalid`);
     }
@@ -607,10 +600,10 @@ async function updatePackageJSON(ctx: Context) {
 
   packageJSON.name = ctx.projectName;
 
-  fs.promises.writeFile(
+  writeFile(
     packageJSONPath,
     JSON.stringify(sortPackageJSON(packageJSON), null, 2),
-    "utf-8"
+    "utf-8",
   );
 }
 

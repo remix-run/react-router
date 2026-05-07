@@ -16,7 +16,7 @@ describe("useLocation", () => {
           <Routes>
             <Route path="/home" element={<ShowLocation />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -33,7 +33,7 @@ describe("useLocation", () => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/home?the=search#the-hash"]}>
           <App />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -74,7 +74,7 @@ describe("useLocation", () => {
           <Routes>
             <Route path={"/example"} element={<ShowLocation />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

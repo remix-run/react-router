@@ -32,7 +32,7 @@ function ensureCleanWorkingDirectory() {
   let lines = status.split("\n");
   invariant(
     lines.every((line) => line === "" || line.startsWith("?")),
-    "Working directory is not clean. Please commit or stash your changes."
+    "Working directory is not clean. Please commit or stash your changes.",
   );
 }
 

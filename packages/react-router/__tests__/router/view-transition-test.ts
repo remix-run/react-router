@@ -20,7 +20,7 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/a" }),
       }),
-      expect.objectContaining({ viewTransitionOpts: undefined })
+      expect.objectContaining({ viewTransitionOpts: undefined }),
     );
 
     // PUSH /a -> /b - w/ transition
@@ -35,7 +35,7 @@ describe("view transitions", () => {
           currentLocation: expect.objectContaining({ pathname: "/a" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
-      })
+      }),
     );
 
     // POP /b -> /a - w/ transition (cached from above)
@@ -51,7 +51,7 @@ describe("view transitions", () => {
           currentLocation: expect.objectContaining({ pathname: "/a" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
-      })
+      }),
     );
 
     // POP /a -> / - No transition
@@ -61,7 +61,7 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/" }),
       }),
-      expect.objectContaining({ viewTransitionOpts: undefined })
+      expect.objectContaining({ viewTransitionOpts: undefined }),
     );
 
     unsubscribe();
@@ -110,7 +110,7 @@ describe("view transitions", () => {
       }),
       expect.objectContaining({
         viewTransitionOpts: undefined,
-      })
+      }),
     );
     expect(B.loaders.a.stub).toHaveBeenCalledTimes(1);
 
@@ -166,7 +166,7 @@ describe("view transitions", () => {
           currentLocation: expect.objectContaining({ pathname: "/" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
-      })
+      }),
     );
 
     unsubscribe();

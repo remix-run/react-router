@@ -5,13 +5,14 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
-  unstable_MiddlewareFunction,
+  MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
+  DataRouteMatch,
+  DataStrategyResult,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
-import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
 import type { SerializeFrom } from "../../types/route-data";
 
@@ -25,7 +26,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  unstable_clientMiddleware?: unstable_MiddlewareFunction<undefined>[];
+  clientMiddleware?: MiddlewareFunction<Record<string, DataStrategyResult>>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -43,14 +44,14 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
-  unstable_middleware?: unstable_MiddlewareFunction<Response>[];
+  middleware?: MiddlewareFunction<Response>[];
 }
 
 /**
  * A function that handles data mutations for a route on the client
  */
 export type ClientActionFunction = (
-  args: ClientActionFunctionArgs
+  args: ClientActionFunctionArgs,
 ) => ReturnType<ActionFunction>;
 
 /**
@@ -64,7 +65,7 @@ export type ClientActionFunctionArgs = ActionFunctionArgs & {
  * A function that loads data for a route on the client
  */
 export type ClientLoaderFunction = ((
-  args: ClientLoaderFunctionArgs
+  args: ClientLoaderFunctionArgs,
 ) => ReturnType<LoaderFunction>) & {
   hydrate?: boolean;
 };
@@ -118,7 +119,7 @@ export type LayoutComponent = ComponentType<{
  * A function that defines `<link>` tags to be inserted into the `<head>` of
  * the document on route transitions.
  *
- * @see https://remix.run/route/meta
+ * @see https://reactrouter.com/start/framework/route-module#meta
  */
 export interface LinksFunction {
   (): LinkDescriptor[];
@@ -126,11 +127,15 @@ export interface LinksFunction {
 
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
+  /** @deprecated Use `MetaMatch.loaderData` instead */
   data: Loader extends LoaderFunction | ClientLoaderFunction
+    ? SerializeFrom<Loader>
+    : unknown;
+  loaderData: Loader extends LoaderFunction | ClientLoaderFunction
     ? SerializeFrom<Loader>
     : unknown;
   handle?: RouteHandle;
@@ -143,7 +148,7 @@ export type MetaMatches<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -158,9 +163,15 @@ export interface MetaArgs<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
+  /** @deprecated Use `MetaArgs.loaderData` instead */
   data:
+    | (Loader extends LoaderFunction | ClientLoaderFunction
+        ? SerializeFrom<Loader>
+        : unknown)
+    | undefined;
+  loaderData:
     | (Loader extends LoaderFunction | ClientLoaderFunction
         ? SerializeFrom<Loader>
         : unknown)
@@ -226,7 +237,7 @@ export interface MetaFunction<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }
@@ -256,13 +267,13 @@ export type RouteComponent = ComponentType<{}>;
 /**
  * An arbitrary object that is associated with a route.
  *
- * @see https://remix.run/route/handle
+ * @see https://reactrouter.com/how-to/using-handle
  */
 export type RouteHandle = unknown;
 
 export async function loadRouteModule(
   route: EntryRoute,
-  routeModulesCache: RouteModules
+  routeModulesCache: RouteModules,
 ): Promise<RouteModule> {
   if (route.id in routeModulesCache) {
     return routeModulesCache[route.id] as RouteModule;
@@ -288,7 +299,7 @@ export async function loadRouteModule(
 
     // Log the error so it can be accessed via the `Preserve Log` setting
     console.error(
-      `Error loading route module \`${route.module}\`, reloading page...`
+      `Error loading route module \`${route.module}\`, reloading page...`,
     );
     console.error(error);
 

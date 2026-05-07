@@ -61,7 +61,7 @@ test.describe("vite-plugin-cloudflare", () => {
     expect(page.errors).toEqual([]);
 
     await expect(page.locator("[data-loader-message]")).toHaveText(
-      "Hello from Cloudflare"
+      "Hello from Cloudflare",
     );
   });
 
@@ -80,7 +80,7 @@ test.describe("vite-plugin-cloudflare", () => {
     expect(page.errors).toEqual([]);
 
     await expect(page.locator("[data-loader-message]")).toHaveText(
-      "Hello from Cloudflare"
+      "Hello from Cloudflare",
     );
   });
 
@@ -100,7 +100,7 @@ test.describe("vite-plugin-cloudflare", () => {
 
       await expect(page.locator("[data-css-side-effect]")).toHaveCSS(
         "padding",
-        "20px"
+        "20px",
       );
     });
   });
@@ -118,7 +118,7 @@ test.describe("vite-plugin-cloudflare", () => {
 
     await expect(page.locator("[data-css-side-effect]")).toHaveCSS(
       "padding",
-      "20px"
+      "20px",
     );
   });
 });

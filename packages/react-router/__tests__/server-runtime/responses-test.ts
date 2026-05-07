@@ -18,11 +18,11 @@ describe("json", () => {
           "Content-Type": "application/json; charset=iso-8859-1",
           "X-Remix": "is awesome",
         },
-      }
+      },
     );
 
     expect(response.headers.get("Content-Type")).toEqual(
-      "application/json; charset=iso-8859-1"
+      "application/json; charset=iso-8859-1",
     );
     expect(response.headers.get("X-Remix")).toEqual("is awesome");
   });

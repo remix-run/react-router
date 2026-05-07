@@ -5,7 +5,7 @@ import { matchRoutes } from "react-router";
 function pickPaths(
   routes: RouteObject[],
   pathname: string,
-  basename?: string
+  basename?: string,
 ): string[] | null {
   let matches = matchRoutes(routes, pathname, basename);
   return matches && matches.map((match) => match.route.path || "");

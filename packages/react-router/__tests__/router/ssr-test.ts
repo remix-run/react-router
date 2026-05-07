@@ -68,7 +68,7 @@ describe("ssr", () => {
           loader: ({ request }) => {
             if (new URL(request.url).searchParams.has("reject")) {
               let promise = new Promise((_, r) =>
-                setTimeout(() => r("broken!"), 10)
+                setTimeout(() => r("broken!"), 10),
               );
               promise.catch(() => {});
               return {
@@ -157,7 +157,7 @@ describe("ssr", () => {
     it("should support document load navigations with HEAD requests", async () => {
       let { query } = createStaticHandler(SSR_ROUTES);
       let context = await query(
-        createRequest("/parent/child", { method: "HEAD" })
+        createRequest("/parent/child", { method: "HEAD" }),
       );
       expect(context).toMatchObject({
         actionData: null,
@@ -186,7 +186,7 @@ describe("ssr", () => {
       });
     });
 
-    it("should fill in null loaderData values for routes without loaders", async () => {
+    it("should not fill in null loaderData values for routes without loaders", async () => {
       let { query } = createStaticHandler([
         {
           id: "root",
@@ -215,10 +215,7 @@ describe("ssr", () => {
       let context = await query(createRequest("/none"));
       expect(context).toMatchObject({
         actionData: null,
-        loaderData: {
-          root: null,
-          none: null,
-        },
+        loaderData: {},
         errors: null,
         location: { pathname: "/none" },
       });
@@ -228,9 +225,7 @@ describe("ssr", () => {
       expect(context).toMatchObject({
         actionData: null,
         loaderData: {
-          root: null,
           a: "A",
-          b: null,
         },
         errors: null,
         location: { pathname: "/a/b" },
@@ -254,7 +249,7 @@ describe("ssr", () => {
     it("should support document load navigations returning deferred", async () => {
       let { query } = createStaticHandler(SSR_ROUTES);
       let context = (await query(
-        createRequest("/parent/deferred")
+        createRequest("/parent/deferred"),
       )) as StaticHandlerContext;
       expect(context).toMatchObject({
         actionData: null,
@@ -378,17 +373,17 @@ describe("ssr", () => {
       };
 
       context = await query(
-        createSubmitRequest("/parent/child", { method: "PUT" })
+        createSubmitRequest("/parent/child", { method: "PUT" }),
       );
       expect(context).toMatchObject(expected);
 
       context = await query(
-        createSubmitRequest("/parent/child", { method: "PATCH" })
+        createSubmitRequest("/parent/child", { method: "PATCH" }),
       );
       expect(context).toMatchObject(expected);
 
       context = await query(
-        createSubmitRequest("/parent/child", { method: "DELETE" })
+        createSubmitRequest("/parent/child", { method: "DELETE" }),
       );
       expect(context).toMatchObject(expected);
     });
@@ -528,7 +523,7 @@ describe("ssr", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/not/found"'),
-            true
+            true,
           ),
         },
         matches: [{ route: { id: "index" } }],
@@ -768,7 +763,7 @@ describe("ssr", () => {
       let request = createRequest("/", { signal: undefined });
       let context = await query(request);
       expect((context as StaticHandlerContext).loaderData.index).toBe(
-        "INDEX LOADER"
+        "INDEX LOADER",
       );
     });
 
@@ -790,9 +785,9 @@ describe("ssr", () => {
             "Method Not Allowed",
             new Error(
               'You made a POST request to "/" but did not provide an `action` ' +
-                'for route "root", so there is no way to handle the request.'
+                'for route "root", so there is no way to handle the request.',
             ),
-            true
+            true,
           ),
         },
         matches: [{ route: { id: "root" } }],
@@ -816,7 +811,7 @@ describe("ssr", () => {
             405,
             "Method Not Allowed",
             new Error('Invalid request method "OPTIONS"'),
-            true
+            true,
           ),
         },
         matches: [{ route: { id: "root" } }],
@@ -842,12 +837,29 @@ describe("ssr", () => {
       ]);
       await query(createRequest("/child"));
 
+      expect(rootLoaderStub).toHaveBeenCalledTimes(1);
+      expect(rootLoaderStub).toHaveBeenCalledWith({
+        request: new Request("http://localhost/child"),
+        pattern: "/child",
+        url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
-      // @ts-expect-error
-      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(rootLoaderRequest.method).toBe("GET");
       expect(rootLoaderRequest.url).toBe("http://localhost/child");
+
+      expect(childLoaderStub).toHaveBeenCalledTimes(1);
+      expect(childLoaderStub).toHaveBeenCalledWith({
+        request: new Request("http://localhost/child"),
+        pattern: "/child",
+        url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
+      // @ts-expect-error
+      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(childLoaderRequest.method).toBe("GET");
       expect(childLoaderRequest.url).toBe("http://localhost/child");
     });
@@ -876,26 +888,51 @@ describe("ssr", () => {
           headers: {
             test: "value",
           },
-        })
+        }),
       );
 
+      expect(actionStub).toHaveBeenCalledTimes(1);
+      expect(actionStub).toHaveBeenCalledWith({
+        request: expect.any(Request),
+        pattern: "/child",
+        url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
       // @ts-expect-error
       let actionRequest = actionStub.mock.calls[0][0]?.request;
       expect(actionRequest.method).toBe("POST");
       expect(actionRequest.url).toBe("http://localhost/child");
       expect(actionRequest.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await actionRequest.formData()).get("key")).toBe("value");
 
+      expect(rootLoaderStub).toHaveBeenCalledTimes(1);
+      expect(rootLoaderStub).toHaveBeenCalledWith({
+        request: expect.any(Request),
+        pattern: "/child",
+        url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
-      // @ts-expect-error
-      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(rootLoaderRequest.method).toBe("GET");
       expect(rootLoaderRequest.url).toBe("http://localhost/child");
       expect(rootLoaderRequest.headers.get("test")).toBe("value");
       expect(await rootLoaderRequest.text()).toBe("");
+
+      expect(childLoaderStub).toHaveBeenCalledTimes(1);
+      expect(childLoaderStub).toHaveBeenCalledWith({
+        request: expect.any(Request),
+        pattern: "/child",
+        url: new URL("http://localhost/child"),
+        params: {},
+        context: {},
+      });
+      // @ts-expect-error
+      let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
       expect(childLoaderRequest.method).toBe("GET");
       expect(childLoaderRequest.url).toBe("http://localhost/child");
       expect(childLoaderRequest.headers.get("test")).toBe("value");
@@ -927,7 +964,7 @@ describe("ssr", () => {
           headers: {
             test: "value",
           },
-        })
+        }),
       );
 
       // @ts-expect-error
@@ -935,7 +972,7 @@ describe("ssr", () => {
       expect(actionRequest.method).toBe("POST");
       expect(actionRequest.url).toBe("http://localhost/child");
       expect(actionRequest.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await actionRequest.formData()).get("key")).toBe("value");
 
@@ -989,7 +1026,7 @@ describe("ssr", () => {
 
       it("should return DeferredData on symbol", async () => {
         let context = (await query(
-          createRequest("/parent/deferred")
+          createRequest("/parent/deferred"),
         )) as StaticHandlerContext;
         expect(context).toMatchObject({
           loaderData: {
@@ -1015,7 +1052,7 @@ describe("ssr", () => {
 
       it("should return rejected promises", async () => {
         let context = (await query(
-          createRequest("/parent/deferred?reject")
+          createRequest("/parent/deferred?reject"),
         )) as StaticHandlerContext;
         expect(context).toMatchObject({
           loaderData: {
@@ -1032,7 +1069,7 @@ describe("ssr", () => {
 
       it("should return resolved undefined", async () => {
         let context = (await query(
-          createRequest("/parent/deferred?undefined")
+          createRequest("/parent/deferred?undefined"),
         )) as StaticHandlerContext;
         expect(context).toMatchObject({
           loaderData: {
@@ -1100,7 +1137,7 @@ describe("ssr", () => {
           },
         ]);
         let context = (await query(
-          createSubmitRequest("/?index")
+          createSubmitRequest("/?index"),
         )) as StaticHandlerContext;
         expect(context.statusCode).toBe(500);
       });
@@ -1145,7 +1182,7 @@ describe("ssr", () => {
           },
         ]);
         let context = (await query(
-          createSubmitRequest("/?index")
+          createSubmitRequest("/?index"),
         )) as StaticHandlerContext;
         expect(context.statusCode).toBe(400);
       });
@@ -1167,7 +1204,7 @@ describe("ssr", () => {
           },
         ]);
         let context = (await query(
-          createSubmitRequest("/?index")
+          createSubmitRequest("/?index"),
         )) as StaticHandlerContext;
         expect(context.statusCode).toBe(203);
       });
@@ -1278,7 +1315,7 @@ describe("ssr", () => {
           },
         ]);
         let context = (await query(
-          createSubmitRequest("/?index")
+          createSubmitRequest("/?index"),
         )) as StaticHandlerContext;
         expect(Array.from(context.actionHeaders.child.entries())).toEqual([
           ["one", "1"],
@@ -1334,7 +1371,7 @@ describe("ssr", () => {
           },
         ]);
         let context = (await query(
-          createSubmitRequest("/?index")
+          createSubmitRequest("/?index"),
         )) as StaticHandlerContext;
         expect(Array.from(context.actionHeaders.child.entries())).toEqual([
           ["one", "1"],
@@ -1411,7 +1448,7 @@ describe("ssr", () => {
           matches: [{ route: { id: "custom" } }],
         });
         expect(
-          (context as StaticHandlerContext).loaderData.custom.get("foo")
+          (context as StaticHandlerContext).loaderData.custom.get("foo"),
         ).toEqual("bar");
       });
     });
@@ -1424,7 +1461,7 @@ describe("ssr", () => {
         routeId: string,
         type: "loader" | "action",
         data: any,
-        isError = false
+        isError = false,
       ) {
         let handler = createStaticHandler([
           {
@@ -1444,7 +1481,7 @@ describe("ssr", () => {
             "flex",
             "loader",
             data,
-            false
+            false,
           );
         },
         rejectLoader(data: any) {
@@ -1453,7 +1490,7 @@ describe("ssr", () => {
             "flex",
             "loader",
             data,
-            true
+            true,
           );
         },
         resolveAction(data: any) {
@@ -1462,7 +1499,7 @@ describe("ssr", () => {
             "flex",
             "action",
             data,
-            false
+            false,
           );
         },
         rejectAction(data: any) {
@@ -1471,7 +1508,7 @@ describe("ssr", () => {
             "flex",
             "action",
             data,
-            true
+            true,
           );
         },
       };
@@ -1502,7 +1539,7 @@ describe("ssr", () => {
     it("should support OPTIONS requests", async () => {
       let { queryRoute } = createStaticHandler(SSR_ROUTES);
       let data = await queryRoute(
-        createRequest("/parent", { method: "OPTIONS" })
+        createRequest("/parent", { method: "OPTIONS" }),
       );
       expect(data).toBe("PARENT LOADER");
     });
@@ -1572,7 +1609,7 @@ describe("ssr", () => {
         new Response(null, {
           status: 302,
           headers: { Location: "/" },
-        })
+        }),
       );
       expect(data.status).toBe(302);
       expect(data.headers.get("Location")).toBe("/");
@@ -1582,7 +1619,7 @@ describe("ssr", () => {
         new Response(null, {
           status: 301,
           headers: { Location: "/" },
-        })
+        }),
       );
       expect(data.status).toBe(301);
       expect(data.headers.get("Location")).toBe("/");
@@ -1737,19 +1774,19 @@ describe("ssr", () => {
 
       data = await queryRoute(
         createSubmitRequest("/parent", { method: "PUT" }),
-        { routeId: "parent" }
+        { routeId: "parent" },
       );
       expect(data).toBe("PARENT ACTION");
 
       data = await queryRoute(
         createSubmitRequest("/parent", { method: "PATCH" }),
-        { routeId: "parent" }
+        { routeId: "parent" },
       );
       expect(data).toBe("PARENT ACTION");
 
       data = await queryRoute(
         createSubmitRequest("/parent", { method: "DELETE" }),
-        { routeId: "parent" }
+        { routeId: "parent" },
       );
       expect(data).toBe("PARENT ACTION");
     });
@@ -1781,7 +1818,7 @@ describe("ssr", () => {
         new Response(null, {
           status: 302,
           headers: { Location: "/" },
-        })
+        }),
       );
       expect(data.status).toBe(302);
       expect(data.headers.get("Location")).toBe("/");
@@ -1791,7 +1828,7 @@ describe("ssr", () => {
         new Response(null, {
           status: 301,
           headers: { Location: "/" },
-        })
+        }),
       );
       expect(data.status).toBe(301);
       expect(data.headers.get("Location")).toBe("/");
@@ -2167,7 +2204,7 @@ describe("ssr", () => {
           expect(isRouteErrorResponse(data)).toBe(true);
           expect(data.status).toBe(403);
           expect(data.error).toEqual(
-            new Error('Route "junk" does not match URL "/"')
+            new Error('Route "junk" does not match URL "/"'),
           );
           expect(data.internal).toBe(true);
         }
@@ -2179,7 +2216,7 @@ describe("ssr", () => {
           expect(isRouteErrorResponse(data)).toBe(true);
           expect(data.status).toBe(403);
           expect(data.error).toEqual(
-            new Error('Route "junk" does not match URL "/"')
+            new Error('Route "junk" does not match URL "/"'),
           );
           expect(data.internal).toBe(true);
         }
@@ -2195,8 +2232,8 @@ describe("ssr", () => {
           expect(data.error).toEqual(
             new Error(
               'You made a GET request to "/" but did not provide a `loader` ' +
-                'for route "root", so there is no way to handle the request.'
-            )
+                'for route "root", so there is no way to handle the request.',
+            ),
           );
           expect(data.internal).toBe(true);
         }
@@ -2212,8 +2249,8 @@ describe("ssr", () => {
           expect(data.error).toEqual(
             new Error(
               'You made a POST request to "/" but did not provide an `action` ' +
-                'for route "root", so there is no way to handle the request.'
-            )
+                'for route "root", so there is no way to handle the request.',
+            ),
           );
           expect(data.internal).toBe(true);
         }
@@ -2229,7 +2266,7 @@ describe("ssr", () => {
           expect(isRouteErrorResponse(data)).toBe(true);
           expect(data.status).toBe(405);
           expect(data.error).toEqual(
-            new Error('Invalid request method "CHICKEN"')
+            new Error('Invalid request method "CHICKEN"'),
           );
           expect(data.internal).toBe(true);
         }

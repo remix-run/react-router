@@ -71,7 +71,7 @@ test("Vite / dead-code elimination for server exports", async () => {
 
   let lines = grep(
     path.join(cwd, "build/client"),
-    /SERVER_ONLY|SERVER_ONLY|node:fs/
+    /SERVER_ONLY|SERVER_ONLY|node:fs/,
   );
   expect(lines).toHaveLength(0);
 });
@@ -142,11 +142,11 @@ test.describe("Vite / route / server-only module referenced by client", () => {
         `    '${specifier}' imported by route 'app/routes/_index.tsx'`,
 
         "  React Router automatically removes server-code from these exports:",
-        "    `loader`, `action`, `unstable_middleware`, `headers`",
+        "    `loader`, `action`, `middleware`, `headers`",
 
         `  But other route exports in 'app/routes/_index.tsx' depend on '${specifier}'.`,
 
-        "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
+        "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
       ].forEach(expect(stderr).toMatch);
     });
   }
@@ -206,7 +206,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 
         `    '${specifier}' imported by 'app/reexport-server-only.ts'`,
 
-        "  See https://remix.run/docs/en/main/guides/vite#splitting-up-client-and-server-code",
+        "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
       ].forEach(expect(stderr).toMatch);
     });
   }

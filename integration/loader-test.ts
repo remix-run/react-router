@@ -105,7 +105,7 @@ test.describe("loader in an app", () => {
             }
           `,
         },
-      })
+      }),
     );
   });
 

@@ -42,6 +42,7 @@ describe("a memory router", () => {
         },
       ],
       initialized: true,
+      renderFallback: false,
       navigation: {
         location: undefined,
         state: "idle",
@@ -100,10 +101,10 @@ describe("a memory router", () => {
 
     router.navigate("/a");
     expect(shouldRevalidateSpy.mock.calls[0][0].currentUrl.toString()).toBe(
-      "http://localhost/"
+      "http://localhost/",
     );
     expect(shouldRevalidateSpy.mock.calls[0][0].nextUrl.toString()).toBe(
-      "http://localhost/a"
+      "http://localhost/a",
     );
     router.dispose();
   });

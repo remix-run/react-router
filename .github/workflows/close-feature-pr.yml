@@ -1,0 +1,28 @@
+# Close a singular pull request that implements a feature that has not
+# gone through the Proposal process
+# Triggered by adding the `feature-request` label to an issue
+
+name: 🚪 Check Feature PR
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  close-feature-pr:
+    name: 🚪 Check Feature PR
+    if: github.repository == 'remix-run/react-router' && github.event.label.name == 'feature-request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+
+      - name: 🚪 Close PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} -F ./scripts/close-feature-pr.md
+          gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
+          gh pr close ${{ github.event.pull_request.number }}

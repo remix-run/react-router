@@ -34,13 +34,20 @@ export class PlaywrightFixture {
         waitForHydration === true
           ? "networkidle"
           : waitForHydration === false
-          ? "commit"
-          : "load",
+            ? "commit"
+            : "load",
     });
     if (response == null)
       throw new Error(
-        "Unexpected null response, possible about:blank request or same-URL redirect"
+        "Unexpected null response, possible about:blank request or same-URL redirect",
       );
+
+    if (waitForHydration === false) {
+      await this.page.waitForFunction(
+        () => !!document.body && document.body.children.length > 0,
+      );
+    }
+
     return response;
   }
 
@@ -88,7 +95,7 @@ export class PlaywrightFixture {
    */
   async clickSubmitButton(
     action: string,
-    options: { wait?: boolean; method?: string } = { wait: true }
+    options: { wait?: boolean; method?: string } = { wait: true },
   ) {
     let selector: string;
     if (options.method) {
@@ -167,7 +174,9 @@ export class PlaywrightFixture {
    * loaders were called (or not).
    */
   collectSingleFetchResponses() {
-    return this.collectResponses((url) => url.pathname.endsWith(".data"));
+    return this.collectResponses(
+      (url) => url.pathname.endsWith(".data") || url.pathname.endsWith(".rsc"),
+    );
   }
 
   /**
@@ -216,7 +225,7 @@ export class PlaywrightFixture {
     let ms = seconds * 1000;
     test.setTimeout(ms);
     console.log(
-      `🙈 Poke around for ${seconds} seconds 👉 ${this.app.serverUrl}`
+      `🙈 Poke around for ${seconds} seconds 👉 ${this.app.serverUrl}`,
     );
     cp.exec(`open ${this.app.serverUrl}${href}`);
     return new Promise((res) => setTimeout(res, ms));
@@ -224,8 +233,11 @@ export class PlaywrightFixture {
 }
 
 export async function getHtml(page: Page, selector?: string) {
-  let html = await page.content();
-  return selector ? selectHtml(html, selector) : prettyHtml(html);
+  let html = await getPageContent(page);
+  let selectedHtml = selector
+    ? await selectHtml(html, selector)
+    : await prettyHtml(html);
+  return selectedHtml;
 }
 
 export function getElement(source: string, selector: string) {
@@ -236,19 +248,43 @@ export function getElement(source: string, selector: string) {
   return el;
 }
 
-export function selectHtml(source: string, selector: string) {
+export async function selectHtml(source: string, selector: string) {
   let el = getElement(source, selector);
-  return prettyHtml(cheerio.html(el)).trim();
+  let html = await prettyHtml(cheerio.html(el));
+  return html.trim();
 }
 
-export function prettyHtml(source: string) {
+export async function prettyHtml(source: string) {
   return prettier.format(source, { parser: "html" });
+}
+
+async function getPageContent(page: Page) {
+  // Some tests intentionally use `goto(..., false)` so they can inspect the
+  // server-rendered document before hydration settles. In that brief window,
+  // Playwright can throw while the new document is still swapping in.
+  for (let i = 0; ; i++) {
+    try {
+      return await page.content();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.includes(
+          "Unable to retrieve content because the page is navigating and changing the content.",
+        ) ||
+        i >= 9
+      ) {
+        throw error;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  }
 }
 
 async function doAndWait(
   page: Page,
   action: () => Promise<unknown>,
-  longPolls = 0
+  longPolls = 0,
 ) {
   let DEBUG = !!process.env.DEBUG;
   let networkSettledCallback: any;
@@ -310,26 +346,6 @@ async function doAndWait(
     console.log(`action done, ${requestCounter} requests pending`);
   }
   await networkSettledPromise;
-
-  // I wish I knew why but Safari seems to get all screwed up without this.
-  // When you run doAndWait (via clicking a blink or submitting a form) and
-  // then waitForSelector().  It finds the selector element but thinks it's
-  // hidden for some unknown reason.  It's intermittent, but waiting for the
-  // next animation frame delaying slightly before the waitForSelector() calls
-  // seems to fix it 🤷‍♂️
-  //
-  //   Test timeout of 30000ms exceeded.
-  //
-  //   Error: page.waitForSelector: Target closed
-  //   =========================== logs ===========================
-  //   waiting for locator('text=ROOT_BOUNDARY_TEXT') to be visible
-  //     locator resolved to hidden <div id="root-boundary">ROOT_BOUNDARY_TEXT</div>
-  //     locator resolved to hidden <div id="root-boundary">ROOT_BOUNDARY_TEXT</div>
-  //     ... and so on until the test times out
-  let userAgent = await page.evaluate(() => navigator.userAgent);
-  if (/Safari\//i.test(userAgent) && !/Chrome\//i.test(userAgent)) {
-    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
-  }
 
   if (DEBUG) {
     console.log(`action done, network settled`);

@@ -6,7 +6,7 @@ title: API Development Strategy
 
 React Router is foundational to your application. We want to make sure that upgrading to new major versions is as smooth as possible while still allowing us to adjust and enhance the behavior and API as the React ecosystem advances.
 
-Our strategy and motivations are discussed in more detail in our [Future Flags][future-flags-blog-post] blog post.
+Our strategy and motivations are discussed in more detail in our [Future Flags][future-flags-blog-post] blog post and our [Open Governance Model][governance].
 
 ## Future Flags
 
@@ -36,10 +36,9 @@ To learn about current unstable flags, keep an eye on the [CHANGELOG](../start/c
 
 ### Example New Feature Flow
 
-The decision flow for a new feature looks something like this (note this diagram is in relation to Remix v1/v2 but applies to React Router v6/v7 as well):
+The decision flow for a new feature looks something like this:
 
-![Flowchart of the decision process for how to introduce a new feature][feature-flowchart]
+<img width="400" src="https://reactrouter.com/_docs/feature-flowchart.png" alt="Flowchart of the decision process for how to introduce a new feature" />
 
 [future-flags-blog-post]: https://remix.run/blog/future-flags
-[feature-flowchart]: https://remix.run/docs-images/feature-flowchart.png
-[picking-a-router]: ../routers/picking-a-router
+[governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process

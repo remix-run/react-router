@@ -22,7 +22,7 @@ describe("Descendant <Routes>", () => {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -53,7 +53,7 @@ describe("Descendant <Routes>", () => {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

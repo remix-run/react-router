@@ -17,7 +17,7 @@ const js = String.raw;
 const withBundleServer = async (
   cwd: string,
   serverBundle: string,
-  callback: (port: number) => Promise<void>
+  callback: (port: number) => Promise<void>,
 ): Promise<void> => {
   let port = await getPort();
   let stop = await reactRouterServe({ cwd, port, serverBundle });
@@ -101,7 +101,7 @@ const expectRenderedRoutes = async (page: Page, routeFiles: string[]) => {
   await Promise.all(
     TEST_ROUTES.map(async (routeFile) => {
       let locator = page.locator(
-        `[data-route-file="${routeFile}"] [data-mounted]`
+        `[data-route-file="${routeFile}"] [data-mounted]`,
       );
       if (routeFiles.includes(routeFile)) {
         await expect(locator).toBeAttached();
@@ -109,7 +109,7 @@ const expectRenderedRoutes = async (page: Page, routeFiles: string[]) => {
         // Assert no other routes are rendered
         await expect(locator).not.toBeAttached();
       }
-    })
+    }),
   );
 };
 
@@ -117,8 +117,8 @@ test.describe("Server bundles", () => {
   let cwd: string;
   let port: number;
 
-  [false, true].forEach((viteEnvironmentApi) => {
-    test.describe(`viteEnvironmentApi enabled: ${viteEnvironmentApi}`, () => {
+  [false, true].forEach((v8_viteEnvironmentApi) => {
+    test.describe(`v8_viteEnvironmentApi enabled: ${v8_viteEnvironmentApi}`, () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject(
@@ -126,7 +126,7 @@ test.describe("Server bundles", () => {
             "react-router.config.ts": dedent(js`
               export default {
                 future: {
-                  unstable_viteEnvironmentApi: ${viteEnvironmentApi},
+                  v8_viteEnvironmentApi: ${v8_viteEnvironmentApi},
                 },
                 buildEnd: async ({ buildManifest }) => {
                   let fs = await import("node:fs");
@@ -141,7 +141,7 @@ test.describe("Server bundles", () => {
                     const fs = await import("node:fs/promises");
                     const routeFileContents = await fs.readFile(route.file, "utf8");
                     if (!routeFileContents.includes(${JSON.stringify(
-                      ROUTE_FILE_COMMENT
+                      ROUTE_FILE_COMMENT,
                     )})) {
                       throw new Error("Couldn't file route file test comment");
                     }
@@ -178,7 +178,7 @@ test.describe("Server bundles", () => {
             `),
             ...files,
           },
-          viteEnvironmentApi ? "vite-6-template" : "vite-5-template"
+          v8_viteEnvironmentApi ? "vite-8-template" : "vite-5-template",
         );
       });
 
@@ -228,7 +228,7 @@ test.describe("Server bundles", () => {
         test("Vite Environment API message", () => {
           let viteEnvironmentApiMessage =
             "Using Vite Environment API (experimental)";
-          if (viteEnvironmentApi) {
+          if (v8_viteEnvironmentApi) {
             expect(stdout).toContain(viteEnvironmentApiMessage);
           } else {
             expect(stdout).not.toContain(viteEnvironmentApiMessage);
@@ -332,10 +332,10 @@ test.describe("Server bundles", () => {
 
         test("React Router browser manifest", () => {
           let clientAssetFiles = fs.readdirSync(
-            path.join(cwd, "build", "client", "assets")
+            path.join(cwd, "build", "client", "assets"),
           );
           let manifestFiles = clientAssetFiles.filter((filename) =>
-            filename.startsWith("manifest-")
+            filename.startsWith("manifest-"),
           );
 
           expect(manifestFiles.length).toEqual(1);
@@ -350,7 +350,7 @@ test.describe("Server bundles", () => {
             ["server", "root"],
           ].forEach((buildPaths) => {
             let viteManifestFiles = fs.readdirSync(
-              path.join(cwd, "build", ...buildPaths, ".vite")
+              path.join(cwd, "build", ...buildPaths, ".vite"),
             );
             expect(viteManifestFiles).toEqual(["manifest.json"]);
           });

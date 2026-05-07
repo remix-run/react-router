@@ -3,6 +3,7 @@ import * as React from "react";
 import { Scripts, useFrameworkContext } from "./components";
 import type { Location } from "../../router/history";
 import { isRouteErrorResponse } from "../../router/utils";
+import { ENABLE_DEV_WARNINGS } from "../../context";
 
 type RemixErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
@@ -30,7 +31,7 @@ export class RemixErrorBoundary extends React.Component<
 
   static getDerivedStateFromProps(
     props: RemixErrorBoundaryProps,
-    state: RemixErrorBoundaryState
+    state: RemixErrorBoundaryState,
   ) {
     // When we get into an error state, the user will likely click "back" to the
     // previous page that didn't have an error. Because this wraps the entire
@@ -83,7 +84,7 @@ export function RemixRootDefaultErrorBoundary({
       dangerouslySetInnerHTML={{
         __html: `
         console.log(
-          "💿 Hey developer 👋. You can provide a way better UX than this when your app throws errors. Check out https://remix.run/guides/errors for more information."
+          "💿 Hey developer 👋. You can provide a way better UX than this when your app throws errors. Check out https://reactrouter.com/how-to/error-boundary for more information."
         );
       `,
       }}
@@ -96,7 +97,7 @@ export function RemixRootDefaultErrorBoundary({
         <h1 style={{ fontSize: "24px" }}>
           {error.status} {error.statusText}
         </h1>
-        {heyDeveloper}
+        {ENABLE_DEV_WARNINGS ? heyDeveloper : null}
       </BoundaryShell>
     );
   }
@@ -109,8 +110,8 @@ export function RemixRootDefaultErrorBoundary({
       error == null
         ? "Unknown Error"
         : typeof error === "object" && "toString" in error
-        ? error.toString()
-        : JSON.stringify(error);
+          ? error.toString()
+          : JSON.stringify(error);
     errorInstance = new Error(errorString);
   }
 

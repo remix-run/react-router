@@ -1,0 +1,21 @@
+diff --git a/lib/index.js b/lib/index.js
+index ddbf4a0ebac3adb0c6277f4771ce413d8058a367..a412cc138011a53afa222ad7a4ae23d83ea18759 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -80,7 +80,7 @@ export function rollup(options) {
+         ...rest
+       })
+     },
+-    async transform(value, path) {
++    async transform(value, id) {
+       if (!formatAwareProcessors) {
+         formatAwareProcessors = createFormatAwareProcessors({
+           SourceMapGenerator,
+@@ -88,6 +88,7 @@ export function rollup(options) {
+         })
+       }
+ 
++      const [path] = id.split('?')
+       const file = new VFile({path, value})
+ 
+       if (

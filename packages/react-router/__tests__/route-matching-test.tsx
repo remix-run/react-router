@@ -29,7 +29,7 @@ describe("route matching", () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
           renderer = TestRenderer.create(
-            <MemoryRouter initialEntries={[path]} children={routes} />
+            <MemoryRouter initialEntries={[path]} children={routes} />,
           );
         });
 

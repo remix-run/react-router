@@ -105,7 +105,7 @@ The middleware API we landed on to ship looks as follows:
 ```ts
 const myMiddleware: Route.unstable_MiddlewareFunction = async (
   { request, context },
-  next
+  next,
 ) => {
   // Do stuff before the handlers are called
   context.user = await getUser(request);
@@ -125,7 +125,7 @@ export const middleware = [myMiddleware];
 // `clientLoader`/`clientAction`
 const myClientMiddleware: Route.unstable_ClientMiddlewareFunction = (
   { context },
-  next
+  next,
 ) => {
   //...
 };

@@ -15,7 +15,7 @@ describe("useRoutes", () => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/home"]}>
           <RoutesRenderer routes={routes} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -41,7 +41,7 @@ describe("useRoutes", () => {
         renderer = TestRenderer.create(
           <MemoryRouter initialEntries={["/users/mj"]}>
             <RoutesRenderer routes={routes} />
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -64,7 +64,7 @@ describe("useRoutes", () => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/one"]}>
           <RoutesRenderer routes={routes} location={{ pathname: "/two" }} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -90,7 +90,7 @@ describe("useRoutes", () => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/two"]}>
           <NullRenderer routes={routes} />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -124,7 +124,7 @@ describe("useRoutes", () => {
             routes={routes}
             location={{ pathname: "/three", search: "", hash: "" }}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -159,15 +159,15 @@ describe("useRoutes", () => {
         TestRenderer.create(
           <MemoryRouter initialEntries={["/layout"]}>
             <RoutesRenderer routes={routes} />
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Matched leaf route at location "/layout" does not have an element`
-        )
+          `Matched leaf route at location "/layout" does not have an element`,
+        ),
       );
     });
   });

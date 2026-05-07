@@ -1,32 +1,42 @@
 import * as React from "react";
 import type {
   ActionFunction,
-  LoaderFunction,
-  unstable_InitialContext,
-} from "../../router/utils";
-import type {
+  ActionFunctionArgs,
   DataRouteObject,
   IndexRouteObject,
+  LoaderFunction,
+  LoaderFunctionArgs,
+  MiddlewareFunction,
   NonIndexRouteObject,
-} from "../../context";
+} from "../../router/utils";
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
-import { convertRoutesToDataRoutes } from "../../router/utils";
+import {
+  convertRoutesToDataRoutes,
+  RouterContextProvider,
+} from "../../router/utils";
+import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
   FrameworkContextObject,
 } from "./entry";
-import { Outlet, RouterProvider, createMemoryRouter } from "../../components";
+import {
+  Outlet,
+  RouterProvider,
+  createMemoryRouter,
+  withComponentProps,
+  withErrorBoundaryProps,
+  withHydrateFallbackProps,
+} from "../../components";
 import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
 
-interface StubIndexRouteObject
-  extends Omit<
-    IndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
+interface StubRouteExtensions {
+  Component?: React.ComponentType<any>;
+  HydrateFallback?: React.ComponentType<any>;
+  ErrorBoundary?: React.ComponentType<any>;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
@@ -34,17 +44,33 @@ interface StubIndexRouteObject
   links?: LinksFunction;
 }
 
+interface StubIndexRouteObject
+  extends Omit<
+      IndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
+
 interface StubNonIndexRouteObject
   extends Omit<
-    NonIndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
-}
+      NonIndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
 
@@ -86,7 +112,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  unstable_getContext?: () => unstable_InitialContext
+  _context?: AppLoadContext | RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -95,14 +121,15 @@ export function createRoutesStub(
     future,
   }: RoutesTestStubProps) {
     let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let remixContextRef = React.useRef<FrameworkContextObject>();
+    let frameworkContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
-      remixContextRef.current = {
+      frameworkContextRef.current = {
         future: {
-          unstable_subResourceIntegrity:
-            future?.unstable_subResourceIntegrity === true,
-          unstable_middleware: future?.unstable_middleware === true,
+          v8_passThroughRequests: future?.v8_passThroughRequests === true,
+          v8_middleware: future?.v8_middleware === true,
+          unstable_trailingSlashAwareDataRequests:
+            future?.unstable_trailingSlashAwareDataRequests === true,
         },
         manifest: {
           routes: {},
@@ -113,19 +140,24 @@ export function createRoutesStub(
         routeModules: {},
         ssr: false,
         isSpaMode: false,
+        routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
       };
 
       // Update the routes to include context in the loader/action and populate
       // the manifest and routeModules during the walk
       let patched = processRoutes(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
-        // types compared to `AgnosticRouteObject`
+        // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
-        remixContextRef.current.manifest,
-        remixContextRef.current.routeModules
+        _context !== undefined
+          ? _context
+          : future?.v8_middleware
+            ? new RouterContextProvider()
+            : {},
+        frameworkContextRef.current.manifest,
+        frameworkContextRef.current.routeModules,
       );
       routerRef.current = createMemoryRouter(patched, {
-        unstable_getContext,
         initialEntries,
         initialIndex,
         hydrationData,
@@ -133,7 +165,7 @@ export function createRoutesStub(
     }
 
     return (
-      <FrameworkContext.Provider value={remixContextRef.current}>
+      <FrameworkContext.Provider value={frameworkContextRef.current}>
         <RouterProvider router={routerRef.current} />
       </FrameworkContext.Provider>
     );
@@ -142,14 +174,15 @@ export function createRoutesStub(
 
 function processRoutes(
   routes: StubRouteObject[],
+  context: unknown,
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  parentId?: string
+  parentId?: string,
 ): DataRouteObject[] {
   return routes.map((route) => {
     if (!route.id) {
       throw new Error(
-        "Expected a route.id in @remix-run/testing processRoutes() function"
+        "Expected a route.id in react-router processRoutes() function",
       );
     }
 
@@ -157,11 +190,31 @@ function processRoutes(
       id: route.id,
       path: route.path,
       index: route.index,
-      Component: route.Component,
-      HydrateFallback: route.HydrateFallback,
-      ErrorBoundary: route.ErrorBoundary,
-      action: route.action,
-      loader: route.loader,
+      Component: route.Component
+        ? withComponentProps(route.Component)
+        : undefined,
+      HydrateFallback: route.HydrateFallback
+        ? withHydrateFallbackProps(route.HydrateFallback)
+        : undefined,
+      ErrorBoundary: route.ErrorBoundary
+        ? withErrorBoundaryProps(route.ErrorBoundary)
+        : undefined,
+      action: route.action
+        ? (args: ActionFunctionArgs) => route.action!({ ...args, context })
+        : undefined,
+      loader: route.loader
+        ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
+        : undefined,
+      middleware: route.middleware
+        ? route.middleware.map(
+            (mw) =>
+              (...args: Parameters<MiddlewareFunction>) =>
+                mw(
+                  { ...args[0], context: context as RouterContextProvider },
+                  args[1],
+                ),
+          )
+        : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,
     };
@@ -192,8 +245,8 @@ function processRoutes(
 
     // Add the route to routeModules
     routeModules[route.id] = {
-      default: route.Component || Outlet,
-      ErrorBoundary: route.ErrorBoundary || undefined,
+      default: newRoute.Component || Outlet,
+      ErrorBoundary: newRoute.ErrorBoundary || undefined,
       handle: route.handle,
       links: route.links,
       meta: route.meta,
@@ -203,9 +256,10 @@ function processRoutes(
     if (route.children) {
       newRoute.children = processRoutes(
         route.children,
+        context,
         manifest,
         routeModules,
-        newRoute.id
+        newRoute.id,
       );
     }
 

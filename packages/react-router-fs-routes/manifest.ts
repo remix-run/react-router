@@ -15,7 +15,7 @@ export interface RouteManifest {
 
 export function routeManifestToRouteConfig(
   routeManifest: RouteManifest,
-  rootId = "root"
+  rootId = "root",
 ): RouteConfigEntry[] {
   let routeConfigById: {
     [id: string]: Omit<RouteConfigEntry, "id"> &

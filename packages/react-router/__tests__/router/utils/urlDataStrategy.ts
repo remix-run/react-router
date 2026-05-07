@@ -11,14 +11,14 @@ const urlDataStrategy: DataStrategyFunction = async ({ matches }) => {
         let contentType = response.headers.get("Content-Type");
         invariant(
           contentType === "application/x-www-form-urlencoded",
-          "Invalid Response"
+          "Invalid Response",
         );
         results[match.route.id] = {
           type: "data",
           result: new URLSearchParams(await response.text()),
         };
-      })
-    )
+      }),
+    ),
   );
   return results;
 };

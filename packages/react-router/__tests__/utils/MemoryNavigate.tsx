@@ -25,7 +25,7 @@ export default function MemoryNavigate({
         dataRouterContext?.router.navigate(to);
       }
     },
-    [dataRouterContext, to, formMethod, formData]
+    [dataRouterContext, to, formMethod, formData],
   );
 
   // Only prepend the basename to the rendered href, send the non-prefixed `to`

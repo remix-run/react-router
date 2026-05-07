@@ -1,5 +1,6 @@
 ---
 title: Framework Adoption from RouterProvider
+order: 5
 ---
 
 # Framework Adoption from RouterProvider
@@ -13,7 +14,7 @@ The React Router Vite plugin adds framework features to React Router. This guide
 The Vite plugin adds:
 
 - Route loaders, actions, and automatic data revalidation
-- Typesafe Routes Modules
+- Type-safe Routes Modules
 - Automatic route code-splitting
 - Automatic scroll restoration across navigations
 - Optional Static pre-rendering
@@ -283,11 +284,11 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(
-  document.getElementById("root")!
+  document.getElementById("root")!,
 ).render(
   <React.StrictMode>
     <RouterProvider router={router} />;
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
@@ -302,7 +303,7 @@ ReactDOM.hydrateRoot(
   document,
   <React.StrictMode>
     <HydratedRouter />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
@@ -422,7 +423,7 @@ You can checkout [Type Safety][type-safety] to learn how to fully setup and use 
 
 ## Enable SSR and/or Pre-rendering
 
-If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying][deploying] for more information.
+If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server.
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
@@ -436,7 +437,6 @@ export default {
 ```
 
 [upgrade-component-routes]: ./component-routes
-[deploying]: ../start/deploying
 [configuring-routes]: ../start/framework/routing
 [route-modules]: ../start/framework/route-module
 [type-safety]: ../how-to/route-module-type-safety

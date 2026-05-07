@@ -46,7 +46,7 @@ test("Vite / Load context / express", async ({ page }) => {
     waitUntil: "networkidle",
   });
   await expect(page.locator("#index [data-context]")).toHaveText(
-    "Context: value"
+    "Context: value",
   );
   expect(pageErrors).toEqual([]);
 });

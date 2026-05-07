@@ -1,7 +1,7 @@
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from "../router/utils";
 import type {
   AssetsManifest,
@@ -12,6 +12,7 @@ import type {
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
 import type { MiddlewareEnabled } from "../types/future";
+import type { ServerInstrumentation } from "../router/instrumentation";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -37,6 +38,11 @@ export interface ServerBuild {
    */
   isSpaMode: boolean;
   prerender: string[];
+  routeDiscovery: {
+    mode: "lazy" | "initial";
+    manifestPath: string;
+  };
+  allowedActionOrigins?: string[] | false;
 }
 
 export interface HandleDocumentRequestFunction {
@@ -46,19 +52,31 @@ export interface HandleDocumentRequestFunction {
     responseHeaders: Headers,
     context: EntryContext,
     loadContext: MiddlewareEnabled extends true
-      ? unstable_RouterContextProvider
-      : AppLoadContext
+      ? RouterContextProvider
+      : AppLoadContext,
   ): Promise<Response> | Response;
 }
 
 export interface HandleDataRequestFunction {
-  (response: Response, args: LoaderFunctionArgs | ActionFunctionArgs):
-    | Promise<Response>
-    | Response;
+  (
+    response: Response,
+    args: {
+      request: LoaderFunctionArgs["request"] | ActionFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"] | ActionFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
+    },
+  ): Promise<Response> | Response;
 }
 
 export interface HandleErrorFunction {
-  (error: unknown, args: LoaderFunctionArgs | ActionFunctionArgs): void;
+  (
+    error: unknown,
+    args: {
+      request: LoaderFunctionArgs["request"] | ActionFunctionArgs["request"];
+      context: LoaderFunctionArgs["context"] | ActionFunctionArgs["context"];
+      params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
+    },
+  ): void;
 }
 
 /**
@@ -69,5 +87,6 @@ export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
+  instrumentations?: ServerInstrumentation[];
   streamTimeout?: number;
 }

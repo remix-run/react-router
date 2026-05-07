@@ -1,7 +1,5 @@
 /* eslint-disable jest/expect-expect */
 
-import { JSDOM } from "jsdom";
-
 import type { HashHistory } from "../../lib/router/history";
 import { createHashHistory } from "../../lib/router/history";
 
@@ -20,6 +18,7 @@ import EncodedReservedCharacters from "./TestSequences/EncodedReservedCharacters
 import GoBack from "./TestSequences/GoBack";
 import GoForward from "./TestSequences/GoForward";
 import ListenPopOnly from "./TestSequences/ListenPopOnly";
+import getWindow from "../utils/getWindow";
 
 // TODO: Do we still need this?
 // const canGoWithoutReload = window.navigator.userAgent.indexOf('Firefox') === -1;
@@ -27,15 +26,12 @@ import ListenPopOnly from "./TestSequences/ListenPopOnly";
 
 describe("a hash history", () => {
   let history: HashHistory;
-  let dom: JSDOM;
+  let testWindow: Window;
 
   beforeEach(() => {
     // Need to use our own custom DOM in order to get a working history
-    dom = new JSDOM(`<!DOCTYPE html><p>History Example</p>`, {
-      url: "https://example.org/",
-    });
-    dom.window.history.replaceState(null, "", "#/");
-    history = createHashHistory({ window: dom.window as unknown as Window });
+    testWindow = getWindow("/");
+    history = createHashHistory({ window: testWindow });
   });
 
   it("knows how to create hrefs from location objects", () => {
@@ -68,8 +64,8 @@ describe("a hash history", () => {
   it("prefixes raw hash values with /", () => {
     let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
-    dom.window.history.replaceState(null, "", "#hello");
-    history = createHashHistory({ window: dom.window as unknown as Window });
+    testWindow.history.replaceState(null, "", "#hello");
+    history = createHashHistory({ window: testWindow });
     expect(history.location.pathname).toBe("/hello");
 
     history.push("world");
@@ -119,7 +115,7 @@ describe("a hash history", () => {
     });
 
     it("re-throws when using non-serializable state", () => {
-      PushStateInvalid(history, dom.window);
+      PushStateInvalid(history, testWindow);
     });
   });
 

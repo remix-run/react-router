@@ -123,7 +123,7 @@ function useQuizTimer() {
   let cb = useCallback(() => {
     submit(
       { quizTimedOut: true },
-      { action: "/end-quiz", method: "post" }
+      { action: "/end-quiz", method: "post" },
     );
   }, []);
 
@@ -161,7 +161,7 @@ They also have the imperative `submit` method.
 ```tsx
 fetcher.submit(
   { title: "New Title" },
-  { action: "/update-task/123", method: "post" }
+  { action: "/update-task/123", method: "post" },
 );
 ```
 

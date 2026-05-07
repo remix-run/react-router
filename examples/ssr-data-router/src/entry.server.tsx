@@ -10,7 +10,7 @@ import { routes } from "./App";
 
 export async function render(
   request: express.Request,
-  response: express.Response
+  response: express.Response,
 ) {
   let { query, dataRoutes } = createStaticHandler(routes);
   let remixRequest = createFetchRequest(request, response);
@@ -28,13 +28,13 @@ export async function render(
         context={context}
         nonce="the-nonce"
       />
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }
 
 export function createFetchRequest(
   req: express.Request,
-  res: express.Response
+  res: express.Response,
 ): Request {
   let origin = `${req.protocol}://${req.get("host")}`;
   // Note: This had to take originalUrl into account for presumably vite's proxying

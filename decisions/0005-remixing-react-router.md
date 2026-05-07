@@ -204,7 +204,7 @@ function NewErrorBoundary() {
   const error = useRouteError();
 
   if (error instanceof Response) {
-    return <MyOldCatchBoudnary error={error} />;
+    return <MyOldCatchBoundary error={error} />;
   } else {
     return <MyOldErrorBoundary error={error} />;
   }
@@ -283,7 +283,7 @@ If folks still prefer the JSX notation, they can leverage `createRoutesFromEleme
 const routes = createRoutesFromElements(
   <Route path="/" element={<Layout />}>
     <Route index element={<Home />} />
-  </Route>
+  </Route>,
 );
 const router = createBrowserRouter(routes);
 

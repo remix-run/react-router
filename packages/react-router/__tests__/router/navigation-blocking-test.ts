@@ -87,7 +87,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
+          initialEntries[initialIndex],
         );
       });
 
@@ -229,7 +229,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
+          initialEntries[initialIndex],
         );
       });
 
@@ -348,7 +348,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex - 1]
+          initialEntries[initialIndex - 1],
         );
       });
 
@@ -382,7 +382,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
+          initialEntries[initialIndex],
         );
       });
 

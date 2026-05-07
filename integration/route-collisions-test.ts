@@ -61,7 +61,7 @@ test.describe("build failures", () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
     return buildOutput;

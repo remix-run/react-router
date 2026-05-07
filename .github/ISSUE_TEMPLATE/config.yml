@@ -5,7 +5,7 @@ contact_links:
     about: If you've got an idea for a new feature in React Router, please open a new Discussion with the `Proposals` label
   - name: 🤔 Usage Question (Github Discussions)
     url: https://github.com/remix-run/remix/discussions/new?category=q-a
-    about: Open a Discussion in GitHub wih the `Q&A` label
+    about: Open a Discussion in GitHub with the `Q&A` label
   - name: 💬 Remix Discord Channel
     url: https://rmx.as/discord
     about: Interact with other people using React Router and Remix 📀

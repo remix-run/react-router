@@ -77,6 +77,20 @@ describe("cookies", () => {
     expect(value).toBe(null);
   });
 
+  it("fails to parse signed string values with invalid signature encoding", async () => {
+    let cookie = createCookie("my-cookie", {
+      secrets: ["secret1"],
+    });
+    let setCookie = await cookie.serialize("hello michael");
+    let cookie2 = createCookie("my-cookie", {
+      secrets: ["secret2"],
+    });
+    // use characters that are invalid for base64 encoding
+    let value = await cookie2.parse(getCookieFromSetCookie(setCookie) + "%^&");
+
+    expect(value).toBe(null);
+  });
+
   it("parses/serializes signed object values", async () => {
     let cookie = createCookie("my-cookie", {
       secrets: ["secret1"],
@@ -126,7 +140,7 @@ describe("cookies", () => {
     let oldValue = await cookie.parse(getCookieFromSetCookie(setCookie));
     expect(oldValue).toMatchObject(value);
 
-    // New Set-Cookie should be different, it uses a differet secret.
+    // New Set-Cookie should be different, it uses a different secret.
     let setCookie2 = await cookie.serialize(value);
     expect(setCookie).not.toEqual(setCookie2);
   });
@@ -178,7 +192,7 @@ describe("cookies", () => {
       createCookie("my-cookie", { expires: new Date(Date.now() + 60_000) });
       expect(spy.console).toHaveBeenCalledTimes(1);
       expect(spy.console).toHaveBeenCalledWith(
-        'The "my-cookie" cookie has an "expires" property set. This will cause the expires value to not be updated when the session is committed. Instead, you should set the expires value when serializing the cookie. You can use `commitSession(session, { expires })` if using a session storage object, or `cookie.serialize("value", { expires })` if you\'re using the cookie directly.'
+        'The "my-cookie" cookie has an "expires" property set. This will cause the expires value to not be updated when the session is committed. Instead, you should set the expires value when serializing the cookie. You can use `commitSession(session, { expires })` if using a session storage object, or `cookie.serialize("value", { expires })` if you\'re using the cookie directly.',
       );
     });
   });

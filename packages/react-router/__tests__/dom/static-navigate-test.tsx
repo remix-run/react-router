@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOMServer from "react-dom/server";
+import * as ReactDOMServer from "react-dom/server.edge";
 import { Navigate, Routes, Route, StaticRouter } from "../../index";
 
 describe("A <Navigate> in a <StaticRouter>", () => {
@@ -21,11 +21,13 @@ describe("A <Navigate> in a <StaticRouter>", () => {
             element={<Navigate to="/somewhere-else?the=query" />}
           />
         </Routes>
-      </StaticRouter>
+      </StaticRouter>,
     );
 
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringMatching("<Navigate> must not be used on the initial render")
+      expect.stringMatching(
+        "<Navigate> must not be used on the initial render",
+      ),
     );
   });
 });

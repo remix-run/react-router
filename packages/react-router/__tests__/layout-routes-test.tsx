@@ -21,7 +21,7 @@ describe("A layout route", () => {
             </Route>
             <Route index element={<h1>Index</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -56,7 +56,7 @@ describe("A layout route", () => {
               />
             </Route>
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -98,7 +98,7 @@ describe("A layout route", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -139,7 +139,7 @@ describe("A layout route", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -180,7 +180,7 @@ describe("A layout route", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -221,7 +221,7 @@ describe("A layout route", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -262,7 +262,7 @@ describe("A layout route", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 

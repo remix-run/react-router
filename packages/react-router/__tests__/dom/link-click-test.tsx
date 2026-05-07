@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import { MemoryRouter, Routes, Route, Link } from "../../index";
 
 function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {
@@ -43,7 +43,7 @@ describe("A <Link> click", () => {
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -78,7 +78,7 @@ describe("A <Link> click", () => {
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -114,7 +114,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -157,7 +157,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -187,7 +187,7 @@ describe("A <Link> click", () => {
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -229,7 +229,7 @@ describe("A <Link> click", () => {
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -262,7 +262,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -306,7 +306,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -343,7 +343,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -378,7 +378,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -417,7 +417,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -452,7 +452,7 @@ describe("A <Link> click", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 

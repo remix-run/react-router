@@ -130,6 +130,58 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("discovers child routes at a depth >1 when a separate matching param route exists (GET navigation)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          handle: {
+            async lazyChildren() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  handle: {
+                    async lazyChildren() {
+                      await tick();
+                      return [{ id: "c", path: "c" }];
+                    },
+                  },
+                },
+              ];
+            },
+          },
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+      ],
+      async patchRoutesOnNavigation({ patch, matches }) {
+        await tick();
+        const leafRoute = last(matches).route;
+        if (leafRoute.handle?.lazyChildren) {
+          const children = await leafRoute.handle.lazyChildren();
+          patch(leafRoute.id, children);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c");
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
   it("discovers child route at a depth of 1 (POST navigation)", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
     let loaderDfd = createDeferred();
@@ -265,6 +317,61 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         c: "C",
       },
     });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
+  it("discovers child routes at a depth >1 when a separate matching param route exists (POST navigation)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          handle: {
+            async lazyChildren() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  handle: {
+                    async lazyChildren() {
+                      await tick();
+                      return [{ id: "c", path: "c" }];
+                    },
+                  },
+                },
+              ];
+            },
+          },
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+      ],
+      async patchRoutesOnNavigation({ patch, matches }) {
+        await tick();
+        const leafRoute = last(matches).route;
+        if (leafRoute.handle?.lazyChildren) {
+          const children = await leafRoute.handle.lazyChildren();
+          patch(leafRoute.id, children);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c", {
+      formMethod: "POST",
+      formData: createFormData({}),
+    });
+    expect(router.state.location.pathname).toBe("/a/b/c");
     expect(router.state.matches.map((m) => m.route.id)).toEqual([
       "a",
       "b",
@@ -1563,7 +1670,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/parent/junk"'),
-            true
+            true,
           ),
         },
       });
@@ -1622,7 +1729,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/parent/junk"'),
-            true
+            true,
           ),
         },
       });
@@ -2103,6 +2210,91 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
 
+    it("handles errors thrown from patchRoutesOnNavigation() when there are no partial matches (GET navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "a",
+            path: "a",
+          },
+        ],
+        async patchRoutesOnNavigation({ patch }) {
+          await tick();
+          throw new Error("broke!");
+        },
+      });
+
+      await router.navigate("/b");
+      expect(router.state).toMatchObject({
+        // A bit odd but this is a result of our best attempt to display some form
+        // of error UI to the user - follows the same logic we use on 404s
+        matches: [
+          {
+            params: {},
+            pathname: "",
+            pathnameBase: "",
+            route: {
+              children: undefined,
+              hasErrorBoundary: false,
+              id: "a",
+              path: "a",
+            },
+          },
+        ],
+        location: { pathname: "/b" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          a: new Error("broke!"),
+        },
+      });
+    });
+
+    it("handles errors thrown from patchRoutesOnNavigation() when there are no partial matches (POST navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "a",
+            path: "a",
+          },
+        ],
+        async patchRoutesOnNavigation({ patch }) {
+          await tick();
+          throw new Error("broke!");
+        },
+      });
+
+      await router.navigate("/b", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        // A bit odd but this is a result of our best attempt to display some form
+        // of error UI to the user - follows the same logic we use on 404s
+        matches: [
+          {
+            params: {},
+            pathname: "",
+            pathnameBase: "",
+            route: {
+              children: undefined,
+              hasErrorBoundary: false,
+              id: "a",
+              path: "a",
+            },
+          },
+        ],
+        location: { pathname: "/b" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          a: new Error("broke!"),
+        },
+      });
+    });
+
     it("bubbles errors thrown from patchRoutesOnNavigation() during hydration", async () => {
       router = createRouter({
         history: createMemoryHistory({
@@ -2332,6 +2524,93 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       await new Promise((r) => setTimeout(r, 10));
       expect(router.getFetcher(key).state).toBe("idle");
       expect(fetcherData.get(key)).toBe("C ACTION");
+    });
+
+    it("does not include search params in the `path` (fetcher.load)", async () => {
+      let capturedPath;
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+          },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          capturedPath = path;
+          patch("parent", [
+            {
+              id: "child",
+              path: "child",
+              loader: () => "CHILD",
+            },
+          ]);
+        },
+      });
+
+      let key = "key";
+
+      let data;
+      router.subscribe((state) => {
+        if (state.fetchers.has("key")) {
+          data = state.fetchers.get("key")!.data;
+        }
+      });
+
+      router.fetch(key, "0", "/parent/child?a=b");
+      await tick();
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(data).toBe("CHILD");
+      expect(capturedPath).toBe("/parent/child");
+    });
+
+    it("does not include search params in the `path` (fetcher.submit)", async () => {
+      let capturedPath;
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+          },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          capturedPath = path;
+          patch("parent", [
+            {
+              id: "child",
+              path: "child",
+              action: () => "CHILD",
+            },
+          ]);
+        },
+      });
+
+      let key = "key";
+
+      let data;
+      router.subscribe((state) => {
+        if (state.fetchers.has("key")) {
+          data = state.fetchers.get("key")!.data;
+        }
+      });
+
+      router.fetch(key, "0", "/parent/child?a=b", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await tick();
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(data).toBe("CHILD");
+      expect(capturedPath).toBe("/parent/child");
     });
   });
 });

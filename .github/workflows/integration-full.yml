@@ -1,6 +1,6 @@
 name: Branch
 
-# main/dev/release-* branches will get the full run across
+# main/dev branches will get the full run across
 # all OS/browsers for multiple node versions
 
 on:
@@ -8,11 +8,8 @@ on:
     branches:
       - main
       - dev
-      - release-*
-    tags:
-      - "v0.0.0-nightly-*"
     paths-ignore:
-      - ".changeset/**"
+      - "packages/*/.changes/**"
       - "decisions/**"
       - "docs/**"
       - "examples/**"
@@ -34,7 +31,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[20, 22]"
+      node_version: "[20.19, 22]"
       browser: '["chromium", "firefox"]'
 
   integration-windows:
@@ -43,8 +40,9 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "windows-latest"
-      node_version: "[20, 22]"
+      node_version: "[22]"
       browser: '["msedge"]'
+      timeout: 90
 
   integration-macos:
     name: "👀 Integration Test"
@@ -52,5 +50,5 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "macos-latest"
-      node_version: "[20, 22]"
+      node_version: "[20.19, 22]"
       browser: '["webkit"]'

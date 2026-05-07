@@ -6,8 +6,10 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
+  ClientOnErrorFunction,
 } from "react-router";
 import {
+  UNSAFE_getHydrationData as getHydrationData,
   UNSAFE_invariant as invariant,
   UNSAFE_FrameworkContext as FrameworkContext,
   UNSAFE_decodeViaTurboStream as decodeViaTurboStream,
@@ -16,15 +18,16 @@ import {
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
   UNSAFE_deserializeErrors as deserializeErrors,
-  UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
+  UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
-  UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
-  matchRoutes,
 } from "react-router";
+import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
+import type { ClientInstrumentation } from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -55,7 +58,7 @@ function initSsrInfo(): void {
       if (importMap?.textContent) {
         try {
           window.__reactRouterManifest.sri = JSON.parse(
-            importMap.textContent
+            importMap.textContent,
           ).integrity;
         } catch (err) {
           console.error("Failed to parse import map", err);
@@ -75,16 +78,18 @@ function initSsrInfo(): void {
 }
 
 function createHydratedRouter({
-  unstable_getContext,
+  getContext,
+  instrumentations,
 }: {
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
+  instrumentations?: ClientInstrumentation[];
 }): DataRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
     throw new Error(
       "You must be using the SSR features of React Router in order to skip " +
-        "passing a `router` prop to `<RouterProvider>`"
+        "passing a `router` prop to `<RouterProvider>`",
     );
   }
 
@@ -121,13 +126,13 @@ function createHydratedRouter({
     ssrInfo.routeModules,
     ssrInfo.context.state,
     ssrInfo.context.ssr,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
-  let loaderData = ssrInfo.context.state.loaderData;
   // In SPA mode we only hydrate build-time root loader data
   if (ssrInfo.context.isSpaMode) {
+    let { loaderData } = ssrInfo.context.state;
     if (
       ssrInfo.manifest.routes.root?.hasLoader &&
       loaderData &&
@@ -140,51 +145,19 @@ function createHydratedRouter({
       };
     }
   } else {
-    // Create a shallow clone of `loaderData` we can mutate for partial hydration.
-    // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
-    // render the fallback so we need the client to do the same for hydration.
-    // The server loader data has already been exposed to these route `clientLoader`'s
-    // in `createClientRoutes` above, so we need to clear out the version we pass to
-    // `createBrowserRouter` so it initializes and runs the client loaders.
-    hydrationData = {
-      ...ssrInfo.context.state,
-      loaderData: { ...loaderData },
-    };
-    let initialMatches = matchRoutes(
+    hydrationData = getHydrationData({
+      state: ssrInfo.context.state,
       routes,
-      window.location,
-      window.__reactRouterContext?.basename
-    );
-    if (initialMatches) {
-      for (let match of initialMatches) {
-        let routeId = match.route.id;
-        let route = ssrInfo.routeModules[routeId];
-        let manifestRoute = ssrInfo.manifest.routes[routeId];
-        // Clear out the loaderData to avoid rendering the route component when the
-        // route opted into clientLoader hydration and either:
-        // * gave us a HydrateFallback
-        // * or doesn't have a server loader and we have no data to render
-        if (
-          route &&
-          manifestRoute &&
-          shouldHydrateRouteLoader(
-            manifestRoute,
-            route,
-            ssrInfo.context.isSpaMode
-          ) &&
-          (route.HydrateFallback || !manifestRoute.hasLoader)
-        ) {
-          delete hydrationData.loaderData![routeId];
-        } else if (manifestRoute && !manifestRoute.hasLoader) {
-          // Since every Remix route gets a `loader` on the client side to load
-          // the route JS module, we need to add a `null` value to `loaderData`
-          // for any routes that don't have server loaders so our partial
-          // hydration logic doesn't kick off the route module loaders during
-          // hydration
-          hydrationData.loaderData![routeId] = null;
-        }
-      }
-    }
+      getRouteInfo: (routeId) => ({
+        clientLoader: ssrInfo!.routeModules[routeId]?.clientLoader,
+        hasLoader: ssrInfo!.manifest.routes[routeId]?.hasLoader === true,
+        hasHydrateFallback:
+          ssrInfo!.routeModules[routeId]?.HydrateFallback != null,
+      }),
+      location: window.location,
+      basename: window.__reactRouterContext?.basename,
+      isSpaMode: ssrInfo.context.isSpaMode,
+    });
 
     if (hydrationData && hydrationData.errors) {
       // TODO: De-dup this or remove entirely in v7 where single fetch is the
@@ -193,33 +166,49 @@ function createHydratedRouter({
     }
   }
 
+  // We cannot support history-state-driven masking with SSR, so if a hard
+  // reload is performed we remove the mask and hydrate according to the
+  // browser URL
+  if (window.history.state && window.history.state.masked) {
+    window.history.replaceState(
+      { ...window.history.state, masked: undefined },
+      "",
+    );
+  }
+
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    unstable_getContext,
+    getContext,
     hydrationData,
+    hydrationRouteProperties,
+    instrumentations,
     mapRouteProperties,
     future: {
-      unstable_middleware: ssrInfo.context.future.unstable_middleware,
+      v8_passThroughRequests: ssrInfo.context.future.v8_passThroughRequests,
     },
-    dataStrategy: getSingleFetchDataStrategy(
+    dataStrategy: getTurboStreamSingleFetchDataStrategy(
+      () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename,
-      () => router
+      ssrInfo.context.future.unstable_trailingSlashAwareDataRequests,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
+      ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
     ),
   });
+
   ssrInfo.router = router;
 
   // We can call initialize() immediately if the router doesn't have any
@@ -238,40 +227,160 @@ function createHydratedRouter({
   return router;
 }
 
-interface HydratedRouterProps {
+/**
+ * Props for the {@link dom.HydratedRouter} component.
+ *
+ * @category Types
+ */
+export interface HydratedRouterProps {
   /**
-   * Context object to passed through to `createBrowserRouter` and made available
-   * to `clientLoader`/`clientActon` functions
+   * Context factory function to be passed through to {@link createBrowserRouter}.
+   * This function will be called to create a fresh `context` instance on each
+   * navigation/fetch and made available to
+   * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+   * functions.
    */
-  unstable_getContext?: RouterInit["unstable_getContext"];
+  getContext?: RouterInit["getContext"];
+  /**
+   * Array of instrumentation objects allowing you to instrument the router and
+   * individual routes prior to router initialization (and on any subsequently
+   * added routes via `route.lazy` or `patchRoutesOnNavigation`).  This is
+   * mostly useful for observability such as wrapping navigations, fetches,
+   * as well as route loaders/actions/middlewares with logging and/or performance
+   * tracing. See the [docs](../../how-to/instrumentation) for more information.
+   *
+   * ```tsx
+   * const logging = {
+   *   router({ instrument }) {
+   *     instrument({
+   *       navigate: (impl, { to }) => logExecution(`navigate ${to}`, impl),
+   *       fetch: (impl, { to }) => logExecution(`fetch ${to}`, impl)
+   *     });
+   *   },
+   *   route({ instrument, id }) {
+   *     instrument({
+   *       middleware: (impl, { request }) => logExecution(
+   *         `middleware ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       loader: (impl, { request }) => logExecution(
+   *         `loader ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *       action: (impl, { request }) => logExecution(
+   *         `action ${request.url} (route ${id})`,
+   *         impl
+   *       ),
+   *     })
+   *   }
+   * };
+   *
+   * async function logExecution(label: string, impl: () => Promise<void>) {
+   *   let start = performance.now();
+   *   console.log(`start ${label}`);
+   *   await impl();
+   *   let duration = Math.round(performance.now() - start);
+   *   console.log(`end ${label} (${duration}ms)`);
+   * }
+   *
+   * startTransition(() => {
+   *   hydrateRoot(
+   *     document,
+   *     <HydratedRouter instrumentations={[logging]} />
+   *   );
+   * });
+   * ```
+   */
+  instrumentations?: ClientInstrumentation[];
+  /**
+   * An error handler function that will be called for any middleware, loader, action,
+   * or render errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of in the {@link ErrorBoundary} because it's not
+   * subject to re-rendering and will only run one time per error.
+   *
+   * The `errorInfo` parameter is passed along from
+   * [`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
+   * and is only present for render errors.
+   *
+   * ```tsx
+   * <HydratedRouter onError=(error, info) => {
+   *   let { location, params, pattern, errorInfo } = info;
+   *   console.error(error, location, errorInfo);
+   *   reportToErrorService(error, location, errorInfo);
+   * }} />
+   * ```
+   */
+  onError?: ClientOnErrorFunction;
+  /**
+   * Control whether router state updates are internally wrapped in
+   * [`React.startTransition`](https://react.dev/reference/react/startTransition).
+   *
+   * - When left `undefined`, all state updates are wrapped in
+   *   `React.startTransition`
+   *   - This can lead to buggy behaviors if you are wrapping your own
+   *     navigations/fetchers in `startTransition`.
+   * - When set to `true`, {@link Link} and {@link Form} navigations will be wrapped
+   *   in `React.startTransition` and router state changes will be wrapped in
+   *   `React.startTransition` and also sent through
+   *   [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+   *   surface mid-navigation router state changes to the UI.
+   * - When set to `false`, the router will not leverage `React.startTransition` or
+   *   `React.useOptimistic` on any navigations or state changes.
+   *
+   * For more information, please see the [docs](../../explanation/react-transitions).
+   */
+  useTransitions?: boolean;
 }
 
 /**
- * Framework-mode router component to be used in `entry.client.tsx` to hydrate a
- * router from a `ServerRouter`
+ * Framework-mode router component to be used to hydrate a router from a
+ * {@link ServerRouter}. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
  *
- * @category Component Routers
+ * @public
+ * @category Framework Routers
+ * @mode framework
+ * @param props Props
+ * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
+ * @param {dom.HydratedRouterProps.onError} props.onError n/a
+ * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
-      unstable_getContext: props.unstable_getContext,
+      getContext: props.getContext,
+      instrumentations: props.instrumentations,
     });
   }
 
-  // Critical CSS can become stale after code changes, e.g. styles might be
-  // removed from a component, but the styles will still be present in the
-  // server HTML. This allows our HMR logic to clear the critical CSS state.
+  // We only want to show critical CSS in dev for the initial server render to
+  // avoid a flash of unstyled content. Once the client-side JS kicks in, we can
+  // clear it to avoid duplicate styles.
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? ssrInfo?.context.criticalCss
-      : undefined
+      : undefined,
   );
-  if (process.env.NODE_ENV === "development") {
-    if (ssrInfo) {
-      window.__reactRouterClearCriticalCss = () => setCriticalCss(undefined);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      setCriticalCss(undefined);
     }
-  }
+  }, []);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development" && criticalCss === undefined) {
+      // When there's a hydration mismatch, React 19 ignores the server HTML and
+      // re-renders from the root, but it doesn't remove any head tags that
+      // aren't present in the virtual DOM. This means that the original
+      // critical CSS elements are still in the document even though we cleared
+      // them in the effect above. To fix this, this effect is designed to clean
+      // up any leftover elements. If `criticalCss` is undefined in this effect,
+      // this means that React is no longer managing the critical CSS elements,
+      // so if there are any left in the document, these are stale elements from
+      // the original SSR pass and we can safely remove them.
+      document
+        .querySelectorAll(`[${CRITICAL_CSS_DATA_ATTRIBUTE}]`)
+        .forEach((element) => element.remove());
+    }
+  }, [criticalCss]);
 
   let [location, setLocation] = React.useState(router.state.location);
 
@@ -301,7 +410,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.manifest,
     ssrInfo.routeModules,
     ssrInfo.context.ssr,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.routeDiscovery,
+    ssrInfo.context.isSpaMode,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
@@ -320,10 +430,15 @@ export function HydratedRouter(props: HydratedRouterProps) {
           criticalCss,
           ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
+          routeDiscovery: ssrInfo.context.routeDiscovery,
         }}
       >
         <RemixErrorBoundary location={location}>
-          <RouterProvider router={router} />
+          <RouterProvider
+            router={router}
+            useTransitions={props.useTransitions}
+            onError={props.onError}
+          />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>
       {/*

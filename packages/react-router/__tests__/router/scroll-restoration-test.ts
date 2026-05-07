@@ -127,7 +127,7 @@ describe("scroll restoration", () => {
       t.router.enableScrollRestoration(
         positions,
         () => activeScrollPosition,
-        (l) => l.pathname
+        (l) => l.pathname,
       );
 
       let nav1 = await t.navigate("/tasks");
@@ -157,7 +157,7 @@ describe("scroll restoration", () => {
         (l) => {
           pathname = l.pathname;
           return l.pathname;
-        }
+        },
       );
 
       let nav1 = await t.navigate("/tasks");
@@ -189,7 +189,7 @@ describe("scroll restoration", () => {
       t.router.enableScrollRestoration(
         positions,
         () => activeScrollPosition,
-        (l) => l.pathname
+        (l) => l.pathname,
       );
 
       let nav1 = await t.navigate("/tasks", {
@@ -223,7 +223,7 @@ describe("scroll restoration", () => {
       t.router.enableScrollRestoration(
         positions,
         () => activeScrollPosition,
-        (l) => l.pathname
+        (l) => l.pathname,
       );
 
       let nav1 = await t.navigate("/tasks", {
@@ -233,6 +233,46 @@ describe("scroll restoration", () => {
       const nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
       await nav2.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(50);
+      expect(t.router.state.preventScrollReset).toBe(false);
+    });
+
+    it("does not restore scroll on revalidation", async () => {
+      let t = setup({
+        routes: SCROLL_ROUTES,
+        initialEntries: ["/"],
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.preventScrollReset).toBe(false);
+
+      let positions = {};
+
+      // Simulate scrolling to 100 on /
+      let activeScrollPosition = 100;
+      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
+
+      // Revalidate
+      let R = await t.revalidate();
+      await R.loaders.index.resolve("INDEX");
+
+      expect(t.router.state.restoreScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(false);
+
+      // Scroll to 200
+      activeScrollPosition = 200;
+
+      // Go to /tasks
+      let nav1 = await t.navigate("/tasks");
+      await nav1.loaders.tasks.resolve("TASKS");
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.preventScrollReset).toBe(false);
+
+      // Restore on pop back to /
+      let nav2 = await t.navigate(-1);
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      await nav2.loaders.index.resolve("INDEX");
+      expect(t.router.state.restoreScrollPosition).toBe(200);
       expect(t.router.state.preventScrollReset).toBe(false);
     });
   });

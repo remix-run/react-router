@@ -2,7 +2,12 @@ import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
-import type { RouteManifest } from "../../router/utils";
+import type {
+  DataRouteObject,
+  RouteBranch,
+  RouteManifest,
+} from "../../router/utils";
+import type { ServerBuild } from "../../server-runtime/build";
 
 type SerializedError = {
   message: string;
@@ -18,6 +23,7 @@ export interface FrameworkContextObject {
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  routeDiscovery: ServerBuild["routeDiscovery"];
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
@@ -37,13 +43,15 @@ export interface FrameworkContextObject {
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
 export interface EntryContext extends FrameworkContextObject {
+  branches: RouteBranch<DataRouteObject>[];
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
 export interface FutureConfig {
-  unstable_subResourceIntegrity: boolean;
-  unstable_middleware: boolean;
+  v8_passThroughRequests: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
+  v8_middleware: boolean;
 }
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };

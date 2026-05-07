@@ -41,7 +41,7 @@ test.describe(async () => {
   test("Vite / dev / route added", async ({ page, browserName }) => {
     test.skip(
       browserName === "webkit",
-      "Safari caches too aggressively, browser manifest is cached with old routes"
+      "Safari caches too aggressively, browser manifest is cached with old routes",
     );
 
     let pageErrors: Error[] = [];
@@ -61,7 +61,7 @@ test.describe(async () => {
           );
         }
       `,
-      "utf-8"
+      "utf-8",
     );
 
     // client is not notified of new route addition (https://github.com/remix-run/remix/issues/7894)

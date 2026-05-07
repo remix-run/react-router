@@ -42,7 +42,7 @@ export default function App() {
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates
  */
 function useQueryParam<T>(
-  key: string
+  key: string,
 ): [T | undefined, (newQuery: T, options?: NavigateOptions) => void] {
   let [searchParams, setSearchParams] = useSearchParams();
   let paramValue = searchParams.get(key);
@@ -55,7 +55,7 @@ function useQueryParam<T>(
       newSearchParams.set(key, JSURL.stringify(newValue));
       setSearchParams(newSearchParams, options);
     },
-    [key, searchParams, setSearchParams]
+    [key, searchParams, setSearchParams],
   );
 
   return [value, setValue];

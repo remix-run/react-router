@@ -19,7 +19,7 @@ describe("useMatch", () => {
                 <Route path="/home" element={<h1>Home</h1>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -51,7 +51,7 @@ describe("useMatch", () => {
                 <Route path="/home" element={<h1>Home</h1>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -83,7 +83,7 @@ describe("useMatch", () => {
                 <Route path="/home" element={<h1>Home</h1>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -118,7 +118,7 @@ describe("useMatch", () => {
             <Routes>
               <Route path={path} element={<HomePage />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -128,7 +128,7 @@ describe("useMatch", () => {
             <Routes>
               <Route path={path} element={<HomePage />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 

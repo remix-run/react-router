@@ -15,7 +15,7 @@ describe("nested routes with no path", () => {
               </Route>
             </Route>
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -66,7 +66,7 @@ describe("nested /", () => {
               </Route>
             </Route>
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -114,7 +114,7 @@ describe("routes with identical paths", () => {
             <Route path="/home" element={<First />} />
             <Route path="/home" element={<Second />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

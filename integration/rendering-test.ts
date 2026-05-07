@@ -55,7 +55,8 @@ test.describe("rendering", () => {
   test("server renders matching routes", async () => {
     let res = await fixture.requestDocument("/");
     expect(res.status).toBe(200);
-    expect(selectHtml(await res.text(), "#content")).toBe(`<div id="content">
+    expect(await selectHtml(await res.text(), "#content"))
+      .toBe(`<div id="content">
   <h1>Root</h1>
   <h2>Index</h2>
 </div>`);

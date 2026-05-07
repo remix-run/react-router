@@ -103,7 +103,7 @@ describe("Cookie session storage", () => {
     let setCookie = await commitSession(session);
     session = await getSession(
       // Tamper with the session cookie...
-      getCookieFromSetCookie(setCookie).slice(0, -1)
+      getCookieFromSetCookie(setCookie).slice(0, -1),
     );
 
     expect(session.get("user")).toBeUndefined();
@@ -139,7 +139,7 @@ describe("Cookie session storage", () => {
     let session = await getSession();
     let setCookie = await destroySession(session);
     expect(setCookie).toMatchInlineSnapshot(
-      `"__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`
+      `"__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`,
     );
     spy.mockRestore();
   });
@@ -155,7 +155,7 @@ describe("Cookie session storage", () => {
     let session = await getSession();
     let setCookie = await destroySession(session);
     expect(setCookie).toMatchInlineSnapshot(
-      `"__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`
+      `"__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`,
     );
     spy.mockRestore();
   });
@@ -173,7 +173,7 @@ describe("Cookie session storage", () => {
 
       expect(spy.console).toHaveBeenCalledTimes(1);
       expect(spy.console).toHaveBeenCalledWith(
-        'The "__session" cookie has an "expires" property set. This will cause the expires value to not be updated when the session is committed. Instead, you should set the expires value when serializing the cookie. You can use `commitSession(session, { expires })` if using a session storage object, or `cookie.serialize("value", { expires })` if you\'re using the cookie directly.'
+        'The "__session" cookie has an "expires" property set. This will cause the expires value to not be updated when the session is committed. Instead, you should set the expires value when serializing the cookie. You can use `commitSession(session, { expires })` if using a session storage object, or `cookie.serialize("value", { expires })` if you\'re using the cookie directly.',
       );
     });
 
@@ -182,7 +182,7 @@ describe("Cookie session storage", () => {
 
       expect(spy.console).toHaveBeenCalledTimes(1);
       expect(spy.console).toHaveBeenCalledWith(
-        'The "__session" cookie is not signed, but session cookies should be signed to prevent tampering on the client before they are sent back to the server. See https://remix.run/utils/cookies#signing-cookies for more information.'
+        'The "__session" cookie is not signed, but session cookies should be signed to prevent tampering on the client before they are sent back to the server. See https://reactrouter.com/explanation/sessions-and-cookies#signing-cookies for more information.',
       );
     });
   });

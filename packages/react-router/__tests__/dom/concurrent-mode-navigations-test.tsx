@@ -17,9 +17,9 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { JSDOM } from "jsdom";
 import { createDeferred } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
+import getWindow from "../utils/getWindow";
 
 describe("Handles concurrent mode features during navigations", () => {
   function getComponents() {
@@ -74,7 +74,7 @@ describe("Handles concurrent mode features during navigations", () => {
     async function assertNavigation(
       container: HTMLElement,
       resolve: () => void,
-      resolveLazy: () => void
+      resolveLazy: () => void,
     ) {
       // Start on home
       expect(getHtml(container)).toMatch("Home");
@@ -137,7 +137,7 @@ describe("Handles concurrent mode features during navigations", () => {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       await assertNavigation(container, resolve, resolveLazy);
@@ -149,7 +149,7 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <BrowserRouter window={getWindowImpl("/", false)}>
+        <BrowserRouter window={getWindow("/", false)}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -169,7 +169,7 @@ describe("Handles concurrent mode features during navigations", () => {
               }
             />
           </Routes>
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       await assertNavigation(container, resolve, resolveLazy);
@@ -181,7 +181,7 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <HashRouter window={getWindowImpl("/", true)}>
+        <HashRouter window={getWindow("/", true)}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -201,7 +201,7 @@ describe("Handles concurrent mode features during navigations", () => {
               }
             />
           </Routes>
-        </HashRouter>
+        </HashRouter>,
       );
 
       await assertNavigation(container, resolve, resolveLazy);
@@ -232,8 +232,8 @@ describe("Handles concurrent mode features during navigations", () => {
                 </React.Suspense>
               }
             />
-          </>
-        )
+          </>,
+        ),
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -245,7 +245,7 @@ describe("Handles concurrent mode features during navigations", () => {
     async function assertNavigation(
       container: HTMLElement,
       resolve: () => void,
-      resolveLazy: () => void
+      resolveLazy: () => void,
     ) {
       // Start on home
       expect(getHtml(container)).toMatch("Home");
@@ -294,7 +294,7 @@ describe("Handles concurrent mode features during navigations", () => {
             <Route path="/about" element={<About />} />
             <Route path="/lazy" element={<LazyComponent />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       await assertNavigation(container, resolve, resolveLazy);
@@ -306,13 +306,13 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <BrowserRouter window-={getWindowImpl("/", true)}>
+        <BrowserRouter window-={getWindow("/", true)}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/lazy" element={<LazyComponent />} />
           </Routes>
-        </BrowserRouter>
+        </BrowserRouter>,
       );
 
       await assertNavigation(container, resolve, resolveLazy);
@@ -324,13 +324,13 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <HashRouter window-={getWindowImpl("/", true)}>
+        <HashRouter window-={getWindow("/", true)}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/lazy" element={<LazyComponent />} />
           </Routes>
-        </HashRouter>
+        </HashRouter>,
       );
 
       await assertNavigation(container, resolve, resolveLazy);
@@ -347,8 +347,8 @@ describe("Handles concurrent mode features during navigations", () => {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/lazy" element={<LazyComponent />} />
-          </>
-        )
+          </>,
+        ),
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -356,10 +356,3 @@ describe("Handles concurrent mode features during navigations", () => {
     });
   });
 });
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
-}

@@ -1,4 +1,5 @@
 import * as React from "react";
+import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   Link,
@@ -6,8 +7,7 @@ import {
   createBrowserRouter,
   unstable_usePrompt as usePrompt,
 } from "../../index";
-import "@testing-library/jest-dom";
-import { JSDOM } from "jsdom";
+import getWindow from "../utils/getWindow";
 
 describe("usePrompt", () => {
   afterEach(() => {
@@ -16,7 +16,7 @@ describe("usePrompt", () => {
 
   describe("when navigation is blocked", () => {
     it("shows window.confirm and blocks navigation when it returns false", async () => {
-      let testWindow = getWindowImpl("/");
+      let testWindow = getWindow("/");
       const windowConfirmMock = jest
         .spyOn(window, "confirm")
         .mockImplementationOnce(() => false);
@@ -35,7 +35,7 @@ describe("usePrompt", () => {
             Component: () => <h1>Arbitrary</h1>,
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
 
       render(<RouterProvider router={router} />);
@@ -49,7 +49,7 @@ describe("usePrompt", () => {
     });
 
     it("shows window.confirm and navigates when it returns true", async () => {
-      let testWindow = getWindowImpl("/");
+      let testWindow = getWindow("/");
       const windowConfirmMock = jest
         .spyOn(window, "confirm")
         .mockImplementationOnce(() => true);
@@ -68,7 +68,7 @@ describe("usePrompt", () => {
             Component: () => <h1>Arbitrary</h1>,
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
 
       render(<RouterProvider router={router} />);
@@ -84,7 +84,7 @@ describe("usePrompt", () => {
 
   describe("when navigation is not blocked", () => {
     it("navigates without showing window.confirm", async () => {
-      let testWindow = getWindowImpl("/");
+      let testWindow = getWindow("/");
       const windowConfirmMock = jest
         .spyOn(window, "confirm")
         .mockImplementation(() => true);
@@ -103,7 +103,7 @@ describe("usePrompt", () => {
             Component: () => <h1>Arbitrary</h1>,
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
 
       render(<RouterProvider router={router} />);
@@ -117,10 +117,3 @@ describe("usePrompt", () => {
     });
   });
 });
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
-}

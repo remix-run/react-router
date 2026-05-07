@@ -13,7 +13,7 @@ hydrate();
 async function hydrate() {
   // Determine if any of the initial routes are lazy
   let lazyMatches = matchRoutes(routes, window.location)?.filter(
-    (m) => m.route.lazy
+    (m) => m.route.lazy,
   );
 
   // Load the lazy matches and update the routes before creating your router
@@ -23,7 +23,7 @@ async function hydrate() {
       lazyMatches.map(async (m) => {
         let routeModule = await m.route.lazy!();
         Object.assign(m.route, { ...routeModule, lazy: undefined });
-      })
+      }),
     );
   }
 
@@ -33,6 +33,6 @@ async function hydrate() {
     document.getElementById("app")!,
     <React.StrictMode>
       <RouterProvider router={router} fallbackElement={null} />
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }

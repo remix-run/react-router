@@ -12,8 +12,8 @@ describe("creating routes from JSX", () => {
             <Route index element={<h1>users index</h1>} />
             <Route path=":id" element={<h1>user profile</h1>} />
           </Route>
-        </Route>
-      )
+        </Route>,
+      ),
     ).toMatchInlineSnapshot(`
       [
         {
@@ -40,6 +40,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "lazy": undefined,
               "loader": undefined,
+              "middleware": undefined,
               "path": "home",
               "shouldRevalidate": undefined,
             },
@@ -60,6 +61,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "lazy": undefined,
               "loader": undefined,
+              "middleware": undefined,
               "path": "about",
               "shouldRevalidate": undefined,
             },
@@ -87,6 +89,7 @@ describe("creating routes from JSX", () => {
                   "index": true,
                   "lazy": undefined,
                   "loader": undefined,
+                  "middleware": undefined,
                   "path": undefined,
                   "shouldRevalidate": undefined,
                 },
@@ -107,6 +110,7 @@ describe("creating routes from JSX", () => {
                   "index": undefined,
                   "lazy": undefined,
                   "loader": undefined,
+                  "middleware": undefined,
                   "path": ":id",
                   "shouldRevalidate": undefined,
                 },
@@ -120,6 +124,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "lazy": undefined,
               "loader": undefined,
+              "middleware": undefined,
               "path": "users",
               "shouldRevalidate": undefined,
             },
@@ -133,6 +138,7 @@ describe("creating routes from JSX", () => {
           "index": undefined,
           "lazy": undefined,
           "loader": undefined,
+          "middleware": undefined,
           "path": "/",
           "shouldRevalidate": undefined,
         },
@@ -158,8 +164,8 @@ describe("creating routes from JSX", () => {
               element={<h1>users index</h1>}
             />
           </Route>
-        </Route>
-      )
+        </Route>,
+      ),
     ).toMatchInlineSnapshot(`
       [
         {
@@ -186,6 +192,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "lazy": undefined,
               "loader": [Function],
+              "middleware": undefined,
               "path": "home",
               "shouldRevalidate": [Function],
             },
@@ -213,6 +220,7 @@ describe("creating routes from JSX", () => {
                   "index": true,
                   "lazy": undefined,
                   "loader": undefined,
+                  "middleware": undefined,
                   "path": undefined,
                   "shouldRevalidate": undefined,
                 },
@@ -226,6 +234,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "lazy": undefined,
               "loader": undefined,
+              "middleware": undefined,
               "path": "users",
               "shouldRevalidate": undefined,
             },
@@ -241,6 +250,7 @@ describe("creating routes from JSX", () => {
           "index": undefined,
           "lazy": undefined,
           "loader": undefined,
+          "middleware": undefined,
           "path": "/",
           "shouldRevalidate": undefined,
         },
@@ -256,7 +266,7 @@ describe("creating routes from JSX", () => {
           <Route index>
             <Route path="users" />
           </Route>
-        </Route>
+        </Route>,
       );
     }).toThrow("An index route cannot have child routes.");
   });
@@ -275,8 +285,8 @@ describe("creating routes from JSX", () => {
             </Route>
             <Route path="b" />
           </>
-        </Route>
-      )
+        </Route>,
+      ),
     ).toEqual([
       {
         id: "0",

@@ -40,7 +40,7 @@ async function createServer() {
     try {
       let html = await fsp.readFile(
         path.join(__dirname, htmlFileToLoad),
-        "utf8"
+        "utf8",
       );
 
       if (!isProduction) {

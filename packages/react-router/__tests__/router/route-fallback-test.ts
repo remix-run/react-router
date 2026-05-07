@@ -13,7 +13,7 @@ interface CustomMatchers<R = jest.Expect> {
   deferredData(
     done: boolean,
     status?: number,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): R;
 }
 

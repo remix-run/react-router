@@ -1,97 +1,160 @@
-name: 🦋 Changesets Release
+# We use this singular file for all of our releases because we can only specify
+# a singular GitHub workflow file in npm's Trusted Publishing configuration.
+# See https://docs.npmjs.com/trusted-publishers for more info.
+#
+# Specific jobs only run on the proper trigger:
+#
+# - Change file driven stable releases (push to release/hotfix branches)
+# - Experimental releases (from a workflow_dispatch trigger)
+
+name: 🚢 Release/Publish
+
 on:
   push:
     branches:
-      - release
-      - "release-*"
-      - "!release-experimental"
-      - "!release-experimental-*"
-      - "!release-manual"
-      - "!release-manual-*"
+      - "release"
+      - "hotfix"
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
+        description: Experimental release branch
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  release:
-    name: 🦋 Changesets Release
-    if: github.repository == 'remix-run/react-router'
+  check:
+    name: Check release readiness
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
-      published_packages: ${{ steps.changesets.outputs.publishedPackages }}
-      published: ${{ steps.changesets.outputs.published }}
+      has_change_files: ${{ steps.check.outputs.has_change_files }}
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check for change files
+        id: check
+        run: |
+          # Look for change files in any package's .changes directory (excluding README.md)
+          change_files=$(find packages/*/.changes -name "*.md" ! -name "README.md" 2>/dev/null)
+          if [ -n "$change_files" ]; then
+            echo "Change files found (blocking publish):"
+            echo "$change_files"
+            echo "has_change_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "No change files found, proceeding to publish."
+            echo "has_change_files=false" >> $GITHUB_OUTPUT
+          fi
+
+  pull_request:
+    name: Open pull request
+    needs: check
+    if: needs.check.outputs.has_change_files == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # enable pushing changes to the origin
+      pull-requests: write # enable opening a PR for the release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ secrets.FORMAT_PAT }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24 # Needed to run typescript scripts directly
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Update PR
+        run: pnpm changes:pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.FORMAT_PAT }}
+
+  publish:
+    name: Publish
+    needs: check
+    if: needs.check.outputs.has_change_files == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version-file: ".nvmrc"
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
           cache: "pnpm"
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🔐 Setup npm auth
-        run: |
-          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+      - name: Build packages
+        run: pnpm build
 
-        # This action has two responsibilities. The first time the workflow runs
-        # (initial push to a `release-*` branch) it will create a new branch and
-        # then open a PR with the related changes for the new version. After the
-        # PR is merged, the workflow will run again and this action will build +
-        # publish to npm.
-      - name: 🚀 PR / Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm run changeset:version
-          commit: "chore: Update version for release"
-          title: "chore: Update version for release"
-          publish: pnpm run release
-          createGithubReleases: false
+      - name: Publish to npm and create releases
+        run: pnpm changes:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  find_package_version:
-    name: 🦋 Find Package
-    needs: [release]
-    runs-on: ubuntu-latest
-    if: github.repository == 'remix-run/react-router' && github.ref_name != 'release-v6' && needs.release.outputs.published == 'true'
-    outputs:
-      package_version: ${{ steps.find_package_version.outputs.package_version }}
-    steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - id: find_package_version
-        run: |
-          package_version=$(node ./scripts/find-release-from-changeset.js)
-          echo "package_version=${package_version}" >> $GITHUB_OUTPUT
-        env:
-          PACKAGE_VERSION_TO_FOLLOW: "react-router"
-          PUBLISHED_PACKAGES: ${{ needs.release.outputs.published_packages }}
 
   comment:
-    name: 📝 Comment on related issues and pull requests
-    if: github.repository == 'remix-run/react-router' && github.ref_name != 'release-v6' && needs.find_package_version.outputs.package_version != ''
-    needs: [release, find_package_version]
+    name: 📝 Comment on released issues/pull requests
+    needs: publish
     uses: ./.github/workflows/release-comments.yml
+
+  experimental-release:
+    name: 🧪 Experimental Release
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          # checkout using a custom token so that we can push later on
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: ⤴️ Update version
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+          pnpm run experimental:version
+          git push origin --tags
+
+      - name: 🏗 Build
+        run: pnpm build
+
+      - name: 🚀 Publish
+        run: pnpm run experimental:publish

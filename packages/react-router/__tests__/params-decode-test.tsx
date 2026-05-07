@@ -22,7 +22,7 @@ describe("Decoding params", () => {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

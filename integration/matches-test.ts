@@ -109,6 +109,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "ROOT",
+    "loaderData": "ROOT",
     "handle": {
       "stuff": "root handle"
     }
@@ -118,6 +119,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "INDEX",
+    "loaderData": "INDEX",
     "handle": {
       "stuff": "index handle"
     }
@@ -135,6 +137,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "ROOT",
+    "loaderData": "ROOT",
     "handle": {
       "stuff": "root handle"
     }
@@ -144,6 +147,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "INDEX",
+    "loaderData": "INDEX",
     "handle": {
       "stuff": "index handle"
     }
@@ -164,6 +168,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "ROOT",
+    "loaderData": "ROOT",
     "handle": {
       "stuff": "root handle"
     }
@@ -173,6 +178,7 @@ test.describe("useMatches", () => {
     "pathname": "/about",
     "params": {},
     "data": "ABOUT",
+    "loaderData": "ABOUT",
     "handle": {
       "stuff": "about handle"
     }

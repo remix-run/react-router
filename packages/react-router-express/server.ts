@@ -7,7 +7,7 @@ import type {
   AppLoadContext,
   ServerBuild,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  unstable_InitialContext,
+  RouterContextProvider,
 } from "react-router";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import {
@@ -27,15 +27,15 @@ type MaybePromise<T> = T | Promise<T>;
  */
 export type GetLoadContextFunction = (
   req: express.Request,
-  res: express.Response
+  res: express.Response,
 ) => MiddlewareEnabled extends true
-  ? MaybePromise<unstable_InitialContext>
+  ? MaybePromise<RouterContextProvider>
   : MaybePromise<AppLoadContext>;
 
 export type RequestHandler = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => Promise<void>;
 
 /**
@@ -55,7 +55,7 @@ export function createRequestHandler({
   return async (
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     try {
       let request = createRemixRequest(req, res);
@@ -73,7 +73,7 @@ export function createRequestHandler({
 }
 
 export function createRemixHeaders(
-  requestHeaders: express.Request["headers"]
+  requestHeaders: express.Request["headers"],
 ): Headers {
   let headers = new Headers();
 
@@ -94,7 +94,7 @@ export function createRemixHeaders(
 
 export function createRemixRequest(
   req: express.Request,
-  res: express.Response
+  res: express.Response,
 ): Request {
   // req.hostname doesn't include port information so grab that from
   // `X-Forwarded-Host` or `Host`
@@ -105,8 +105,8 @@ export function createRemixRequest(
   let port = Number.isSafeInteger(hostnamePort)
     ? hostnamePort
     : Number.isSafeInteger(hostPort)
-    ? hostPort
-    : "";
+      ? hostPort
+      : "";
   // Use req.hostname here as it respects the "trust proxy" setting
   let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
   // Use `req.originalUrl` so Remix is aware of the full path
@@ -137,7 +137,7 @@ export function createRemixRequest(
 
 export async function sendRemixResponse(
   res: express.Response,
-  nodeResponse: Response
+  nodeResponse: Response,
 ): Promise<void> {
   res.statusMessage = nodeResponse.statusText;
   res.status(nodeResponse.status);

@@ -759,9 +759,9 @@ describe("submissions", () => {
             "Method Not Allowed",
             new Error(
               'You made a POST request to "/child" but did not provide an ' +
-                '`action` for route "child", so there is no way to handle the request.'
+                '`action` for route "child", so there is no way to handle the request.',
             ),
-            true
+            true,
           ),
         });
         spy.mockReset();
@@ -820,9 +820,9 @@ describe("submissions", () => {
             new Error(
               'You made a POST request to "/child/grandchild" but did not ' +
                 'provide an `action` for route "grandchild", so there is no way ' +
-                "to handle the request."
+                "to handle the request.",
             ),
-            true
+            true,
           ),
         });
       });
@@ -925,7 +925,7 @@ describe("submissions", () => {
   describe("submission encTypes", () => {
     async function validateFormDataSubmission(
       body: any,
-      includeFormEncType: boolean
+      includeFormEncType: boolean,
     ) {
       let t = setup({
         routes: [{ id: "root", path: "/", action: true }],
@@ -948,6 +948,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -955,7 +957,7 @@ describe("submissions", () => {
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       let fd = await request.formData();
       expect(fd.get("a")).toBe("1");
@@ -982,6 +984,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1014,6 +1018,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1048,7 +1054,7 @@ describe("submissions", () => {
           ["a", "1"],
           ["b", "2"],
         ],
-        false
+        false,
       );
     });
 
@@ -1074,7 +1080,7 @@ describe("submissions", () => {
           ["a", "1"],
           ["b", "2"],
         ],
-        true
+        true,
       );
     });
 
@@ -1118,6 +1124,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1125,7 +1133,7 @@ describe("submissions", () => {
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "text/plain;charset=UTF-8"
+        "text/plain;charset=UTF-8",
       );
       expect(await request.text()).toEqual(body);
     });
@@ -1156,6 +1164,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1163,7 +1173,7 @@ describe("submissions", () => {
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "text/plain;charset=UTF-8"
+        "text/plain;charset=UTF-8",
       );
       expect(await request.text()).toMatchInlineSnapshot(`
       "a=1
@@ -1191,6 +1201,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1198,7 +1210,7 @@ describe("submissions", () => {
       expect(request.method).toBe("POST");
       expect((await request.formData()).get("a")).toBe("1");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
     });
 

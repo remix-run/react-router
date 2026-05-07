@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import {
   Routes,
   Route,
@@ -8,8 +9,6 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Dialog } from "@reach/dialog";
-import "@reach/dialog/styles.css";
 
 import { IMAGES, getImageById } from "./images";
 
@@ -227,4 +226,125 @@ function NoMatch() {
       </p>
     </div>
   );
+}
+
+type DialogProps = {
+  children: React.ReactNode;
+  onDismiss: () => void;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  initialFocusRef?: React.RefObject<HTMLElement>;
+};
+
+function Dialog({
+  children,
+  onDismiss,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
+  initialFocusRef,
+}: DialogProps) {
+  let overlayRef = React.useRef<HTMLDivElement>(null);
+  let contentRef = React.useRef<HTMLDivElement>(null);
+  let previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+
+    let focusTarget = initialFocusRef?.current ?? contentRef.current;
+    if (focusTarget) {
+      focusTarget.focus();
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onDismiss();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        let container = contentRef.current;
+        if (!container) return;
+
+        let focusable = getFocusableElements(container);
+        if (focusable.length === 0) {
+          event.preventDefault();
+          container.focus();
+          return;
+        }
+
+        let activeElement = document.activeElement as HTMLElement | null;
+        let currentIndex = focusable.indexOf(activeElement ?? focusable[0]);
+
+        let nextIndex = currentIndex;
+        if (event.shiftKey) {
+          nextIndex =
+            currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1;
+        } else {
+          nextIndex =
+            currentIndex === focusable.length - 1 ? 0 : currentIndex + 1;
+        }
+
+        event.preventDefault();
+        focusable[nextIndex].focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [initialFocusRef, onDismiss]);
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onDismiss();
+        }
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0, 0, 0, 0.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        ref={contentRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledby}
+        tabIndex={-1}
+        style={{
+          background: "white",
+          borderRadius: "12px",
+          maxWidth: "min(480px, 100%)",
+          width: "100%",
+          padding: "24px",
+          boxShadow:
+            "0 20px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.06)",
+        }}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function getFocusableElements(container: HTMLElement) {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]',
+    ),
+  ).filter((element) => !element.hasAttribute("disabled"));
 }

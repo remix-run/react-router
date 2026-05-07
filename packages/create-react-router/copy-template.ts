@@ -21,7 +21,7 @@ function agent(url: string) {
 export async function copyTemplate(
   template: string,
   destPath: string,
-  options: CopyTemplateOptions
+  options: CopyTemplateOptions,
 ): Promise<{ localTemplateDirectory: string } | undefined> {
   let { log = () => {} } = options;
 
@@ -64,8 +64,8 @@ export async function copyTemplate(
 
     throw new CopyTemplateError(
       `"${color.bold(template)}" is an invalid template. Run ${color.bold(
-        "create-react-router --help"
-      )} to see supported template formats.`
+        "create-react-router --help",
+      )} to see supported template formats.`,
     );
   } catch (error) {
     await options.onError(error);
@@ -84,7 +84,7 @@ function isLocalFilePath(input: string): boolean {
     return (
       input.startsWith("file://") ||
       fs.existsSync(
-        path.isAbsolute(input) ? input : path.resolve(process.cwd(), input)
+        path.isAbsolute(input) ? input : path.resolve(process.cwd(), input),
       )
     );
   } catch (_) {
@@ -95,7 +95,7 @@ function isLocalFilePath(input: string): boolean {
 async function copyTemplateFromRemoteTarball(
   url: string,
   destPath: string,
-  options: CopyTemplateOptions
+  options: CopyTemplateOptions,
 ) {
   return await downloadAndExtractTarball(destPath, url, options);
 }
@@ -103,7 +103,7 @@ async function copyTemplateFromRemoteTarball(
 async function copyTemplateFromGithubRepoShorthand(
   repoShorthand: string,
   destPath: string,
-  options: CopyTemplateOptions
+  options: CopyTemplateOptions,
 ) {
   let [owner, name, ...path] = repoShorthand.split("/");
   let filePath = path.length ? path.join("/") : null;
@@ -111,14 +111,14 @@ async function copyTemplateFromGithubRepoShorthand(
   await downloadAndExtractRepoTarball(
     { owner, name, filePath },
     destPath,
-    options
+    options,
   );
 }
 
 async function copyTemplateFromGithubRepoUrl(
   repoUrl: string,
   destPath: string,
-  options: CopyTemplateOptions
+  options: CopyTemplateOptions,
 ) {
   await downloadAndExtractRepoTarball(getRepoInfo(repoUrl), destPath, options);
 }
@@ -126,14 +126,14 @@ async function copyTemplateFromGithubRepoUrl(
 async function copyTemplateFromGenericUrl(
   url: string,
   destPath: string,
-  options: CopyTemplateOptions
+  options: CopyTemplateOptions,
 ) {
   await copyTemplateFromRemoteTarball(url, destPath, options);
 }
 
 async function copyTemplateFromLocalFilePath(
   filePath: string,
-  destPath: string
+  destPath: string,
 ): Promise<boolean> {
   if (filePath.endsWith(".tar.gz") || filePath.endsWith(".tgz")) {
     await extractLocalTarball(filePath, destPath);
@@ -146,7 +146,7 @@ async function copyTemplateFromLocalFilePath(
     return true;
   }
   throw new CopyTemplateError(
-    "The provided template is not a valid local directory or tarball."
+    "The provided template is not a valid local directory or tarball.",
   );
 }
 
@@ -154,20 +154,20 @@ const pipeline = promisify(stream.pipeline);
 
 async function extractLocalTarball(
   tarballPath: string,
-  destPath: string
+  destPath: string,
 ): Promise<void> {
   try {
     await pipeline(
       fs.createReadStream(tarballPath),
       gunzip(),
-      tar.extract(destPath, { strip: 1 })
+      tar.extract(destPath, { strip: 1 }),
     );
   } catch (error: unknown) {
     throw new CopyTemplateError(
       "There was a problem extracting the file from the provided template." +
         `  Template filepath: \`${tarballPath}\`` +
         `  Destination directory: \`${destPath}\`` +
-        `  ${error}`
+        `  ${error}`,
     );
   }
 }
@@ -181,7 +181,7 @@ interface TarballDownloadOptions {
 async function downloadAndExtractRepoTarball(
   repo: RepoInfo,
   destPath: string,
-  options: TarballDownloadOptions
+  options: TarballDownloadOptions,
 ) {
   // If we have a direct file path we will also have the branch. We can skip the
   // redirect and get the tarball URL directly.
@@ -215,7 +215,7 @@ interface DownloadAndExtractTarballOptions {
 async function downloadAndExtractTarball(
   downloadPath: string,
   tarballUrl: string,
-  { token, filePath }: DownloadAndExtractTarballOptions
+  { token, filePath }: DownloadAndExtractTarballOptions,
 ): Promise<void> {
   let resourceUrl = tarballUrl;
   let headers: HeadersInit = {};
@@ -242,7 +242,7 @@ async function downloadAndExtractTarball(
     if (response.status !== 200) {
       throw new CopyTemplateError(
         "There was a problem fetching the file from GitHub. The request " +
-          `responded with a ${response.status} status. Please try again later.`
+          `responded with a ${response.status} status. Please try again later.`,
       );
     }
 
@@ -255,7 +255,7 @@ async function downloadAndExtractTarball(
     ) {
       throw new CopyTemplateError(
         "There was a problem fetching the file from GitHub. No asset was " +
-          "found at that url. Please try again later."
+          "found at that url. Please try again later.",
       );
     }
 
@@ -268,7 +268,7 @@ async function downloadAndExtractTarball(
     if (assetId == null) {
       throw new CopyTemplateError(
         "There was a problem fetching the file from GitHub. No asset was " +
-          "found at that url. Please try again later."
+          "found at that url. Please try again later.",
       );
     }
     resourceUrl = `https://api.github.com/repos/${info.owner}/${info.name}/releases/assets/${assetId}`;
@@ -286,14 +286,14 @@ async function downloadAndExtractTarball(
           isGithubUrl ? " from GitHub" : ""
         }. The request ` +
           `responded with a ${response.status} status. Perhaps your \`--token\`` +
-          "is expired or invalid."
+          "is expired or invalid.",
       );
     }
     throw new CopyTemplateError(
       `There was a problem fetching the file${
         isGithubUrl ? " from GitHub" : ""
       }. The request ` +
-        `responded with a ${response.status} status. Please try again later.`
+        `responded with a ${response.status} status. Please try again later.`,
     );
   }
 
@@ -341,13 +341,13 @@ async function downloadAndExtractTarball(
           }
           return header.name === "__IGNORE__";
         },
-      })
+      }),
     );
   } catch (_) {
     throw new CopyTemplateError(
       "There was a problem extracting the file from the provided template." +
         `  Template URL: \`${tarballUrl}\`` +
-        `  Destination directory: \`${downloadPath}\``
+        `  Destination directory: \`${downloadPath}\``,
     );
   }
 
@@ -355,7 +355,7 @@ async function downloadAndExtractTarball(
     throw new CopyTemplateError(
       `The path "${filePath}" was not found in this ${
         isGithubUrl ? "GitHub repo." : "tarball."
-      }`
+      }`,
     );
   }
 }
@@ -363,7 +363,7 @@ async function downloadAndExtractTarball(
 // Copied from react-router-node/stream.ts
 async function writeReadableStreamToWritable(
   stream: ReadableStream,
-  writable: stream.Writable
+  writable: stream.Writable,
 ) {
   let reader = stream.getReader();
   let flushable = writable as { flush?: Function };
@@ -389,7 +389,7 @@ async function writeReadableStreamToWritable(
 }
 
 function isValidGithubRepoUrl(
-  input: string | URL
+  input: string | URL,
 ): input is URL | GithubUrlString {
   if (!isUrl(input)) {
     return false;
@@ -471,7 +471,7 @@ function getRepoInfo(validatedGithubUrl: string): RepoInfo {
     Name: string,
     Tree: string | undefined,
     Branch: string | undefined,
-    FileInfo: string | undefined
+    FileInfo: string | undefined,
   ];
   let filePath = file.join("/");
 

@@ -25,7 +25,7 @@ describe("greedy matching", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/"]} children={routes} />
+        <MemoryRouter initialEntries={["/"]} children={routes} />,
       );
     });
 
@@ -40,7 +40,7 @@ describe("greedy matching", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/home"]} children={routes} />
+        <MemoryRouter initialEntries={["/home"]} children={routes} />,
       );
     });
 
@@ -58,7 +58,7 @@ describe("greedy matching", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/home/typo"]} children={routes} />
+        <MemoryRouter initialEntries={["/home/typo"]} children={routes} />,
       );
     });
 
@@ -76,7 +76,7 @@ describe("greedy matching", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/hometypo"]} children={routes} />
+        <MemoryRouter initialEntries={["/hometypo"]} children={routes} />,
       );
     });
 

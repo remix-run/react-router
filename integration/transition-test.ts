@@ -139,8 +139,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/gh-1691.tsx": js`
-          import { json, redirect } from "react-router";
-          import { useFetcher} from "react-router";
+          import { redirect, useFetcher } from "react-router";
 
           export const action = async ( ) => {
             return redirect("/gh-1691");
@@ -195,8 +194,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/parent.child.tsx": js`
-          import { redirect } from "react-router";
-          import { useFetcher} from "react-router";
+          import { redirect, useFetcher } from "react-router";
 
           export const action = async ({ request }) => {
             return redirect("/parent");

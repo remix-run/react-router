@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import type { Blocker, RouteObject } from "../../index";
 import {
   createMemoryRouter,
@@ -93,7 +93,7 @@ describe("navigation blocking with useBlocker", () => {
       {
         basename: "/base",
         initialEntries: ["/base"],
-      }
+      },
     );
 
     act(() => {
@@ -263,7 +263,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -344,7 +344,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -435,7 +435,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -559,7 +559,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -644,7 +644,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -739,7 +739,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -871,7 +871,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -964,7 +964,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -1067,7 +1067,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -1172,6 +1172,6 @@ function click(target: EventTarget | null | undefined) {
       view: window,
       bubbles: true,
       cancelable: true,
-    })
+    }),
   );
 }

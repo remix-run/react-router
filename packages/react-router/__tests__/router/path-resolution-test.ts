@@ -33,7 +33,7 @@ describe("path resolution", () => {
       let router = getRouter();
       router.navigate(null, { fromRouteId: "activeRoute" });
       expect(createPath(router.state.location)).toBe(
-        expectedPath + (expectIndex ? "?index&a=1#hash" : "?a=1#hash")
+        expectedPath + (expectIndex ? "?index&a=1#hash" : "?a=1#hash"),
       );
       router.dispose();
 
@@ -41,14 +41,14 @@ describe("path resolution", () => {
       router = getRouter();
       router.navigate(".", { fromRouteId: "activeRoute" });
       expect(createPath(router.state.location)).toBe(
-        expectedPath + (expectIndex ? "?index" : "")
+        expectedPath + (expectIndex ? "?index" : ""),
       );
       router.dispose();
 
       router = getRouter();
       router.navigate("", { fromRouteId: "activeRoute" });
       expect(createPath(router.state.location)).toBe(
-        expectedPath + (expectIndex ? "?index" : "")
+        expectedPath + (expectIndex ? "?index" : ""),
       );
       router.dispose();
     }
@@ -63,7 +63,7 @@ describe("path resolution", () => {
           },
         ],
         "/foo/bar",
-        false
+        false,
       );
     });
 
@@ -81,7 +81,7 @@ describe("path resolution", () => {
           },
         ],
         "/foo/bar",
-        false
+        false,
       );
     });
 
@@ -99,7 +99,7 @@ describe("path resolution", () => {
           },
         ],
         "/foo/bar",
-        true
+        true,
       );
     });
 
@@ -113,7 +113,7 @@ describe("path resolution", () => {
           },
         ],
         "/foo/bar",
-        true
+        true,
       );
     });
 
@@ -126,7 +126,7 @@ describe("path resolution", () => {
           },
         ],
         "/foo/bar",
-        false
+        false,
       );
     });
 
@@ -139,7 +139,7 @@ describe("path resolution", () => {
           },
         ],
         "/foo/bar",
-        false
+        false,
       );
     });
     /* eslint-enable jest/expect-expect */

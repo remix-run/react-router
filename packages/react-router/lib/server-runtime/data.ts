@@ -5,6 +5,7 @@ import type {
   ActionFunctionArgs,
 } from "../router/utils";
 import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
+import type { FutureConfig } from "../dom/ssr/entry";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -20,12 +21,17 @@ export interface AppLoadContext {
 // though we know it'll always be provided in remix
 export async function callRouteHandler(
   handler: LoaderFunction | ActionFunction,
-  args: LoaderFunctionArgs | ActionFunctionArgs
+  args: LoaderFunctionArgs | ActionFunctionArgs,
+  future: FutureConfig,
 ) {
   let result = await handler({
-    request: stripRoutesParam(stripIndexParam(args.request)),
+    request: future.v8_passThroughRequests
+      ? args.request
+      : stripRoutesParam(stripIndexParam(args.request)),
+    url: args.url,
     params: args.params,
     context: args.context,
+    pattern: args.pattern,
   });
 
   // If they returned a redirect via data(), re-throw it as a Response
@@ -41,11 +47,6 @@ export async function callRouteHandler(
   return result;
 }
 
-// TODO: Document these search params better
-// and stop stripping these in V2. These break
-// support for running in a SW and also expose
-// valuable info to data funcs that is being asked
-// for such as "is this a data request?".
 function stripIndexParam(request: Request) {
   let url = new URL(request.url);
   let indexValues = url.searchParams.getAll("index");

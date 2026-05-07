@@ -99,7 +99,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT 2");
     expect(t.router.state).toMatchObject({
@@ -125,7 +125,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT 2");
     expect(t.router.state).toMatchObject({
@@ -170,7 +170,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
 
     await nav.loaders.parent.resolve("PARENT");
@@ -194,7 +194,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
 
     await nav.loaders.parent.resolve("PARENT");
@@ -219,7 +219,7 @@ describe("redirects", () => {
       "./child",
       undefined,
       undefined,
-      ["parent", "child", "index"]
+      ["parent", "child", "index"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     await nav2.loaders.child.resolve("CHILD");
@@ -250,7 +250,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -277,7 +277,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -301,7 +301,7 @@ describe("redirects", () => {
     });
 
     let nav2 = await nav1.actions.child.redirectReturn(
-      "/parent?key=value#hash"
+      "/parent?key=value#hash",
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -330,7 +330,7 @@ describe("redirects", () => {
       "..?key=value#hash",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -435,7 +435,7 @@ describe("redirects", () => {
       "http://localhost/parent",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await B.loaders.parent.resolve("PARENT");
     expect(t.router.state.location).toMatchObject({
@@ -460,7 +460,7 @@ describe("redirects", () => {
       "http://localhost/base/parent",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await B.loaders.parent.resolve("PARENT");
     expect(t.router.state.location).toMatchObject({
@@ -521,7 +521,7 @@ describe("redirects", () => {
       "http://localhost/parent",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await C.loaders.parent.resolve("PARENT*");
 

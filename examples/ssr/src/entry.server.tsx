@@ -10,6 +10,6 @@ export function render(url: string) {
       <StaticRouter location={url}>
         <App />
       </StaticRouter>
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }

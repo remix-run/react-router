@@ -112,13 +112,18 @@ export const routeConfigEntrySchema: v.BaseSchema<
     );
   }, "Invalid type: Expected object but received a promise. Did you forget to await?"),
   v.object({
-    id: v.optional(v.string()),
+    id: v.optional(
+      v.pipe(
+        v.string(),
+        v.notValue("root", "A route cannot use the reserved id 'root'."),
+      ),
+    ),
     path: v.optional(v.string()),
     index: v.optional(v.boolean()),
     caseSensitive: v.optional(v.boolean()),
     file: v.string(),
     children: v.optional(v.array(v.lazy(() => routeConfigEntrySchema))),
-  })
+  }),
 );
 
 export const resolvedRouteConfigSchema = v.array(routeConfigEntrySchema);
@@ -135,7 +140,9 @@ export function validateRouteConfig({
 }: {
   routeConfigFile: string;
   routeConfig: unknown;
-}): { valid: false; message: string } | { valid: true } {
+}):
+  | { valid: false; message: string }
+  | { valid: true; routeConfig: RouteConfigEntry[] } {
   if (!routeConfig) {
     return {
       valid: false,
@@ -161,7 +168,7 @@ export function validateRouteConfig({
         root ? `${root}` : [],
         nested
           ? Object.entries(nested).map(
-              ([path, message]) => `Path: routes.${path}\n${message}`
+              ([path, message]) => `Path: routes.${path}\n${message}`,
             )
           : [],
       ]
@@ -170,7 +177,10 @@ export function validateRouteConfig({
     };
   }
 
-  return { valid: true };
+  return {
+    valid: true,
+    routeConfig: routeConfig as RouteConfigEntry[],
+  };
 }
 
 const createConfigRouteOptionKeys = [
@@ -189,19 +199,19 @@ type CreateRouteOptions = Pick<
 function route(
   path: string | null | undefined,
   file: string,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry;
 function route(
   path: string | null | undefined,
   file: string,
   options: CreateRouteOptions,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry;
 function route(
   path: string | null | undefined,
   file: string,
   optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry {
   let options: CreateRouteOptions = {};
 
@@ -253,12 +263,12 @@ function layout(file: string, children?: RouteConfigEntry[]): RouteConfigEntry;
 function layout(
   file: string,
   options: CreateLayoutOptions,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry;
 function layout(
   file: string,
   optionsOrChildren: CreateLayoutOptions | RouteConfigEntry[] | undefined,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry {
   let options: CreateLayoutOptions = {};
 
@@ -281,7 +291,7 @@ function layout(
  */
 function prefix(
   prefixPath: string,
-  routes: RouteConfigEntry[]
+  routes: RouteConfigEntry[],
 ): RouteConfigEntry[] {
   return routes.map((route) => {
     if (route.index || typeof route.path === "string") {
@@ -346,11 +356,10 @@ export function relative(directory: string): typeof helpers {
 export function configRoutesToRouteManifest(
   appDirectory: string,
   routes: RouteConfigEntry[],
-  rootId = "root"
 ): RouteManifest {
   let routeManifest: RouteManifest = {};
 
-  function walk(route: RouteConfigEntry, parentId: string) {
+  function walk(route: RouteConfigEntry, parentId?: string) {
     let id = route.id || createRouteId(route.file);
     let manifestItem: RouteManifestEntry = {
       id,
@@ -365,7 +374,7 @@ export function configRoutesToRouteManifest(
 
     if (routeManifest.hasOwnProperty(id)) {
       throw new Error(
-        `Unable to define routes with duplicate route id: "${id}"`
+        `Unable to define routes with duplicate route id: "${id}"`,
       );
     }
     routeManifest[id] = manifestItem;
@@ -378,7 +387,7 @@ export function configRoutesToRouteManifest(
   }
 
   for (let route of routes) {
-    walk(route, rootId);
+    walk(route);
   }
 
   return routeManifest;

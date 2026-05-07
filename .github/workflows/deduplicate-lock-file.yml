@@ -5,26 +5,28 @@ on:
     branches:
       - dev
     paths:
-      - ./pnpm-lock.yaml
+      - pnpm-lock.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  format:
+  dedupe:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.FORMAT_PAT }}
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
@@ -34,13 +36,14 @@ jobs:
 
       - name: 💪 Commit
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+
           git add .
           if [ -z "$(git status --porcelain)" ]; then
             echo "💿 no deduplication needed"
             exit 0
           fi
-          git commit -m "chore: deduplicate `pnpm-lock.yaml`"
+          git commit -m "chore: deduplicate \`pnpm-lock.yaml\`"
           git push
-          echo "💿 https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
+          echo "💿 pushed dedupe changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

@@ -18,10 +18,10 @@ describe("index route matching", () => {
             ],
           },
         ],
-        "/users/mj"
+        "/users/mj",
       );
     }).toThrowErrorMatchingInlineSnapshot(
-      `"Index routes must not have child routes. Please remove all child routes from route path "/users/"."`
+      `"Index routes must not have child routes. Please remove all child routes from route path "/users/"."`,
     );
   });
 });

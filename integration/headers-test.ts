@@ -194,14 +194,14 @@ test.describe("headers export", () => {
           `,
         },
       },
-      ServerMode.Test
+      ServerMode.Test,
     );
   });
 
   test("can use `action` headers", async () => {
     let response = await appFixture.postDocument(
       "/action",
-      new URLSearchParams()
+      new URLSearchParams(),
     );
     expect(response.headers.get(ACTION_HKEY)).toBe(ACTION_HVALUE);
   });
@@ -260,7 +260,7 @@ test.describe("headers export", () => {
           `,
         },
       },
-      ServerMode.Test
+      ServerMode.Test,
     );
     let response = await fixture.requestDocument("/");
     expect(response.headers.get(HEADER_KEY)).toBe(HEADER_VALUE);
@@ -272,7 +272,7 @@ test.describe("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
@@ -282,34 +282,34 @@ test.describe("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("returns headers from successful /parent POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent",
-      new URLSearchParams()
+      new URLSearchParams(),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-action", "success"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("returns headers from successful /parent/child POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent/child",
-      new URLSearchParams()
+      new URLSearchParams(),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
@@ -319,71 +319,71 @@ test.describe("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "error, error"], // Shows up in loaderHeaders and errorHeaders
-      ])
+      ]),
     );
   });
 
   test("returns bubbled headers from failed /parent/child GET requests", async () => {
     let response = await appFixture.requestDocument(
-      "/parent/child?throw=child"
+      "/parent/child?throw=child",
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-child-loader", "error"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("ignores headers from successful non-rendered loaders", async () => {
     let response = await appFixture.requestDocument(
-      "/parent/child?throw=parent"
+      "/parent/child?throw=parent",
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "error, error"], // Shows up in loaderHeaders and errorHeaders
-      ])
+      ]),
     );
   });
 
   test("chooses higher thrown errors when multiple loaders throw", async () => {
     let response = await appFixture.requestDocument(
-      "/parent/child/grandchild?throw=child"
+      "/parent/child/grandchild?throw=child",
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-child-loader", "error"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("returns headers from failed /parent POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent?throw=parent",
-      new URLSearchParams("throw=parent")
+      new URLSearchParams("throw=parent"),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-action", "error, error"], // Shows up in actionHeaders and errorHeaders
-      ])
+      ]),
     );
   });
 
   test("returns bubbled headers from failed /parent/child POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent/child",
-      new URLSearchParams("throw=child")
+      new URLSearchParams("throw=child"),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-child-action", "error"],
-      ])
+      ]),
     );
   });
 
@@ -393,7 +393,7 @@ test.describe("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["set-cookie", "normal-cookie=true"],
-      ])
+      ]),
     );
   });
 
@@ -403,7 +403,7 @@ test.describe("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["set-cookie", "thrown-cookie=true"],
-      ])
+      ]),
     );
   });
 
@@ -413,7 +413,7 @@ test.describe("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["set-cookie", "parent-thrown-cookie=true"],
-      ])
+      ]),
     );
   });
 
@@ -460,7 +460,7 @@ test.describe("headers export", () => {
           `,
         },
       },
-      ServerMode.Test
+      ServerMode.Test,
     );
     let response = await fixture.requestDocument("/");
     expect([...response.headers.entries()]).toEqual([

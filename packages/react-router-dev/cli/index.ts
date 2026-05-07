@@ -8,5 +8,5 @@ run().then(
   (error: unknown) => {
     if (error) console.error(error);
     process.exit(1);
-  }
+  },
 );

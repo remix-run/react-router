@@ -79,12 +79,12 @@ test.describe(() => {
 
   test("Vite / manifests enabled / Vite manifests", () => {
     let viteManifestFilesClient = fs.readdirSync(
-      path.join(cwd, "build", "client", ".vite")
+      path.join(cwd, "build", "client", ".vite"),
     );
     expect(viteManifestFilesClient).toEqual(["manifest.json"]);
 
     let viteManifestFilesServer = fs.readdirSync(
-      path.join(cwd, "build", "server", ".vite")
+      path.join(cwd, "build", "server", ".vite"),
     );
     expect(viteManifestFilesServer).toEqual(["manifest.json"]);
   });

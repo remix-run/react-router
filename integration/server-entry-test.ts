@@ -59,6 +59,8 @@ test.describe("Default Server Entry", () => {
 
   test("renders", async () => {
     let response = await fixture.requestDocument("/");
-    expect(selectHtml(await response.text(), "p")).toBe("<p>Hello World</p>");
+    expect(await selectHtml(await response.text(), "p")).toBe(
+      "<p>Hello World</p>",
+    );
   });
 });

@@ -11,394 +11,495 @@ describe("transform", () => {
   test("arrow function", () => {
     let result = transform(
       `
-      export const serverExport_1 = () => {}
-      export const serverExport_2 = () => {}
+      export const removedExport_1 = () => {}
+      export const removedExport_2 = () => {}
 
-      export const clientExport_1 = () => {}
-      export const clientExport_2 = () => {}
+      export const keptExport_1 = () => {}
+      export const keptExport_2 = () => {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = () => {};
-      export const clientExport_2 = () => {};"
+      "export const keptExport_1 = () => {};
+      export const keptExport_2 = () => {};"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("arrow function with dependencies", () => {
     let result = transform(
       `
-      import { serverLib } from 'server-lib'
-      import { clientLib } from 'client-lib'
+      import { removedLib } from 'removed-lib'
+      import { keptLib } from 'kept-lib'
       import { sharedLib } from 'shared-lib'
 
-      const SERVER_STRING = 'SERVER_STRING'
+      const REMOVED_STRING = 'REMOVED_STRING'
 
       const sharedUtil = () => sharedLib()
-      const serverUtil = () => sharedUtil(serverLib(SERVER_STRING))
-      const clientUtil = () => sharedUtil(clientLib())
+      const removedUtil = () => sharedUtil(removedLib(REMOVED_STRING))
+      const keptUtil = () => sharedUtil(keptLib())
 
-      export const serverExport_1 = () => serverUtil()
-      export const serverExport_2 = () => serverUtil()
+      export const removedExport_1 = () => removedUtil()
+      export const removedExport_2 = () => removedUtil()
 
-      export const clientExport_1 = () => clientUtil()
-      export const clientExport_2 = () => clientUtil()
+      export const keptExport_1 = () => keptUtil()
+      export const keptExport_2 = () => keptUtil()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientLib } from 'client-lib';
+      "import { keptLib } from 'kept-lib';
       import { sharedLib } from 'shared-lib';
       const sharedUtil = () => sharedLib();
-      const clientUtil = () => sharedUtil(clientLib());
-      export const clientExport_1 = () => clientUtil();
-      export const clientExport_2 = () => clientUtil();"
+      const keptUtil = () => sharedUtil(keptLib());
+      export const keptExport_1 = () => keptUtil();
+      export const keptExport_2 = () => keptUtil();"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
+  });
+
+  test("arrow function with property assignment", () => {
+    let result = transform(
+      `
+      export const removedExport_1 = () => {}
+      removedExport_1.removedProperty = true
+      export const removedExport_2 = () => {}
+      removedExport_2.removedProperty = true
+      
+      export const keptExport_1 = () => {}
+      keptExport_1.keptProperty = true
+      export const keptExport_2 = () => {}
+      keptExport_2.keptProperty = true
+    `,
+      ["removedExport_1", "removedExport_2"],
+    );
+    expect(result.code).toMatchInlineSnapshot(`
+      "export const keptExport_1 = () => {};
+      keptExport_1.keptProperty = true;
+      export const keptExport_2 = () => {};
+      keptExport_2.keptProperty = true;"
+    `);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("function statement", () => {
     let result = transform(
       `
-      export function serverExport_1(){}
-      export function serverExport_2(){}
+      export function removedExport_1(){}
+      export function removedExport_2(){}
 
-      export function clientExport_1(){}
-      export function clientExport_2(){}
+      export function keptExport_1(){}
+      export function keptExport_2(){}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export function clientExport_1() {}
-      export function clientExport_2() {}"
+      "export function keptExport_1() {}
+      export function keptExport_2() {}"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("function statement with dependencies", () => {
     let result = transform(
       `
-      import { serverLib } from 'server-lib'
-      import { clientLib } from 'client-lib'
+      import { removedLib } from 'removed-lib'
+      import { keptLib } from 'kept-lib'
       import { sharedLib } from 'shared-lib'
 
-      const SERVER_STRING = 'SERVER_STRING'
+      const REMOVED_STRING = 'REMOVED_STRING'
 
       function sharedUtil() { return sharedLib() }
-      function serverUtil() { return sharedUtil(serverLib(SERVER_STRING)) }
-      function clientUtil() { return sharedUtil(clientLib()) }
+      function removedUtil() { return sharedUtil(removedLib(REMOVED_STRING)) }
+      function keptUtil() { return sharedUtil(keptLib()) }
 
-      export function serverExport_1() { return serverUtil() }
-      export function serverExport_2() { return serverUtil() }
+      export function removedExport_1() { return removedUtil() }
+      export function removedExport_2() { return removedUtil() }
 
-      export function clientExport_1() { return clientUtil() }
-      export function clientExport_2() { return clientUtil() }
+      export function keptExport_1() { return keptUtil() }
+      export function keptExport_2() { return keptUtil() }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientLib } from 'client-lib';
+      "import { keptLib } from 'kept-lib';
       import { sharedLib } from 'shared-lib';
       function sharedUtil() {
         return sharedLib();
       }
-      function clientUtil() {
-        return sharedUtil(clientLib());
+      function keptUtil() {
+        return sharedUtil(keptLib());
       }
-      export function clientExport_1() {
-        return clientUtil();
+      export function keptExport_1() {
+        return keptUtil();
       }
-      export function clientExport_2() {
-        return clientUtil();
+      export function keptExport_2() {
+        return keptUtil();
       }"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
+  });
+
+  test("function statement with property assignment", () => {
+    let result = transform(
+      `
+      export function removedExport_1(){}
+      removedExport_1.removedProperty = true
+      export function removedExport_2(){}
+      removedExport_2.removedProperty = true
+
+      export function keptExport_1(){}
+      keptExport_1.keptProperty = true
+      export function keptExport_2(){}
+      keptExport_2.keptProperty = true
+    `,
+      ["removedExport_1", "removedExport_2"],
+    );
+    expect(result.code).toMatchInlineSnapshot(`
+      "export function keptExport_1() {}
+      keptExport_1.keptProperty = true;
+      export function keptExport_2() {}
+      keptExport_2.keptProperty = true;"
+    `);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("object", () => {
     let result = transform(
       `
-      export const serverExport_1 = {}
-      export const serverExport_2 = {}
+      export const removedExport_1 = {}
+      export const removedExport_2 = {}
 
-      export const clientExport_1 = {}
-      export const clientExport_2 = {}
+      export const keptExport_1 = {}
+      export const keptExport_2 = {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = {};
-      export const clientExport_2 = {};"
+      "export const keptExport_1 = {};
+      export const keptExport_2 = {};"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("object with dependencies", () => {
     let result = transform(
       `
-      import { serverLib } from 'server-lib'
-      import { clientLib } from 'client-lib'
+      import { removedLib } from 'removed-lib'
+      import { keptLib } from 'kept-lib'
       import { sharedLib } from 'shared-lib'
 
-      const SERVER_STRING = 'SERVER_STRING'
+      const REMOVED_STRING = 'REMOVED_STRING'
 
       const sharedUtil = () => sharedLib()
-      const serverUtil = () => sharedUtil(serverLib(SERVER_STRING))
-      const clientUtil = () => sharedUtil(clientLib())
+      const removedUtil = () => sharedUtil(removedLib(REMOVED_STRING))
+      const keptUtil = () => sharedUtil(keptLib())
 
-      export const serverExport_1 = { value: serverUtil() }
-      export const serverExport_2 = { value: serverUtil() }
+      export const removedExport_1 = { value: removedUtil() }
+      export const removedExport_2 = { value: removedUtil() }
 
-      export const clientExport_1 = { value: clientUtil() }
-      export const clientExport_2 = { value: clientUtil() }
+      export const keptExport_1 = { value: keptUtil() }
+      export const keptExport_2 = { value: keptUtil() }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientLib } from 'client-lib';
+      "import { keptLib } from 'kept-lib';
       import { sharedLib } from 'shared-lib';
       const sharedUtil = () => sharedLib();
-      const clientUtil = () => sharedUtil(clientLib());
-      export const clientExport_1 = {
-        value: clientUtil()
+      const keptUtil = () => sharedUtil(keptLib());
+      export const keptExport_1 = {
+        value: keptUtil()
       };
-      export const clientExport_2 = {
-        value: clientUtil()
+      export const keptExport_2 = {
+        value: keptUtil()
       };"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("class", () => {
     let result = transform(
       `
-      export class serverExport_1 {}
-      export class serverExport_2 {}
+      export class removedExport_1 {}
+      export class removedExport_2 {}
 
-      export class clientExport_1 {}
-      export class clientExport_2 {}
+      export class keptExport_1 {}
+      export class keptExport_2 {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export class clientExport_1 {}
-      export class clientExport_2 {}"
+      "export class keptExport_1 {}
+      export class keptExport_2 {}"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("class with dependencies", () => {
     let result = transform(
       `
-      import { serverLib } from 'server-lib'
-      import { clientLib } from 'client-lib'
+      import { removedLib } from 'removed-lib'
+      import { keptLib } from 'kept-lib'
       import { sharedLib } from 'shared-lib'
 
-      const SERVER_STRING = 'SERVER_STRING'
+      const REMOVED_STRING = 'REMOVED_STRING'
 
       const sharedUtil = () => sharedLib()
-      const serverUtil = () => sharedUtil(serverLib(SERVER_STRING))
-      const clientUtil = () => sharedUtil(clientLib())
+      const removedUtil = () => sharedUtil(removedLib(REMOVED_STRING))
+      const keptUtil = () => sharedUtil(keptLib())
 
-      export class serverExport_1{
-        static util = serverUtil()
+      export class removedExport_1{
+        static util = removedUtil()
       }
-      export class serverExport_2{
-        static util = serverUtil()
+      export class removedExport_2{
+        static util = removedUtil()
       }
 
-      export class clientExport_1{
-        static util = clientUtil()
+      export class keptExport_1{
+        static util = keptUtil()
       }
-      export class clientExport_2{
-        static util = clientUtil()
+      export class keptExport_2{
+        static util = keptUtil()
       }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientLib } from 'client-lib';
+      "import { keptLib } from 'kept-lib';
       import { sharedLib } from 'shared-lib';
       const sharedUtil = () => sharedLib();
-      const clientUtil = () => sharedUtil(clientLib());
-      export class clientExport_1 {
-        static util = clientUtil();
+      const keptUtil = () => sharedUtil(keptLib());
+      export class keptExport_1 {
+        static util = keptUtil();
       }
-      export class clientExport_2 {
-        static util = clientUtil();
+      export class keptExport_2 {
+        static util = keptUtil();
       }"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("function call", () => {
     let result = transform(
       `
-      export const serverExport_1 = globalFunction()
-      export const serverExport_2 = globalFunction()
+      export const removedExport_1 = globalFunction()
+      export const removedExport_2 = globalFunction()
 
-      export const clientExport_1 = globalFunction()
-      export const clientExport_2 = globalFunction()
+      export const keptExport_1 = globalFunction()
+      export const keptExport_2 = globalFunction()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = globalFunction();
-      export const clientExport_2 = globalFunction();"
+      "export const keptExport_1 = globalFunction();
+      export const keptExport_2 = globalFunction();"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("function call with dependencies", () => {
     let result = transform(
       `
-      import { serverLib } from 'server-lib'
-      import { clientLib } from 'client-lib'
+      import { removedLib } from 'removed-lib'
+      import { keptLib } from 'kept-lib'
       import { sharedLib } from 'shared-lib'
 
-      const SERVER_STRING = 'SERVER_STRING'
+      const REMOVED_STRING = 'REMOVED_STRING'
 
       const sharedUtil = () => sharedLib()
-      const serverUtil = () => sharedUtil(serverLib(SERVER_STRING))
-      const clientUtil = () => sharedUtil(clientLib())
+      const removedUtil = () => sharedUtil(removedLib(REMOVED_STRING))
+      const keptUtil = () => sharedUtil(keptLib())
 
-      export const serverExport_1 = serverUtil()
-      export const serverExport_2 = serverUtil()
+      export const removedExport_1 = removedUtil()
+      export const removedExport_2 = removedUtil()
 
-      export const clientExport_1 = clientUtil()
-      export const clientExport_2 = clientUtil()
+      export const keptExport_1 = keptUtil()
+      export const keptExport_2 = keptUtil()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientLib } from 'client-lib';
+      "import { keptLib } from 'kept-lib';
       import { sharedLib } from 'shared-lib';
       const sharedUtil = () => sharedLib();
-      const clientUtil = () => sharedUtil(clientLib());
-      export const clientExport_1 = clientUtil();
-      export const clientExport_2 = clientUtil();"
+      const keptUtil = () => sharedUtil(keptLib());
+      export const keptExport_1 = keptUtil();
+      export const keptExport_2 = keptUtil();"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("iife", () => {
     let result = transform(
       `
-      export const serverExport_1 = (() => {})()
-      export const serverExport_2 = (() => {})()
+      export const removedExport_1 = (() => {})()
+      export const removedExport_2 = (() => {})()
 
-      export const clientExport_1 = (() => {})()
-      export const clientExport_2 = (() => {})()
+      export const keptExport_1 = (() => {})()
+      export const keptExport_2 = (() => {})()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = (() => {})();
-      export const clientExport_2 = (() => {})();"
+      "export const keptExport_1 = (() => {})();
+      export const keptExport_2 = (() => {})();"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("iife with dependencies", () => {
     let result = transform(
       `
-      import { serverLib } from 'server-lib'
-      import { clientLib } from 'client-lib'
+      import { removedLib } from 'removed-lib'
+      import { keptLib } from 'kept-lib'
       import { sharedLib } from 'shared-lib'
 
-      const SERVER_STRING = 'SERVER_STRING'
+      const REMOVED_STRING = 'REMOVED_STRING'
 
       const sharedUtil = () => sharedLib()
-      const serverUtil = () => sharedUtil(serverLib(SERVER_STRING))
-      const clientUtil = () => sharedUtil(clientLib())
+      const removedUtil = () => sharedUtil(removedLib(REMOVED_STRING))
+      const keptUtil = () => sharedUtil(keptLib())
 
-      export const serverExport_1 = (() => serverUtil())()
-      export const serverExport_2 = (() => serverUtil())()
+      export const removedExport_1 = (() => removedUtil())()
+      export const removedExport_2 = (() => removedUtil())()
 
-      export const clientExport_1 = (() => clientUtil())()
-      export const clientExport_2 = (() => clientUtil())()
+      export const keptExport_1 = (() => keptUtil())()
+      export const keptExport_2 = (() => keptUtil())()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientLib } from 'client-lib';
+      "import { keptLib } from 'kept-lib';
       import { sharedLib } from 'shared-lib';
       const sharedUtil = () => sharedLib();
-      const clientUtil = () => sharedUtil(clientLib());
-      export const clientExport_1 = (() => clientUtil())();
-      export const clientExport_2 = (() => clientUtil())();"
+      const keptUtil = () => sharedUtil(keptLib());
+      export const keptExport_1 = (() => keptUtil())();
+      export const keptExport_2 = (() => keptUtil())();"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("aggregated export", () => {
     let result = transform(
       `
-      const serverExport_1 = 123
-      const serverExport_2 = 123
+      const removedExport_1 = () => {}
+      removedExport_1.removedProperty = true
+      const removedExport_2 = () => {}
+      removedExport_2.removedProperty = true
 
-      const clientExport_1 = 123
-      const clientExport_2 = 123
+      const keptExport_1 = () => {}
+      keptExport_1.keptProperty = true
+      const keptExport_2 = () => {}
+      keptExport_2.keptProperty = true
 
-      export { serverExport_1 }
-      export { serverExport_2 }
+      export { removedExport_1 }
+      export { removedExport_2 }
 
-      export { clientExport_1 }
-      export { clientExport_2 }
+      export { keptExport_1 }
+      export { keptExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "const clientExport_1 = 123;
-      const clientExport_2 = 123;
-      export { clientExport_1 };
-      export { clientExport_2 };"
+      "const keptExport_1 = () => {};
+      keptExport_1.keptProperty = true;
+      const keptExport_2 = () => {};
+      keptExport_2.keptProperty = true;
+      export { keptExport_1 };
+      export { keptExport_2 };"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("aggregated export multiple", () => {
     let result = transform(
       `
-      const serverExport_1 = 123
-      const serverExport_2 = 123
+      const removedExport_1 = () => {}
+      removedExport_1.removedProperty = true
+      const removedExport_2 = () => {}
+      removedExport_2.removedProperty = true
 
-      const clientExport_1 = 123
-      const clientExport_2 = 123
+      const keptExport_1 = () => {}
+      keptExport_1.keptProperty = true
+      const keptExport_2 = () => {}
+      keptExport_2.keptProperty = true
 
-      export { serverExport_1, serverExport_2 }
-      export { clientExport_1, clientExport_2 }
+      export { removedExport_1, removedExport_2 }
+      export { keptExport_1, keptExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "const clientExport_1 = 123;
-      const clientExport_2 = 123;
-      export { clientExport_1, clientExport_2 };"
+      "const keptExport_1 = () => {};
+      keptExport_1.keptProperty = true;
+      const keptExport_2 = () => {};
+      keptExport_2.keptProperty = true;
+      export { keptExport_1, keptExport_2 };"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("aggregated export multiple mixed", () => {
     let result = transform(
       `
-      const removeMe_1 = 123
-      const removeMe_2 = 123
+      const removedExport_1 = () => {}
+      removedExport_1.removedProperty = true
+      const removedExport_2 = () => {}
+      removedExport_2.removedProperty = true
 
-      const keepMe_1 = 123
-      const keepMe_2 = 123
+      const keptExport_1 = () => {}
+      keptExport_1.keptProperty = true
+      const keptExport_2 = () => {}
+      keptExport_2.keptProperty = true
 
-      export { removeMe_1, keepMe_1 }
-      export { removeMe_2, keepMe_2 }
+      export { removedExport_1, keptExport_1 }
+      export { removedExport_2, keptExport_2 }
     `,
-      ["removeMe_1", "removeMe_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "const keepMe_1 = 123;
-      const keepMe_2 = 123;
-      export { keepMe_1 };
-      export { keepMe_2 };"
+      "const keptExport_1 = () => {};
+      keptExport_1.keptProperty = true;
+      const keptExport_2 = () => {};
+      keptExport_2.keptProperty = true;
+      export { keptExport_1 };
+      export { keptExport_2 };"
+    `);
+    expect(result.code).not.toMatch(/removeMe/i);
+  });
+
+  test("aggregated export multiple mixed and renamed", () => {
+    let result = transform(
+      `
+      const removedExport_1 = () => {}
+      removedExport_1.removedProperty = true
+      const removedExport_2 = () => {}
+      removedExport_2.removedProperty = true
+
+      const keptExport_1 = () => {}
+      keptExport_1.keptProperty = true
+      const keptExport_2 = () => {}
+      keptExport_2.keptProperty = true
+
+      export {
+        removedExport_1 as removedExport_1_renamed,
+        keptExport_1 as keptExport_1_renamed
+      }
+      export {
+        removedExport_2 as removedExport_2_renamed,
+        keptExport_2 as keptExport_2_renamed
+      }
+    `,
+      ["removedExport_1_renamed", "removedExport_2_renamed"],
+    );
+    expect(result.code).toMatchInlineSnapshot(`
+      "const keptExport_1 = () => {};
+      keptExport_1.keptProperty = true;
+      const keptExport_2 = () => {};
+      keptExport_2.keptProperty = true;
+      export { keptExport_1 as keptExport_1_renamed };
+      export { keptExport_2 as keptExport_2_renamed };"
     `);
     expect(result.code).not.toMatch(/removeMe/i);
   });
@@ -406,33 +507,33 @@ describe("transform", () => {
   test("re-export", () => {
     let result = transform(
       `
-      export { serverExport_1 } from './server/1'
-      export { serverExport_2 } from './server/2'
+      export { removedExport_1 } from './removed/1'
+      export { removedExport_2 } from './removed/2'
 
-      export { clientExport_1 } from './client/1'
-      export { clientExport_2 } from './client/2'
+      export { keptExport_1 } from './kept/1'
+      export { keptExport_2 } from './kept/2'
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export { clientExport_1 } from './client/1';
-      export { clientExport_2 } from './client/2';"
+      "export { keptExport_1 } from './kept/1';
+      export { keptExport_2 } from './kept/2';"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("re-export multiple", () => {
     let result = transform(
       `
-      export { serverExport_1, serverExport_2 } from './server'
-      export { clientExport_1, clientExport_2 } from './client'
+      export { removedExport_1, removedExport_2 } from './removed'
+      export { keptExport_1, keptExport_2 } from './kept'
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(
-      "\"export { clientExport_1, clientExport_2 } from './client';\""
+      "\"export { keptExport_1, keptExport_2 } from './kept';\"",
     );
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("re-export multiple mixed", () => {
@@ -441,7 +542,7 @@ describe("transform", () => {
       export { removeMe_1, keepMe_1 } from './1'
       export { removeMe_2, keepMe_2 } from './2'
     `,
-      ["removeMe_1", "removeMe_2"]
+      ["removeMe_1", "removeMe_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export { keepMe_1 } from './1';
@@ -453,44 +554,44 @@ describe("transform", () => {
   test("re-export manual", () => {
     let result = transform(
       `
-      import { serverExport_1 } from './server/1'
-      import { serverExport_2 } from './server/2'
-      import { clientExport_1 } from './client/1'
-      import { clientExport_2 } from './client/2'
+      import { removedExport_1 } from './removed/1'
+      import { removedExport_2 } from './removed/2'
+      import { keptExport_1 } from './kept/1'
+      import { keptExport_2 } from './kept/2'
 
-      export { serverExport_1 }
-      export { serverExport_2 }
+      export { removedExport_1 }
+      export { removedExport_2 }
 
-      export { clientExport_1 }
-      export { clientExport_2 }
+      export { keptExport_1 }
+      export { keptExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientExport_1 } from './client/1';
-      import { clientExport_2 } from './client/2';
-      export { clientExport_1 };
-      export { clientExport_2 };"
+      "import { keptExport_1 } from './kept/1';
+      import { keptExport_2 } from './kept/2';
+      export { keptExport_1 };
+      export { keptExport_2 };"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("re-export manual multiple", () => {
     let result = transform(
       `
-      import { serverExport_1, serverExport_2 } from './server'
-      import { clientExport_1, clientExport_2 } from './client'
+      import { removedExport_1, removedExport_2 } from './removed'
+      import { keptExport_1, keptExport_2 } from './kept'
 
-      export { serverExport_1, serverExport_2 }
-      export { clientExport_1, clientExport_2 }
+      export { removedExport_1, removedExport_2 }
+      export { keptExport_1, keptExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "import { clientExport_1, clientExport_2 } from './client';
-      export { clientExport_1, clientExport_2 };"
+      "import { keptExport_1, keptExport_2 } from './kept';
+      export { keptExport_1, keptExport_2 };"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("re-export manual multiple mixed", () => {
@@ -502,7 +603,7 @@ describe("transform", () => {
       export { removeMe_1, keepMe_1 }
       export { removeMe_2, keepMe_2 }
     `,
-      ["removeMe_1", "removeMe_2"]
+      ["removeMe_1", "removeMe_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { keepMe_1 } from './1';
@@ -516,273 +617,274 @@ describe("transform", () => {
   test("number", () => {
     let result = transform(
       `
-      export const serverExport_1 = 123
-      export const serverExport_2 = 123
+      export const removedExport_1 = 123
+      export const removedExport_2 = 123
 
-      export const clientExport_1 = 123
-      export const clientExport_2 = 123
+      export const keptExport_1 = 123
+      export const keptExport_2 = 123
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = 123;
-      export const clientExport_2 = 123;"
+      "export const keptExport_1 = 123;
+      export const keptExport_2 = 123;"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("string", () => {
     let result = transform(
       `
-      export const serverExport_1 = 'string'
-      export const serverExport_2 = 'string'
+      export const removedExport_1 = 'string'
+      export const removedExport_2 = 'string'
 
-      export const clientExport_1 = 'string'
-      export const clientExport_2 = 'string'
+      export const keptExport_1 = 'string'
+      export const keptExport_2 = 'string'
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = 'string';
-      export const clientExport_2 = 'string';"
+      "export const keptExport_1 = 'string';
+      export const keptExport_2 = 'string';"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("string reference", () => {
     let result = transform(
       `
-      const SERVER_STRING = 'SERVER_STRING';
-      const CLIENT_STRING = 'CLIENT_STRING';
+      const REMOVED_STRING = 'REMOVED_STRING';
+      const KEPT_STRING = 'KEPT_STRING';
 
-      export const serverExport_1 = SERVER_STRING
-      export const serverExport_2 = SERVER_STRING
+      export const removedExport_1 = REMOVED_STRING
+      export const removedExport_2 = REMOVED_STRING
 
-      export const clientExport_1 = CLIENT_STRING
-      export const clientExport_2 = CLIENT_STRING
+      export const keptExport_1 = KEPT_STRING
+      export const keptExport_2 = KEPT_STRING
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "const CLIENT_STRING = 'CLIENT_STRING';
-      export const clientExport_1 = CLIENT_STRING;
-      export const clientExport_2 = CLIENT_STRING;"
+      "const KEPT_STRING = 'KEPT_STRING';
+      export const keptExport_1 = KEPT_STRING;
+      export const keptExport_2 = KEPT_STRING;"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("null", () => {
     let result = transform(
       `
-      export const serverExport_1 = null
-      export const serverExport_2 = null
+      export const removedExport_1 = null
+      export const removedExport_2 = null
 
-      export const clientExport_1 = null
-      export const clientExport_2 = null
+      export const keptExport_1 = null
+      export const keptExport_2 = null
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = null;
-      export const clientExport_2 = null;"
+      "export const keptExport_1 = null;
+      export const keptExport_2 = null;"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("multiple variable declarators", () => {
     let result = transform(
       `
-      export const serverExport_1 = null,
-        serverExport_2 = null
+      export const removedExport_1 = null,
+        removedExport_2 = null
 
-      export const clientExport_1 = null,
-        clientExport_2 = null
+      export const keptExport_1 = null,
+        keptExport_2 = null
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = null,
-        clientExport_2 = null;"
+      "export const keptExport_1 = null,
+        keptExport_2 = null;"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("multiple variable declarators mixed", () => {
     let result = transform(
       `
-      export const serverExport_1 = null,
-        clientExport_1 = null
+      export const removedExport_1 = null,
+        keptExport_1 = null
 
-      export const clientExport_2 = null,
-        serverExport_2 = null
+      export const keptExport_2 = null,
+        removedExport_2 = null
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = null;
-      export const clientExport_2 = null;"
+      "export const keptExport_1 = null;
+      export const keptExport_2 = null;"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("array destructuring throws on removed export", () => {
     expect(() =>
       transform(
         `
-        export const [serverExport_1, serverExport_2] = [null, null]
+        export const [removedExport_1, removedExport_2] = [null, null]
 
-        export const [clientExport_1, clientExport_2] = [null, null]
+        export const [keptExport_1, keptExport_2] = [null, null]
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
-    );
+        ["removedExport_1", "removedExport_2"],
+      ),
+    ).toThrow(`Cannot remove destructured export "removedExport_1"`);
   });
 
   test("array rest destructuring throws on removed export", () => {
     expect(() =>
       transform(
         `
-        export const [...serverExport_1] = [null, null]
+        export const [...removedExport_1] = [null, null]
 
-        export const [clientExport_1, clientExport_2] = [null, null]
+        export const [keptExport_1, keptExport_2] = [null, null]
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
-    );
+        ["removedExport_1", "removedExport_2"],
+      ),
+    ).toThrow('Cannot remove destructured export "removedExport_1"');
   });
 
   test("nested array destructuring throws on removed export", () => {
     expect(() =>
       transform(
         `
-        export const [keepMe_1, [{ nested: [ { nested: [serverExport_2] } ] }] ] = nested;
+        export const [keepMe_1, [{ nested: [ { nested: [removedExport_2] } ] }] ] = nested;
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_2""`
-    );
+        ["removedExport_1", "removedExport_2"],
+      ),
+    ).toThrow('Cannot remove destructured export "removedExport_2"');
   });
 
   test("array destructuring works when nothing is removed", () => {
     let result = transform(
       `
-      export const [clientExport_1, clientExport_2] = [null, null]
+      export const [keptExport_1, keptExport_2] = [null, null]
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(
-      `"export const [clientExport_1, clientExport_2] = [null, null];"`
+      `"export const [keptExport_1, keptExport_2] = [null, null];"`,
     );
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("object destructuring throws on removed export", () => {
     expect(() =>
       transform(
         `
-        export const { serverExport_1, serverExport_2 } = {}
+        export const { removedExport_1, removedExport_2 } = {}
 
-        export const { clientExport_1, clientExport_2 } = {}
+        export const { keptExport_1, keptExport_2 } = {}
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
-    );
+        ["removedExport_1", "removedExport_2"],
+      ),
+    ).toThrow('Cannot remove destructured export "removedExport_1"');
   });
 
   test("object rest destructuring throws on removed export", () => {
     expect(() =>
       transform(
         `
-        export const { ...serverExport_1 } = {}
+        export const { ...removedExport_1 } = {}
 
-        export const { ...clientExport_1 } = {}
+        export const { ...keptExport_1 } = {}
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
-    );
+        ["removedExport_1", "removedExport_2"],
+      ),
+    ).toThrow('Cannot remove destructured export "removedExport_1"');
   });
 
   test("nested object destructuring throws on removed export", () => {
     expect(() =>
       transform(
         `
-        export const [keepMe_1, [{ nested: [ { nested: { serverExport_2 } } ] }]] = nested;
+        export const [keepMe_1, [{ nested: [ { nested: { removedExport_2 } } ] }]] = nested;
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_2""`
-    );
+        ["removedExport_1", "removedExport_2"],
+      ),
+    ).toThrow('Cannot remove destructured export "removedExport_2"');
   });
 
   test("object destructuring works when nothing is removed", () => {
     let result = transform(
       `
-      export const { clientExport_1, clientExport_2 } = {}
+      export const { keptExport_1, keptExport_2 } = {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const {
-        clientExport_1,
-        clientExport_2
+        keptExport_1,
+        keptExport_2
       } = {};"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 
   test("default export", () => {
     let result = transform(
       `
-      export const keepMe = null;
+      export const keepMe = () => {};
+      keepMe.keptProperty = true;
 
-      const removeMe = null;
+      const removeMe = () => {};
+      removeMe.removedProperty = true;
 
       export default removeMe;
     `,
-      ["default"]
+      ["default"],
     );
-    expect(result.code).toMatchInlineSnapshot(`"export const keepMe = null;"`);
+    expect(result.code).toMatchInlineSnapshot(`
+      "export const keepMe = () => {};
+      keepMe.keptProperty = true;"
+    `);
     expect(result.code).not.toMatch(/default/i);
   });
 
   test("default export aggregated", () => {
     let result = transform(
       `
-      export const keepMe = null;
+      export const keepMe = () => {};
+      keepMe.keptProperty = true;
 
-      const removeMe = null;
+      const removeMe = () => {};
+      removeMe.removedProperty = true;
 
       export { removeMe as default };
     `,
-      ["default"]
+      ["default"],
     );
-    expect(result.code).toMatchInlineSnapshot(`"export const keepMe = null;"`);
+    expect(result.code).toMatchInlineSnapshot(`
+      "export const keepMe = () => {};
+      keepMe.keptProperty = true;"
+    `);
     expect(result.code).not.toMatch(/default/i);
   });
 
   test("default export aggregated mixed", () => {
     let result = transform(
       `
-      const keepMe = null;
+      const keepMe = () => {};
+      keepMe.keptProperty = true;
 
-      const removeMe = null;
+      const removeMe = () => {};
+      removeMe.removedProperty = true;
 
       export { removeMe as default, keepMe };
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "const keepMe = null;
+      "const keepMe = () => {};
+      keepMe.keptProperty = true;
       export { keepMe };"
     `);
     expect(result.code).not.toMatch(/default/i);
@@ -795,7 +897,7 @@ describe("transform", () => {
 
       export { default } from "./module";
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(`"export const keepMe = null;"`);
     expect(result.code).not.toMatch(/default/i);
@@ -806,10 +908,10 @@ describe("transform", () => {
       `
       export { default, keepMe } from "./module";
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(
-      `"export { keepMe } from "./module";"`
+      `"export { keepMe } from "./module";"`,
     );
     expect(result.code).not.toMatch(/default/i);
   });
@@ -817,15 +919,15 @@ describe("transform", () => {
   test("nothing removed", () => {
     let result = transform(
       `
-      export const clientExport_1 = () => {}
-      export const clientExport_2 = () => {}
+      export const keptExport_1 = () => {}
+      export const keptExport_2 = () => {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["removedExport_1", "removedExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
-      "export const clientExport_1 = () => {};
-      export const clientExport_2 = () => {};"
+      "export const keptExport_1 = () => {};
+      export const keptExport_2 = () => {};"
     `);
-    expect(result.code).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/removed/i);
   });
 });

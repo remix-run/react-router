@@ -10,7 +10,7 @@ describe("A <Link> in a <StaticRouter>", () => {
         renderer = TestRenderer.create(
           <StaticRouter location="/">
             <Link to="mjackson" />
-          </StaticRouter>
+          </StaticRouter>,
         );
       });
 
@@ -23,12 +23,12 @@ describe("A <Link> in a <StaticRouter>", () => {
         renderer = TestRenderer.create(
           <StaticRouter location="/base" basename="/base">
             <Link to="mjackson" />
-          </StaticRouter>
+          </StaticRouter>,
         );
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/base/mjackson"
+        "/base/mjackson",
       );
     });
   });
@@ -40,7 +40,7 @@ describe("A <Link> in a <StaticRouter>", () => {
         renderer = TestRenderer.create(
           <StaticRouter location="/">
             <Link to={{ pathname: "/mjackson" }} />
-          </StaticRouter>
+          </StaticRouter>,
         );
       });
 

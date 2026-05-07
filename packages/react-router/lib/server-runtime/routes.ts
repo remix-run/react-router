@@ -1,10 +1,11 @@
 import type {
-  AgnosticDataRouteObject,
+  DataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
-  unstable_MiddlewareFunction,
+  MiddlewareFunction,
 } from "../router/utils";
+import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
@@ -12,9 +13,13 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
+import {
+  SingleFetchRedirectSymbol,
+  decodeViaTurboStream,
+} from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
+import { getBuildTimeHeader } from "./dev";
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
@@ -39,22 +44,6 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   return routes;
 }
 
-// Create a map of routes by parentId to use recursively instead of
-// repeatedly filtering the manifest.
-export function createRoutes(
-  manifest: ServerRouteManifest,
-  parentId: string = "",
-  routesByParentId: Record<
-    string,
-    Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
-): ServerRoute[] {
-  return (routesByParentId[parentId] || []).map((route) => ({
-    ...route,
-    children: createRoutes(manifest, route.id, routesByParentId),
-  }));
-}
-
 // Convert the Remix ServerManifest into DataRouteObject's for use with
 // createStaticHandler
 export function createStaticHandlerDataRoutes(
@@ -64,8 +53,8 @@ export function createStaticHandlerDataRoutes(
   routesByParentId: Record<
     string,
     Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
-): AgnosticDataRouteObject[] {
+  > = groupRoutesByParentId(manifest),
+): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
       // Always include root due to default boundaries
@@ -73,8 +62,8 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
-      unstable_middleware: route.module.unstable_middleware as unknown as
-        | unstable_MiddlewareFunction[]
+      middleware: route.module.middleware as unknown as
+        | MiddlewareFunction[]
         | undefined,
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix
@@ -82,10 +71,11 @@ export function createStaticHandlerDataRoutes(
         ? async (args: RRLoaderFunctionArgs) => {
             // If we're prerendering, use the data passed in from prerendering
             // the .data route so we don't call loaders twice
-            if (args.request.headers.has("X-React-Router-Prerender-Data")) {
-              const preRenderedData = args.request.headers.get(
-                "X-React-Router-Prerender-Data"
-              );
+            let preRenderedData = getBuildTimeHeader(
+              args.request,
+              "X-React-Router-Prerender-Data",
+            );
+            if (preRenderedData != null) {
               let encoded = preRenderedData
                 ? decodeURI(preRenderedData)
                 : preRenderedData;
@@ -99,21 +89,43 @@ export function createStaticHandlerDataRoutes(
               });
               let decoded = await decodeViaTurboStream(stream, global);
               let data = decoded.value as SingleFetchResults;
-              invariant(
-                data && route.id in data,
-                "Unable to decode prerendered data"
-              );
-              let result = data[route.id] as SingleFetchResult;
-              invariant("data" in result, "Unable to process prerendered data");
-              return result.data;
+
+              // If the loader returned a `.data` redirect, re-throw a normal
+              // Response here to trigger a document level SSG redirect
+              if (data && SingleFetchRedirectSymbol in data) {
+                let result = data[SingleFetchRedirectSymbol]!;
+                let init = { status: result.status };
+                if (result.reload) {
+                  throw redirectDocument(result.redirect, init);
+                } else if (result.replace) {
+                  throw replace(result.redirect, init);
+                } else {
+                  throw redirect(result.redirect, init);
+                }
+              } else {
+                invariant(
+                  data && route.id in data,
+                  "Unable to decode prerendered data",
+                );
+                let result = data[route.id] as SingleFetchResult;
+                invariant(
+                  "data" in result,
+                  "Unable to process prerendered data",
+                );
+                return result.data;
+              }
             }
-            let val = await callRouteHandler(route.module.loader!, args);
+            let val = await callRouteHandler(
+              route.module.loader!,
+              args,
+              future,
+            );
             return val;
           }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>
-            callRouteHandler(route.module.action!, args)
+            callRouteHandler(route.module.action!, args, future)
         : undefined,
       handle: route.module.handle,
     };
@@ -129,7 +141,7 @@ export function createStaticHandlerDataRoutes(
             manifest,
             future,
             route.id,
-            routesByParentId
+            routesByParentId,
           ),
           ...commonRoute,
         };

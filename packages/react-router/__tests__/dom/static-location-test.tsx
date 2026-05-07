@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOMServer from "react-dom/server";
+import * as ReactDOMServer from "react-dom/server.edge";
 import { Routes, Route, StaticRouter, useLocation } from "../../index";
 
 describe("A <StaticRouter>", () => {
@@ -16,7 +16,7 @@ describe("A <StaticRouter>", () => {
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </StaticRouter>
+        </StaticRouter>,
       );
 
       expect(location).toEqual({
@@ -44,7 +44,7 @@ describe("A <StaticRouter>", () => {
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </StaticRouter>
+        </StaticRouter>,
       );
 
       expect(location).toEqual({
@@ -70,7 +70,7 @@ describe("A <StaticRouter>", () => {
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </StaticRouter>
+        </StaticRouter>,
       );
 
       expect(location).toEqual({

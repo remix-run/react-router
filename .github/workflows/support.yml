@@ -11,7 +11,7 @@ jobs:
   action:
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/support-requests@v3
+      - uses: dessant/support-requests@v4
         with:
           issue-comment: >
             :wave: @{issue-author}, we use the issue tracker exclusively for bug reports

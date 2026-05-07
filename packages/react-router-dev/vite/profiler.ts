@@ -35,8 +35,8 @@ export const stop = (log: (message: string) => void): void | Promise<void> => {
       fs.writeFileSync(outPath, JSON.stringify(profile));
       log(
         colors.yellow(
-          `CPU profile written to ${colors.white(colors.dim(outPath))}`
-        )
+          `CPU profile written to ${colors.white(colors.dim(outPath))}`,
+        ),
       );
       global.__reactRouter_profile_session = undefined;
       res();

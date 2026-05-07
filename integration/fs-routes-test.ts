@@ -19,14 +19,6 @@ test.describe("fs-routes", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "vite.config.js": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-
-          export default defineConfig({
-            plugins: [reactRouter()],
-          });
-        `,
         "app/routes.ts": js`
           import { type RouteConfig } from "@react-router/dev/routes";  
           import { flatRoutes } from "@react-router/fs-routes";
@@ -275,7 +267,7 @@ test.describe("emits warnings for route conflicts", async () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
   });
@@ -317,7 +309,7 @@ test.describe("", () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
   });

@@ -35,7 +35,7 @@ test.describe("pathless layout routes", () => {
             export default () => <div data-testid="sandwiches-pathless-index">Sandwiches pathless index</div>;
           `,
         },
-      })
+      }),
     );
   });
 

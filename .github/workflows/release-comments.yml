@@ -1,21 +1,39 @@
-name: 📝 Comment on Release
+name: 💬 Release Comments
 
 on:
   workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   comment:
-    name: 📝 Comment on related issues and pull requests
-    if: github.repository == 'remix-run/react-router'
+    name: 📝 Comment on released issues/pull requests
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # enable commenting on released issues
+      pull-requests: write # enable commenting on released pull requests
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: 📝 Comment on related issues and pull requests
-        uses: remix-run/release-comment-action@v0.4.1
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
         with:
-          DIRECTORY_TO_CHECK: "./packages"
-          PACKAGE_NAME: "react-router"
+          node-version: 24 # Needed for node TS support
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📝 Comment on released issues and pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm run release-comments

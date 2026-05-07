@@ -8,7 +8,7 @@ title: createCookieSessionStorage
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createCookieSessionStorage.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createCookieSessionStorage.html)
 
 Creates and returns a SessionStorage object that stores all session data
 directly in the session cookie itself.

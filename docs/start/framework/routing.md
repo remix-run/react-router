@@ -204,7 +204,7 @@ Note that index routes can't have children.
 
 ## Route Prefixes
 
-Using `prefix`, you can add a path prefix to a set of routes without needing to introduce a parent route file.
+Using `prefix`, you can add a path prefix to a set of routes without needing to introduce a parent route.
 
 ```tsx filename=app/routes.ts lines=[14]
 import {
@@ -228,6 +228,24 @@ export default [
     ]),
   ]),
 ] satisfies RouteConfig;
+```
+
+Note that this does not introduce a new route into the route tree. Instead, it merely modifies the paths of its children.
+
+For example, these two sets of routes are equivalent:
+
+```ts filename=app/routes.ts
+// This usage of `prefix`...
+prefix("parent", [
+  route("child1", "./child1.tsx"),
+  route("child2", "./child2.tsx"),
+])
+
+// ...is equivalent to this:
+[
+  route("parent/child1", "./child1.tsx"),
+  route("parent/child2", "./child2.tsx"),
+]
 ```
 
 ## Dynamic Segments
@@ -301,6 +319,18 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 const { "*": splat } = params;
 ```
 
+You can also use a splat to catch requests that don't match any route:
+
+```ts filename=app/routes.ts
+route("*", "./catchall.tsx"); // catchall route,
+```
+
+```tsx filename=app/catchall.tsx
+export function loader() {
+  throw new Response("Page not found", { status: 404 });
+}
+```
+
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
@@ -329,4 +359,4 @@ Note that these routes do not participate in data loading, actions, code splitti
 Next: [Route Module](./route-module)
 
 [file-route-conventions]: ../../how-to/file-route-conventions
-[outlet]: https://api.reactrouter.com/v7/functions/react_router.Outlet.html
+[outlet]: https://api.reactrouter.com/v7/functions/react-router.Outlet.html

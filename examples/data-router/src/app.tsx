@@ -79,7 +79,7 @@ export function Layout() {
   let revalidator = useRevalidator();
   let fetchers = useFetchers();
   let fetcherInProgress = fetchers.some((f) =>
-    ["loading", "submitting"].includes(f.state)
+    ["loading", "submitting"].includes(f.state),
   );
 
   return (
@@ -324,7 +324,7 @@ const reject = (d: Error | string, ms: number) =>
         d += ` - ${rand()}`;
       }
       r(d);
-    }, ms)
+    }, ms),
   );
 
 export async function deferredLoader() {

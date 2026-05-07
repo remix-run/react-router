@@ -5,15 +5,25 @@ import * as React from "react";
 import {
   createMemoryRouter,
   Link,
+  Links,
   NavLink,
   Outlet,
   RouterProvider,
+  Scripts,
 } from "../../../index";
 import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
-import { FrameworkContext } from "../../../lib/dom/ssr/components";
+import {
+  FrameworkContext,
+  usePrefetchBehavior,
+} from "../../../lib/dom/ssr/components";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+} from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
+import { mockEntryContext, mockFrameworkContext } from "../../utils/framework";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
 type PrefetchEventHandlerProps = {
@@ -21,10 +31,10 @@ type PrefetchEventHandlerProps = {
 };
 
 function itPrefetchesPageLinks<
-  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps
+  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps,
 >(Component: React.ComponentType<Props>) {
   describe('prefetch="intent"', () => {
-    let context = {
+    let context = mockFrameworkContext({
       routeModules: { idk: { default: () => null } },
       manifest: {
         routes: {
@@ -40,8 +50,7 @@ function itPrefetchesPageLinks<
         url: "",
         version: "",
       },
-      future: {},
-    };
+    });
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -72,7 +81,7 @@ function itPrefetchesPageLinks<
         let { container, unmount } = render(
           <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </FrameworkContext.Provider>
+          </FrameworkContext.Provider>,
         );
 
         fireEvent[event](container.firstChild);
@@ -80,11 +89,11 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        let dataHref = container
+        let dataHref = container.ownerDocument
           .querySelector('link[rel="prefetch"][as="fetch"]')
           ?.getAttribute("href");
         expect(dataHref).toBe("/idk.data");
-        let moduleHref = container
+        let moduleHref = container.ownerDocument
           .querySelector('link[rel="modulepreload"]')
           ?.getAttribute("href");
         expect(moduleHref).toBe("idk.js");
@@ -124,7 +133,7 @@ function itPrefetchesPageLinks<
         let { container, unmount } = render(
           <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </FrameworkContext.Provider>
+          </FrameworkContext.Provider>,
         );
 
         fireEvent[event](container.firstChild);
@@ -132,7 +141,9 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        expect(container.querySelector("link[rel=prefetch]")).toBeTruthy();
+        expect(
+          container.ownerDocument.querySelector("link[rel=prefetch]"),
+        ).toBeTruthy();
         expect(ranHandler).toBe(true);
         unmount();
       });
@@ -151,15 +162,15 @@ describe("<NavLink />", () => {
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/")
+      new Request("http://localhost/"),
     );
 
     invariant(
       !(staticHandlerContext instanceof Response),
-      "Expected a context"
+      "Expected a context",
     );
 
-    let context = {
+    let context = mockEntryContext({
       manifest: {
         routes: {
           root: {
@@ -197,19 +208,17 @@ describe("<ServerRouter>", () => {
         },
         empty: { default: {} },
       },
-      staticHandlerContext,
-      future: {},
-    };
+    });
 
     jest.spyOn(console, "warn").mockImplementation(() => {});
     jest.spyOn(console, "error");
 
     let { container } = render(
-      <ServerRouter context={context} url="http://localhost/" />
+      <ServerRouter context={context} url="http://localhost/" />,
     );
 
     expect(console.warn).toHaveBeenCalledWith(
-      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.'
+      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.',
     );
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
@@ -218,55 +227,56 @@ describe("<ServerRouter>", () => {
 
 describe("<HydratedRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    window.__reactRouterContext = {
-      url: "/",
-      future: {},
-    };
-    window.__reactRouterRouteModules = {
-      root: {
-        default: () => {
-          return (
-            <>
-              <h1>Root</h1>
-              <Outlet />
-            </>
-          );
+    let context = mockFrameworkContext({
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+          empty: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "empty",
+            module: "empty.js",
+            index: true,
+            parentId: "root",
+          },
         },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
       },
-      empty: { default: {} },
-    };
-    window.__reactRouterManifest = {
-      routes: {
+      routeModules: {
         root: {
-          hasLoader: false,
-          hasAction: false,
-          hasErrorBoundary: false,
-          id: "root",
-          module: "root.js",
-          path: "/",
+          default: () => {
+            return (
+              <>
+                <h1>Root</h1>
+                <Outlet />
+              </>
+            );
+          },
         },
-        empty: {
-          hasLoader: false,
-          hasAction: false,
-          hasErrorBoundary: false,
-          id: "empty",
-          module: "empty.js",
-          index: true,
-          parentId: "root",
-        },
+        empty: { default: {} },
       },
-      entry: { imports: [], module: "" },
-      url: "",
-      version: "",
-    };
+    });
+    window.__reactRouterContext = context;
+    window.__reactRouterRouteModules = context.routeModules;
+    window.__reactRouterManifest = context.manifest;
     window.__reactRouterContext!.stream = new ReadableStream({
       start(controller) {
         window.__reactRouterContext!.streamController = controller;
       },
     }).pipeThrough(new TextEncoderStream());
     window.__reactRouterContext!.streamController.enqueue(
-      // ts-expect-error
-      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n'
+      // @ts-expect-error
+      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n',
     );
     window.__reactRouterContext!.streamController.close();
 
@@ -280,5 +290,248 @@ describe("<HydratedRouter>", () => {
 
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
+  });
+});
+
+describe("<Links />", () => {
+  it("renders critical css with nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("data-react-router-critical-css");
+    expect(style).toHaveAttribute("nonce", "test-nonce");
+    expect(style).toHaveTextContent(".critical { color: red; }");
+  });
+
+  it("renders critical css object with nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: { rel: "stylesheet", href: "/critical.css" },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[rel='stylesheet']");
+    expect(link).toHaveAttribute("data-react-router-critical-css");
+    expect(link).toHaveAttribute("href", "/critical.css");
+    expect(link).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates nonce to route links", () => {
+    let context = mockFrameworkContext({
+      routeModules: {
+        root: {
+          default: () => null,
+          links: () => [{ rel: "stylesheet", href: "/style.css" }],
+        },
+      },
+      manifest: {
+        routes: {
+          root: {
+            id: "root",
+            module: "root.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            hasClientAction: false,
+            hasClientLoader: false,
+            hasClientMiddleware: false,
+            clientActionModule: undefined,
+            clientLoaderModule: undefined,
+            clientMiddlewareModule: undefined,
+            hydrateFallbackModule: undefined,
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={
+          {
+            matches: [
+              {
+                route: { id: "root" },
+              },
+            ],
+          } as any
+        }
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[href='/style.css']");
+    expect(link).toHaveAttribute("nonce", "test-nonce");
+  });
+});
+
+describe("<Scripts />", () => {
+  it("propagates nonce to modulepreload links", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/"),
+    );
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: ["preload-a.js", "preload-b.js"],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
+      routeModules: {
+        root: {
+          default: () => (
+            <>
+              <h1>Root</h1>
+              <Scripts nonce="test-nonce" />
+            </>
+          ),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter context={context} url="http://localhost/" />,
+    );
+
+    let modulePreloads = container.ownerDocument.querySelectorAll(
+      'link[rel="modulepreload"]',
+    );
+    expect(modulePreloads.length).toBeGreaterThan(0);
+    modulePreloads.forEach((link) => {
+      expect(link).toHaveAttribute("nonce", "test-nonce");
+    });
+
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="manifest.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="entry.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-a.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-b.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+  });
+});
+
+describe("usePrefetchBehavior", () => {
+  function TestComponent({
+    prefetch,
+  }: {
+    prefetch: "intent" | "render" | "none" | "viewport";
+  }) {
+    let [shouldPrefetch, ref] = usePrefetchBehavior(prefetch, {});
+    return (
+      <a ref={ref} data-prefetch={shouldPrefetch}>
+        Link
+      </a>
+    );
+  }
+
+  it("handles prefetch='render'", () => {
+    let context = mockFrameworkContext({});
+
+    // Wrap in FrameworkContext because usePrefetchBehavior checks for it
+    let { container } = render(
+      <FrameworkContext.Provider value={context}>
+        <TestComponent prefetch="render" />
+      </FrameworkContext.Provider>,
+    );
+
+    expect(container.firstChild).toHaveAttribute("data-prefetch", "true");
+  });
+
+  it("handles prefetch='viewport'", () => {
+    let context = mockFrameworkContext({});
+    let observeCallback: IntersectionObserverCallback;
+    let observeMock = jest.fn();
+    let disconnectMock = jest.fn();
+
+    window.IntersectionObserver = class {
+      constructor(cb: IntersectionObserverCallback) {
+        observeCallback = cb;
+      }
+      observe = observeMock;
+      unobserve = jest.fn();
+      disconnect = disconnectMock;
+      takeRecords = () => [];
+      root = null;
+      rootMargin = "";
+      thresholds = [];
+    };
+
+    let { container } = render(
+      <FrameworkContext.Provider value={context}>
+        <TestComponent prefetch="viewport" />
+      </FrameworkContext.Provider>,
+    );
+
+    // Initial state
+    expect(container.firstChild).toHaveAttribute("data-prefetch", "false");
+    expect(observeMock).toHaveBeenCalled();
+
+    // Trigger intersection
+    act(() => {
+      observeCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        new IntersectionObserver(() => {}),
+      );
+    });
+
+    expect(container.firstChild).toHaveAttribute("data-prefetch", "true");
   });
 });

@@ -1,6 +1,5 @@
 import * as React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { JSDOM } from "jsdom";
 
 import {
   createBrowserRouter,
@@ -9,6 +8,7 @@ import {
   useFetcher,
 } from "../../index";
 import { RouterProvider } from "../../lib/dom-export/dom-router-provider";
+import getWindow from "../utils/getWindow";
 
 describe("flushSync", () => {
   it("wraps useNavigate updates in flushSync when specified", async () => {
@@ -42,8 +42,8 @@ describe("flushSync", () => {
         },
       ],
       {
-        window: getWindowImpl("/"),
-      }
+        window: getWindow("/"),
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -58,14 +58,14 @@ describe("flushSync", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     fireEvent.click(screen.getByText("Go to /"));
     await waitFor(() => screen.getByText("Home"));
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -116,8 +116,8 @@ describe("flushSync", () => {
         },
       ],
       {
-        window: getWindowImpl("/"),
-      }
+        window: getWindow("/"),
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -176,8 +176,8 @@ describe("flushSync", () => {
         },
       ],
       {
-        window: getWindowImpl("/"),
-      }
+        window: getWindow("/"),
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -226,7 +226,7 @@ describe("flushSync", () => {
                   onClick={() =>
                     fetcher2.submit(
                       {},
-                      { method: "post", action: "/", flushSync: true }
+                      { method: "post", action: "/", flushSync: true },
                     )
                   }
                 >
@@ -239,8 +239,8 @@ describe("flushSync", () => {
         },
       ],
       {
-        window: getWindowImpl("/"),
-      }
+        window: getWindow("/"),
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -267,10 +267,3 @@ describe("flushSync", () => {
     router.dispose();
   });
 });
-
-function getWindowImpl(initialUrl: string, isHash = false): Window {
-  // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
-  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
-  return dom.window as unknown as Window;
-}

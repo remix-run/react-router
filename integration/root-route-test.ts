@@ -101,7 +101,7 @@ test.describe("root route", () => {
         `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -142,7 +142,7 @@ test.describe("root route", () => {
         `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -194,7 +194,7 @@ test.describe("root route", () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -204,7 +204,7 @@ test.describe("root route", () => {
     expect(await app.page.$("#layout")).toBeNull();
     expect(await app.getHtml("pre")).toMatch("Unexpected Server Error");
     expect(await app.getHtml("pre")).toMatch(
-      "Cannot read properties of undefined"
+      "Cannot read properties of undefined",
     );
 
     console.error = oldConsoleError;
@@ -261,7 +261,7 @@ test.describe("root route", () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -274,7 +274,7 @@ test.describe("root route", () => {
     expect(await app.getHtml("h1")).toMatch("Application Error");
     if (browserName === "chromium") {
       expect(await app.getHtml("pre")).toMatch(
-        "TypeError: Cannot read properties of null"
+        "TypeError: Cannot read properties of null",
       );
     } else {
       // Other browsers don't include the error message in the stack trace so just
@@ -322,7 +322,7 @@ test.describe("root route", () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -333,7 +333,7 @@ test.describe("root route", () => {
     expect(await app.page.$("#layout")).toBeNull();
     expect(await app.getHtml("pre")).toMatch("Unexpected Server Error");
     expect(await app.getHtml("pre")).toMatch(
-      "Cannot read properties of undefined"
+      "Cannot read properties of undefined",
     );
 
     console.error = oldConsoleError;
@@ -387,7 +387,7 @@ test.describe("root route", () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -401,7 +401,7 @@ test.describe("root route", () => {
 
     if (browserName === "chromium") {
       expect(await app.getHtml("pre")).toMatch(
-        "TypeError: Cannot read properties of null"
+        "TypeError: Cannot read properties of null",
       );
     } else {
       // Other browsers don't include the error message in the stack trace so just

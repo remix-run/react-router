@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
-import path from "pathe";
+import Path from "pathe";
 import chokidar, {
   type FSWatcher,
   type EmitArgs as ChokidarEmitArgs,
@@ -17,6 +16,7 @@ import isEqual from "lodash/isEqual";
 import {
   type RouteManifest,
   type RouteManifestEntry,
+  type RouteConfigEntry,
   setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
@@ -54,7 +54,7 @@ type BranchRoute = Pick<
 >;
 
 export const configRouteToBranchRoute = (
-  configRoute: RouteManifestEntry
+  configRoute: RouteManifestEntry,
 ): BranchRoute => pick(configRoute, branchRouteProperties);
 
 export type ServerBundlesFunction = (args: {
@@ -82,21 +82,28 @@ type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
+type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
+
 interface FutureConfig {
+  unstable_optimizeDeps: boolean;
+  v8_passThroughRequests: boolean;
+  unstable_trailingSlashAwareDataRequests: boolean;
+  /**
+   * Prerender with Vite Preview server
+   */
+  unstable_previewServerPrerendering?: boolean;
   /**
    * Enable route middleware
    */
-  unstable_middleware: boolean;
-  unstable_optimizeDeps: boolean;
+  v8_middleware: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
    */
-  unstable_splitRouteModules: boolean | "enforce";
-  unstable_subResourceIntegrity: boolean;
+  v8_splitRouteModules: boolean | "enforce";
   /**
-   * Use Vite Environment API (experimental)
+   * Use Vite Environment API
    */
-  unstable_viteEnvironmentApi: boolean;
+  v8_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -106,6 +113,13 @@ type BuildEndHook = (args: {
   reactRouterConfig: ResolvedReactRouterConfig;
   viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
+
+export type PrerenderPaths =
+  | boolean
+  | Array<string>
+  | ((args: {
+      getStaticPaths: () => string[];
+    }) => Array<string> | Promise<Array<string>>);
 
 /**
  * Config to be exported via the default export from `react-router.config.ts`.
@@ -146,18 +160,42 @@ export type ReactRouterConfig = {
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
+   *
+   * `concurrency` defaults to 1, which means "no concurrency" - fully serial execution.
+   * Setting it to a value more than 1 enables concurrent prerendering.
+   * Setting it to a value higher than one can increase the speed of the build,
+   * but may consume more resources, and send more concurrent requests to the
+   * server/CMS.
    */
   prerender?:
-    | boolean
-    | Array<string>
-    | ((args: {
-        getStaticPaths: () => string[];
-      }) => Array<string> | Promise<Array<string>>);
+    | PrerenderPaths
+    | {
+        paths: PrerenderPaths;
+        concurrency?: number;
+      };
   /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
    */
   presets?: Array<Preset>;
+  /**
+   * Control the "Lazy Route Discovery" behavior
+   *
+   * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
+   *   lazily discover routes as the user navigates around your application.
+   *   You can set this to `initial` to opt-out of this behavior and load all
+   *   routes with the initial HTML document load.
+   * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
+   *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
+   */
+  routeDiscovery?:
+    | {
+        mode: "lazy";
+        manifestPath?: string;
+      }
+    | {
+        mode: "initial";
+      };
   /**
    * The file name of the server build output. This file
    * should end in a `.js` extension and should be deployed to your server.
@@ -177,6 +215,54 @@ export type ReactRouterConfig = {
    * SPA without server-rendering. Default's to `true`.
    */
   ssr?: boolean;
+
+  /**
+   * Enable subresource integrity hashes on asset script tags. Defaults to
+   * `false`.
+   */
+  subResourceIntegrity?: boolean;
+
+  /**
+   * An array of allowed origin hosts for action submissions to UI routes (does not apply
+   * to resource routes). Supports micromatch glob patterns (`*` to match one segment,
+   * `**` to match multiple).
+   *
+   * ```tsx
+   * export default {
+   *   allowedActionOrigins: [
+   *     "example.com",
+   *     "*.example.com", // sub.example.com
+   *     "**.example.com", // sub.domain.example.com
+   *   ],
+   * } satisfies Config;
+   * ```
+   *
+   * If you need to set this value at runtime, you can do in by setting the value
+   * on the server build in your custom server. For example, when using `express`:
+   *
+   * ```ts
+   * import express from "express";
+   * import { createRequestHandler } from "@react-router/express";
+   * import type { ServerBuild } from "react-router";
+   *
+   * export const app = express();
+   *
+   * async function getBuild() {
+   *   let build: ServerBuild = await import(
+   *     "virtual:react-router/server-build"
+   *   );
+   *   return {
+   *     ...build,
+   *     allowedActionOrigins:
+   *       process.env.NODE_ENV === "development"
+   *         ? undefined
+   *         : ["staging.example.com", "www.example.com"],
+   *   };
+   * }
+   *
+   * app.use(createRequestHandler({ build: getBuild }));
+   */
+  allowedActionOrigins?: string[];
 };
 
 export type ResolvedReactRouterConfig = Readonly<{
@@ -206,6 +292,17 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   prerender: ReactRouterConfig["prerender"];
   /**
+   * Control the "Lazy Route Discovery" behavior
+   *
+   * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
+   *   lazily discover routes as the user navigates around your application.
+   *   You can set this to `initial` to opt-out of this behavior and load all
+   *   routes with the initial HTML document load.
+   * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
+   *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
+   */
+  routeDiscovery: ReactRouterConfig["routeDiscovery"];
+  /**
    * An object of all available routes, keyed by route id.
    */
   routes: RouteManifest;
@@ -232,6 +329,19 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * Whether to generate subresource integrity hashes for asset script tags.
+   */
+  subResourceIntegrity: boolean;
+  /**
+   * The allowed origins for actions / mutations. Does not apply to routes
+   * without a component. micromatch glob patterns are supported.
+   */
+  allowedActionOrigins: string[] | false;
+  /**
+   * The resolved array of route config entries exported from `routes.ts`
+   */
+  unstable_routeConfig: RouteConfigEntry[];
 }>;
 
 let mergeReactRouterConfig = (
@@ -239,7 +349,7 @@ let mergeReactRouterConfig = (
 ): ReactRouterConfig => {
   let reducer = (
     configA: ReactRouterConfig,
-    configB: ReactRouterConfig
+    configB: ReactRouterConfig,
   ): ReactRouterConfig => {
     let mergeRequired = (key: keyof ReactRouterConfig) =>
       configA[key] !== undefined && configB[key] !== undefined;
@@ -309,6 +419,8 @@ type Result<T> =
       error: string;
     };
 
+type ConfigResult = Result<ResolvedReactRouterConfig>;
+
 function ok<T>(value: T): Result<T> {
   return { ok: true, value };
 }
@@ -321,11 +433,15 @@ async function resolveConfig({
   root,
   viteNodeContext,
   reactRouterConfigFile,
+  skipRoutes,
+  validateConfig,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
-}): Promise<Result<ResolvedReactRouterConfig>> {
+  skipRoutes?: boolean;
+  validateConfig?: ValidateConfigFunction;
+}): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
   if (reactRouterConfigFile) {
@@ -335,7 +451,7 @@ async function resolveConfig({
       }
 
       let configModule = await viteNodeContext.runner.executeFile(
-        reactRouterConfigFile
+        reactRouterConfigFile,
       );
 
       if (configModule.default === undefined) {
@@ -347,6 +463,13 @@ async function resolveConfig({
       }
 
       reactRouterUserConfig = configModule.default;
+
+      if (validateConfig) {
+        const error = validateConfig(reactRouterUserConfig);
+        if (error) {
+          return err(error);
+        }
+      }
     } catch (error) {
       return err(`Error loading ${reactRouterConfigFile}: ${error}`);
     }
@@ -360,7 +483,7 @@ async function resolveConfig({
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
         if (!preset.name) {
           throw new Error(
-            "React Router presets must have a `name` property defined."
+            "React Router presets must have a `name` property defined.",
           );
         }
 
@@ -370,11 +493,11 @@ async function resolveConfig({
 
         let configPreset: ReactRouterConfig = omit(
           await preset.reactRouterConfig({ reactRouterUserConfig }),
-          excludedConfigPresetKeys
+          excludedConfigPresetKeys,
         );
 
         return configPreset;
-      })
+      }),
     )
   ).filter(function isNotNull<T>(value: T | null): value is T {
     return value !== null;
@@ -388,121 +511,225 @@ async function resolveConfig({
     ssr: true,
   } as const satisfies Partial<ReactRouterConfig>;
 
+  let userAndPresetConfigs = mergeReactRouterConfig(
+    ...presets,
+    reactRouterUserConfig,
+  );
+
   let {
     appDirectory: userAppDirectory,
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
     prerender,
+    routeDiscovery: userRouteDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
     ssr,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
-    ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
+    ...userAndPresetConfigs,
   };
 
   if (!ssr && serverBundles) {
     serverBundles = undefined;
   }
 
-  let isValidPrerenderConfig =
-    prerender == null ||
-    typeof prerender === "boolean" ||
-    Array.isArray(prerender) ||
-    typeof prerender === "function";
+  if (prerender) {
+    let isValidPrerenderPathsConfig = (p: unknown) =>
+      typeof p === "boolean" || typeof p === "function" || Array.isArray(p);
 
-  if (!isValidPrerenderConfig) {
-    return err(
-      "The `prerender` config must be a boolean, an array of string paths, " +
-        "or a function returning a boolean or array of string paths"
-    );
-  }
+    let isValidPrerenderConfig =
+      isValidPrerenderPathsConfig(prerender) ||
+      (typeof prerender === "object" &&
+        "paths" in prerender &&
+        isValidPrerenderPathsConfig(prerender.paths));
 
-  let appDirectory = path.resolve(root, userAppDirectory || "app");
-  let buildDirectory = path.resolve(root, userBuildDirectory);
-
-  let rootRouteFile = findEntry(appDirectory, "root");
-  if (!rootRouteFile) {
-    let rootRouteDisplayPath = path.relative(
-      root,
-      path.join(appDirectory, "root.tsx")
-    );
-    return err(
-      `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
-    );
-  }
-
-  let routes: RouteManifest = {
-    root: { path: "", id: "root", file: rootRouteFile },
-  };
-
-  let routeConfigFile = findEntry(appDirectory, "routes");
-
-  try {
-    if (!routeConfigFile) {
-      let routeConfigDisplayPath = path.relative(
-        root,
-        path.join(appDirectory, "routes.ts")
+    if (!isValidPrerenderConfig) {
+      return err(
+        "The `prerender`/`prerender.paths` config must be a boolean, an array " +
+          "of string paths, or a function returning a boolean or array of string paths.",
       );
-      return err(`Route config file not found at "${routeConfigDisplayPath}".`);
     }
 
-    setAppDirectory(appDirectory);
-    let routeConfigExport = (
-      await viteNodeContext.runner.executeFile(
-        path.join(appDirectory, routeConfigFile)
-      )
-    ).default;
-    let routeConfig = await routeConfigExport;
-
-    let result = validateRouteConfig({
-      routeConfigFile,
-      routeConfig,
-    });
-
-    if (!result.valid) {
-      return err(result.message);
+    if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
+      return err(
+        "The `prerender.unstable_concurrency` config field has been stabilized as `prerender.concurrency`",
+      );
     }
 
-    routes = {
-      ...routes,
-      ...configRoutesToRouteManifest(appDirectory, routeConfig),
-    };
-  } catch (error: any) {
-    return err(
-      [
-        colors.red(`Route config in "${routeConfigFile}" is invalid.`),
-        "",
-        error.loc?.file && error.loc?.column && error.frame
-          ? [
-              path.relative(appDirectory, error.loc.file) +
-                ":" +
-                error.loc.line +
-                ":" +
-                error.loc.column,
-              error.frame.trim?.(),
-            ]
-          : error.stack,
-      ]
-        .flat()
-        .join("\n")
+    let isValidConcurrencyConfig =
+      typeof prerender != "object" ||
+      !("concurrency" in prerender) ||
+      (typeof prerender.concurrency === "number" &&
+        Number.isInteger(prerender.concurrency) &&
+        prerender.concurrency > 0);
+
+    if (!isValidConcurrencyConfig) {
+      return err(
+        "The `prerender.concurrency` config must be a positive integer if specified.",
+      );
+    }
+  }
+
+  let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
+  if (userRouteDiscovery == null) {
+    if (ssr) {
+      routeDiscovery = {
+        mode: "lazy",
+        manifestPath: "/__manifest",
+      };
+    } else {
+      routeDiscovery = { mode: "initial" };
+    }
+  } else if (userRouteDiscovery.mode === "initial") {
+    routeDiscovery = userRouteDiscovery;
+  } else if (userRouteDiscovery.mode === "lazy") {
+    if (!ssr) {
+      return err(
+        'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`',
+      );
+    }
+
+    let { manifestPath } = userRouteDiscovery;
+    if (manifestPath != null && !manifestPath.startsWith("/")) {
+      return err(
+        "The `routeDiscovery.manifestPath` config must be a root-relative " +
+          'pathname beginning with a slash (i.e., "/__manifest")',
+      );
+    }
+
+    routeDiscovery = userRouteDiscovery;
+  }
+
+  let appDirectory = Path.resolve(root, userAppDirectory || "app");
+  let buildDirectory = Path.resolve(root, userBuildDirectory);
+
+  let rootRouteFile = findEntry(appDirectory, "root", { absolute: true });
+  if (!rootRouteFile) {
+    let rootRouteDisplayPath = Path.relative(
+      root,
+      Path.join(appDirectory, "root.tsx"),
     );
+    return err(
+      `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`,
+    );
+  }
+
+  let routes: RouteManifest;
+  let routeConfig: RouteConfigEntry[] = [];
+
+  if (skipRoutes) {
+    routes = {};
+  } else {
+    let routeConfigFile = findEntry(appDirectory, "routes");
+
+    try {
+      if (!routeConfigFile) {
+        let routeConfigDisplayPath = Path.relative(
+          root,
+          Path.join(appDirectory, "routes.ts"),
+        );
+        return err(
+          `Route config file not found at "${routeConfigDisplayPath}".`,
+        );
+      }
+
+      setAppDirectory(appDirectory);
+      let routeConfigExport = (
+        await viteNodeContext.runner.executeFile(
+          Path.join(appDirectory, routeConfigFile),
+        )
+      ).default;
+      let result = validateRouteConfig({
+        routeConfigFile,
+        routeConfig: await routeConfigExport,
+      });
+
+      if (!result.valid) {
+        return err(result.message);
+      }
+
+      // Nest the route config under the resolved root route
+      routeConfig = [
+        {
+          id: "root",
+          path: "",
+          file: Path.relative(appDirectory, rootRouteFile),
+          children: result.routeConfig,
+        },
+      ];
+
+      routes = configRoutesToRouteManifest(appDirectory, routeConfig);
+    } catch (error: any) {
+      return err(
+        [
+          colors.red(`Route config in "${routeConfigFile}" is invalid.`),
+          "",
+          error.loc?.file && error.loc?.column && error.frame
+            ? [
+                Path.relative(appDirectory, error.loc.file) +
+                  ":" +
+                  error.loc.line +
+                  ":" +
+                  error.loc.column,
+                error.frame.trim?.(),
+              ]
+            : error.stack,
+        ]
+          .flat()
+          .join("\n"),
+      );
+    }
+  }
+
+  // Check for renamed flags and provide helpful error messages
+  let futureConfig = userAndPresetConfigs.future;
+  if (futureConfig) {
+    if ("unstable_splitRouteModules" in futureConfig) {
+      return err(
+        "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
+      );
+    }
+    if ("unstable_viteEnvironmentApi" in futureConfig) {
+      return err(
+        "The `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi`",
+      );
+    }
+    if ("unstable_passThroughRequests" in futureConfig) {
+      return err(
+        "The `future.unstable_passThroughRequests` flag has been stabilized as `future.v8_passThroughRequests`",
+      );
+    }
+    if ("unstable_subResourceIntegrity" in futureConfig) {
+      return err(
+        "The `future.unstable_subResourceIntegrity` flag has been stabilized and moved to a top-level `config.subResourceIntegrity` field",
+      );
+    }
   }
 
   let future: FutureConfig = {
-    unstable_middleware:
-      reactRouterUserConfig.future?.unstable_middleware ?? false,
     unstable_optimizeDeps:
-      reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
-    unstable_splitRouteModules:
-      reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
-    unstable_subResourceIntegrity:
-      reactRouterUserConfig.future?.unstable_subResourceIntegrity ?? false,
-    unstable_viteEnvironmentApi:
-      reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
+      userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
+    v8_passThroughRequests:
+      userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
+    unstable_trailingSlashAwareDataRequests:
+      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
+      false,
+    unstable_previewServerPrerendering:
+      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
+    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
+    v8_splitRouteModules:
+      userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
+    v8_viteEnvironmentApi:
+      (userAndPresetConfigs.future?.v8_viteEnvironmentApi ||
+        userAndPresetConfigs.future?.unstable_previewServerPrerendering) ??
+      false,
   };
+
+  let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+  let subResourceIntegrity = userAndPresetConfigs.subResourceIntegrity ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
@@ -512,11 +739,15 @@ async function resolveConfig({
     future,
     prerender,
     routes,
+    routeDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
     ssr,
-  });
+    subResourceIntegrity,
+    allowedActionOrigins,
+    unstable_routeConfig: routeConfig,
+  } satisfies ResolvedReactRouterConfig);
 
   for (let preset of reactRouterUserConfig.presets ?? []) {
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
@@ -528,8 +759,9 @@ async function resolveConfig({
 type ChokidarEventName = ChokidarEmitArgs[0];
 
 type ChangeHandler = (args: {
-  result: Result<ResolvedReactRouterConfig>;
-  configCodeUpdated: boolean;
+  result: ConfigResult;
+  configCodeChanged: boolean;
+  routeConfigCodeChanged: boolean;
   configChanged: boolean;
   routeConfigChanged: boolean;
   path: string;
@@ -537,7 +769,7 @@ type ChangeHandler = (args: {
 }) => void;
 
 export type ConfigLoader = {
-  getConfig: () => Promise<Result<ResolvedReactRouterConfig>>;
+  getConfig: () => Promise<ConfigResult>;
   onChange: (handler: ChangeHandler) => () => void;
   close: () => Promise<void>;
 };
@@ -545,23 +777,46 @@ export type ConfigLoader = {
 export async function createConfigLoader({
   rootDirectory: root,
   watch,
+  mode,
+  skipRoutes,
+  validateConfig,
 }: {
   watch: boolean;
   rootDirectory?: string;
+  mode: string;
+  skipRoutes?: boolean;
+  validateConfig?: ValidateConfigFunction;
 }): Promise<ConfigLoader> {
-  root = root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+  root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
+  let vite = await import("vite");
   let viteNodeContext = await ViteNode.createContext({
     root,
-    mode: watch ? "development" : "production",
+    mode,
+    // Filter out any info level logs from vite-node
+    customLogger: vite.createLogger("warn", {
+      prefix: "[react-router]",
+    }),
   });
 
-  let reactRouterConfigFile = findEntry(root, "react-router.config", {
-    absolute: true,
-  });
+  let reactRouterConfigFile: string | undefined;
+
+  let updateReactRouterConfigFile = () => {
+    reactRouterConfigFile = findEntry(root, "react-router.config", {
+      absolute: true,
+    });
+  };
+
+  updateReactRouterConfigFile();
 
   let getConfig = () =>
-    resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
+    resolveConfig({
+      root,
+      viteNodeContext,
+      reactRouterConfigFile,
+      skipRoutes,
+      validateConfig,
+    });
 
   let appDirectory: string;
 
@@ -571,9 +826,9 @@ export async function createConfigLoader({
     throw new Error(initialConfigResult.error);
   }
 
-  appDirectory = initialConfigResult.value.appDirectory;
+  appDirectory = Path.normalize(initialConfigResult.value.appDirectory);
 
-  let lastConfig = initialConfigResult.value;
+  let currentConfig = initialConfigResult.value;
 
   let fsWatcher: FSWatcher | undefined;
   let changeHandlers: ChangeHandler[] = [];
@@ -583,68 +838,119 @@ export async function createConfigLoader({
     onChange: (handler: ChangeHandler) => {
       if (!watch) {
         throw new Error(
-          "onChange is not supported when watch mode is disabled"
+          "onChange is not supported when watch mode is disabled",
         );
       }
 
       changeHandlers.push(handler);
 
       if (!fsWatcher) {
-        fsWatcher = chokidar.watch(
-          [
-            ...(reactRouterConfigFile ? [reactRouterConfigFile] : []),
-            appDirectory,
-          ],
-          { ignoreInitial: true }
-        );
+        fsWatcher = chokidar.watch([root, appDirectory], {
+          ignoreInitial: true,
+          ignored: (path) => isIgnoredByWatcher(path, { root, appDirectory }),
+        });
 
-        fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
+        fsWatcher.on("error", (error: unknown) => {
+          let message = error instanceof Error ? error.message : String(error);
+          console.warn(colors.yellow(`File watcher error: ${message}`));
+        });
+
+        fsWatcher.on("all", async (...args) => {
           let [event, rawFilepath] = args;
-          let filepath = path.normalize(rawFilepath);
+          let filepath = Path.normalize(rawFilepath);
+
+          let fileAddedOrRemoved = event === "add" || event === "unlink";
 
           let appFileAddedOrRemoved =
-            appDirectory &&
-            (event === "add" || event === "unlink") &&
-            filepath.startsWith(path.normalize(appDirectory));
+            fileAddedOrRemoved &&
+            filepath.startsWith(Path.normalize(appDirectory));
 
-          let configCodeUpdated = Boolean(
-            viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
-          );
+          let rootRelativeFilepath = Path.relative(root, filepath);
 
-          if (configCodeUpdated || appFileAddedOrRemoved) {
-            viteNodeContext.devServer?.moduleGraph.invalidateAll();
-            viteNodeContext.runner?.moduleCache.clear();
+          let configFileAddedOrRemoved =
+            fileAddedOrRemoved &&
+            isEntryFile("react-router.config", rootRelativeFilepath);
+
+          if (configFileAddedOrRemoved) {
+            updateReactRouterConfigFile();
           }
 
-          if (appFileAddedOrRemoved || configCodeUpdated) {
-            let result = await getConfig();
+          let moduleGraphChanged =
+            configFileAddedOrRemoved ||
+            Boolean(
+              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath),
+            );
 
-            let configChanged = result.ok && !isEqual(lastConfig, result.value);
+          // Bail out if no relevant changes detected
+          if (!moduleGraphChanged && !appFileAddedOrRemoved) {
+            return;
+          }
 
-            let routeConfigChanged =
-              result.ok && !isEqual(lastConfig?.routes, result.value.routes);
+          viteNodeContext.devServer?.moduleGraph.invalidateAll();
+          viteNodeContext.runner?.moduleCache.clear();
 
-            for (let handler of changeHandlers) {
-              handler({
-                result,
-                configCodeUpdated,
-                configChanged,
-                routeConfigChanged,
-                path: filepath,
-                event,
-              });
-            }
+          let result = await getConfig();
 
-            if (result.ok) {
-              lastConfig = result.value;
-            }
+          let prevAppDirectory = appDirectory;
+          appDirectory = Path.normalize(
+            (result.value ?? currentConfig).appDirectory,
+          );
+
+          if (appDirectory !== prevAppDirectory) {
+            fsWatcher!.unwatch(prevAppDirectory);
+            fsWatcher!.add(appDirectory);
+          }
+
+          let configCodeChanged =
+            configFileAddedOrRemoved ||
+            (reactRouterConfigFile !== undefined &&
+              isEntryFileDependency(
+                viteNodeContext.devServer.moduleGraph,
+                reactRouterConfigFile,
+                filepath,
+              ));
+
+          let routeConfigFile = !skipRoutes
+            ? findEntry(appDirectory, "routes", {
+                absolute: true,
+              })
+            : undefined;
+          let routeConfigCodeChanged =
+            routeConfigFile !== undefined &&
+            isEntryFileDependency(
+              viteNodeContext.devServer.moduleGraph,
+              routeConfigFile,
+              filepath,
+            );
+
+          let configChanged =
+            result.ok &&
+            !isEqual(omitRoutes(currentConfig), omitRoutes(result.value));
+
+          let routeConfigChanged =
+            result.ok && !isEqual(currentConfig?.routes, result.value.routes);
+
+          for (let handler of changeHandlers) {
+            handler({
+              result,
+              configCodeChanged,
+              routeConfigCodeChanged,
+              configChanged,
+              routeConfigChanged,
+              path: filepath,
+              event,
+            });
+          }
+
+          if (result.ok) {
+            currentConfig = result.value;
           }
         });
       }
 
       return () => {
         changeHandlers = changeHandlers.filter(
-          (changeHandler) => changeHandler !== handler
+          (changeHandler) => changeHandler !== handler,
         );
       };
     },
@@ -656,9 +962,19 @@ export async function createConfigLoader({
   };
 }
 
-export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
+export async function loadConfig({
+  rootDirectory,
+  mode,
+  skipRoutes,
+}: {
+  rootDirectory: string;
+  mode: string;
+  skipRoutes?: boolean;
+}) {
   let configLoader = await createConfigLoader({
     rootDirectory,
+    mode,
+    skipRoutes,
     watch: false,
   });
   let config = await configLoader.getConfig();
@@ -675,11 +991,11 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(
-    path.dirname(require.resolve("@react-router/dev/package.json")),
+  let defaultsDirectory = Path.resolve(
+    Path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
-    "defaults"
+    "defaults",
   );
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
@@ -688,36 +1004,50 @@ export async function resolveEntryFiles({
   let entryServerFile: string;
   let entryClientFile = userEntryClientFile || "entry.client.tsx";
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
-
   if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
+    let packageJsonPath = findEntry(rootDirectory, "package", {
+      extensions: [".json"],
+      absolute: true,
+      walkParents: true,
+    });
+
+    if (!packageJsonPath) {
+      throw new Error(
+        `Could not find package.json in ${rootDirectory} or any of its parent directories. Please add a package.json, or provide a custom entry.server.tsx/jsx file in your app directory.`,
+      );
+    }
+
+    // TODO(v8): Remove - only required for Node 20.18 and below
+    let { readPackageJSON, sortPackage, updatePackage } = await import(
+      "pkg-types"
+    );
+    let packageJsonDirectory = Path.dirname(packageJsonPath);
+    let pkgJson = await readPackageJSON(packageJsonDirectory);
+    let deps = pkgJson.dependencies ?? {};
+
     if (!deps["@react-router/node"]) {
       throw new Error(
-        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`
+        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
       );
     }
 
     if (!deps["isbot"]) {
       console.log(
-        "adding `isbot@5` to your package.json, you should commit this change"
+        "adding `isbot@5` to your package.json, you should commit this change",
       );
 
-      pkgJson.update({
-        dependencies: {
-          ...pkgJson.content.dependencies,
-          isbot: "^5",
-        },
+      await updatePackage(packageJsonPath, (pkg) => {
+        pkg.dependencies ??= {};
+        pkg.dependencies.isbot = "^5";
+        sortPackage(pkg);
       });
-
-      await pkgJson.save();
 
       let packageManager = detectPackageManager() ?? "npm";
 
       execSync(`${packageManager} install`, {
-        cwd: rootDirectory,
+        cwd: packageJsonDirectory,
         stdio: "inherit",
       });
     }
@@ -726,29 +1056,169 @@ export async function resolveEntryFiles({
   }
 
   let entryClientFilePath = userEntryClientFile
-    ? path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
-    : path.resolve(defaultsDirectory, entryClientFile);
+    ? Path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
+    : Path.resolve(defaultsDirectory, entryClientFile);
 
   let entryServerFilePath = userEntryServerFile
-    ? path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
-    : path.resolve(defaultsDirectory, entryServerFile);
+    ? Path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
+    : Path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
 }
 
-const entryExts = [".js", ".jsx", ".ts", ".tsx"];
+export async function resolveRSCEntryFiles({
+  reactRouterConfig,
+}: {
+  reactRouterConfig: ResolvedReactRouterConfig;
+}) {
+  let { appDirectory } = reactRouterConfig;
+
+  let defaultsDirectory = Path.resolve(
+    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "default-rsc-entries",
+  );
+
+  let userEntryClientFile = findEntry(appDirectory, "entry.client", {
+    absolute: true,
+  });
+  let userEntryRSCFile = findEntry(appDirectory, "entry.rsc", {
+    absolute: true,
+  });
+  let userEntrySSRFile = findEntry(appDirectory, "entry.ssr", {
+    absolute: true,
+  });
+
+  let client =
+    userEntryClientFile ?? Path.join(defaultsDirectory, "entry.client.tsx");
+  let rsc = userEntryRSCFile ?? Path.join(defaultsDirectory, "entry.rsc.tsx");
+  let ssr = userEntrySSRFile ?? Path.join(defaultsDirectory, "entry.ssr.tsx");
+
+  return { client, rsc, ssr };
+}
+
+function omitRoutes(
+  config: ResolvedReactRouterConfig,
+): ResolvedReactRouterConfig {
+  return {
+    ...config,
+    routes: {},
+  };
+}
+
+const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
+
+function isEntryFile(entryBasename: string, filename: string) {
+  return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
+}
 
 function findEntry(
   dir: string,
   basename: string,
-  options?: { absolute?: boolean }
+  options?: {
+    absolute?: boolean;
+    extensions?: string[];
+    walkParents?: boolean;
+  },
 ): string | undefined {
-  for (let ext of entryExts) {
-    let file = path.resolve(dir, basename + ext);
-    if (fs.existsSync(file)) {
-      return options?.absolute ?? false ? file : path.relative(dir, file);
+  let currentDir = Path.resolve(dir);
+  let { root } = Path.parse(currentDir);
+
+  while (true) {
+    for (let ext of options?.extensions ?? entryExts) {
+      let file = Path.resolve(currentDir, basename + ext);
+      if (fs.existsSync(file)) {
+        return (options?.absolute ?? false) ? file : Path.relative(dir, file);
+      }
+    }
+
+    if (!options?.walkParents) {
+      return undefined;
+    }
+
+    let parentDir = Path.dirname(currentDir);
+    // Break out when we've reached the root directory or we're about to get
+    // stuck in a loop where `path.dirname` keeps returning "/"
+    if (currentDir === root || parentDir === currentDir) {
+      return undefined;
+    }
+
+    currentDir = parentDir;
+  }
+}
+
+function isEntryFileDependency(
+  moduleGraph: Vite.ModuleGraph,
+  entryFilepath: string,
+  filepath: string,
+  visited = new Set<string>(),
+): boolean {
+  // Ensure normalized paths
+  entryFilepath = Path.normalize(entryFilepath);
+  filepath = Path.normalize(filepath);
+
+  if (visited.has(filepath)) {
+    return false;
+  }
+
+  visited.add(filepath);
+
+  if (filepath === entryFilepath) {
+    return true;
+  }
+
+  let mod = moduleGraph.getModuleById(filepath);
+
+  if (!mod) {
+    return false;
+  }
+
+  // Recursively check all importers to see if any of them are the entry file
+  for (let importer of mod.importers) {
+    if (!importer.id) {
+      continue;
+    }
+
+    if (
+      importer.id === entryFilepath ||
+      isEntryFileDependency(moduleGraph, entryFilepath, importer.id, visited)
+    ) {
+      return true;
     }
   }
 
-  return undefined;
+  return false;
+}
+
+export function isIgnoredByWatcher(
+  path: string,
+  { root, appDirectory }: { root: string; appDirectory: string },
+): boolean {
+  let dirname = Path.dirname(path);
+
+  let ignoredByPath =
+    !dirname.startsWith(appDirectory) &&
+    // Ensure we're only watching files outside of the app directory
+    // that are at the root level, not nested in subdirectories
+    path !== root && // Watch the root directory itself
+    dirname !== root; // Watch files at the root level
+
+  if (ignoredByPath) {
+    return true;
+  }
+
+  // Filter out non-regular files (sockets, pipes, etc.) that
+  // crash `fs.watch()` on macOS with errno -102
+  // https://github.com/paulmillr/chokidar/issues/1391
+  try {
+    let stat = fs.statSync(path, { throwIfNoEntry: false });
+    if (stat && !stat.isFile() && !stat.isDirectory()) {
+      return true;
+    }
+  } catch {
+    return true;
+  }
+
+  return false;
 }

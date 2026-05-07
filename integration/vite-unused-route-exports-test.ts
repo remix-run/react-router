@@ -28,10 +28,10 @@ test("Vite / dead-code elimination for unused route exports", async () => {
   expect(status).toBe(0);
 
   expect(
-    grep(path.join(cwd, "build/client"), /ROUTE_EXPORT_THAT_ISNT_USED/).length
+    grep(path.join(cwd, "build/client"), /ROUTE_EXPORT_THAT_ISNT_USED/).length,
   ).toBe(0);
 
   expect(
-    grep(path.join(cwd, "build/client"), /ROUTE_EXPORT_THAT_IS_USED/).length
+    grep(path.join(cwd, "build/client"), /ROUTE_EXPORT_THAT_IS_USED/).length,
   ).toBeGreaterThanOrEqual(1);
 });

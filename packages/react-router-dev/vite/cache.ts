@@ -6,7 +6,7 @@ export function getOrSetFromCache<T>(
   cache: Cache,
   key: string,
   version: string,
-  getValue: () => T
+  getValue: () => T,
 ): T {
   if (!cache) {
     return getValue();

@@ -41,7 +41,7 @@ test("Vite / client code excluded from server bundle", async () => {
   expect(status).toBe(0);
   let lines = grep(
     path.join(cwd, "build/server"),
-    /CLIENT_ONLY_FILE|CLIENT_ONLY_DIR/
+    /CLIENT_ONLY_FILE|CLIENT_ONLY_DIR/,
   );
   expect(lines).toHaveLength(0);
 });

@@ -11,5 +11,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter basename="inbox">
       <InboxApp />
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

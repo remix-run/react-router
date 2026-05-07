@@ -4,30 +4,52 @@ title: generatePath
 
 # generatePath
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/router/utils.ts
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.generatePath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.generatePath.html)
 
 Returns a path with params interpolated.
+
+```tsx
+import { generatePath } from "react-router";
+
+generatePath("/users/:id", { id: "123" }); // "/users/123"
+```
 
 ## Signature
 
 ```tsx
-generatePath(originalPath, params): string
+function generatePath<Path extends string>(
+  originalPath: Path,
+  params: GeneratePathParams<Path> =  as any,
+): string {}
 ```
 
 ## Params
 
 ### originalPath
 
-[modes: framework, data, declarative]
-
-_No documentation_
+The original path to generate.
 
 ### params
 
-[modes: framework, data, declarative]
+The parameters to interpolate into the path.
 
-_No documentation_
+## Returns
+
+The generated path with parameters interpolated.
+

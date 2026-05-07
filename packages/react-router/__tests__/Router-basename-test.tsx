@@ -20,14 +20,14 @@ describe("<Router basename>", () => {
           <Routes>
             <Route path="/" element={<h1>App</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(renderer.toJSON()).toBeNull();
     expect(consoleWarn).toHaveBeenCalledTimes(1);
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining("<Router> won't render anything")
+      expect.stringContaining("<Router> won't render anything"),
     );
   });
 
@@ -39,7 +39,7 @@ describe("<Router basename>", () => {
           <Routes>
             <Route path="/" element={<h1>Home</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -59,7 +59,7 @@ describe("<Router basename>", () => {
             <Route path="home" element={<h1>Home</h1>} />
             <Route path="home" element={<h1>Something else</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -78,7 +78,7 @@ describe("<Router basename>", () => {
           <Routes>
             <Route path="/" element={<h1>Home</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -97,7 +97,7 @@ describe("<Router basename>", () => {
           <Routes>
             <Route path="/" element={<h1>Home</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

@@ -14,20 +14,20 @@
     "@react-router/cloudflare": "workspace:*",
     "isbot": "^4.1.0",
     "miniflare": "^3.20250214.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250404.0",
+    "@cloudflare/workers-types": "^4.20260507.1",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@react-router/remix-routes-option-adapter": "workspace:*",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "typescript": "^5.1.6",
-    "vite": "^6.1.0",
-    "wrangler": "^4.7.1"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^6.3.0",
+    "wrangler": "^4.90.0"
   },
   "engines": {
     "node": ">=20.0.0"

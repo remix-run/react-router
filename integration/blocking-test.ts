@@ -40,7 +40,7 @@ test("handles synchronous proceeding correctly", async ({ page }) => {
       `,
       "app/routes/b.tsx": js`
       import * as React from "react";
-      import { Form, useAction, useBlocker } from "react-router";
+      import { Form, useBlocker } from "react-router";
         export default function Component() {
           return (
             <div>

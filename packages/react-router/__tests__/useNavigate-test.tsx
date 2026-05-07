@@ -38,7 +38,7 @@ describe("useNavigate", () => {
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -74,7 +74,7 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -131,7 +131,7 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -188,7 +188,7 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -264,40 +264,40 @@ describe("useNavigate", () => {
           <Routes>
             <Route path="home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[0].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[1].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[2].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search#hash"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search#hash"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
 
     expect(() =>
       TestRenderer.act(() => {
         renderer.root.findAllByType("button")[3].props.onClick();
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`,
     );
   });
 
@@ -493,7 +493,7 @@ describe("useNavigate", () => {
                 <Route index element={<Home />} />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -510,7 +510,7 @@ describe("useNavigate", () => {
           </h1>
         `);
         expect(warnSpy).toHaveBeenCalledWith(
-          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered.",
         );
       });
 
@@ -523,7 +523,7 @@ describe("useNavigate", () => {
                 <Route index element={<Home />} />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -553,7 +553,7 @@ describe("useNavigate", () => {
                 <Route path="home" element={<Parent />} />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -561,7 +561,7 @@ describe("useNavigate", () => {
           let navigate = useNavigate();
           let onChildRendered = React.useCallback(
             () => navigate("/about"),
-            [navigate]
+            [navigate],
           );
           return <Child onChildRendered={onChildRendered} />;
         }
@@ -610,7 +610,7 @@ describe("useNavigate", () => {
           </h1>
         `);
         expect(warnSpy).toHaveBeenCalledWith(
-          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered.",
         );
       });
 
@@ -653,7 +653,7 @@ describe("useNavigate", () => {
               let navigate = useNavigate();
               let onChildRendered = React.useCallback(
                 () => navigate("/about"),
-                [navigate]
+                [navigate],
               );
               return <Child onChildRendered={onChildRendered} />;
             },
@@ -714,7 +714,7 @@ describe("useNavigate", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<ShowLocationState />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -746,7 +746,7 @@ describe("useNavigate", () => {
                 />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -776,7 +776,7 @@ describe("useNavigate", () => {
                 />
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -803,7 +803,7 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -833,7 +833,7 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -869,7 +869,7 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -905,7 +905,7 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -954,7 +954,7 @@ describe("useNavigate", () => {
                 </Route>
                 <Route path="about" element={<h1>About</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -984,7 +984,7 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1014,7 +1014,7 @@ describe("useNavigate", () => {
                   element={<UseNavigateButton to=".." relative="path" />}
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1044,7 +1044,7 @@ describe("useNavigate", () => {
                   />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1074,7 +1074,7 @@ describe("useNavigate", () => {
                   />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1112,7 +1112,7 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1150,7 +1150,7 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1183,7 +1183,7 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1213,7 +1213,7 @@ describe("useNavigate", () => {
                   }
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -1268,7 +1268,7 @@ describe("useNavigate", () => {
                 <Route path="about" element={<h1>About</h1>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -1381,9 +1381,9 @@ describe("useNavigate", () => {
             <>
               <Route path="home" element={<UseNavigateButton to="/about" />} />
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1414,9 +1414,9 @@ describe("useNavigate", () => {
                 element={<UseNavigateButton to="../about" />}
               />
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1444,9 +1444,9 @@ describe("useNavigate", () => {
                 <Route index element={<UseNavigateButton to="../about" />} />
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1477,9 +1477,9 @@ describe("useNavigate", () => {
                 />
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1516,9 +1516,9 @@ describe("useNavigate", () => {
                 </Route>
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home"] }
+          { initialEntries: ["/home"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1555,9 +1555,9 @@ describe("useNavigate", () => {
                 </Route>
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home/page"] }
+          { initialEntries: ["/home/page"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1607,9 +1607,9 @@ describe("useNavigate", () => {
                 </Route>
               </Route>
               <Route path="about" element={<h1>About</h1>} />
-            </>
+            </>,
           ),
-          { initialEntries: ["/home/page"] }
+          { initialEntries: ["/home/page"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1640,9 +1640,9 @@ describe("useNavigate", () => {
                   <Route path="dest" element={<h1>Destination</h1>} />
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/layout/thing"] }
+          { initialEntries: ["/layout/thing"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1673,9 +1673,9 @@ describe("useNavigate", () => {
                 path="contacts/:id"
                 element={<UseNavigateButton to=".." relative="path" />}
               />
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1706,9 +1706,9 @@ describe("useNavigate", () => {
                   element={<UseNavigateButton to=".." relative="path" />}
                 />
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1739,9 +1739,9 @@ describe("useNavigate", () => {
                   element={<UseNavigateButton to=".." relative="path" />}
                 />
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1778,9 +1778,9 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1817,9 +1817,9 @@ describe("useNavigate", () => {
                   </Route>
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1853,9 +1853,9 @@ describe("useNavigate", () => {
                   <Route path="dest" element={<h1>Destination</h1>} />
                 </Route>
               </Route>
-            </>
+            </>,
           ),
-          { initialEntries: ["/layout/thing"] }
+          { initialEntries: ["/layout/thing"] },
         );
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1886,9 +1886,9 @@ describe("useNavigate", () => {
                   <UseNavigateButton to="..?foo=bar#hash" relative="path" />
                 }
               />
-            </>
+            </>,
           ),
-          { initialEntries: ["/contacts/1"] }
+          { initialEntries: ["/contacts/1"] },
         );
 
         function Contacts() {
@@ -1951,7 +1951,7 @@ describe("useNavigate", () => {
             ],
           },
         ],
-        { initialEntries: ["/home"] }
+        { initialEntries: ["/home"] },
       );
 
       let renderer: TestRenderer.ReactTestRenderer;
@@ -2071,7 +2071,7 @@ describe("useNavigate", () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/path" element={<h1>Path</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -2115,7 +2115,7 @@ describe("useNavigate", () => {
                 />
                 <Route path="/path" element={<h1>Path</h1>} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -2154,7 +2154,7 @@ describe("useNavigate", () => {
             },
             { path: "/path", Component: () => <h1>Path</h1> },
           ],
-          { basename: "/base", initialEntries: ["/base"] }
+          { basename: "/base", initialEntries: ["/base"] },
         );
 
         function Home() {
@@ -2201,7 +2201,7 @@ describe("useNavigate", () => {
             },
             { path: "/path", Component: () => <h1>Path</h1> },
           ],
-          { basename: "/base", initialEntries: ["/base"] }
+          { basename: "/base", initialEntries: ["/base"] },
         );
 
         function Home() {

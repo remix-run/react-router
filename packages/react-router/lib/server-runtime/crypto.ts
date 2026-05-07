@@ -1,4 +1,4 @@
-const encoder = new TextEncoder();
+const encoder = /* @__PURE__ */ new TextEncoder();
 
 export const sign = async (value: string, secret: string): Promise<string> => {
   let data = encoder.encode(value);
@@ -6,7 +6,7 @@ export const sign = async (value: string, secret: string): Promise<string> => {
   let signature = await crypto.subtle.sign("HMAC", key, data);
   let hash = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(
     /=+$/,
-    ""
+    "",
   );
 
   return value + "." + hash;
@@ -14,7 +14,7 @@ export const sign = async (value: string, secret: string): Promise<string> => {
 
 export const unsign = async (
   cookie: string,
-  secret: string
+  secret: string,
 ): Promise<string | false> => {
   let index = cookie.lastIndexOf(".");
   let value = cookie.slice(0, index);
@@ -23,22 +23,29 @@ export const unsign = async (
   let data = encoder.encode(value);
 
   let key = await createKey(secret, ["verify"]);
-  let signature = byteStringToUint8Array(atob(hash));
-  let valid = await crypto.subtle.verify("HMAC", key, signature, data);
+  try {
+    let signature = byteStringToUint8Array(atob(hash));
+    let valid = await crypto.subtle.verify("HMAC", key, signature, data);
 
-  return valid ? value : false;
+    return valid ? value : false;
+  } catch (error: unknown) {
+    // atob will throw a DOMException with name === 'InvalidCharacterError'
+    // if the signature contains a non-base64 character, which should just
+    // be treated as an invalid signature.
+    return false;
+  }
 };
 
 const createKey = async (
   secret: string,
-  usages: CryptoKey["usages"]
+  usages: CryptoKey["usages"],
 ): Promise<CryptoKey> =>
   crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    usages
+    usages,
   );
 
 function byteStringToUint8Array(byteString: string): Uint8Array {

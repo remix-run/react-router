@@ -231,7 +231,7 @@ test("fetcher calls index route loader when at index route", async ({
   expect(dataElement.text()).toBe("index data");
 });
 
-test("fetcher calls layout route action when at paramaterized route", async ({
+test("fetcher calls layout route action when at parameterized route", async ({
   page,
 }) => {
   let app = new PlaywrightFixture(appFixture, page);

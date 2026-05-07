@@ -1,8 +1,8 @@
-import { Outlet, unstable_createContext } from "react-router";
+import { Outlet, createContext } from "react-router";
 import type { Route } from "./+types/server.a.b";
 import { aContext, bContext, expressContext, rootContext } from "~/contexts";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
+export const middleware: Route.MiddlewareFunction[] = [
   async ({ context }, next) => {
     console.log("start b middleware");
     context.set(bContext, "B");

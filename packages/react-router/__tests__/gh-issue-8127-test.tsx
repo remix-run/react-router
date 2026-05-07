@@ -19,7 +19,7 @@ describe("GH Issue #8127", () => {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

@@ -1,9 +1,14 @@
 ---
 title: Address Book
-order: 1
+order: 2
 ---
 
 # Address Book
+
+[MODES: framework]
+
+<br />
+<br />
 
 We'll be building a small, but feature-rich address book app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take 30-45m if you're following along, otherwise it's a quick read.
 
@@ -42,7 +47,7 @@ npm install
 npm run dev
 ```
 
-You should be able to open up [http://localhost:5173][http-localhost-5173] and see an unstyled screen that looks like this:
+You should now be able to open up [http://localhost:5173][http-localhost-5173] and see your app running, though there's not much going on just yet.
 
 ## The Root Route
 
@@ -265,7 +270,7 @@ export default function Contact() {
             method="post"
             onSubmit={(event) => {
               const response = confirm(
-                "Please confirm you want to delete this record."
+                "Please confirm you want to delete this record.",
               );
               if (!response) {
                 event.preventDefault();
@@ -344,7 +349,7 @@ Now the child route should be rendering through the outlet.
 
 ## Client Side Routing
 
-You may or may not have noticed, but when we click the links in the sidebar, the browser is doing a full document request for the next URL instead of client side routing, which completely remounts our app
+You may or may not have noticed, but when we click the links in the sidebar, the browser is doing a full document request for the next URL instead of client side routing, which completely remounts our app.
 
 Client side routing allows our app to update the URL without reloading the entire page. Instead, the app can immediately render new UI. Let's make it happen with [`<Link>`][link-component].
 
@@ -688,7 +693,7 @@ export default function SidebarLayout() {
 
 👉 **Move route definitions under the sidebar layout**
 
-We can define a `layout` route to automatically render the sidebar for all matched routes within in. This is basically what our `root` was, but now we can scope it to specific routes.
+We can define a `layout` route to automatically render the sidebar for all matched routes within it. This is basically what our `root` was, but now we can scope it to specific routes.
 
 ```ts filename=app/routes.ts lines=[4,9,12]
 import type { RouteConfig } from "@react-router/dev/routes";
@@ -808,7 +813,7 @@ If you refresh the about page, you still see the loading spinner for just a spli
 
 Inside of `react-router.config.ts`, we can add a [`prerender`][pre-rendering] array to the config to tell React Router to pre-render certain urls at build time. In this case we just want to pre-render the about page.
 
-```ts filename=app/react-router.config.ts lines=[5]
+```ts filename=react-router.config.ts lines=[5]
 import { type Config } from "@react-router/dev/config";
 
 export default {
@@ -833,7 +838,7 @@ If you ever do want to introduce server-side rendering into your React Router ap
 
 👉 **Enable server-side rendering**
 
-```ts filename=app/react-router.config.ts lines=[2]
+```ts filename=react-router.config.ts lines=[2]
 export default {
   ssr: true,
   prerender: ["/about"],
@@ -857,7 +862,7 @@ export async function loader() {
 }
 ```
 
-Whether you set `ssr` to `true` or `false` depends on you and your users needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
+Whether you set `ssr` to `true` or `false` depends on you and your users' needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
 
 ## URL Params in Loaders
 
@@ -994,7 +999,7 @@ export default [
     route("contacts/:contactId", "routes/contact.tsx"),
     route(
       "contacts/:contactId/edit",
-      "routes/edit-contact.tsx"
+      "routes/edit-contact.tsx",
     ),
   ]),
   route("about", "routes/about.tsx"),
@@ -1233,8 +1238,8 @@ export default function SidebarLayout({
                   isActive
                     ? "active"
                     : isPending
-                    ? "pending"
-                    : ""
+                      ? "pending"
+                      : ""
                 }
                 to={`contacts/${contact.id}`}
               >
@@ -1310,7 +1315,7 @@ If we review code in the contact route, we can find the delete button looks like
   method="post"
   onSubmit={(event) => {
     const response = confirm(
-      "Please confirm you want to delete this record."
+      "Please confirm you want to delete this record.",
     );
     if (!response) {
       event.preventDefault();
@@ -1341,7 +1346,7 @@ export default [
   // existing routes
   route(
     "contacts/:contactId/destroy",
-    "routes/destroy-contact.tsx"
+    "routes/destroy-contact.tsx",
   ),
   // existing routes
 ] satisfies RouteConfig;
@@ -1679,7 +1684,7 @@ export default function SidebarLayout({
   const searching =
     navigation.location &&
     new URLSearchParams(navigation.location.search).has(
-      "q"
+      "q",
     );
 
   // existing code
@@ -1937,10 +1942,10 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [root-route]: ../explanation/special-files#roottsx
 [error-boundaries]: ../how-to/error-boundary
 [links]: ../start/framework/route-module#links
-[outlet-component]: https://api.reactrouter.com/v7/functions/react_router.Outlet
+[outlet-component]: https://api.reactrouter.com/v7/functions/react-router.Outlet
 [file-route-conventions]: ../how-to/file-route-conventions
 [contacts-1]: http://localhost:5173/contacts/1
-[link-component]: https://api.reactrouter.com/v7/functions/react_router.Link
+[link-component]: https://api.reactrouter.com/v7/functions/react-router.Link
 [client-loader]: ../start/framework/route-module#clientloader
 [spa]: ../how-to/spa
 [type-safety]: ../explanation/type-safety
@@ -1954,17 +1959,17 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [url-search-params]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
 [loader]: ../start/framework/route-module#loader
 [action]: ../start/framework/route-module#action
-[form-component]: https://api.reactrouter.com/v7/functions/react_router.Form
+[form-component]: https://api.reactrouter.com/v7/functions/react-router.Form
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
 [form-data]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [object-from-entries]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
 [request-form-data]: https://developer.mozilla.org/en-US/docs/Web/API/Request/formData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
-[redirect]: https://api.reactrouter.com/v7/functions/react_router.redirect
+[redirect]: https://api.reactrouter.com/v7/functions/react-router.redirect
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[nav-link]: https://api.reactrouter.com/v7/functions/react_router.NavLink
-[use-navigation]: https://api.reactrouter.com/v7/functions/react_router.useNavigation
-[use-navigate]: https://api.reactrouter.com/v7/functions/react_router.useNavigate
-[use-submit]: https://api.reactrouter.com/v7/functions/react_router.useSubmit
-[use-fetcher]: https://api.reactrouter.com/v7/functions/react_router.useFetcher
+[nav-link]: https://api.reactrouter.com/v7/functions/react-router.NavLink
+[use-navigation]: https://api.reactrouter.com/v7/functions/react-router.useNavigation
+[use-navigate]: https://api.reactrouter.com/v7/functions/react-router.useNavigate
+[use-submit]: https://api.reactrouter.com/v7/functions/react-router.useSubmit
+[use-fetcher]: https://api.reactrouter.com/v7/functions/react-router.useFetcher
 [react-router-apis]: https://api.reactrouter.com/v7/modules/react_router

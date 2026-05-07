@@ -72,7 +72,7 @@ export interface Cookie {
  */
 export const createCookie = (
   name: string,
-  cookieOptions: CookieOptions = {}
+  cookieOptions: CookieOptions = {},
 ): Cookie => {
   let { secrets = [], ...options } = {
     path: "/",
@@ -117,7 +117,7 @@ export const createCookie = (
         {
           ...options,
           ...serializeOptions,
-        }
+        },
       );
     },
   };
@@ -142,7 +142,7 @@ export const isCookie: IsCookieFunction = (object): object is Cookie => {
 
 async function encodeCookieValue(
   value: any,
-  secrets: string[]
+  secrets: string[],
 ): Promise<string> {
   let encoded = encodeData(value);
 
@@ -155,7 +155,7 @@ async function encodeCookieValue(
 
 async function decodeCookieValue(
   value: string,
-  secrets: string[]
+  secrets: string[],
 ): Promise<any> {
   if (secrets.length > 0) {
     for (let secret of secrets) {
@@ -248,6 +248,6 @@ function warnOnceAboutExpiresCookie(name: string, expires?: Date) {
       `This will cause the expires value to not be updated when the session is committed. ` +
       `Instead, you should set the expires value when serializing the cookie. ` +
       `You can use \`commitSession(session, { expires })\` if using a session storage object, ` +
-      `or \`cookie.serialize("value", { expires })\` if you're using the cookie directly.`
+      `or \`cookie.serialize("value", { expires })\` if you're using the cookie directly.`,
   );
 }
