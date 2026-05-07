@@ -119,11 +119,7 @@ export default {
 
 No code changes are required unless you have custom Vite configuration that needs to be updated for the [Environment API][vite-environment]. Most users won't need to make any changes.
 
-## Unstable Future Flags (Optional)
-
-We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
-
-### future.unstable_passThroughRequests
+## `future.v8_passThroughRequests`
 
 [MODES: framework]
 
@@ -137,9 +133,9 @@ By default, React Router normalizes the `request.url` passed to your `loader`, `
 This flag eliminates that normalization and passes the raw HTTP `request` instance to your handlers. This provides a few benefits:
 
 - Reduces server-side overhead by eliminating multiple `new Request()` calls on the critical path
-- Allows you to distinguish document from data requests in your handlers base don the presence of a `.data` suffix (useful for [observability] purposes)
+- Allows you to distinguish document from data requests in your handlers based on the presence of a `.data` suffix (useful for [observability] purposes)
 
-If you were previously relying on the normalization of `request.url`, you can switch to use the new sibling `unstable_url` parameter which contains a `URL` instance representing the normalized location.
+If you were previously relying on the normalization of `request.url`, you can switch to use the new sibling `url` parameter which contains a `URL` instance representing the normalized location.
 
 👉 **Enable the Flag**
 
@@ -148,7 +144,7 @@ import type { Config } from "@react-router/dev/config";
 
 export default {
   future: {
-    unstable_passThroughRequests: true,
+    v8_passThroughRequests: true,
   },
 } satisfies Config;
 ```
@@ -169,13 +165,13 @@ export async function loader({
   }
 }
 
-// ✅ After: use `unstable_url` for normalized routing logic and `request.url`
+// ✅ After: use `url` for normalized routing logic and `request.url`
 // for raw routing logic
 export async function loader({
   request,
-  unstable_url,
+  url,
 }: Route.LoaderArgs) {
-  if (unstable_url.pathname === "/path") {
+  if (url.pathname === "/path") {
     // This will always have the `.data` suffix stripped
   }
 
@@ -185,6 +181,12 @@ export async function loader({
   ).pathname.endsWith(".data");
 }
 ```
+
+## Unstable Future Flags (Optional)
+
+We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
+
+_No current unstable flags to document_
 
 [api-development-strategy]: ../community/api-development-strategy
 [unstable]: ../community/api-development-strategy#unstable-flags

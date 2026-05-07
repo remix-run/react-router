@@ -34,23 +34,23 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
-    unstable_mask,
+    mask,
     state,
     preventScrollReset,
     relative,
     viewTransition,
-    unstable_defaultShouldRevalidate,
-    unstable_useTransitions,
+    defaultShouldRevalidate,
+    useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    unstable_mask?: To;
+    mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
-    unstable_defaultShouldRevalidate?: boolean;
-    unstable_useTransitions?: boolean;
+    defaultShouldRevalidate?: boolean;
+    useTransitions?: boolean;
   } = ,
 ): (event: React.MouseEvent<E, MouseEvent>) => void {}
 ```
@@ -87,15 +87,15 @@ The target attribute for the link. Defaults to `undefined`.
 Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation. To apply specific styles during the transition, see
 [`useViewTransitionState`](../hooks/useViewTransitionState). Defaults to `false`.
 
-### options.unstable_defaultShouldRevalidate
+### options.defaultShouldRevalidate
 
 Specify the default revalidation behavior for the navigation. Defaults to `true`.
 
-### options.unstable_mask
+### options.mask
 
 Masked location to display in the browser instead of the router location. Defaults to `undefined`.
 
-### options.unstable_useTransitions
+### options.useTransitions
 
 Wraps the navigation in [`React.startTransition`](https://react.dev/reference/react/startTransition)
 for concurrent rendering. Defaults to `false`.

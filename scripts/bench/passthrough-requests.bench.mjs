@@ -1,5 +1,5 @@
 /**
- * Benchmark: unstable_passThroughRequests flag
+ * Benchmark: passThroughRequests flag
  *
  * Measures the overhead of creating new Request objects on each server handler
  * invocation (default behavior) vs passing the original request through.
@@ -13,7 +13,7 @@
  */
 
 import { bench, describe } from "vitest";
-import { createRequestHandler } from "../../packages/react-router/dist/production/index.js";
+import { createRequestHandler } from "react-router";
 
 // ---------------------------------------------------------------------------
 // Minimal server build factory
@@ -24,12 +24,7 @@ function mockServerBuild(future = {}) {
 
   return {
     ssr: true,
-    future: {
-      v8_middleware: false,
-      unstable_subResourceIntegrity: false,
-      unstable_passThroughRequests: false,
-      ...future,
-    },
+    future,
     prerender: [],
     isSpaMode: false,
     routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
@@ -64,8 +59,6 @@ function mockServerBuild(future = {}) {
         default: async (_request, statusCode, headers) =>
           new Response(null, { status: statusCode, headers }),
         handleDataRequest: async (response) => response,
-        handleError: undefined,
-        unstable_instrumentations: undefined,
       },
     },
     routes: {
@@ -91,12 +84,12 @@ function mockServerBuild(future = {}) {
 // ---------------------------------------------------------------------------
 
 const handlerDefault = createRequestHandler(
-  mockServerBuild({ unstable_passThroughRequests: false }),
+  mockServerBuild({ v8_passThroughRequests: false }),
   "production",
 );
 
 const handlerPassThrough = createRequestHandler(
-  mockServerBuild({ unstable_passThroughRequests: true }),
+  mockServerBuild({ v8_passThroughRequests: true }),
   "production",
 );
 

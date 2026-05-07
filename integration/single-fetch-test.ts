@@ -857,7 +857,7 @@ test.describe("single-fetch", () => {
 
           export default function Comp({ loaderData, actionData }) {
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={false}>
+              <Form method="post" defaultShouldRevalidate={false}>
                 <button type="submit" name="name" value="value">Submit</button>
                 <p id="data">{loaderData.count}</p>
                 {actionData ? <p id="action-data">{actionData.count}</p> : null}
@@ -911,7 +911,7 @@ test.describe("single-fetch", () => {
           export default function Comp({ loaderData }) {
             let navigation = useNavigation();
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={true}>
+              <Form method="post" defaultShouldRevalidate={true}>
                 <button type="submit" name="throw" value="5xx">Throw 5xx</button>
                 <p id="data">{loaderData.count}</p>
                 {navigation.state === "idle" ? <p id="idle">idle</p> : null}
@@ -970,7 +970,7 @@ test.describe("single-fetch", () => {
 
           export default function Comp({ loaderData, actionData }) {
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={false}>
+              <Form method="post" defaultShouldRevalidate={false}>
                 <button type="submit" name="name" value="value">Submit</button>
                 <p id="data">{loaderData.count}</p>
                 {actionData ? <p id="action-data">{actionData.count}</p> : null}
@@ -1028,7 +1028,7 @@ test.describe("single-fetch", () => {
           export default function Comp({ loaderData }) {
             let navigation = useNavigation();
             return (
-              <Form method="post" unstable_defaultShouldRevalidate={true}>
+              <Form method="post" defaultShouldRevalidate={true}>
                 <button type="submit" name="throw" value="5xx">Throw 5xx</button>
                 <p id="data">{loaderData.count}</p>
                 {navigation.state === "idle" ? <p id="idle">idle</p> : null}
@@ -1061,6 +1061,96 @@ test.describe("single-fetch", () => {
     await page.click('button[name="throw"][value="5xx"]');
     await page.waitForSelector("#error");
     expect(urls).toEqual([expect.stringMatching(/\/action\.data$/)]);
+  });
+
+  test("call-site revalidation opt-out handles parent routes w/o shouldRevalidate", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Links, Meta, Outlet, Scripts, useMatches } from "react-router";
+
+          let count = 0
+
+          export function loader() {
+            return { count: ++count };
+          }
+
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <nav>
+                    <Link to="/">Home</Link>
+                    <Link to="/page">Page (default)</Link>
+                    <Link to="/page?optout" defaultShouldRevalidate={false}>Page (opt-out)</Link>
+                  </nav>
+                  <pre id="data">
+                    {JSON.stringify(useMatches().map(m => [m.id, m.data]))}
+                  </pre>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/page.tsx": js`
+          let count = 0
+
+          export function loader() {
+            return { count: ++count }
+          }
+
+          export default function Component() {
+            return <h2>Page</h2>
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes(".data")) {
+        let url = new URL(req.url());
+        urls.push(url.pathname + url.search);
+      }
+    });
+
+    console.error = () => {};
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/"); // root increments to 1
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":1}],["routes/_index",null]]',
+    );
+
+    await app.clickLink("/page"); // root increments to 2
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":2}],["routes/page",{"count":1}]]',
+    );
+    expect(urls).toEqual(["/page.data"]);
+    urls.splice(0, urls.length);
+
+    await app.clickLink("/"); // root increments to 3
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":3}],["routes/_index",null]]',
+    );
+    expect(urls).toEqual(["/_root.data"]);
+    urls.splice(0, urls.length);
+
+    await app.clickLink("/page?optout");
+    // root stays at 3, page is a fresh load so increments to 2
+    expect(await page.locator("#data").innerText()).toBe(
+      '[["root",{"count":3}],["routes/page",{"count":2}]]',
+    );
+    expect(urls).toEqual(["/page.data?optout=&_routes=routes%2Fpage"]);
   });
 
   test("returns headers correctly for singular loader and action calls", async () => {

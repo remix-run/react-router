@@ -561,6 +561,48 @@ function testDomRouter(
           </div>"
         `);
       });
+
+      it("handles race conditions if router initialization completes prior to the layout effect router.subscribe() call", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        // Kick off some async data load _before_ any react stuff
+        let suspensePromise = sleep(100).then(() => "DATA");
+
+        // Create a router that will initialize shortly after the suspense boundary resolves
+        let router = createTestRouter([
+          {
+            path: "/",
+            // Only fails when this is around 200ms - passes if you bump it to ~500ms
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        expect(router.state.initialized).toBe(false);
+
+        // Render a component that will suspend until `suspensePromise` resolves, then
+        // renders RouterProvider which sets up listeners for the router state
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        // Needs to be wrapped in `act()` for suspense to work properly
+        // https://github.com/testing-library/react-testing-library/issues/1375
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Data:LOADER"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
+      });
     });
 
     describe("navigations", () => {
@@ -2655,7 +2697,7 @@ function testDomRouter(
     });
 
     describe("call-site revalidation opt-out", () => {
-      it("accepts unstable_defaultShouldRevalidate on <Link> navigations", async () => {
+      it("accepts defaultShouldRevalidate on <Link> navigations", async () => {
         let loaderDefer = createDeferred();
 
         let router = createTestRouter(
@@ -2673,7 +2715,7 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              <Link to="/?foo=bar" unstable_defaultShouldRevalidate={false}>
+              <Link to="/?foo=bar" defaultShouldRevalidate={false}>
                 Change Search Params
               </Link>
               <div id="output">
@@ -2719,7 +2761,7 @@ function testDomRouter(
       `);
       });
 
-      it("accepts unstable_defaultShouldRevalidate on setSearchParams navigations", async () => {
+      it("accepts defaultShouldRevalidate on setSearchParams navigations", async () => {
         let loaderDefer = createDeferred();
 
         let router = createTestRouter(
@@ -2741,7 +2783,7 @@ function testDomRouter(
               <button
                 onClick={() =>
                   setSearchParams(new URLSearchParams([["foo", "bar"]]), {
-                    unstable_defaultShouldRevalidate: false,
+                    defaultShouldRevalidate: false,
                   })
                 }
               >
@@ -2790,7 +2832,7 @@ function testDomRouter(
       `);
       });
 
-      it("accepts unstable_defaultShouldRevalidate on <Form method=post> navigations", async () => {
+      it("accepts defaultShouldRevalidate on <Form method=post> navigations", async () => {
         let loaderDefer = createDeferred();
         let actionDefer = createDeferred();
 
@@ -2816,7 +2858,7 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              <Form method="post" unstable_defaultShouldRevalidate={false}>
+              <Form method="post" defaultShouldRevalidate={false}>
                 <input name="test" value="value" />
                 <button type="submit">Submit Form</button>
               </Form>
@@ -2863,7 +2905,7 @@ function testDomRouter(
       `);
       });
 
-      it("accepts unstable_defaultShouldRevalidate on fetcher.submit", async () => {
+      it("accepts defaultShouldRevalidate on fetcher.submit", async () => {
         let loaderDefer = createDeferred();
         let actionDefer = createDeferred();
 
@@ -2895,7 +2937,7 @@ function testDomRouter(
                     {
                       method: "post",
                       action: "/",
-                      unstable_defaultShouldRevalidate: false,
+                      defaultShouldRevalidate: false,
                     },
                   )
                 }

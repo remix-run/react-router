@@ -1011,6 +1011,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={manifest.url}
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[manifest.url]}
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
         />
       ) : null}
@@ -1019,6 +1020,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         href={manifest.entry.module}
         crossOrigin={scriptProps.crossOrigin}
         integrity={sri[manifest.entry.module]}
+        nonce={scriptProps.nonce}
         suppressHydrationWarning
       />
       {preloads.map((path) => (
@@ -1028,6 +1030,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={path}
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[path]}
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
         />
       ))}

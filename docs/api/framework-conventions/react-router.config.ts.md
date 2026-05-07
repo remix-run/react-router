@@ -132,9 +132,7 @@ export default {
 
 ### `prerender`
 
-An array of URLs to prerender to HTML files at build time. Can also be a function returning an array to dynamically generate URLs.
-
-See [Pre-Rendering][pre-rendering] for more information.
+An array of URLs to prerender to HTML files at build time - see [Pre-Rendering][pre-rendering] for more information.
 
 ```tsx filename=react-router.config.ts
 export default {
@@ -146,6 +144,12 @@ export default {
     const paths = await getStaticPaths();
     return ["/", ...paths];
   },
+
+  // Or an object if you wish to enable concurrency
+  prerender: {
+    paths: ["/", "/about", "/contact"],
+    concurrency: 4,
+  }
 } satisfies Config;
 ```
 

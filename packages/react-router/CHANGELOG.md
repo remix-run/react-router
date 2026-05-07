@@ -1,5 +1,107 @@
 # `react-router`
 
+## v7.15.0
+
+### Minor Changes
+
+- Stabilize `unstable_defaultShouldRevalidate` as `defaultShouldRevalidate` on `<Link>`, `<Form>`, `useLinkClickHandler`, `useSubmit`, `fetcher.submit`, and `setSearchParams` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Stabilize the instrumentation APIs. `unstable_instrumentations` is now `instrumentations` and `unstable_pattern` is now `pattern` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - The `unstable_ServerInstrumentation`, `unstable_ClientInstrumentation`, `unstable_InstrumentRequestHandlerFunction`, `unstable_InstrumentRouterFunction`, `unstable_InstrumentRouteFunction`, and `unstable_InstrumentationHandlerResult` types have had their `unstable_` prefixes removed
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Stabilize `unstable_mask` as `mask` on `<Link>`, `useLinkClickHandler`, and `useNavigate`, and rename the corresponding `Location.unstable_mask` field to `Location.mask` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Stabilize the `unstable_normalizePath` option on `staticHandler.query` and `staticHandler.queryRoute` as `normalizePath` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Stabilize `future.unstable_passThroughRequests` as `future.v8_passThroughRequests` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Remove `unstable_subResourceIntegrity` from the runtime `FutureConfig` type; the flag is now controlled by the top-level `subResourceIntegrity` option in `react-router.config.ts` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Stabilize `unstable_url` as `url` on `loader`, `action`, and `middleware` function args ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+- Stabilize `unstable_useTransitions` as `useTransitions` on `<BrowserRouter>`, `<HashRouter>`, `<HistoryRouter>`, `<MemoryRouter>`, `<Router>`, `<RouterProvider>`, `<HydratedRouter>`, and `useLinkClickHandler` ([a993f09](https://github.com/remix-run/react-router/commit/a993f09))
+  - ⚠️ This is a breaking change if you have already opted into the unstable version - you will need to update your code accordingly
+
+### Patch Changes
+
+- Add `nonce` to `<Scripts>` `<link rel="modulepreload">` elements (if provided) ([af5d49b](https://github.com/remix-run/react-router/commit/af5d49b))
+
+- Fix a bug with `unstable_defaultShouldRevalidate={false}` where parent routes that did not export a `shouldRevalidate` function could be incorrectly included in the single fetch call for new child route data ([#15012](https://github.com/remix-run/react-router/pull/15012))
+
+- Improve server-side route matching performance by pre-computing flattened/cached route branches ([#14967](https://github.com/remix-run/react-router/pull/14967)) ([af5d49b](https://github.com/remix-run/react-router/commit/af5d49b))
+  - Performance benchmarks showed roughly a 10-15% improvement in server-side request handling performance
+
+- Mark `mask` as an optional field in `Location` for easier mocking in unit tests ([#14999](https://github.com/remix-run/react-router/pull/14999))
+
+- Cache flattened/ranked route branches to optimize server-side route matching ([#14967](https://github.com/remix-run/react-router/pull/14967))
+
+- Improve route matching performance in Framework/Data Mode ([#14971](https://github.com/remix-run/react-router/pull/14971)) ([af5d49b](https://github.com/remix-run/react-router/commit/af5d49b))
+  - Avoiding unnecessary calls to `matchRoutes` in data router scenarios
+    - This includes adding back the optimization that was removed in `7.6.0` ([#13562](https://github.com/remix-run/react-router/pull/13562))
+    - The issues that prompted the revert have been addressed by using the available router `matches` but always updating `match.route` to the latest route in the `manifest`
+  - Leverage pre-computed pre-computing flattened/cached route branches during client side route matching
+  - Performance benchmarks showed roughly a 15-30% improvement in server-side request handling performance
+
+## v7.14.2
+
+### Patch Changes
+
+- Remove the un-documented custom error serialization logic from the internal turbo-stream implementation. React Router only automatically handles serialization of `Error` and it's standard subtypes (`SyntaxError`, `TypeError`, etc.). ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- Properly handle parent middleware redirects during `fetcher.load` ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- Remove redundant `Omit<RouterProviderProps, "flushSync">` from `react-router/dom` `RouterProvider` ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+- Improved types for `generatePath`'s `param` arg ([[aabf4a1](https://github.com/remix-run/react-router/commit/aabf4a1))
+
+  Type errors when required params are omitted:
+
+  ```ts
+  // Before
+  // Passes type checks, but throws at runtime 💥
+  generatePath(":required", { required: null });
+
+  // After
+  generatePath(":required", { required: null });
+  //                          ^^^^^^^^ Type 'null' is not assignable to type 'string'.ts(2322)
+  ```
+
+  Allow omission of optional params:
+
+  ```ts
+  // Before
+  generatePath(":optional?", {});
+  //                         ^^ Property 'optional' is missing in type '{}' but required in type '{ optional: string | null | undefined; }'.ts(2741)
+
+  // After
+  generatePath(":optional?", {});
+  ```
+
+  Allows extra keys:
+
+  ```ts
+  // Before
+  generatePath(":a", { a: "1", b: "2" });
+  //                           ^ Object literal may only specify known properties, and 'b' does not exist in type '{ a: string; }'.ts(2353)
+
+  // After
+  generatePath(":a", { a: "1", b: "2" });
+  ```
+
+## v7.14.1
+
+### Patch Changes
+
+- Fix a potential race condition that can occur when rendering a `HydrateFallback` and initial loaders land before the `router.subscribe` call happens in the `RouterProvider` layout effect
+- Normalize double-slashes in redirect paths
+
 ## 7.14.0
 
 ### Patch Changes

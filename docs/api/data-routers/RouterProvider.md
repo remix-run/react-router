@@ -49,7 +49,7 @@ function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
   onError,
-  unstable_useTransitions,
+  useTransitions,
 }: RouterProviderProps): React.ReactElement
 ```
 
@@ -78,7 +78,7 @@ and is only present for render errors.
 
 ```tsx
 <RouterProvider onError=(error, info) => {
-  let { location, params, unstable_pattern, errorInfo } = info;
+  let { location, params, pattern, errorInfo } = info;
   console.error(error, location, errorInfo);
   reportToErrorService(error, location, errorInfo);
 }} />
@@ -88,7 +88,7 @@ and is only present for render errors.
 
 The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) instance to use for navigation and data fetching.
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -105,5 +105,5 @@ Control whether router state updates are internally wrapped in
 - When set to `false`, the router will not leverage `React.startTransition` or
   `React.useOptimistic` on any navigations or state changes.
 
-For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+For more information, please see the [docs](../../explanation/react-transitions).
 

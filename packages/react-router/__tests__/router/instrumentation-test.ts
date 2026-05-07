@@ -43,7 +43,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -87,7 +87,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -135,7 +135,7 @@ describe("instrumentation", () => {
             index: "INDEX",
           },
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -176,7 +176,7 @@ describe("instrumentation", () => {
             action: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -219,7 +219,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -263,7 +263,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -311,7 +311,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -363,7 +363,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -422,7 +422,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -487,7 +487,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -551,7 +551,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -613,7 +613,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -682,7 +682,7 @@ describe("instrumentation", () => {
             action: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -763,7 +763,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -838,7 +838,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -931,7 +931,7 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1009,7 +1009,7 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1090,7 +1090,7 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1169,7 +1169,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1228,7 +1228,7 @@ describe("instrumentation", () => {
             path: "/target",
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1295,7 +1295,7 @@ describe("instrumentation", () => {
             path: "/target",
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1365,7 +1365,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1408,7 +1408,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1451,7 +1451,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1488,7 +1488,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1530,7 +1530,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1554,7 +1554,7 @@ describe("instrumentation", () => {
       expect(args.request.headers.get).toBeDefined();
       expect(args.request.headers.set).not.toBeDefined();
       expect(args.params).toEqual({ slug: "a", extra: "extra" });
-      expect(args.unstable_pattern).toBe("/:slug");
+      expect(args.pattern).toBe("/:slug");
       expect(args.context.get).toBeDefined();
       expect(args.context.set).not.toBeDefined();
       expect(t.router.state.matches[0].params).toEqual({ slug: "a" });
@@ -1573,7 +1573,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1624,7 +1624,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               router(router) {
                 router.instrument({
@@ -1666,7 +1666,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               router(router) {
                 router.instrument({
@@ -1719,7 +1719,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1766,7 +1766,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1811,7 +1811,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1879,7 +1879,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1922,7 +1922,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1974,7 +1974,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               handler(handler) {
                 handler.instrument({
@@ -2050,7 +2050,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -2081,7 +2081,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -2100,7 +2100,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
             context: {
               get: expect.any(Function),
             },
@@ -2126,7 +2126,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -2157,7 +2157,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
             context: {},
           },
         ],
@@ -2173,7 +2173,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
             context: {},
           },
         ],
@@ -2197,7 +2197,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -2230,7 +2230,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
             context: {},
           },
         ],
@@ -2246,7 +2246,7 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
             context: {},
           },
         ],

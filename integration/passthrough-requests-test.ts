@@ -38,19 +38,19 @@ const files = {
   "app/routes/_index.tsx": js`
     import { Form, Link } from "react-router";
 
-    export function loader({ request, unstable_url }) {
-      let url = new URL(request.url);
+    export function loader({ request, url }) {
+      let passthroughUrl = new URL(request.url);
       return {
-        url: url.pathname + url.search,
-        path: unstable_url.pathname + unstable_url.search
+        url: passthroughUrl.pathname + passthroughUrl.search,
+        path: url.pathname + url.search
       };
     }
 
-    export function action({ request, unstable_url }) {
-      let url = new URL(request.url);
+    export function action({ request, url }) {
+      let passthroughUrl = new URL(request.url);
       return {
-        url: url.pathname + url.search,
-        path: unstable_url.pathname + unstable_url.search
+        url: passthroughUrl.pathname + passthroughUrl.search,
+        path: url.pathname + url.search
       };
     }
 
@@ -61,7 +61,7 @@ const files = {
           <Form method="post">
             <button type="submit">Submit</button>
           </Form>
-          <Link to="/page?b=2" unstable_defaultShouldRevalidate={false}>
+          <Link to="/page?b=2" defaultShouldRevalidate={false}>
             Go to new page
           </Link>
           <p data-loader-url>{loaderData.url}</p>
@@ -77,11 +77,11 @@ const files = {
     }
   `,
   "app/routes/page.tsx": js`
-    export function loader({ request, unstable_url }) {
-      let url = new URL(request.url);
+    export function loader({ request, url }) {
+      let passthroughUrl = new URL(request.url);
       return {
-        url: url.pathname + url.search,
-        path: unstable_url.pathname + unstable_url.search
+        url: passthroughUrl.pathname + passthroughUrl.search,
+        path: url.pathname + url.search
       };
     }
 
@@ -97,14 +97,14 @@ const files = {
 };
 
 test.describe("pass through requests", () => {
-  test("sends proper arguments to loaders when future.unstable_passThroughRequests is disabled", async ({
+  test("sends proper arguments to loaders when future.v8_passThroughRequests is disabled", async ({
     page,
   }) => {
     let fixture = await createFixture({
       files: {
         "react-router.config.ts": reactRouterConfig({
           future: {
-            unstable_passThroughRequests: false,
+            v8_passThroughRequests: false,
           },
         }),
         ...files,
@@ -160,14 +160,14 @@ test.describe("pass through requests", () => {
     requests = [];
   });
 
-  test("sends proper arguments to loaders when future.unstable_passThroughRequests is enabled", async ({
+  test("sends proper arguments to loaders when future.v8_passThroughRequests is enabled", async ({
     page,
   }) => {
     let fixture = await createFixture({
       files: {
         "react-router.config.ts": reactRouterConfig({
           future: {
-            unstable_passThroughRequests: true,
+            v8_passThroughRequests: true,
           },
         }),
         ...files,
