@@ -2085,51 +2085,58 @@ function toRouterStateMatch(match: DataRouteMatch): unstable_RouterStateMatch {
  * @returns The current router state with `active` and `pending` variants
  */
 export function useRouterState(): unstable_RouterState {
-  let state = useDataRouterState(DataRouterStateHook.UseRouterState);
+  let {
+    location,
+    historyAction: type,
+    matches,
+    navigation,
+  } = useDataRouterState(DataRouterStateHook.UseRouterState);
 
-  let active = React.useMemo<unstable_RouterStateActiveVariant>(() => {
-    let leaf = state.matches[state.matches.length - 1];
-    return {
-      type: state.historyAction,
-      location: state.location,
-      searchParams: new URLSearchParams(state.location.search),
-      params: leaf?.params ?? {},
-      matches: state.matches.map((m) => toRouterStateMatch(m)),
-    };
-  }, [state.location, state.historyAction, state.matches]);
+  let active = React.useMemo<unstable_RouterStateActiveVariant>(
+    () => ({
+      type,
+      location,
+      searchParams: new URLSearchParams(location.search),
+      params: matches[matches.length - 1]?.params ?? {},
+      matches: matches.map((m) => toRouterStateMatch(m)),
+    }),
+    [location, matches, type],
+  );
 
   let pending = React.useMemo<unstable_RouterStatePendingVariant | null>(() => {
-    let nav = state.navigation;
-    if (nav.state === "idle") return null;
+    if (navigation.state === "idle") return null;
     let shared = {
-      type: nav.historyAction,
-      location: nav.location,
-      searchParams: new URLSearchParams(nav.location.search),
-      params: nav.matches[nav.matches.length - 1]?.params ?? {},
-      matches: nav.matches.map((m) => toRouterStateMatch(m)),
+      type: navigation.historyAction,
+      location: navigation.location,
+      searchParams: new URLSearchParams(navigation.location.search),
+      params: navigation.matches[navigation.matches.length - 1]?.params ?? {},
+      matches: navigation.matches.map((m) => toRouterStateMatch(m)),
     };
-    return nav.state === "loading"
+
+    // Do submissions fields independently to keep TS happy with the
+    // `NavigationStates` discriminated union
+    return navigation.state === "loading"
       ? {
           ...shared,
           state: "loading",
-          formMethod: nav.formMethod,
-          formAction: nav.formAction,
-          formEncType: nav.formEncType,
-          formData: nav.formData,
-          json: nav.json,
-          text: nav.text,
+          formMethod: navigation.formMethod,
+          formAction: navigation.formAction,
+          formEncType: navigation.formEncType,
+          formData: navigation.formData,
+          json: navigation.json,
+          text: navigation.text,
         }
       : {
           ...shared,
           state: "submitting",
-          formMethod: nav.formMethod,
-          formAction: nav.formAction,
-          formEncType: nav.formEncType,
-          formData: nav.formData,
-          json: nav.json,
-          text: nav.text,
+          formMethod: navigation.formMethod,
+          formAction: navigation.formAction,
+          formEncType: navigation.formEncType,
+          formData: navigation.formData,
+          json: navigation.json,
+          text: navigation.text,
         };
-  }, [state.navigation]);
+  }, [navigation]);
 
   return React.useMemo<unstable_RouterState>(
     () => ({ active, pending }),
