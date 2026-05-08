@@ -753,7 +753,46 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
+  logFutureFlagWarnings(userAndPresetConfigs.future || {});
+
   return ok(reactRouterConfig);
+}
+
+function logFutureFlagWarning(flag: string, message: string): void {
+  console.warn(
+    colors.yellow(
+      `  ⚠️  Future Flag Warning: ${message}\n` +
+        `     You can use the \`future.${flag}\` flag to opt in early.\n` +
+        `     -> https://reactrouter.com/upgrading/future-flags#${flag}`,
+    ),
+  );
+}
+
+export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
+  if (future.v8_middleware === undefined) {
+    logFutureFlagWarning(
+      "v8_middleware",
+      "Route middleware support is changing in React Router v8.",
+    );
+  }
+  if (future.v8_splitRouteModules === undefined) {
+    logFutureFlagWarning(
+      "v8_splitRouteModules",
+      "Route module splitting behavior is changing in React Router v8.",
+    );
+  }
+  if (future.v8_viteEnvironmentApi === undefined) {
+    logFutureFlagWarning(
+      "v8_viteEnvironmentApi",
+      "Vite Environment API usage is changing in React Router v8.",
+    );
+  }
+  if (future.v8_passThroughRequests === undefined) {
+    logFutureFlagWarning(
+      "v8_passThroughRequests",
+      "Request handling behavior is changing in React Router v8.",
+    );
+  }
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
