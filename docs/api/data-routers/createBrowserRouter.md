@@ -172,7 +172,7 @@ const router = createBrowserRouter(
 );
 ```
 
-### opts.unstable_instrumentations
+### opts.instrumentations
 
 Array of instrumentation objects allowing you to instrument the router and
 individual routes prior to router initialization (and on any subsequently
@@ -183,7 +183,7 @@ tracing.  See the [docs](../../how-to/instrumentation) for more information.
 
 ```tsx
 let router = createBrowserRouter(routes, {
-  unstable_instrumentations: [logging]
+  instrumentations: [logging]
 });
 
 

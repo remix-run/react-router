@@ -234,7 +234,7 @@ let unInstrumentedHandler = createRequestHandler({
         ...m.entry,
         module: {
           ...m.entry.module,
-          unstable_instrumentations: undefined,
+          instrumentations: undefined,
         },
       },
     })),

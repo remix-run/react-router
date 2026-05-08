@@ -1,14 +1,11 @@
 import type * as Vite from "vite";
-import { createRequire } from "node:module";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
-import * as babel from "@babel/core";
 import colors from "picocolors";
-
-const nodeRequire = createRequire(import.meta.url);
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
+import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import path, { join } from "pathe";
 import invariant from "../../invariant";
@@ -21,20 +18,23 @@ import {
 import {
   defineCompilerOptions,
   defineOptimizeDepsCompilerOptions,
+  getVite,
   preloadVite,
 } from "../vite";
 import { hasDependency } from "../has-dependency";
 import { getOptimizeDepsEntries } from "../optimize-deps-entries";
 import { createVirtualRouteConfig } from "./virtual-route-config";
-import {
-  transformVirtualRouteModules,
-  parseRouteExports,
-  isVirtualClientRouteModuleId,
-  CLIENT_NON_COMPONENT_EXPORTS,
-} from "./virtual-route-modules";
+import { virtualRouteModulesPlugin } from "./virtual-route-modules";
 import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
+import { prerender } from "../plugins/prerender";
+import { getPrerenderPaths } from "../plugin";
+
+const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+
+let configLoaderPromise: Promise<ConfigLoader>;
+let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
@@ -46,7 +46,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       arguments[0].__runningWithinTheReactRouterMonoRepo === true,
   );
   let configLoader: ConfigLoader;
-  let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let viteCommand: Vite.ConfigEnv["command"];
   let resolvedViteConfig: Vite.ResolvedConfig;
   let routeIdByFile: Map<string, string> | undefined;
@@ -63,6 +62,79 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     );
   }
 
+  function isRootRouteModule(id: string): boolean {
+    return path.normalize(id) === path.normalize(rootRouteFile);
+  }
+
+  function getRouteIdForFile(file: string): string | undefined {
+    let normalizedFile = path.normalize(file);
+    let directMatch = routeIdByFile?.get(normalizedFile);
+    if (directMatch) {
+      return directMatch;
+    }
+
+    return Array.from(routeIdByFile ?? []).find(([routeFile]) =>
+      path.normalize(routeFile).endsWith(normalizedFile),
+    )?.[1];
+  }
+
+  function isMdxRouteModule(filename: string) {
+    let extension = path.extname(filename).toLowerCase();
+    return extension === ".md" || extension === ".mdx";
+  }
+
+  function getTransformLanguage(
+    filename: string,
+  ): "ts" | "tsx" | "jsx" | undefined {
+    let extension = path.extname(filename).toLowerCase();
+
+    switch (extension) {
+      case ".ts":
+      case ".cts":
+      case ".mts":
+        return "ts";
+      case ".tsx":
+        return "tsx";
+      case ".js":
+      case ".cjs":
+      case ".mjs":
+      case ".jsx":
+      case ".md":
+      case ".mdx":
+        return "jsx";
+      default:
+        return undefined;
+    }
+  }
+
+  async function transformToJs(
+    code: string,
+    filename: string,
+  ): Promise<string> {
+    await preloadVite();
+    let vite = getVite();
+    let lang = getTransformLanguage(filename);
+
+    return (
+      "transformWithOxc" in vite && typeof vite.transformWithOxc === "function"
+        ? await vite.transformWithOxc(code, filename, {
+            lang,
+            jsx: {
+              runtime: "automatic",
+              development: viteCommand !== "build",
+              target: "esnext",
+            },
+          })
+        : await vite.transformWithEsbuild(code, filename, {
+            loader: lang,
+            target: "esnext",
+            format: "esm",
+            jsx: "automatic",
+            jsxDev: viteCommand !== "build",
+          })
+    ).code;
+  }
+
   return [
     {
       name: "react-router/rsc",
@@ -72,7 +144,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
-        const watch = command === "serve";
+        const watch =
+          command === "serve" && process.env.IS_RR_BUILD_REQUEST !== "yes";
 
         await loadDotenv({
           rootDirectory,
@@ -80,31 +153,27 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           mode,
         });
 
-        configLoader = await createConfigLoader({
+        configLoaderPromise ??= createConfigLoader({
           rootDirectory,
           mode,
           watch,
           validateConfig: (userConfig) => {
             let errors: string[] = [];
             if (userConfig.buildEnd) errors.push("buildEnd");
-            if (userConfig.prerender) errors.push("prerender");
             if (userConfig.presets?.length) errors.push("presets");
-            if (userConfig.routeDiscovery) errors.push("routeDiscovery");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.ssr === false) errors.push("ssr: false");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
-            if (userConfig.future?.v8_splitRouteModules)
-              errors.push("future.v8_splitRouteModules");
             if (userConfig.future?.v8_viteEnvironmentApi === false)
               errors.push("future.v8_viteEnvironmentApi: false");
-            if (userConfig.future?.unstable_subResourceIntegrity)
-              errors.push("future.unstable_subResourceIntegrity");
+            if (userConfig.subResourceIntegrity)
+              errors.push("subResourceIntegrity");
             if (errors.length) {
               return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
             }
           },
         });
+        configLoader = await configLoaderPromise;
 
         const configResult = await configLoader.getConfig();
         if (!configResult.ok) throw new Error(configResult.error);
@@ -284,36 +353,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               },
             },
           },
-          build: {
-            rollupOptions: {
-              // Copied from https://github.com/vitejs/vite-plugin-react/blob/c602225271d4acf462ba00f8d6d8a2e42492c5cd/packages/common/warning.ts
-              onwarn(warning, defaultHandler) {
-                if (
-                  warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-                  (warning.message.includes("use client") ||
-                    warning.message.includes("use server"))
-                ) {
-                  return;
-                }
-                // https://github.com/vitejs/vite/issues/15012
-                if (
-                  warning.code === "SOURCEMAP_ERROR" &&
-                  warning.message.includes("resolve original location") &&
-                  warning.pos === 0
-                ) {
-                  return;
-                }
-                if (viteUserConfig.build?.rollupOptions?.onwarn) {
-                  viteUserConfig.build.rollupOptions.onwarn(
-                    warning,
-                    defaultHandler,
-                  );
-                } else {
-                  defaultHandler(warning);
-                }
-              },
-            },
-          },
         };
       },
       configResolved(viteConfig) {
@@ -359,6 +398,65 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           },
         );
       },
+      configurePreviewServer(previewServer) {
+        const clientBuildDirectory = getClientBuildDirectory(config);
+        if (
+          (config.prerender || config.ssr === false) &&
+          process.env.IS_RR_BUILD_REQUEST !== "yes"
+        ) {
+          previewServer.middlewares.use(async (req, res, next) => {
+            try {
+              const htmlFileBase = (
+                (req.url || "/") +
+                (req.url?.endsWith("/") ? "" : "/") +
+                "index.html"
+              ).slice(1);
+              const htmlFilePath = path.join(
+                clientBuildDirectory,
+                htmlFileBase,
+              );
+              if (existsSync(htmlFilePath)) {
+                res.setHeader("Content-Type", "text/html");
+                res.end(await readFile(htmlFilePath, "utf-8"));
+
+                return;
+              }
+              next();
+            } catch (error) {
+              next(error);
+            }
+          });
+
+          return () => {
+            if (config.ssr === false) {
+              previewServer.middlewares.use(async (req, res, next) => {
+                try {
+                  res.statusCode = 404;
+
+                  const url = new URL(req.url || "/", `http://localhost`);
+
+                  const htmlFilePath = path.join(
+                    clientBuildDirectory,
+                    url.pathname.endsWith(".rsc")
+                      ? "__spa-fallback.rsc"
+                      : "__spa-fallback.html",
+                  );
+
+                  if (existsSync(htmlFilePath)) {
+                    res.setHeader("Content-Type", "text/html");
+                    res.end(await readFile(htmlFilePath, "utf-8"));
+
+                    return;
+                  }
+                  res.end();
+                } catch (error) {
+                  next(error);
+                }
+              });
+            }
+          };
+        }
+      },
       async buildEnd() {
         await configLoader.close();
       },
@@ -381,29 +479,31 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         configureServer: logExperimentalNotice,
       };
     })(),
-    {
-      name: "react-router/rsc/typegen",
-      async config(viteUserConfig, { command, mode }) {
-        if (command === "serve") {
-          const vite = await import("vite");
-          typegenWatcherPromise = Typegen.watch(
-            getRootDirectory(viteUserConfig),
-            {
-              mode,
-              rsc: true,
-              // ignore `info` logs from typegen since they are
-              // redundant when Vite plugin logs are active
-              logger: vite.createLogger("warn", {
-                prefix: "[react-router]",
-              }),
-            },
-          );
+    process.env.IS_RR_BUILD_REQUEST !== "yes"
+      ? {
+          name: "react-router/rsc/typegen",
+          async config(viteUserConfig, { command, mode }) {
+            if (command === "serve") {
+              const vite = await import("vite");
+              typegenWatcherPromise ??= Typegen.watch(
+                getRootDirectory(viteUserConfig),
+                {
+                  mode,
+                  rsc: true,
+                  // ignore `info` logs from typegen since they are
+                  // redundant when Vite plugin logs are active
+                  logger: vite.createLogger("warn", {
+                    prefix: "[react-router]",
+                  }),
+                },
+              );
+            }
+          },
+          async buildEnd() {
+            (await typegenWatcherPromise)?.close();
+          },
         }
-      },
-      async buildEnd() {
-        (await typegenWatcherPromise)?.close();
-      },
-    },
+      : null,
 
     {
       name: "react-router/rsc/virtual-route-config",
@@ -423,20 +523,17 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         }
       },
     },
-    {
-      name: "react-router/rsc/virtual-route-modules",
-      transform(code, id) {
-        if (!routeIdByFile) return;
-        return transformVirtualRouteModules({
-          code,
-          id,
-          viteCommand,
-          routeIdByFile,
-          rootRouteFile,
-          viteEnvironment: this.environment,
-        });
+    virtualRouteModulesPlugin({
+      environments: {
+        client: ["client", "ssr"],
+        server: ["rsc"],
       },
-    },
+      getRouteIdForFile,
+      isRootRouteModule,
+      transformToJs,
+      enforceSplitRouteModules: () =>
+        config.future.v8_splitRouteModules === "enforce",
+    }),
     {
       name: "react-router/rsc/virtual-basename",
       resolveId(id) {
@@ -447,6 +544,25 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       load(id) {
         if (id === virtual.basename.resolvedId) {
           return `export default ${JSON.stringify(config.basename)};`;
+        }
+      },
+    },
+    {
+      name: "react-router/rsc/virtual-route-discovery",
+      resolveId(id) {
+        if (id === virtual.routeDiscovery.id) {
+          return virtual.routeDiscovery.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.routeDiscovery.resolvedId) {
+          return `export default ${JSON.stringify(
+            config.ssr === false
+              ? {
+                  mode: "initial",
+                }
+              : (config.routeDiscovery ?? { mode: "lazy" }),
+          )};`;
         }
       },
     },
@@ -463,145 +579,20 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         return viteCommand === "serve"
           ? [
-              `import RefreshRuntime from "${virtual.hmrRuntime.id}"`,
-              "RefreshRuntime.injectIntoGlobalHook(window)",
-              "window.$RefreshReg$ = () => {}",
-              "window.$RefreshSig$ = () => (type) => type",
-              "window.__vite_plugin_react_preamble_installed__ = true",
+              `if (import.meta.hot) {
+  import.meta.hot.accept();
+  import.meta.hot.on('rsc:update', () => {
+    // Defer revalidation to the next animation frame so React Fast Refresh
+    // can apply pending client component updates first. Without this delay,
+    // the RSC payload (showing updated text) can arrive and be reconciled
+    // against a DOM that still has the old text, causing a hydration mismatch.
+    requestAnimationFrame(() => {
+      __reactRouterDataRouter.revalidate()
+    });
+  })
+}`,
             ].join("\n")
           : "";
-      },
-    },
-    {
-      name: "react-router/rsc/hmr/runtime",
-      enforce: "pre",
-      resolveId(id) {
-        if (id === virtual.hmrRuntime.id) return virtual.hmrRuntime.resolvedId;
-      },
-      async load(id) {
-        if (id !== virtual.hmrRuntime.resolvedId) return;
-
-        const reactRefreshDir = path.dirname(
-          nodeRequire.resolve("react-refresh/package.json"),
-        );
-        const reactRefreshRuntimePath = join(
-          reactRefreshDir,
-          "cjs/react-refresh-runtime.development.js",
-        );
-
-        return [
-          "const exports = {}",
-          await readFile(reactRefreshRuntimePath, "utf8"),
-          await readFile(
-            nodeRequire.resolve("./static/rsc-refresh-utils.mjs"),
-            "utf8",
-          ),
-          "export default exports",
-        ].join("\n");
-      },
-    },
-    {
-      name: "react-router/rsc/hmr/react-refresh",
-      async transform(code, id, options) {
-        if (viteCommand !== "serve") return;
-        if (id.includes("/node_modules/")) return;
-
-        const filepath = id.split("?")[0];
-        const extensionsRE = /\.(jsx?|tsx?|mdx?)$/;
-        if (!extensionsRE.test(filepath)) return;
-
-        const devRuntime = "react/jsx-dev-runtime";
-        const ssr = options?.ssr === true;
-        const isJSX = filepath.endsWith("x");
-        const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
-        if (!useFastRefresh) return;
-
-        if (isVirtualClientRouteModuleId(id)) {
-          const routeId = routeIdByFile?.get(filepath);
-          return { code: addRefreshWrapper({ routeId, code, id }) };
-        }
-
-        const result = await babel.transformAsync(code, {
-          babelrc: false,
-          configFile: false,
-          filename: id,
-          sourceFileName: filepath,
-          parserOpts: {
-            sourceType: "module",
-            allowAwaitOutsideFunction: true,
-          },
-          plugins: [
-            [
-              nodeRequire.resolve("react-refresh/babel"),
-              { skipEnvCheck: true },
-            ],
-          ],
-          sourceMaps: true,
-        });
-        if (result === null) return;
-
-        code = result.code!;
-        const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
-        if (refreshContentRE.test(code)) {
-          code = addRefreshWrapper({ code, id });
-        }
-        return { code, map: result.map };
-      },
-    },
-    {
-      name: "react-router/rsc/hmr/updates",
-      async hotUpdate(this, { server, file, modules }) {
-        if (this.environment.name !== "rsc") return;
-
-        const clientModules =
-          server.environments.client.moduleGraph.getModulesByFile(file);
-
-        const vite = await import("vite");
-        const isServerOnlyChange =
-          !clientModules ||
-          clientModules.size === 0 ||
-          // Handle CSS injected from server-first routes (with ?direct query
-          // string) since the client graph has a reference to the CSS
-          (vite.isCSSRequest(file) &&
-            Array.from(clientModules).some((mod) =>
-              mod.id?.includes("?direct"),
-            ));
-
-        for (const mod of getModulesWithImporters(modules)) {
-          if (!mod.file) continue;
-
-          const normalizedPath = path.normalize(mod.file);
-          const routeId = routeIdByFile?.get(normalizedPath);
-          if (routeId !== undefined) {
-            const routeSource = await readFile(normalizedPath, "utf8");
-            const virtualRouteModuleCode = (
-              await server.environments.rsc.pluginContainer.transform(
-                routeSource,
-                `${normalizedPath}?route-module`,
-              )
-            ).code;
-            const { staticExports } = parseRouteExports(virtualRouteModuleCode);
-            const hasAction = staticExports.includes("action");
-            const hasComponent = staticExports.includes("default");
-            const hasErrorBoundary = staticExports.includes("ErrorBoundary");
-            const hasLoader = staticExports.includes("loader");
-
-            server.hot.send({
-              type: "custom",
-              event: "react-router:hmr",
-              data: {
-                routeId,
-                isServerOnlyChange,
-                hasAction,
-                hasComponent,
-                hasErrorBoundary,
-                hasLoader,
-              },
-            });
-          }
-        }
-
-        return modules;
       },
     },
     {
@@ -630,13 +621,162 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
+    prerender({
+      config() {
+        return {
+          buildDirectory: getClientBuildDirectory(config),
+          concurrency: getPrerenderConcurrencyConfig(config),
+        };
+      },
+      logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      async requests() {
+        const prerenderPaths = new Set(
+          await getPrerenderPaths(
+            config.prerender,
+            config.ssr,
+            config.routes,
+            true,
+          ),
+        );
+
+        let basename =
+          !config.basename || config.basename === "/"
+            ? "/"
+            : config.basename.endsWith("/")
+              ? config.basename
+              : config.basename + "/";
+
+        if (config.ssr === false) {
+          prerenderPaths.add("/__spa-fallback.html");
+        }
+
+        return Array.from(prerenderPaths).map(
+          (prerenderPath) =>
+            `http://localhost${basename}${prerenderPath.slice(1)}`,
+        );
+      },
+      async postProcess(request, response, metadata) {
+        let url = new URL(request.url);
+
+        let isRedirect = redirectStatusCodes.has(response.status);
+
+        if (
+          !isRedirect &&
+          response.status !== 200 &&
+          response.status !== 202 &&
+          !(url.pathname === "/__spa-fallback.html" && response.status === 404)
+        ) {
+          throw new Error(
+            `Prerender (data): Received a ${response.status} status code from ` +
+              `\`entry.server.tsx\` while prerendering the \`${url.pathname}\` ` +
+              `path.\n${url.pathname}`,
+            { cause: response },
+          );
+        }
+
+        if (metadata?.manifest) {
+          return [
+            {
+              path: url.pathname,
+              contents: await response.text(),
+            },
+          ];
+        }
+
+        let isHtml = response.headers
+          .get("content-type")
+          ?.includes("text/html");
+        let htmlResponse = isHtml
+          ? isRedirect
+            ? response
+            : response.clone()
+          : null;
+
+        // This isn't ideal but gets the job done as a fallback if the user can't
+        // implement proper redirects via .htaccess or something else.  This is the
+        // approach used by Astro as well, so there's some precedent.
+        // https://github.com/withastro/roadmap/issues/466
+        // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
+        let location = response.headers.get("Location");
+        // A short delay causes Google to interpret the redirect as temporary.
+        // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
+        let delay = response.status === 302 ? 2 : 0;
+        let redirectBody = isRedirect
+          ? `<!doctype html>
+<head>
+<title>Redirecting to: ${location}</title>
+<meta http-equiv="refresh" content="${delay};url=${location}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+	<a href="${location}">
+  Redirecting from <code>${url.pathname}</code> to <code>${location}</code>
+</a>
+</body>
+</html>`
+          : "";
+
+        let files: { path: string; contents: Uint8Array | string }[] = [
+          {
+            path:
+              isHtml || redirectBody
+                ? url.pathname === "/__spa-fallback.html"
+                  ? "__spa-fallback.html"
+                  : (url.pathname.endsWith("/")
+                      ? url.pathname
+                      : url.pathname + "/") + "index.html"
+                : url.pathname,
+            contents:
+              redirectBody ||
+              (isHtml
+                ? await response.text()
+                : new Uint8Array(await response.arrayBuffer())),
+          },
+        ];
+
+        if (htmlResponse) {
+          let body = await htmlResponse.text();
+
+          let matches = Array.from(
+            body.matchAll(
+              /<script>\(self\.__FLIGHT_DATA\|\|=\[\]\)\.push\(("(?:[^"\\]|\\.)*")\)<\/script>/gim,
+            ),
+          );
+          if (matches.length) {
+            let rscData = "";
+            for (const match of matches) {
+              rscData += JSON.parse(match[1]);
+            }
+
+            files.push({
+              path:
+                url.pathname === "/"
+                  ? "_.rsc"
+                  : (url.pathname === "/__spa-fallback.html"
+                      ? "__spa-fallback"
+                      : url.pathname) + ".rsc",
+              contents: rscData,
+            });
+          }
+        } else if (!url.pathname.endsWith(".rsc")) {
+          let dataUrl = new URL(url);
+          dataUrl.pathname += ".rsc";
+          return {
+            files,
+            requests: [dataUrl.href],
+          };
+        }
+
+        return files;
+      },
+    }),
   ];
 }
 
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
+  routeDiscovery: create("unstable_rsc/route-discovery"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
-  hmrRuntime: create("unstable_rsc/runtime"),
   basename: create("unstable_rsc/basename"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
@@ -656,83 +796,17 @@ function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 }
 
-function getModulesWithImporters(
-  modules: Vite.EnvironmentModuleNode[],
-): Set<Vite.EnvironmentModuleNode> {
-  const visited = new Set<Vite.EnvironmentModuleNode>();
-  const result = new Set<Vite.EnvironmentModuleNode>();
+const getClientBuildDirectory = (
+  reactRouterConfig: ResolvedReactRouterConfig,
+) => path.join(reactRouterConfig.buildDirectory, "client");
 
-  function walk(module: Vite.EnvironmentModuleNode) {
-    if (visited.has(module)) return;
-
-    visited.add(module);
-    result.add(module);
-
-    for (const importer of module.importers) {
-      walk(importer);
-    }
+function getPrerenderConcurrencyConfig(
+  reactRouterConfig: ResolvedReactRouterConfig,
+): number {
+  let concurrency = 1;
+  let { prerender } = reactRouterConfig;
+  if (typeof prerender === "object" && "concurrency" in prerender) {
+    concurrency = prerender.concurrency ?? 1;
   }
-
-  for (const module of modules) {
-    walk(module);
-  }
-
-  return result;
+  return concurrency;
 }
-
-function addRefreshWrapper({
-  routeId,
-  code,
-  id,
-}: {
-  routeId?: string;
-  code: string;
-  id: string;
-}): string {
-  const acceptExports =
-    routeId !== undefined ? CLIENT_NON_COMPONENT_EXPORTS : [];
-  return (
-    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
-    code +
-    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
-      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
-      .replaceAll("__ROUTE_ID__", JSON.stringify(routeId))
-  );
-}
-
-const REACT_REFRESH_HEADER = `
-import RefreshRuntime from "${virtual.hmrRuntime.id}";
-
-const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
-let prevRefreshReg;
-let prevRefreshSig;
-
-if (import.meta.hot && !inWebWorker) {
-  if (!window.__vite_plugin_react_preamble_installed__) {
-    throw new Error(
-      "React Router Vite plugin can't detect preamble. Something is wrong."
-    );
-  }
-
-  prevRefreshReg = window.$RefreshReg$;
-  prevRefreshSig = window.$RefreshSig$;
-  window.$RefreshReg$ = (type, id) => {
-    RefreshRuntime.register(type, __SOURCE__ + " " + id)
-  };
-  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
-}`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
-
-const REACT_REFRESH_FOOTER = `
-if (import.meta.hot && !inWebWorker) {
-  window.$RefreshReg$ = prevRefreshReg;
-  window.$RefreshSig$ = prevRefreshSig;
-  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
-    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
-    import.meta.hot.accept((nextExports) => {
-      if (!nextExports) return;
-      __ROUTE_ID__ && window.__reactRouterRouteModuleUpdates.set(__ROUTE_ID__, nextExports);
-      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports, __ACCEPT_EXPORTS__);
-      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
-    });
-  });
-}`;

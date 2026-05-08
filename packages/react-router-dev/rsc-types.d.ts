@@ -10,12 +10,29 @@ declare module "virtual:react-router/unstable_rsc/basename" {
   export default basename;
 }
 
+declare module "virtual:react-router/unstable_rsc/ssr" {
+  const ssr: boolean;
+  export default ssr;
+}
+
 declare module "virtual:react-router/unstable_rsc/react-router-serve-config" {
   const unstable_reactRouterServeConfig: {
     publicPath: string;
     assetsBuildDirectory: string;
   };
   export default unstable_reactRouterServeConfig;
+}
+
+declare module "virtual:react-router/unstable_rsc/route-discovery" {
+  const routeDiscovery:
+    | {
+        mode: "initial";
+      }
+    | {
+        mode: "lazy";
+        manifestPath?: string;
+      };
+  export default routeDiscovery;
 }
 
 declare module "virtual:react-router/unstable_rsc/inject-hmr-runtime" {}

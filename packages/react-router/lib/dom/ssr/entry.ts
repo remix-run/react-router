@@ -2,7 +2,11 @@ import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
-import type { RouteManifest } from "../../router/utils";
+import type {
+  DataRouteObject,
+  RouteBranch,
+  RouteManifest,
+} from "../../router/utils";
 import type { ServerBuild } from "../../server-runtime/build";
 
 type SerializedError = {
@@ -39,13 +43,13 @@ export interface FrameworkContextObject {
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
 export interface EntryContext extends FrameworkContextObject {
+  branches: RouteBranch<DataRouteObject>[];
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
 export interface FutureConfig {
-  unstable_passThroughRequests: boolean;
-  unstable_subResourceIntegrity: boolean;
+  v8_passThroughRequests: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   v8_middleware: boolean;
 }

@@ -149,12 +149,31 @@ test.describe("Client Data", () => {
                   templateName,
                   files: {
                     "react-router.config.ts": reactRouterConfig({
-                      future: { v8_splitRouteModules },
+                      future: { v8_splitRouteModules, v8_middleware: true },
                     }),
                     "app/root.tsx": js`
                       import { Form, Outlet, Scripts } from "react-router"
 
-                      export default function Root({ loaderData }) {
+                      export const middleware = [
+                        async ({ request }, next) => {
+                          let response = await next();
+
+                          if (
+                            request.method === "GET" &&
+                            response instanceof Response &&
+                            response.status === 200 &&
+                            request.headers.get("sec-purpose") === "prefetch" &&
+                            !response.headers.has("Cache-Control")
+                          ) {
+                            let cachedResponse = new Response(response.body, response);
+                            cachedResponse.headers.set("Cache-Control", "max-age=5");
+                            return cachedResponse;
+                          }
+                          return response;
+                        }
+                      ];
+
+                      export default function Root() {
                         return (
                           <html>
                             <head></head>
@@ -941,6 +960,49 @@ test.describe("Client Data", () => {
                         return <p id="b">Hi!</p>;
                       }
                     `,
+
+                    "app/routes/client-loader-critical.aborted-hydration-fetches-fresh-data.tsx": js`
+                      import { Link } from "react-router";
+
+                      export function loader({ request }) {
+                        return { query: new URL(request.url).searchParams.get("q") || "empty" };
+                      }
+
+                      export async function clientLoader({ serverLoader, request }) {
+                        let q = new URL(request.url).searchParams.get("q") || "empty";
+
+                        // Delay the initial invocation
+                        if (q === "initial") {
+                          if (!window.__hydrationBlock) {
+                            let { promise, resolve } = Promise.withResolvers();
+                            window.__resolveHydrationBlock = resolve
+                            window.__hydrationBlock = promise;
+                            await window.__hydrationBlock;
+                          }
+                        }
+
+                        let serverData = await serverLoader();
+                        return {
+                          ...serverData,
+                          clientLoaderRan: true,
+                          clientLoaderQuery: q,
+                        };
+                      }
+
+                      clientLoader.hydrate = true;
+
+                      export default function Component({ loaderData }) {
+                        return (
+                          <div>
+                            <p data-server-query>{loaderData.query}</p>
+                            <p data-client-loader-query>{String(loaderData.clientLoaderQuery ?? "none")}</p>
+                            <Link to="/client-loader-critical/aborted-hydration-fetches-fresh-data?q=updated">
+                              Update query
+                            </Link>
+                          </div>
+                        );
+                      }
+                    `,
                   },
                 },
                 ServerMode.Development, // Avoid error sanitization
@@ -1284,6 +1346,56 @@ test.describe("Client Data", () => {
               // But 2nd parent opted out of revalidation
               await expect(page.locator("#parent-2-data")).toHaveText("1");
               await expect(page.locator("#b")).toHaveText("Hi!");
+            });
+
+            // When a same-route navigation aborts the pending hydration
+            // POP, serverLoader() must fetch fresh data — not return the
+            // stale SSR initialData captured for the original URL.
+            test("serverLoader() fetches fresh data when a same-route navigation aborts hydration", async ({
+              page,
+            }) => {
+              let app = new PlaywrightFixture(appFixture, page);
+
+              await app.goto(
+                "/client-loader-critical/aborted-hydration-fetches-fresh-data?q=initial",
+              );
+
+              // SSR shows the server loader's data; clientLoader hasn't completed yet
+              await expect(page.locator("[data-server-query]")).toHaveText(
+                "initial",
+              );
+              await expect(
+                page.locator("[data-client-loader-query]"),
+              ).toHaveText("none");
+
+              // Click before hydration completes to abort the hydration clientLoader call before it calls serverLoader
+              await app.clickLink(
+                "/client-loader-critical/aborted-hydration-fetches-fresh-data?q=updated",
+                { wait: false },
+              );
+
+              await page.waitForURL(/q=updated/);
+
+              // PUSH ran the clientLoader as call #2 and saw the new URL and the serverLoader
+              // invocation doesn't return hydrationData
+              await expect(page.locator("[data-server-query]")).toHaveText(
+                "updated",
+              );
+              await expect(
+                page.locator("[data-client-loader-query]"),
+              ).toHaveText("updated");
+
+              // Release the still-pending hydration call so it can unwind.
+              await page.evaluate(() =>
+                (window as any).__resolveHydrationBlock(),
+              );
+
+              await expect(page.locator("[data-server-query]")).toHaveText(
+                "updated",
+              );
+              await expect(
+                page.locator("[data-client-loader-query]"),
+              ).toHaveText("updated");
             });
           });
 

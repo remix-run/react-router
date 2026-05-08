@@ -1,6 +1,5 @@
 ---
 title: React Transitions
-unstable: true
 ---
 
 # React Transitions
@@ -9,10 +8,6 @@ unstable: true
 
 <br/>
 <br/>
-
-<docs-warning>The `unstable_useTransitions` prop is experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
-to release notes for relevant changes.</docs-warning>
 
 [React 18][react-18] introduced the concept of "transitions" which allow you to differentiate urgent from non-urgent UI updates. To learn more about React Transitions and "concurrent rendering" Please refer to React's official documentation:
 
@@ -27,13 +22,13 @@ to release notes for relevant changes.</docs-warning>
 
 The introduction of Transitions in React makes the story of how React Router manages your navigations and router state a bit more complicated. These are powerful APIs but they don't come without some nuance and added complexity. We aim to make React Router work seamlessly with the new React features, but in some cases there may exist some tension between the new React ways to do things and some patterns you are already using in your React Router apps (i.e., pending states, optimistic UI).
 
-To ensure a smooth adoption story, we've introduced changes related to Transitions behind an opt-in `unstable_useTransitions` flag so that you can upgrade in a non-breaking fashion.
+To ensure a smooth adoption story, we've introduced changes related to Transitions behind an opt-in `useTransitions` flag so that you can upgrade in a non-breaking fashion.
 
 ### Current Behavior
 
 We first leveraged `React.startTransition` to make React Router more Suspense-friendly in React Router [6.13.0][rr-6-13-0] via the `future.v7_startTransition` flag. In v7, that became the default behavior and all router state updates are currently wrapped in `React.startTransition`.
 
-This default behavior has 2 potential issues that `unstable_useTransitions` is designed to solve:
+This default behavior has 2 potential issues that `useTransitions` is designed to solve:
 
 - There are some valid use cases where you _don't_ want your updates wrapped in `startTransition`
   - One specific issue is that `React.useSyncExternalStore` updates can't be Transitions ([^1][uses-transition-issue], [^2][uses-transition-tweet]). `useSyncExternalStore` forces a sync update, which means fallbacks can be shown in update transitions that would otherwise avoid showing the fallback.
@@ -41,26 +36,26 @@ This default behavior has 2 potential issues that `unstable_useTransitions` is d
 - React 19 has added a new `startTransition(() => Promise))` API as well as a new `useOptimistic` hook to surface updates during Transitions
   - Without some updates to React Router, `startTransition(() => navigate(path))` doesn't work as you might expect, because we are not using `useOptimistic` internally so router state updates don't surface during the navigation, which breaks hooks like `useNavigation`
 
-To provide a solution to both of the above issues, we're introducing a new `unstable_useTransitions` prop to the router components that will let you opt-out of using `startTransition` for router state updates (solving the first issue), or opt-into a more enhanced usage of `startTransition` + `useOptimistic` (solving the second issue). Because the current behavior is a bit incomplete with the new React 19 APIs, we plan to make the opt-in behavior the default in React Router v8, but we will likely retain the opt-out flag for use cases such as `useSyncExternalStore`.
+To provide a solution to both of the above issues, we're introducing a new `useTransitions` prop to the router components that will let you opt-out of using `startTransition` for router state updates (solving the first issue), or opt-into a more enhanced usage of `startTransition` + `useOptimistic` (solving the second issue). Because the current behavior is a bit incomplete with the new React 19 APIs, we plan to make the opt-in behavior the default in React Router v8, but we will likely retain the opt-out flag for use cases such as `useSyncExternalStore`.
 
-### Opt-out via `unstable_useTransitions=false`
+### Opt-out via `useTransitions=false`
 
 If your application is not "Transition-friendly" due to the usage of `useSyncExternalStore` (or other reasons), then you can opt-out via the prop:
 
 ```tsx
 // Framework Mode (entry.client.tsx)
-<HydratedRouter unstable_useTransitions={false} />
+<HydratedRouter useTransitions={false} />
 
 // Data Mode
-<RouterProvider unstable_useTransitions={false} />
+<RouterProvider useTransitions={false} />
 
 // Declarative Mode
-<BrowserRouter unstable_useTransitions={false} />
+<BrowserRouter useTransitions={false} />
 ```
 
 This will stop the router from wrapping internal state updates in `startTransition`.
 
-### Opt-in via `unstable_useTransitions=true`
+### Opt-in via `useTransitions=true`
 
 <docs-info>Opting into this feature in Framework or Data Mode requires that you are using React 19 because it needs access to [`React.useOptimistic`][use-optimistic]</docs-info>
 
@@ -68,13 +63,13 @@ If you want to make your application play nicely with all of the new React 19 fe
 
 ```tsx
 // Framework Mode (entry.client.tsx)
-<HydratedRouter unstable_useTransitions />
+<HydratedRouter useTransitions />
 
 // Data Mode
-<RouterProvider unstable_useTransitions />
+<RouterProvider useTransitions />
 
 // Declarative Mode
-<BrowserRouter unstable_useTransitions />
+<BrowserRouter useTransitions />
 ```
 
 With this flag enabled:

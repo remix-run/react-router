@@ -2,6 +2,7 @@ import { flatten } from "./flatten";
 import { unflatten } from "./unflatten";
 import {
   Deferred,
+  SUPPORTED_ERROR_TYPES,
   TYPE_ERROR,
   TYPE_PREVIOUS_RESOLVED,
   TYPE_PROMISE,
@@ -13,6 +14,7 @@ import {
 } from "./utils";
 
 export type { DecodePlugin, EncodePlugin };
+export { SUPPORTED_ERROR_TYPES };
 
 export async function decode(
   readable: ReadableStream<Uint8Array>,

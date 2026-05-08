@@ -16,6 +16,8 @@ import {
 } from "../errors";
 import { escapeHtml } from "../dom/ssr/markup";
 
+const defaultManifestPath = "/__manifest";
+
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
   formState: Promise<any>;
@@ -579,9 +581,8 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
-      unstable_subResourceIntegrity: false,
       unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-      unstable_passThroughRequests: true, // always on for RSC
+      v8_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
@@ -595,7 +596,14 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         imports: [],
       },
     },
-    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+    routeDiscovery:
+      payload.routeDiscovery.mode === "initial"
+        ? { mode: "initial", manifestPath: defaultManifestPath }
+        : {
+            mode: "lazy",
+            manifestPath:
+              payload.routeDiscovery.manifestPath || defaultManifestPath,
+          },
     routeModules: createRSCRouteModules(payload),
   };
 
