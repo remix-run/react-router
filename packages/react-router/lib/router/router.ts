@@ -2888,14 +2888,18 @@ export function createRouter(init: RouterInit): Router {
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
     // Since we let revalidations complete even if the submitting fetcher was
-    // deleted, only put it back to idle if it hasn't been deleted
-    if (state.fetchers.has(key)) {
-      let doneFetcher = getDoneFetcher(actionResult.data);
-      state.fetchers.set(key, doneFetcher);
-    }
+    // deleted, only put it back to idle if it hasn't been deleted.
+    // We track this now for use later, but defer the actual mutation.
+    let fetcherHasKey = state.fetchers.has(key);
 
     let redirect = findRedirect(loaderResults);
     if (redirect) {
+      // For redirect paths we still need to mutate state.fetchers so that the
+      // subsequent redirect navigation's completeNavigation() sees the fetcher
+      // as idle when it reads state.fetchers.
+      if (fetcherHasKey) {
+        state.fetchers.set(key, getDoneFetcher(actionResult.data));
+      }
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
@@ -2909,6 +2913,9 @@ export function createRouter(init: RouterInit): Router {
       // If this redirect came from a fetcher make sure we mark it in
       // fetchRedirectIds so it doesn't get revalidated on the next set of
       // loader executions
+      if (fetcherHasKey) {
+        state.fetchers.set(key, getDoneFetcher(actionResult.data));
+      }
       fetchRedirectIds.add(redirect.key);
       return startRedirectNavigation(
         revalidationRequest,
@@ -2930,6 +2937,17 @@ export function createRouter(init: RouterInit): Router {
 
     abortStaleFetchLoads(loadId);
 
+    // Build the final fetchers Map atomically so that the done-fetcher
+    // transition and the new loaderData are committed in the same React state
+    // update.  Do NOT mutate state.fetchers here: that Map was already handed
+    // to React via the updateState() call above (line ~2824) and mutating it
+    // before React renders would expose idle formData alongside stale
+    // loaderData — the flicker described in #14506.
+    let finalFetchers = new Map(state.fetchers);
+    if (fetcherHasKey) {
+      finalFetchers.set(key, getDoneFetcher(actionResult.data));
+    }
+
     // If we are currently in a navigation loading state and this fetcher is
     // more recent than the navigation, we want the newer data so abort the
     // navigation and complete it with the fetcher data
@@ -2944,7 +2962,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         loaderData,
         errors,
-        fetchers: new Map(state.fetchers),
+        fetchers: finalFetchers,
       });
     } else {
       // otherwise just update with the fetcher data, preserving any existing
@@ -2958,7 +2976,7 @@ export function createRouter(init: RouterInit): Router {
           matches,
           errors,
         ),
-        fetchers: new Map(state.fetchers),
+        fetchers: finalFetchers,
       });
       isRevalidationRequired = false;
     }

@@ -3703,4 +3703,84 @@ describe("fetchers", () => {
       expect(A.loaders.fetch.signal.reason).toBe("BECAUSE I SAID SO");
     });
   });
+
+  describe("fetcher optimistic UI flicker (#14506)", () => {
+    // The root cause of the bug: after updateState({ fetchers: new Map(...) })
+    // hands a Map to React, subsequent direct mutations of state.fetchers (e.g.
+    // state.fetchers.set(key, getDoneFetcher())) mutate that same Map before
+    // React renders it. If React renders the earlier state snapshot after the
+    // mutation, it sees idle formData alongside stale loaderData — a flicker.
+    it("does not expose idle fetcher before new loaderData is committed", async () => {
+      // Capture every state the subscriber receives so we can verify that the
+      // subscriber never sees formData disappear while loaderData is still stale.
+      let subscriberStates: Array<{
+        fetcherState: string;
+        hasFormData: boolean;
+        loaderStatus: boolean | undefined;
+      }> = [];
+
+      let itemStatus = false;
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/item"] }),
+        routes: [
+          {
+            id: "item",
+            path: "/item",
+            loader: () => ({ status: itemStatus }),
+            action: async ({ request }) => {
+              let formData = await request.formData();
+              itemStatus = formData.get("status") === "true";
+              return { ok: true };
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: { item: { status: false } },
+        },
+      });
+
+      router.initialize();
+
+      // Mount the fetcher so it stays in state
+      router.getFetcher("toggle");
+
+      router.subscribe((state) => {
+        let fetcher = state.fetchers.get("toggle");
+        if (!fetcher) return;
+        let loaderData = state.loaderData["item"] as
+          | { status: boolean }
+          | undefined;
+        subscriberStates.push({
+          fetcherState: fetcher.state,
+          hasFormData: fetcher.formData !== undefined,
+          loaderStatus: loaderData?.status,
+        });
+      });
+
+      let formData = new FormData();
+      formData.append("status", "true");
+
+      await router.fetch("toggle", "item", "/item", {
+        formMethod: "POST",
+        formData,
+      });
+
+      router.dispose();
+
+      // The subscriber must never see a state where formData is gone (idle/no
+      // submission info) while loaderData still has the old value (false).
+      // That combination is the "flicker" state described in #14506.
+      let flickerStates = subscriberStates.filter(
+        (s) => !s.hasFormData && s.loaderStatus === false,
+      );
+
+      expect(flickerStates).toEqual([]);
+
+      // Sanity checks: we should have seen submitting/loading states with
+      // formData, and the final state should have the updated loaderData.
+      let lastState = subscriberStates[subscriberStates.length - 1];
+      expect(lastState.loaderStatus).toBe(true);
+    });
+  });
 });
