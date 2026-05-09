@@ -609,7 +609,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           const clientOutDir =
             resolvedViteConfig.environments.client?.build?.outDir;
           invariant(clientOutDir, "Client build directory config not found");
-          const assetsBuildDirectory = Path.relative(rscOutDir, clientOutDir);
+          const assetsBuildDirectory = Path.relative(rscOutDir, clientOutDir)
+            .split(Path.sep)
+            .join(Path.posix.sep);
           const publicPath = resolvedViteConfig.base;
 
           return `export default ${JSON.stringify({
