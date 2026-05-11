@@ -115,7 +115,6 @@ describe("<Routes>", () => {
   });
 
   it("throws if some <CustomRoute> is passed as a child of <Routes>", () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const CustomRoute = (...args: any) => <Route />;
 
     expect(() => {

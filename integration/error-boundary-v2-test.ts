@@ -145,7 +145,7 @@ test.describe("ErrorBoundary", () => {
     appFixture.close();
   });
 
-  test.beforeEach(() => {
+  test.beforeEach(({ page }) => {
     oldConsoleError = console.error;
     console.error = () => {};
   });

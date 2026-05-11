@@ -8,7 +8,7 @@ export default async function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  _loadContext: AppLoadContext,
+  loadContext: AppLoadContext,
 ) {
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,

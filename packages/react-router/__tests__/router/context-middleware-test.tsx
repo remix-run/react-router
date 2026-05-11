@@ -38,7 +38,7 @@ declare module "../../lib/router/utils" {
 function respondWithJson(staticContext: StaticHandlerContext | Response) {
   invariant(!isResponse(staticContext), "Expected a StaticHandlerContext");
   return new Response(
-    JSON.stringify(staticContext, (_, value) =>
+    JSON.stringify(staticContext, (key, value) =>
       value instanceof Error ? `ERROR: ${value.message}` : value,
     ),
     {

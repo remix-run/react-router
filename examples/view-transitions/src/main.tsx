@@ -96,7 +96,7 @@ const router = createBrowserRouter([
       },
       {
         path: "defer",
-        async loader() {
+        async loader({ request }) {
           return defer({
             critical: "CRITICAL PATH DATA",
             lazy: new Promise((r) => setTimeout(() => r("LAZY DATA"), 1000)),

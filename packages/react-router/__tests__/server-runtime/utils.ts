@@ -89,7 +89,7 @@ export function mockServerBuild(
         default:
           opts.handleDocumentRequest ||
           jest.fn(
-            async (_request, responseStatusCode, responseHeaders) =>
+            async (request, responseStatusCode, responseHeaders) =>
               new Response(null, {
                 status: responseStatusCode,
                 headers: responseHeaders,

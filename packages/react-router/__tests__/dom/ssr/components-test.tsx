@@ -16,7 +16,10 @@ import {
   FrameworkContext,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
-import { DataRouterStateContext } from "../../../lib/context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+} from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom";
@@ -473,7 +476,7 @@ describe("usePrefetchBehavior", () => {
   }) {
     let [shouldPrefetch, ref] = usePrefetchBehavior(prefetch, {});
     return (
-      <a href="path" ref={ref} data-prefetch={shouldPrefetch}>
+      <a ref={ref} data-prefetch={shouldPrefetch}>
         Link
       </a>
     );

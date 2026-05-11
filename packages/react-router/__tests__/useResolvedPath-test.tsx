@@ -231,7 +231,7 @@ describe("useResolvedPath", () => {
     });
   });
 
-  function LogResolvedPathInfo({ desc }: { desc: string }) {
+  function LogResolvedPathInfo({ desc }) {
     return (
       <>
         {`--- Routes: ${desc} ---`}
@@ -251,7 +251,7 @@ describe("useResolvedPath", () => {
 
   // See: https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
   it("resolves splat route relative paths the same as other routes", async () => {
-    function App() {
+    function App({ enableFlag }: { enableFlag: boolean }) {
       let routeConfigs = [
         {
           routes: (
@@ -316,7 +316,7 @@ describe("useResolvedPath", () => {
       );
     }
 
-    let { container } = render(<App />);
+    let { container } = render(<App enableFlag={true} />);
     let html = getHtml(container);
     html = html ? html.replace(/&lt;/g, "<").replace(/&gt;/g, ">") : html;
     expect(html).toMatchInlineSnapshot(`

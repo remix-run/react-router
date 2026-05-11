@@ -2243,7 +2243,7 @@ describe("fetchers", () => {
     it("respects shouldRevalidate for the fetcher route", async () => {
       let key = "key";
       let count = 0;
-      let shouldRevalidate = jest.fn(() => false);
+      let shouldRevalidate = jest.fn((args) => false);
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/one"] }),
         routes: [

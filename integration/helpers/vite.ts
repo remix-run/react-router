@@ -502,7 +502,7 @@ export const test = base.extend<Fixtures>({
     });
     stop?.();
   },
-  vitePreview: async (_, use) => {
+  vitePreview: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {
       let port = await getPort();

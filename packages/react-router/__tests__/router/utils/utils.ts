@@ -40,13 +40,13 @@ export function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (_e) {}
+      } catch (e) {}
     };
     reject = async (error?: Error) => {
       rej(error);
       try {
         await promise;
-      } catch (_e) {}
+      } catch (e) {}
     };
   });
   return {

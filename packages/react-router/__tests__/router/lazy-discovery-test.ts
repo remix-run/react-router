@@ -785,7 +785,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "/:slug",
         },
       ],
-      async patchRoutesOnNavigation() {
+      async patchRoutesOnNavigation({ matches, patch }) {
         await tick();
       },
     });
@@ -841,7 +841,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "/splat/*",
         },
       ],
-      async patchRoutesOnNavigation({ patch }) {
+      async patchRoutesOnNavigation({ matches, patch }) {
         await tick();
         patch(null, [
           {
@@ -2219,7 +2219,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async patchRoutesOnNavigation() {
+        async patchRoutesOnNavigation({ patch }) {
           await tick();
           throw new Error("broke!");
         },
@@ -2260,7 +2260,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async patchRoutesOnNavigation() {
+        async patchRoutesOnNavigation({ patch }) {
           await tick();
           throw new Error("broke!");
         },

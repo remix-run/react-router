@@ -163,7 +163,7 @@ const outputDir = args.output || "docs/api";
 
 // Build lookup table for @link resolution
 const repoApiLookup = buildRepoDocsLinks(outputDir);
-const typedocLookup = buildTypedocLinks();
+const typedocLookup = buildTypedocLinks(outputDir);
 
 run();
 
@@ -204,7 +204,7 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   return lookup;
 }
 
-function buildTypedocLinks() {
+function buildTypedocLinks(outputDir: string) {
   const lookup = new Map<string, { href: string; description?: string }>();
 
   // Prerequisite: `typedoc` has been run first via `npm run docs`

@@ -221,7 +221,9 @@ test.describe("Vite base + React Router basename", () => {
           await workflowDev({ page, cwd, port, basename: "/mybase/app/" });
         });
 
-        test("errors if basename does not start with base", async () => {
+        test("errors if basename does not start with base", async ({
+          page,
+        }) => {
           await setup({
             base: "/mybase/",
             basename: "/notmybase/",
