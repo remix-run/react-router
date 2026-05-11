@@ -502,7 +502,8 @@ export const test = base.extend<Fixtures>({
     });
     stop?.();
   },
-  vitePreview: async (_, use) => {
+  // eslint-disable-next-line no-empty-pattern
+  vitePreview: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {
       let port = await getPort();
