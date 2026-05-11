@@ -17,10 +17,10 @@ import {
   type RouteManifest,
   type RouteManifestEntry,
   type RouteConfigEntry,
-  setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
 } from "./routes";
+import { withAppDirectory } from "./app-directory";
 import { detectPackageManager } from "../cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -636,15 +636,17 @@ async function resolveConfig({
         );
       }
 
-      setAppDirectory(appDirectory);
-      let routeConfigExport = (
-        await viteNodeContext.runner.executeFile(
-          Path.join(appDirectory, routeConfigFile),
-        )
-      ).default;
-      let result = validateRouteConfig({
-        routeConfigFile,
-        routeConfig: await routeConfigExport,
+      let result = await withAppDirectory(appDirectory, async () => {
+        let routeConfigExport = (
+          await viteNodeContext.runner.executeFile(
+            Path.join(appDirectory, routeConfigFile),
+          )
+        ).default;
+
+        return validateRouteConfig({
+          routeConfigFile,
+          routeConfig: await routeConfigExport,
+        });
       });
 
       if (!result.valid) {

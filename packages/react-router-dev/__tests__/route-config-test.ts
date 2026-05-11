@@ -9,17 +9,41 @@ import {
   prefix,
   relative,
 } from "../config/routes";
+import {
+  getAppDirectory,
+  setAppDirectory,
+  withAppDirectory,
+} from "../config/app-directory";
 
+const cwd = normalizePath(process.cwd());
 const cleanPathsForSnapshot = (obj: any): any =>
   JSON.parse(
     JSON.stringify(obj, (_key, value) =>
       typeof value === "string" && path.isAbsolute(value)
-        ? normalizePath(value.replace(process.cwd(), "{{CWD}}"))
+        ? normalizePath(value).replace(cwd, "{{CWD}}")
         : value,
     ),
   );
 
 describe("route config", () => {
+  describe("app directory context", () => {
+    it("isolates concurrent async route config loads", async () => {
+      setAppDirectory("global-app");
+
+      let first = withAppDirectory("app-a", async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return getAppDirectory();
+      });
+      let second = withAppDirectory("app-b", async () => getAppDirectory());
+
+      await expect(Promise.all([first, second])).resolves.toEqual([
+        "app-a",
+        "app-b",
+      ]);
+      expect(getAppDirectory()).toBe("global-app");
+    });
+  });
+
   describe("validateRouteConfig", () => {
     it("validates a route config", () => {
       const routeConfig = prefix("prefix", [

@@ -2,24 +2,7 @@ import * as Path from "pathe";
 import * as v from "valibot";
 import pick from "lodash/pick";
 
-import invariant from "../invariant";
-
-declare global {
-  var __reactRouterAppDirectory: string;
-}
-
-export function setAppDirectory(directory: string) {
-  globalThis.__reactRouterAppDirectory = directory;
-}
-
-/**
- * Provides the absolute path to the app directory, for use within `routes.ts`.
- * This is designed to support resolving file system routes.
- */
-export function getAppDirectory() {
-  invariant(globalThis.__reactRouterAppDirectory);
-  return globalThis.__reactRouterAppDirectory;
-}
+export { getAppDirectory, setAppDirectory } from "./app-directory";
 
 export interface RouteManifestEntry {
   /**
