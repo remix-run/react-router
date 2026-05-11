@@ -33,7 +33,7 @@ import { copyTemplate, CopyTemplateError } from "./copy-template";
 async function createReactRouter(argv: string[]) {
   let ctx = await getContext(argv);
   if (ctx.help) {
-    printHelp(ctx);
+    printHelp();
     return;
   }
   if (ctx.versionRequested) {
@@ -624,7 +624,7 @@ function title(text: string) {
   return align(color.bgWhite(` ${color.black(text)} `), "end", 7) + " ";
 }
 
-function printHelp(ctx: Context) {
+function printHelp() {
   // prettier-ignore
   let output = `
 ${title("create-react-router")}

@@ -606,7 +606,7 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (e) {
+        } catch (_e) {
           // If we can't unwrap the response - just leave it as-is
         }
       }

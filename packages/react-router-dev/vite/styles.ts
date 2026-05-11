@@ -112,7 +112,7 @@ const getStylesForFiles = async ({
 
   return (
     Object.entries(styles)
-      .map(([fileName, css], i) => [
+      .map(([fileName, css]) => [
         `\n/* ${fileName
           // Escape comment syntax in file paths
           .replace(/\/\*/g, "/\\*")

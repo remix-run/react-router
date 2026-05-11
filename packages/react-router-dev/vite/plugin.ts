@@ -592,10 +592,8 @@ const getRouteModuleExports = async (
 };
 
 const resolveEnvironmentBuildContext = ({
-  viteCommand,
   viteUserConfig,
 }: {
-  viteCommand: Vite.ResolvedConfig["command"];
   viteUserConfig: Vite.UserConfig;
 }): ResolvedEnvironmentBuildContext | null => {
   if (
@@ -656,9 +654,6 @@ let getServerBundleRouteIds = (
 
   return Object.keys(serverBundleRoutes);
 };
-
-const injectQuery = (url: string, query: string) =>
-  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
 
 let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
@@ -770,7 +765,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let environmentBuildContext: ResolvedEnvironmentBuildContext | null =
       viteCommand === "build"
-        ? resolveEnvironmentBuildContext({ viteCommand, viteUserConfig })
+        ? resolveEnvironmentBuildContext({ viteUserConfig })
         : null;
 
     firstLoad = false;
@@ -2833,7 +2828,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
-        let { ssr, future } = ctx.reactRouterConfig;
+        let { ssr } = ctx.reactRouterConfig;
 
         // if ssr:false is set
         if (!ssr) {

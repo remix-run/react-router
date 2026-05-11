@@ -146,7 +146,7 @@ function isFormDataSubmitterSupported() {
         0,
       );
       _formDataSupportsSubmitter = false;
-    } catch (e) {
+    } catch (_e) {
       _formDataSupportsSubmitter = true;
     }
   }

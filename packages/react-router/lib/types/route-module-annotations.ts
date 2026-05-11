@@ -271,7 +271,6 @@ export type GetAnnotations<Info extends RouteInfo> = {
   ServerErrorBoundaryProps: CreateErrorBoundaryProps<Info, true>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   // Test that MetaArgs.loaderData is only potentially undefined when ErrorBoundary is present
   Expect<

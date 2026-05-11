@@ -27,7 +27,7 @@ export function deserializeErrors(
             let error = new ErrorConstructor(val.message);
             error.stack = val.stack;
             serialized[key] = error;
-          } catch (e) {
+          } catch (_e) {
             // no-op - fall through and create a normal Error
           }
         }

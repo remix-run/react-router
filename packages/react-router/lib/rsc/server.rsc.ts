@@ -535,7 +535,7 @@ async function generateManifestResponse(
   if (routeDiscovery?.mode === "initial") {
     let payload: RSCManifestPayload = {
       type: "manifest",
-      patches: getAllRoutePatches(routes, basename),
+      patches: getAllRoutePatches(routes),
     };
     return generateResponse(
       {
@@ -1186,7 +1186,7 @@ async function getRenderPayload(
 
   let patches =
     routeDiscovery?.mode === "initial" && !isDataRequest
-      ? getAllRoutePatches(routes, basename).then((patches) =>
+      ? getAllRoutePatches(routes).then((patches) =>
           patches.filter(
             (patch) =>
               !staticContext.matches.some((m) => m.route.id === patch.id),
@@ -1391,7 +1391,6 @@ async function explodeLazyRoute(route: RSCRouteConfigEntry) {
 
 async function getAllRoutePatches(
   routes: RSCRouteConfigEntry[],
-  basename: string | undefined,
 ): Promise<RSCRouteManifest[]> {
   let patches: RSCRouteManifest[] = [];
 

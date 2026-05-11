@@ -824,7 +824,6 @@ type _ParseParams<path extends string> =
 // prettier-ignore
 export type PathParam<path extends string> = (keyof ParseParams<path>) & string;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
   // PathParam
   Expect<Equal<PathParam<"/a/b/*">, "*">>,
@@ -2234,7 +2233,7 @@ export function parseToInfo<T extends To | string>(
       } else {
         isExternal = true;
       }
-    } catch (e) {
+    } catch (_e) {
       // We can't do external URL detection without a valid URL
       warning(
         false,

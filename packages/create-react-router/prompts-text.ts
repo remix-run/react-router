@@ -152,6 +152,7 @@ export class TextPrompt extends Prompt {
     this.cursorOffset += n;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _(c: string, key: ActionKey) {
     let s1 = this.value.slice(0, this.cursor);
     let s2 = this.value.slice(this.cursor);

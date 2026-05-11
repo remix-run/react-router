@@ -193,7 +193,6 @@ function createHydratedRouter({
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
       ssrInfo.manifest,
-      ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename,
       ssrInfo.context.future.unstable_trailingSlashAwareDataRequests,

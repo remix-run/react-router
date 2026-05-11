@@ -96,6 +96,7 @@ export class SelectPrompt<
     this.render();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _(c: string, key: ActionKey) {
     if (this._timeout) clearTimeout(this._timeout);
     if (!Number.isNaN(Number.parseInt(c))) {

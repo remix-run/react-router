@@ -78,11 +78,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     )?.[1];
   }
 
-  function isMdxRouteModule(filename: string) {
-    let extension = path.extname(filename).toLowerCase();
-    return extension === ".md" || extension === ".mdx";
-  }
-
   function getTransformLanguage(
     filename: string,
   ): "ts" | "tsx" | "jsx" | undefined {

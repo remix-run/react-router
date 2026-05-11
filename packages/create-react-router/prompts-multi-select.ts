@@ -100,6 +100,7 @@ export class MultiSelectPrompt<
     this.render();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _(c: string, key: ActionKey) {
     if (c === " ") {
       return this.toggle();

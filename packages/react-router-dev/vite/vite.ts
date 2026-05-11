@@ -4,7 +4,6 @@ import type { DepOptimizationConfig, ESBuildOptions } from "vite";
 import invariant from "../invariant";
 import { isReactRouterRepo } from "../config/is-react-router-repo";
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type Vite = typeof import("vite");
 let vite: Vite | undefined;
 

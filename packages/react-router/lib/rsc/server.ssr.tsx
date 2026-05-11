@@ -309,9 +309,9 @@ export async function routeRSCServerRequest({
     }
 
     try {
-      reason = renderError ?? reason;
-      let [status, statusText] = isRouteErrorResponse(reason)
-        ? [reason.status, reason.statusText]
+      let errorOrReason = renderError ?? reason;
+      let [status, statusText] = isRouteErrorResponse(errorOrReason)
+        ? [errorOrReason.status, errorOrReason.statusText]
         : [500, ""];
 
       let retryRedirect: { status: number; location: string } | undefined;
@@ -327,7 +327,7 @@ export async function routeRSCServerRequest({
               status,
               errors: deepestRenderedBoundaryId
                 ? {
-                    [deepestRenderedBoundaryId]: reason,
+                    [deepestRenderedBoundaryId]: errorOrReason,
                   }
                 : {},
             }),

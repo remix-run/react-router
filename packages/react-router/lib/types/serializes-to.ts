@@ -10,7 +10,6 @@ export type unstable_SerializesTo<T> = {
   unstable__ReactRouter_SerializesTo: [T];
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   Expect<
     Equal<

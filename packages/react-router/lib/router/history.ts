@@ -404,7 +404,7 @@ export function createBrowserHistory(
     );
   }
 
-  function createBrowserHref(window: Window, to: To) {
+  function createBrowserHref(_window: Window, to: To) {
     return typeof to === "string" ? to : createPath(to);
   }
 
@@ -536,7 +536,7 @@ export function warning(cond: any, message: string) {
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
-    } catch (e) {}
+    } catch (_e) {}
   }
 }
 

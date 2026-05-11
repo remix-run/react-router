@@ -51,7 +51,7 @@ export async function singleFetchAction(
           ? build.allowedActionOrigins
           : [],
       );
-    } catch (e) {
+    } catch (_e) {
       return handleQueryError(new Error("Bad Request"), 400);
     }
 

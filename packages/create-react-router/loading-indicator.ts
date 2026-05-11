@@ -97,7 +97,7 @@ function loadingIndicatorFrame(offset = 0) {
 
 function getGradientAnimationFrames() {
   return INDICATOR_GRADIENT.map(
-    (colors) => " " + colors.map((g, i) => color.hex(g)("█")).join(""),
+    (colors) => " " + colors.map((g) => color.hex(g)("█")).join(""),
   );
 }
 
@@ -140,7 +140,7 @@ async function gradient(
         let frame = frames[frameIndex];
         logUpdate(
           `${(noMotion
-            ? getMotionlessFrame(frameIndex)
+            ? getMotionlessFrame()
             : color.supportsColor
               ? frame
               : getColorlessFrame(frameIndex)
@@ -170,6 +170,6 @@ function getColorlessFrame(frameIndex: number) {
   ).padEnd(MAX_FRAMES - 1 + 20, " ");
 }
 
-function getMotionlessFrame(frameIndex: number) {
+function getMotionlessFrame() {
   return " ".repeat(MAX_FRAMES - 1);
 }

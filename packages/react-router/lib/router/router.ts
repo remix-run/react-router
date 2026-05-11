@@ -5125,7 +5125,7 @@ function normalizeNavigateOptions(
             text: undefined,
           },
         };
-      } catch (e) {
+      } catch (_e) {
         return getInvalidBodyError();
       }
     }
@@ -5155,7 +5155,7 @@ function normalizeNavigateOptions(
     try {
       searchParams = new URLSearchParams(opts.body);
       formData = convertSearchParamsToFormData(searchParams);
-    } catch (e) {
+    } catch (_e) {
       return getInvalidBodyError();
     }
   }
@@ -5715,7 +5715,7 @@ function isSameRoute(
   // Otherwise, we look to see if every child in the new route is already
   // represented in the existing route's children
   return (
-    newRoute.children?.every((aChild, i) =>
+    newRoute.children?.every((aChild) =>
       existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild)),
     ) ?? false
   );
@@ -6467,7 +6467,7 @@ async function callDataStrategyImpl(
         m._lazyPromises?.route,
       ]),
     );
-  } catch (e) {
+  } catch (_e) {
     // No-op
   }
 
@@ -6776,7 +6776,7 @@ function normalizeRedirectLocation(
     if (invalidProtocols.includes(url.protocol)) {
       throw new Error("Invalid redirect location");
     }
-  } catch (e) {}
+  } catch (_e) {}
 
   return location;
 }
@@ -7129,13 +7129,11 @@ function getInternalRouterError(
     routeId,
     method,
     type,
-    message,
   }: {
     pathname?: string;
     routeId?: string;
     method?: string;
     type?: "invalid-body";
-    message?: string;
   } = {},
 ) {
   let statusText = "Unknown Server Error";
@@ -7508,7 +7506,7 @@ function restoreAppliedTransitions(
         }
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // no-op, use default empty object
   }
 }
@@ -7544,13 +7542,13 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (_e) {}
     };
     reject = async (error?: Error) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (_e) {}
     };
   });
   return {

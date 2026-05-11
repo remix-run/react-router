@@ -24,7 +24,6 @@ import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
-import type { RouteModules } from "./routeModules";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -181,7 +180,6 @@ export type FetchAndDecodeFunction = (
 export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   manifest: AssetsManifest,
-  routeModules: RouteModules,
   ssr: boolean,
   basename: string | undefined,
   trailingSlashAware: boolean,
@@ -565,7 +563,7 @@ async function bubbleMiddlewareErrors(
         }
       });
     }
-  } catch (e) {
+  } catch (_e) {
     // No-op - this logic is only intended to process successful responses
     // If the `.data` failed, the routes will handle those errors themselves
   }
@@ -726,7 +724,7 @@ async function fetchAndDecodeViaTurboStream(
       }
     }
     return { status: res.status, data };
-  } catch (e) {
+  } catch (_e) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
     // content type here, or even X-Remix-Response but then folks can't
@@ -842,13 +840,13 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (_e) {}
     };
     reject = async (error?: unknown) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (_e) {}
     };
   });
   return {
