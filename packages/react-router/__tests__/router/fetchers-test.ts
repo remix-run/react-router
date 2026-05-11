@@ -1,5 +1,5 @@
 /* eslint-disable jest/valid-title */
-import type { HydrationState } from "../../lib/router/router";
+import type { Fetcher, HydrationState } from "../../lib/router/router";
 import { createMemoryHistory } from "../../lib/router/history";
 import {
   createRouter,
@@ -3776,10 +3776,191 @@ describe("fetchers", () => {
       // assertion fails because state.fetchers.set(key, doneFetcher) mutated
       // the Map that was already handed to React.
       expect(capturedLoadingMap).not.toBeNull();
-      expect((capturedLoadingMap! as Map<string, Fetcher>).get("toggle")?.state).toBe("loading");
-      expect(
-        (capturedLoadingMap! as Map<string, Fetcher>).get("toggle")?.formData,
-      ).toBeDefined();
+      expect(capturedLoadingMap!.get("toggle")?.state).toBe("loading");
+      expect(capturedLoadingMap!.get("toggle")?.formData).toBeDefined();
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher GET load)", async () => {
+      // updateFetcherState() does: state.fetchers.set(key, fetcher); updateState({fetchers: new Map(state.fetchers)}).
+      // After the first call (loading state), state.fetchers === MapA which React holds.
+      // The second call (done state) mutates MapA via state.fetchers.set before creating MapB.
+      let capturedLoadingMap: Map<string, Fetcher> | null = null;
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          { id: "root", path: "/", loader: () => ({ data: "root" }) },
+          { id: "item", path: "/item", loader: () => ({ data: "item" }) },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("load");
+
+      router.subscribe((state) => {
+        let fetcher = state.fetchers.get("load");
+        if (fetcher?.state === "loading" && capturedLoadingMap === null) {
+          capturedLoadingMap = state.fetchers;
+        }
+      });
+
+      await router.fetch("load", "root", "/item");
+
+      router.dispose();
+
+      // The "loading" Map must not have been mutated to "idle" in place.
+      expect(capturedLoadingMap).not.toBeNull();
+      expect(capturedLoadingMap!.get("load")?.state).toBe("loading");
+      expect(capturedLoadingMap!.get("load")?.data).toBeUndefined();
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher revalidation during navigation)", async () => {
+      // getUpdatedRevalidatingFetchers() (dev branch) calls state.fetchers.set()
+      // on the current Map before returning a copy. This mutates MapPrev.
+      // Later, processLoaderData mutates the Map that subscribers received for
+      // the "loading" revalidation state. Test that the subscriber's loading
+      // Map is not mutated to idle by processLoaderData after loaders complete.
+      let capturedRevalidatingMap: Map<string, Fetcher> | null = null;
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: () => ({ data: "root" }),
+            action: () => ({ ok: true }),
+          },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("f");
+
+      router.subscribe((state) => {
+        let fetcher = state.fetchers.get("f");
+        // Capture the first time the fetcher enters "loading" during
+        // revalidation (triggered by the navigation POST action below).
+        if (fetcher?.state === "loading" && capturedRevalidatingMap === null) {
+          capturedRevalidatingMap = state.fetchers;
+        }
+      });
+
+      // GET load to register the fetcher in fetchLoadMatches (eligible for
+      // revalidation when a subsequent navigation action fires).
+      await router.fetch("f", "root", "/");
+
+      // POST to the same route — sets isRevalidationRequired=true and causes
+      // fetcher "f" to revalidate alongside the route loaders.
+      let formData = new FormData();
+      await router.navigate("/", { formMethod: "POST", formData });
+
+      router.dispose();
+
+      // The Map handed to subscribers during the revalidation "loading" phase
+      // must not have been mutated to "idle" in place by processLoaderData.
+      expect(capturedRevalidatingMap).not.toBeNull();
+      expect(capturedRevalidatingMap!.get("f")?.state).toBe("loading");
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher loader redirect)", async () => {
+      // handleFetcherLoader hands MapA (loading) to React via updateFetcherState().
+      // When the loader returns a redirect, markFetchRedirectsDone() calls
+      // state.fetchers.set(key, doneFetcher) which mutates MapA before the
+      // final completeNavigation updateState creates MapB.
+      let capturedLoadingMap: Map<string, Fetcher> | null = null;
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          { id: "root", path: "/", loader: () => ({ data: "root" }) },
+          {
+            id: "redirect-source",
+            path: "/redirect",
+            loader: () =>
+              new Response(null, {
+                status: 302,
+                headers: { Location: "/" },
+              }),
+          },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("redir");
+
+      router.subscribe((state) => {
+        let fetcher = state.fetchers.get("redir");
+        if (fetcher?.state === "loading" && capturedLoadingMap === null) {
+          capturedLoadingMap = state.fetchers;
+        }
+      });
+
+      await router.fetch("redir", "root", "/redirect");
+
+      router.dispose();
+
+      // The "loading" Map must still show the fetcher loading — not mutated
+      // to "idle" by markFetchersDone() during the redirect navigation.
+      expect(capturedLoadingMap).not.toBeNull();
+      expect(capturedLoadingMap!.get("redir")?.state).toBe("loading");
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher action redirect)", async () => {
+      // When a fetcher action returns a redirect, handleFetcherAction calls
+      // updateFetcherState(key, getLoadingFetcher(submission)) which first
+      // mutates the "submitting" MapA via state.fetchers.set, creates MapB
+      // (loading), then kicks off startRedirectNavigation. Inside
+      // completeNavigation, markFetchRedirectsDone() mutates MapB
+      // (state.fetchers.set(key, doneFetcher)) before the final updateState
+      // creates MapC. Test that MapB is not mutated.
+      let capturedLoadingMap: Map<string, Fetcher> | null = null;
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          { id: "root", path: "/", loader: () => ({ data: "root" }) },
+          {
+            id: "action-route",
+            path: "/action",
+            action: () =>
+              new Response(null, {
+                status: 302,
+                headers: { Location: "/" },
+              }),
+          },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("act");
+
+      router.subscribe((state) => {
+        let fetcher = state.fetchers.get("act");
+        // Capture the Map when the fetcher enters "loading" state (action
+        // redirect accepted — fetcher transitions from submitting → loading
+        // while the redirect navigation runs).
+        if (fetcher?.state === "loading" && capturedLoadingMap === null) {
+          capturedLoadingMap = state.fetchers;
+        }
+      });
+
+      let formData = new FormData();
+      await router.fetch("act", "root", "/action", {
+        formMethod: "POST",
+        formData,
+      });
+
+      router.dispose();
+
+      // MapB (fetcher loading during redirect) must not have been mutated to
+      // "idle" by markFetchersDone() before completeNavigation creates MapC.
+      expect(capturedLoadingMap).not.toBeNull();
+      expect(capturedLoadingMap!.get("act")?.state).toBe("loading");
     });
   });
 });
