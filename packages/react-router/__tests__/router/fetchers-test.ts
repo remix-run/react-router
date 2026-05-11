@@ -3706,18 +3706,24 @@ describe("fetchers", () => {
 
   describe("fetcher optimistic UI flicker (#14506)", () => {
     // The root cause of the bug: after updateState({ fetchers: new Map(...) })
-    // hands a Map to React, subsequent direct mutations of state.fetchers (e.g.
-    // state.fetchers.set(key, getDoneFetcher())) mutate that same Map before
-    // React renders it. If React renders the earlier state snapshot after the
-    // mutation, it sees idle formData alongside stale loaderData — a flicker.
-    it("does not expose idle fetcher before new loaderData is committed", async () => {
-      // Capture every state the subscriber receives so we can verify that the
-      // subscriber never sees formData disappear while loaderData is still stale.
-      let subscriberStates: Array<{
-        fetcherState: string;
-        hasFormData: boolean;
-        loaderStatus: boolean | undefined;
-      }> = [];
+    // hands a Map (MapA) to React, a subsequent direct mutation of
+    // state.fetchers (e.g. state.fetchers.set(key, getDoneFetcher())) mutates
+    // that same MapA because state.fetchers === MapA after the updateState.
+    // React's concurrent renderer may still hold MapA and render it post-
+    // mutation, seeing an idle fetcher (formData gone) alongside stale
+    // loaderData — the "flicker".
+    //
+    // The subscriber-based approach does NOT catch this: the subscriber is
+    // called synchronously after each updateState, so it only ever sees
+    // fully-settled state. Instead, the test captures the Map reference handed
+    // to the subscriber during the "loading" phase and, after the fetch
+    // completes, asserts that reference was never mutated in place.
+    it("does not mutate the Map reference handed to subscribers", async () => {
+      // The Map we receive from the subscriber when the fetcher is "loading"
+      // (post-action, pre-loader-completion). On a buggy build this Map gets
+      // mutated to idle before the final updateState; with the fix it is
+      // immutable after handoff.
+      let capturedLoadingMap: Map<string, Fetcher> | null = null;
 
       let itemStatus = false;
 
@@ -3747,15 +3753,11 @@ describe("fetchers", () => {
 
       router.subscribe((state) => {
         let fetcher = state.fetchers.get("toggle");
-        if (!fetcher) return;
-        let loaderData = state.loaderData["item"] as
-          | { status: boolean }
-          | undefined;
-        subscriberStates.push({
-          fetcherState: fetcher.state,
-          hasFormData: fetcher.formData !== undefined,
-          loaderStatus: loaderData?.status,
-        });
+        // Capture the Map reference the first time the fetcher enters the
+        // "loading" state (action done, loaders revalidating).
+        if (fetcher?.state === "loading" && capturedLoadingMap === null) {
+          capturedLoadingMap = state.fetchers;
+        }
       });
 
       let formData = new FormData();
@@ -3768,19 +3770,16 @@ describe("fetchers", () => {
 
       router.dispose();
 
-      // The subscriber must never see a state where formData is gone (idle/no
-      // submission info) while loaderData still has the old value (false).
-      // That combination is the "flicker" state described in #14506.
-      let flickerStates = subscriberStates.filter(
-        (s) => !s.hasFormData && s.loaderStatus === false,
-      );
-
-      expect(flickerStates).toEqual([]);
-
-      // Sanity checks: we should have seen submitting/loading states with
-      // formData, and the final state should have the updated loaderData.
-      let lastState = subscriberStates[subscriberStates.length - 1];
-      expect(lastState.loaderStatus).toBe(true);
+      // After the fetch fully completes, the Map we captured during the
+      // "loading" phase must still reflect "loading" — it must not have been
+      // mutated to "idle" in place. On the dev branch (before the fix) this
+      // assertion fails because state.fetchers.set(key, doneFetcher) mutated
+      // the Map that was already handed to React.
+      expect(capturedLoadingMap).not.toBeNull();
+      expect((capturedLoadingMap! as Map<string, Fetcher>).get("toggle")?.state).toBe("loading");
+      expect(
+        (capturedLoadingMap! as Map<string, Fetcher>).get("toggle")?.formData,
+      ).toBeDefined();
     });
   });
 });
