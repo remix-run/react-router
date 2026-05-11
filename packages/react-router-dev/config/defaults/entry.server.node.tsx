@@ -29,11 +29,14 @@ export default function handleRequest(
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     let userAgent = request.headers.get("user-agent");
+    let isPrerendering = process.env.IS_RR_BUILD_REQUEST === "yes";
 
     // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
     // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
     let readyOption: keyof RenderToPipeableStreamOptions =
-      (userAgent && isbot(userAgent)) || routerContext.isSpaMode
+      (userAgent && isbot(userAgent)) ||
+      routerContext.isSpaMode ||
+      isPrerendering
         ? "onAllReady"
         : "onShellReady";
 

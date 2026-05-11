@@ -934,6 +934,65 @@ for (let previewServerPrerendering of [false, true]) {
         expect(await app.getHtml()).toMatch("Index: INDEX");
       });
 
+      test("Prerenders complete suspense boundaries without shell swap markup", async () => {
+        fixture = await createFixture({
+          files: {
+            ...files,
+            "app/root.tsx": js`
+            import * as React from "react";
+            import { Links, Meta, Scripts, Outlet } from "react-router";
+
+            const LazyRoute = React.lazy(() => {
+              return new Promise((resolve) => {
+                setTimeout(() => resolve(import("./lazy-route")), 1);
+              });
+            });
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <h1>Root</h1>
+                    <React.Suspense fallback={<p id="fallback">Loading</p>}>
+                      <LazyRoute />
+                    </React.Suspense>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root() {
+              return <Outlet />;
+            }
+          `,
+            "app/routes/_index.tsx": js`
+            export default function Component() {
+              return <p id="index-route">Index Route</p>;
+            }
+          `,
+            "app/lazy-route.tsx": js`
+            export default function LazyRoute() {
+              return <p id="lazy-route">Deferred Route</p>;
+            }
+          `,
+          },
+        });
+        appFixture = await createAppFixture(fixture);
+
+        let res = await fixture.requestDocument("/");
+        let html = await res.text();
+        expect(html).toContain('<p id="lazy-route">Deferred Route</p>');
+        expect(html).toContain('<p id="index-route">Index Route</p>');
+        expect(html).not.toContain("<!--$?-->");
+        expect(html).not.toContain('$RC("B:0",');
+      });
+
       test("Ignores build-time headers at runtime", async () => {
         fixture = await createFixture({ files });
         let res = await fixture.requestSingleFetchData("/_root.data", {
