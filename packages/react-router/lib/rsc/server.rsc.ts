@@ -29,6 +29,7 @@ import {
   type TrackedPromise,
   isAbsoluteUrl,
   isRouteErrorResponse,
+  joinPaths,
   matchRoutes,
   prependBasename,
   convertRouteMatchToUiMatch,
@@ -68,6 +69,10 @@ import {
   createRouteErrorResponseDigest,
 } from "../errors";
 import { getNormalizedPath } from "../server-runtime/urls";
+
+const defaultManifestPath = "/__manifest";
+const RSC_MANIFEST_RESPONSE_HEADER = "React-Router-RSC-Manifest";
+const RSC_VERSION_HEADER = "X-React-Router-RSC-Version";
 
 const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
@@ -247,6 +252,7 @@ export type RSCRenderPayload = {
   loaderData: Record<string, any>;
   location: Location;
   routeDiscovery: RouteDiscovery;
+  version?: string;
   matches: RSCRouteMatch[];
   // Additional routes we should patch into the router for subsequent navigations.
   // Mostly a collection of pathless/index routes that may be needed for complete
@@ -259,6 +265,7 @@ export type RSCRenderPayload = {
 
 export type RSCManifestPayload = {
   type: "manifest";
+  version?: string;
   // Routes we should patch into the router for subsequent navigations.
   patches: Promise<RSCRouteManifest[]>;
 };
@@ -383,6 +390,7 @@ export type RouteDiscovery =
  * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
  * @param opts.routeDiscovery The route discovery configuration, used to determine how the router should discover new routes during navigations.
  * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
+ * @param opts.version An optional build version identifier used to detect stale RSC clients and trigger document recovery.
  * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  * that contains the [RSC](https://react.dev/reference/rsc/server-components)
  * data for hydration.
@@ -400,6 +408,7 @@ export async function matchRSCServerRequest({
   onError,
   request,
   routes,
+  version,
   generateResponse,
 }: {
   allowedActionOrigins?: string[];
@@ -414,6 +423,7 @@ export async function matchRSCServerRequest({
   request: Request;
   routes: RSCRouteConfigEntry[];
   routeDiscovery?: RouteDiscovery;
+  version?: string;
   generateResponse: (
     match: RSCMatch,
     {
@@ -456,7 +466,13 @@ export async function matchRSCServerRequest({
   const temporaryReferences = createTemporaryReferenceSet();
 
   const requestUrl = new URL(request.url);
-  if (isManifestRequest(requestUrl)) {
+  if (
+    isRSCVersionMismatch(request, requestUrl, version, basename, routeDiscovery)
+  ) {
+    return getRSCReloadDocumentResponse();
+  }
+
+  if (isManifestRequest(requestUrl, basename, routeDiscovery)) {
     let response = await generateManifestResponse(
       routes,
       basename,
@@ -464,6 +480,7 @@ export async function matchRSCServerRequest({
       generateResponse,
       temporaryReferences,
       routeDiscovery,
+      version,
     );
     return response;
   }
@@ -511,6 +528,7 @@ export async function matchRSCServerRequest({
     temporaryReferences,
     allowedActionOrigins,
     routeDiscovery,
+    version,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -531,10 +549,12 @@ async function generateManifestResponse(
   ) => Response,
   temporaryReferences: unknown,
   routeDiscovery: RouteDiscovery | undefined,
+  version: string | undefined,
 ) {
   if (routeDiscovery?.mode === "initial") {
     let payload: RSCManifestPayload = {
       type: "manifest",
+      version,
       patches: getAllRoutePatches(routes, basename),
     };
     return generateResponse(
@@ -542,6 +562,7 @@ async function generateManifestResponse(
         statusCode: 200,
         headers: new Headers({
           "Content-Type": "text/x-component",
+          [RSC_MANIFEST_RESPONSE_HEADER]: "true",
           Vary: "Content-Type",
         }),
         payload,
@@ -554,7 +575,9 @@ async function generateManifestResponse(
   let pathParam = url.searchParams.get("paths");
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
-    : [url.pathname.replace(/\.manifest$/, "")];
+    : url.pathname.endsWith(".manifest")
+      ? [url.pathname.replace(/\.manifest$/, "")]
+      : [];
   let routeIds = new Set<string>();
   let matchedRoutes = pathnames
     .flatMap((pathname) => {
@@ -575,6 +598,7 @@ async function generateManifestResponse(
     });
   let payload: RSCManifestPayload = {
     type: "manifest",
+    version,
     patches: Promise.all([
       ...matchedRoutes.map((route) => getManifestRoute(route)),
       getAdditionalRoutePatches(
@@ -591,6 +615,7 @@ async function generateManifestResponse(
       statusCode: 200,
       headers: new Headers({
         "Content-Type": "text/x-component",
+        [RSC_MANIFEST_RESPONSE_HEADER]: "true",
       }),
       payload,
     },
@@ -807,6 +832,7 @@ async function generateRenderResponse(
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  version: string | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -944,6 +970,7 @@ async function generateRenderResponse(
           skipRevalidation,
           ctx.redirect?.headers,
           routeDiscovery,
+          version,
         );
       },
     }),
@@ -1042,6 +1069,7 @@ async function generateStaticContextResponse(
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  version: string | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1097,6 +1125,7 @@ async function generateStaticContextResponse(
     loaderData: staticContext.loaderData,
     location: staticContext.location,
     formState,
+    version,
   };
 
   const renderPayloadPromise = () =>
@@ -1471,8 +1500,53 @@ export function isReactServerRequest(url: URL) {
   return url.pathname.endsWith(".rsc");
 }
 
-export function isManifestRequest(url: URL) {
-  return url.pathname.endsWith(".manifest");
+export function isManifestRequest(
+  url: URL,
+  basename?: string,
+  routeDiscovery?: RouteDiscovery,
+) {
+  return (
+    url.pathname.endsWith(".manifest") ||
+    url.pathname === getRouteDiscoveryManifestPath(routeDiscovery, basename)
+  );
+}
+
+function isRSCVersionMismatch(
+  request: Request,
+  url: URL,
+  version: string | undefined,
+  basename: string | undefined,
+  routeDiscovery: RouteDiscovery | undefined,
+): boolean {
+  if (!version) {
+    return false;
+  }
+
+  let requestVersion = isManifestRequest(url, basename, routeDiscovery)
+    ? url.searchParams.get("version")
+    : request.headers.get(RSC_VERSION_HEADER);
+
+  return requestVersion != null && requestVersion !== version;
+}
+
+function getRouteDiscoveryManifestPath(
+  routeDiscovery: RouteDiscovery | undefined,
+  basename: string | undefined,
+): string {
+  let manifestPath =
+    routeDiscovery?.mode === "lazy"
+      ? routeDiscovery.manifestPath || defaultManifestPath
+      : defaultManifestPath;
+  return basename == null ? manifestPath : joinPaths([basename, manifestPath]);
+}
+
+function getRSCReloadDocumentResponse(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "X-Remix-Reload-Document": "true",
+    },
+  });
 }
 
 function defaultOnError(error: unknown) {
