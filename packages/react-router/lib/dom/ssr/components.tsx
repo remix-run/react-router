@@ -726,7 +726,7 @@ export function Meta(): React.JSX.Element {
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
-          } catch (_e) {
+          } catch (err) {
             return null;
           }
         }

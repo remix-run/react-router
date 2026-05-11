@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 import type { NodePath } from "@babel/traverse";
 import type { types as Babel } from "@babel/core";
 import { parse, type ParseResult } from "@babel/parser";

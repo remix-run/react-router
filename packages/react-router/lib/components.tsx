@@ -1297,7 +1297,6 @@ export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
  * @param {PathRouteProps.shouldRevalidate} props.shouldRevalidate n/a
  * @returns {void}
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Route(props: RouteProps): React.ReactElement | null {
   invariant(
     false,

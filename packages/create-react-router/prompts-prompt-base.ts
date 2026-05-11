@@ -88,7 +88,6 @@ export class Prompt extends EventEmitter {
     if (this.firstRender) this.firstRender = false;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _(c: string, key: ActionKey) {
     throw new Error("Method _ not implemented.");
   }

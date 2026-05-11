@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "../global";
 
 export async function createRequestInit(

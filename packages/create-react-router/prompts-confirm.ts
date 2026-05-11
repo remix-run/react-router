@@ -117,7 +117,6 @@ export class ConfirmPrompt extends Prompt {
     this.render();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _(c: string, key: ActionKey) {
     if (!Number.isNaN(Number.parseInt(c))) {
       let n = Number.parseInt(c) - 1;

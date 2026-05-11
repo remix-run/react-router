@@ -2,6 +2,7 @@ import type {
   ClientLoaderFunctionArgs,
   ClientActionFunctionArgs,
 } from "../dom/ssr/routeModules";
+import type { Path } from "../router/history";
 import type {
   DataWithResponseInit,
   RouterContextProvider,

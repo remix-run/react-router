@@ -60,7 +60,7 @@ export default defineConfig([
       "pnpm-lock.yaml",
       "docs/api/**",
       "examples/**/dist/**",
-      "**/worker-configuration.d.ts",
+      "worker-configuration.d.ts",
       "playground/**",
       "playground-local/**",
       "integration/helpers/**/dist/**",
@@ -147,18 +147,6 @@ export default defineConfig([
         },
       ],
       "import/no-anonymous-default-export": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          args: "all",
-          argsIgnorePattern: "^_",
-          caughtErrors: "all",
-          caughtErrorsIgnorePattern: "^_",
-          destructuredArrayIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          ignoreRestSiblings: true,
-        },
-      ],
     },
   },
   {

@@ -70,7 +70,7 @@ async function decodeInitial(
   let line: unknown;
   try {
     line = JSON.parse(read.value);
-  } catch (_e) {
+  } catch (reason) {
     throw new SyntaxError();
   }
 
@@ -100,7 +100,7 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (_e) {
+        } catch (reason) {
           throw new SyntaxError();
         }
 
@@ -120,7 +120,7 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (_e) {
+        } catch (reason) {
           throw new SyntaxError();
         }
         const value = unflatten.call(this, jsonLine);
@@ -184,7 +184,9 @@ export function encode(
             if (signal.aborted) {
               rejectPromise();
             } else {
-              signal.addEventListener("abort", () => rejectPromise());
+              signal.addEventListener("abort", (event) => {
+                rejectPromise();
+              });
             }
           }
         });

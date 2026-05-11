@@ -28,7 +28,7 @@ export const unsign = async (
     let valid = await crypto.subtle.verify("HMAC", key, signature, data);
 
     return valid ? value : false;
-  } catch (_e) {
+  } catch (error: unknown) {
     // atob will throw a DOMException with name === 'InvalidCharacterError'
     // if the signature contains a non-base64 character, which should just
     // be treated as an invalid signature.

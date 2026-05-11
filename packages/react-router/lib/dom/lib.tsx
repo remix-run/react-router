@@ -43,6 +43,7 @@ import {
   stripBasename,
 } from "../router/utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
 import type {
   SubmitOptions,
@@ -121,7 +122,7 @@ try {
       // @ts-expect-error
       REACT_ROUTER_VERSION;
   }
-} catch (_e) {
+} catch (e) {
   // no-op
 }
 //#endregion
@@ -737,7 +738,7 @@ function deserializeErrors(
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
             serialized[key] = error;
-          } catch (_e) {
+          } catch (e) {
             // no-op - fall through and create a normal Error
           }
         }
@@ -3114,7 +3115,7 @@ export function useScrollRestoration({
         if (sessionPositions) {
           savedScrollPositions = JSON.parse(sessionPositions);
         }
-      } catch (_e) {
+      } catch (e) {
         // no-op, use default empty object
       }
     }, [storageKey]);

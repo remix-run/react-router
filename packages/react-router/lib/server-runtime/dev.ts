@@ -25,7 +25,7 @@ export function getBuildTimeHeader(request: Request, headerName: string) {
       ) {
         return request.headers.get(headerName);
       }
-    } catch (_e) {}
+    } catch (e) {}
   }
   return null;
 }

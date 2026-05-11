@@ -356,7 +356,7 @@ function createRouterFromPayload({
   }
 
   let lastLoaderData: unknown = undefined;
-  globalVar.__reactRouterDataRouter.subscribe(({ loaderData }) => {
+  globalVar.__reactRouterDataRouter.subscribe(({ loaderData, actionData }) => {
     if (lastLoaderData !== loaderData) {
       globalVar.__routerActionID = (globalVar.__routerActionID ??= 0) + 1;
     }
