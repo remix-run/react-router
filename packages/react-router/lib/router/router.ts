@@ -5125,7 +5125,10 @@ function normalizeNavigateOptions(
             text: undefined,
           },
         };
-      } catch (e) {
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {
         return getInvalidBodyError();
       }
     }
@@ -5155,7 +5158,10 @@ function normalizeNavigateOptions(
     try {
       searchParams = new URLSearchParams(opts.body);
       formData = convertSearchParamsToFormData(searchParams);
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       return getInvalidBodyError();
     }
   }
@@ -6467,7 +6473,10 @@ async function callDataStrategyImpl(
         m._lazyPromises?.route,
       ]),
     );
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // No-op
   }
 
@@ -6776,7 +6785,10 @@ function normalizeRedirectLocation(
     if (invalidProtocols.includes(url.protocol)) {
       throw new Error("Invalid redirect location");
     }
-  } catch (e) {}
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {}
 
   return location;
 }
@@ -7508,7 +7520,10 @@ function restoreAppliedTransitions(
         }
       }
     }
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // no-op, use default empty object
   }
 }
@@ -7544,13 +7559,19 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
     reject = async (error?: Error) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
   });
   return {

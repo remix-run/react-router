@@ -87,7 +87,10 @@ function isLocalFilePath(input: string): boolean {
         path.isAbsolute(input) ? input : path.resolve(process.cwd(), input),
       )
     );
-  } catch (_) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     return false;
   }
 }
@@ -343,7 +346,10 @@ async function downloadAndExtractTarball(
         },
       }),
     );
-  } catch (_) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     throw new CopyTemplateError(
       "There was a problem extracting the file from the provided template." +
         `  Template URL: \`${tarballUrl}\`` +
@@ -410,7 +416,10 @@ function isValidGithubRepoUrl(
         ? pathSegments[2] === "tree" && pathSegments.length >= 4
         : true)
     );
-  } catch (_) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     return false;
   }
 }

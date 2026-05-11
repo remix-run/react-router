@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import type { Page } from "@playwright/test";
 
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";

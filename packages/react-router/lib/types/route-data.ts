@@ -2,7 +2,6 @@ import type {
   ClientLoaderFunctionArgs,
   ClientActionFunctionArgs,
 } from "../dom/ssr/routeModules";
-import type { Path } from "../router/history";
 import type {
   DataWithResponseInit,
   RouterContextProvider,
@@ -221,6 +220,7 @@ type _DataActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   // ServerDataFrom
   Expect<Equal<ServerDataFrom<any>, undefined>>,

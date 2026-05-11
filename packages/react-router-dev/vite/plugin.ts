@@ -657,9 +657,6 @@ let getServerBundleRouteIds = (
   return Object.keys(serverBundleRoutes);
 };
 
-const injectQuery = (url: string, query: string) =>
-  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
-
 let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
   "dist",
@@ -2833,7 +2830,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
-        let { ssr, future } = ctx.reactRouterConfig;
+        let { ssr } = ctx.reactRouterConfig;
 
         // if ssr:false is set
         if (!ssr) {
