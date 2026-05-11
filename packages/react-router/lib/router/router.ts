@@ -844,7 +844,7 @@ interface HandleLoadersResult extends ShortCircuitable {
   /**
    * Updated fetchers map (when stale fetch loads were aborted or redirects completed)
    */
-  fetchers?: RouterState["fetchers"];
+  workingFetchers?: RouterState["fetchers"];
 }
 
 /**
@@ -1381,10 +1381,7 @@ export function createRouter(init: RouterInit): Router {
     }
     subscribers.clear();
     pendingNavigationController && pendingNavigationController.abort();
-    state.fetchers.forEach((_, key) => {
-      deleteFetcher(key);
-      state.fetchers.delete(key);
-    });
+    state.fetchers.forEach((_, key) => deleteFetcher(state.fetchers, key));
     state.blockers.forEach((_, key) => deleteBlocker(key));
   }
 
@@ -1470,10 +1467,7 @@ export function createRouter(init: RouterInit): Router {
     // Cleanup after subscribers have been called.  Unmounted fetchers are fully
     // removed; mounted idle fetchers are removed from state.fetchers only (they
     // stay in fetchLoadMatches etc. in case they're re-used).
-    unmountedFetchers.forEach((key) => {
-      deleteFetcher(key);
-      state.fetchers.delete(key);
-    });
+    unmountedFetchers.forEach((key) => deleteFetcher(state.fetchers, key));
     mountedFetchers.forEach((key) => state.fetchers.delete(key));
   }
 
@@ -2034,7 +2028,7 @@ export function createRouter(init: RouterInit): Router {
       matches: updatedMatches,
       loaderData,
       errors,
-      fetchers: updatedFetcherMap,
+      workingFetchers,
     } = await handleLoaders(
       request,
       location,
@@ -2066,7 +2060,7 @@ export function createRouter(init: RouterInit): Router {
       ...getActionDataForCommit(pendingActionResult),
       loaderData,
       errors,
-      ...(updatedFetcherMap ? { fetchers: updatedFetcherMap } : {}),
+      ...(workingFetchers ? { fetchers: workingFetchers } : {}),
     });
   }
 
@@ -2396,8 +2390,8 @@ export function createRouter(init: RouterInit): Router {
       ) &&
       revalidatingFetchers.length === 0
     ) {
-      let fetcherMap = new Map(state.fetchers);
-      let updatedFetchers = markFetchRedirectsDone(fetcherMap);
+      let workingFetchers = new Map(state.fetchers);
+      let fetchersUpdatedViaRedirects = markFetchRedirectsDone(workingFetchers);
       completeNavigation(
         location,
         {
@@ -2409,7 +2403,7 @@ export function createRouter(init: RouterInit): Router {
               ? { [pendingActionResult[0]]: pendingActionResult[1].error }
               : null,
           ...getActionDataForCommit(pendingActionResult),
-          ...(updatedFetchers ? { fetchers: fetcherMap } : {}),
+          ...(fetchersUpdatedViaRedirects ? { fetchers: workingFetchers } : {}),
         },
         { flushSync },
       );
@@ -2499,7 +2493,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let fetcherMap = new Map(state.fetchers);
+    let workingFetchers = new Map(state.fetchers);
     let { loaderData, errors } = processLoaderData(
       state,
       matches,
@@ -2507,7 +2501,7 @@ export function createRouter(init: RouterInit): Router {
       pendingActionResult,
       revalidatingFetchers,
       fetcherResults,
-      fetcherMap,
+      workingFetchers,
     );
 
     // Preserve SSR errors during partial hydration
@@ -2515,19 +2509,21 @@ export function createRouter(init: RouterInit): Router {
       errors = { ...state.errors, ...errors };
     }
 
-    let updatedFetchers = markFetchRedirectsDone(fetcherMap);
+    let fetchersUpdatedViaRedirects = markFetchRedirectsDone(workingFetchers);
     let didAbortFetchLoads = abortStaleFetchLoads(
       pendingNavigationLoadId,
-      fetcherMap,
+      workingFetchers,
     );
     let shouldUpdateFetchers =
-      updatedFetchers || didAbortFetchLoads || revalidatingFetchers.length > 0;
+      fetchersUpdatedViaRedirects ||
+      didAbortFetchLoads ||
+      revalidatingFetchers.length > 0;
 
     return {
       matches,
       loaderData,
       errors,
-      ...(shouldUpdateFetchers ? { fetchers: fetcherMap } : {}),
+      ...(shouldUpdateFetchers ? { workingFetchers } : {}),
     };
   }
 
@@ -2553,16 +2549,16 @@ export function createRouter(init: RouterInit): Router {
   function getUpdatedRevalidatingFetchers(
     revalidatingFetchers: RevalidatingFetcher[],
   ) {
-    let updatedFetchers = new Map(state.fetchers);
+    let workingFetchers = new Map(state.fetchers);
     revalidatingFetchers.forEach((rf) => {
-      let fetcher = updatedFetchers.get(rf.key);
+      let fetcher = workingFetchers.get(rf.key);
       let revalidatingFetcher = getLoadingFetcher(
         undefined,
         fetcher ? fetcher.data : undefined,
       );
-      updatedFetchers.set(rf.key, revalidatingFetcher);
+      workingFetchers.set(rf.key, revalidatingFetcher);
     });
-    return updatedFetchers;
+    return workingFetchers;
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
@@ -2860,8 +2856,8 @@ export function createRouter(init: RouterInit): Router {
     // mutating state.fetchers.  Set the submitting fetcher into loading state
     // and put all revalidating fetchers (except the current one) into loading
     // state as well.
-    let updatedFetchers = new Map(state.fetchers);
-    updatedFetchers.set(key, loadFetcher);
+    let workingFetchers = new Map(state.fetchers);
+    workingFetchers.set(key, loadFetcher);
 
     // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
@@ -2870,19 +2866,19 @@ export function createRouter(init: RouterInit): Router {
       .filter((rf) => rf.key !== key)
       .forEach((rf) => {
         let staleKey = rf.key;
-        let existingFetcher = updatedFetchers.get(staleKey);
+        let existingFetcher = workingFetchers.get(staleKey);
         let revalidatingFetcher = getLoadingFetcher(
           undefined,
           existingFetcher ? existingFetcher.data : undefined,
         );
-        updatedFetchers.set(staleKey, revalidatingFetcher);
+        workingFetchers.set(staleKey, revalidatingFetcher);
         abortFetcher(staleKey);
         if (rf.controller) {
           fetchControllers.set(staleKey, rf.controller);
         }
       });
 
-    updateState({ fetchers: updatedFetchers });
+    updateState({ fetchers: workingFetchers });
 
     let abortPendingFetchRevalidations = () =>
       revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
@@ -2914,25 +2910,25 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
-    // Since we let revalidations complete even if the submitting fetcher was
-    // deleted, only put it back to idle if it hasn't been deleted.
-    let fetcherHasKey = state.fetchers.has(key);
+    let fetcherIsMounted = state.fetchers.has(key);
 
-    // Helper to produce a new state.fetchers Map with the done fetcher included
-    // without mutating the existing Map (which React may already hold a
-    // reference to from the updateState() call above).
-    let withDoneFetcher = () => {
-      if (!fetcherHasKey) return state.fetchers;
-      let fetchers = new Map(state.fetchers);
-      fetchers.set(key, getDoneFetcher(actionResult.data));
-      return fetchers;
+    // Generate a new local copy of `state` for the redirect navigation to read
+    // from and eventually commit.  This avoids mutating the existing state.fetchers
+    // map Map which React already holds a reference to from updateState() above
+    let getRedirectStateWithDoneFetcher = (s: RouterState) => {
+      // Since we let revalidations complete even if the submitting fetcher was
+      // deleted, only put it back to idle if it hasn't been deleted.
+      if (!fetcherIsMounted) return s;
+      let workingFetchers = new Map(s.fetchers);
+      workingFetchers.set(key, getDoneFetcher(actionResult.data));
+      return { ...s, fetchers: workingFetchers };
     };
 
     let redirect = findRedirect(loaderResults);
     if (redirect) {
       // Advance state.fetchers to include the done fetcher before handing off
       // to the redirect navigation so that completeNavigation() sees it as idle.
-      state = { ...state, fetchers: withDoneFetcher() };
+      state = getRedirectStateWithDoneFetcher(state);
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
@@ -2947,7 +2943,7 @@ export function createRouter(init: RouterInit): Router {
       // fetchRedirectIds so it doesn't get revalidated on the next set of
       // loader executions
       fetchRedirectIds.add(redirect.key);
-      state = { ...state, fetchers: withDoneFetcher() };
+      state = getRedirectStateWithDoneFetcher(state);
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
@@ -2962,7 +2958,7 @@ export function createRouter(init: RouterInit): Router {
     // we never mutate the Map that was handed to React via the earlier
     // updateState() call (see #14506).
     let finalFetchers = new Map(state.fetchers);
-    if (fetcherHasKey) {
+    if (fetcherIsMounted) {
       finalFetchers.set(key, getDoneFetcher(actionResult.data));
     }
 
@@ -3457,10 +3453,10 @@ export function createRouter(init: RouterInit): Router {
     fetcher: Fetcher,
     opts: { flushSync?: boolean } = {},
   ) {
-    let fetchers = new Map(state.fetchers);
-    fetchers.set(key, fetcher);
+    let workingFetchers = new Map(state.fetchers);
+    workingFetchers.set(key, fetcher);
     updateState(
-      { fetchers },
+      { fetchers: workingFetchers },
       { flushSync: (opts && opts.flushSync) === true },
     );
   }
@@ -3472,17 +3468,17 @@ export function createRouter(init: RouterInit): Router {
     opts: { flushSync?: boolean } = {},
   ) {
     let boundaryMatch = findNearestBoundary(state.matches, routeId);
-    // Build the new Map first, then call deleteFetcher so we don't
-    // accidentally include a stale entry.
-    let fetchers = new Map(state.fetchers);
-    fetchers.delete(key);
-    deleteFetcher(key);
+    // Build the new Map first and delete from there, we don't want to mutate the map React
+    // already has a reference to.  It will be removed from `state.fetchers` on a
+    // subsequent updateState() call
+    let workingFetchers = new Map(state.fetchers);
+    deleteFetcher(workingFetchers, key);
     updateState(
       {
         errors: {
           [boundaryMatch.route.id]: error,
         },
-        fetchers,
+        fetchers: workingFetchers,
       },
       { flushSync: (opts && opts.flushSync) === true },
     );
@@ -3503,7 +3499,7 @@ export function createRouter(init: RouterInit): Router {
     updateFetcherState(key, getDoneFetcher(null));
   }
 
-  function deleteFetcher(key: string): void {
+  function deleteFetcher(fetchers: Map<string, Fetcher>, key: string): void {
     let fetcher = state.fetchers.get(key);
     // Don't abort the controller if this is a deletion of a fetcher.submit()
     // in it's loading phase since - we don't want to abort the corresponding
@@ -3519,11 +3515,7 @@ export function createRouter(init: RouterInit): Router {
     fetchRedirectIds.delete(key);
     fetchersQueuedForDeletion.delete(key);
     cancelledFetcherLoads.delete(key);
-    // Note: we intentionally do NOT delete from state.fetchers here.  Callers
-    // that need a snapshot to pass to React must build their own new Map and
-    // exclude this key (or call state.fetchers.delete after obtaining their
-    // snapshot).  Direct mutation of state.fetchers risks handing React a Map
-    // that gets mutated after it has been captured.
+    fetchers.delete(key);
   }
 
   function queueFetcherForDeletion(key: string): void {
@@ -3556,18 +3548,18 @@ export function createRouter(init: RouterInit): Router {
 
   function markFetchRedirectsDone(fetchers: Map<string, Fetcher>): boolean {
     let doneKeys = [];
-    let updatedFetchers = false;
+    let didUpdateFetchers = false;
     for (let key of fetchRedirectIds) {
       let fetcher = fetchers.get(key);
       invariant(fetcher, `Expected fetcher: ${key}`);
       if (fetcher.state === "loading") {
         fetchRedirectIds.delete(key);
         doneKeys.push(key);
-        updatedFetchers = true;
+        didUpdateFetchers = true;
       }
     }
     markFetchersDone(doneKeys, fetchers);
-    return updatedFetchers;
+    return didUpdateFetchers;
   }
 
   function abortStaleFetchLoads(
