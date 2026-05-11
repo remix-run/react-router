@@ -1,24 +1,24 @@
 import { logFutureFlagWarnings } from "../config/config";
 
 describe("logFutureFlagWarnings", () => {
-  let warnSpy: jest.SpyInstance;
+  let logSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    warnSpy.mockRestore();
+    logSpy.mockRestore();
   });
 
   it("warns about all stable v8_ flags when none are set", () => {
     logFutureFlagWarnings({});
 
-    expect(warnSpy).toHaveBeenCalledTimes(4);
-    expect(warnSpy.mock.calls[0][0]).toContain("v8_middleware");
-    expect(warnSpy.mock.calls[1][0]).toContain("v8_splitRouteModules");
-    expect(warnSpy.mock.calls[2][0]).toContain("v8_viteEnvironmentApi");
-    expect(warnSpy.mock.calls[3][0]).toContain("v8_passThroughRequests");
+    expect(logSpy).toHaveBeenCalledTimes(4);
+    expect(logSpy.mock.calls[0][0]).toContain("v8_middleware");
+    expect(logSpy.mock.calls[1][0]).toContain("v8_splitRouteModules");
+    expect(logSpy.mock.calls[2][0]).toContain("v8_viteEnvironmentApi");
+    expect(logSpy.mock.calls[3][0]).toContain("v8_passThroughRequests");
   });
 
   it("does not warn about flags that are already opted in (true)", () => {
@@ -29,7 +29,7 @@ describe("logFutureFlagWarnings", () => {
       v8_passThroughRequests: true,
     });
 
-    expect(warnSpy).not.toHaveBeenCalled();
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it("does not warn about flags that are explicitly opted out (false)", () => {
@@ -40,7 +40,7 @@ describe("logFutureFlagWarnings", () => {
       v8_passThroughRequests: false,
     });
 
-    expect(warnSpy).not.toHaveBeenCalled();
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it("only warns about flags that are not yet set", () => {
@@ -50,8 +50,8 @@ describe("logFutureFlagWarnings", () => {
     });
 
     // Only v8_splitRouteModules and v8_viteEnvironmentApi are missing
-    expect(warnSpy).toHaveBeenCalledTimes(2);
-    expect(warnSpy.mock.calls[0][0]).toContain("v8_splitRouteModules");
-    expect(warnSpy.mock.calls[1][0]).toContain("v8_viteEnvironmentApi");
+    expect(logSpy).toHaveBeenCalledTimes(2);
+    expect(logSpy.mock.calls[0][0]).toContain("v8_splitRouteModules");
+    expect(logSpy.mock.calls[1][0]).toContain("v8_viteEnvironmentApi");
   });
 });

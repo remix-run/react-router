@@ -109,7 +109,7 @@ test.describe("cli", () => {
     expect(status).toBe(0);
   });
 
-  test.only("routes", async () => {
+  test("routes", async () => {
     const cwd = await createProject();
     let { stdout, stderr, status } = run(["routes"], { cwd });
 
