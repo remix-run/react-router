@@ -1045,13 +1045,13 @@ function createDeferred() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (_e) {}
     };
     reject = async (error?: Error) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (_e) {}
     };
   });
   return {

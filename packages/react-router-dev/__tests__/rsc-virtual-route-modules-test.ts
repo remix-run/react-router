@@ -11,7 +11,7 @@ const plugin = virtualRouteModulesPlugin({
   isRootRouteModule() {
     return false;
   },
-  async transformToJs(code: string, filename: string) {
+  async transformToJs(code: string, _filename: string) {
     return await ts.transpile(code, {
       target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.ESNext,

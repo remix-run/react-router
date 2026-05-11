@@ -599,9 +599,7 @@ test.describe("SPA Mode", () => {
           );
         });
 
-        test("wraps default root HydrateFallback in user-provided Layout", async ({
-          page,
-        }) => {
+        test("wraps default root HydrateFallback in user-provided Layout", async () => {
           fixture = await createFixture({
             spaMode: true,
             files: {

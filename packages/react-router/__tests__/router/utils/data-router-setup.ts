@@ -380,7 +380,7 @@ export function setup({
           await internalHelpers.dfd.resolve(redirectResponse);
         }
         await tick();
-      } catch (e) {}
+      } catch (_e) {}
       return helpers;
     }
 
@@ -400,7 +400,7 @@ export function setup({
       async reject(value) {
         try {
           await internalHelpers.dfd.reject(value);
-        } catch (e) {}
+        } catch (_e) {}
       },
       async redirect(href, status = 301, headers = {}, shims = []) {
         return _redirect(true, href, status, headers, shims);
@@ -724,7 +724,7 @@ export function setup({
           data: fetcherData.get(key),
         };
       });
-      fetcherData.forEach((data, key) => {
+      fetcherData.forEach((_, key) => {
         if (!fetchers[key]) {
           fetchers[key] = {
             ...IDLE_FETCHER,

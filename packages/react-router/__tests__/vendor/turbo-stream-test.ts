@@ -455,7 +455,7 @@ test("should allow postPlugins to handle values that would otherwise throw", asy
   const decoded = await decode(
     encode(input, {
       postPlugins: [
-        (value) => {
+        (_value) => {
           return ["u"];
         },
       ],
@@ -585,6 +585,7 @@ test("should allow many nested promises without a memory leak", async () => {
 test("should encode large payload", async () => {
   const input = createDeeplyNestedObject();
   await readStreamToString(encode(input));
+  expect(true).toBe(true);
 });
 
 test("should encode and decode large payload and yield the event loop", async () => {

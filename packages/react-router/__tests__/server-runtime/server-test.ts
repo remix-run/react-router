@@ -2102,7 +2102,7 @@ describe("shared server runtime", () => {
         },
       },
       {
-        handleDocumentRequest(request, responseStatusCode, responseHeaders) {
+        handleDocumentRequest(_request, responseStatusCode, responseHeaders) {
           return new Response(JSON.stringify(loadContext), {
             status: responseStatusCode,
             headers: responseHeaders,

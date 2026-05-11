@@ -26,7 +26,7 @@ describe("shouldRevalidate", () => {
   afterEach(() => cleanup());
 
   it("provides a default implementation", async () => {
-    let rootLoader = jest.fn((...args) => "ROOT");
+    let rootLoader = jest.fn(() => "ROOT");
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -124,10 +124,10 @@ describe("shouldRevalidate", () => {
   });
 
   it("delegates to the route if it should reload or not", async () => {
-    let rootLoader = jest.fn((...args) => "ROOT");
-    let childLoader = jest.fn((...args) => "CHILD");
-    let paramsLoader = jest.fn((...args) => "PARAMS");
-    let shouldRevalidate = jest.fn((args) => false);
+    let rootLoader = jest.fn(() => "ROOT");
+    let childLoader = jest.fn(() => "CHILD");
+    let paramsLoader = jest.fn(() => "PARAMS");
+    let shouldRevalidate = jest.fn(() => false);
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -463,7 +463,7 @@ describe("shouldRevalidate", () => {
   });
 
   it("provides the default implementation to the route function", async () => {
-    let rootLoader = jest.fn((...args) => "ROOT");
+    let rootLoader = jest.fn(() => "ROOT");
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -564,8 +564,8 @@ describe("shouldRevalidate", () => {
 
   it("applies to fetcher loads", async () => {
     let count = 0;
-    let fetchLoader = jest.fn((...args) => `FETCH ${++count}`);
-    let shouldRevalidate = jest.fn((args) => false);
+    let fetchLoader = jest.fn(() => `FETCH ${++count}`);
+    let shouldRevalidate = jest.fn(() => false);
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -659,7 +659,7 @@ describe("shouldRevalidate", () => {
   });
 
   it("applies to fetcher submissions and sends fetcher actionResult through", async () => {
-    let shouldRevalidate = jest.fn((args) => true);
+    let shouldRevalidate = jest.fn(() => true);
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -722,7 +722,7 @@ describe("shouldRevalidate", () => {
   });
 
   it("applies to fetcher submissions when action redirects", async () => {
-    let shouldRevalidate = jest.fn((args) => true);
+    let shouldRevalidate = jest.fn(() => true);
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -798,7 +798,7 @@ describe("shouldRevalidate", () => {
             {
               path: "/",
               id: "index",
-              loader: (args) => "SHOULD NOT GET CALLED",
+              loader: () => "SHOULD NOT GET CALLED",
               shouldRevalidate: () => false,
             },
           ],

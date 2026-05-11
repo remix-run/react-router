@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "react-router";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 

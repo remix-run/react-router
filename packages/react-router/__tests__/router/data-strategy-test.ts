@@ -372,7 +372,7 @@ describe("router dataStrategy", () => {
             ],
           },
         ],
-        dataStrategy({ matches }) {
+        dataStrategy() {
           throw new Error("Uh oh");
         },
       });
@@ -604,7 +604,7 @@ describe("router dataStrategy", () => {
       let dataStrategy = jest.fn<
         ReturnType<DataStrategyFunction>,
         Parameters<DataStrategyFunction>
-      >(async ({ request, matches }) => {
+      >(async ({ matches }) => {
         let values = matches.reduce(
           (acc, m) =>
             Object.assign(acc, {
