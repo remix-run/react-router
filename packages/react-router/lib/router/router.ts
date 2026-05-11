@@ -2391,7 +2391,7 @@ export function createRouter(init: RouterInit): Router {
       revalidatingFetchers.length === 0
     ) {
       let workingFetchers = new Map(state.fetchers);
-      let fetchersUpdatedViaRedirects = markFetchRedirectsDone(workingFetchers);
+      let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);
       completeNavigation(
         location,
         {
@@ -2403,7 +2403,7 @@ export function createRouter(init: RouterInit): Router {
               ? { [pendingActionResult[0]]: pendingActionResult[1].error }
               : null,
           ...getActionDataForCommit(pendingActionResult),
-          ...(fetchersUpdatedViaRedirects ? { fetchers: workingFetchers } : {}),
+          ...(didUpdateFetcherRedirects ? { fetchers: workingFetchers } : {}),
         },
         { flushSync },
       );
@@ -2509,13 +2509,13 @@ export function createRouter(init: RouterInit): Router {
       errors = { ...state.errors, ...errors };
     }
 
-    let fetchersUpdatedViaRedirects = markFetchRedirectsDone(workingFetchers);
+    let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);
     let didAbortFetchLoads = abortStaleFetchLoads(
       pendingNavigationLoadId,
       workingFetchers,
     );
     let shouldUpdateFetchers =
-      fetchersUpdatedViaRedirects ||
+      didUpdateFetcherRedirects ||
       didAbortFetchLoads ||
       revalidatingFetchers.length > 0;
 
@@ -2825,8 +2825,6 @@ export function createRouter(init: RouterInit): Router {
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
 
-    let loadFetcher = getLoadingFetcher(submission, actionResult.data);
-
     let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
       revalidationRequest,
       scopedContext,
@@ -2856,6 +2854,7 @@ export function createRouter(init: RouterInit): Router {
     // mutating state.fetchers.  Set the submitting fetcher into loading state
     // and put all revalidating fetchers (except the current one) into loading
     // state as well.
+    let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     let workingFetchers = new Map(state.fetchers);
     workingFetchers.set(key, loadFetcher);
 
