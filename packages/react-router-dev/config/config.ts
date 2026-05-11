@@ -759,7 +759,7 @@ async function resolveConfig({
 }
 
 function logFutureFlagWarning(flag: string, message: string): void {
-  console.warn(
+  console.log(
     colors.yellow(
       `  ⚠️  Future Flag Warning: ${message}\n` +
         `     You can use the \`future.${flag}\` flag to opt in early.\n` +
