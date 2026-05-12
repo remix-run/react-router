@@ -1,4 +1,4 @@
-import type { DataRouteObject, Params, RouteObject } from "../router/utils";
+import type { DataRouteObject, Params } from "../router/utils";
 import type { RouteBranch } from "../router/utils";
 import { matchRoutesImpl } from "../router/utils";
 import invariant from "./invariant";

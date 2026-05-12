@@ -1,7 +1,6 @@
-name: 💬 Release Comments
+name: 💬 Release Comments (manual)
 
 on:
-  workflow_call:
   workflow_dispatch:
 
 concurrency:

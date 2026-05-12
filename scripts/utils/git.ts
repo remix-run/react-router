@@ -57,6 +57,7 @@ export function findVersionIntroductionCommit(
     }
 
     let parentLine = execGit(["rev-list", "--parents", "-n", "1", commit]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let [_commit, ...parents] = parentLine
       .split(" ")
       .filter((line) => line.length > 0);

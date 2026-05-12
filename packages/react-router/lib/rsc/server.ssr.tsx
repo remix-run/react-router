@@ -294,9 +294,9 @@ export async function routeRSCServerRequest({
       statusText,
       headers,
     });
-  } catch (reason) {
-    if (reason instanceof Response) {
-      return reason;
+  } catch (error) {
+    if (error instanceof Response) {
+      return error;
     }
 
     if (renderRedirect) {
@@ -309,9 +309,9 @@ export async function routeRSCServerRequest({
     }
 
     try {
-      reason = renderError ?? reason;
-      let [status, statusText] = isRouteErrorResponse(reason)
-        ? [reason.status, reason.statusText]
+      let normalizedError = renderError ?? error;
+      let [status, statusText] = isRouteErrorResponse(normalizedError)
+        ? [normalizedError.status, normalizedError.statusText]
         : [500, ""];
 
       let retryRedirect: { status: number; location: string } | undefined;
@@ -327,7 +327,7 @@ export async function routeRSCServerRequest({
               status,
               errors: deepestRenderedBoundaryId
                 ? {
-                    [deepestRenderedBoundaryId]: reason,
+                    [deepestRenderedBoundaryId]: normalizedError,
                   }
                 : {},
             }),
@@ -427,11 +427,14 @@ export async function routeRSCServerRequest({
         statusText,
         headers,
       });
-    } catch {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      error2
+    ) {
       // Throw the original error below
     }
 
-    throw reason;
+    throw error;
   }
 }
 

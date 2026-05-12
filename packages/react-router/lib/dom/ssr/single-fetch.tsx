@@ -565,7 +565,10 @@ async function bubbleMiddlewareErrors(
         }
       });
     }
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // No-op - this logic is only intended to process successful responses
     // If the `.data` failed, the routes will handle those errors themselves
   }
@@ -726,7 +729,10 @@ async function fetchAndDecodeViaTurboStream(
       }
     }
     return { status: res.status, data };
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
     // content type here, or even X-Remix-Response but then folks can't
@@ -842,13 +848,19 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
     reject = async (error?: unknown) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
   });
   return {

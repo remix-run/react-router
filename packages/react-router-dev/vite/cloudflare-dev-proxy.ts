@@ -32,7 +32,10 @@ type GetLoadContext<Env, Cf extends CfProperties> = (args: {
 function importWrangler() {
   try {
     return import("wrangler");
-  } catch (_) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     throw Error("Could not import `wrangler`. Do you have it installed?");
   }
 }

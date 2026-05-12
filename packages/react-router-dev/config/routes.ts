@@ -310,6 +310,7 @@ function prefix(
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const helpers = { route, index, layout, prefix };
 export { route, index, layout, prefix };
 /**

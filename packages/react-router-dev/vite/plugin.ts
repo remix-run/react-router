@@ -660,9 +660,6 @@ let getServerBundleRouteIds = (
   return Object.keys(serverBundleRoutes);
 };
 
-const injectQuery = (url: string, query: string) =>
-  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
-
 let defaultEntriesDir = path.resolve(
   path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
   "dist",
@@ -821,7 +818,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     return `
     import * as entryServer from ${JSON.stringify(
-      resolveFileUrl(ctx, ctx.entryServerFilePath),
+      resolveFileUrl(ctx, ctx.entryServerFilePath, {
+        publicPath: ctx.publicPath,
+      }),
     )};
     ${Object.keys(routes)
       .map((key, index) => {
@@ -837,6 +836,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             resolveFileUrl(
               ctx,
               resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+              { publicPath: ctx.publicPath },
             ),
           )};`;
         }
@@ -2844,7 +2844,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
-        let { ssr, future } = ctx.reactRouterConfig;
+        let { ssr } = ctx.reactRouterConfig;
 
         // if ssr:false is set
         if (!ssr) {
