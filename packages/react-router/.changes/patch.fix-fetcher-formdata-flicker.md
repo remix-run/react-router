@@ -1,1 +1,1 @@
-Fix a race condition in fetcher state machine where `formData` briefly became `undefined` before new `loaderData` was available, causing a UI flicker in optimistic update patterns (#14506)
+Update router to operate on fetcher Maps in an immutable manner to avoid delayed React renders from potentially reading an updated but not yet committed Map.  This could result in brief flickers in some fetcher-driven optimistic UI scenarios.
