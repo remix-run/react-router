@@ -6606,10 +6606,10 @@ function testDomRouter(
           expect(container.querySelector("pre")?.innerHTML).toBe("");
           fireEvent.click(screen.getByText("Load fetchers"));
           await waitFor(() =>
-            // React `useId()` results in something such as `_r_2k_` or `_r_u_`
-            // depending on `DataBrowserRouter`/`DataHashRouter`
+            // React `useId()` results in something such as `_r_2k_`, `_r_u_`,
+            // or `_r_11_` depending on React version and component tree depth
             expect(container.querySelector("pre")?.innerHTML).toMatch(
-              /^_r_[0-9]?[a-z]_,my-key$/,
+              /^_r_[0-9a-z]+_,my-key$/,
             ),
           );
         });
