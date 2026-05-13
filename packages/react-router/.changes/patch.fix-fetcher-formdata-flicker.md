@@ -1,1 +1,0 @@
-Update router to operate on fetcher Maps in an immutable manner to avoid delayed React renders from potentially reading an updated but not yet committed Map. This could result in brief flickers in some fetcher-driven optimistic UI scenarios.

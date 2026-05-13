@@ -13,7 +13,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.15.1](#v7151)
   - [v7.15.0](#v7150)
+    - [Stabilizations](#stabilizations)
+    - [Route matching optimizations](#route-matching-optimizations)
   - [v7.14.2](#v7142)
   - [v7.14.1](#v7141)
   - [v7.14.0](#v7140)
@@ -169,6 +172,72 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.15.1
+
+Date: 2026-05-13
+
+### Patch Changes
+
+- `react-router` - Update router to operate on fetcher Maps in an immutable manner to avoid delayed React renders from potentially reading an updated but not yet committed Map. This could result in brief flickers in some fetcher-driven optimistic UI scenarios. ([#15028](https://github.com/remix-run/react-router/pull/15028))
+
+- `react-router` - Fix `serverLoader()` returning stale SSR data when a client navigation aborts pending hydration before the hydration `clientLoader` resolves ([#15022](https://github.com/remix-run/react-router/pull/15022))
+
+- `react-router` - Fix `RouterProvider` `onError` callback not being called for synchronous initial loader errors in SPA mode ([#15039](https://github.com/remix-run/react-router/pull/15039)) ([#14942](https://github.com/remix-run/react-router/pull/14942))
+
+- `react-router` - Memoize `useFetchers` to return a stable identity and only change if fetchers changed ([#15028](https://github.com/remix-run/react-router/pull/15028))
+
+- `react-router` - Internal refactor to consolidate mutation request detection through shared utility ([#15033](https://github.com/remix-run/react-router/pull/15033))
+
+- `@react-router/dev` - Fix `basename` conflicting with `app` directory name when Vite `base` is set ([#15027](https://github.com/remix-run/react-router/pull/15027))
+
+  When the Vite `base` config and React Router `basename` both match the
+  app directory name (e.g. `base: "/app/"`, `basename: "/app/"`), Vite would
+  strip the base prefix from server-build virtual module import paths, causing
+  "Failed to load url /root.tsx" errors. The fix uses `/@fs/` absolute paths
+  for those imports to bypass Vite's base-stripping logic.
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - Add a new `unstable_useRouterState()` hook that consolidates access to active and pending router states (RFC: #12358) ([#15017](https://github.com/remix-run/react-router/pull/15017))
+
+  - Data/Framework/RSC only — throws when used without a data router
+  - This should allow you to consolidate usages of the following hooks which will likely be deprecated and removed in a future major version
+    - `useLocation`
+    - `useSearchParams`
+    - `useParams`
+    - `useMatches`
+    - `useNavigationType`
+    - `useNavigation`
+
+    ```ts
+    let { active, pending } = unstable_useRouterState();
+
+    // Active is always populated with the current location
+    active.location; // replaces `useLocation()`
+    active.searchParams; // replaces `useSearchParams()[0]`
+    active.params; // replaces `useParams()`
+    active.matches; // replaces `useMatches()`
+    active.type; // replaces `useNavigationType()`
+
+    // Pending is only populated during a navigation
+    pending.location; // replaces `useNavigation().location`
+    pending.searchParams; // equivalent to `new URLSearchParams(useNavigation().search)`
+    pending.params; // Not directly accessible today
+    pending.matches; // Not directly accessible today
+    pending.type; // Not directly accessible today
+    pending.state; // replaces `useNavigation().state`
+    pending.formMethod; // replaces useNavigation().formMethod
+    pending.formAction; // replaces useNavigation().formAction
+    pending.formEncType; // replaces useNavigation().formEncType
+    pending.formData; // replaces useNavigation().formData
+    pending.json; // replaces useNavigation().json
+    pending.text; // replaces useNavigation().text
+    ```
+
+**Full Changelog**: [`v7.15.0...v7.15.1`](https://github.com/remix-run/react-router/compare/react-router@7.15.0...react-router@7.15.1)
 
 ## v7.15.0
 
