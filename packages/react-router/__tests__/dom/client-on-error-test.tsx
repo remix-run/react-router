@@ -642,6 +642,37 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  it("handles initial load synchronous loader errors in SPA mode (delayed render)", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw new Error("immediate loader error!");
+        },
+        Component: () => <h1>Home</h1>,
+        HydrateFallback: () => <h1>Loading...</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+      },
+    ]);
+
+    // Make sure the router completely initializes
+    await tick();
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:immediate loader error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   it("does not fire onError for errors from hydrationData", async () => {
     let spy = jest.fn();
     let router = createMemoryRouter(
@@ -664,6 +695,39 @@ describe(`handleError`, () => {
         },
       },
     );
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:hydration error!"));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("does not fire onError for errors from hydrationData (delayed render)", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            throw new Error("hydration error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      {
+        hydrationData: {
+          errors: { "0": new Error("hydration error!") },
+          loaderData: {},
+        },
+      },
+    );
+
+    // Make sure the router completely initializes
+    await tick();
 
     render(<RouterProvider router={router} onError={spy} />);
 
