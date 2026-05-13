@@ -501,7 +501,7 @@ test.describe("Vite base + React Router basename", () => {
           await workflowBuild({ page, port, basename: "/notmybase/" });
         });
 
-        test("works when when base is an absolute external URL", async ({
+        test("works when base is an absolute external URL", async ({
           page,
         }) => {
           test.skip(
