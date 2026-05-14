@@ -17,7 +17,7 @@ import {
   type RouteManifest,
   type RouteManifestEntry,
   type RouteConfigEntry,
-  setAppDirectory,
+  withAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
 } from "./routes";
@@ -636,15 +636,17 @@ async function resolveConfig({
         );
       }
 
-      setAppDirectory(appDirectory);
-      let routeConfigExport = (
-        await viteNodeContext.runner.executeFile(
-          Path.join(appDirectory, routeConfigFile),
-        )
-      ).default;
+      let routeConfigExport = await withAppDirectory(appDirectory, async () => {
+        let routeConfigExport = (
+          await viteNodeContext.runner.executeFile(
+            Path.join(appDirectory, routeConfigFile),
+          )
+        ).default;
+        return await routeConfigExport;
+      });
       let result = validateRouteConfig({
         routeConfigFile,
-        routeConfig: await routeConfigExport,
+        routeConfig: routeConfigExport,
       });
 
       if (!result.valid) {

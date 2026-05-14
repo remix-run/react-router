@@ -8,18 +8,43 @@ import {
   index,
   prefix,
   relative,
+  getAppDirectory,
+  withAppDirectory,
 } from "../config/routes";
 
-const cleanPathsForSnapshot = (obj: any): any =>
-  JSON.parse(
+const cleanPathsForSnapshot = (obj: any): any => {
+  let cwd = normalizePath(process.cwd());
+  return JSON.parse(
     JSON.stringify(obj, (_key, value) =>
       typeof value === "string" && path.isAbsolute(value)
-        ? normalizePath(value.replace(process.cwd(), "{{CWD}}"))
+        ? normalizePath(value).replace(cwd, "{{CWD}}")
         : value,
     ),
   );
+};
 
 describe("route config", () => {
+  describe("app directory context", () => {
+    it("isolates concurrent app directory reads", async () => {
+      let appA = path.resolve("app-a");
+      let appB = path.resolve("app-b");
+      let releaseA!: () => void;
+      let aCanRead = new Promise<void>((resolve) => {
+        releaseA = resolve;
+      });
+
+      let readA = withAppDirectory(appA, async () => {
+        await aCanRead;
+        return getAppDirectory();
+      });
+      let readB = withAppDirectory(appB, async () => getAppDirectory());
+
+      await expect(readB).resolves.toBe(appB);
+      releaseA();
+      await expect(readA).resolves.toBe(appA);
+    });
+  });
+
   describe("validateRouteConfig", () => {
     it("validates a route config", () => {
       const routeConfig = prefix("prefix", [
