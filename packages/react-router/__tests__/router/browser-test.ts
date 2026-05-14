@@ -47,6 +47,15 @@ describe("a browser history", () => {
     expect(href).toEqual("/the/path?the=query#the-hash");
   });
 
+  it("uses the configured window to create URLs", () => {
+    let testWindow = getWindow("/", false, "https://custom.example");
+    let history = createBrowserHistory({ window: testWindow });
+
+    expect(history.createURL("/the/path").href).toBe(
+      "https://custom.example/the/path",
+    );
+  });
+
   it("does not encode the generated path", () => {
     const encodedHref = history.createHref({
       pathname: "/%23abc",

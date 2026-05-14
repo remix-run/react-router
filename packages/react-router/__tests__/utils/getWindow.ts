@@ -1,8 +1,14 @@
 import { JSDOM } from "jsdom";
 
-export default function getWindow(initialUrl: string, isHash = false): Window {
+export default function getWindow(
+  initialUrl: string,
+  isHash = false,
+  origin = "http://localhost",
+): Window {
   // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
+  const dom = new JSDOM(`<!DOCTYPE html>`, {
+    url: new URL("/", origin).href,
+  });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
 }
