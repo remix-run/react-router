@@ -726,7 +726,7 @@ function getUrlBasedHistory(
   }
 
   function createURL(to: To): URL {
-    return createBrowserURLImpl(to);
+    return createBrowserURLImpl(to, false, window);
   }
 
   let history: History = {
@@ -771,16 +771,24 @@ function getUrlBasedHistory(
   return history;
 }
 
-export function createBrowserURLImpl(to: To, isAbsolute = false): URL {
+export function createBrowserURLImpl(
+  to: To,
+  isAbsolute = false,
+  windowArg?: Window,
+): URL {
   let base = "http://localhost";
-  if (typeof window !== "undefined") {
+  let urlWindow =
+    windowArg ??
+    (typeof globalThis.window !== "undefined" ? globalThis.window : undefined);
+
+  if (urlWindow) {
     // window.location.origin is "null" (the literal string value) in Firefox
     // under certain conditions, notably when serving from a local HTML file
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
     base =
-      window.location.origin !== "null"
-        ? window.location.origin
-        : window.location.href;
+      urlWindow.location.origin !== "null"
+        ? urlWindow.location.origin
+        : urlWindow.location.href;
   }
 
   invariant(base, "No window.location.(origin|href) available to create URL");
