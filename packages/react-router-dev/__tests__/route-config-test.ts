@@ -8,18 +8,39 @@ import {
   index,
   prefix,
   relative,
+  getAppDirectory,
+  withAppDirectory,
 } from "../config/routes";
 
 const cleanPathsForSnapshot = (obj: any): any =>
   JSON.parse(
     JSON.stringify(obj, (_key, value) =>
       typeof value === "string" && path.isAbsolute(value)
-        ? normalizePath(value.replace(process.cwd(), "{{CWD}}"))
+        ? normalizePath(value).replace(normalizePath(process.cwd()), "{{CWD}}")
         : value,
     ),
   );
 
 describe("route config", () => {
+  describe("app directory scope", () => {
+    it("keeps the app directory scoped to concurrent async route config work", async () => {
+      let appA = path.resolve("app-a");
+      let appB = path.resolve("app-b");
+
+      let readAppDirectory = async () => {
+        await Promise.resolve();
+        return getAppDirectory();
+      };
+
+      await expect(
+        Promise.all([
+          withAppDirectory(appA, readAppDirectory),
+          withAppDirectory(appB, readAppDirectory),
+        ]),
+      ).resolves.toEqual([appA, appB]);
+    });
+  });
+
   describe("validateRouteConfig", () => {
     it("validates a route config", () => {
       const routeConfig = prefix("prefix", [
