@@ -11,6 +11,7 @@
   strip the base prefix from server-build virtual module import paths, causing
   "Failed to load url /root.tsx" errors. The fix uses `/@fs/` absolute paths
   for those imports to bypass Vite's base-stripping logic.
+
 - Updated dependencies:
   - [`react-router@7.15.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.1)
   - [`@react-router/node@7.15.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.1)

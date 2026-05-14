@@ -199,10 +199,9 @@ Date: 2026-05-13
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - `react-router` - Add a new `unstable_useRouterState()` hook that consolidates access to active and pending router states (RFC: #12358) ([#15017](https://github.com/remix-run/react-router/pull/15017))
-
   - Data/Framework/RSC only — throws when used without a data router
   - This should allow you to consolidate usages of the following hooks which will likely be deprecated and removed in a future major version
     - `useLocation`
