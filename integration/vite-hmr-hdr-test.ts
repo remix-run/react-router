@@ -109,6 +109,10 @@ templates.forEach((template) => {
         "app/routes/mdx.mdx": mdx`
           import { Counter } from "../component";
 
+          export const frontmatter = {
+            title: "MDX route",
+          };
+
           # MDX Title (HMR: 0)
 
           <Counter />

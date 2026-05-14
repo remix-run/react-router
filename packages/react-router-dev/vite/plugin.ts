@@ -136,6 +136,7 @@ const CLIENT_NON_COMPONENT_EXPORTS = [
   "handle",
   "meta",
   "links",
+  "frontmatter",
   "shouldRevalidate",
 ];
 const CLIENT_ROUTE_EXPORTS = [
