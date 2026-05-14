@@ -56,7 +56,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
-import { removeExports } from "./remove-exports";
+import { removeExports, removeUnusedDotServerImports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
 import { hasDependency } from "./has-dependency";
 import {
@@ -2418,6 +2418,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let ast = parse(code, { sourceType: "module" });
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+          removeUnusedDotServerImports(ast);
         }
         decorateComponentExportsWithProps(ast);
         return generate(ast, {

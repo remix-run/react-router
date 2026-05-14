@@ -158,6 +158,33 @@ export const removeExports = (
   }
 };
 
+export const removeUnusedDotServerImports = (ast: ParseResult<Babel.File>) => {
+  traverse(ast, {
+    ImportDeclaration(path) {
+      if (!isDotServerImport(path.node.source.value)) {
+        return;
+      }
+
+      if (path.node.specifiers.length === 0) {
+        return;
+      }
+
+      path.node.specifiers = path.node.specifiers.filter((specifier) => {
+        let binding = path.scope.getBinding(specifier.local.name);
+        return binding?.referenced;
+      });
+
+      if (path.node.specifiers.length === 0) {
+        path.remove();
+      }
+    },
+  });
+};
+
+function isDotServerImport(source: string) {
+  return /(^|[/\\])\.server([/\\]|$)|\.server(\.[cm]?[jt]sx?)?$/.test(source);
+}
+
 function validateDestructuredExports(
   id: Babel.ArrayPattern | Babel.ObjectPattern,
   exportsToRemove: readonly string[],
