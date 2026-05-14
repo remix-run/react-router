@@ -30,6 +30,7 @@ import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 import { prerender } from "../plugins/prerender";
 import { getPrerenderPaths } from "../plugin";
+import { toPortablePath } from "../portable-path";
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
@@ -604,7 +605,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           const clientOutDir =
             resolvedViteConfig.environments.client?.build?.outDir;
           invariant(clientOutDir, "Client build directory config not found");
-          const assetsBuildDirectory = Path.relative(rscOutDir, clientOutDir);
+          const assetsBuildDirectory = toPortablePath(
+            Path.relative(rscOutDir, clientOutDir),
+          );
           const publicPath = resolvedViteConfig.base;
 
           return `export default ${JSON.stringify({

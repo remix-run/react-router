@@ -56,6 +56,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
+import { toPortablePath } from "./portable-path";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
 import { hasDependency } from "./has-dependency";
@@ -843,9 +844,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         virtual.serverManifest.id,
       )};
       export const assetsBuildDirectory = ${JSON.stringify(
-        path.relative(
-          ctx.rootDirectory,
-          getClientBuildDirectory(ctx.reactRouterConfig),
+        toPortablePath(
+          path.relative(
+            ctx.rootDirectory,
+            getClientBuildDirectory(ctx.reactRouterConfig),
+          ),
         ),
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
