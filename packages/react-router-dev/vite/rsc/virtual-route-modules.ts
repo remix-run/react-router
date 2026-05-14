@@ -400,6 +400,7 @@ export const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientMiddleware",
   "handle",
   "meta",
+  "frontmatter",
   "links",
   "shouldRevalidate",
 ] as const;
