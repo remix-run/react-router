@@ -1,5 +1,21 @@
 # `@react-router/dev`
 
+## v7.15.1
+
+### Patch Changes
+
+- Fix `basename` conflicting with `app` directory name when Vite `base` is set ([#15027](https://github.com/remix-run/react-router/pull/15027))
+
+  When the Vite `base` config and React Router `basename` both match the
+  app directory name (e.g. `base: "/app/"`, `basename: "/app/"`), Vite would
+  strip the base prefix from server-build virtual module import paths, causing
+  "Failed to load url /root.tsx" errors. The fix uses `/@fs/` absolute paths
+  for those imports to bypass Vite's base-stripping logic.
+- Updated dependencies:
+  - [`react-router@7.15.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.1)
+  - [`@react-router/node@7.15.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.1)
+  - [`@react-router/serve@7.15.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.15.1)
+
 ## v7.15.0
 
 ### Minor Changes

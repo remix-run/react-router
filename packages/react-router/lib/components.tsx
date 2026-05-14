@@ -616,22 +616,11 @@ export function RouterProvider({
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>).
+  // If the router finished initializing (and emitted errors) before this
+  // subscriber was attached, `subscribe()` replays that notification so
+  // `onError` still fires for initial data load errors.
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
-
-  // Track race conditions where we finish initializing prior to the layout
-  // effect above running to register our listener.  If we manually detect a
-  // change in `state.initialized`, automatically sync state.
-  let initialized = state.initialized;
-  React.useLayoutEffect(() => {
-    if (!initialized && router.state.initialized) {
-      setState(router.state, {
-        deletedFetchers: [],
-        flushSync: false,
-        newErrors: router.state.errors, // Initial data load errors
-      });
-    }
-  }, [initialized, setState, router.state]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
