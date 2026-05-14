@@ -1,5 +1,6 @@
 /* eslint-disable jest/expect-expect */
 
+import { JSDOM } from "jsdom";
 import {
   type BrowserHistory,
   createBrowserHistory,
@@ -57,6 +58,15 @@ describe("a browser history", () => {
       pathname: "/#abc",
     });
     expect(unencodedHref).toEqual("/#abc");
+  });
+
+  it("creates URLs using the configured window", () => {
+    let customWindow = new JSDOM("<!DOCTYPE html>", {
+      url: "https://example.test/current",
+    }).window as unknown as Window;
+    history = createBrowserHistory({ window: customWindow });
+
+    expect(history.createURL("/next").href).toBe("https://example.test/next");
   });
 
   describe("listen", () => {
