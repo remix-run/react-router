@@ -1236,6 +1236,9 @@ export function createRouter(init: RouterInit): Router {
   // Fetchers that triggered data reloads as a result of their actions
   let fetchReloadIds = new Map<string, number>();
 
+  // Fetchers that are actively revalidating as a result of another action
+  let fetchersInFlightRevalidations = new Set<string>();
+
   // Fetchers that triggered redirect navigations
   let fetchRedirectIds = new Set<string>();
 
@@ -2327,6 +2330,7 @@ export function createRouter(init: RouterInit): Router {
       fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
+      fetchersInFlightRevalidations,
       routesToUse,
       basename,
       init.patchRoutesOnNavigation != null,
@@ -2794,6 +2798,7 @@ export function createRouter(init: RouterInit): Router {
       fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
+      new Set<string>(),
       routesToUse,
       basename,
       init.patchRoutesOnNavigation != null,
@@ -2801,6 +2806,10 @@ export function createRouter(init: RouterInit): Router {
       [match.route.id, actionResult],
       callSiteDefaultShouldRevalidate,
     );
+
+    revalidatingFetchers.forEach((rf) => {
+      fetchersInFlightRevalidations.add(rf.key);
+    });
 
     // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
@@ -2824,7 +2833,10 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
 
     let abortPendingFetchRevalidations = () =>
-      revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
+      revalidatingFetchers.forEach((rf) => {
+        fetchersInFlightRevalidations.delete(rf.key);
+        abortFetcher(rf.key);
+      });
 
     abortController.signal.addEventListener(
       "abort",
@@ -2841,6 +2853,9 @@ export function createRouter(init: RouterInit): Router {
       );
 
     if (abortController.signal.aborted) {
+      revalidatingFetchers.forEach((r) =>
+        fetchersInFlightRevalidations.delete(r.key),
+      );
       return;
     }
 
@@ -2851,7 +2866,10 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
+    revalidatingFetchers.forEach((r) => {
+      fetchControllers.delete(r.key);
+      fetchersInFlightRevalidations.delete(r.key);
+    });
 
     // Since we let revalidations complete even if the submitting fetcher was
     // deleted, only put it back to idle if it hasn't been deleted
@@ -5166,6 +5184,7 @@ function getMatchesToLoad(
   fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
+  fetchersInFlightRevalidations: Set<string>,
   routesToUse: DataRouteObject[],
   basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
@@ -5323,6 +5342,10 @@ function getMatchesToLoad(
       !matches.some((m) => m.route.id === f.routeId) ||
       fetchersQueuedForDeletion.has(key)
     ) {
+      return;
+    }
+
+    if (fetchersInFlightRevalidations.has(key)) {
       return;
     }
 
