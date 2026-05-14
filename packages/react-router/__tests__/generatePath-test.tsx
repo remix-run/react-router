@@ -141,7 +141,7 @@ describe("generatePath", () => {
     });
   });
 
-  it("throws only on on missing named parameters, but not missing splat params", () => {
+  it("throws only on missing named parameters, but not missing splat params", () => {
     expect(() => generatePath(":foo")).toThrow();
     expect(() => generatePath("/:foo")).toThrow();
     expect(() => generatePath("*")).not.toThrow();
