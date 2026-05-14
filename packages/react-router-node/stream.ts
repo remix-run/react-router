@@ -17,15 +17,50 @@ export async function writeReadableStreamToWritable(
         break;
       }
 
-      writable.write(value);
+      if (writable.destroyed || writable.writableEnded) {
+        throw new Error(
+          "Cannot write to a destroyed or ended writable stream",
+        );
+      }
+
+      let canContinueWriting = writable.write(value);
       if (typeof flushable.flush === "function") {
         flushable.flush();
+      }
+
+      if (!canContinueWriting) {
+        await waitForDrain(writable);
       }
     }
   } catch (error: unknown) {
     writable.destroy(error as Error);
     throw error;
   }
+}
+
+function waitForDrain(writable: Writable): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    function cleanup() {
+      writable.off("drain", onDrain);
+      writable.off("error", onError);
+      writable.off("close", onClose);
+    }
+    function onDrain() {
+      cleanup();
+      resolve();
+    }
+    function onError(error: Error) {
+      cleanup();
+      reject(error);
+    }
+    function onClose() {
+      cleanup();
+      reject(new Error("Writable closed before drain"));
+    }
+    writable.once("drain", onDrain);
+    writable.once("error", onError);
+    writable.once("close", onClose);
+  });
 }
 
 export async function writeAsyncIterableToWritable(
