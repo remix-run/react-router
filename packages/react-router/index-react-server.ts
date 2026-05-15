@@ -28,6 +28,7 @@ export {
 } from "./lib/rsc/server.rsc";
 
 // Client references
+// @ts-ignore There are no types before the tsup build when used internally.
 export {
   BrowserRouter,
   Form,
@@ -47,6 +48,8 @@ export {
   StaticRouter,
   StaticRouterProvider,
   unstable_HistoryRouter,
+  unstable_useRoute,
+  useRouteLoaderData,
 } from "react-router/internal/react-server-client";
 
 // Shared implementation of agnostic APIs

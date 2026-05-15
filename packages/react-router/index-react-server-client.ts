@@ -24,3 +24,4 @@ export {
 } from "./lib/dom/lib";
 export { StaticRouter, StaticRouterProvider } from "./lib/dom/server";
 export { Meta, Links } from "./lib/dom/ssr/components";
+export { useRouteLoaderData, useRoute as unstable_useRoute } from "./lib/hooks";
