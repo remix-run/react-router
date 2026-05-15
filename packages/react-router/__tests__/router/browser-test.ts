@@ -4,6 +4,7 @@ import {
   type BrowserHistory,
   createBrowserHistory,
 } from "../../lib/router/history";
+import { JSDOM } from "jsdom";
 
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";
@@ -57,6 +58,17 @@ describe("a browser history", () => {
       pathname: "/#abc",
     });
     expect(unencodedHref).toEqual("/#abc");
+  });
+
+  it("creates URLs relative to the configured window", () => {
+    let customWindow = new JSDOM(`<!DOCTYPE html>`, {
+      url: "https://example.com/current",
+    }).window as unknown as Window;
+    let customHistory = createBrowserHistory({ window: customWindow });
+
+    expect(customHistory.createURL("/target").href).toBe(
+      "https://example.com/target",
+    );
   });
 
   describe("listen", () => {
