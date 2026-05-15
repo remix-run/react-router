@@ -146,7 +146,10 @@ function isFormDataSubmitterSupported() {
         0,
       );
       _formDataSupportsSubmitter = false;
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       _formDataSupportsSubmitter = true;
     }
   }
@@ -204,7 +207,7 @@ interface SharedSubmitOptions {
    * By default (when not specified), loaders will revalidate according to the routers
    * standard revalidation behavior.
    */
-  unstable_defaultShouldRevalidate?: boolean;
+  defaultShouldRevalidate?: boolean;
 }
 
 /**

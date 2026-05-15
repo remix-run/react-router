@@ -9,9 +9,27 @@ title: HTTP Headers
 <br/>
 <br/>
 
+## Reading request headers
+
+The `request` sent to route handlers is a standard Web Fetch [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request), so you can read headers directly from the [`request.headers`](https://developer.mozilla.org/en-US/docs/Web/API/Request/headers) property:
+
+```tsx filename=some-route.tsx
+export async function loader({
+  request,
+}: Route.LoaderArgs) {
+  // Standard Headers methods are available
+  const userAgent = request.headers.get("User-Agent");
+  const hasCookies = request.headers.has("Cookie");
+
+  // ...
+}
+```
+
+## Setting response headers
+
 Headers are primarily defined with the route module `headers` export. You can also set headers in `entry.server.tsx`.
 
-## From Route Modules
+### From Route Modules
 
 ```tsx filename=some-route.tsx
 import { Route } from "./+types/some-route";
@@ -28,11 +46,11 @@ export function headers(_: Route.HeadersArgs) {
 
 You can return either a [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) instance or `HeadersInit`.
 
-## From loaders and actions
+### From loaders and actions
 
 When the header is dependent on loader data, loaders and actions can also set headers.
 
-### 1. Wrap your return value in `data`
+**1. Wrap your return value in `data`**
 
 ```tsx lines=[1,8]
 import { data } from "react-router";
@@ -50,7 +68,7 @@ export async function loader({ params }: LoaderArgs) {
 }
 ```
 
-### 2. Return from `headers` export
+**2. Return from `headers` export**
 
 Headers from loaders and actions are not sent automatically. You must explicitly return them from the `headers` export.
 
@@ -71,7 +89,7 @@ export function headers({
 
 One notable exception is `Set-Cookie` headers, which are automatically preserved from `headers`, `loader`, and `action` in parent routes, even without exporting `headers` from the child route.
 
-## Merging with parent headers
+### Merging with parent headers
 
 Consider these nested routes
 
@@ -85,7 +103,7 @@ If both route modules want to set headers, the headers from the deepest matching
 
 When you need to keep both the parent and the child headers, you need to merge them in the child route.
 
-### Appending
+#### Appending
 
 The easiest way is to simply append to the parent headers. This avoids overwriting a header the parent may have set and both are important.
 
@@ -98,7 +116,7 @@ export function headers({ parentHeaders }: HeadersArgs) {
 }
 ```
 
-### Setting
+#### Setting
 
 Sometimes it's important to overwrite the parent header. Do this with `set` instead of `append`:
 
@@ -114,7 +132,7 @@ export function headers({ parentHeaders }: HeadersArgs) {
 
 You can avoid the need to merge headers by only defining headers in "leaf routes" (index routes and child routes without children) and not in parent routes.
 
-## From `entry.server.tsx`
+### From `entry.server.tsx`
 
 The `handleRequest` export receives the headers from the route module as an argument. You can append global headers here.
 

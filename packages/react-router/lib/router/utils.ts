@@ -271,19 +271,19 @@ interface DataFunctionArgs<Context> {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
   /**
-   * A URL instance representing the application location being navigated to or fetched.
-   * Without `future.unstable_passThroughRequests` enabled, this matches `request.url`.
-   * With `future.unstable_passThroughRequests` enabled, this is a normalized
-   * URL with React-Router-specific implementation details removed (`.data`
-   * suffixes, `index`/`_routes` search params).
-   * The URL includes the origin from the request for convenience.
+   * A URL instance representing the application location being navigated to or
+   * fetched. By default, this matches `request.url`.
+   *
+   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
+   * normalized URL with React-Router-specific implementation details removed
+   * (`.data` suffixes, `index`/`_routes` search params).
    */
-  unstable_url: URL;
+  url: URL;
   /**
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  unstable_pattern: string;
+  pattern: string;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -770,49 +770,63 @@ export type RouteManifest<R = DataRouteObject> = Record<string, R | undefined>;
 
 // prettier-ignore
 type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-// prettier-ignore
-type Regez_AZ = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+type Regex_AZ = Uppercase<Regex_az>;
 type Regex_09 = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-type Regex_w = Regex_az | Regez_AZ | Regex_09 | "_";
-type ParamChar = Regex_w | "-";
+type Regex_w = Regex_az | Regex_AZ | Regex_09 | "_";
 
-// Emulates regex `+`
-type RegexMatchPlus<
-  CharPattern extends string,
-  T extends string,
-> = T extends `${infer First}${infer Rest}`
-  ? First extends CharPattern
-    ? RegexMatchPlus<CharPattern, Rest> extends never
-      ? First
-      : `${First}${RegexMatchPlus<CharPattern, Rest>}`
-    : never
-  : never;
+// prettier-ignore
+/** Emulates Regex `+` operator */
+type RegexMatchPlus<char extends string, T extends string> =
+  _RegexMatchPlus<char, T> extends infer result extends string ?
+    result extends '' ? never : result
+  :
+  never
 
-// Recursive helper for finding path parameters in the absence of wildcards
-type _PathParam<Path extends string> =
-  // split path into individual path segments
-  Path extends `${infer L}/${infer R}`
-    ? _PathParam<L> | _PathParam<R>
-    : // find params after `:`
-      Path extends `:${infer Param}`
-      ? Param extends `${infer Optional}?${string}`
-        ? RegexMatchPlus<ParamChar, Optional>
-        : RegexMatchPlus<ParamChar, Param>
-      : // otherwise, there aren't any params present
-        never;
+// prettier-ignore
+type _RegexMatchPlus<char extends string, T extends string> =
+  T extends `${infer head extends char}${infer rest}` ?
+    `${head}${_RegexMatchPlus<char, rest>}`
+  :
+  ''
 
-export type PathParam<Path extends string> =
+type ParamNameChar = Regex_w | "-";
+
+type Simplify<T> = { [K in keyof T]: T[K] } & {};
+
+// prettier-ignore
+type GeneratePathParams<path extends string> = Simplify<
+  & ParseParams<path>
+  & { [key in string]: string | null | undefined }
+>
+
+// prettier-ignore
+type ParseParams<path extends string> =
   // check if path is just a wildcard
-  Path extends "*" | "/*"
-    ? "*"
-    : // look for wildcard at the end of the path
-      Path extends `${infer Rest}/*`
-      ? "*" | _PathParam<Rest>
-      : // look for params in the absence of wildcards
-        _PathParam<Path>;
+  path extends '*' ? { '*': string } :
+  // look for wildcard at the end of the path
+  path extends `${infer rest}/*` ? { '*': string } & ParseParams<rest> :
+  // look for params in the absence of wildcards
+  _ParseParams<path>;
+
+// prettier-ignore
+type _ParseParams<path extends string> =
+  // split path into individual path segments
+  path extends `${infer left}/${infer right}` ?
+    _ParseParams<left> & _ParseParams<right> :
+  // look for optional param in segment
+  path extends `:${infer param}?${string}` ?
+    { [key in RegexMatchPlus<ParamNameChar, param>]?: string | null | undefined } :
+  // look for required param in segment
+  path extends `:${infer param}` ?
+    { [key in RegexMatchPlus<ParamNameChar, param>]: string } :
+  {};
+
+// prettier-ignore
+export type PathParam<path extends string> = (keyof ParseParams<path>) & string;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
+  // PathParam
   Expect<Equal<PathParam<"/a/b/*">, "*">>,
   Expect<Equal<PathParam<":a">, "a">>,
   Expect<Equal<PathParam<"/a/:b">, "b">>,
@@ -821,6 +835,28 @@ type _tests = [
   Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
   Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
   Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
+
+  // ParseParams
+  Expect<Equal<ParseParams<"/a/b/*">, { "*": string }>>,
+  Expect<Equal<ParseParams<":a">, { a: string }>>,
+  Expect<Equal<ParseParams<"/a/:b">, { b: string }>>,
+  Expect<Equal<ParseParams<"/a/blahblahblah:b">, {}>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:b">>, { a: string; b: string }>>,
+  Expect<
+    Equal<
+      Simplify<ParseParams<"/:a/b/:c/*">>,
+      { a: string; c: string; "*": string }
+    >
+  >,
+  Expect<Equal<ParseParams<"/:lang.xml">, { lang: string }>>,
+  Expect<
+    Equal<ParseParams<"/:lang?.xml">, { lang?: string | null | undefined }>
+  >,
+  Expect<Equal<Simplify<ParseParams<"/:a/:a">>, { a: string }>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:a?">>, { a: string }>>,
+  Expect<
+    Equal<Simplify<ParseParams<"/:a?/:a?">>, { a?: string | null | undefined }>
+  >,
 ];
 
 // Attempt to parse the given string segment. If it fails, then just return the
@@ -984,6 +1020,7 @@ export function matchRoutesImpl<
   locationArg: Partial<Location> | string,
   basename: string,
   allowPartial: boolean,
+  precomputedBranches?: RouteBranch<RouteObjectType>[],
 ): RouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
@@ -994,10 +1031,10 @@ export function matchRoutesImpl<
     return null;
   }
 
-  let branches = flattenRoutes(routes);
-  rankRouteBranches(branches);
+  let branches = precomputedBranches ?? flattenAndRankRoutes(routes);
 
   let matches = null;
+  let decoded = decodePath(pathname);
   for (let i = 0; matches == null && i < branches.length; ++i) {
     // Incoming pathnames are generally encoded from either window.location
     // or from router.navigate, but we want to match against the unencoded
@@ -1005,7 +1042,6 @@ export function matchRoutesImpl<
     // encoded here but there also shouldn't be anything to decode so this
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
-    let decoded = decodePath(pathname);
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
       decoded,
@@ -1066,10 +1102,27 @@ interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   route: RouteObjectType;
 }
 
-interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
+/**
+ * @private
+ * PRIVATE - DO NOT USE
+ *
+ * A "branch" of routes that match a given route pattern.
+ * This is an internal interface not intended for direct external usage.
+ */
+export interface RouteBranch<
+  RouteObjectType extends RouteObject = RouteObject,
+> {
   path: string;
   score: number;
   routesMeta: RouteMeta<RouteObjectType>[];
+}
+
+export function flattenAndRankRoutes<
+  RouteObjectType extends RouteObject = RouteObject,
+>(routes: RouteObjectType[]): RouteBranch<RouteObjectType>[] {
+  let branches = flattenRoutes(routes);
+  rankRouteBranches(branches);
+  return branches;
 }
 
 function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
@@ -1365,9 +1418,7 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any,
+  params: GeneratePathParams<Path> = {} as any,
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
@@ -1394,15 +1445,14 @@ export function generatePath<Path extends string>(
 
       // only apply the splat if it's the last segment
       if (isLastSegment && segment === "*") {
-        const star = "*" as PathParam<Path>;
         // Apply the splat
-        return stringify(params[star]);
+        return stringify(params["*" as keyof typeof params]);
       }
 
       const keyMatch = segment.match(/^:([\w-]+)(\??)(.*)/);
       if (keyMatch) {
         const [, key, optional, suffix] = keyMatch;
-        let param = params[key as PathParam<Path>];
+        let param = params[key as keyof typeof params];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
         return encodeURIComponent(stringify(param)) + suffix;
       }
@@ -1477,13 +1527,10 @@ type Mutable<T> = {
  * @returns A path match object if the pattern matches the pathname,
  * or `null` if it does not match.
  */
-export function matchPath<
-  ParamKey extends ParamParseKey<Path>,
-  Path extends string,
->(
+export function matchPath<Path extends string>(
   pattern: PathPattern<Path> | Path,
   pathname: string,
-): PathMatch<ParamKey> | null {
+): PathMatch<ParamParseKey<Path>> | null {
   if (typeof pattern === "string") {
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
@@ -1681,7 +1728,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
-    toPathname = toPathname.replace(/\/\/+/g, "/");
+    toPathname = removeDoubleSlashes(toPathname);
     if (toPathname.startsWith("/")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
@@ -1699,7 +1746,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 }
 
 function resolvePathname(relativePath: string, fromPathname: string): string {
-  let segments = fromPathname.replace(/\/+$/, "").split("/");
+  let segments = removeTrailingSlash(fromPathname).split("/");
   let relativeSegments = relativePath.split("/");
 
   relativeSegments.forEach((segment) => {
@@ -1853,11 +1900,17 @@ export function resolveTo(
   return path;
 }
 
+export const removeDoubleSlashes = (path: string): string =>
+  path.replace(/\/\/+/g, "/");
+
 export const joinPaths = (paths: string[]): string =>
-  paths.join("/").replace(/\/\/+/g, "/");
+  removeDoubleSlashes(paths.join("/"));
+
+export const removeTrailingSlash = (path: string): string =>
+  path.replace(/\/+$/, "");
 
 export const normalizePathname = (pathname: string): string =>
-  pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
+  removeTrailingSlash(pathname).replace(/^\/*/, "/");
 
 /*
 lol - this comment is needed because the JSDoc parser for docs.ts gets confused
@@ -1937,6 +1990,9 @@ export type RedirectFunction = (
  * Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
  * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * This utility accepts absolute URLs and can navigate to external domains, so
+ * the application should validate any user-supplied inputs to redirects.
+ *
  * @example
  * import { redirect } from "react-router";
  *
@@ -1978,6 +2034,9 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  * that will force a document reload to the new location. Sets the status code
  * and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
  * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
+ *
+ * This utility accepts absolute URLs and can navigate to external domains, so
+ * the application should validate any user-supplied inputs to redirects.
  *
  * ```tsx filename=routes/logout.tsx
  * import { redirectDocument } from "react-router";
@@ -2126,13 +2185,8 @@ for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 */
 
 export function getRoutePattern(matches: RouteMatch[]) {
-  return (
-    matches
-      .map((m) => m.route.path)
-      .filter(Boolean)
-      .join("/")
-      .replace(/\/\/*/g, "/") || "/"
-  );
+  let parts = matches.map((m) => m.route.path).filter(Boolean) as string[];
+  return joinPaths(parts) || "/";
 }
 
 export const isBrowser =
@@ -2180,7 +2234,10 @@ export function parseToInfo<T extends To | string>(
       } else {
         isExternal = true;
       }
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       // We can't do external URL detection without a valid URL
       warning(
         false,

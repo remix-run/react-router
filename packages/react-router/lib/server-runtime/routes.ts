@@ -44,22 +44,6 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   return routes;
 }
 
-// Create a map of routes by parentId to use recursively instead of
-// repeatedly filtering the manifest.
-export function createRoutes(
-  manifest: ServerRouteManifest,
-  parentId: string = "",
-  routesByParentId: Record<
-    string,
-    Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest),
-): ServerRoute[] {
-  return (routesByParentId[parentId] || []).map((route) => ({
-    ...route,
-    children: createRoutes(manifest, route.id, routesByParentId),
-  }));
-}
-
 // Convert the Remix ServerManifest into DataRouteObject's for use with
 // createStaticHandler
 export function createStaticHandlerDataRoutes(

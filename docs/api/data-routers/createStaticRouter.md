@@ -48,6 +48,7 @@ function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = ,
 ): DataRouter {}
@@ -66,6 +67,10 @@ The [`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react-rou
 ### opts.future
 
 Future flags for the static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html)
+
+### opts.branches
+
+Optional pre-computed route branches
 
 ## Returns
 

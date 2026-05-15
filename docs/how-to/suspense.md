@@ -68,7 +68,7 @@ export default function MyComponent({
 
 ## With React 19
 
-If you're experimenting with React 19, you can use `React.use` instead of `Await`, but you'll need to create a new component and pass the promise down to trigger the suspense fallback.
+If you're using React 19, you can use `React.use` instead of `Await`, but you'll need to create a new component and pass the promise down to trigger the suspense fallback.
 
 ```tsx
 <React.Suspense fallback={<div>Loading...</div>}>
@@ -90,4 +90,43 @@ By default, loaders and actions reject any outstanding promises after 4950ms. Yo
 ```ts filename=entry.server.tsx
 // Reject all pending promises from handler functions after 10 seconds
 export const streamTimeout = 10_000;
+```
+
+## Handling early rejections (Node)
+
+React Router waits for all loaders to settle (via `Promise.all`) before it begins streaming the response. Once streaming has started, React Router catches subsequent rejections of your streamed promises and surfaces them to your `<Await>` (or React 19 `React.use`) error UI.
+
+However, if a streamed promise rejects _before_ all of the route's loaders have settled, React Router has not yet been able to attach a handler to it. In Node, an unhandled promise rejection will crash the process unless you have a top-level handler registered.
+
+For example, this can happen if a parent route's loader takes longer to resolve than a child route's streamed promise takes to reject:
+
+```tsx
+// parent.tsx — slow loader
+export async function loader() {
+  await new Promise((r) => setTimeout(r, 1000));
+  return { parent: "data" };
+}
+
+// child.tsx — fast-rejecting streamed promise
+export async function loader() {
+  let lazy = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("boom")), 100),
+  );
+  return { lazy };
+}
+```
+
+When `lazy` rejects before the parent loader resolves, the rejection bubbles to the node process as an unhandled rejection, which will crash the process without a user-defined handler.
+
+To prevent this, register a process-level `unhandledRejection` handler in your server entry:
+
+```ts filename=entry.server.ts
+process.on("unhandledRejection", (reason, promise) => {
+  console.error(
+    "Unhandled Rejection at:",
+    promise,
+    "reason:",
+    reason,
+  );
+});
 ```

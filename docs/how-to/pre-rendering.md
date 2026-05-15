@@ -59,15 +59,11 @@ export default {
 } satisfies Config;
 ```
 
-### Concurrency (unstable)
-
-<docs-warning>This API is experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
-to release notes for relevant changes.</docs-warning>
+### Concurrency
 
 By default, pages are pre-rendered one path at a time. You can enable concurrency to pre-render multiple paths in parallel which can speed up build times in many cases. You should experiment with the value that provides the best performance for your app.
 
-To specify concurrency, move your `prerender` config down into a `prerender.paths` field and you can specify the concurrency in `prerender.unstable_concurrency`:
+To specify concurrency, move your `prerender` config down into a `prerender.paths` field and you can specify the concurrency in `prerender.concurrency`:
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
@@ -81,7 +77,7 @@ export default {
       "/blog",
       ...slugs.map((s) => `/blog/${s}`),
     ],
-    unstable_concurrency: 4,
+    concurrency: 4,
   },
 } satisfies Config;
 ```

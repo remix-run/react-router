@@ -15,9 +15,9 @@ import type { TrackedPromise, RouteMatch } from "./router/utils";
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
-  // `NavigationContext` needs `future`/`unstable_useTransitions` since it doesn't
+  // `NavigationContext` needs `future`/`useTransitions` since it doesn't
   // have a `router` in all cases
-  extends Omit<NavigationContextObject, "future" | "unstable_useTransitions"> {
+  extends Omit<NavigationContextObject, "future" | "useTransitions"> {
   router: Router;
   staticContext?: StaticHandlerContext;
   onError?: ClientOnErrorFunction;
@@ -74,7 +74,7 @@ export interface NavigateOptions {
   /** Replace the current entry in the history stack instead of pushing a new one */
   replace?: boolean;
   /** Masked URL */
-  unstable_mask?: To;
+  mask?: To;
   /** Adds persistent client side routing state to the next location */
   state?: any;
   /** If you are using {@link ScrollRestoration `<ScrollRestoration>`}, prevent the scroll position from being reset to the top of the window when navigating */
@@ -86,7 +86,7 @@ export interface NavigateOptions {
   /** Enables a {@link https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API View Transition} for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the {@link useViewTransitionState `useViewTransitionState()`} hook.  */
   viewTransition?: boolean;
   /** Specifies the default revalidation behavior after this submission */
-  unstable_defaultShouldRevalidate?: boolean;
+  defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -111,7 +111,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  unstable_useTransitions: boolean | undefined;
+  useTransitions: boolean | undefined;
   // TODO: Re-introduce a singular `FutureConfig` once we land our first
   // future.unstable_ or future.v8_ flag
   future: {};

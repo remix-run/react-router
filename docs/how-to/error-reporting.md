@@ -75,7 +75,7 @@ import { type ClientOnErrorFunction } from "react-router";
 
 const onError: ClientOnErrorFunction = (
   error,
-  { location, params, unstable_pattern, errorInfo },
+  { location, params, pattern, errorInfo },
 ) => {
   myReportError(error, location, errorInfo);
 
@@ -108,7 +108,7 @@ import { type ClientOnErrorFunction } from "react-router";
 
 const onError: ClientOnErrorFunction = (
   error,
-  { location, params, unstable_pattern, errorInfo },
+  { location, params, pattern, errorInfo },
 ) => {
   myReportError(error, location, errorInfo);
 

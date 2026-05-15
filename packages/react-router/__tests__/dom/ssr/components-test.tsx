@@ -16,10 +16,7 @@ import {
   FrameworkContext,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-} from "../../../lib/context";
+import { DataRouterStateContext } from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom";
@@ -390,6 +387,84 @@ describe("<Links />", () => {
   });
 });
 
+describe("<Scripts />", () => {
+  it("propagates nonce to modulepreload links", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/"),
+    );
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: ["preload-a.js", "preload-b.js"],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
+      routeModules: {
+        root: {
+          default: () => (
+            <>
+              <h1>Root</h1>
+              <Scripts nonce="test-nonce" />
+            </>
+          ),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter context={context} url="http://localhost/" />,
+    );
+
+    let modulePreloads = container.ownerDocument.querySelectorAll(
+      'link[rel="modulepreload"]',
+    );
+    expect(modulePreloads.length).toBeGreaterThan(0);
+    modulePreloads.forEach((link) => {
+      expect(link).toHaveAttribute("nonce", "test-nonce");
+    });
+
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="manifest.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="entry.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-a.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-b.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+  });
+});
+
 describe("usePrefetchBehavior", () => {
   function TestComponent({
     prefetch,
@@ -398,6 +473,7 @@ describe("usePrefetchBehavior", () => {
   }) {
     let [shouldPrefetch, ref] = usePrefetchBehavior(prefetch, {});
     return (
+      // eslint-disable-next-line jsx-a11y/anchor-is-valid
       <a ref={ref} data-prefetch={shouldPrefetch}>
         Link
       </a>

@@ -32,8 +32,8 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
       document,
       <StrictMode>
         <RSCHydratedRouter
-          payload={payload}
           createFromReadableStream={createFromReadableStream}
+          payload={payload}
         />
       </StrictMode>,
       {

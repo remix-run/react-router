@@ -68,7 +68,10 @@ async function fileExists(filePath) {
   try {
     await fsp.stat(filePath);
     return true;
-  } catch (_) {
+  } catch (
+    // eslint-disable-next-line no-unused-vars
+    e
+  ) {
     return false;
   }
 }

@@ -31,7 +31,7 @@ API for client-side routing.
 function BrowserRouter({
   basename,
   children,
-  unstable_useTransitions,
+  useTransitions,
   window,
 }: BrowserRouterProps)
 ```
@@ -46,7 +46,7 @@ Application basename
 
 ``<Route>`` components describing your route configuration
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -59,7 +59,7 @@ Control whether router state updates are internally wrapped in
 - When set to `false`, the router will not leverage `React.startTransition`
   on any navigations or state changes.
 
-For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+For more information, please see the [docs](../../explanation/react-transitions).
 
 ### window
 

@@ -660,9 +660,6 @@ let getServerBundleRouteIds = (
   return Object.keys(serverBundleRoutes);
 };
 
-const injectQuery = (url: string, query: string) =>
-  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
-
 let defaultEntriesDir = path.resolve(
   path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
   "dist",
@@ -821,7 +818,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     return `
     import * as entryServer from ${JSON.stringify(
-      resolveFileUrl(ctx, ctx.entryServerFilePath),
+      resolveFileUrl(ctx, ctx.entryServerFilePath, {
+        publicPath: ctx.publicPath,
+      }),
     )};
     ${Object.keys(routes)
       .map((key, index) => {
@@ -837,6 +836,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             resolveFileUrl(
               ctx,
               resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+              { publicPath: ctx.publicPath },
             ),
           )};`;
         }
@@ -1110,7 +1110,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let sri: ReactRouterManifest["sri"] = undefined;
-    if (ctx.reactRouterConfig.future.unstable_subResourceIntegrity) {
+    if (ctx.reactRouterConfig.subResourceIntegrity) {
       sri = await generateSriManifest(ctx);
     }
 
@@ -1814,7 +1814,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return response;
             }
 
-            throw new Error("No handlers were found for the request.");
+            let url = new URL(request.url);
+            throw new Error(
+              "No handlers were found for the request: " +
+                url.pathname +
+                url.search,
+            );
           };
 
           return cachedHandler;
@@ -2608,15 +2613,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { future } = ctx.reactRouterConfig;
 
-        // Prerender during SSR build only
-        if (
-          future.v8_viteEnvironmentApi
-            ? this.environment.name === "client"
-            : !viteConfigEnv.isSsrBuild
-        ) {
-          return [];
-        }
-
         // Skip prerendering if the future flag is disabled
         if (!future.unstable_previewServerPrerendering) {
           return [];
@@ -2848,7 +2844,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
-        let { ssr, future } = ctx.reactRouterConfig;
+        let { ssr } = ctx.reactRouterConfig;
 
         // if ssr:false is set
         if (!ssr) {
@@ -2878,10 +2874,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
           }
 
-          let serverBuildDirectory = future.v8_viteEnvironmentApi
-            ? this.environment.config?.build?.outDir
-            : (ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx.reactRouterConfig));
+          let serverBuildDirectory = getServerBuildDirectory(
+            ctx.reactRouterConfig,
+          );
 
           // Cleanup - we no longer need the server build assets
           viteConfig.logger.info(
@@ -3279,8 +3274,8 @@ async function handlePrerender(
 
   let concurrency = 1;
   let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
-    concurrency = prerender.unstable_concurrency ?? 1;
+  if (typeof prerender === "object" && "concurrency" in prerender) {
+    concurrency = prerender.concurrency ?? 1;
   }
 
   const pMap = await import("p-map");
@@ -4286,8 +4281,8 @@ function getPrerenderConcurrencyConfig(
 ): number {
   let concurrency = 1;
   let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
-    concurrency = prerender.unstable_concurrency ?? 1;
+  if (typeof prerender === "object" && "concurrency" in prerender) {
+    concurrency = prerender.concurrency ?? 1;
   }
   return concurrency;
 }

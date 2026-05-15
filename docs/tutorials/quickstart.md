@@ -114,7 +114,7 @@ You should now see a `build` folder containing a `server` folder (the server ver
 
 👉 **Run the app with `react-router-serve`**
 
-Now you can run your app with `react-router-serve`:
+Now you can run your app with `react-router-serve`, provided by the `@react-router/serve` package:
 
 ```shellscript nonumber
 npx react-router-serve build/server/index.js
@@ -142,9 +142,9 @@ You can also use React Router as a Single Page Application with no server. For m
 
 </docs-info>
 
-If you don't care to set up your own server, you can use `react-router-serve`. It's a simple `express`-based server maintained by the React Router maintainers. However, React Router is specifically designed to run in _any_ JavaScript environment so that you own your stack. It is expected many —if not most— production apps will have their own server.
+If you don't care to set up your own server, you can use `@react-router/serve`. It's a simple `express`-based server maintained by the React Router maintainers. However, React Router is specifically designed to run in _any_ JavaScript environment so that you own your stack. It is expected many —if not most— production apps will have their own server.
 
-Just for kicks, let's stop using `react-router-serve` and use `express` instead.
+Just for kicks, let's stop using `@react-router/serve` and use `express` instead.
 
 👉 **Install Express, the React Router Express adapter, and [cross-env] for running in production mode**
 
