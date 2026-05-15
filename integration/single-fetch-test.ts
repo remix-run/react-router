@@ -416,7 +416,6 @@ test.describe("single-fetch", () => {
 
           let count = 0;
           export function loader() {
-            console.log('running server side loader, count -> ', count + 1)
             return { count: ++count };
           }
 
@@ -436,7 +435,6 @@ test.describe("single-fetch", () => {
           }
 
           export function shouldRevalidate({ actionResult }) {
-            console.log('running shouldRevalidate, actionResult.shouldRevalidate =', actionResult.shouldRevalidate)
             return actionResult.shouldRevalidate === true;
           }
         `,
@@ -444,9 +442,6 @@ test.describe("single-fetch", () => {
     });
 
     let urls: string[] = [];
-    page.on("console", (msg) => {
-      console.log("BROWSER:", msg.text());
-    });
     page.on("request", (req) => {
       if (req.method() === "GET" && req.url().includes(".data")) {
         urls.push(req.url());
