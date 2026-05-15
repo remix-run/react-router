@@ -3,6 +3,7 @@ import type {
   DataStrategyMatch,
   DataStrategyResult,
 } from "../../lib/router/utils";
+import { getSingleFetchDataStrategyImpl } from "../../lib/dom/ssr/single-fetch";
 import {
   createDeferred,
   createAsyncStub,
@@ -1187,6 +1188,46 @@ describe("router dataStrategy", () => {
         parent: "PARENT",
         child: "CHILD",
       });
+    });
+
+    it("does not single-fetch for clientLoader-only routes without a server loader", async () => {
+      let fetchAndDecode = jest.fn(async () => {
+        return { status: 200, data: { routes: {} } };
+      });
+
+      let t: ReturnType<typeof setup>;
+      t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        dataStrategy: getSingleFetchDataStrategyImpl(
+          () => t.router,
+          (match) =>
+            match.route.id === "parent"
+              ? { hasLoader: false, hasClientLoader: true }
+              : { hasLoader: false, hasClientLoader: false },
+          fetchAndDecode,
+          true,
+          undefined,
+          false,
+        ),
+      });
+
+      let A = await t.navigate("/parent");
+      await A.loaders.parent.resolve("CLIENT_LOADER");
+
+      expect(fetchAndDecode).toHaveBeenCalledTimes(0);
+      expect(A.loaders.parent.stub).toHaveBeenCalledTimes(1);
     });
 
     it("allows middleware/context implementations", async () => {

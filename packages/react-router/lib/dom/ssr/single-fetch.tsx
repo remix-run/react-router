@@ -435,15 +435,17 @@ async function singleFetchLoaderNavigationStrategy(
             foundOptOutRoute = true;
           }
           try {
-            let result = await handler(async () => {
-              let { data } = await fetchAndDecode(
-                args,
-                basename,
-                trailingSlashAware,
-                [routeId],
-              );
-              return unwrapSingleFetchResult(data, routeId);
-            });
+            let result = await (hasLoader
+              ? handler(async () => {
+                  let { data } = await fetchAndDecode(
+                    args,
+                    basename,
+                    trailingSlashAware,
+                    [routeId],
+                  );
+                  return unwrapSingleFetchResult(data, routeId);
+                })
+              : handler(async () => null));
 
             results[routeId] = { type: "data", result };
           } catch (e) {
