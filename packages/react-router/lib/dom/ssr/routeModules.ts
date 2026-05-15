@@ -210,14 +210,14 @@ export interface MetaArgs<
  *  "root": RootLoader,
  *  "routes/sales": SalesLoader,
  *  "routes/sales/customers": CustomersLoader,
- * }> = ({ data, matches }) => {
- *   const { name } = data
+ * }> = ({ loaderData, matches }) => {
+ *   const { name } = loaderData
  *   //      ^? string
- *   const { customerCount } = matches.find((match) => match.id === "routes/sales/customers").data
+ *   const { customerCount } = matches.find((match) => match.id === "routes/sales/customers").loaderData
  *   //      ^? number
- *   const { salesCount } = matches.find((match) => match.id === "routes/sales").data
+ *   const { salesCount } = matches.find((match) => match.id === "routes/sales").loaderData
  *   //      ^? number
- *   const { hello } = matches.find((match) => match.id === "root").data
+ *   const { hello } = matches.find((match) => match.id === "root").loaderData
  *   //      ^? "world"
  * }
  * ```

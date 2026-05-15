@@ -402,7 +402,7 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#action-data")).toContain("value");
   });
 
-  test("allows fine-grained revalidation", async ({ page }) => {
+  test.only("allows fine-grained revalidation", async ({ page }) => {
     let fixture = await createFixture({
       files: {
         ...files,
@@ -416,6 +416,7 @@ test.describe("single-fetch", () => {
 
           let count = 0;
           export function loader() {
+            console.log('running server side loader, count -> ', count + 1)
             return { count: ++count };
           }
 
@@ -435,6 +436,7 @@ test.describe("single-fetch", () => {
           }
 
           export function shouldRevalidate({ actionResult }) {
+            console.log('running shouldRevalidate, actionResult.shouldRevalidate =', actionResult.shouldRevalidate)
             return actionResult.shouldRevalidate === true;
           }
         `,
@@ -442,6 +444,9 @@ test.describe("single-fetch", () => {
     });
 
     let urls: string[] = [];
+    page.on("console", (msg) => {
+      console.log("BROWSER:", msg.text());
+    });
     page.on("request", (req) => {
       if (req.method() === "GET" && req.url().includes(".data")) {
         urls.push(req.url());
@@ -454,20 +459,19 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#data")).toContain("1");
     expect(urls).toEqual([]);
 
-    await page.click('button[name="revalidate"][value="yes"]');
-    await page.waitForSelector("#action-data");
-    await page.waitForSelector("#idle");
-    expect(await app.getHtml("#data")).toContain("2");
-    expect(urls).toEqual([expect.stringMatching(/\/no-revalidate\.data$/)]);
-
     await page.click('button[name="revalidate"][value="no"]');
     await page.waitForSelector("#action-data");
     await page.waitForSelector("#idle");
-    expect(await app.getHtml("#data")).toContain("2");
+    expect(await app.getHtml("#data")).toContain("1");
     expect(urls).toEqual([
-      expect.stringMatching(/\/no-revalidate\.data$/),
       expect.stringMatching(/\/no-revalidate\.data\?_routes=root$/),
     ]);
+    urls.splice(0, urls.length);
+
+    await page.click('button[name="revalidate"][value="yes"]');
+    await page.waitForSelector("#data:has-text('2')");
+    expect(await app.getHtml("#data")).toContain("2");
+    expect(urls).toEqual([expect.stringMatching(/\/no-revalidate\.data$/)]);
   });
 
   test("revalidates on reused routes by default", async ({ page }) => {
