@@ -33,8 +33,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          # required for --experimental-strip-types
-          node-version: 22
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: 📥 Install deps

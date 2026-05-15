@@ -90,11 +90,11 @@ export async function run(
 ) {
   // Check the node version
   let versions = process.versions;
-  let MINIMUM_NODE_VERSION = 20;
+  let MINIMUM_NODE_VERSION = "22.12";
   if (
     versions &&
     versions.node &&
-    semver.major(versions.node) < MINIMUM_NODE_VERSION
+    semver.lt(versions.node, MINIMUM_NODE_VERSION)
   ) {
     console.warn(
       `️⚠️ Oops, Node v${versions.node} detected. react-router requires ` +

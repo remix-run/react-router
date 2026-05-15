@@ -13,7 +13,7 @@
     "@types/semver": "^7.7.0"
   },
   "engines": {
-    "node": "^22.18"
+    "node": ">=24"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
