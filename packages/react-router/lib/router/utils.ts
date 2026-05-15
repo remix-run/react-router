@@ -1063,14 +1063,6 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
    * The return value from the matched route's loader or clientLoader. This might
    * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
    * an error and we're currently displaying an `ErrorBoundary`.
-   *
-   * @deprecated Use `UIMatch.loaderData` instead
-   */
-  data: Data | undefined;
-  /**
-   * The return value from the matched route's loader or clientLoader. This might
-   * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
-   * an error and we're currently displaying an `ErrorBoundary`.
    */
   loaderData: Data | undefined;
   /**
@@ -1089,7 +1081,6 @@ export function convertRouteMatchToUiMatch(
     id: route.id,
     pathname,
     params,
-    data: loaderData[route.id],
     loaderData: loaderData[route.id],
     handle: route.handle,
   };
