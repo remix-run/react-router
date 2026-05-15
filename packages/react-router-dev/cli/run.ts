@@ -90,7 +90,7 @@ export async function run(
 ) {
   // Check the node version
   let versions = process.versions;
-  let MINIMUM_NODE_VERSION = "22.12";
+  let MINIMUM_NODE_VERSION = "22.12.0";
   if (
     versions &&
     versions.node &&
