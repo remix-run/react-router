@@ -135,11 +135,11 @@ export const replace: typeof baseReplace = (...args) => {
 
 const cachedResolvePromise: <T>(
   resolve: T,
-) => Promise<PromiseSettledResult<Awaited<T>>> =
-  // @ts-expect-error - on 18 types, requires 19.
-  React.cache(async <T>(resolve: T) => {
+) => Promise<PromiseSettledResult<Awaited<T>>> = React.cache(
+  async <T>(resolve: T) => {
     return Promise.allSettled([resolve]).then((r) => r[0]);
-  });
+  },
+);
 
 export const Await: typeof AwaitType = (async ({
   children,

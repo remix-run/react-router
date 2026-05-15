@@ -23,19 +23,6 @@ type DecodedPayload = Promise<RSCPayload> & {
   formState: Promise<any>;
 };
 
-// Safe version of React.use() that will not cause compilation errors against
-// React 18 and will result in a runtime error if used (you can't use RSC against
-// React 18).
-const REACT_USE = "use";
-const useImpl = (React as any)[REACT_USE];
-
-function useSafe<T>(promise: Promise<T> | React.Context<T>): T {
-  if (useImpl) {
-    return useImpl(promise);
-  }
-  throw new Error("React Router v7 requires React 19+ for RSC features.");
-}
-
 export type SSRCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
 ) => Promise<unknown>;
@@ -491,8 +478,7 @@ export interface RSCStaticRouterProps {
  */
 export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   const decoded = getPayload();
-  // Can be replaced with React.use when v18 compatibility is no longer required.
-  const payload = useSafe(decoded);
+  const payload = React.use(decoded);
 
   if (payload.type === "redirect") {
     throw new Response(null, {

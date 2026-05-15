@@ -825,7 +825,7 @@ export function BrowserRouter({
   useTransitions,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  let historyRef = React.useRef<BrowserHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
@@ -916,7 +916,7 @@ export function HashRouter({
   useTransitions,
   window,
 }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  let historyRef = React.useRef<HashHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }
@@ -1968,7 +1968,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         });
 
       if (useTransitions && navigate !== false) {
-        // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
         doSubmit();
@@ -2248,7 +2247,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           });
 
         if (useTransitions) {
-          // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
           doNavigate();

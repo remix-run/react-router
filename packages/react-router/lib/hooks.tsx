@@ -215,19 +215,6 @@ const navigateEffectWarning =
   `You should call navigate() in a React.useEffect(), not when ` +
   `your component is first rendered.`;
 
-// Mute warnings for calls to useNavigate in SSR environments
-function useIsomorphicLayoutEffect(
-  cb: Parameters<typeof React.useLayoutEffect>[0],
-) {
-  let isStatic = React.useContext(NavigationContext).static;
-  if (!isStatic) {
-    // We should be able to get rid of this once react 18.3 is released
-    // See: https://github.com/facebook/react/pull/26395
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useLayoutEffect(cb);
-  }
-}
-
 /**
  * Returns a function that lets you navigate programmatically in the browser in
  * response to user interactions or effects.
@@ -397,7 +384,7 @@ function useNavigateUnstable(): NavigateFunction {
   let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   let activeRef = React.useRef(false);
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 
@@ -1931,7 +1918,7 @@ function useNavigateStable(): NavigateFunction {
   let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
 
   let activeRef = React.useRef(false);
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 

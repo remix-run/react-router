@@ -74,33 +74,7 @@ import {
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
-
-/**
- * Webpack can fail to compile against react versions without this export -
- * it complains that `useOptimistic` doesn't exist in `React`.
- *
- * Using the string constant directly at runtime fixes the webpack build issue
- * but can result in terser stripping the actual call at minification time.
- *
- * Grabbing an exported reference once up front resolves that issue.
- *
- * See https://github.com/remix-run/react-router/issues/10579
- */
-const USE_OPTIMISTIC = "useOptimistic";
-// @ts-expect-error Needs React 19 types but we develop against 18
-const useOptimisticImpl = React[USE_OPTIMISTIC];
-const stableUseOptimisticSetter = () => undefined;
-
-function useOptimisticSafe<T>(
-  val: T,
-): [T, React.Dispatch<React.SetStateAction<T>>] {
-  if (useOptimisticImpl) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useOptimisticImpl(val);
-  } else {
-    return [val, stableUseOptimisticSetter];
-  }
-}
+import { useOptimistic } from "react";
 
 export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
@@ -386,7 +360,8 @@ export interface RouterProviderProps {
    * - If you are rendering in a non-DOM environment, you can import
    *   `RouterProvider` from `react-router` and ignore this prop
    */
-  flushSync?: (fn: () => unknown) => undefined;
+  flushSync?: <R>(fn: () => R) => R;
+
   /**
    * An error handler function that will be called for any middleware, loader, action,
    * or render errors that are encountered in your application.  This is useful for
@@ -469,7 +444,7 @@ export function RouterProvider({
   useTransitions = unstable_rsc || useTransitions;
 
   let [_state, setStateImpl] = React.useState(router.state);
-  let [state, setOptimisticState] = useOptimisticSafe(_state);
+  let [state, setOptimisticState] = useOptimistic(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -875,7 +850,7 @@ export function MemoryRouter({
   initialIndex,
   useTransitions,
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
+  let historyRef = React.useRef<MemoryHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({
       initialEntries,
@@ -1833,7 +1808,11 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, treePath),
+        createRoutesFromChildren(
+          (element as unknown as React.ReactElement<React.FragmentProps>).props
+            .children,
+          treePath,
+        ),
       );
       return;
     }
@@ -1845,39 +1824,38 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`,
     );
 
+    let props = (element as unknown as React.ReactElement<RouteProps>).props;
+
     invariant(
-      !element.props.index || !element.props.children,
+      !props.index || !props.children,
       "An index route cannot have child routes.",
     );
 
     let route: RouteObject = {
-      id: element.props.id || treePath.join("-"),
-      caseSensitive: element.props.caseSensitive,
-      element: element.props.element,
-      Component: element.props.Component,
-      index: element.props.index,
-      path: element.props.path,
-      middleware: element.props.middleware,
-      loader: element.props.loader,
-      action: element.props.action,
-      hydrateFallbackElement: element.props.hydrateFallbackElement,
-      HydrateFallback: element.props.HydrateFallback,
-      errorElement: element.props.errorElement,
-      ErrorBoundary: element.props.ErrorBoundary,
+      id: props.id || treePath.join("-"),
+      caseSensitive: props.caseSensitive,
+      element: props.element,
+      Component: props.Component,
+      index: props.index,
+      path: props.path,
+      middleware: props.middleware,
+      loader: props.loader,
+      action: props.action,
+      hydrateFallbackElement: props.hydrateFallbackElement,
+      HydrateFallback: props.HydrateFallback,
+      errorElement: props.errorElement,
+      ErrorBoundary: props.ErrorBoundary,
       hasErrorBoundary:
-        element.props.hasErrorBoundary === true ||
-        element.props.ErrorBoundary != null ||
-        element.props.errorElement != null,
-      shouldRevalidate: element.props.shouldRevalidate,
-      handle: element.props.handle,
-      lazy: element.props.lazy,
+        props.hasErrorBoundary === true ||
+        props.ErrorBoundary != null ||
+        props.errorElement != null,
+      shouldRevalidate: props.shouldRevalidate,
+      handle: props.handle,
+      lazy: props.lazy,
     };
 
-    if (element.props.children) {
-      route.children = createRoutesFromChildren(
-        element.props.children,
-        treePath,
-      );
+    if (props.children) {
+      route.children = createRoutesFromChildren(props.children, treePath);
     }
 
     routes.push(route);
