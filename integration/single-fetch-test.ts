@@ -1090,7 +1090,7 @@ test.describe("single-fetch", () => {
                     <Link to="/page?optout" defaultShouldRevalidate={false}>Page (opt-out)</Link>
                   </nav>
                   <pre id="data">
-                    {JSON.stringify(useMatches().map(m => [m.id, m.data]))}
+                    {JSON.stringify(useMatches().map(m => [m.id, m.loaderData]))}
                   </pre>
                   <Outlet />
                   <Scripts />

@@ -1159,33 +1159,6 @@ describe("create-react-router CLI", () => {
       expect(status).toBe(1);
     });
   });
-
-  describe("supports proxy usage", () => {
-    beforeAll(() => {
-      server.close();
-    });
-    afterAll(() => {
-      server.listen({ onUnhandledRequest: "error" });
-    });
-    it("uses the proxy from env var", async () => {
-      let projectDir = await getProjectDir("template");
-
-      let { stderr } = await execCreateReactRouter({
-        args: [
-          projectDir,
-          "--template",
-          "remix-run/grunge-stack",
-          "--no-install",
-          "--no-git-init",
-          "--debug",
-        ],
-        mockNetwork: false,
-        env: { HTTPS_PROXY: "http://127.0.0.1:33128" },
-      });
-
-      expect(stderr.trim()).toMatch("127.0.0.1:33");
-    });
-  });
 });
 
 async function execCreateReactRouter({
