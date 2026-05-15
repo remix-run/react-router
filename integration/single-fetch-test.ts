@@ -402,7 +402,7 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#action-data")).toContain("value");
   });
 
-  test.only("allows fine-grained revalidation", async ({ page }) => {
+  test("allows fine-grained revalidation", async ({ page }) => {
     let fixture = await createFixture({
       files: {
         ...files,
