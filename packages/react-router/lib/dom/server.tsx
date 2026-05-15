@@ -20,7 +20,12 @@ import {
   IDLE_NAVIGATION,
   createStaticHandler as routerCreateStaticHandler,
 } from "../router/router";
-import type { RouteManifest, RouteObject } from "../router/utils";
+import type {
+  DataRouteObject,
+  RouteBranch,
+  RouteManifest,
+  RouteObject,
+} from "../router/utils";
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
@@ -81,7 +86,7 @@ export function StaticRouter({
     hash: locationProp.hash || "",
     state: locationProp.state != null ? locationProp.state : null,
     key: locationProp.key || "default",
-    unstable_mask: undefined,
+    mask: undefined,
   };
 
   let staticNavigator = getStatelessNavigator();
@@ -93,7 +98,7 @@ export function StaticRouter({
       navigationType={action}
       navigator={staticNavigator}
       static={true}
-      unstable_useTransitions={false}
+      useTransitions={false}
     />
   );
 }
@@ -204,9 +209,10 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
-                unstable_useTransitions={false}
+                useTransitions={false}
               >
                 <DataRoutes
+                  manifest={router.manifest}
                   routes={router.routes}
                   future={router.future}
                   state={state}
@@ -372,12 +378,14 @@ export function createStaticHandler(
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
+ * @param opts.branches Optional pre-computed route branches
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
@@ -410,7 +418,7 @@ export function createStaticRouter(
     get future() {
       return {
         v8_middleware: false,
-        unstable_passThroughRequests: false,
+        v8_passThroughRequests: false,
         ...opts?.future,
       };
     },
@@ -434,6 +442,12 @@ export function createStaticRouter(
     },
     get routes() {
       return dataRoutes;
+    },
+    get branches() {
+      return opts.branches;
+    },
+    get manifest() {
+      return manifest;
     },
     get window() {
       return undefined;

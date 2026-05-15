@@ -193,6 +193,9 @@ test.describe("Vite preview", () => {
                 <div id="content">
                   <Outlet />
                 </div>
+                {Array.from({ length: 100 }).map((_, i) => (
+                  <p key={i}>Filler content {i + 1}</p>
+                ))}
                 <Scripts />
               </body>
             </html>

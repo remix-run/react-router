@@ -1,7 +1,7 @@
 {
   "name": "@react-router/remix-routes-option-adapter",
   "type": "module",
-  "version": "7.13.2",
+  "version": "7.15.1",
   "description": "Adapter for Remix's \"routes\" config option, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -46,7 +46,7 @@
   },
   "peerDependencies": {
     "@react-router/dev": "workspace:^",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {

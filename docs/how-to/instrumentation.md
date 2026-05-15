@@ -1,6 +1,5 @@
 ---
 title: Instrumentation
-unstable: true
 ---
 
 # Instrumentation
@@ -9,10 +8,6 @@ unstable: true
 
 <br/>
 <br/>
-
-<docs-warning>The instrumentation APIs are experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
-to release notes for relevant changes.</docs-warning>
 
 Instrumentation allows you to add logging, error reporting, and performance tracing to your React Router application without modifying your actual route handlers. This enables comprehensive observability solutions for production applications on both the server and client.
 
@@ -41,7 +36,7 @@ As with any instrumentation approach, adding additional code execution at runtim
 Add instrumentations to your `entry.server.tsx`:
 
 ```tsx filename=app/entry.server.tsx
-export const unstable_instrumentations = [
+export const instrumentations = [
   {
     // Instrument the server handler
     handler(handler) {
@@ -90,7 +85,7 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
-const unstable_instrumentations = [
+const instrumentations = [
   {
     // Instrument router operations
     router(router) {
@@ -140,11 +135,7 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <HydratedRouter
-        unstable_instrumentations={
-          unstable_instrumentations
-        }
-      />
+      <HydratedRouter instrumentations={instrumentations} />
     </StrictMode>,
   );
 });
@@ -162,7 +153,7 @@ import {
   RouterProvider,
 } from "react-router";
 
-const unstable_instrumentations = [
+const instrumentations = [
   {
     // Instrument router operations
     router(router) {
@@ -209,7 +200,7 @@ const unstable_instrumentations = [
 ];
 
 const router = createBrowserRouter(routes, {
-  unstable_instrumentations,
+  instrumentations,
 });
 
 function App() {
@@ -230,7 +221,7 @@ There are different levels at which you can instrument your application. Each in
 Instruments the top-level request handler that processes all requests to your server:
 
 ```tsx filename=entry.server.tsx
-export const unstable_instrumentations = [
+export const instrumentations = [
   {
     handler(handler) {
       handler.instrument({
@@ -251,7 +242,7 @@ export const unstable_instrumentations = [
 Instruments client-side router operations like navigations and fetcher calls:
 
 ```tsx
-export const unstable_instrumentations = [
+export const instrumentations = [
   {
     router(router) {
       router.instrument({
@@ -272,13 +263,11 @@ export const unstable_instrumentations = [
 ];
 
 // Framework Mode (entry.client.tsx)
-<HydratedRouter
-  unstable_instrumentations={unstable_instrumentations}
-/>;
+<HydratedRouter instrumentations={instrumentations} />;
 
 // Data Mode
 const router = createBrowserRouter(routes, {
-  unstable_instrumentations,
+  instrumentations,
 });
 ```
 
@@ -289,27 +278,27 @@ const router = createBrowserRouter(routes, {
 Instruments individual route handlers:
 
 ```tsx
-const unstable_instrumentations = [
+const instrumentations = [
   {
     route(route) {
       route.instrument({
         async loader(
           callLoader,
-          { params, request, context, unstable_pattern },
+          { params, request, context, pattern },
         ) {
           // Runs around loader execution
           await callLoader();
         },
         async action(
           callAction,
-          { params, request, context, unstable_pattern },
+          { params, request, context, pattern },
         ) {
           // Runs around action execution
           await callAction();
         },
         async middleware(
           callMiddleware,
-          { params, request, context, unstable_pattern },
+          { params, request, context, pattern },
         ) {
           // Runs around middleware execution
           await callMiddleware();
@@ -341,7 +330,7 @@ To ensure that instrumentation code doesn't impact the runtime application, erro
 First, if a "handler" function (loader, action, request handler, navigation, etc.) throws an error, that error will not bubble out of the `callHandler` function invoked from your instrumentation. Instead, the `callHandler` function returns a discriminated union result of type `{ type: "success", error: undefined } | { type: "error", error: unknown }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
 
 ```tsx
-export const unstable_instrumentations = [
+export const instrumentations = [
   {
     route(route) {
       route.instrument({
@@ -363,7 +352,7 @@ export const unstable_instrumentations = [
 Second, if your instrumentation function throws an error, React Router will gracefully swallow that so that it does not bubble outward and impact other instrumentations or application behavior. In both of these examples, the handlers and all other instrumentation functions will still run:
 
 ```tsx
-export const unstable_instrumentations = [
+export const instrumentations = [
   {
     route(route) {
       route.instrument({
@@ -390,7 +379,7 @@ export const unstable_instrumentations = [
 You can compose multiple instrumentations by providing an array:
 
 ```tsx
-export const unstable_instrumentations = [
+export const instrumentations = [
   loggingInstrumentation,
   performanceInstrumentation,
   errorReportingInstrumentation,
@@ -404,7 +393,7 @@ Each instrumentation wraps the previous one, creating a nested execution chain.
 You can enable instrumentation conditionally based on environment or other factors:
 
 ```tsx
-export const unstable_instrumentations =
+export const instrumentations =
   process.env.NODE_ENV === "production"
     ? [productionInstrumentation]
     : [developmentInstrumentation];
@@ -412,7 +401,7 @@ export const unstable_instrumentations =
 
 ```tsx
 // Or conditionally within an instrumentation
-export const unstable_instrumentations = [
+export const instrumentations = [
   {
     route(route) {
       // Only instrument specific routes
@@ -437,7 +426,7 @@ export const unstable_instrumentations = [
 ### Request logging (server)
 
 ```tsx
-const logging: unstable_ServerInstrumentation = {
+const logging: ServerInstrumentation = {
   handler({ instrument }) {
     instrument({
       request: (fn, { request }) =>
@@ -455,7 +444,7 @@ const logging: unstable_ServerInstrumentation = {
 
 async function log(
   label: string,
-  cb: () => Promise<unstable_InstrumentationHandlerResult>,
+  cb: () => Promise<InstrumentationHandlerResult>,
 ) {
   let start = Date.now();
   console.log(`➡️ ${label}`);
@@ -463,7 +452,7 @@ async function log(
   console.log(`⬅️ ${label} (${Date.now() - start}ms)`);
 }
 
-export const unstable_instrumentations = [logging];
+export const instrumentations = [logging];
 ```
 
 ### OpenTelemetry Integration
@@ -473,7 +462,7 @@ import { trace, SpanStatusCode } from "@opentelemetry/api";
 
 const tracer = trace.getTracer("my-app");
 
-const otel: unstable_ServerInstrumentation = {
+const otel: ServerInstrumentation = {
   handler({ instrument }) {
     instrument({
       request: (fn, { request }) =>
@@ -482,22 +471,22 @@ const otel: unstable_ServerInstrumentation = {
   },
   route({ instrument, id }) {
     instrument({
-      middleware: (fn, { unstable_pattern }) =>
+      middleware: (fn, { pattern }) =>
         otelSpan(
           "middleware",
-          { routeId: id, pattern: unstable_pattern },
+          { routeId: id, pattern: pattern },
           fn,
         ),
-      loader: (fn, { unstable_pattern }) =>
+      loader: (fn, { pattern }) =>
         otelSpan(
           "loader",
-          { routeId: id, pattern: unstable_pattern },
+          { routeId: id, pattern: pattern },
           fn,
         ),
-      action: (fn, { unstable_pattern }) =>
+      action: (fn, { pattern }) =>
         otelSpan(
           "action",
-          { routeId: id, pattern: unstable_pattern },
+          { routeId: id, pattern: pattern },
           fn,
         ),
     });
@@ -507,7 +496,7 @@ const otel: unstable_ServerInstrumentation = {
 async function otelSpan(
   label: string,
   attributes: Record<string, string>,
-  cb: () => Promise<unstable_InstrumentationHandlerResult>,
+  cb: () => Promise<InstrumentationHandlerResult>,
 ) {
   return tracer.startActiveSpan(
     label,
@@ -525,13 +514,13 @@ async function otelSpan(
   );
 }
 
-export const unstable_instrumentations = [otel];
+export const instrumentations = [otel];
 ```
 
 ### Client-side Performance Tracking
 
 ```tsx
-const windowPerf: unstable_ClientInstrumentation = {
+const windowPerf: ClientInstrumentation = {
   router({ instrument }) {
     instrument({
       navigate: (fn, { to, currentUrl }) =>
@@ -551,7 +540,7 @@ const windowPerf: unstable_ClientInstrumentation = {
 
 async function measure(
   label: string,
-  cb: () => Promise<unstable_InstrumentationHandlerResult>,
+  cb: () => Promise<InstrumentationHandlerResult>,
 ) {
   performance.mark(`start:${label}`);
   await cb();
@@ -563,5 +552,5 @@ async function measure(
   );
 }
 
-<HydratedRouter unstable_instrumentations={[windowPerf]} />;
+<HydratedRouter instrumentations={[windowPerf]} />;
 ```

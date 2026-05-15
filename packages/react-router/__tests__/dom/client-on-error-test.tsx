@@ -51,7 +51,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("lazy error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
-      unstable_pattern: "/",
+      pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Unexpected Application Error!");
@@ -83,7 +83,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("middleware error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
-      unstable_pattern: "/",
+      pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -112,7 +112,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
-      unstable_pattern: "/",
+      pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -143,7 +143,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("lazy error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     let html = getHtml(container);
@@ -179,7 +179,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("middleware error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -211,7 +211,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -248,7 +248,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("action error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -278,7 +278,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
-      unstable_pattern: "/",
+      pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -313,7 +313,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("action error!"), {
       location: expect.objectContaining({ pathname: "/" }),
       params: {},
-      unstable_pattern: "/",
+      pattern: "/",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -344,7 +344,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("render error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -390,7 +390,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Await Error");
@@ -439,7 +439,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -494,12 +494,12 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("await error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledWith(new Error("errorElement error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -549,7 +549,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("loader error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
     });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(getHtml(container)).toContain("Error");
@@ -600,7 +600,7 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledWith(new Error("render error!"), {
       location: expect.objectContaining({ pathname: "/page" }),
       params: {},
-      unstable_pattern: "/page",
+      pattern: "/page",
       errorInfo: expect.objectContaining({
         componentStack: expect.any(String),
       }),
@@ -612,5 +612,127 @@ describe(`handleError`, () => {
     await fireEvent.click(container.querySelector("button")!);
     await waitFor(() => screen.getByText("FETCH"));
     expect(spy.mock.calls.length).toBe(1);
+  });
+
+  it("handles initial load synchronous loader errors in SPA mode", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw new Error("immediate loader error!");
+        },
+        Component: () => <h1>Home</h1>,
+        HydrateFallback: () => <h1>Loading...</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+      },
+    ]);
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:immediate loader error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles initial load synchronous loader errors in SPA mode (delayed render)", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw new Error("immediate loader error!");
+        },
+        Component: () => <h1>Home</h1>,
+        HydrateFallback: () => <h1>Loading...</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+      },
+    ]);
+
+    // Make sure the router completely initializes
+    await tick();
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:immediate loader error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire onError for errors from hydrationData", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            throw new Error("hydration error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      {
+        hydrationData: {
+          errors: { "0": new Error("hydration error!") },
+          loaderData: {},
+        },
+      },
+    );
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:hydration error!"));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("does not fire onError for errors from hydrationData (delayed render)", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            throw new Error("hydration error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      {
+        hydrationData: {
+          errors: { "0": new Error("hydration error!") },
+          loaderData: {},
+        },
+      },
+    );
+
+    // Make sure the router completely initializes
+    await tick();
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:hydration error!"));
+
+    expect(spy).not.toHaveBeenCalled();
   });
 });

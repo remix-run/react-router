@@ -724,7 +724,10 @@ export function Meta(): React.JSX.Element {
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
-          } catch (err) {
+          } catch (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            e
+          ) {
             return null;
           }
         }
@@ -973,13 +976,16 @@ import(${JSON.stringify(manifest.entry.module)});`;
   let preloads =
     isHydrated || isRSCRouterContext
       ? []
-      : dedupe(
-          manifest.entry.imports.concat(
-            getModuleLinkHrefs(matches, manifest, {
-              includeHydrateFallback: true,
-            }),
+      : [
+          // Dedupe through a Set
+          ...new Set(
+            manifest.entry.imports.concat(
+              getModuleLinkHrefs(matches, manifest, {
+                includeHydrateFallback: true,
+              }),
+            ),
           ),
-        );
+        ];
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
@@ -1009,6 +1015,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={manifest.url}
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[manifest.url]}
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
         />
       ) : null}
@@ -1017,6 +1024,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         href={manifest.entry.module}
         crossOrigin={scriptProps.crossOrigin}
         integrity={sri[manifest.entry.module]}
+        nonce={scriptProps.nonce}
         suppressHydrationWarning
       />
       {preloads.map((path) => (
@@ -1026,16 +1034,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={path}
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[path]}
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
         />
       ))}
       {initialScripts}
     </>
   );
-}
-
-function dedupe(array: any[]) {
-  return [...new Set(array)];
 }
 
 export function mergeRefs<T = any>(

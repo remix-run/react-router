@@ -51,11 +51,14 @@ export async function singleFetchAction(
           ? build.allowedActionOrigins
           : [],
       );
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       return handleQueryError(new Error("Bad Request"), 400);
     }
 
-    let handlerRequest = build.future.unstable_passThroughRequests
+    let handlerRequest = build.future.v8_passThroughRequests
       ? request
       : new Request(handlerUrl, {
           method: request.method,
@@ -79,8 +82,7 @@ export async function singleFetchAction(
             }
           }
         : undefined,
-      unstable_normalizePath: (r) =>
-        getNormalizedPath(r, build.basename, build.future),
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryResult(result);
@@ -152,7 +154,7 @@ export async function singleFetchLoaders(
   let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
   try {
-    let handlerRequest = build.future.unstable_passThroughRequests
+    let handlerRequest = build.future.v8_passThroughRequests
       ? request
       : new Request(handlerUrl, {
           headers: request.headers,
@@ -173,8 +175,7 @@ export async function singleFetchLoaders(
             }
           }
         : undefined,
-      unstable_normalizePath: (r) =>
-        getNormalizedPath(r, build.basename, build.future),
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryResult(result);

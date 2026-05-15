@@ -221,6 +221,19 @@ test.describe("Vite base + React Router basename", () => {
           await workflowDev({ page, cwd, port, basename: "/mybase/app/" });
         });
 
+        test("works when base and basename match the app directory name", async ({
+          page,
+        }) => {
+          await setup({ base: "/app/", basename: "/app/" });
+          await workflowDev({
+            page,
+            cwd,
+            port,
+            base: "/app/",
+            basename: "/app/",
+          });
+        });
+
         test("errors if basename does not start with base", async ({
           page,
         }) => {
@@ -419,6 +432,13 @@ test.describe("Vite base + React Router basename", () => {
             port,
             basename: "/mybase/dashboard/",
           });
+        });
+
+        test("works when base and basename match the app directory name", async ({
+          page,
+        }) => {
+          await setup({ base: "/app/", basename: "/app/" });
+          await workflowBuild({ page, port, base: "/app/", basename: "/app/" });
         });
 
         test("works when basename does not start with base", async ({

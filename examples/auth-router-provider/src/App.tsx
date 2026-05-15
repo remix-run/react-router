@@ -134,7 +134,10 @@ async function loginAction({ request }: LoaderFunctionArgs) {
   // Sign in and redirect to the proper destination if successful.
   try {
     await fakeAuthProvider.signin(username);
-  } catch (error) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // Unused as of now but this is how you would handle invalid
     // username/password combinations - just like validating the inputs
     // above
