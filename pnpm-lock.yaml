@@ -3916,6 +3916,9 @@ packages:
     peerDependencies:
       rollup: '>=2'
 
+  '@mjackson/node-fetch-server@0.6.1':
+    resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
+
   '@mswjs/interceptors@0.37.6':
     resolution: {integrity: sha512-wK+5pLK5XFmgtH3aQ2YVvA3HohS3xqV/OxuVOdNx9Wpnz7VE/fnC+e1A7ln6LFYeck7gOJ/dsZV6OLplOtAJ2w==}
     engines: {node: '>=18'}
@@ -12040,6 +12043,8 @@ snapshots:
       vfile: 6.0.1
     transitivePeerDependencies:
       - supports-color
+
+  '@mjackson/node-fetch-server@0.6.1': {}
 
   '@mswjs/interceptors@0.37.6':
     dependencies:
