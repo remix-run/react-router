@@ -19,51 +19,91 @@
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
   "types": "./dist/development/index.d.ts",
-  "main": "./dist/development/index.js",
-  "module": "./dist/development/index.mjs",
+  "main": "./dist/production/index.js",
+  "module": "./dist/production/index.mjs",
   "exports": {
     ".": {
       "react-server": {
-        "module": "./dist/development/index-react-server.mjs",
-        "default": "./dist/development/index-react-server.js"
+        "development": {
+          "module": "./dist/development/index-react-server.mjs",
+          "default": "./dist/development/index-react-server.js"
+        },
+        "module": "./dist/production/index-react-server.mjs",
+        "default": "./dist/production/index-react-server.js"
       },
       "node": {
+        "development": {
+          "types": "./dist/development/index.d.ts",
+          "module": "./dist/development/index.mjs",
+          "module-sync": "./dist/development/index.mjs",
+          "default": "./dist/development/index.js"
+        },
         "types": "./dist/development/index.d.ts",
-        "module": "./dist/development/index.mjs",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
+        "module": "./dist/production/index.mjs",
+        "module-sync": "./dist/production/index.mjs",
+        "default": "./dist/production/index.js"
       },
       "module": {
+        "development": {
+          "types": "./dist/development/index.d.mts",
+          "default": "./dist/development/index.mjs"
+        },
         "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
+        "default": "./dist/production/index.mjs"
       },
       "import": {
+        "development": {
+          "types": "./dist/development/index.d.mts",
+          "default": "./dist/development/index.mjs"
+        },
         "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
+        "default": "./dist/production/index.mjs"
       },
       "default": {
+        "development": {
+          "types": "./dist/development/index.d.ts",
+          "default": "./dist/development/index.js"
+        },
         "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
+        "default": "./dist/production/index.js"
       }
     },
     "./dom": {
       "node": {
+        "development": {
+          "types": "./dist/development/dom-export.d.ts",
+          "module": "./dist/development/dom-export.mjs",
+          "module-sync": "./dist/development/dom-export.mjs",
+          "default": "./dist/development/dom-export.js"
+        },
         "types": "./dist/development/dom-export.d.ts",
-        "module": "./dist/development/dom-export.mjs",
-        "module-sync": "./dist/development/dom-export.mjs",
-        "default": "./dist/development/dom-export.js"
+        "module": "./dist/production/dom-export.mjs",
+        "module-sync": "./dist/production/dom-export.mjs",
+        "default": "./dist/production/dom-export.js"
       },
       "module": {
+        "development": {
+          "types": "./dist/development/dom-export.d.mts",
+          "default": "./dist/development/dom-export.mjs"
+        },
         "types": "./dist/development/dom-export.d.mts",
-        "default": "./dist/development/dom-export.mjs"
+        "default": "./dist/production/dom-export.mjs"
       },
       "import": {
+        "development": {
+          "types": "./dist/development/dom-export.d.mts",
+          "default": "./dist/development/dom-export.mjs"
+        },
         "types": "./dist/development/dom-export.d.mts",
-        "default": "./dist/development/dom-export.mjs"
+        "default": "./dist/production/dom-export.mjs"
       },
       "default": {
+        "development": {
+          "types": "./dist/development/dom-export.d.ts",
+          "default": "./dist/development/dom-export.js"
+        },
         "types": "./dist/development/dom-export.d.ts",
-        "default": "./dist/development/dom-export.js"
+        "default": "./dist/production/dom-export.js"
       }
     },
     "./internal": {
@@ -79,26 +119,48 @@
     },
     "./internal/react-server-client": {
       "react-server": {
-        "module": "./dist/development/index-react-server-client.mjs",
-        "default": "./dist/development/index-react-server-client.js"
+        "development": {
+          "module": "./dist/development/index-react-server-client.mjs",
+          "default": "./dist/development/index-react-server-client.js"
+        },
+        "module": "./dist/production/index-react-server-client.mjs",
+        "default": "./dist/production/index-react-server-client.js"
       },
       "node": {
+        "development": {
+          "types": "./dist/development/index.d.ts",
+          "module": "./dist/development/index.mjs",
+          "module-sync": "./dist/development/index.mjs",
+          "default": "./dist/development/index.js"
+        },
         "types": "./dist/development/index.d.ts",
-        "module": "./dist/development/index.mjs",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
+        "module": "./dist/production/index.mjs",
+        "module-sync": "./dist/production/index.mjs",
+        "default": "./dist/production/index.js"
       },
       "module": {
+        "development": {
+          "types": "./dist/development/index.d.mts",
+          "default": "./dist/development/index.mjs"
+        },
         "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
+        "default": "./dist/production/index.mjs"
       },
       "import": {
+        "development": {
+          "types": "./dist/development/index.d.mts",
+          "default": "./dist/development/index.mjs"
+        },
         "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
+        "default": "./dist/production/index.mjs"
       },
       "default": {
+        "development": {
+          "types": "./dist/development/index.d.ts",
+          "default": "./dist/development/index.js"
+        },
         "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
+        "default": "./dist/production/index.js"
       }
     },
     "./package.json": "./package.json"
