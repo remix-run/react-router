@@ -70,7 +70,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed to run typescript scripts directly
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: Install dependencies
@@ -99,7 +99,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: 📥 Install deps
@@ -132,7 +132,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for node TS support
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: 📥 Install deps
@@ -165,7 +165,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: 📥 Install deps
