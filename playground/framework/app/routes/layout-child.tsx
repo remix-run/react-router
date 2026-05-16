@@ -1,0 +1,31 @@
+import * as React from "react";
+import type { Route } from "./+types/layout-child";
+
+function getData(): Promise<string> {
+  return new Promise((resolve) => setTimeout(() => resolve("hello from promise"), 1500));
+}
+
+export function loader() {
+  return { data: getData() };
+}
+
+export function Layout({ children }: Route.LayoutProps) {
+  return (
+    <div>
+      <p>Child Layout</p>
+      <React.Suspense fallback={<p>Loading...</p>}>
+        {children}
+      </React.Suspense>
+    </div>
+  );
+}
+
+export default function Component({ loaderData }: Route.ComponentProps) {
+  return  <DataComponent promise={loaderData.data} />;
+}
+
+
+function DataComponent({ promise }: { promise: Promise<string> }) {
+  let data = React.use(promise);
+  return <p>Data: {data}</p>;
+}
