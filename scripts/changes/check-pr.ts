@@ -2,15 +2,25 @@
  * Checks whether the current PR contains a change file and posts (or
  * updates) a sticky comment on the PR with the result.
  *
- * Usage (called by the changes-file GitHub Actions workflow):
- *   node scripts/changes/check-pr.ts
+ * Two-phase to avoid running with write permissions in PRs from forks
+ * See https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
+ *
+ *   check    Reads the PR file list and writes pr-check-result.json.
+ *            Safe to run with a read-only token (Workflow A).
+ *
+ *   comment  Reads pr-check-result.json and posts/updates the sticky
+ *            comment. Runs in Workflow B (workflow_run) with write
+ *            permissions; never sees PR contents.
  *
  * Usage:
- *   node scripts/changes/check-pr.ts <pr-number>
+ *   node scripts/changes/check-pr.ts check <pr-number>
+ *   node scripts/changes/check-pr.ts comment <result-file>
  *
  * Environment:
- *   GITHUB_TOKEN - Required. GitHub token with pull-requests:write permission.
+ *   GITHUB_TOKEN - Required. GitHub token with appropriate permissions
+ *                  for the selected mode.
  */
+import * as fs from "node:fs";
 import {
   createPrComment,
   getPrComments,
@@ -43,21 +53,36 @@ pnpm run changes:add
 // Matches packages/*/.changes/*.md but not .gitkeep
 const CHANGE_FILE_RE = /^packages\/[^/]+\/\.changes\/[^/]+\.md$/;
 
-async function main() {
-  let arg = process.argv[2];
-  let prNumber = arg ? parseInt(arg, 10) : NaN;
-  if (!arg || isNaN(prNumber)) {
-    console.error("Usage: node scripts/changes/check-pr.ts <pr-number>");
-    process.exit(1);
-  }
+// Needs to match change-file.yml/change-file-comment.yml
+const ARTIFACT_FILE = "pr-check-result.json"; //
 
-  // Check for change files via the GitHub API — no git fetch needed
+let [mode, arg] = process.argv.slice(2);
+
+if (mode === "check") {
+  let prNumber = parseInt(arg ?? "", 10);
+  if (isNaN(prNumber)) usage();
+  await check(prNumber);
+} else if (mode === "comment") {
+  if (!arg) usage();
+  await comment(arg);
+} else {
+  usage();
+}
+
+async function check(prNumber: number) {
   let files = await getPrFiles(prNumber);
   let found = files.some((f) => CHANGE_FILE_RE.test(f.filename));
-  let body = found ? COMMENT_FOUND : COMMENT_MISSING;
-  console.log(`Change files found: ${found}`);
+  console.log(
+    `Writing artifact to ${ARTIFACT_FILE}:`,
+    JSON.stringify({ prNumber, found }),
+  );
+  fs.writeFileSync(ARTIFACT_FILE, JSON.stringify({ prNumber, found }));
+}
 
-  // Find existing sticky comment
+async function comment(resultPath: string) {
+  let { prNumber, found } = JSON.parse(fs.readFileSync(resultPath, "utf8"));
+  let body = found ? COMMENT_FOUND : COMMENT_MISSING;
+
   let comments = await getPrComments(prNumber);
   let existing = comments.find(
     (c) =>
@@ -74,7 +99,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Error:", err.message);
+function usage(): never {
+  console.error(
+    "Usage:\n" +
+      "  node scripts/changes/check-pr.ts check <pr-number>\n" +
+      "  node scripts/changes/check-pr.ts comment <result-file>",
+  );
   process.exit(1);
-});
+}

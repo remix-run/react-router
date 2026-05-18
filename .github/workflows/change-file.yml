@@ -1,4 +1,4 @@
-name: 📝 Change File Check
+name: 📝 Change File (Check)
 
 on:
   pull_request:
@@ -16,8 +16,8 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      pull-requests: write
+      contents: read
+      pull-requests: read
 
     steps:
       - name: ⬇️ Checkout repo
@@ -35,7 +35,14 @@ jobs:
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 📝 Check change file and update PR comment
+      - name: 📝 Check for change file
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/changes/check-pr.ts ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/changes/check-pr.ts check "$PR_NUMBER"
+
+      - name: 📤 Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-check-result
+          path: pr-check-result.json
