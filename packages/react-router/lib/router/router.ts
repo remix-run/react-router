@@ -2992,7 +2992,7 @@ export function createRouter(init: RouterInit): Router {
       } else if (isAbsoluteUrl(location)) {
         // We skip `history.createURL` here for absolute URLs because we don't
         // want to inherit the current `window.location` base URL
-        const url = createBrowserURLImpl(location, true);
+        const url = createBrowserURLImpl(location, true, routerWindow);
         isDocumentReload =
           // Hard reload if it's an absolute URL to a new origin
           url.origin !== routerWindow.location.origin ||
