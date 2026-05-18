@@ -774,7 +774,7 @@ function getUrlBasedHistory(
 export function createBrowserURLImpl(
   to: To,
   isAbsolute = false,
-  windowImpl: Window | undefined = typeof window !== "undefined" ? window : undefined,
+  windowImpl: Window
 ): URL {
   let base = "http://localhost";
   if (windowImpl) {
