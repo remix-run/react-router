@@ -1,0 +1,52 @@
+name: 📝 Change File (Comment)
+
+# Runs after the "Change File (Check)" workflow completes. That workflow runs
+# under the `pull_request` trigger with a read-only token (safe for PRs from
+# forks); this workflow runs under `workflow_run` with write permissions to
+# post the sticky comment, but never executes any PR code — it only reads
+# the artifact produced by the upstream workflow.
+
+on:
+  workflow_run:
+    workflows: ["📝 Change File (Check)"]
+    types: [completed]
+
+jobs:
+  comment:
+    name: 📝 Post Comment
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # Read artifact
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📥 Download result from upstream workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-check-result
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: 💬 Post comment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/changes/check-pr.ts comment pr-check-result.json
