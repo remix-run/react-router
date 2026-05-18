@@ -34,6 +34,17 @@ function createBackpressureSamplingWritable(
   };
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout>;
+  let timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error("Timed out")), ms);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() =>
+    clearTimeout(timeout),
+  );
+}
+
 describe("writeReadableStreamToWritable", () => {
   it("respects writable backpressure", async () => {
     let highWaterMark = 16;
@@ -59,6 +70,28 @@ describe("writeReadableStreamToWritable", () => {
       highWaterMark + chunkSize,
     );
   });
+
+  it("rejects if the writable errors while waiting for the next chunk", async () => {
+    let writableError = new Error("Writable failed");
+    let writable = new Writable({
+      write(_chunk, _encoding, callback) {
+        callback();
+      },
+    });
+    let readable = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(1));
+      },
+    });
+
+    let writePromise = writeReadableStreamToWritable(readable, writable);
+
+    setTimeout(() => writable.destroy(writableError), 10);
+
+    await expect(withTimeout(writePromise, 100)).rejects.toThrow(
+      "Writable failed",
+    );
+  });
 });
 
 describe("writeAsyncIterableToWritable", () => {
@@ -81,6 +114,27 @@ describe("writeAsyncIterableToWritable", () => {
 
     expect(getMaxBufferedLength()).toBeLessThanOrEqual(
       highWaterMark + chunkSize,
+    );
+  });
+
+  it("rejects if the writable closes while waiting for the next chunk", async () => {
+    let writable = new Writable({
+      write(_chunk, _encoding, callback) {
+        callback();
+      },
+    });
+
+    async function* chunks() {
+      yield new Uint8Array(1);
+      await new Promise<never>(() => {});
+    }
+
+    let writePromise = writeAsyncIterableToWritable(chunks(), writable);
+
+    setTimeout(() => writable.destroy(), 10);
+
+    await expect(withTimeout(writePromise, 100)).rejects.toThrow(
+      "Writable closed before stream finished",
     );
   });
 });
