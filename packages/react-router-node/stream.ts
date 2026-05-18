@@ -69,7 +69,17 @@ export async function writeAsyncIterableToWritable(
 ) {
   try {
     for await (let chunk of iterable) {
-      writable.write(chunk);
+      if (writable.destroyed || writable.writableEnded) {
+        throw new Error(
+          "Cannot write to a destroyed or ended writable stream",
+        );
+      }
+
+      let canContinueWriting = writable.write(chunk);
+
+      if (!canContinueWriting) {
+        await waitForDrain(writable);
+      }
     }
     writable.end();
   } catch (error: any) {
