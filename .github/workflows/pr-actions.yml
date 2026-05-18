@@ -1,29 +1,29 @@
-name: 📝 Change File (Comment)
+name: PR (Actions)
 
-# Runs after the "Change File (Check)" workflow completes. That workflow runs
-# under the `pull_request` trigger with a read-only token (safe for PRs from
-# forks); this workflow runs under `workflow_run` with write permissions to
-# post the sticky comment, but never executes any PR code — it only reads
-# the artifact produced by the upstream workflow.
+# Triggered when "PR (Check)" completes. Downloads the artifact produced by
+# the upstream workflow and applies the recorded actions (sticky comments,
+# label changes, close, etc.) with write permissions. Never executes PR
+# source code — only reads the JSON artifact.
 
 on:
   workflow_run:
-    workflows: ["📝 Change File (Check)"]
+    workflows: ["PR (Check)"]
     types: [completed]
 
 jobs:
-  comment:
-    name: 📝 Post Comment
+  actions:
+    name: PR (Actions)
     if: >
       github.event.workflow_run.conclusion == 'success' &&
       github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     permissions:
-      actions: read # Read artifact
       issues: write
       pull-requests: write
+      actions: read
 
     steps:
+      # Check's out the base (main) branch - not the PR branch
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v6
 
@@ -42,11 +42,11 @@ jobs:
       - name: 📥 Download result from upstream workflow
         uses: actions/download-artifact@v4
         with:
-          name: pr-check-result
+          name: pr-checks-result
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: 💬 Post comment
+      - name: 💬 Apply actions
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/changes/check-pr.ts comment pr-check-result.json
+        run: node scripts/pr.ts actions pr-checks-result.json
