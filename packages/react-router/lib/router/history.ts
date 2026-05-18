@@ -726,7 +726,7 @@ function getUrlBasedHistory(
   }
 
   function createURL(to: To): URL {
-    return createBrowserURLImpl(to, false, window);
+    return createBrowserURLImpl(window, to);
   }
 
   let history: History = {
@@ -772,9 +772,9 @@ function getUrlBasedHistory(
 }
 
 export function createBrowserURLImpl(
+  windowImpl: Window,
   to: To,
   isAbsolute = false,
-  windowImpl: Window
 ): URL {
   let base = "http://localhost";
   if (windowImpl) {
