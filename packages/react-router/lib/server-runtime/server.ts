@@ -191,7 +191,10 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
-    if (requestUrl.pathname === manifestUrl) {
+    if (
+      build.routeDiscovery.mode === "lazy" &&
+      requestUrl.pathname === manifestUrl
+    ) {
       try {
         let res = await handleManifestRequest(
           build,

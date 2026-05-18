@@ -1,7 +1,7 @@
 import * as fsp from "node:fs/promises";
 import * as path from "node:path";
 import * as util from "node:util";
-import { logAndExec } from "./utils/process.ts";
+import { logAndExec } from "../utils/process.ts";
 
 /**
  * This script prepares a base branch (usually `dev`) to be PNPM-installable
