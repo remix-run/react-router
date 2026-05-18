@@ -11,7 +11,7 @@
  * - `cleanup <pr-number>`: Deletes the preview branch from the remote repository
  *   and adds a cleanup notification comment to the PR.
  *
- * Usage: `node pr-preview.ts <command> <pr-number>`
+ * Usage: `node scripts/previews/pr.ts <command> <pr-number>`
  */
 
 import { parseArgs } from "node:util";
@@ -21,8 +21,8 @@ import {
   deletePrComment,
   getPrComments,
   updatePrComment,
-} from "./utils/github.ts";
-import { logAndExec } from "./utils/process.ts";
+} from "../utils/github.ts";
+import { logAndExec } from "../utils/process.ts";
 
 const STICKY_MARKER = "<!-- pr-preview-comment-sticky -->";
 const CLEANUP_MARKER = "<!-- pr-preview-comment-cleanup -->";
@@ -57,7 +57,7 @@ if (commands[command]) {
 }
 
 function printUsage() {
-  console.error("Usage: node pr-preview.ts <command> <args>");
+  console.error("Usage: node scripts/previews/pr.ts <command> <args>");
   console.error(
     "  comment <pr-number> <preview-branch> - Add preview comment to PR",
   );
