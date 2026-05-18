@@ -99,14 +99,15 @@ if (mode === "check") {
 
 // ---------- Checks ----------
 
-const checks: Check[] = [changeFileCheck, featurePrCheck];
-
 async function runChecks() {
   let prNumber = parseInt(requireEnv("PR_NUMBER"), 10);
   if (isNaN(prNumber)) {
     console.error("PR_NUMBER must be numeric");
     process.exit(1);
   }
+
+  let checks: Check[] = [changeFileCheck, featurePrCheck];
+
   let ctx: CheckContext = {
     prNumber,
     baseBranch: requireEnv("PR_BASE"),
@@ -119,6 +120,7 @@ async function runChecks() {
     prNumber,
     actions: [],
   };
+
   for (let check of checks) {
     result.actions.push(...(await check(ctx)));
   }
