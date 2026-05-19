@@ -1544,7 +1544,7 @@ describe("lazily loaded route modules", () => {
       // We shouldn't bubble the loader error until after this resolves
       // so we know if it has a boundary or not
       await lazyDeferred.resolve({
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       });
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
@@ -1571,7 +1571,7 @@ describe("lazily loaded route modules", () => {
                 path: "lazy",
                 loader: true,
                 lazy: {
-                  hasErrorBoundary: lazyHasErrorBoundary,
+                  ErrorBoundary: lazyHasErrorBoundary,
                 },
               },
             ],
@@ -1587,7 +1587,7 @@ describe("lazily loaded route modules", () => {
 
       // We shouldn't bubble the loader error until after this resolves
       // so we know if it has a boundary or not
-      await lazyHasErrorBoundaryDeferred.resolve(true);
+      await lazyHasErrorBoundaryDeferred.resolve(() => null);
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.loaderData).toEqual({});
@@ -1614,7 +1614,7 @@ describe("lazily loaded route modules", () => {
               path: "lazy",
               loader: true,
               lazy: {
-                hasErrorBoundary: lazyHasErrorBoundary,
+                ErrorBoundary: lazyHasErrorBoundary,
               },
             },
           ],
@@ -2093,7 +2093,7 @@ describe("lazily loaded route modules", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "lazy",
@@ -2122,7 +2122,7 @@ describe("lazily loaded route modules", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "lazy",
@@ -2236,7 +2236,7 @@ describe("lazily loaded route modules", () => {
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
         loader: () => loaderDeferred.promise,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
@@ -2257,7 +2257,7 @@ describe("lazily loaded route modules", () => {
         createAsyncStub();
       let routes = createBasicLazyRoutes({
         loader: lazyLoader,
-        hasErrorBoundary: lazyHasErrorBoundary,
+        ErrorBoundary: lazyHasErrorBoundary,
       });
       let t = setup({ routes });
       expect(lazyLoader).not.toHaveBeenCalled();
@@ -2271,7 +2271,7 @@ describe("lazily loaded route modules", () => {
 
       let loaderDeferred = createDeferred();
       await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
-      await lazyHasErrorBoundaryDeferred.resolve(() => true);
+      await lazyHasErrorBoundaryDeferred.resolve(() => null);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
       expect(lazyLoader).toHaveBeenCalledTimes(1);
@@ -2352,7 +2352,6 @@ describe("lazily loaded route modules", () => {
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
         loader: () => loaderDeferred.promise,
-        hasErrorBoundary: false,
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
@@ -2373,7 +2372,7 @@ describe("lazily loaded route modules", () => {
         createAsyncStub();
       let routes = createBasicLazyRoutes({
         loader: lazyLoader,
-        hasErrorBoundary: lazyHasErrorBoundary,
+        ErrorBoundary: lazyHasErrorBoundary,
       });
       let t = setup({ routes });
       expect(lazyLoader).not.toHaveBeenCalled();
@@ -2387,7 +2386,7 @@ describe("lazily loaded route modules", () => {
 
       let loaderDeferred = createDeferred();
       await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
-      await lazyHasErrorBoundaryDeferred.resolve(false);
+      await lazyHasErrorBoundaryDeferred.resolve(null);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
 
@@ -2408,7 +2407,7 @@ describe("lazily loaded route modules", () => {
         createAsyncStub();
       let routes = createBasicLazyRoutes({
         loader: lazyLoader,
-        hasErrorBoundary: lazyHasErrorBoundary,
+        ErrorBoundary: lazyHasErrorBoundary,
       });
       let t = setup({ routes });
       expect(lazyLoader).not.toHaveBeenCalled();
@@ -2504,7 +2503,7 @@ describe("lazily loaded route modules", () => {
       let actionDeferred = createDeferred();
       await lazyDeferred.resolve({
         action: () => actionDeferred.promise,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
@@ -2525,7 +2524,7 @@ describe("lazily loaded route modules", () => {
         createAsyncStub();
       let routes = createBasicLazyRoutes({
         action: lazyAction,
-        hasErrorBoundary: lazyErrorBoundaryStub,
+        ErrorBoundary: lazyErrorBoundaryStub,
       });
       let t = setup({ routes });
       expect(lazyAction).not.toHaveBeenCalled();
@@ -2542,7 +2541,7 @@ describe("lazily loaded route modules", () => {
 
       let actionDeferred = createDeferred();
       await lazyActionDeferred.resolve(() => actionDeferred.promise);
-      await lazyErrorBoundaryDeferred.resolve(true);
+      await lazyErrorBoundaryDeferred.resolve(() => null);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
 
@@ -2573,7 +2572,6 @@ describe("lazily loaded route modules", () => {
       let actionDeferred = createDeferred();
       await lazyDeferred.resolve({
         action: () => actionDeferred.promise,
-        hasErrorBoundary: false,
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
@@ -2594,7 +2592,7 @@ describe("lazily loaded route modules", () => {
         createAsyncStub();
       let routes = createBasicLazyRoutes({
         action: lazyAction,
-        hasErrorBoundary: lazyErrorBoundaryStub,
+        ErrorBoundary: lazyErrorBoundaryStub,
       });
       let t = setup({ routes });
       expect(lazyAction).not.toHaveBeenCalled();
@@ -2611,7 +2609,7 @@ describe("lazily loaded route modules", () => {
 
       let actionDeferred = createDeferred();
       await lazyActionDeferred.resolve(() => actionDeferred.promise);
-      await lazyErrorBoundaryDeferred.resolve(false);
+      await lazyErrorBoundaryDeferred.resolve(null);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
 
@@ -2632,7 +2630,7 @@ describe("lazily loaded route modules", () => {
         createAsyncStub();
       let routes = createBasicLazyRoutes({
         action: lazyAction,
-        hasErrorBoundary: lazyErrorBoundaryStub,
+        ErrorBoundary: lazyErrorBoundaryStub,
       });
       let t = setup({ routes });
       expect(lazyAction).not.toHaveBeenCalled();
@@ -2917,7 +2915,7 @@ describe("lazily loaded route modules", () => {
                   async loader() {
                     throw new Error("LAZY LOADER ERROR");
                   },
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                 };
               },
             },
@@ -2952,9 +2950,9 @@ describe("lazily loaded route modules", () => {
                     throw new Error("LAZY LOADER ERROR");
                   };
                 },
-                hasErrorBoundary: async () => {
+                ErrorBoundary: async () => {
                   await tick();
-                  return true;
+                  return () => null;
                 },
               },
             },
@@ -2973,7 +2971,7 @@ describe("lazily loaded route modules", () => {
       });
     });
 
-    it("bubbles loader errors from lazy route functions on staticHandler.query() when hasErrorBoundary is resolved as false", async () => {
+    it("bubbles loader errors from lazy route functions on staticHandler.query() when ErrorBoundary is missing", async () => {
       let { query } = createStaticHandler([
         {
           id: "root",
@@ -2989,7 +2987,6 @@ describe("lazily loaded route modules", () => {
                     await tick();
                     throw new Error("LAZY LOADER ERROR");
                   },
-                  hasErrorBoundary: false,
                 };
               },
             },
@@ -3008,7 +3005,7 @@ describe("lazily loaded route modules", () => {
       });
     });
 
-    it("bubbles loader errors from lazy route properties on staticHandler.query() when hasErrorBoundary is resolved as false", async () => {
+    it("bubbles loader errors from lazy route properties on staticHandler.query() when ErrorBoundary is resolved as null", async () => {
       let { query } = createStaticHandler([
         {
           id: "root",
@@ -3024,9 +3021,9 @@ describe("lazily loaded route modules", () => {
                     throw new Error("LAZY LOADER ERROR");
                   };
                 },
-                hasErrorBoundary: async () => {
+                ErrorBoundary: async () => {
                   await tick();
-                  return false;
+                  return null;
                 },
               },
             },
@@ -3045,7 +3042,7 @@ describe("lazily loaded route modules", () => {
       });
     });
 
-    it("bubbles loader errors from lazy route properties on staticHandler.query() when hasErrorBoundary is resolved as null", async () => {
+    it("bubbles loader errors from lazy route properties on staticHandler.query() when ErrorBoundary is resolved as undefined", async () => {
       let { query } = createStaticHandler([
         {
           id: "root",
@@ -3061,9 +3058,9 @@ describe("lazily loaded route modules", () => {
                     throw new Error("LAZY LOADER ERROR");
                   };
                 },
-                hasErrorBoundary: async () => {
+                ErrorBoundary: async () => {
                   await tick();
-                  return null;
+                  return undefined;
                 },
               },
             },

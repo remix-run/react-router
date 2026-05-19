@@ -26,7 +26,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {
@@ -608,7 +608,7 @@ describe("fetchers", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "index",
@@ -642,7 +642,7 @@ describe("fetchers", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
           },
         ],
       });
@@ -668,13 +668,13 @@ describe("fetchers", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "wit",
                 path: "wit",
                 loader: true,
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
               },
               {
                 id: "witout",

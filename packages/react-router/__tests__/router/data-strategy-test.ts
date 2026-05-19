@@ -215,7 +215,7 @@ describe("router dataStrategy", () => {
             id: "test",
             path: "/test",
             loader: true,
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
           },
         ],
         async dataStrategy({ matches }) {
@@ -282,7 +282,7 @@ describe("router dataStrategy", () => {
               {
                 id: "child",
                 path: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 children: [
                   {
                     id: "test",
@@ -320,7 +320,7 @@ describe("router dataStrategy", () => {
               {
                 id: "child",
                 path: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 children: [
                   {
                     id: "test",
@@ -403,7 +403,7 @@ describe("router dataStrategy", () => {
             id: "parent",
             path: "/parent",
             loader: true,
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "child",

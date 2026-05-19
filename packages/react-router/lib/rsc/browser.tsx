@@ -369,7 +369,6 @@ function createRouterFromPayload({
         routeModule: any;
         hasAction: boolean;
         hasComponent: boolean;
-        hasErrorBoundary: boolean;
         hasLoader: boolean;
       }
     >,
@@ -386,13 +385,8 @@ function createRouterFromPayload({
         const routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const {
-            routeModule,
-            hasAction,
-            hasComponent,
-            hasErrorBoundary,
-            hasLoader,
-          } = routeUpdate;
+          const { routeModule, hasAction, hasComponent, hasLoader } =
+            routeUpdate;
           const newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
@@ -401,7 +395,6 @@ function createRouterFromPayload({
             handle: route.handle,
             hasAction,
             hasComponent,
-            hasErrorBoundary,
             hasLoader,
             hydrateFallbackElement:
               route.hydrateFallbackElement as React.ReactElement,
@@ -911,7 +904,6 @@ function createRouteFromServerManifest(
     element: match.element,
     errorElement: match.errorElement,
     handle: match.handle,
-    hasErrorBoundary: match.hasErrorBoundary,
     hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
     loader: match.clientLoader
@@ -1131,8 +1123,6 @@ function diffRoutes(a: DataRouteObject[], b: DataRouteObject[]): boolean {
       (route as any).hydrateFallbackElement !==
       (b[index] as any).hydrateFallbackElement
     )
-      return true;
-    if ((route as any).hasErrorBoundary !== (b[index] as any).hasErrorBoundary)
       return true;
     if ((route as any).hasLoader !== (b[index] as any).hasLoader) return true;
     if ((route as any).hasClientLoader !== (b[index] as any).hasClientLoader)

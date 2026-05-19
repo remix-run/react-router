@@ -37,10 +37,10 @@ export type TestIndexRouteObject = Pick<
   | "handle"
   | "lazy"
   | "middleware"
+  | "ErrorBoundary"
 > & {
   loader?: boolean;
   action?: boolean;
-  hasErrorBoundary?: boolean;
 };
 
 export type TestNonIndexRouteObject = Pick<
@@ -52,10 +52,10 @@ export type TestNonIndexRouteObject = Pick<
   | "handle"
   | "lazy"
   | "middleware"
+  | "ErrorBoundary"
 > & {
   loader?: boolean;
   action?: boolean;
-  hasErrorBoundary?: boolean;
   children?: TestRouteObject[];
 };
 
@@ -113,7 +113,7 @@ export const TASK_ROUTES: TestRouteObject[] = [
     id: "root",
     path: "/",
     loader: true,
-    hasErrorBoundary: true,
+    ErrorBoundary: () => null,
     children: [
       {
         id: "index",
@@ -125,14 +125,14 @@ export const TASK_ROUTES: TestRouteObject[] = [
         path: "tasks",
         loader: true,
         action: true,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       },
       {
         id: "tasksId",
         path: "tasks/:id",
         loader: true,
         action: true,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       },
       {
         id: "noLoader",

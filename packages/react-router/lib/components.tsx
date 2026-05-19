@@ -77,14 +77,7 @@ import type { ClientInstrumentation } from "./router/instrumentation";
 import { useOptimistic } from "react";
 
 export function mapRouteProperties(route: RouteObject) {
-  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this -- please and thank you!
-    hasErrorBoundary:
-      route.hasErrorBoundary ||
-      route.ErrorBoundary != null ||
-      route.errorElement != null,
-  };
+  let updates: Partial<RouteObject> = {};
 
   if (route.Component) {
     if (ENABLE_DEV_WARNINGS) {
@@ -1057,7 +1050,6 @@ export interface PathRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
@@ -1150,7 +1142,6 @@ export interface IndexRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
@@ -1845,10 +1836,6 @@ export function createRoutesFromChildren(
       HydrateFallback: props.HydrateFallback,
       errorElement: props.errorElement,
       ErrorBoundary: props.ErrorBoundary,
-      hasErrorBoundary:
-        props.hasErrorBoundary === true ||
-        props.ErrorBoundary != null ||
-        props.errorElement != null,
       shouldRevalidate: props.shouldRevalidate,
       handle: props.handle,
       lazy: props.lazy,

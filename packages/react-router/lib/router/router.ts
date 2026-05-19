@@ -917,9 +917,7 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   location: undefined,
 };
 
-const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
-  hasErrorBoundary: Boolean(route.hasErrorBoundary),
-});
+const defaultMapRouteProperties: MapRoutePropertiesFunction = () => ({});
 
 const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
 
@@ -5724,9 +5722,9 @@ function patchRoutesImpl(
     for (let i = 0; i < existingChildren.length; i++) {
       let { existingRoute, newRoute } = existingChildren[i];
       let existingRouteTyped = existingRoute as RouteObject;
-      // All this will end up doing for these scenarios is adding `hasErrorBoundary`
-      // to the route.  There's no need for Component->element conversions since
-      // we're already dealing with elements here
+      // This likely ends up being a no-op since there's no need for Component->element
+      // conversions since we're already dealing with elements here.  But kept for
+      // safety and future proofing if we added any more logic to mapRouteProperties
       let [newRouteTyped] = convertRoutesToDataRoutes(
         [newRoute],
         mapRouteProperties,
@@ -5842,8 +5840,7 @@ const loadLazyRouteProperty = ({
   let propertyPromise = (async () => {
     let isUnsupported = isUnsupportedLazyRouteObjectKey(key);
     let staticRouteValue = routeToUpdate[key as keyof typeof routeToUpdate];
-    let isStaticallyDefined =
-      staticRouteValue !== undefined && key !== "hasErrorBoundary";
+    let isStaticallyDefined = staticRouteValue !== undefined;
 
     if (isUnsupported) {
       warning(
@@ -5950,11 +5947,7 @@ function loadLazyRoute(
           isUnsupportedLazyRouteFunctionKey(lazyRouteProperty);
         let staticRouteValue =
           routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
-        let isStaticallyDefined =
-          staticRouteValue !== undefined &&
-          // This property isn't static since it should always be updated based
-          // on the route updates
-          lazyRouteProperty !== "hasErrorBoundary";
+        let isStaticallyDefined = staticRouteValue !== undefined;
 
         if (isUnsupported) {
           warning(
@@ -5979,13 +5972,13 @@ function loadLazyRoute(
       // the updated version to mapRouteProperties
       Object.assign(routeToUpdate, routeUpdates);
 
-      // Mutate the `hasErrorBoundary` property on the route based on the route
-      // updates and remove the `lazy` function so we don't resolve the lazy
-      // route again.
+      // Mutate the route with framework-aware property updates (e.g.,
+      // `Component`->`element` conversions) and remove the `lazy` function so
+      // we don't resolve the lazy route again.
       Object.assign(routeToUpdate, {
         // To keep things framework agnostic, we use the provided `mapRouteProperties`
-        // function to set the framework-aware properties (`element`/`hasErrorBoundary`)
-        // since the logic will differ between frameworks.
+        // function to set framework-aware properties since the logic will
+        // differ between frameworks.
         ...mapRouteProperties(routeToUpdate),
         lazy: undefined,
       });
@@ -7178,8 +7171,11 @@ function findNearestBoundary(
     ? matches.slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
     : [...matches];
   return (
-    eligibleMatches.reverse().find((m) => m.route.hasErrorBoundary === true) ||
-    matches[0]
+    eligibleMatches
+      .reverse()
+      .find(
+        (m) => m.route.ErrorBoundary != null || m.route.errorElement != null,
+      ) || matches[0]
   );
 }
 

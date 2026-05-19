@@ -552,9 +552,7 @@ export type PatchRoutesOnNavigationFunction = (
  * Function provided to set route-specific properties from route objects
  */
 export interface MapRoutePropertiesFunction {
-  (route: DataRouteObject): {
-    hasErrorBoundary: boolean;
-  } & Record<string, any>;
+  (route: DataRouteObject): Record<string, any>;
 }
 
 /**
@@ -669,8 +667,6 @@ export type BaseRouteObject = {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: ActionFunction | boolean;
-  // TODO(v8): deprecate/remove
-  hasErrorBoundary?: boolean;
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
