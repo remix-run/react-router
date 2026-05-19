@@ -18,6 +18,7 @@ import type {
   NonIndexRouteObject,
 } from "../../../lib/router/utils";
 import {
+  defaultMapRouteProperties,
   matchRoutes,
   redirect,
   stripBasename,
@@ -299,6 +300,9 @@ export function setup({
       if (!r.index && "children" in r && r.children) {
         enhancedRoute.children = enhanceRoutes(r.children);
       }
+      // Match what the router does internally so that tests comparing
+      // enhanceRoutes() output against router.routes line up
+      Object.assign(enhancedRoute, defaultMapRouteProperties(enhancedRoute));
       return enhancedRoute;
     });
   }

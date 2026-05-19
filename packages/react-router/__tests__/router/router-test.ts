@@ -1,3 +1,4 @@
+import type React from "react";
 import type { HydrationState } from "../../lib/router/router";
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, IDLE_NAVIGATION } from "../../lib/router/router";
@@ -342,7 +343,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            ErrorBoundary: expect.any(Function),
+            errorElement: expect.any(Object),
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
@@ -418,7 +419,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            ErrorBoundary: expect.any(Function),
+            errorElement: expect.any(Object),
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
@@ -2492,7 +2493,7 @@ describe("a router", () => {
     });
   });
 
-  describe("router.enhanceRoutes", () => {
+  describe("router._internalSetRoutes", () => {
     // Detect any failures inside the router navigate code
     afterEach(() => cleanup());
 
@@ -2730,7 +2731,7 @@ describe("a router", () => {
         {
           path: "/",
           id: "root",
-          ErrorBoundary: () => null,
+          errorElement: {} as React.ReactElement,
           loader: () => rootDfd.promise,
           children: [
             {
@@ -2770,7 +2771,7 @@ describe("a router", () => {
           path: "/",
           id: "root",
           loader: () => rootDfd2.promise,
-          ErrorBoundary: () => null,
+          errorElement: expect.any(Object),
           children: [
             {
               index: true,
@@ -2836,7 +2837,7 @@ describe("a router", () => {
         {
           path: "/",
           id: "root",
-          ErrorBoundary: () => null,
+          errorElement: {} as React.ReactElement,
           loader: () => rootDfd.promise,
           children: [
             {
@@ -2875,7 +2876,7 @@ describe("a router", () => {
           path: "/",
           id: "root",
           loader: () => rootDfd2.promise,
-          ErrorBoundary: () => null,
+          errorElement: expect.any(Object),
           children: [
             {
               index: true,
