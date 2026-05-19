@@ -17,9 +17,7 @@ for (let previewServerPrerendering of [false, true]) {
   let createFixture = (...args: Parameters<typeof _createFixture>) =>
     _createFixture(
       {
-        templateName:
-          args[0].templateName ??
-          (previewServerPrerendering ? "vite-6-template" : "vite-5-template"),
+        templateName: args[0].templateName ?? "vite-7-template",
         ...args[0],
       },
       args[1],
@@ -319,6 +317,9 @@ for (let previewServerPrerendering of [false, true]) {
             "react-router.config.ts": js`
             let counter = 1;
             export default {
+              future: {
+                unstable_previewServerPrerendering: ${previewServerPrerendering},
+              },
               serverBundles: () => "server" + counter++,
               async prerender() {
                 await new Promise(r => setTimeout(r, 1));

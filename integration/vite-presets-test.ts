@@ -109,7 +109,7 @@ const files = {
           name: "test-preset",
           reactRouterConfig: async () => ({
             serverBundles() {
-              return "preset-server-bundle-id";
+              return "preset_server_bundle_id";
             },
           }),
         },
@@ -251,13 +251,12 @@ test.describe("Vite / presets", async () => {
         v8_middleware: true,
         v8_passThroughRequests: false,
         v8_splitRouteModules: false,
-        v8_viteEnvironmentApi: false,
       });
 
       // Ensure we get a valid build manifest
       expect(buildEndArgsMeta.buildManifest).toEqual({
         routeIdToServerBundleId: {
-          "routes/_index": "preset-server-bundle-id",
+          "routes/_index": "preset_server_bundle_id",
         },
         routes: {
           root: {
@@ -273,9 +272,9 @@ test.describe("Vite / presets", async () => {
           },
         },
         serverBundles: {
-          "preset-server-bundle-id": {
-            file: "build/server/preset-server-bundle-id/index.js",
-            id: "preset-server-bundle-id",
+          preset_server_bundle_id: {
+            file: "build/server/preset_server_bundle_id/index.js",
+            id: "preset_server_bundle_id",
           },
         },
       });

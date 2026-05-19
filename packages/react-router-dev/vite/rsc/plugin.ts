@@ -164,8 +164,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.serverBundles) errors.push("serverBundles");
             if (userConfig.future?.v8_middleware === false)
               errors.push("future.v8_middleware: false");
-            if (userConfig.future?.v8_viteEnvironmentApi === false)
-              errors.push("future.v8_viteEnvironmentApi: false");
             if (userConfig.subResourceIntegrity)
               errors.push("subResourceIntegrity");
             if (errors.length) {

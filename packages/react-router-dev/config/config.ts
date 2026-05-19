@@ -103,10 +103,6 @@ interface FutureConfig {
    * Automatically split route modules into multiple chunks when possible.
    */
   v8_splitRouteModules: boolean | "enforce";
-  /**
-   * Use Vite Environment API
-   */
-  v8_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -695,9 +691,12 @@ async function resolveConfig({
         "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
       );
     }
-    if ("unstable_viteEnvironmentApi" in futureConfig) {
+    if (
+      "unstable_viteEnvironmentApi" in futureConfig ||
+      "v8_viteEnvironmentApi" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi`",
+        "The `future.v8_viteEnvironmentApi` flag has been removed because Vite Environment API usage is now always enabled",
       );
     }
     if ("unstable_passThroughRequests" in futureConfig) {
@@ -725,10 +724,6 @@ async function resolveConfig({
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
-    v8_viteEnvironmentApi:
-      (userAndPresetConfigs.future?.v8_viteEnvironmentApi ||
-        userAndPresetConfigs.future?.unstable_previewServerPrerendering) ??
-      false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;

@@ -64,7 +64,7 @@ test.describe("Vite .env", () => {
               ENV_VAR_FROM_DOTENV_FILE=Content from ${env.path} file
             `,
             "app/routes.ts": (contents) => {
-              if (template.name === "vite-5-template") return contents;
+              if (template.name.startsWith("rsc-")) return contents;
               return tsx`
                 import { type RouteConfig, route } from "@react-router/dev/routes";
 

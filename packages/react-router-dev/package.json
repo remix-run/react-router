@@ -30,10 +30,6 @@
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
     },
-    "./vite/cloudflare": {
-      "types": "./dist/vite/cloudflare.d.ts",
-      "default": "./dist/vite/cloudflare.js"
-    },
     "./package.json": "./package.json"
   },
   "imports": {
@@ -120,7 +116,7 @@
     "react-router": "workspace:^",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
+    "vite": "^7.0.0",
     "wireit": "catalog:",
     "wrangler": "^4.23.0"
   },
@@ -130,7 +126,7 @@
     "react-router": "workspace:^",
     "react-server-dom-webpack": "catalog:",
     "typescript": "^5.1.0 || ^6.0.0",
-    "vite": "^5.1.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",
+    "vite": "^7.0.0 || ^8.0.0",
     "wrangler": "^3.28.2 || ^4.0.0"
   },
   "peerDependenciesMeta": {
