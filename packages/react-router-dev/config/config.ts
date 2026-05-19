@@ -779,12 +779,6 @@ export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
       "Route module splitting behavior is changing in React Router v8.",
     );
   }
-  if (future.v8_viteEnvironmentApi === undefined) {
-    logFutureFlagWarning(
-      "v8_viteEnvironmentApi",
-      "Vite Environment API usage is changing in React Router v8.",
-    );
-  }
   if (future.v8_passThroughRequests === undefined) {
     logFutureFlagWarning(
       "v8_passThroughRequests",
