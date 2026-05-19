@@ -31,7 +31,6 @@ import type {
   FormMethod,
   HTMLFormMethod,
   DataStrategyResult,
-  MapRoutePropertiesFunction,
   MaybePromise,
   MutationFormMethod,
   RedirectResult,
@@ -50,6 +49,7 @@ import type {
   MiddlewareNextFunction,
   PatchRoutesOnNavigationFunction,
   RouteBranch,
+  MapRoutePropertiesFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -70,6 +70,7 @@ import {
   getRoutePattern,
   removeDoubleSlashes,
   flattenAndRankRoutes,
+  defaultMapRouteProperties,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +438,6 @@ export interface RouterInit {
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
   instrumentations?: ClientInstrumentation[];
-  mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
@@ -917,8 +917,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   location: undefined,
 };
 
-const defaultMapRouteProperties: MapRoutePropertiesFunction = () => ({});
-
 const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
 
 // Flag used on new `loaderData` to indicate that we do not want to preserve
@@ -1008,9 +1006,7 @@ export function createRouter(init: RouterInit): Router {
   );
 
   let hydrationRouteProperties = init.hydrationRouteProperties || [];
-  let _mapRouteProperties =
-    init.mapRouteProperties || defaultMapRouteProperties;
-  let mapRouteProperties = _mapRouteProperties;
+  let mapRouteProperties = defaultMapRouteProperties;
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
@@ -1019,7 +1015,7 @@ export function createRouter(init: RouterInit): Router {
 
     mapRouteProperties = (route: DataRouteObject) => {
       return {
-        ..._mapRouteProperties(route),
+        ...defaultMapRouteProperties(route),
         ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)
@@ -4005,11 +4001,40 @@ export function createRouter(init: RouterInit): Router {
 
 export interface CreateStaticHandlerOptions {
   basename?: string;
-  mapRouteProperties?: MapRoutePropertiesFunction;
   instrumentations?: Pick<ServerInstrumentation, "route">[];
   future?: Partial<FutureConfig>;
 }
 
+/**
+ * Create a static handler to perform server-side data loading
+ *
+ * @example
+ * export async function handleRequest(request: Request) {
+ *   let { query, dataRoutes } = createStaticHandler(routes);
+ *   let context = await query(request);
+ *
+ *   if (context instanceof Response) {
+ *     return context;
+ *   }
+ *
+ *   let router = createStaticRouter(dataRoutes, context);
+ *   return new Response(
+ *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
+ *     { headers: { "Content-Type": "text/html" } }
+ *   );
+ * }
+ *
+ * @public
+ * @category Data Routers
+ * @mode data
+ * @param routes The {@link RouteObject | route objects} to create a static
+ * handler for
+ * @param opts Options
+ * @param opts.basename The base URL for the static handler (default: `/`)
+ * @param opts.future Future flags for the static handler
+ * @returns A static handler that can be used to query data for the provided
+ * routes
+ */
 export function createStaticHandler(
   routes: RouteObject[],
   opts?: CreateStaticHandlerOptions,
@@ -4021,9 +4046,7 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
-  let _mapRouteProperties =
-    opts?.mapRouteProperties || defaultMapRouteProperties;
-  let mapRouteProperties = _mapRouteProperties;
+  let mapRouteProperties = defaultMapRouteProperties;
   // Currently unused in the static handler, but available for additional flags in the future
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
@@ -4037,7 +4060,7 @@ export function createStaticHandler(
 
     mapRouteProperties = (route: DataRouteObject) => {
       return {
-        ..._mapRouteProperties(route),
+        ...defaultMapRouteProperties(route),
         ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)

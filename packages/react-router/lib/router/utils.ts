@@ -1,8 +1,12 @@
-import type * as React from "react";
+import * as React from "react";
 import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+
+// Provided by the build system
+declare const __DEV__: boolean;
+export const ENABLE_DEV_WARNINGS = __DEV__;
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -552,7 +556,7 @@ export type PatchRoutesOnNavigationFunction = (
  * Function provided to set route-specific properties from route objects
  */
 export interface MapRoutePropertiesFunction {
-  (route: DataRouteObject): Record<string, any>;
+  (route: DataRouteObject): Partial<DataRouteObject>;
 }
 
 /**
@@ -900,11 +904,65 @@ function isIndexRoute(route: RouteObject): route is IndexRouteObject {
   return route.index === true;
 }
 
+export function defaultMapRouteProperties(route: DataRouteObject) {
+  let updates: Partial<DataRouteObject> = {};
+
+  if (route.Component) {
+    if (ENABLE_DEV_WARNINGS) {
+      if (route.element) {
+        warning(
+          false,
+          "You should not include both `Component` and `element` on your route - " +
+            "`Component` will be used.",
+        );
+      }
+    }
+    Object.assign(updates, {
+      element: React.createElement(route.Component),
+      Component: undefined,
+    });
+  }
+
+  if (route.HydrateFallback) {
+    if (ENABLE_DEV_WARNINGS) {
+      if (route.hydrateFallbackElement) {
+        warning(
+          false,
+          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
+            "`HydrateFallback` will be used.",
+        );
+      }
+    }
+    Object.assign(updates, {
+      hydrateFallbackElement: React.createElement(route.HydrateFallback),
+      HydrateFallback: undefined,
+    });
+  }
+
+  if (route.ErrorBoundary) {
+    if (ENABLE_DEV_WARNINGS) {
+      if (route.errorElement) {
+        warning(
+          false,
+          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
+            "`ErrorBoundary` will be used.",
+        );
+      }
+    }
+    Object.assign(updates, {
+      errorElement: React.createElement(route.ErrorBoundary),
+      ErrorBoundary: undefined,
+    });
+  }
+
+  return updates;
+}
+
 // Walk the route tree generating unique IDs where necessary, so we are working
 // solely with DataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: RouteObject[],
-  mapRouteProperties: MapRoutePropertiesFunction,
+  mapRouteProperties: MapRoutePropertiesFunction = defaultMapRouteProperties,
   parentPath: string[] = [],
   manifest: RouteManifest = {},
   allowInPlaceMutations = false,
@@ -960,7 +1018,7 @@ export function convertRoutesToDataRoutes(
 
 function mergeRouteUpdates<T extends DataRouteObject>(
   route: T,
-  updates: ReturnType<MapRoutePropertiesFunction>,
+  updates: Partial<DataRouteObject>,
 ): T {
   return Object.assign(route, {
     ...updates,
