@@ -20,7 +20,6 @@
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
   "main": "./dist/index.js",
-  "unpkg": "./dist/umd/react-router-dom.production.min.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
