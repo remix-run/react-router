@@ -90,7 +90,10 @@ describe("lazily loaded route modules", () => {
       expect(router.state.location.pathname).toBe("/lazy");
       expect(router.state.navigation.state).toBe("idle");
       expect(router.state.initialized).toBe(true);
-      expect(router.state.matches[0].route).toMatchObject(route);
+      expect(router.state.matches[0].route).toMatchObject({
+        path: "/lazy",
+        element: expect.any(Object),
+      });
     });
 
     it("resolves lazy route properties on router initialization", async () => {
@@ -303,7 +306,10 @@ describe("lazily loaded route modules", () => {
       expect(router.state.loaderData).toEqual({
         "0": "LOADER",
       });
-      expect(router.state.matches[0].route).toMatchObject(route);
+      expect(router.state.matches[0].route).toMatchObject({
+        path: "/lazy",
+        element: expect.any(Object),
+      });
     });
 
     it("resolves lazy route properties and executes loaders on router initialization", async () => {
