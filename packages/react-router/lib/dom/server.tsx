@@ -242,7 +242,7 @@ function serializeErrors(
   let serialized: StaticHandlerContext["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // deserializeErrors in react-router-dom/index.tsx :)
+    // deserializeErrors in lib/dom/lib.tsx :)
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
     } else if (val instanceof Error) {

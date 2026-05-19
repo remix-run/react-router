@@ -71,7 +71,6 @@ let getNpmPackageNameToDirectoryMap = (() => {
  * Examples:
  *   "@react-router/node" -> "react-router-node"
  *   "react-router" -> "react-router"
- *   "react-router-dom" -> "react-router-dom"
  */
 export function packageNameToDirectoryName(packageName: string): string | null {
   return getNpmPackageNameToDirectoryMap().get(packageName) ?? null;

@@ -214,9 +214,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react-router",
               "react-router/dom",
               "react-router/internal/react-server-client",
-              ...(hasDependency({ name: "react-router-dom", rootDirectory })
-                ? ["react-router-dom"]
-                : []),
               ...(hasDependency({
                 name: "react-server-dom-webpack",
                 rootDirectory,

@@ -586,8 +586,7 @@ async function updatePackageJSON(ctx: Context) {
       let version = dependencies[dependency];
       if (
         (dependency.startsWith("@react-router/") ||
-          dependency === "react-router" ||
-          dependency === "react-router-dom") &&
+          dependency === "react-router") &&
         version === "*"
       ) {
         dependencies[dependency] = semver.prerelease(ctx.reactRouterVersion)

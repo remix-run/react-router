@@ -721,7 +721,7 @@ function deserializeErrors(
   let serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // serializeErrors in react-router-dom/server.tsx :)
+    // serializeErrors in lib/dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
       serialized[key] = new ErrorResponseImpl(
         val.status,
@@ -3346,7 +3346,7 @@ export function useViewTransitionState(
 
   invariant(
     vtContext != null,
-    "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+    "`useViewTransitionState` must be used within `react-router/dom`'s `RouterProvider`.  " +
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 

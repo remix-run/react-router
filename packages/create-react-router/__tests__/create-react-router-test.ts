@@ -875,7 +875,6 @@ describe("create-react-router CLI", () => {
 
     expect(dependencies).toMatchObject({
       "react-router": expect.any(String),
-      "react-router-dom": expect.any(String),
       "@react-router/node": expect.any(String),
       "not-react-router": "*",
     });
