@@ -1140,28 +1140,6 @@ importers:
         specifier: ^4.23.0
         version: 4.23.0(@cloudflare/workers-types@4.20250805.0)
 
-  packages/react-router-dom:
-    dependencies:
-      react-router:
-        specifier: workspace:*
-        version: link:../react-router
-    devDependencies:
-      react:
-        specifier: 'catalog:'
-        version: 19.2.6
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.2.6(react@19.2.6)
-      tsup:
-        specifier: 'catalog:'
-        version: 8.5.0(@swc/core@1.11.24)(jiti@2.4.2)(postcss@8.5.8)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.4.5
-      wireit:
-        specifier: 'catalog:'
-        version: 0.14.9
-
   packages/react-router-express:
     dependencies:
       '@react-router/node':

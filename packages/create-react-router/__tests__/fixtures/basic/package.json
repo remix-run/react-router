@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "react-router": "*",
-    "react-router-dom": "*",
     "@react-router/node": "*",
     "not-react-router": "*"
   },
