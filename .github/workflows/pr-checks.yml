@@ -47,7 +47,7 @@ jobs:
         run: node scripts/pr.ts check
 
       - name: 📤 Upload result
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-checks-result
           path: pr-checks-result.json
