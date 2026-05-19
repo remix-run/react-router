@@ -1359,13 +1359,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
               "react-router/dom",
-              // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
-              ...(hasDependency({
-                name: "react-router-dom",
-                rootDirectory: ctx.rootDirectory,
-              })
-                ? ["react-router-dom"]
-                : []),
             ],
           },
           ...defineCompilerOptions({
@@ -1389,7 +1382,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               // see description for `optimizeDeps.include`
               "react-router",
               "react-router/dom",
-              "react-router-dom",
             ],
             conditions:
               viteCommand === "build"
