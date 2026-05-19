@@ -118,7 +118,7 @@ for (let previewServerPrerendering of [false, true]) {
     }
   `,
     "app/routes/about.tsx": js`
-    import { useActionData, useLoaderData } from "react-router";
+    import { useLoaderData } from "react-router";
 
     export function meta({ loaderData }) {
       return [{
