@@ -23,7 +23,7 @@
     "lint": "eslint --cache .",
     "playground": "node ./scripts/playground.js",
     "previews:branch": "node ./scripts/previews/branch.ts",
-    "previews:pre": "node ./scripts/previews/pr.ts",
+    "previews:pr": "node ./scripts/previews/pr.ts",
     "release-comments": "node scripts/release-comments.ts",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
