@@ -1,7 +1,7 @@
 {
   "name": "react-router",
   "type": "module",
-  "version": "7.15.0",
+  "version": "7.15.1",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -100,8 +100,8 @@
     "wireit": "catalog:"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
+    "react": ">=19.2.6",
+    "react-dom": ">=19.2.6"
   },
   "peerDependenciesMeta": {
     "react-dom": {
@@ -115,6 +115,6 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.12.0"
   }
 }

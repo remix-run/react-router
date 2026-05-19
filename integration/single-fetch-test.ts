@@ -454,20 +454,19 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#data")).toContain("1");
     expect(urls).toEqual([]);
 
-    await page.click('button[name="revalidate"][value="yes"]');
-    await page.waitForSelector("#action-data");
-    await page.waitForSelector("#idle");
-    expect(await app.getHtml("#data")).toContain("2");
-    expect(urls).toEqual([expect.stringMatching(/\/no-revalidate\.data$/)]);
-
     await page.click('button[name="revalidate"][value="no"]');
     await page.waitForSelector("#action-data");
     await page.waitForSelector("#idle");
-    expect(await app.getHtml("#data")).toContain("2");
+    expect(await app.getHtml("#data")).toContain("1");
     expect(urls).toEqual([
-      expect.stringMatching(/\/no-revalidate\.data$/),
       expect.stringMatching(/\/no-revalidate\.data\?_routes=root$/),
     ]);
+    urls.splice(0, urls.length);
+
+    await page.click('button[name="revalidate"][value="yes"]');
+    await page.waitForSelector("#data:has-text('2')");
+    expect(await app.getHtml("#data")).toContain("2");
+    expect(urls).toEqual([expect.stringMatching(/\/no-revalidate\.data$/)]);
   });
 
   test("revalidates on reused routes by default", async ({ page }) => {
@@ -1091,7 +1090,7 @@ test.describe("single-fetch", () => {
                     <Link to="/page?optout" defaultShouldRevalidate={false}>Page (opt-out)</Link>
                   </nav>
                   <pre id="data">
-                    {JSON.stringify(useMatches().map(m => [m.id, m.data]))}
+                    {JSON.stringify(useMatches().map(m => [m.id, m.loaderData]))}
                   </pre>
                   <Outlet />
                   <Scripts />

@@ -105,7 +105,7 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
-): [boolean, React.RefObject<T>, PrefetchHandlers] {
+): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
@@ -634,7 +634,6 @@ export function Meta(): React.JSX.Element {
 
     let match: MetaMatch = {
       id: routeId,
-      data,
       loaderData: data,
       meta: [],
       params: _match.params,
@@ -648,7 +647,6 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
               loaderData: data,
               params,
               location,
@@ -726,7 +724,10 @@ export function Meta(): React.JSX.Element {
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
-          } catch (err) {
+          } catch (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            e
+          ) {
             return null;
           }
         }

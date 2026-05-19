@@ -101,7 +101,7 @@ const customServerFile = ({
 
   if (templateName.includes("rsc")) {
     return js`
-      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import { createRequestListener } from "@remix-run/node-fetch-server";
       import express from "express";
 
       const viteDevServer =
@@ -219,6 +219,19 @@ test.describe("Vite base + React Router basename", () => {
             basename: "/mybase/app/",
           });
           await workflowDev({ page, cwd, port, basename: "/mybase/app/" });
+        });
+
+        test("works when base and basename match the app directory name", async ({
+          page,
+        }) => {
+          await setup({ base: "/app/", basename: "/app/" });
+          await workflowDev({
+            page,
+            cwd,
+            port,
+            base: "/app/",
+            basename: "/app/",
+          });
         });
 
         test("errors if basename does not start with base", async ({
@@ -421,6 +434,13 @@ test.describe("Vite base + React Router basename", () => {
           });
         });
 
+        test("works when base and basename match the app directory name", async ({
+          page,
+        }) => {
+          await setup({ base: "/app/", basename: "/app/" });
+          await workflowBuild({ page, port, base: "/app/", basename: "/app/" });
+        });
+
         test("works when basename does not start with base", async ({
           page,
         }) => {
@@ -520,7 +540,7 @@ test.describe("Vite base + React Router basename", () => {
               // Slim server that only serves basename (route) requests from the React Router handler
               "server.mjs": templateName.includes("rsc")
                 ? String.raw`
-                  import { createRequestListener } from "@mjackson/node-fetch-server";
+                  import { createRequestListener } from "@remix-run/node-fetch-server";
                   import express from "express";
 
                   const app = express();

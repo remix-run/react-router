@@ -16,6 +16,7 @@ import { createRequire } from "node:module";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
+import { sendResponse } from "@remix-run/node-fetch-server";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
@@ -617,9 +618,6 @@ let getServerBundleRouteIds = (
   return Object.keys(serverBundleRoutes);
 };
 
-const injectQuery = (url: string, query: string) =>
-  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
-
 let defaultEntriesDir = path.resolve(
   path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
   "dist",
@@ -760,7 +758,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     return `
     import * as entryServer from ${JSON.stringify(
-      resolveFileUrl(ctx, ctx.entryServerFilePath),
+      resolveFileUrl(ctx, ctx.entryServerFilePath, {
+        publicPath: ctx.publicPath,
+      }),
     )};
     ${Object.keys(routes)
       .map((key, index) => {
@@ -776,6 +776,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             resolveFileUrl(
               ctx,
               resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
+              { publicPath: ctx.publicPath },
             ),
           )};`;
         }
@@ -1288,13 +1289,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
               "react-router/dom",
-              // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
-              ...(hasDependency({
-                name: "react-router-dom",
-                rootDirectory: ctx.rootDirectory,
-              })
-                ? ["react-router-dom"]
-                : []),
             ],
           },
           ...defineCompilerOptions({
@@ -1318,7 +1312,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               // see description for `optimizeDeps.include`
               "react-router",
               "react-router/dom",
-              "react-router-dom",
             ],
             conditions:
               viteCommand === "build"
@@ -1613,11 +1606,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     req,
                     await reactRouterDevLoadContext(req),
                   );
-                  // Async import here to allow ESM only module on Node 20.18.
-                  // TODO(v8): Can move to a normal import when Node 20 support
-                  const { sendResponse } = await import(
-                    "@remix-run/node-fetch-server"
-                  );
                   await sendResponse(nodeRes, res);
                 };
                 await nodeHandler(req, res);
@@ -1747,12 +1735,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               let response = await handler(
                 request,
                 await reactRouterDevLoadContext(request),
-              );
-
-              // Async import here to allow ESM only module on Node 20.18.
-              // TODO(v8): Can move to a normal import when Node 20 support
-              const { sendResponse } = await import(
-                "@remix-run/node-fetch-server"
               );
               await sendResponse(res, response);
             } catch (error) {
@@ -2749,7 +2731,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
-        let { ssr, future } = ctx.reactRouterConfig;
+        let { ssr } = ctx.reactRouterConfig;
 
         // if ssr:false is set
         if (!ssr) {

@@ -13,9 +13,9 @@ describe("meta", () => {
       {
         id: "root",
         path: "/",
-        meta: ({ data }) => [
-          { name: "description", content: data.description },
-          { title: data.title },
+        meta: ({ loaderData }) => [
+          { name: "description", content: loaderData.description },
+          { title: loaderData.title },
         ],
         Component() {
           return (
@@ -314,7 +314,7 @@ describe("meta", () => {
     let RoutesStub = createRoutesStub([
       {
         path: "/",
-        meta: ({ data }) => data?.meta,
+        meta: ({ loaderData }) => loaderData.meta,
         loader: () => ({
           meta: [
             {

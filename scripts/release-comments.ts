@@ -263,7 +263,7 @@ async function findMergedPRs(
     }),
   );
 
-  return result.filter((pr: any): pr is MergedPR => pr != undefined);
+  return result.filter((pr: any): pr is MergedPR => pr != null);
 }
 
 type ReferencedIssueResult = {

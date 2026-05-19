@@ -1063,14 +1063,6 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
    * The return value from the matched route's loader or clientLoader. This might
    * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
    * an error and we're currently displaying an `ErrorBoundary`.
-   *
-   * @deprecated Use `UIMatch.loaderData` instead
-   */
-  data: Data | undefined;
-  /**
-   * The return value from the matched route's loader or clientLoader. This might
-   * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
-   * an error and we're currently displaying an `ErrorBoundary`.
    */
   loaderData: Data | undefined;
   /**
@@ -1089,7 +1081,6 @@ export function convertRouteMatchToUiMatch(
     id: route.id,
     pathname,
     params,
-    data: loaderData[route.id],
     loaderData: loaderData[route.id],
     handle: route.handle,
   };
@@ -2234,7 +2225,10 @@ export function parseToInfo<T extends To | string>(
       } else {
         isExternal = true;
       }
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       // We can't do external URL detection without a valid URL
       warning(
         false,

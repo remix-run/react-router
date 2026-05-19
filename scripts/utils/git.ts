@@ -57,6 +57,7 @@ export function findVersionIntroductionCommit(
     }
 
     let parentLine = execGit(["rev-list", "--parents", "-n", "1", commit]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let [_commit, ...parents] = parentLine
       .split(" ")
       .filter((line) => line.length > 0);
@@ -131,13 +132,21 @@ export function tagExists(tag: string): boolean {
 }
 
 /**
- * Gets the git SHA of the commit that last modified a file.
+ * Gets the git SHA of the commit that introduced a file (the add commit),
+ * so subsequent edits don't steal credit from the PR that introduced it.
  * Falls back to HEAD if the file has no git history (e.g., untracked or newly staged).
  */
 export function getFileSha(filePath: string): string {
   let normalizedPath = filePath.replaceAll("\\", "/");
   try {
-    let sha = execGit(["log", "-1", "--format=%H", "--", normalizedPath]);
+    let sha = execGit([
+      "log",
+      "-1",
+      "--diff-filter=A",
+      "--format=%H",
+      "--",
+      normalizedPath,
+    ]);
     if (sha) return sha;
   } catch {}
   return execGit(["rev-parse", "HEAD"]);

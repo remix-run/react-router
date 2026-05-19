@@ -9,9 +9,13 @@ const { JSDOM } = nodeRequire(
   path.join(jestEnvironmentJsdomDir, "../jsdom"),
 ) as typeof import("jsdom");
 
-export default function getWindow(initialUrl: string, isHash = false): Window {
+export default function getWindow(
+  initialUrl: string,
+  isHash = false,
+  origin = "http://localhost/",
+): Window {
   // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
+  const dom = new JSDOM(`<!DOCTYPE html>`, { url: origin });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
 }

@@ -1,7 +1,6 @@
-name: 💬 Release Comments
+name: 💬 Release Comments (manual)
 
 on:
-  workflow_call:
   workflow_dispatch:
 
 concurrency:
@@ -27,7 +26,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for node TS support
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: 📥 Install deps

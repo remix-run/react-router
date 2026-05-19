@@ -78,11 +78,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     )?.[1];
   }
 
-  function isMdxRouteModule(filename: string) {
-    let extension = path.extname(filename).toLowerCase();
-    return extension === ".md" || extension === ".mdx";
-  }
-
   function getTransformLanguage(
     filename: string,
   ): "ts" | "tsx" | "jsx" | undefined {
@@ -217,9 +212,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react-router",
               "react-router/dom",
               "react-router/internal/react-server-client",
-              ...(hasDependency({ name: "react-router-dom", rootDirectory })
-                ? ["react-router-dom"]
-                : []),
               ...(hasDependency({
                 name: "react-server-dom-webpack",
                 rootDirectory,

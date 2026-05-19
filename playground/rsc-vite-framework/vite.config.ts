@@ -11,7 +11,10 @@ export default defineConfig({
     minify: false,
   },
   plugins: [
-    { enforce: "pre", ...mdx({ remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter] })},
+    {
+      enforce: "pre",
+      ...mdx({ remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter] }),
+    },
     // @ts-ignore
     reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),
     react(),

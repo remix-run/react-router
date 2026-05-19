@@ -120,10 +120,10 @@ export function createRoutesStub(
     hydrationData,
     future,
   }: RoutesTestStubProps) {
-    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let frameworkContextRef = React.useRef<FrameworkContextObject>();
+    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>(null);
+    let frameworkContextRef = React.useRef<FrameworkContextObject>(null);
 
-    if (routerRef.current == null) {
+    if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
         future: {
           v8_passThroughRequests: future?.v8_passThroughRequests === true,

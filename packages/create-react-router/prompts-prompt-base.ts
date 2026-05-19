@@ -42,7 +42,10 @@ export class Prompt extends EventEmitter {
       if (a === false) {
         try {
           this._(str, key);
-        } catch (_) {}
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          e
+        ) {}
         // @ts-expect-error
       } else if (typeof this[a] === "function") {
         // @ts-expect-error

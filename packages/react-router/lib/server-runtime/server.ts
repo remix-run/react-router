@@ -15,6 +15,7 @@ import {
   createStaticHandler,
   isRedirectResponse,
   isResponse,
+  isMutationMethod,
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
@@ -190,7 +191,10 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
-    if (requestUrl.pathname === manifestUrl) {
+    if (
+      build.routeDiscovery.mode === "lazy" &&
+      requestUrl.pathname === manifestUrl
+    ) {
       try {
         let res = await handleManifestRequest(
           build,
@@ -446,26 +450,25 @@ async function handleSingleFetchRequest(
   let handlerUrl = new URL(request.url);
   handlerUrl.pathname = normalizedPath;
 
-  let response =
-    request.method !== "GET"
-      ? await singleFetchAction(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        )
-      : await singleFetchLoaders(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        );
+  let response = isMutationMethod(request.method)
+    ? await singleFetchAction(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      )
+    : await singleFetchLoaders(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      );
 
   return response;
 }
@@ -481,7 +484,7 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
-    if (request.method === "POST") {
+    if (isMutationMethod(request.method)) {
       try {
         throwIfPotentialCSRFAttack(
           request.headers,
@@ -606,7 +609,10 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (e) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          e
+        ) {
           // If we can't unwrap the response - just leave it as-is
         }
       }

@@ -45,7 +45,7 @@ for (let previewServerPrerendering of [false, true]) {
     import * as React from "react";
     import { Link, Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
 
-    export function meta({ data }) {
+    export function meta() {
       return [{
         title: "Root Title"
       }];
@@ -96,9 +96,9 @@ for (let previewServerPrerendering of [false, true]) {
     import * as React  from "react";
     import { useLoaderData } from "react-router";
 
-    export function meta({ data }) {
+    export function meta({ loaderData }) {
       return [{
-        title: "Index Title: " + data
+        title: "Index Title: " + loaderData
       }];
     }
 
@@ -120,9 +120,9 @@ for (let previewServerPrerendering of [false, true]) {
     "app/routes/about.tsx": js`
     import { useActionData, useLoaderData } from "react-router";
 
-    export function meta({ data }) {
+    export function meta({ loaderData }) {
       return [{
-        title: "About Title: " + data
+        title: "About Title: " + loaderData
       }];
     }
 

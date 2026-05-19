@@ -146,7 +146,10 @@ function isFormDataSubmitterSupported() {
         0,
       );
       _formDataSupportsSubmitter = false;
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       _formDataSupportsSubmitter = true;
     }
   }

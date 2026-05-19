@@ -832,7 +832,7 @@ test.describe("SPA Mode", () => {
                 import * as React from "react";
                 import { Form, Link, Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta() {
                   return [{
                     title: "Root Title"
                   }];
@@ -915,9 +915,9 @@ test.describe("SPA Mode", () => {
                 import * as React  from "react";
                 import { useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta({ loaderData }) {
                   return [{
-                    title: "Index Title: " + data
+                    title: "Index Title: " + loaderData
                   }];
                 }
 
@@ -952,9 +952,9 @@ test.describe("SPA Mode", () => {
               "app/routes/about.tsx": js`
                 import { useActionData, useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta({ loaderData }) {
                   return [{
-                    title: "About Title: " + data
+                    title: "About Title: " + loaderData
                   }];
                 }
 

@@ -31,5 +31,5 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[22]"
+      node_version: "[24]"
       browser: '["chromium"]'

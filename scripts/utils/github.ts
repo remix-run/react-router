@@ -237,3 +237,17 @@ export async function deletePrComment(commentId: number) {
     comment_id: commentId,
   });
 }
+
+/**
+ * Remove a label from a PR (or issue)
+ */
+export async function removePrLabel(prNumber: number, label: string) {
+  await request(
+    "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
+    {
+      ...requestOptions(),
+      issue_number: prNumber,
+      name: label,
+    },
+  );
+}

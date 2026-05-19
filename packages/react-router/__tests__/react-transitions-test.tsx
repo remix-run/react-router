@@ -515,7 +515,6 @@ describe("react transitions", () => {
             {
               index: true,
               Component() {
-                let navigate = useNavigate();
                 return (
                   <Link id="link" to="/page">
                     Go to page

@@ -70,8 +70,8 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed to run typescript scripts directly
-          cache: pnpm
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -99,8 +99,8 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
-          cache: "pnpm"
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
@@ -116,7 +116,32 @@ jobs:
   comment:
     name: 📝 Comment on released issues/pull requests
     needs: publish
-    uses: ./.github/workflows/release-comments.yml
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # enable commenting on released issues
+      pull-requests: write # enable commenting on released pull requests
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📝 Comment on released issues and pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm run release-comments
 
   experimental-release:
     name: 🧪 Experimental Release
@@ -140,8 +165,8 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
-          cache: "pnpm"
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile

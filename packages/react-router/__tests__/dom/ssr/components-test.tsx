@@ -16,10 +16,7 @@ import {
   FrameworkContext,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-} from "../../../lib/context";
+import { DataRouterStateContext } from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom";
@@ -476,6 +473,7 @@ describe("usePrefetchBehavior", () => {
   }) {
     let [shouldPrefetch, ref] = usePrefetchBehavior(prefetch, {});
     return (
+      // eslint-disable-next-line jsx-a11y/anchor-is-valid
       <a ref={ref} data-prefetch={shouldPrefetch}>
         Link
       </a>

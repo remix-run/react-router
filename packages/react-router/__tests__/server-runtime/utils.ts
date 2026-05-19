@@ -37,6 +37,7 @@ export function mockServerBuild(
     handleError?: HandleErrorFunction;
     handleDocumentRequest?: HandleDocumentRequestFunction;
     instrumentations?: ServerInstrumentation[];
+    routeDiscovery?: ServerBuild["routeDiscovery"];
   } = {},
 ): ServerBuild {
   return {
@@ -47,7 +48,7 @@ export function mockServerBuild(
     },
     prerender: [],
     isSpaMode: false,
-    routeDiscovery: {
+    routeDiscovery: opts.routeDiscovery || {
       mode: "lazy",
       manifestPath: "/__manifest",
     },

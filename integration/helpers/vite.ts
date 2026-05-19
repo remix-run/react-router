@@ -155,7 +155,7 @@ export const EXPRESS_SERVER = (args: {
 }) => {
   if (args.templateName?.includes("rsc")) {
     return String.raw`
-      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import { createRequestListener } from "@remix-run/node-fetch-server";
       import express from "express";
 
       const viteDevServer =
@@ -496,6 +496,7 @@ export const test = base.extend<Fixtures>({
     });
     stop?.();
   },
+  // eslint-disable-next-line no-empty-pattern
   vitePreview: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {

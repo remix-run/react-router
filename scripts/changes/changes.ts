@@ -330,8 +330,8 @@ export function parseAllChangeFiles(): ParsedChanges {
     });
   }
 
-  // Sort releases with custom ordering: react-router first, then react-router-dom,
-  // then @react-router/* packages sorted alphabetically, then others
+  // Sort releases with custom ordering: react-router first, then @react-router/*
+  // packages sorted alphabetically, then others
   releases.sort((a, b) => packageNameComparator(a.packageName, b.packageName));
 
   return { valid: true, releases };
@@ -340,9 +340,8 @@ export function parseAllChangeFiles(): ParsedChanges {
 function packageNameComparator(a: string, b: string) {
   const order = (name: string): [number, string] => {
     if (name === "react-router") return [0, name];
-    if (name === "react-router-dom") return [1, name];
-    if (name.startsWith("@react-router/")) return [2, name];
-    return [3, name];
+    if (name.startsWith("@react-router/")) return [1, name];
+    return [2, name];
   };
 
   const [orderA, nameA] = order(a);

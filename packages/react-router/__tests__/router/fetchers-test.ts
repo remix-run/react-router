@@ -1,5 +1,5 @@
 /* eslint-disable jest/valid-title */
-import type { HydrationState } from "../../lib/router/router";
+import type { Fetcher, HydrationState } from "../../lib/router/router";
 import { createMemoryHistory } from "../../lib/router/history";
 import {
   createRouter,
@@ -3701,6 +3701,261 @@ describe("fetchers", () => {
       let A = await t.fetch("/fetch", "a", "root");
       t.router.resetFetcher("a", { reason: "BECAUSE I SAID SO" });
       expect(A.loaders.fetch.signal.reason).toBe("BECAUSE I SAID SO");
+    });
+  });
+
+  describe("fetcher Map mutation", () => {
+    // The root cause of the bug: after updateState({ fetchers: new Map(...) })
+    // hands a Map (MapA) to React, a subsequent direct mutation of
+    // state.fetchers (e.g. state.fetchers.set(key, getDoneFetcher())) mutates
+    // that same MapA because state.fetchers === MapA after the updateState.
+    // React's concurrent renderer may still hold MapA and render it post-
+    // mutation, seeing an idle fetcher (formData gone) alongside stale
+    // loaderData — the "flicker".
+    //
+    // The subscriber-based approach does NOT catch this: the subscriber is
+    // called synchronously after each updateState, so it only ever sees
+    // fully-settled state. Instead, the test captures the Map reference handed
+    // to the subscriber during the "loading" phase and, after the fetch
+    // completes, asserts that reference was never mutated in place.
+    it("does not mutate the Map reference handed to subscribers (fetcher.submit)", async () => {
+      let fetcherMaps: Map<string, Fetcher>[] = [];
+      let itemStatus = false;
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/item"] }),
+        routes: [
+          {
+            id: "item",
+            path: "/item",
+            loader: () => ({ status: itemStatus }),
+            action: async ({ request }) => {
+              let formData = await request.formData();
+              itemStatus = formData.get("status") === "true";
+              return { ok: true };
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: { item: { status: false } },
+        },
+      });
+
+      router.initialize();
+
+      // Mount the fetcher so it stays in state
+      router.getFetcher("toggle");
+
+      router.subscribe((state) => {
+        fetcherMaps.push(state.fetchers);
+      });
+
+      let formData = new FormData();
+      formData.append("status", "true");
+
+      await router.fetch("toggle", "item", "/item", {
+        formMethod: "POST",
+        formData,
+      });
+
+      router.dispose();
+
+      // After the fetch fully completes, the Maps we captured during the
+      // submitting/loading phases must still reflect submitting/loading — it must not have been
+      // mutated to "idle" in place
+      expect(fetcherMaps.length).toBe(3);
+      expect(fetcherMaps[0].get("toggle")?.state).toBe("submitting");
+      expect(fetcherMaps[0].get("toggle")?.formData).toBeDefined();
+      expect(fetcherMaps[1].get("toggle")?.state).toBe("loading");
+      expect(fetcherMaps[1].get("toggle")?.formData).toBeDefined();
+      expect(fetcherMaps[2].get("toggle")).toBeUndefined();
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher.load)", async () => {
+      // updateFetcherState() does: state.fetchers.set(key, fetcher); updateState({fetchers: new Map(state.fetchers)}).
+      // After the first call (loading state), state.fetchers === MapA which React holds.
+      // The second call (done state) mutates MapA via state.fetchers.set before creating MapB.
+      let fetcherMaps: Map<string, Fetcher>[] = [];
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          { id: "root", path: "/", loader: () => ({ data: "root" }) },
+          { id: "item", path: "/item", loader: () => ({ data: "item" }) },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("load");
+
+      router.subscribe((state) => {
+        fetcherMaps.push(state.fetchers);
+      });
+
+      await router.fetch("load", "root", "/item");
+
+      router.dispose();
+
+      // After the fetch fully completes, the Maps we captured during the
+      // loading phase must still reflect loading — they must not have been
+      // mutated to "idle" in place.
+      expect(fetcherMaps.length).toBe(2);
+      expect(fetcherMaps[0].get("load")?.state).toBe("loading");
+      expect(fetcherMaps[0].get("load")?.data).toBeUndefined();
+      expect(fetcherMaps[1].get("load")).toBeUndefined();
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher revalidation during navigation)", async () => {
+      // getUpdatedRevalidatingFetchers() (dev branch) calls state.fetchers.set()
+      // on the current Map before returning a copy. This mutates MapPrev.
+      // Later, processLoaderData mutates the Map that subscribers received for
+      // the "loading" revalidation state. Test that the subscriber's loading
+      // Map is not mutated to idle by processLoaderData after loaders complete.
+      let fetcherMaps: Map<string, Fetcher>[] = [];
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: () => ({ data: "root" }),
+            action: () => ({ ok: true }),
+          },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("f");
+
+      router.subscribe((state) => {
+        fetcherMaps.push(state.fetchers);
+      });
+
+      // GET load to register the fetcher in fetchLoadMatches (eligible for
+      // revalidation when a subsequent navigation action fires).
+      await router.fetch("f", "root", "/");
+
+      // POST to the same route — sets isRevalidationRequired=true and causes
+      // fetcher "f" to revalidate alongside the route loaders.
+      let formData = new FormData();
+      await router.navigate("/", { formMethod: "POST", formData });
+
+      router.dispose();
+
+      // After the navigation fully completes, the Maps we captured during the
+      // loading phases (initial fetch + revalidation) must still reflect
+      // loading — they must not have been mutated to "idle"/done in place by
+      // getUpdatedRevalidatingFetchers/processLoaderData.
+      expect(fetcherMaps.length).toBe(5);
+      expect(fetcherMaps[0].get("f")?.state).toBe("loading");
+      expect(fetcherMaps[1].get("f")).toBeUndefined();
+      expect(fetcherMaps[2].get("f")).toBeUndefined();
+      expect(fetcherMaps[3].get("f")?.state).toBe("loading");
+      expect(fetcherMaps[4].get("f")).toBeUndefined();
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher loader redirect)", async () => {
+      // handleFetcherLoader hands MapA (loading) to React via updateFetcherState().
+      // When the loader returns a redirect, markFetchRedirectsDone() calls
+      // state.fetchers.set(key, doneFetcher) which mutates MapA before the
+      // final completeNavigation updateState creates MapB.
+      let fetcherMaps: Map<string, Fetcher>[] = [];
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          { id: "root", path: "/", loader: () => ({ data: "root" }) },
+          {
+            id: "redirect-source",
+            path: "/redirect",
+            loader: () =>
+              new Response(null, {
+                status: 302,
+                headers: { Location: "/" },
+              }),
+          },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("redir");
+
+      router.subscribe((state) => {
+        fetcherMaps.push(state.fetchers);
+      });
+
+      await router.fetch("redir", "root", "/redirect");
+
+      router.dispose();
+
+      // After the redirect navigation fully completes, the Maps captured
+      // during the loading phases must still reflect loading — they must not
+      // have been mutated to "idle"/done in place by markFetchRedirectsDone().
+      expect(fetcherMaps.length).toBe(3);
+      expect(fetcherMaps[0].get("redir")?.state).toBe("loading");
+      expect(fetcherMaps[1].get("redir")?.state).toBe("loading");
+      expect(fetcherMaps[2].get("redir")).toBeUndefined();
+    });
+
+    it("does not mutate the Map reference handed to subscribers (fetcher action redirect)", async () => {
+      // When a fetcher action returns a redirect, handleFetcherAction calls
+      // updateFetcherState(key, getLoadingFetcher(submission)) which first
+      // mutates the "submitting" MapA via state.fetchers.set, creates MapB
+      // (loading), then kicks off startRedirectNavigation. Inside
+      // completeNavigation, markFetchRedirectsDone() mutates MapB
+      // (state.fetchers.set(key, doneFetcher)) before the final updateState
+      // creates MapC. Test that MapB is not mutated.
+      let fetcherMaps: Map<string, Fetcher>[] = [];
+
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          { id: "root", path: "/", loader: () => ({ data: "root" }) },
+          {
+            id: "action-route",
+            path: "/action",
+            action: () =>
+              new Response(null, {
+                status: 302,
+                headers: { Location: "/" },
+              }),
+          },
+        ],
+        hydrationData: { loaderData: { root: { data: "root" } } },
+      });
+
+      router.initialize();
+      router.getFetcher("act");
+
+      router.subscribe((state) => {
+        fetcherMaps.push(state.fetchers);
+      });
+
+      let formData = new FormData();
+      await router.fetch("act", "root", "/action", {
+        formMethod: "POST",
+        formData,
+      });
+
+      router.dispose();
+
+      // After the redirect navigation fully completes, the Maps captured
+      // during the submitting/loading phases must still reflect those
+      // states (with formData intact) — they must not have been mutated to
+      // "idle"/done in place by markFetchRedirectsDone() before
+      // completeNavigation finalizes.
+      expect(fetcherMaps.length).toBe(4);
+      expect(fetcherMaps[0].get("act")?.state).toBe("submitting");
+      expect(fetcherMaps[0].get("act")?.formData).toBeDefined();
+      expect(fetcherMaps[1].get("act")?.state).toBe("loading");
+      expect(fetcherMaps[1].get("act")?.formData).toBeDefined();
+      expect(fetcherMaps[2].get("act")?.state).toBe("loading");
+      expect(fetcherMaps[2].get("act")?.formData).toBeDefined();
+      expect(fetcherMaps[3].get("act")).toBeUndefined();
     });
   });
 });

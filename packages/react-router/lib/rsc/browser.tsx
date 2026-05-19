@@ -142,7 +142,6 @@ export function createCallServer({
     });
 
     React.startTransition(() =>
-      // @ts-expect-error - Needs React 19 types
       Promise.resolve(payloadPromise)
         .then(async (payload) => {
           if (payload.type === "redirect") {

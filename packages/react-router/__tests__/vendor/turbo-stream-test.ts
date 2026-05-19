@@ -585,6 +585,7 @@ test("should allow many nested promises without a memory leak", async () => {
 test("should encode large payload", async () => {
   const input = createDeeplyNestedObject();
   await readStreamToString(encode(input));
+  expect(true).toBe(true);
 });
 
 test("should encode and decode large payload and yield the event loop", async () => {

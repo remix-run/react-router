@@ -34,7 +34,6 @@ export const routes = [
           {
             id: "child",
             path: "child",
-            // @ts-expect-error
             lazy: () => import("./routes/child/child"),
           },
         ],

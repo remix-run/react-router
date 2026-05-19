@@ -122,7 +122,10 @@ try {
       // @ts-expect-error
       REACT_ROUTER_VERSION;
   }
-} catch (e) {
+} catch (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  e
+) {
   // no-op
 }
 //#endregion
@@ -718,7 +721,7 @@ function deserializeErrors(
   let serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // serializeErrors in react-router-dom/server.tsx :)
+    // serializeErrors in lib/dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
       serialized[key] = new ErrorResponseImpl(
         val.status,
@@ -738,7 +741,10 @@ function deserializeErrors(
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
             serialized[key] = error;
-          } catch (e) {
+          } catch (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            e
+          ) {
             // no-op - fall through and create a normal Error
           }
         }
@@ -819,7 +825,7 @@ export function BrowserRouter({
   useTransitions,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  let historyRef = React.useRef<BrowserHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
@@ -910,7 +916,7 @@ export function HashRouter({
   useTransitions,
   window,
 }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  let historyRef = React.useRef<HashHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }
@@ -1771,13 +1777,6 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   preventScrollReset?: boolean;
 
   /**
-   * A function to call when the form is submitted. If you call
-   * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
-   * then this form will not do anything.
-   */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
-
-  /**
    * Specify the default revalidation behavior after this submission
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
@@ -1943,7 +1942,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let isAbsolute =
       typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+    let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
       event.preventDefault();
@@ -1969,7 +1968,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         });
 
       if (useTransitions && navigate !== false) {
-        // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
         doSubmit();
@@ -2249,7 +2247,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           });
 
         if (useTransitions) {
-          // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
           doNavigate();
@@ -2628,7 +2625,7 @@ export function useSubmit(): SubmitFunction {
  * This is used internally by {@link Form} to resolve the `action` to the closest
  * route, but can be used generically as well.
  *
- * @example
+ * ```ts
  * import { useFormAction } from "react-router";
  *
  * function SomeComponent() {
@@ -2638,6 +2635,14 @@ export function useSubmit(): SubmitFunction {
  *   // closest route URL + "destroy"
  *   let destroyAction = useFormAction("destroy");
  * }
+ * ```
+ *
+ * <docs-info>This hook adds a `basename` if your app specifies one, so that it
+ * can be used with raw `<form>` elements in a progressively enhanced way.  If
+ * you are using this to provide an `action` to `<Form>` or `fetcher.submit`, you
+ * will need to remove the `basename` since both of those will prepend it
+ * internally.</docs-info>
+ *
  *
  * @public
  * @category Hooks
@@ -3000,10 +3005,14 @@ export function useFetcher<T = any>({
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
-  return Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
-    ...fetcher,
-    key,
-  }));
+  return React.useMemo(
+    () =>
+      Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+        ...fetcher,
+        key,
+      })),
+    [state.fetchers],
+  );
 }
 
 const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
@@ -3115,7 +3124,10 @@ export function useScrollRestoration({
         if (sessionPositions) {
           savedScrollPositions = JSON.parse(sessionPositions);
         }
-      } catch (e) {
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {
         // no-op, use default empty object
       }
     }, [storageKey]);
@@ -3334,7 +3346,7 @@ export function useViewTransitionState(
 
   invariant(
     vtContext != null,
-    "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+    "`useViewTransitionState` must be used within `react-router/dom`'s `RouterProvider`.  " +
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 
