@@ -1,9 +1,4 @@
-import type {
-  AppLoadContext,
-  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  ServerBuild,
-  RouterContextProvider,
-} from "react-router";
+import type { ServerBuild, RouterContextProvider } from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { type CacheStorage } from "@cloudflare/workers-types";
 
@@ -36,28 +31,20 @@ export type GetLoadContextFunction<
       caches: CacheStorage;
     };
   };
-}) => MiddlewareEnabled extends true
-  ? MaybePromise<RouterContextProvider>
-  : MaybePromise<AppLoadContext>;
+}) => MaybePromise<RouterContextProvider>;
 
 export type RequestHandler<Env = any> = PagesFunction<Env>;
 
 export interface createPagesFunctionHandlerParams<Env = any> {
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>);
-  getLoadContext?: GetLoadContextFunction<Env>;
+  getLoadContext: GetLoadContextFunction<Env>;
   mode?: string;
 }
 
 export function createRequestHandler<Env = any>({
   build,
   mode,
-  getLoadContext = ({ context }) => ({
-    ...context,
-    cloudflare: {
-      ...context.cloudflare,
-      cf: context.cloudflare.request.cf,
-    },
-  }),
+  getLoadContext,
 }: createPagesFunctionHandlerParams<Env>): RequestHandler<Env> {
   let handleRequest = createReactRouterRequestHandler(build, mode);
 

@@ -295,10 +295,7 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
-export type {
-  Future,
-  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
-} from "./lib/types/future.ts";
+export type { Future } from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";

@@ -119,7 +119,6 @@ const files = {
           name: "test-preset",
           reactRouterConfig: async () => ({
             future: {
-              v8_middleware: true,
               unstable_optimizeDeps: true,
             },
           }),
@@ -248,7 +247,6 @@ test.describe("Vite / presets", async () => {
         unstable_optimizeDeps: true,
         unstable_trailingSlashAwareDataRequests: false,
         unstable_previewServerPrerendering: false,
-        v8_middleware: true,
         v8_passThroughRequests: false,
         v8_splitRouteModules: false,
         v8_viteEnvironmentApi: false,

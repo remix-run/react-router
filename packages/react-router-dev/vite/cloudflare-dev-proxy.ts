@@ -1,9 +1,7 @@
 import { sendResponse } from "@remix-run/node-fetch-server";
 import { createRequestHandler } from "react-router";
 import {
-  type AppLoadContext,
   type ServerBuild,
-  type UNSAFE_MiddlewareEnabled,
   type RouterContextProvider,
 } from "react-router";
 import { type Plugin } from "vite";
@@ -26,9 +24,7 @@ type LoadContext<Env, Cf extends CfProperties> = {
 type GetLoadContext<Env, Cf extends CfProperties> = (args: {
   request: Request;
   context: LoadContext<Env, Cf>;
-}) => UNSAFE_MiddlewareEnabled extends true
-  ? MaybePromise<RouterContextProvider>
-  : MaybePromise<AppLoadContext>;
+}) => MaybePromise<RouterContextProvider>;
 
 function importWrangler() {
   try {
@@ -146,7 +142,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
               context ??= await getContext();
               let loadContext = getLoadContext
                 ? await getLoadContext({ request: req, context })
-                : context;
+                : undefined;
               let res = await handler(req, loadContext);
               await sendResponse(nodeRes, res);
             } catch (error) {

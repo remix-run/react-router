@@ -18,7 +18,6 @@ import {
   SINGLE_FETCH_REDIRECT_STATUS,
   SingleFetchRedirectSymbol,
 } from "../dom/ssr/single-fetch";
-import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
@@ -40,7 +39,7 @@ export async function singleFetchAction(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
@@ -72,16 +71,14 @@ export async function singleFetchAction(
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       skipRevalidation: true,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (query) => {
-            try {
-              let innerResult = await query(handlerRequest);
-              return handleQueryResult(innerResult);
-            } catch (error) {
-              return handleQueryError(error);
-            }
-          }
-        : undefined,
+      generateMiddlewareResponse: async (query) => {
+        try {
+          let innerResult = await query(handlerRequest);
+          return handleQueryResult(innerResult);
+        } catch (error) {
+          return handleQueryError(error);
+        }
+      },
       normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
@@ -147,7 +144,7 @@ export async function singleFetchLoaders(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   let routesParam = new URL(request.url).searchParams.get("_routes");
@@ -165,16 +162,14 @@ export async function singleFetchLoaders(
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (query) => {
-            try {
-              let innerResult = await query(handlerRequest);
-              return handleQueryResult(innerResult);
-            } catch (error) {
-              return handleQueryError(error);
-            }
-          }
-        : undefined,
+      generateMiddlewareResponse: async (query) => {
+        try {
+          let innerResult = await query(handlerRequest);
+          return handleQueryResult(innerResult);
+        } catch (error) {
+          return handleQueryError(error);
+        }
+      },
       normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
@@ -183,14 +178,12 @@ export async function singleFetchLoaders(
     return handleQueryError(error);
   }
 
-  // Handle the query() result - either inside stream() with middleware enabled
-  // or after query() without
+  // Handle the query() result from inside stream()
   function handleQueryResult(result: StaticHandlerContext | Response) {
     return isResponse(result) ? result : staticContextToResponse(result);
   }
 
-  // Handle any thrown errors from query() result - either inside stream() with
-  // middleware enabled or after query() without
+  // Handle any thrown errors from query() result from inside stream()
   function handleQueryError(error: unknown) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs

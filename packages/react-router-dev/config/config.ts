@@ -96,10 +96,6 @@ interface FutureConfig {
    */
   unstable_previewServerPrerendering?: boolean;
   /**
-   * Enable route middleware
-   */
-  v8_middleware: boolean;
-  /**
    * Automatically split route modules into multiple chunks when possible.
    */
   v8_splitRouteModules: boolean | "enforce";
@@ -722,7 +718,6 @@ async function resolveConfig({
       false,
     unstable_previewServerPrerendering:
       userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
-    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
     v8_viteEnvironmentApi:
@@ -772,12 +767,6 @@ function logFutureFlagWarning(flag: string, message: string): void {
 }
 
 export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
-  if (future.v8_middleware === undefined) {
-    logFutureFlagWarning(
-      "v8_middleware",
-      "Route middleware support is changing in React Router v8.",
-    );
-  }
   if (future.v8_splitRouteModules === undefined) {
     logFutureFlagWarning(
       "v8_splitRouteModules",
