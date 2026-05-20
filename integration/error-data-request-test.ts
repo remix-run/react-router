@@ -127,11 +127,11 @@ test.describe("ErrorBoundary", () => {
       error: new ErrorResponseImpl(
         405,
         "Method Not Allowed",
-        'Error: You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
+        'Error: You made a POST request to "/_root.data" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
       ),
     });
     assertLoggedErrorInstance(
-      'You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
+      'You made a POST request to "/_root.data" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
     );
   });
 
