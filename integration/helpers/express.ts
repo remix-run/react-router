@@ -10,8 +10,6 @@ export function server() {
 
     const app = express();
 
-    const getLoadContext = () => ({});
-
     if (process.env.NODE_ENV === "production") {
       app.use(
         "/assets",
@@ -20,7 +18,6 @@ export function server() {
       app.use(express.static("build/client", { maxAge: "1h" }));
       app.all("*", createRequestHandler({
         build: await import("./build/index.js"),
-        getLoadContext,
       }));
     } else {
       const viteDevServer = await import("vite").then(
@@ -34,7 +31,6 @@ export function server() {
       app.use(viteDevServer.middlewares);
       app.all("*", createRequestHandler({
         build:() => viteDevServer.ssrLoadModule("virtual:react-router/server-build"),
-        getLoadContext,
       }));
     }
 

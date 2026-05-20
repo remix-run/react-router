@@ -18,15 +18,16 @@ function defineFiles({
     export default defineConfig({
       ${await viteConfig.server({ port })}
       plugins: [
-        cloudflare({ viteEnvironment: { name: "ssr" } }),
+        cloudflare({ viteEnvironment: { name: "ssr" }, inspectorPort: false }),
         reactRouter(),
       ]${reversePlugins ? ".reverse()" : ""},
     });
   `,
     "app/routes/env.tsx": tsx`
     import type { Route } from "./+types/env";
+    import { cloudflareContext } from "../cloudflare";
     export function loader({ context }: Route.LoaderArgs) {
-      return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+      return { message: context.get(cloudflareContext).env.VALUE_FROM_CLOUDFLARE };
     }
     export default function EnvRoute({ loaderData }: Route.RouteComponentProps) {
       return <div data-loader-message>{loaderData.message}</div>;
