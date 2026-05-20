@@ -186,6 +186,7 @@ test("should encode and decode an EvalError", async () => {
   const input = new EvalError("foo");
   const output = await quickDecode(encode(input));
   expect(output).toEqual(input);
+  expect((output as EvalError).name).toEqual("EvalError");
 });
 
 test("should encode and decode array", async () => {
@@ -584,6 +585,7 @@ test("should allow many nested promises without a memory leak", async () => {
 test("should encode large payload", async () => {
   const input = createDeeplyNestedObject();
   await readStreamToString(encode(input));
+  expect(true).toBe(true);
 });
 
 test("should encode and decode large payload and yield the event loop", async () => {

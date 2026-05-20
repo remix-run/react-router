@@ -1,14 +1,11 @@
 import * as React from "react";
 import type { Router as DataRouter } from "../../router/router";
 import type {
+  DataRouteObject,
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import {
-  joinPaths,
-  matchRoutes,
-  removeDoubleSlashes,
-} from "../../router/utils";
+import { joinPaths, matchRoutesImpl } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -26,7 +23,7 @@ const discoveredPaths = new Set<string>();
 
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
-const URL_LIMIT = 7680;
+export const URL_LIMIT = 7680;
 
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
@@ -56,7 +53,13 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutes(router.routes, path, router.basename);
+    let matches = matchRoutesImpl<DataRouteObject>(
+      router.routes,
+      path,
+      router.basename || "/",
+      false,
+      router.branches,
+    );
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }

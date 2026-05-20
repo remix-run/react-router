@@ -1,6 +1,9 @@
 import * as React from "react";
 
-import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
+import {
+  SUPPORTED_ERROR_TYPES,
+  decode,
+} from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
@@ -163,7 +166,6 @@ export function StreamTransfer({
 type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
   hasClientLoader: boolean;
-  hasShouldRevalidate: boolean;
 };
 
 type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
@@ -189,11 +191,9 @@ export function getTurboStreamSingleFetchDataStrategy(
     (match: DataRouteMatch) => {
       let manifestRoute = manifest.routes[match.route.id];
       invariant(manifestRoute, "Route not found in manifest");
-      let routeModule = routeModules[match.route.id];
       return {
         hasLoader: manifestRoute.hasLoader,
         hasClientLoader: manifestRoute.hasClientLoader,
-        hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
       };
     },
     fetchAndDecodeViaTurboStream,
@@ -412,8 +412,7 @@ async function singleFetchLoaderNavigationStrategy(
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
         let routeId = m.route.id;
-        let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(m);
+        let { hasLoader, hasClientLoader } = getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.shouldRevalidateArgs ||
@@ -425,8 +424,7 @@ async function singleFetchLoaderNavigationStrategy(
           // If this route opted out, don't include in the .data request
           foundOptOutRoute ||=
             m.shouldRevalidateArgs != null && // This is a revalidation,
-            hasLoader && // for a route with a server loader,
-            hasShouldRevalidate === true; // and a shouldRevalidate function
+            hasLoader; // for a route with a server loader
           return;
         }
 
@@ -567,7 +565,10 @@ async function bubbleMiddlewareErrors(
         }
       });
     }
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // No-op - this logic is only intended to process successful responses
     // If the `.data` failed, the routes will handle those errors themselves
   }
@@ -728,7 +729,10 @@ async function fetchAndDecodeViaTurboStream(
       }
     }
     return { status: res.status, data };
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
     // content type here, or even X-Remix-Response but then folks can't
@@ -757,8 +761,13 @@ export function decodeViaTurboStream(
             string | undefined,
           ];
           let Constructor = Error;
-          // @ts-expect-error
-          if (name && name in global && typeof global[name] === "function") {
+          if (
+            name &&
+            SUPPORTED_ERROR_TYPES.includes(name) &&
+            name in global &&
+            // @ts-expect-error
+            typeof global[name] === "function"
+          ) {
             // @ts-expect-error
             Constructor = global[name];
           }
@@ -839,13 +848,19 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
     reject = async (error?: unknown) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
   });
   return {

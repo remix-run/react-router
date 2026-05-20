@@ -772,8 +772,8 @@ describe("special character tests", () => {
       expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
         "<div>
           <a
-            data-discover=\"true\"
-            href=\"/parent/child/percent-%25-sign/grandchild\"
+            data-discover="true"
+            href="/parent/child/percent-%25-sign/grandchild"
           >
             Link to grandchild
           </a>
@@ -786,8 +786,8 @@ describe("special character tests", () => {
       expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
         "<div>
           <a
-            data-discover=\"true\"
-            href=\"/parent/child/percent-%25-sign/grandchild\"
+            data-discover="true"
+            href="/parent/child/percent-%25-sign/grandchild"
           >
             Link to grandchild
           </a>

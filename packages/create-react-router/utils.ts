@@ -226,7 +226,10 @@ export function isUrl(value: string | URL) {
   try {
     new URL(value);
     return true;
-  } catch (_) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     return false;
   }
 }

@@ -626,7 +626,7 @@ for (let previewServerPrerendering of [false, true]) {
             "react-router.config.ts": reactRouterConfig({
               prerender: {
                 paths: ["/", "/about"],
-                unstable_concurrency: 2,
+                concurrency: 2,
               },
             }),
             "vite.config.ts": js`

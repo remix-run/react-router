@@ -1,9 +1,13 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse } from "../router/utils";
-import { RouterContextProvider } from "../router/utils";
+import type {
+  DataRouteObject,
+  ErrorResponse,
+  RouteBranch,
+} from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
+  RouterContextProvider,
   stripBasename,
 } from "../router/utils";
 import {
@@ -11,6 +15,7 @@ import {
   createStaticHandler,
   isRedirectResponse,
   isResponse,
+  isMutationMethod,
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
@@ -21,7 +26,7 @@ import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
-import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
+import { createStaticHandlerDataRoutes } from "./routes";
 import type { ServerHandoff } from "./serverHandoff";
 import { createServerHandoffString } from "./serverHandoff";
 import { getBuildTimeHeader, getDevServerHooks } from "./dev";
@@ -35,8 +40,8 @@ import {
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import type { MiddlewareEnabled } from "../types/future";
-import { getManifestPath } from "../dom/ssr/fog-of-war";
-import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
+import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import { getNormalizedPath } from "./urls";
@@ -54,12 +59,12 @@ export type CreateRequestHandlerFunction = (
 ) => RequestHandler;
 
 function derive(build: ServerBuild, mode?: string) {
-  let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
-    unstable_instrumentations: build.entry.module.unstable_instrumentations,
+    instrumentations: build.entry.module.instrumentations,
+    future: build.future,
   });
 
   let errorHandler =
@@ -186,9 +191,17 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
-    if (requestUrl.pathname === manifestUrl) {
+    if (
+      build.routeDiscovery.mode === "lazy" &&
+      requestUrl.pathname === manifestUrl
+    ) {
       try {
-        let res = await handleManifestRequest(build, routes, requestUrl);
+        let res = await handleManifestRequest(
+          build,
+          staticHandler.dataRoutes,
+          staticHandler._internalRouteBranches,
+          requestUrl,
+        );
         return res;
       } catch (e) {
         handleError(e);
@@ -196,19 +209,19 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
-    let matches = matchServerRoutes(routes, normalizedPathname, build.basename);
+    let matches = matchServerRoutes(
+      build.routes,
+      staticHandler.dataRoutes,
+      staticHandler._internalRouteBranches,
+      normalizedPathname,
+      build.basename,
+    );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
 
     let response: Response;
     if (requestUrl.pathname.endsWith(".data")) {
-      let singleFetchMatches = matchServerRoutes(
-        routes,
-        normalizedPathname,
-        build.basename,
-      );
-
       response = await handleSingleFetchRequest(
         serverMode,
         build,
@@ -231,7 +244,7 @@ function derive(build: ServerBuild, mode?: string) {
       if (build.entry.module.handleDataRequest) {
         response = await build.entry.module.handleDataRequest(response, {
           context: loadContext,
-          params: singleFetchMatches ? singleFetchMatches[0].params : {},
+          params: matches ? matches[0].params : {},
           request,
         });
 
@@ -295,18 +308,16 @@ function derive(build: ServerBuild, mode?: string) {
     return response;
   };
 
-  if (build.entry.module.unstable_instrumentations) {
+  if (build.entry.module.instrumentations) {
     requestHandler = instrumentHandler(
       requestHandler,
-      build.entry.module.unstable_instrumentations
+      build.entry.module.instrumentations
         .map((i) => i.handler)
-        .filter(Boolean) as unstable_InstrumentRequestHandlerFunction[],
+        .filter(Boolean) as InstrumentRequestHandlerFunction[],
     );
   }
 
   return {
-    routes,
-    dataRoutes,
     serverMode,
     staticHandler,
     errorHandler,
@@ -319,7 +330,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   mode,
 ) => {
   let _build: ServerBuild;
-  let routes: ServerRoute[];
   let serverMode: ServerMode;
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
@@ -330,20 +340,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     if (typeof build === "function") {
       let derived = derive(_build, mode);
-      routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
       _requestHandler = derived.requestHandler;
     } else if (
-      !routes ||
       !serverMode ||
       !staticHandler ||
       !errorHandler ||
       !_requestHandler
     ) {
       let derived = derive(_build, mode);
-      routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
@@ -356,7 +363,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  routes: ServerRoute[],
+  dataRoutes: DataRouteObject[],
+  branches: RouteBranch<DataRouteObject>[],
   url: URL,
 ) {
   if (build.assets.version !== url.searchParams.get("version")) {
@@ -365,6 +373,13 @@ async function handleManifestRequest(
       headers: {
         "X-Remix-Reload-Document": "true",
       },
+    });
+  }
+
+  if (url.toString().length > URL_LIMIT) {
+    return new Response(null, {
+      statusText: "Bad Request",
+      status: 400,
     });
   }
 
@@ -395,7 +410,13 @@ async function handleManifestRequest(
     });
 
     for (let path of paths) {
-      let matches = matchServerRoutes(routes, path, build.basename);
+      let matches = matchServerRoutes(
+        build.routes,
+        dataRoutes,
+        branches,
+        path,
+        build.basename,
+      );
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -429,26 +450,25 @@ async function handleSingleFetchRequest(
   let handlerUrl = new URL(request.url);
   handlerUrl.pathname = normalizedPath;
 
-  let response =
-    request.method !== "GET"
-      ? await singleFetchAction(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        )
-      : await singleFetchLoaders(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        );
+  let response = isMutationMethod(request.method)
+    ? await singleFetchAction(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      )
+    : await singleFetchLoaders(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      );
 
   return response;
 }
@@ -464,7 +484,7 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
-    if (request.method === "POST") {
+    if (isMutationMethod(request.method)) {
       try {
         throwIfPotentialCSRFAttack(
           request.headers,
@@ -493,8 +513,7 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
-      unstable_normalizePath: (r) =>
-        getNormalizedPath(r, build.basename, build.future),
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     if (!isResponse(result)) {
@@ -542,6 +561,7 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
+      branches: staticHandler._internalRouteBranches,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
@@ -589,7 +609,10 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (e) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          e
+        ) {
           // If we can't unwrap the response - just leave it as-is
         }
       }
@@ -672,8 +695,7 @@ async function handleResourceRequest(
             }
           }
         : undefined,
-      unstable_normalizePath: (r) =>
-        getNormalizedPath(r, build.basename, build.future),
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryRouteResult(result);

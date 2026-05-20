@@ -18,6 +18,7 @@ on:
     inputs:
       branch:
         required: true
+        description: Experimental release branch
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,7 +33,7 @@ jobs:
       has_change_files: ${{ steps.check.outputs.has_change_files }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check for change files
         id: check
@@ -51,25 +52,26 @@ jobs:
   pull_request:
     name: Open pull request
     needs: check
-    if: github.event_name == 'push' && needs.check.outputs.has_change_files == 'true'
+    if: needs.check.outputs.has_change_files == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24 # Needed to run typescript scripts directly
-          cache: pnpm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -82,7 +84,7 @@ jobs:
   publish:
     name: Publish
     needs: check
-    if: github.event_name == 'push' && needs.check.outputs.has_change_files == 'false'
+    if: needs.check.outputs.has_change_files == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -92,13 +94,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
           node-version: 24 # Needed for npm@11 for Trusted Publishing
-          cache: "pnpm"
+          package-manager-cache: false
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
@@ -110,6 +112,36 @@ jobs:
         run: pnpm changes:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  comment:
+    name: 📝 Comment on released issues/pull requests
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # enable commenting on released issues
+      pull-requests: write # enable commenting on released pull requests
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24 # Needed for node TS support
+          package-manager-cache: false
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📝 Comment on released issues and pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm run release-comments
 
   experimental-release:
     name: 🧪 Experimental Release
@@ -128,13 +160,13 @@ jobs:
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
           node-version: 24 # Needed for npm@11 for Trusted Publishing
-          cache: "pnpm"
+          package-manager-cache: false
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile

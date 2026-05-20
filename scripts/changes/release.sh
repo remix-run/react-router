@@ -76,13 +76,22 @@ elif [[ "${COMMAND}" == "finish" ]]; then
 
   git push
 
-  git branch -d release
   git branch -d release-pr &> /dev/null || true
+  git branch -d release
+
+  set +e
   git ls-remote --exit-code --heads origin release-pr
   EXIT_CODE=$?
   if [[ $EXIT_CODE == '0' ]]; then
     git push origin --delete release-pr
   fi
+
+  git ls-remote --exit-code --heads origin release
+  EXIT_CODE=$?
+  if [[ $EXIT_CODE == '0' ]]; then
+    git push origin --delete release
+  fi
+  set -e
 fi
 
 set +e

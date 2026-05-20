@@ -948,8 +948,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -984,8 +984,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1018,8 +1018,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1124,8 +1124,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1164,8 +1164,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -1201,8 +1201,8 @@ describe("submissions", () => {
       expect(nav.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
-        unstable_url: expect.any(URL),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 

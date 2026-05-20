@@ -402,11 +402,11 @@ function hasBreakingChangePrefix(content: string): boolean {
 function formatChangelogEntry(change: ChangeFile): string {
   let lines = change.content.trim().split("\n");
   let base = "https://github.com/remix-run/react-router";
-  let link = change.prNumber
-    ? ` ([#${change.prNumber}](${base}/pull/${change.prNumber}))`
-    : change.gitSha
-      ? ` ([[${change.gitSha}](${base}/commit/${change.gitSha}))`
-      : "";
+  // prettier-ignore
+  let link =
+    change.prNumber ? ` ([#${change.prNumber}](${base}/pull/${change.prNumber}))` :
+    change.gitSha   ? ` ([${change.gitSha}](${base}/commit/${change.gitSha}))` :
+    "";
 
   if (lines.length === 1) {
     return `- ${lines[0]}${link}`;

@@ -43,6 +43,7 @@ import {
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
+import { URL_LIMIT } from "../dom/ssr/fog-of-war";
 
 const defaultManifestPath = "/__manifest";
 
@@ -459,7 +460,6 @@ export function getRSCSingleFetchDataStrategy(
       hasComponent: boolean;
       hasAction: boolean;
       hasClientAction: boolean;
-      hasShouldRevalidate: boolean;
     };
   };
 
@@ -474,7 +474,6 @@ export function getRSCSingleFetchDataStrategy(
         hasComponent: M.route.hasComponent,
         hasAction: M.route.hasAction,
         hasClientAction: M.route.hasClientAction,
-        hasShouldRevalidate: M.route.hasShouldRevalidate,
       };
     },
     // pass map into fetchAndDecode so it can add payloads
@@ -841,9 +840,8 @@ export function RSCHydratedRouter({
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
-      unstable_subResourceIntegrity: false,
       unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-      unstable_passThroughRequests: true, // always on for RSC
+      v8_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
@@ -888,7 +886,6 @@ type DataRouteObjectWithManifestInfo = DataRouteObject & {
   hasClientLoader: boolean;
   hasAction: boolean;
   hasClientAction: boolean;
-  hasShouldRevalidate: boolean;
 };
 
 function createRouteFromServerManifest(
@@ -920,31 +917,32 @@ function createRouteFromServerManifest(
     index: match.index,
     loader: match.clientLoader
       ? async (args, singleFetch) => {
-          try {
-            let result = await match.clientLoader!({
-              ...args,
-              serverLoader: () => {
-                preventInvalidServerHandlerCall(
-                  "loader",
-                  match.id,
-                  match.hasLoader,
-                );
-                // On the first call, resolve with the server result
-                if (isHydrationRequest) {
-                  if (hasInitialData) {
-                    return initialData;
-                  }
-                  if (hasInitialError) {
-                    throw initialError;
-                  }
+          // Capture and clear immediately so that if this call is aborted
+          // mid-flight, subsequent calls won't see a stale `true` value
+          let _isHydrationRequest = isHydrationRequest;
+          isHydrationRequest = false;
+
+          let result = await match.clientLoader!({
+            ...args,
+            serverLoader: () => {
+              preventInvalidServerHandlerCall(
+                "loader",
+                match.id,
+                match.hasLoader,
+              );
+              // On the first call, resolve with the server result
+              if (_isHydrationRequest) {
+                if (hasInitialData) {
+                  return initialData;
                 }
-                return callSingleFetch(singleFetch);
-              },
-            });
-            return result;
-          } finally {
-            isHydrationRequest = false;
-          }
+                if (hasInitialError) {
+                  throw initialError;
+                }
+              }
+              return callSingleFetch(singleFetch);
+            },
+          });
+          return result;
         }
       : // We always make the call in this RSC world since even if we don't
         // have a `loader` we may need to get the `element` implementation
@@ -975,7 +973,6 @@ function createRouteFromServerManifest(
     hasClientLoader: match.clientLoader != null,
     hasAction: match.hasAction,
     hasClientAction: match.clientAction != null,
-    hasShouldRevalidate: match.shouldRevalidate != null,
   };
 
   if (typeof dataRoute.loader === "function") {
@@ -1017,10 +1014,6 @@ const nextPaths = new Set<string>();
 // subsequent navigations to the same path
 const discoveredPathsMaxSize = 1000;
 const discoveredPaths = new Set<string>();
-
-// 7.5k to come in under the ~8k limit for most browsers
-// https://stackoverflow.com/a/417184
-const URL_LIMIT = 7680;
 
 function getManifestUrl(paths: string[]): URL | null {
   if (paths.length === 0) {

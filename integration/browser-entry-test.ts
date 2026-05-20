@@ -213,7 +213,7 @@ test("allows users to instrument the client side router via HydratedRouter", asy
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_instrumentations={[{
+                instrumentations={[{
                   router(router) {
                     router.instrument({
                       async navigate(impl, info) {

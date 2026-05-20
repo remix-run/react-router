@@ -214,14 +214,14 @@ for this navigation.
 
 To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
 
-### unstable_defaultShouldRevalidate
+### defaultShouldRevalidate
 
 [modes: framework, data, declarative]
 
 Specify the default revalidation behavior for the navigation.
 
 ```tsx
-<Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+<Link to="/some/path" defaultShouldRevalidate={false} />
 ```
 
 If no `shouldRevalidate` functions are present on the active routes, then this
@@ -232,7 +232,7 @@ useful when updating search params and you don't want to trigger a revalidation.
 By default (when not specified), loaders will revalidate according to the routers
 standard revalidation behavior.
 
-### unstable_mask
+### mask
 
 [modes: framework, data]
 
@@ -265,7 +265,7 @@ export default function Gallery({ loaderData }: Route.ComponentProps) {
          <Link
            key={image.id}
            to={`/gallery?image=${image.id}`}
-           unstable_mask={`/images/${image.id}`}
+           mask={`/images/${image.id}`}
          >
            <img src={image.url} alt={image.alt} />
          </Link>

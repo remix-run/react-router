@@ -159,7 +159,7 @@ function Gallery() {
           <Link
             key={image.id}
             to={`?img=${image.id}`}
-            unstable_mask={`/img/${image.id}`}
+            mask={`/img/${image.id}`}
           >
             <img
               width={200}

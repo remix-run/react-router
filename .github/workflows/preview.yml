@@ -56,7 +56,7 @@ jobs:
           ref: ${{ inputs.baseBranch }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -76,7 +76,7 @@ jobs:
       - name: Build/push branch (push)
         if: github.event_name == 'push'
         run: |
-          pnpm run setup-installable-branch preview/dev
+          pnpm run previews:branch preview/dev
           git push --force --set-upstream origin preview/dev
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
@@ -86,17 +86,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          pnpm run setup-installable-branch preview/pr-${{ github.event.pull_request.number }}
+          pnpm run previews:branch preview/pr-${{ github.event.pull_request.number }}
           git push --force --set-upstream origin preview/pr-${{ github.event.pull_request.number }}
           echo "pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
-          pnpm run pr-preview comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
+          pnpm run previews:pr comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
 
       # Build and normal push for experimental releases to avoid unintended force
       # pushes over remote branches in case of a branch name collision
       - name: Build/push branch (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          pnpm run setup-installable-branch ${{ inputs.installableBranch }}
+          pnpm run previews:branch ${{ inputs.installableBranch }}
           git push --set-upstream origin ${{ inputs.installableBranch }}
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
@@ -106,4 +106,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          pnpm run pr-preview cleanup ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
+          pnpm run previews:pr cleanup ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}

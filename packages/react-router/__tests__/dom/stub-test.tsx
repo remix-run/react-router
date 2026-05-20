@@ -84,6 +84,7 @@ test("middleware works without loader", async () => {
   });
 
   await waitFor(() => screen.findByText("Target"));
+  expect(true).toBe(true);
 });
 
 test("middleware works with loader", async () => {
@@ -106,6 +107,7 @@ test("middleware works with loader", async () => {
   render(<RoutesStub future={{ v8_middleware: true }} />);
 
   await waitFor(() => screen.findByText("Message: hello"));
+  expect(true).toBe(true);
 });
 
 // eslint-disable-next-line jest/expect-expect

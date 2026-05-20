@@ -2081,6 +2081,122 @@ describe("shared server runtime", () => {
     });
   });
 
+  describe("manifest requests", () => {
+    test("returns manifest patches", async () => {
+      let build = mockServerBuild({
+        root: {
+          default: {},
+        },
+        "routes/a": {
+          path: "a",
+        },
+        "routes/a.b": {
+          path: "a/b",
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let request = new Request(
+        `${baseUrl}/__manifest?paths=%2Fa&version=${build.assets.version}`,
+      );
+
+      let result = await handler(request);
+      expect(result.status).toBe(200);
+      expect(await result.json()).toEqual({
+        "routes/a": {
+          hasAction: false,
+          hasClientAction: false,
+          hasClientLoader: false,
+          hasClientMiddleware: false,
+          hasErrorBoundary: false,
+          hasLoader: false,
+          id: "routes/a",
+          module: "",
+          path: "a",
+        },
+      });
+    });
+
+    test("returns nested manifest patches", async () => {
+      let build = mockServerBuild({
+        root: {
+          default: {},
+        },
+        "routes/a": {
+          path: "a",
+        },
+        "routes/a.b": {
+          path: "b",
+          parentId: "routes/a",
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let request = new Request(
+        `${baseUrl}/__manifest?paths=%2Fa%2Fb&version=${build.assets.version}`,
+      );
+
+      let result = await handler(request);
+      expect(result.status).toBe(200);
+      expect(await result.json()).toEqual({
+        "routes/a": {
+          hasAction: false,
+          hasClientAction: false,
+          hasClientLoader: false,
+          hasClientMiddleware: false,
+          hasErrorBoundary: false,
+          hasLoader: false,
+          id: "routes/a",
+          module: "",
+          path: "a",
+        },
+        "routes/a.b": {
+          hasAction: false,
+          hasClientAction: false,
+          hasClientLoader: false,
+          hasClientMiddleware: false,
+          hasErrorBoundary: false,
+          hasLoader: false,
+          id: "routes/a.b",
+          parentId: "routes/a",
+          module: "",
+          path: "b",
+        },
+      });
+    });
+
+    test("disabled when route discovery is disabled", async () => {
+      let build = mockServerBuild(
+        {
+          root: {
+            default: {},
+          },
+          "routes/a": {
+            path: "a",
+          },
+          "routes/a.b": {
+            path: "a/b",
+          },
+        },
+        {
+          routeDiscovery: {
+            mode: "initial",
+            manifestPath: "",
+          },
+        },
+      );
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let request = new Request(
+        `${baseUrl}/__manifest?paths=%2Fa&version=${build.assets.version}`,
+      );
+
+      let result = await handler(request);
+      expect(result.status).toBe(404);
+      expect(await result.text()).toBe("");
+    });
+  });
+
   test("provides load context to server entrypoint", async () => {
     let rootLoader = jest.fn(() => {
       return "root";

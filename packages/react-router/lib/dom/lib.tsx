@@ -95,7 +95,7 @@ import {
   useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
-import type { unstable_ClientInstrumentation } from "../router/instrumentation";
+import type { ClientInstrumentation } from "../router/instrumentation";
 import { escapeHtml } from "./ssr/markup";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,10 @@ try {
       // @ts-expect-error
       REACT_ROUTER_VERSION;
   }
-} catch (e) {
+} catch (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  e
+) {
   // no-op
 }
 //#endregion
@@ -247,7 +250,7 @@ export interface DOMRouterOpts {
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   unstable_instrumentations: [logging]
+   *   instrumentations: [logging]
    * });
    *
    *
@@ -285,7 +288,7 @@ export interface DOMRouterOpts {
    * }
    * ```
    */
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   /**
    * Override the default data strategy of running loaders in parallel -
    * see the [docs](../../how-to/data-strategy) for more information.
@@ -635,7 +638,7 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
- * @param {DOMRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
+ * @param {DOMRouterOpts.instrumentations} opts.instrumentations n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
  * @returns An initialized {@link DataRouter| data router} to pass to {@link RouterProvider | `<RouterProvider>`}
@@ -656,7 +659,7 @@ export function createBrowserRouter(
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
-    unstable_instrumentations: opts?.unstable_instrumentations,
+    instrumentations: opts?.instrumentations,
   }).initialize();
 }
 
@@ -673,7 +676,7 @@ export function createBrowserRouter(
  * @param {DOMRouterOpts.future} opts.future n/a
  * @param {DOMRouterOpts.getContext} opts.getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
- * @param {DOMRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
+ * @param {DOMRouterOpts.instrumentations} opts.instrumentations n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
@@ -695,7 +698,7 @@ export function createHashRouter(
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
-    unstable_instrumentations: opts?.unstable_instrumentations,
+    instrumentations: opts?.instrumentations,
   }).initialize();
 }
 
@@ -738,7 +741,10 @@ function deserializeErrors(
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
             serialized[key] = error;
-          } catch (e) {
+          } catch (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            e
+          ) {
             // no-op - fall through and create a normal Error
           }
         }
@@ -788,9 +794,9 @@ export interface BrowserRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -808,7 +814,7 @@ export interface BrowserRouterProps {
  * @param props Props
  * @param {BrowserRouterProps.basename} props.basename n/a
  * @param {BrowserRouterProps.children} props.children n/a
- * @param {BrowserRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
+ * @param {BrowserRouterProps.useTransitions} props.useTransitions n/a
  * @param {BrowserRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * API for client-side routing.
@@ -816,7 +822,7 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
-  unstable_useTransitions,
+  useTransitions,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -831,13 +837,13 @@ export function BrowserRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_useTransitions === false) {
+      if (useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_useTransitions],
+    [useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -849,7 +855,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions}
+      useTransitions={useTransitions}
     />
   );
 }
@@ -878,9 +884,9 @@ export interface HashRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
    * override. Defaults to the global `window` instance
@@ -899,7 +905,7 @@ export interface HashRouterProps {
  * @param props Props
  * @param {HashRouterProps.basename} props.basename n/a
  * @param {HashRouterProps.children} props.children n/a
- * @param {HashRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
+ * @param {HashRouterProps.useTransitions} props.useTransitions n/a
  * @param {HashRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
  * for client-side routing.
@@ -907,7 +913,7 @@ export interface HashRouterProps {
 export function HashRouter({
   basename,
   children,
-  unstable_useTransitions,
+  useTransitions,
   window,
 }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
@@ -922,13 +928,13 @@ export function HashRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_useTransitions === false) {
+      if (useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_useTransitions],
+    [useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -940,7 +946,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions}
+      useTransitions={useTransitions}
     />
   );
 }
@@ -973,9 +979,9 @@ export interface HistoryRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
 }
 
 /**
@@ -993,7 +999,7 @@ export interface HistoryRouterProps {
  * @param {HistoryRouterProps.basename} props.basename n/a
  * @param {HistoryRouterProps.children} props.children n/a
  * @param {HistoryRouterProps.history} props.history n/a
- * @param {HistoryRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
+ * @param {HistoryRouterProps.useTransitions} props.useTransitions n/a
  * @returns A declarative {@link Router | `<Router>`} using the provided history
  * implementation for client-side routing.
  */
@@ -1001,7 +1007,7 @@ export function HistoryRouter({
   basename,
   children,
   history,
-  unstable_useTransitions,
+  useTransitions,
 }: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
@@ -1009,13 +1015,13 @@ export function HistoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_useTransitions === false) {
+      if (useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_useTransitions],
+    [useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -1027,7 +1033,7 @@ export function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions}
+      useTransitions={useTransitions}
     />
   );
 }
@@ -1206,7 +1212,7 @@ export interface LinkProps
    * Specify the default revalidation behavior for the navigation.
    *
    * ```tsx
-   * <Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+   * <Link to="/some/path" defaultShouldRevalidate={false} />
    * ```
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
@@ -1217,7 +1223,7 @@ export interface LinkProps
    * By default (when not specified), loaders will revalidate according to the routers
    * standard revalidation behavior.
    */
-  unstable_defaultShouldRevalidate?: boolean;
+  defaultShouldRevalidate?: boolean;
 
   /**
    * Masked path for this navigation, when you want to navigate the router to
@@ -1249,7 +1255,7 @@ export interface LinkProps
    *          <Link
    *            key={image.id}
    *            to={`/gallery?image=${image.id}`}
-   *            unstable_mask={`/images/${image.id}`}
+   *            mask={`/images/${image.id}`}
    *          >
    *            <img src={image.url} alt={image.alt} />
    *          </Link>
@@ -1266,7 +1272,7 @@ export interface LinkProps
    * }
    * ```
    */
-  unstable_mask?: To;
+  mask?: To;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -1299,8 +1305,8 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  * @param {LinkProps.state} props.state n/a
  * @param {LinkProps.to} props.to n/a
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
- * @param {LinkProps.unstable_defaultShouldRevalidate} props.unstable_defaultShouldRevalidate n/a
- * @param {LinkProps.unstable_mask} props.unstable_mask [modes: framework, data] n/a
+ * @param {LinkProps.defaultShouldRevalidate} props.defaultShouldRevalidate n/a
+ * @param {LinkProps.mask} props.mask [modes: framework, data] n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1311,18 +1317,18 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       relative,
       reloadDocument,
       replace,
-      unstable_mask,
+      mask,
       state,
       target,
       to,
       preventScrollReset,
       viewTransition,
-      unstable_defaultShouldRevalidate,
+      defaultShouldRevalidate,
       ...rest
     },
     forwardedRef,
   ) {
-    let { basename, navigator, unstable_useTransitions } =
+    let { basename, navigator, useTransitions } =
       React.useContext(NavigationContext);
     let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
@@ -1335,13 +1341,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let maskedHref: string | null = null;
 
-    if (unstable_mask) {
+    if (mask) {
       // Inlined version of the `useHref` logic operating off the masked location
       // instead of the current location
       let resolved = resolveTo(
-        unstable_mask,
+        mask,
         [],
-        location.unstable_mask ? location.unstable_mask.pathname : "/",
+        location.mask ? location.mask.pathname : "/",
         true,
       );
 
@@ -1366,14 +1372,14 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
-      unstable_mask,
+      mask,
       state,
       target,
       preventScrollReset,
       relative,
       viewTransition,
-      unstable_defaultShouldRevalidate,
-      unstable_useTransitions,
+      defaultShouldRevalidate,
+      useTransitions,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -1788,7 +1794,7 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * By default (when not specified), loaders will revalidate according to the routers
    * standard revalidation behavior.
    */
-  unstable_defaultShouldRevalidate?: boolean;
+  defaultShouldRevalidate?: boolean;
 }
 
 /**
@@ -1912,7 +1918,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.replace} replace n/a
  * @param {FormProps.state} state n/a
  * @param {FormProps.viewTransition} viewTransition n/a
- * @param {FormProps.unstable_defaultShouldRevalidate} unstable_defaultShouldRevalidate n/a
+ * @param {FormProps.defaultShouldRevalidate} defaultShouldRevalidate n/a
  * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
@@ -1930,12 +1936,12 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       relative,
       preventScrollReset,
       viewTransition,
-      unstable_defaultShouldRevalidate,
+      defaultShouldRevalidate,
       ...props
     },
     forwardedRef,
   ) => {
-    let { unstable_useTransitions } = React.useContext(NavigationContext);
+    let { useTransitions } = React.useContext(NavigationContext);
     let submit = useSubmit();
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
@@ -1965,10 +1971,10 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
           relative,
           preventScrollReset,
           viewTransition,
-          unstable_defaultShouldRevalidate,
+          defaultShouldRevalidate,
         });
 
-      if (unstable_useTransitions && navigate !== false) {
+      if (useTransitions && navigate !== false) {
         // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
@@ -2188,11 +2194,11 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
- * @param options.unstable_defaultShouldRevalidate Specify the default revalidation
+ * @param options.defaultShouldRevalidate Specify the default revalidation
  * behavior for the navigation. Defaults to `true`.
- * @param options.unstable_mask Masked location to display in the browser instead
+ * @param options.mask Masked location to display in the browser instead
  * of the router location. Defaults to `undefined`.
- * @param options.unstable_useTransitions Wraps the navigation in
+ * @param options.useTransitions Wraps the navigation in
  * [`React.startTransition`](https://react.dev/reference/react/startTransition)
  * for concurrent rendering. Defaults to `false`.
  * @returns A click handler function that can be used in a custom {@link Link} component.
@@ -2202,23 +2208,23 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   {
     target,
     replace: replaceProp,
-    unstable_mask,
+    mask,
     state,
     preventScrollReset,
     relative,
     viewTransition,
-    unstable_defaultShouldRevalidate,
-    unstable_useTransitions,
+    defaultShouldRevalidate,
+    useTransitions,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    unstable_mask?: To;
+    mask?: To;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
-    unstable_defaultShouldRevalidate?: boolean;
-    unstable_useTransitions?: boolean;
+    defaultShouldRevalidate?: boolean;
+    useTransitions?: boolean;
   } = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -2240,15 +2246,15 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let doNavigate = () =>
           navigate(to, {
             replace,
-            unstable_mask,
+            mask,
             state,
             preventScrollReset,
             relative,
             viewTransition,
-            unstable_defaultShouldRevalidate,
+            defaultShouldRevalidate,
           });
 
-        if (unstable_useTransitions) {
+        if (useTransitions) {
           // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
@@ -2261,15 +2267,15 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       navigate,
       path,
       replaceProp,
-      unstable_mask,
+      mask,
       state,
       target,
       to,
       preventScrollReset,
       relative,
       viewTransition,
-      unstable_defaultShouldRevalidate,
-      unstable_useTransitions,
+      defaultShouldRevalidate,
+      useTransitions,
     ],
   );
 }
@@ -2591,8 +2597,7 @@ export function useSubmit(): SubmitFunction {
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
         await routerFetch(key, currentRouteId, options.action || action, {
-          unstable_defaultShouldRevalidate:
-            options.unstable_defaultShouldRevalidate,
+          defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2602,8 +2607,7 @@ export function useSubmit(): SubmitFunction {
         });
       } else {
         await routerNavigate(options.action || action, {
-          unstable_defaultShouldRevalidate:
-            options.unstable_defaultShouldRevalidate,
+          defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -2630,7 +2634,7 @@ export function useSubmit(): SubmitFunction {
  * This is used internally by {@link Form} to resolve the `action` to the closest
  * route, but can be used generically as well.
  *
- * @example
+ * ```ts
  * import { useFormAction } from "react-router";
  *
  * function SomeComponent() {
@@ -2640,6 +2644,14 @@ export function useSubmit(): SubmitFunction {
  *   // closest route URL + "destroy"
  *   let destroyAction = useFormAction("destroy");
  * }
+ * ```
+ *
+ * <docs-info>This hook adds a `basename` if your app specifies one, so that it
+ * can be used with raw `<form>` elements in a progressively enhanced way.  If
+ * you are using this to provide an `action` to `<Form>` or `fetcher.submit`, you
+ * will need to remove the `basename` since both of those will prepend it
+ * internally.</docs-info>
+ *
  *
  * @public
  * @category Hooks
@@ -3002,10 +3014,14 @@ export function useFetcher<T = any>({
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
-  return Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
-    ...fetcher,
-    key,
-  }));
+  return React.useMemo(
+    () =>
+      Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+        ...fetcher,
+        key,
+      })),
+    [state.fetchers],
+  );
 }
 
 const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
@@ -3117,7 +3133,10 @@ export function useScrollRestoration({
         if (sessionPositions) {
           savedScrollPositions = JSON.parse(sessionPositions);
         }
-      } catch (e) {
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {
         // no-op, use default empty object
       }
     }, [storageKey]);

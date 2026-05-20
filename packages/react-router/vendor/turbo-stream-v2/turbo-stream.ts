@@ -2,6 +2,7 @@ import { flatten } from "./flatten";
 import { unflatten } from "./unflatten";
 import {
   Deferred,
+  SUPPORTED_ERROR_TYPES,
   TYPE_ERROR,
   TYPE_PREVIOUS_RESOLVED,
   TYPE_PROMISE,
@@ -13,6 +14,7 @@ import {
 } from "./utils";
 
 export type { DecodePlugin, EncodePlugin };
+export { SUPPORTED_ERROR_TYPES };
 
 export async function decode(
   readable: ReadableStream<Uint8Array>,
@@ -68,7 +70,10 @@ async function decodeInitial(
   let line: unknown;
   try {
     line = JSON.parse(read.value);
-  } catch (reason) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    reason
+  ) {
     throw new SyntaxError();
   }
 
@@ -98,7 +103,10 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (reason) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          reason
+        ) {
           throw new SyntaxError();
         }
 
@@ -118,7 +126,10 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (reason) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          reason
+        ) {
           throw new SyntaxError();
         }
         const value = unflatten.call(this, jsonLine);
