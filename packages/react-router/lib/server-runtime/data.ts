@@ -5,7 +5,6 @@ import type {
   ActionFunctionArgs,
 } from "../router/utils";
 import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
-import type { FutureConfig } from "../dom/ssr/entry";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -22,12 +21,9 @@ export interface AppLoadContext {
 export async function callRouteHandler(
   handler: LoaderFunction | ActionFunction,
   args: LoaderFunctionArgs | ActionFunctionArgs,
-  future: FutureConfig,
 ) {
   let result = await handler({
-    request: future.v8_passThroughRequests
-      ? args.request
-      : stripRoutesParam(stripIndexParam(args.request)),
+    request: args.request,
     url: args.url,
     params: args.params,
     context: args.context,
@@ -45,49 +41,4 @@ export async function callRouteHandler(
   }
 
   return result;
-}
-
-function stripIndexParam(request: Request) {
-  let url = new URL(request.url);
-  let indexValues = url.searchParams.getAll("index");
-  url.searchParams.delete("index");
-  let indexValuesToKeep = [];
-  for (let indexValue of indexValues) {
-    if (indexValue) {
-      indexValuesToKeep.push(indexValue);
-    }
-  }
-  for (let toKeep of indexValuesToKeep) {
-    url.searchParams.append("index", toKeep);
-  }
-
-  let init: RequestInit = {
-    method: request.method,
-    body: request.body,
-    headers: request.headers,
-    signal: request.signal,
-  };
-
-  if (init.body) {
-    (init as { duplex: "half" }).duplex = "half";
-  }
-
-  return new Request(url.href, init);
-}
-
-function stripRoutesParam(request: Request) {
-  let url = new URL(request.url);
-  url.searchParams.delete("_routes");
-  let init: RequestInit = {
-    method: request.method,
-    body: request.body,
-    headers: request.headers,
-    signal: request.signal,
-  };
-
-  if (init.body) {
-    (init as { duplex: "half" }).duplex = "half";
-  }
-
-  return new Request(url.href, init);
 }

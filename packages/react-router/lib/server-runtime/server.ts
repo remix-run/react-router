@@ -59,7 +59,7 @@ export type CreateRequestHandlerFunction = (
 ) => RequestHandler;
 
 function derive(build: ServerBuild, mode?: string) {
-  let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
+  let dataRoutes = createStaticHandlerDataRoutes(build.routes);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
@@ -227,7 +227,6 @@ function derive(build: ServerBuild, mode?: string) {
         build,
         staticHandler,
         request,
-        normalizedPathname,
         loadContext,
         handleError,
       );
@@ -443,20 +442,15 @@ async function handleSingleFetchRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  normalizedPath: string,
   loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
-  let handlerUrl = new URL(request.url);
-  handlerUrl.pathname = normalizedPath;
-
   let response = isMutationMethod(request.method)
     ? await singleFetchAction(
         build,
         serverMode,
         staticHandler,
         request,
-        handlerUrl,
         loadContext,
         handleError,
       )
@@ -465,7 +459,6 @@ async function handleSingleFetchRequest(
         serverMode,
         staticHandler,
         request,
-        handlerUrl,
         loadContext,
         handleError,
       );

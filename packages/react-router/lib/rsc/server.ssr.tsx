@@ -571,7 +571,6 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
       unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-      v8_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
