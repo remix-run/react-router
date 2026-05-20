@@ -237,8 +237,8 @@ importers:
         specifier: ^7.0.3
         version: 7.0.6
       dedent:
-        specifier: ^1.7.2
-        version: 1.7.2(babel-plugin-macros@3.1.0)
+        specifier: ^0.7.0
+        version: 0.7.0
       execa:
         specifier: ^9.6.1
         version: 9.6.1
@@ -6174,6 +6174,9 @@ packages:
 
   decode-named-character-reference@1.0.2:
     resolution: {integrity: sha512-O8x12RzrUF8xyVcY0KJowWsmaJxQbmy0/EtnNtHRpsOcT7dFk5W598coHqBVpmWo1oQQfsCqfCmkZN5DJrZVdg==}
+
+  dedent@0.7.0:
+    resolution: {integrity: sha512-Q6fKUPqnAHAyhiUgFU7BUzLiv0kd8saH9al7tnu5Q/okj6dnupxyTgFIBjVzJATdfIAm9NAsvXNzjaKa+bxVyA==}
 
   dedent@1.7.2:
     resolution: {integrity: sha512-WzMx3mW98SN+zn3hgemf4OzdmyNhhhKz5Ay0pUfQiMQ3e1g+xmTJWp/pKdwKVXhdSkAEGIIzqeuWrL3mV/AXbA==}
@@ -12567,8 +12570,8 @@ snapshots:
 
   '@jridgewell/source-map@0.3.6':
     dependencies:
-      '@jridgewell/gen-mapping': 0.3.8
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
@@ -13036,7 +13039,7 @@ snapshots:
 
   '@testing-library/dom@10.4.0':
     dependencies:
-      '@babel/code-frame': 7.27.1
+      '@babel/code-frame': 7.29.0
       '@babel/runtime': 7.24.1
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
@@ -14994,6 +14997,8 @@ snapshots:
   decode-named-character-reference@1.0.2:
     dependencies:
       character-entities: 2.0.2
+
+  dedent@0.7.0: {}
 
   dedent@1.7.2(babel-plugin-macros@3.1.0):
     optionalDependencies:
@@ -19553,7 +19558,7 @@ snapshots:
 
   terser-webpack-plugin@5.3.15(@swc/core@1.11.24)(esbuild@0.28.0)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.28.0)):
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
@@ -19565,7 +19570,7 @@ snapshots:
 
   terser-webpack-plugin@5.3.15(esbuild@0.27.4)(webpack@5.103.0(esbuild@0.27.4)):
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
@@ -19576,7 +19581,7 @@ snapshots:
 
   terser-webpack-plugin@5.3.15(esbuild@0.28.0)(webpack@5.103.0(esbuild@0.28.0)):
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
