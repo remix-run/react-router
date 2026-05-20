@@ -140,7 +140,7 @@ const files = {
                   "export const reactRouterConfig = " + serializeJs(reactRouterConfig, { space: 2, unsafe: true }) + ";",
                   "export const assetsDir = " + JSON.stringify(viteConfig.build.assetsDir) + ";",
                   "export const futureFlags = " + JSON.stringify(reactRouterConfig.future) + ";",
-                ].join("\\n"),
+                ].join("\n"),
                 "utf-8"
               );
             },

@@ -24,7 +24,7 @@
     "@vanilla-extract/vite-plugin": "^5.1.1",
     "cheerio": "^1.2.0",
     "cross-spawn": "^7.0.3",
-    "dedent": "^0.7.0",
+    "dedent": "^1.7.2",
     "execa": "^9.6.1",
     "express": "^4.19.2",
     "get-port": "^5.1.1",
