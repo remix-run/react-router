@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@architect/functions": "^7.0.0",
-    "@types/aws-lambda": "^8.10.82"
+    "@types/aws-lambda": "^8.10.161"
   },
   "devDependencies": {
     "@react-router/node": "workspace:*",
