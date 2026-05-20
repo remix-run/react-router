@@ -1,0 +1,1 @@
+Require Vite 7+

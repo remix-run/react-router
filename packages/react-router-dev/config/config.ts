@@ -92,10 +92,6 @@ interface FutureConfig {
   v8_passThroughRequests: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
-   * Prerender with Vite Preview server
-   */
-  unstable_previewServerPrerendering?: boolean;
-  /**
    * Enable route middleware
    */
   v8_middleware: boolean;
@@ -719,8 +715,6 @@ async function resolveConfig({
     unstable_trailingSlashAwareDataRequests:
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
-    unstable_previewServerPrerendering:
-      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,

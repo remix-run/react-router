@@ -247,7 +247,6 @@ test.describe("Vite / presets", async () => {
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
         unstable_trailingSlashAwareDataRequests: false,
-        unstable_previewServerPrerendering: false,
         v8_middleware: true,
         v8_passThroughRequests: false,
         v8_splitRouteModules: false,
