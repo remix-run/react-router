@@ -1,5 +1,6 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
+import { defaultMapRouteProperties } from "../../lib/router/utils";
 import {
   createMemoryRouter,
   hydrationRouteProperties,
@@ -78,6 +79,7 @@ describe("lazily loaded route modules", () => {
           },
         ],
         history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+        mapRouteProperties: defaultMapRouteProperties,
       });
 
       expect(router.state.initialized).toBe(false);
@@ -285,6 +287,7 @@ describe("lazily loaded route modules", () => {
           },
         ],
         history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+        mapRouteProperties: defaultMapRouteProperties,
       });
 
       expect(router.state.initialized).toBe(false);

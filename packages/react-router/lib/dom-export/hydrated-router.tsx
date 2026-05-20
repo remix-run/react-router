@@ -17,6 +17,7 @@ import {
   UNSAFE_createBrowserHistory as createBrowserHistory,
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
+  UNSAFE_defaultMapRouteProperties as defaultMapRouteProperties,
   UNSAFE_deserializeErrors as deserializeErrors,
   UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
@@ -183,6 +184,7 @@ function createHydratedRouter({
     basename: ssrInfo.context.basename,
     getContext,
     hydrationData,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     instrumentations,
     future: {

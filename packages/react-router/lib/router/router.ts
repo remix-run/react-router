@@ -70,7 +70,6 @@ import {
   getRoutePattern,
   removeDoubleSlashes,
   flattenAndRankRoutes,
-  defaultMapRouteProperties,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,6 +437,7 @@ export interface RouterInit {
   basename?: string;
   getContext?: () => MaybePromise<RouterContextProvider>;
   instrumentations?: ClientInstrumentation[];
+  mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
@@ -1006,7 +1006,10 @@ export function createRouter(init: RouterInit): Router {
   );
 
   let hydrationRouteProperties = init.hydrationRouteProperties || [];
-  let mapRouteProperties = defaultMapRouteProperties;
+  let _mapRouteProperties = init.mapRouteProperties;
+  let mapRouteProperties: MapRoutePropertiesFunction = _mapRouteProperties
+    ? _mapRouteProperties
+    : () => ({});
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
@@ -1015,7 +1018,7 @@ export function createRouter(init: RouterInit): Router {
 
     mapRouteProperties = (route: DataRouteObject) => {
       return {
-        ...defaultMapRouteProperties(route),
+        ..._mapRouteProperties?.(route),
         ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)
@@ -4001,6 +4004,7 @@ export function createRouter(init: RouterInit): Router {
 
 export interface CreateStaticHandlerOptions {
   basename?: string;
+  mapRouteProperties?: MapRoutePropertiesFunction;
   instrumentations?: Pick<ServerInstrumentation, "route">[];
   future?: Partial<FutureConfig>;
 }
@@ -4046,7 +4050,10 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
-  let mapRouteProperties = defaultMapRouteProperties;
+  let _mapRouteProperties = opts?.mapRouteProperties;
+  let mapRouteProperties: MapRoutePropertiesFunction = _mapRouteProperties
+    ? _mapRouteProperties
+    : () => ({});
   // Currently unused in the static handler, but available for additional flags in the future
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
@@ -4060,7 +4067,7 @@ export function createStaticHandler(
 
     mapRouteProperties = (route: DataRouteObject) => {
       return {
-        ...defaultMapRouteProperties(route),
+        ..._mapRouteProperties?.(route),
         ...getRouteInstrumentationUpdates(
           instrumentations
             .map((i) => i.route)

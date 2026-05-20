@@ -364,7 +364,10 @@ export {
 export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
 
 /** @internal */
-export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+export {
+  defaultMapRouteProperties as UNSAFE_defaultMapRouteProperties,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
+} from "./lib/router/utils";
 
 /** @internal */
 export {

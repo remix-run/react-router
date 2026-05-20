@@ -37,6 +37,7 @@ import type {
   TrackedPromise,
 } from "./router/utils";
 import {
+  defaultMapRouteProperties,
   getResolveToMatches,
   getRoutePattern,
   resolveTo,
@@ -232,6 +233,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
