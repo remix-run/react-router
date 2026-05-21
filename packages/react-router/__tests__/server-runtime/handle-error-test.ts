@@ -127,7 +127,7 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
+            'You made a POST request to "/_root.data" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
           true,
         ),

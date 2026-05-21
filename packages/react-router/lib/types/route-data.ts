@@ -77,11 +77,11 @@ export type ClientDataFunctionArgs<Params> = {
   request: Request;
   /**
    * A URL instance representing the application location being navigated to or
-   * fetched. By default, this matches `request.url`.
+   * fetched.
    *
-   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
-   * normalized URL with React-Router-specific implementation details removed
-   * (`.data` suffixes, `index`/`_routes` search params).
+   * In Framework mode, this is a normalized URL with React-Router-specific
+   * implementation details removed (`.data` suffixes, `index`/`_routes` search
+   * params). For the raw incoming URL, use `request.url`.
    */
   url: URL;
   /**
@@ -117,11 +117,11 @@ export type ServerDataFunctionArgs<Params> = {
   request: Request;
   /**
    * A URL instance representing the application location being navigated to or
-   * fetched. By default, this matches `request.url`.
+   * fetched.
    *
-   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
-   * normalized URL with React-Router-specific implementation details removed
-   * (`.data` suffixes, `index`/`_routes` search params).
+   * In Framework mode, this is a normalized URL with React-Router-specific
+   * implementation details removed (`.data` suffixes, `index`/`_routes` search
+   * params). For the raw incoming URL, use `request.url`.
    */
   url: URL;
   /**

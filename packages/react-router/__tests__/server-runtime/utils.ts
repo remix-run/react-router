@@ -43,7 +43,6 @@ export function mockServerBuild(
   return {
     ssr: true,
     future: {
-      v8_passThroughRequests: false,
       unstable_trailingSlashAwareDataRequests: false,
       ...opts.future,
     },

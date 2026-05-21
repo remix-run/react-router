@@ -38,7 +38,6 @@ export async function singleFetchAction(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
   loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
@@ -57,23 +56,13 @@ export async function singleFetchAction(
       return handleQueryError(new Error("Bad Request"), 400);
     }
 
-    let handlerRequest = build.future.v8_passThroughRequests
-      ? request
-      : new Request(handlerUrl, {
-          method: request.method,
-          body: request.body,
-          headers: request.headers,
-          signal: request.signal,
-          ...(request.body ? { duplex: "half" } : undefined),
-        });
-
-    let result = await staticHandler.query(handlerRequest, {
+    let result = await staticHandler.query(request, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       skipRevalidation: true,
       generateMiddlewareResponse: async (query) => {
         try {
-          let innerResult = await query(handlerRequest);
+          let innerResult = await query(request);
           return handleQueryResult(innerResult);
         } catch (error) {
           return handleQueryError(error);
@@ -143,7 +132,6 @@ export async function singleFetchLoaders(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
   loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
@@ -151,20 +139,13 @@ export async function singleFetchLoaders(
   let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
   try {
-    let handlerRequest = build.future.v8_passThroughRequests
-      ? request
-      : new Request(handlerUrl, {
-          headers: request.headers,
-          signal: request.signal,
-        });
-
-    let result = await staticHandler.query(handlerRequest, {
+    let result = await staticHandler.query(request, {
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
       generateMiddlewareResponse: async (query) => {
         try {
-          let innerResult = await query(handlerRequest);
+          let innerResult = await query(request);
           return handleQueryResult(innerResult);
         } catch (error) {
           return handleQueryError(error);

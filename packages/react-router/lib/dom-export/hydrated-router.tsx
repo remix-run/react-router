@@ -187,9 +187,6 @@ function createHydratedRouter({
     mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     instrumentations,
-    future: {
-      v8_passThroughRequests: ssrInfo.context.future.v8_passThroughRequests,
-    },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
       ssrInfo.manifest,

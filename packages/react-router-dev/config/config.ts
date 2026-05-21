@@ -90,7 +90,6 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
-  v8_passThroughRequests: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
@@ -692,11 +691,6 @@ async function resolveConfig({
         "The `future.v8_viteEnvironmentApi` flag has been removed because Vite Environment API usage is now always enabled",
       );
     }
-    if ("unstable_passThroughRequests" in futureConfig) {
-      return err(
-        "The `future.unstable_passThroughRequests` flag has been stabilized as `future.v8_passThroughRequests`",
-      );
-    }
     if ("unstable_subResourceIntegrity" in futureConfig) {
       return err(
         "The `future.unstable_subResourceIntegrity` flag has been stabilized and moved to a top-level `config.subResourceIntegrity` field",
@@ -707,8 +701,6 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    v8_passThroughRequests:
-      userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
     unstable_trailingSlashAwareDataRequests:
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
@@ -761,12 +753,6 @@ export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
     logFutureFlagWarning(
       "v8_splitRouteModules",
       "Route module splitting behavior is changing in React Router v8.",
-    );
-  }
-  if (future.v8_passThroughRequests === undefined) {
-    logFutureFlagWarning(
-      "v8_passThroughRequests",
-      "Request handling behavior is changing in React Router v8.",
     );
   }
 }

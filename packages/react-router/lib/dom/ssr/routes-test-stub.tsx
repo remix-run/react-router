@@ -125,7 +125,6 @@ export function createRoutesStub(
     if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
         future: {
-          v8_passThroughRequests: future?.v8_passThroughRequests === true,
           unstable_trailingSlashAwareDataRequests:
             future?.unstable_trailingSlashAwareDataRequests === true,
         },
