@@ -5,7 +5,6 @@ import { expect } from "@playwright/test";
 import dedent from "dedent";
 
 import {
-  reactRouterConfig,
   viteConfig,
   test,
   type TemplateName,
@@ -16,33 +15,22 @@ const tsx = dedent;
 
 const fixtures = [
   {
-    templateName: "vite-5-template",
-    v8_viteEnvironmentApi: false,
-  },
-  {
-    templateName: "vite-6-template",
-    v8_viteEnvironmentApi: true,
+    templateName: "vite-7-template",
   },
   {
     templateName: "vite-8-template",
-    v8_viteEnvironmentApi: true,
   },
   {
     templateName: "rsc-vite-framework",
-    v8_viteEnvironmentApi: true,
   },
 ] as const satisfies ReadonlyArray<{
   templateName: TemplateName;
-  v8_viteEnvironmentApi: boolean;
 }>;
 
 test.describe("Vite dev", () => {
-  for (const { templateName, v8_viteEnvironmentApi } of fixtures) {
-    test.describe(`template: ${templateName} viteEnvironmentApi: ${v8_viteEnvironmentApi}`, () => {
+  for (const { templateName } of fixtures) {
+    test.describe(`template: ${templateName}`, () => {
       const files: Files = async ({ port }) => ({
-        "react-router.config.ts": reactRouterConfig({
-          future: { v8_viteEnvironmentApi },
-        }),
         "vite.config.ts": await viteConfig.basic({
           port,
           templateName,

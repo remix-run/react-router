@@ -7,7 +7,6 @@ const config = {
     "./config.ts",
     "./routes.ts",
     "./vite.ts",
-    "./vite/cloudflare.ts",
   ],
   blockTags,
 };

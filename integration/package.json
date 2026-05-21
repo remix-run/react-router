@@ -45,7 +45,7 @@
     "strip-indent": "^3.0.0",
     "type-fest": "^4.0.0",
     "typescript": "catalog:",
-    "vite": "^6.3.0",
+    "vite": "^7.0.0",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2",
     "wait-on": "^7.0.1"

@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import dedent from "dedent";
+import getPort from "get-port";
 
 import { type Files, test, viteConfig } from "./helpers/vite.js";
 
@@ -9,8 +10,11 @@ const css = dedent;
 function defineFiles({
   reversePlugins = false,
 }: { reversePlugins?: boolean } = {}): Files {
-  const files: Files = async ({ port }) => ({
-    "vite.config.ts": tsx`
+  const files: Files = async ({ port }) => {
+    const inspectorPort = await getPort();
+
+    return {
+      "vite.config.ts": tsx`
     import { defineConfig } from "vite";
     import { cloudflare } from "@cloudflare/vite-plugin";
     import { reactRouter } from "@react-router/dev/vite";
@@ -18,7 +22,10 @@ function defineFiles({
     export default defineConfig({
       ${await viteConfig.server({ port })}
       plugins: [
-        cloudflare({ viteEnvironment: { name: "ssr" } }),
+        cloudflare({
+          inspectorPort: ${inspectorPort},
+          viteEnvironment: { name: "ssr" },
+        }),
         reactRouter(),
       ]${reversePlugins ? ".reverse()" : ""},
     });
@@ -44,7 +51,8 @@ function defineFiles({
         padding: 20px;
       }
     `,
-  });
+    };
+  };
   return files;
 }
 

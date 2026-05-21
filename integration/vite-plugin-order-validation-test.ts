@@ -44,9 +44,7 @@ test.describe("Vite plugin order validation", () => {
             ],
           });
         `,
-        "react-router.config.ts": reactRouterConfig({
-          future: { v8_viteEnvironmentApi: true },
-        }),
+        "react-router.config.ts": reactRouterConfig({}),
       },
       "rsc-vite-framework",
     );
@@ -73,9 +71,7 @@ test.describe("Vite plugin order validation", () => {
             ],
           });
         `,
-        "react-router.config.ts": reactRouterConfig({
-          future: { v8_viteEnvironmentApi: true },
-        }),
+        "react-router.config.ts": reactRouterConfig({}),
       },
       "rsc-vite-framework",
     );
