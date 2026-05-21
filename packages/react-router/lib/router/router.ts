@@ -6603,7 +6603,7 @@ async function callLoaderOrAction({
   let isAction = isMutationMethod(request.method);
   let type = isAction ? "action" : "loader";
   let runHandler = (
-    handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>,
+    handler: boolean | LoaderFunction<any> | ActionFunction<any>,
   ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;

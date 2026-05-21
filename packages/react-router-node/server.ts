@@ -2,12 +2,7 @@ import type { RequestListener } from "node:http";
 
 import type { ClientAddress } from "@remix-run/node-fetch-server";
 import { createRequestListener as createRequestListener_ } from "@remix-run/node-fetch-server";
-import type {
-  AppLoadContext,
-  ServerBuild,
-  UNSAFE_MiddlewareEnabled,
-  RouterContextProvider,
-} from "react-router";
+import type { ServerBuild, RouterContextProvider } from "react-router";
 import { createRequestHandler } from "react-router";
 
 type MaybePromise<T> = T | Promise<T>;
@@ -17,9 +12,7 @@ export interface RequestListenerOptions {
   getLoadContext?: (
     request: Request,
     client: ClientAddress,
-  ) => UNSAFE_MiddlewareEnabled extends true
-    ? MaybePromise<RouterContextProvider>
-    : MaybePromise<AppLoadContext>;
+  ) => MaybePromise<RouterContextProvider>;
   mode?: string;
 }
 

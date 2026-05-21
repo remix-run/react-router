@@ -366,7 +366,6 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        v8_middleware: false,
         ...opts?.future,
       };
     },
