@@ -17,11 +17,11 @@ import {
   UNSAFE_createBrowserHistory as createBrowserHistory,
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
+  UNSAFE_defaultMapRouteProperties as defaultMapRouteProperties,
   UNSAFE_deserializeErrors as deserializeErrors,
   UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
-  UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
@@ -184,12 +184,9 @@ function createHydratedRouter({
     basename: ssrInfo.context.basename,
     getContext,
     hydrationData,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     instrumentations,
-    mapRouteProperties,
-    future: {
-      v8_passThroughRequests: ssrInfo.context.future.v8_passThroughRequests,
-    },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
       ssrInfo.manifest,

@@ -26,7 +26,6 @@ import type {
   RequestHandler,
   ServerBuild,
   DataRouteObject,
-  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
   RouterContextProvider,
 } from "react-router";
 import {
@@ -632,14 +631,10 @@ type MaybePromise<T> = T | Promise<T>;
 
 let reactRouterDevLoadContext: (
   request: Request,
-) => MaybePromise<
-  MiddlewareEnabled extends true
-    ? MaybePromise<RouterContextProvider | undefined>
-    : MaybePromise<Record<string, unknown> | undefined>
-> = () => undefined;
+) => MaybePromise<RouterContextProvider | undefined> = () => undefined;
 
 export let setReactRouterDevLoadContext = (
-  loadContext: (request: Request) => MaybePromise<Record<string, unknown>>,
+  loadContext: (request: Request) => MaybePromise<RouterContextProvider>,
 ) => {
   reactRouterDevLoadContext = loadContext;
 };

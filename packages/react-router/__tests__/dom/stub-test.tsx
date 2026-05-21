@@ -80,7 +80,7 @@ test("middleware works without loader", async () => {
   ]);
 
   act(() => {
-    render(<RoutesStub future={{ v8_middleware: true }} />);
+    render(<RoutesStub />);
   });
 
   await waitFor(() => screen.findByText("Target"));
@@ -104,7 +104,7 @@ test("middleware works with loader", async () => {
     },
   ]);
 
-  render(<RoutesStub future={{ v8_middleware: true }} />);
+  render(<RoutesStub />);
 
   await waitFor(() => screen.findByText("Message: hello"));
   expect(true).toBe(true);
@@ -373,7 +373,7 @@ test("can pass context values (w/middleware)", async () => {
   );
 
   render(
-    <RoutesStub future={{ v8_middleware: true }} initialEntries={["/hello"]} />,
+    <RoutesStub initialEntries={["/hello"]} />,
   );
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);

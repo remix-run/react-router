@@ -2239,8 +2239,8 @@ test.describe("single-fetch", () => {
         `,
         "app/routes/parent.tsx": js`
           import { Link, Outlet, useLoaderData } from "react-router";
-          export function loader({ request }) {
-            return { url: request.url };
+          export function loader({ url }) {
+            return { url: url.toString() };
           }
           export default function Component() {
             return (
@@ -2253,14 +2253,14 @@ test.describe("single-fetch", () => {
         `,
         "app/routes/parent.a.tsx": js`
           import { useLoaderData } from "react-router";
-          export function loader({ request }) {
-            return { url: request.url };
+          export function loader({ url }) {
+            return { url: url.toString() };
           }
-          export async function clientLoader({ request, serverLoader }) {
+          export async function clientLoader({ url, serverLoader }) {
             let serverData = await serverLoader();
             return {
               serverUrl: serverData.url,
-              clientUrl: request.url
+              clientUrl: url.toString()
             }
           }
           export default function Component() {
@@ -4589,10 +4589,12 @@ test.describe("single-fetch", () => {
           import { Link, useLoaderData } from "react-router";
 
           export function loader({ request }) {
-            let url = new URL(request.url);
+            let pathname = new URL(request.url).pathname
+              .replace(/_\.data$/, "")
+              .replace(/\.data$/, "");
             return {
-              pathname: url.pathname,
-              hasTrailingSlash: url.pathname.endsWith("/"),
+              pathname,
+              hasTrailingSlash: pathname.endsWith("/"),
             };
           }
 
@@ -4686,10 +4688,12 @@ test.describe("single-fetch", () => {
           import { Link, useLoaderData } from "react-router";
 
           export function loader({ request }) {
-            let url = new URL(request.url);
+            let pathname = new URL(request.url).pathname
+              .replace(/_\.data$/, "")
+              .replace(/\.data$/, "");
             return {
-              pathname: url.pathname,
-              hasTrailingSlash: url.pathname.endsWith("/"),
+              pathname,
+              hasTrailingSlash: pathname.endsWith("/"),
             };
           }
 

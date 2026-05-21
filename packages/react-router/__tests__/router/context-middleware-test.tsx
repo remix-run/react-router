@@ -1138,7 +1138,7 @@ describe("context/middleware", () => {
                 {
                   id: "child",
                   path: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   middleware: [
                     async ({ request, context }, next) => {
                       if (request.method !== "GET") {
@@ -1191,15 +1191,15 @@ describe("context/middleware", () => {
           "parent loader end",
         ]);
         expect(router.state.loaderData).toMatchInlineSnapshot(`
-          {
-            "child": undefined,
-            "parent": "PARENT",
-          }
+         {
+           "child": undefined,
+           "parent": "PARENT",
+         }
         `);
         expect(router.state.errors).toMatchInlineSnapshot(`
-          {
-            "child": [Error: child 1 action error],
-          }
+         {
+           "child": [Error: child 1 action error],
+         }
         `);
       });
 
@@ -1238,7 +1238,7 @@ describe("context/middleware", () => {
                 {
                   id: "child",
                   path: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   middleware: [
                     async ({ request, context }, next) => {
                       if (request.method !== "GET") {
@@ -1316,7 +1316,7 @@ describe("context/middleware", () => {
             {
               id: "parent",
               path: "/parent",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               middleware: [
                 async ({ request, context }, next) => {
                   if (request.method !== "GET") {
@@ -1406,7 +1406,7 @@ describe("context/middleware", () => {
             {
               id: "parent",
               path: "/parent",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               middleware: [
                 async ({ request, context }, next) => {
                   if (request.method !== "GET") {
@@ -1570,23 +1570,23 @@ describe("context/middleware", () => {
             {
               id: "a",
               path: "/a",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               children: [
                 {
                   id: "b",
                   path: "b",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   loader: () => "B",
                   children: [
                     {
                       id: "c",
                       path: "c",
-                      hasErrorBoundary: true,
+                      ErrorBoundary: () => null,
                       children: [
                         {
                           id: "d",
                           path: "d",
-                          hasErrorBoundary: true,
+                          ErrorBoundary: () => null,
                           middleware: [
                             () => {
                               throw new Error("D ERROR");
@@ -1597,7 +1597,7 @@ describe("context/middleware", () => {
                         {
                           id: "e",
                           path: "e",
-                          hasErrorBoundary: true,
+                          ErrorBoundary: () => null,
                           middleware: [
                             () => {
                               throw new Error("E ERROR");
@@ -1644,12 +1644,11 @@ describe("context/middleware", () => {
             {
               id: "a",
               path: "/a",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               children: [
                 {
                   id: "b",
                   path: "b",
-                  hasErrorBoundary: false,
                   middleware: [
                     ({ request }) => {
                       if (request.method === "POST") {
@@ -2612,7 +2611,7 @@ describe("context/middleware", () => {
               {
                 id: "child",
                 path: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 middleware: [
                   async ({ context }) => {
                     pushOrderContext(context, "child 1 start - throwing");
@@ -2683,7 +2682,7 @@ describe("context/middleware", () => {
               {
                 id: "child",
                 path: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 middleware: [
                   async ({ context }, next) => {
                     pushOrderContext(context, "child 1 start");
@@ -2744,7 +2743,7 @@ describe("context/middleware", () => {
           {
             id: "parent",
             path: "/parent",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             middleware: [
               async ({ context }, next) => {
                 pushOrderContext(context, "parent start");
@@ -2814,7 +2813,7 @@ describe("context/middleware", () => {
           {
             id: "parent",
             path: "/parent",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             middleware: [
               async ({ context }, next) => {
                 pushOrderContext(context, "parent start");
@@ -3625,7 +3624,7 @@ describe("context/middleware", () => {
               {
                 id: "child",
                 path: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 middleware: [
                   async ({ context }) => {
                     context.set(orderContext, [
@@ -3704,7 +3703,7 @@ describe("context/middleware", () => {
               {
                 id: "child",
                 path: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 middleware: [
                   async ({ context }, next) => {
                     context.set(orderContext, [
@@ -3770,7 +3769,7 @@ describe("context/middleware", () => {
           {
             id: "parent",
             path: "/parent",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             middleware: [
               async ({ context }, next) => {
                 context.set(orderContext, [
@@ -3850,7 +3849,7 @@ describe("context/middleware", () => {
           {
             id: "parent",
             path: "/parent",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             middleware: [
               async ({ context }, next) => {
                 context.set(orderContext, [
