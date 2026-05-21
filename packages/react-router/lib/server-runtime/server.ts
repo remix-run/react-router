@@ -18,7 +18,6 @@ import {
   isResponse,
   isMutationMethod,
 } from "../router/router";
-import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { CriticalCss, EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
@@ -40,7 +39,6 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
-import type { MiddlewareEnabled } from "../types/future";
 import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
@@ -49,9 +47,7 @@ import { getNormalizedPath } from "./urls";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: MiddlewareEnabled extends true
-    ? RouterContextProvider
-    : AppLoadContext,
+  loadContext?: RouterContextProvider,
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -82,7 +78,7 @@ function derive(build: ServerBuild, mode?: string) {
 
   let requestHandler: RequestHandler = async (request, initialContext) => {
     let params: RouteMatch<ServerRoute>["params"] = {};
-    let loadContext: AppLoadContext | RouterContextProvider;
+    let loadContext: RouterContextProvider;
 
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -96,23 +92,16 @@ function derive(build: ServerBuild, mode?: string) {
       });
     };
 
-    if (build.future.v8_middleware) {
-      if (
-        initialContext &&
-        !(initialContext instanceof RouterContextProvider)
-      ) {
-        let error = new Error(
-          "Invalid `context` value provided to `handleRequest`. When middleware " +
-            "is enabled you must return an instance of `RouterContextProvider` " +
-            "from your `getLoadContext` function.",
-        );
-        handleError(error);
-        return returnLastResortErrorResponse(error, serverMode);
-      }
-      loadContext = initialContext || new RouterContextProvider();
-    } else {
-      loadContext = initialContext || {};
+    if (initialContext && !(initialContext instanceof RouterContextProvider)) {
+      let error = new Error(
+        "Invalid `context` value provided to `handleRequest`. You must " +
+          "return an instance of `RouterContextProvider` from your " +
+          "`getLoadContext` function.",
+      );
+      handleError(error);
+      return returnLastResortErrorResponse(error, serverMode);
     }
+    loadContext = initialContext || new RouterContextProvider();
 
     let requestUrl = new URL(request.url);
     let normalizedPathname = getNormalizedPath(
@@ -446,7 +435,7 @@ async function handleSingleFetchRequest(
   staticHandler: StaticHandler,
   request: Request,
   normalizedPath: string,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   let handlerUrl = new URL(request.url);
@@ -480,7 +469,7 @@ async function handleDocumentRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
   isSpaMode: boolean,
   criticalCss?: CriticalCss,
@@ -501,20 +490,18 @@ async function handleDocumentRequest(
     }
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (query) => {
-            try {
-              let innerResult = await query(request);
-              if (!isResponse(innerResult)) {
-                innerResult = await renderHtml(innerResult, isSpaMode);
-              }
-              return innerResult;
-            } catch (error: unknown) {
-              handleError(error);
-              return new Response(null, { status: 500 });
-            }
+      generateMiddlewareResponse: async (query) => {
+        try {
+          let innerResult = await query(request);
+          if (!isResponse(innerResult)) {
+            innerResult = await renderHtml(innerResult, isSpaMode);
           }
-        : undefined,
+          return innerResult;
+        } catch (error: unknown) {
+          handleError(error);
+          return new Response(null, { status: 500 });
+        }
+      },
       normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
@@ -592,9 +579,7 @@ async function handleDocumentRequest(
         context.statusCode,
         headers,
         entryContext,
-        loadContext as MiddlewareEnabled extends true
-          ? RouterContextProvider
-          : AppLoadContext,
+        loadContext,
       );
     } catch (error: unknown) {
       handleError(error);
@@ -659,9 +644,7 @@ async function handleDocumentRequest(
           context.statusCode,
           headers,
           entryContext,
-          loadContext as MiddlewareEnabled extends true
-            ? RouterContextProvider
-            : AppLoadContext,
+          loadContext,
         );
       } catch (error: any) {
         handleError(error);
@@ -677,7 +660,7 @@ async function handleResourceRequest(
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ) {
   try {
@@ -687,16 +670,14 @@ async function handleResourceRequest(
     let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (queryRoute) => {
-            try {
-              let innerResult = await queryRoute(request);
-              return handleQueryRouteResult(innerResult);
-            } catch (error) {
-              return handleQueryRouteError(error);
-            }
-          }
-        : undefined,
+      generateMiddlewareResponse: async (queryRoute) => {
+        try {
+          let innerResult = await queryRoute(request);
+          return handleQueryRouteResult(innerResult);
+        } catch (error) {
+          return handleQueryRouteError(error);
+        }
+      },
       normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 

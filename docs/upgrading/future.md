@@ -19,50 +19,6 @@ First update to the latest minor version of v7.x to have the latest future flags
 npm install react-router@7 @react-router/{dev,node,etc.}@7
 ```
 
-## `future.v8_middleware`
-
-[MODES: framework, data]
-
-<br/>
-<br/>
-
-**Background**
-
-Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables common patterns like authentication, logging, error handling, and data preprocessing in a reusable way. Please see the [docs](../how-to/middleware) for more information.
-
-👉 **Enable the Flag**
-
-In Framework mode:
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_middleware: true,
-  },
-} satisfies Config;
-```
-
-In Data mode:
-
-```ts
-import { createBrowserRouter } from "react-router/dom";
-
-const router = createBrowserRouter(routes, {
-  future: {
-    v8_middleware: true,
-  },
-});
-```
-
-**Update your Code**
-
-If you're using the `context` parameter in `loader` and `action` functions, you may need to update your code:
-
-- In Framework mode, if you're using `react-router-serve`, you should not need to make any updates. Otherwise, this only applies if you have a custom server with a `getLoadContext` function. Please see the docs on the middleware [`getLoadContext` changes](../how-to/middleware#changes-to-getloadcontextapploadcontext) and the instructions to [migrate to the new API](../how-to/middleware#migration-from-apploadcontext).
-- In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#2-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
-
 ## `future.v8_splitRouteModules`
 
 [MODES: framework]
@@ -164,5 +120,4 @@ _No current unstable flags to document_
 [api-development-strategy]: ../community/api-development-strategy
 [unstable]: ../community/api-development-strategy#unstable-flags
 [observability]: ../how-to/instrumentation
-[Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [vite-environment]: https://vite.dev/guide/api-environment

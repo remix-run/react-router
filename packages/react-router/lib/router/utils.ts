@@ -1,5 +1,4 @@
 import * as React from "react";
-import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -262,9 +261,7 @@ export class RouterContextProvider {
   }
 }
 
-type DefaultContext = MiddlewareEnabled extends true
-  ? Readonly<RouterContextProvider>
-  : any;
+type DefaultContext = Readonly<RouterContextProvider>;
 
 /**
  * @private
