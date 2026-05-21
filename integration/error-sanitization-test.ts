@@ -304,11 +304,15 @@ test.describe("Error Sanitization", () => {
 
       // Hydration
       let appFixture = await createAppFixture(fixture);
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/?subclass", true);
-      html = await app.getHtml();
-      expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
-      expect(html).toMatch("<p>NAME:Error");
+      try {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/?subclass", true);
+        html = await app.getHtml();
+        expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
+        expect(html).toMatch("<p>NAME:Error");
+      } finally {
+        appFixture.close();
+      }
     });
   });
 
@@ -462,14 +466,18 @@ test.describe("Error Sanitization", () => {
 
       // Hydration
       let appFixture = await createAppFixture(fixture, ServerMode.Development);
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/?subclass", true);
-      html = await app.getHtml();
-      expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
-      expect(html).toMatch("<p>NAME:ReferenceError");
-      expect(html).toMatch(
-        "STACK:ReferenceError: thisisnotathing is not defined",
-      );
+      try {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/?subclass", true);
+        html = await app.getHtml();
+        expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
+        expect(html).toMatch("<p>NAME:ReferenceError");
+        expect(html).toMatch(
+          "STACK:ReferenceError: thisisnotathing is not defined",
+        );
+      } finally {
+        appFixture.close();
+      }
     });
   });
 

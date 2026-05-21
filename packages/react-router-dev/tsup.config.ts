@@ -13,7 +13,6 @@ const entry = [
   "internal.ts",
   "routes.ts",
   "vite.ts",
-  "vite/cloudflare.ts",
 ];
 
 const external = [

@@ -16,7 +16,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "react-router-serve": "bin.js"
+    "react-router-serve": "bin.cjs"
   },
   "scripts": {
     "build": "wireit",
@@ -28,7 +28,7 @@
       "files": [
         "../../pnpm-workspace.yaml",
         "*.ts",
-        "bin.js",
+        "bin.cjs",
         "tsconfig.json",
         "package.json"
       ],
@@ -64,7 +64,7 @@
   },
   "files": [
     "dist/",
-    "bin.js",
+    "bin.cjs",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
