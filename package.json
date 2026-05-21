@@ -107,10 +107,6 @@
   "pnpm": {
     "patchedDependencies": {
       "@mdx-js/rollup": "patches/@mdx-js__rollup.patch"
-    },
-    "overrides": {
-      "workerd": "1.20250705.0",
-      "react-is": "19.1.0"
     }
   }
 }
