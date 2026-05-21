@@ -1059,7 +1059,7 @@ describe("shouldRevalidate", () => {
             {
               id: "index",
               index: true,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               action: () => responses[++count],
             },
           ],
@@ -1124,7 +1124,7 @@ describe("shouldRevalidate", () => {
             {
               id: "index",
               index: true,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               action: () => {
                 throw responses[++count];
               },
@@ -1179,7 +1179,7 @@ describe("shouldRevalidate", () => {
         {
           id: "root",
           path: "/",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: () => "NOPE",
           children: [
             {

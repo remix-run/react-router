@@ -4,7 +4,6 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RSCRouterContext,
@@ -40,6 +39,7 @@ import type {
   UIMatch,
 } from "./router/utils";
 import {
+  ENABLE_DEV_WARNINGS,
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,

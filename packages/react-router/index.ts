@@ -79,6 +79,7 @@ export type {
   InstrumentationHandlerResult,
 } from "./lib/router/instrumentation";
 export {
+  createStaticHandler,
   IDLE_NAVIGATION,
   IDLE_FETCHER,
   IDLE_BLOCKER,
@@ -209,7 +210,6 @@ export type {
   StaticRouterProviderProps,
 } from "./lib/dom/server";
 export {
-  createStaticHandler,
   createStaticRouter,
   StaticRouter,
   StaticRouterProvider,
@@ -361,7 +361,10 @@ export {
 export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
 
 /** @internal */
-export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+export {
+  defaultMapRouteProperties as UNSAFE_defaultMapRouteProperties,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
+} from "./lib/router/utils";
 
 /** @internal */
 export {
@@ -377,7 +380,6 @@ export {
 /** @internal */
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
-  mapRouteProperties as UNSAFE_mapRouteProperties,
   WithComponentProps as UNSAFE_WithComponentProps,
   withComponentProps as UNSAFE_withComponentProps,
   WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,

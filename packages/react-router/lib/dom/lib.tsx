@@ -35,6 +35,7 @@ import type {
   UIMatch,
 } from "../router/utils";
 import {
+  defaultMapRouteProperties,
   ErrorResponseImpl,
   joinPaths,
   matchPath,
@@ -70,11 +71,7 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import {
-  Router,
-  mapRouteProperties,
-  hydrationRouteProperties,
-} from "../components";
+import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
@@ -654,7 +651,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -693,7 +690,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
