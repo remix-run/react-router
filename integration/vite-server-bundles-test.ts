@@ -117,70 +117,65 @@ test.describe("Server bundles", () => {
   let cwd: string;
   let port: number;
 
-  [false, true].forEach((v8_viteEnvironmentApi) => {
-    test.describe(`v8_viteEnvironmentApi enabled: ${v8_viteEnvironmentApi}`, () => {
-      test.beforeAll(async () => {
-        port = await getPort();
-        cwd = await createProject(
-          {
-            "react-router.config.ts": dedent(js`
-              export default {
-                future: {
-                  v8_viteEnvironmentApi: ${v8_viteEnvironmentApi},
-                },
-                buildEnd: async ({ buildManifest }) => {
-                  let fs = await import("node:fs");
-                  await fs.promises.writeFile(
-                    "build/test-manifest.json",
-                    JSON.stringify(buildManifest, null, 2)
-                  );
-                },
-                serverBundles: async ({ branch }) => {
-                  // Smoke test to ensure we can read the route files via 'route.file'
-                  await Promise.all(branch.map(async (route) => {
-                    const fs = await import("node:fs/promises");
-                    const routeFileContents = await fs.readFile(route.file, "utf8");
-                    if (!routeFileContents.includes(${JSON.stringify(
-                      ROUTE_FILE_COMMENT,
-                    )})) {
-                      throw new Error("Couldn't file route file test comment");
-                    }
-                  }));
-
-                  if (branch.some((route) => route.id === "routes/_index")) {
-                    return "root";
-                  }
-
-                  if (branch.some((route) => route.id === "routes/bundle_a")) {
-                    return "bundle_a";
-                  }
-
-                  if (branch.some((route) => route.id === "routes/bundle_b")) {
-                    return "bundle_b";
-                  }
-
-                  if (branch.some((route) => route.id === "routes/_pathless.bundle_c")) {
-                    return "bundle_c";
-                  }
-
-                  throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
+  test.beforeAll(async () => {
+    port = await getPort();
+    cwd = await createProject(
+      {
+        "react-router.config.ts": dedent(js`
+          export default {
+            buildEnd: async ({ buildManifest }) => {
+              let fs = await import("node:fs");
+              await fs.promises.writeFile(
+                "build/test-manifest.json",
+                JSON.stringify(buildManifest, null, 2)
+              );
+            },
+            serverBundles: async ({ branch }) => {
+              // Smoke test to ensure we can read the route files via 'route.file'
+              await Promise.all(branch.map(async (route) => {
+                const fs = await import("node:fs/promises");
+                const routeFileContents = await fs.readFile(route.file, "utf8");
+                if (!routeFileContents.includes(${JSON.stringify(
+                  ROUTE_FILE_COMMENT,
+                )})) {
+                  throw new Error("Couldn't file route file test comment");
                 }
-              }
-            `),
-            "vite.config.ts": dedent(js`
-              import { reactRouter } from "@react-router/dev/vite";
+              }));
 
-              export default {
-                ${await viteConfig.server({ port })}
-                build: { manifest: true },
-                plugins: [reactRouter()]
+              if (branch.some((route) => route.id === "routes/_index")) {
+                return "root";
               }
-            `),
-            ...files,
-          },
-          v8_viteEnvironmentApi ? "vite-8-template" : "vite-5-template",
-        );
-      });
+
+              if (branch.some((route) => route.id === "routes/bundle_a")) {
+                return "bundle_a";
+              }
+
+              if (branch.some((route) => route.id === "routes/bundle_b")) {
+                return "bundle_b";
+              }
+
+              if (branch.some((route) => route.id === "routes/_pathless.bundle_c")) {
+                return "bundle_c";
+              }
+
+              throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
+            }
+          }
+        `),
+        "vite.config.ts": dedent(js`
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default {
+            ${await viteConfig.server({ port })}
+            build: { manifest: true },
+            plugins: [reactRouter()]
+          }
+        `),
+        ...files,
+      },
+      "vite-7-template",
+    );
+  });
 
       test.describe(() => {
         let stop: () => void;
@@ -226,13 +221,7 @@ test.describe("Server bundles", () => {
         });
 
         test("Vite Environment API message", () => {
-          let viteEnvironmentApiMessage =
-            "Using Vite Environment API (experimental)";
-          if (v8_viteEnvironmentApi) {
-            expect(stdout).toContain(viteEnvironmentApiMessage);
-          } else {
-            expect(stdout).not.toContain(viteEnvironmentApiMessage);
-          }
+          expect(stdout).toContain("Using Vite Environment API");
         });
 
         test("server", async ({ page }) => {
@@ -470,6 +459,4 @@ test.describe("Server bundles", () => {
           });
         });
       });
-    });
-  });
 });

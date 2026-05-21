@@ -48,33 +48,6 @@ export default {
 
 No code changes are required. This is an optimization feature that works automatically once enabled.
 
-## `future.v8_viteEnvironmentApi`
-
-[MODES: framework]
-
-<br/>
-<br/>
-
-**Background**
-
-This enables support for the experimental Vite Environment API, which provides a more flexible and powerful way to configure Vite environments. This is only available when using Vite 6+.
-
-👉 **Enable the Flag**
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_viteEnvironmentApi: true,
-  },
-} satisfies Config;
-```
-
-**Update your Code**
-
-No code changes are required unless you have custom Vite configuration that needs to be updated for the [Environment API][vite-environment]. Most users won't need to make any changes.
-
 ## `future.v8_passThroughRequests`
 
 [MODES: framework]

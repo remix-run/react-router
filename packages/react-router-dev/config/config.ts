@@ -92,17 +92,9 @@ interface FutureConfig {
   v8_passThroughRequests: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
   /**
-   * Prerender with Vite Preview server
-   */
-  unstable_previewServerPrerendering?: boolean;
-  /**
    * Automatically split route modules into multiple chunks when possible.
    */
   v8_splitRouteModules: boolean | "enforce";
-  /**
-   * Use Vite Environment API
-   */
-  v8_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -691,9 +683,12 @@ async function resolveConfig({
         "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
       );
     }
-    if ("unstable_viteEnvironmentApi" in futureConfig) {
+    if (
+      "unstable_viteEnvironmentApi" in futureConfig ||
+      "v8_viteEnvironmentApi" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi`",
+        "The `future.v8_viteEnvironmentApi` flag has been removed because Vite Environment API usage is now always enabled",
       );
     }
     if ("unstable_passThroughRequests" in futureConfig) {
@@ -716,14 +711,8 @@ async function resolveConfig({
     unstable_trailingSlashAwareDataRequests:
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
-    unstable_previewServerPrerendering:
-      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
     v8_splitRouteModules:
       userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
-    v8_viteEnvironmentApi:
-      (userAndPresetConfigs.future?.v8_viteEnvironmentApi ||
-        userAndPresetConfigs.future?.unstable_previewServerPrerendering) ??
-      false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
@@ -771,12 +760,6 @@ export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
     logFutureFlagWarning(
       "v8_splitRouteModules",
       "Route module splitting behavior is changing in React Router v8.",
-    );
-  }
-  if (future.v8_viteEnvironmentApi === undefined) {
-    logFutureFlagWarning(
-      "v8_viteEnvironmentApi",
-      "Vite Environment API usage is changing in React Router v8.",
     );
   }
   if (future.v8_passThroughRequests === undefined) {

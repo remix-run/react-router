@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import dedent from "dedent";
+import getPort from "get-port";
 
 import { type Files, test, viteConfig } from "./helpers/vite.js";
 
@@ -9,8 +10,11 @@ const css = dedent;
 function defineFiles({
   reversePlugins = false,
 }: { reversePlugins?: boolean } = {}): Files {
-  const files: Files = async ({ port }) => ({
-    "vite.config.ts": tsx`
+  const files: Files = async ({ port }) => {
+    const inspectorPort = await getPort();
+
+    return {
+      "vite.config.ts": tsx`
     import { defineConfig } from "vite";
     import { cloudflare } from "@cloudflare/vite-plugin";
     import { reactRouter } from "@react-router/dev/vite";
@@ -18,7 +22,10 @@ function defineFiles({
     export default defineConfig({
       ${await viteConfig.server({ port })}
       plugins: [
-        cloudflare({ viteEnvironment: { name: "ssr" }, inspectorPort: false }),
+        cloudflare({
+          inspectorPort: ${inspectorPort},
+          viteEnvironment: { name: "ssr" },
+        }),
         reactRouter(),
       ]${reversePlugins ? ".reverse()" : ""},
     });
@@ -35,7 +42,7 @@ function defineFiles({
   `,
     "app/routes/css-side-effect/route.tsx": tsx`
     import "./styles.css";
-    
+
     export default function CssSideEffectRoute() {
       return <div className="css-side-effect" data-css-side-effect>CSS Side Effect</div>;
     }
@@ -45,7 +52,8 @@ function defineFiles({
         padding: 20px;
       }
     `,
-  });
+    };
+  };
   return files;
 }
 
