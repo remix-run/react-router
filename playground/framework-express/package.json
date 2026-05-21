@@ -15,7 +15,7 @@
     "@react-router/node": "workspace:*",
     "compression": "^1.8.1",
     "express": "^4.19.2",
-    "isbot": "^5.1.11",
+    "isbot": "^5.1.40",
     "morgan": "^1.10.1",
     "react": "catalog:",
     "react-dom": "catalog:",

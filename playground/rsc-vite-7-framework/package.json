@@ -16,7 +16,7 @@
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@react-router/serve": "workspace:*",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.13.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

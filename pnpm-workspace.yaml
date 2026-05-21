@@ -14,5 +14,5 @@ catalog:
   react-server-dom-parcel: ^19.2.6
   react-server-dom-webpack: ^19.2.6
   typescript: ^5.4.5
-  tsup: ^8.3.0
+  tsup: ^8.5.1
   wireit: 0.14.9
