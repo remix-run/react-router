@@ -17,7 +17,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^4.5.2",
     "typescript": "catalog:",
-    "vite": "^6.3.0"
+    "vite": "^7.0.0"
   },
   "dependencies": {
     "@remix-run/node-fetch-server": "^0.13.0",

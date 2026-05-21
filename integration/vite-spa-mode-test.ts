@@ -167,7 +167,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-                "prerendering your `index.html` file.",
+                "prerendering your SPA Fallback HTML file.",
             );
             expect(stderr).toMatch("<h1>Loading...</h1>");
           });

@@ -20,16 +20,8 @@ let stop: () => void;
 const js = String.raw;
 
 test.describe("Build", () => {
-  [false, true].forEach((v8_viteEnvironmentApi) => {
-    viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
-      // Vite 5 doesn't support the Environment API
-      if (templateName === "vite-5-template" && v8_viteEnvironmentApi) {
-        return;
-      }
-
-      test.describe(`${templateDisplayName}${
-        v8_viteEnvironmentApi ? " with Vite Environment API" : ""
-      }`, () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test.describe(templateDisplayName, () => {
         test.beforeAll(async () => {
           port = await getPort();
           cwd = await createProject(
@@ -37,9 +29,7 @@ test.describe("Build", () => {
               ".env": `
                 ENV_VAR_FROM_DOTENV_FILE=true
               `,
-              "react-router.config.ts": reactRouterConfig({
-                future: { v8_viteEnvironmentApi },
-              }),
+              "react-router.config.ts": reactRouterConfig({}),
               "vite.config.ts": js`
                 import { defineConfig } from "vite";
                 import { reactRouter } from "@react-router/dev/vite";
@@ -391,7 +381,6 @@ test.describe("Build", () => {
 
           expect(pageErrors).toEqual([]);
         });
-      });
     });
   });
 });

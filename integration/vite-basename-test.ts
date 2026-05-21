@@ -17,7 +17,7 @@ import {
 import { js } from "./helpers/create-fixture.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
