@@ -104,7 +104,7 @@ export function json(value: JsonObject) {
   return JSON.stringify(value, null, 2);
 }
 
-const defaultTemplateName = "vite-5-template" satisfies TemplateName;
+const defaultTemplateName = "vite-7-template" satisfies TemplateName;
 
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let templateName = init.templateName ?? defaultTemplateName;

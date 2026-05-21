@@ -10,7 +10,7 @@ import { PlaywrightFixture, selectHtml } from "./helpers/playwright-fixture.js";
 import { type TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 

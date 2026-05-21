@@ -3,6 +3,7 @@ npm-debug.log
 
 /website/build/
 node_modules/
+.pnpm-store/
 
 /examples/*/yarn.lock
 /examples/*/pnpm-lock.yaml

@@ -18,7 +18,7 @@ import type { Config } from "@react-router/dev/config";
 
 const nodeRequire = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/bin.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.cjs";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -230,17 +230,13 @@ export const EXPRESS_SERVER = (args: {
 };
 
 type FrameworkModeViteMajorTemplateName =
-  | "vite-5-template"
-  | "vite-6-template"
-  | "vite-7-beta-template"
+  | "vite-7-template"
   | "vite-8-template"
   | "vite-plugin-cloudflare-template";
 
 type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
-type FrameworkModeCloudflareTemplateName =
-  | "cloudflare-dev-proxy-template"
-  | "vite-plugin-cloudflare-template";
+type FrameworkModeCloudflareTemplateName = "vite-plugin-cloudflare-template";
 
 export type RscBundlerTemplateName = "rsc-vite";
 
@@ -251,9 +247,7 @@ export type TemplateName =
   | RscBundlerTemplateName;
 
 export const viteMajorTemplates = [
-  { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
-  { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
-  { templateName: "vite-7-beta-template", templateDisplayName: "Vite 7 Beta" },
+  { templateName: "vite-7-template", templateDisplayName: "Vite 7" },
   { templateName: "vite-8-template", templateDisplayName: "Vite 8" },
 ] as const satisfies Array<{
   templateName: FrameworkModeViteMajorTemplateName;
@@ -269,7 +263,7 @@ export const rscBundlerTemplates = [
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-5-template",
+  templateName: TemplateName = "vite-7-template",
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -522,7 +516,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "cloudflare-dev-proxy-template",
+        "vite-plugin-cloudflare-template",
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
