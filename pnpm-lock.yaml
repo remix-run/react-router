@@ -32,6 +32,7 @@ overrides:
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
   '@types/react-test-renderer': ^18.3.1
+  react-is: 19.1.0
 
 patchedDependencies:
   '@mdx-js/rollup':
@@ -8395,15 +8396,6 @@ packages:
     resolution: {integrity: sha512-loJ3Y0TFRxwbNl+YA8ra1F0gDYIzJXXAVfe6hPwv8SKkV8eTWBP449oy5CqupcxjDy+4o730euIBTOZDTIQKvQ==}
     peerDependencies:
       react: 19.3.0-canary-d763f313-20251210
-
-  react-is@16.13.1:
-    resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
-
-  react-is@17.0.2:
-    resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
-
-  react-is@18.3.1:
-    resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
   react-is@19.1.0:
     resolution: {integrity: sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==}
@@ -17998,19 +17990,19 @@ snapshots:
     dependencies:
       ansi-regex: 5.0.1
       ansi-styles: 5.2.0
-      react-is: 17.0.2
+      react-is: 19.1.0
 
   pretty-format@29.7.0:
     dependencies:
       '@jest/schemas': 29.6.3
       ansi-styles: 5.2.0
-      react-is: 18.3.1
+      react-is: 19.1.0
 
   pretty-format@30.3.0:
     dependencies:
       '@jest/schemas': 30.0.5
       ansi-styles: 5.2.0
-      react-is: 18.3.1
+      react-is: 19.1.0
 
   pretty-ms@9.3.0:
     dependencies:
@@ -18027,7 +18019,7 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
-      react-is: 16.13.1
+      react-is: 19.1.0
 
   proper-lockfile@4.1.2:
     dependencies:
@@ -18106,12 +18098,6 @@ snapshots:
     dependencies:
       react: 19.3.0-canary-d763f313-20251210
       scheduler: 0.28.0-canary-d763f313-20251210
-
-  react-is@16.13.1: {}
-
-  react-is@17.0.2: {}
-
-  react-is@18.3.1: {}
 
   react-is@19.1.0: {}
 
