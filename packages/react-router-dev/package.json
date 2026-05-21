@@ -39,7 +39,7 @@
     }
   },
   "bin": {
-    "react-router": "bin.js"
+    "react-router": "bin.cjs"
   },
   "scripts": {
     "build": "wireit",
@@ -56,7 +56,7 @@
         "typegen/**",
         "vite/**",
         "*.ts",
-        "bin.js",
+        "bin.cjs",
         "tsconfig.json",
         "package.json"
       ],
@@ -152,7 +152,7 @@
   "files": [
     "dist/",
     "module-sync-enabled/",
-    "bin.js",
+    "bin.cjs",
     "rsc-types.d.ts",
     "CHANGELOG.md",
     "LICENSE.md",

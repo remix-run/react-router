@@ -18,7 +18,7 @@ import type { Config } from "@react-router/dev/config";
 
 const nodeRequire = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/bin.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.cjs";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
