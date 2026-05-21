@@ -1039,8 +1039,10 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 /**
  * @category Types
  */
-export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+export interface LinkProps extends Omit<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href"
+> {
   /**
    * Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
    *
@@ -1474,8 +1476,10 @@ export type NavLinkRenderProps = {
 /**
  * @category Types
  */
-export interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style" | "children"> {
+export interface NavLinkProps extends Omit<
+  LinkProps,
+  "className" | "style" | "children"
+> {
   /**
    *  Can be regular React children or a function that receives an object with the
    * `active` and `pending` states of the link.
@@ -1901,7 +1905,6 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.fetcherKey} fetcherKey n/a
  * @param {FormProps.method} method n/a
  * @param {FormProps.navigate} navigate n/a
- * @param {FormProps.onSubmit} onSubmit n/a
  * @param {FormProps.preventScrollReset} preventScrollReset n/a
  * @param {FormProps.relative} relative n/a
  * @param {FormProps.reloadDocument} reloadDocument n/a
