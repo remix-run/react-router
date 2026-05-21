@@ -118,7 +118,7 @@
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "wireit": "catalog:",
-    "wrangler": "^4.23.0"
+    "wrangler": "^4.93.1"
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",
@@ -127,7 +127,7 @@
     "react-server-dom-webpack": "catalog:",
     "typescript": "^5.1.0 || ^6.0.0",
     "vite": "^7.0.0 || ^8.0.0",
-    "wrangler": "^3.28.2 || ^4.0.0"
+    "wrangler": "^4.93.1"
   },
   "peerDependenciesMeta": {
     "@vitejs/plugin-rsc": {

@@ -1,4 +1,3 @@
-Require Vite 7+ and make the Vite Environment API build path mandatory
-
-Remove `@react-router/dev/vite/cloudflare` dev proxy export; use
-`@cloudflare/vite-plugin` instead.
+- Require Vite 7+ and make the Vite Environment API build path mandatory
+- Remove `@react-router/dev/vite/cloudflare` dev proxy export; use `@cloudflare/vite-plugin` instead
+- Updates the minimum version of `wrangler` to 4.93.1 to align with `@cloudflare/vite-plugin`'s required version
