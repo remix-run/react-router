@@ -139,6 +139,7 @@ const files = {
                   "export const reactRouterConfig = " + serializeJs(reactRouterConfig, { space: 2, unsafe: true }) + ";",
                   "export const assetsDir = " + JSON.stringify(viteConfig.build.assetsDir) + ";",
                   "export const futureFlags = " + JSON.stringify(reactRouterConfig.future) + ";",
+                  "export const splitRouteModules = " + JSON.stringify(reactRouterConfig.splitRouteModules) + ";",
                 ].join("\n"),
                 "utf-8"
               );
@@ -237,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "splitRouteModules",
         "subResourceIntegrity",
         "allowedActionOrigins",
         "unstable_routeConfig",
@@ -246,8 +248,8 @@ test.describe("Vite / presets", async () => {
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
         unstable_trailingSlashAwareDataRequests: false,
-        v8_splitRouteModules: false,
       });
+      expect(buildEndArgsMeta.splitRouteModules).toBe(true);
 
       // Ensure we get a valid build manifest
       expect(buildEndArgsMeta.buildManifest).toEqual({

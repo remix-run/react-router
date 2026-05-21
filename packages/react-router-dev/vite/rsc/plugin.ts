@@ -39,11 +39,11 @@ let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
     arguments &&
-      arguments.length === 1 &&
-      typeof arguments[0] === "object" &&
-      arguments[0] &&
-      "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
-      arguments[0].__runningWithinTheReactRouterMonoRepo === true,
+    arguments.length === 1 &&
+    typeof arguments[0] === "object" &&
+    arguments[0] &&
+    "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
+    arguments[0].__runningWithinTheReactRouterMonoRepo === true,
   );
   let configLoader: ConfigLoader;
   let viteCommand: Vite.ConfigEnv["command"];
@@ -519,8 +519,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       getRouteIdForFile,
       isRootRouteModule,
       transformToJs,
-      enforceSplitRouteModules: () =>
-        config.future.v8_splitRouteModules === "enforce",
+      enforceSplitRouteModules: () => config.splitRouteModules === "enforce",
     }),
     {
       name: "react-router/rsc/virtual-basename",

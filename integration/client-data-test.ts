@@ -125,17 +125,17 @@ test.describe("Client Data", () => {
     }
 
     test.describe(`template: ${templateName}`, () => {
-      for (const v8_splitRouteModules of [true, false]) {
-        test.describe(`v8_splitRouteModules: ${v8_splitRouteModules}`, () => {
+      for (const splitRouteModules of [true, false]) {
+        test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
           test.skip(
-            templateName.includes("rsc") && v8_splitRouteModules,
+            templateName.includes("rsc") && splitRouteModules,
             "RSC Framework Mode doesn't support splitRouteModules",
           );
 
           test.skip(
             ({ browserName }) =>
               Boolean(process.env.CI) &&
-              v8_splitRouteModules &&
+              splitRouteModules &&
               (browserName === "webkit" || process.platform === "win32"),
             "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific",
           );
@@ -149,7 +149,7 @@ test.describe("Client Data", () => {
                   templateName,
                   files: {
                     "react-router.config.ts": reactRouterConfig({
-                      future: { v8_splitRouteModules },
+                      splitRouteModules,
                     }),
                     "app/root.tsx": js`
                       import { Form, Outlet, Scripts } from "react-router"

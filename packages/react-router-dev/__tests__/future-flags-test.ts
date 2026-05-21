@@ -11,35 +11,17 @@ describe("logFutureFlagWarnings", () => {
     logSpy.mockRestore();
   });
 
-  it("warns about all stable v8_ flags when none are set", () => {
+  it("does not warn when there are no stable v8_ future flags", () => {
     logFutureFlagWarnings({});
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy.mock.calls[0][0]).toContain("v8_splitRouteModules");
-  });
-
-  it("does not warn about flags that are already opted in (true)", () => {
-    logFutureFlagWarnings({
-      v8_splitRouteModules: true,
-    });
-
     expect(logSpy).not.toHaveBeenCalled();
   });
 
-  it("does not warn about flags that are explicitly opted out (false)", () => {
-    logFutureFlagWarnings({
-      v8_splitRouteModules: false,
-    });
-
-    expect(logSpy).not.toHaveBeenCalled();
-  });
-
-  it("only warns about flags that are not yet set", () => {
+  it("does not warn about unstable future flags", () => {
     logFutureFlagWarnings({
       unstable_optimizeDeps: true,
     });
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy.mock.calls[0][0]).toContain("v8_splitRouteModules");
+    expect(logSpy).not.toHaveBeenCalled();
   });
 });
