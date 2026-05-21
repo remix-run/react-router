@@ -37,6 +37,7 @@ import type {
   TrackedPromise,
 } from "./router/utils";
 import {
+  defaultMapRouteProperties,
   getResolveToMatches,
   getRoutePattern,
   resolveTo,
@@ -48,7 +49,6 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  ENABLE_DEV_WARNINGS,
   FetchersContext,
   LocationContext,
   NavigationContext,
@@ -75,67 +75,6 @@ import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
 import { useOptimistic } from "react";
-
-export function mapRouteProperties(route: RouteObject) {
-  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this -- please and thank you!
-    hasErrorBoundary:
-      route.hasErrorBoundary ||
-      route.ErrorBoundary != null ||
-      route.errorElement != null,
-  };
-
-  if (route.Component) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.element) {
-        warning(
-          false,
-          "You should not include both `Component` and `element` on your route - " +
-            "`Component` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      element: React.createElement(route.Component),
-      Component: undefined,
-    });
-  }
-
-  if (route.HydrateFallback) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.hydrateFallbackElement) {
-        warning(
-          false,
-          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
-            "`HydrateFallback` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      hydrateFallbackElement: React.createElement(route.HydrateFallback),
-      HydrateFallback: undefined,
-    });
-  }
-
-  if (route.ErrorBoundary) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.errorElement) {
-        warning(
-          false,
-          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-            "`ErrorBoundary` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      errorElement: React.createElement(route.ErrorBoundary),
-      ErrorBoundary: undefined,
-    });
-  }
-
-  return updates;
-}
 
 export const hydrationRouteProperties: (keyof RouteObject)[] = [
   "HydrateFallback",
@@ -294,8 +233,8 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
-    mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     instrumentations: opts?.instrumentations,
@@ -1057,7 +996,6 @@ export interface PathRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
@@ -1150,7 +1088,6 @@ export interface IndexRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
@@ -1845,10 +1782,6 @@ export function createRoutesFromChildren(
       HydrateFallback: props.HydrateFallback,
       errorElement: props.errorElement,
       ErrorBoundary: props.ErrorBoundary,
-      hasErrorBoundary:
-        props.hasErrorBoundary === true ||
-        props.ErrorBoundary != null ||
-        props.errorElement != null,
       shouldRevalidate: props.shouldRevalidate,
       handle: props.handle,
       lazy: props.lazy,

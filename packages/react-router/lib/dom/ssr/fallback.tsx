@@ -1,7 +1,7 @@
 import * as React from "react";
 
+import { ENABLE_DEV_WARNINGS } from "../../router/utils";
 import { BoundaryShell } from "./errorBoundaries";
-import { ENABLE_DEV_WARNINGS } from "../../context";
 
 // If the user sets `clientLoader.hydrate=true` somewhere but does not
 // provide a `HydrateFallback` at any level of the tree, then we need to at

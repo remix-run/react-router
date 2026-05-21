@@ -55,9 +55,6 @@ export function createStaticHandlerDataRoutes(
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
-      // Always include root due to default boundaries
-      hasErrorBoundary:
-        route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
       middleware: route.module.middleware as unknown as
@@ -121,6 +118,11 @@ export function createStaticHandlerDataRoutes(
         ? (args: RRActionFunctionArgs) =>
             callRouteHandler(route.module.action!, args)
         : undefined,
+      // Always include root due to default boundaries
+      ErrorBoundary:
+        route.id === "root" || route.module.ErrorBoundary != null
+          ? () => null
+          : undefined,
       handle: route.module.handle,
     };
 

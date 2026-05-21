@@ -5,6 +5,7 @@ import type {
   RouteBranch,
 } from "../router/utils";
 import {
+  defaultMapRouteProperties,
   isRouteErrorResponse,
   ErrorResponseImpl,
   RouterContextProvider,
@@ -63,6 +64,7 @@ function derive(build: ServerBuild, mode?: string) {
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
+    mapRouteProperties: defaultMapRouteProperties,
     instrumentations: build.entry.module.instrumentations,
     future: build.future,
   });

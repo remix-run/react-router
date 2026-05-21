@@ -8,6 +8,7 @@ import chokidar, {
   type FSWatcher,
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
+import { readPackageJSON, sortPackage, updatePackage } from "pkg-types";
 import colors from "picocolors";
 import pick from "lodash/pick.js";
 import omit from "lodash/omit.js";
@@ -1030,10 +1031,6 @@ export async function resolveEntryFiles({
       );
     }
 
-    // TODO(v8): Remove - only required for Node 20.18 and below
-    let { readPackageJSON, sortPackage, updatePackage } = await import(
-      "pkg-types"
-    );
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};

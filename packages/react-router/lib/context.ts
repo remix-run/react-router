@@ -147,7 +147,3 @@ RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-export const ENABLE_DEV_WARNINGS = __DEV__;

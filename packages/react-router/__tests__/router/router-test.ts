@@ -1,3 +1,4 @@
+import type React from "react";
 import type { HydrationState } from "../../lib/router/router";
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, IDLE_NAVIGATION } from "../../lib/router/router";
@@ -39,7 +40,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {
@@ -274,7 +275,7 @@ describe("a router", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             loader: () => ++count,
           },
         ],
@@ -342,7 +343,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            hasErrorBoundary: true,
+            errorElement: expect.any(Object),
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
@@ -418,7 +419,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            hasErrorBoundary: true,
+            errorElement: expect.any(Object),
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
@@ -1475,7 +1476,7 @@ describe("a router", () => {
         routes: [
           {
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             loader: () => {},
           },
         ],
@@ -2492,7 +2493,7 @@ describe("a router", () => {
     });
   });
 
-  describe("router.enhanceRoutes", () => {
+  describe("router._internalSetRoutes", () => {
     // Detect any failures inside the router navigate code
     afterEach(() => cleanup());
 
@@ -2510,7 +2511,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2518,14 +2519,12 @@ describe("a router", () => {
               id: "index",
               loader: true,
               action: true,
-              hasErrorBoundary: false,
             },
             {
               path: "/foo",
               id: "foo",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2566,7 +2565,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2574,7 +2573,6 @@ describe("a router", () => {
               id: "noLoader",
               loader: true,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2619,7 +2617,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2627,14 +2625,12 @@ describe("a router", () => {
               id: "index",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
             {
               path: "/foo",
               id: "foo",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2680,7 +2676,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2688,14 +2684,12 @@ describe("a router", () => {
               id: "index",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
             {
               path: "/foo",
               id: "foo",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2737,20 +2731,18 @@ describe("a router", () => {
         {
           path: "/",
           id: "root",
-          hasErrorBoundary: true,
+          errorElement: {} as React.ReactElement,
           loader: () => rootDfd.promise,
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
             {
               path: "foo",
               id: "foo",
               loader: () => fooDfd.promise,
               children: undefined,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2779,18 +2771,16 @@ describe("a router", () => {
           path: "/",
           id: "root",
           loader: () => rootDfd2.promise,
-          hasErrorBoundary: true,
+          errorElement: expect.any(Object),
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
             {
               path: "foo",
               id: "foo",
               children: undefined,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2847,20 +2837,18 @@ describe("a router", () => {
         {
           path: "/",
           id: "root",
-          hasErrorBoundary: true,
+          errorElement: {} as React.ReactElement,
           loader: () => rootDfd.promise,
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
             {
               path: "foo",
               id: "foo",
               loader: () => fooDfd.promise,
               children: undefined,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2888,12 +2876,11 @@ describe("a router", () => {
           path: "/",
           id: "root",
           loader: () => rootDfd2.promise,
-          hasErrorBoundary: true,
+          errorElement: expect.any(Object),
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
           ],
         },
