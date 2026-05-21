@@ -127,7 +127,7 @@
     "react-server-dom-webpack": "catalog:",
     "typescript": "^5.1.0 || ^6.0.0",
     "vite": "^7.0.0 || ^8.0.0",
-    "wrangler": "^4.93.1"
+    "wrangler": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "@vitejs/plugin-rsc": {
