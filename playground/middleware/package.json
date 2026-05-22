@@ -29,7 +29,7 @@
     "@types/express": "^4.17.21",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^20.19.0",
+    "@types/node": "^22.19.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "tsx": "^4.22.3",
