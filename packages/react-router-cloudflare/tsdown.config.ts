@@ -13,6 +13,7 @@ export default defineConfig([
     entry,
     format: "esm",
     fixedExtension: false,
+    unbundle: true,
     outDir: "dist",
     dts: true,
     banner: {

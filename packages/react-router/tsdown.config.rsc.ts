@@ -16,6 +16,7 @@ const config = (enableDevWarnings: boolean): UserConfig => ({
   },
   format: "esm",
   fixedExtension: false,
+  unbundle: true,
   outDir: enableDevWarnings ? "dist/development" : "dist/production",
   dts: true,
   banner: {

@@ -22,6 +22,7 @@ const config = (enableDevWarnings: boolean): UserConfig => ({
   },
   format: "esm",
   fixedExtension: false,
+  unbundle: true,
   // We don't do the external thing for `react-router` here because it
   // doesn't get bundled by default in the ESM build, and when we tried it
   // in https://github.com/remix-run/react-router/pull/13497 it changed up
