@@ -87,7 +87,7 @@ describe("create-react-router CLI", () => {
       args: ["--help"],
     });
     expect(stdout.trim()).toMatchInlineSnapshot(`
-     "create-react-router
+     "create-react-router  
 
      Usage:
 
