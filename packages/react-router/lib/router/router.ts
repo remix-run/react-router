@@ -6172,17 +6172,15 @@ function runClientMiddlewarePipeline(
   );
 
   // Handle error bubbling on the client
-  function errorHandler(
+  async function errorHandler(
     error: unknown,
     routeId: string,
     nextResult: { value: Record<string, DataStrategyResult> } | undefined,
   ): Promise<Record<string, DataStrategyResult>> {
     if (nextResult) {
-      return Promise.resolve(
-        Object.assign(nextResult.value, {
-          [routeId]: { type: "error", result: error },
-        }),
-      );
+      return Object.assign(nextResult.value, {
+        [routeId]: { type: "error", result: error },
+      });
     } else {
       // We never even got to the handlers, so we might not have data for new routes.
       // Find the boundary at or above the source of the middleware error or the
@@ -6201,13 +6199,18 @@ function runClientMiddlewarePipeline(
           0,
         ),
       );
+      await Promise.all(
+        matches
+          .slice(0, maxBoundaryIdx + 1)
+          .map((match) => match._lazyPromises?.route),
+      );
       let boundaryRouteId = findNearestBoundary(
         matches,
         matches[maxBoundaryIdx].route.id,
       ).route.id;
-      return Promise.resolve({
+      return {
         [boundaryRouteId]: { type: "error", result: error },
-      });
+      };
     }
   }
 }
