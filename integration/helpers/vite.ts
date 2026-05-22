@@ -25,7 +25,7 @@ const TMP_DIR = path.join(root, ".tmp/integration");
 
 export const reactRouterConfig = (
   // Don't support function configs due to JSON.stringify()
-  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles">,
+  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles"> = {},
 ) => {
   if (
     typeof config.prerender === "function" ||

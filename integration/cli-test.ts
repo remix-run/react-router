@@ -113,6 +113,10 @@ test.describe("cli", () => {
     const cwd = await createProject();
     let { stdout, stderr, status } = run(["routes"], { cwd });
 
+    // Filter out future flag warnings for the format:
+    // ⚠️  Future Flag Warning: Something is changing in React Router v8.
+    //     You can use the `future.v8_whatever` flag to opt in early.
+    //     -> https://reactrouter.com/upgrading/future-flags#v8_whatever
     let filteredStdOut = stdout.toString().split("\n");
     while (filteredStdOut[0]?.includes("Future Flag Warning:")) {
       filteredStdOut.splice(0, 3);

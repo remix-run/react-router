@@ -257,7 +257,7 @@ test.describe("Split route modules", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "react-router.config.ts": reactRouterConfig({}),
+        "react-router.config.ts": reactRouterConfig(),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });

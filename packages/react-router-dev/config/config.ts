@@ -691,14 +691,12 @@ async function resolveConfig({
   // Check for renamed flags and provide helpful error messages
   let futureConfig = userAndPresetConfigs.future;
   if (futureConfig) {
-    if ("unstable_splitRouteModules" in futureConfig) {
+    if (
+      "unstable_splitRouteModules" in futureConfig ||
+      "v8_splitRouteModules" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_splitRouteModules` flag has been stabilized and moved to a top-level `config.splitRouteModules` field",
-      );
-    }
-    if ("v8_splitRouteModules" in futureConfig) {
-      return err(
-        "The `future.v8_splitRouteModules` flag has been moved to a top-level `config.splitRouteModules` field",
+        "The `future.v8_splitRouteModules` flag has been moved to a top-level `config.splitRouteModules` field (default `true`)",
       );
     }
     if (
@@ -751,13 +749,7 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  logFutureFlagWarnings(userAndPresetConfigs.future || {});
-
   return ok(reactRouterConfig);
-}
-
-export function logFutureFlagWarnings(_future: Partial<FutureConfig>): void {
-  void _future;
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
