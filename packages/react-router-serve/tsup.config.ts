@@ -6,6 +6,7 @@ import { createBanner } from "../../build.utils.js";
 import pkg from "./package.json";
 
 const entry = ["cli.ts"];
+const dts = { compilerOptions: { ignoreDeprecations: "6.0" } };
 
 export default defineConfig([
   {
@@ -13,7 +14,7 @@ export default defineConfig([
     entry,
     format: ["esm"],
     outDir: "dist",
-    dts: true,
+    dts,
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },

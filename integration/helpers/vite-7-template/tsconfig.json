@@ -12,7 +12,6 @@
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"]
     },

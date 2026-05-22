@@ -13,6 +13,7 @@ const entry = [
 ];
 
 const external = ["react-router", "react-router/internal/react-server-client"];
+const dts = { compilerOptions: { ignoreDeprecations: "6.0" } };
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
@@ -27,7 +28,7 @@ const config = (enableDevWarnings: boolean) =>
       // in https://github.com/remix-run/react-router/pull/13497 it changed up
       // some chunk creation that we didn't want to risk having any side effects
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
-      dts: true,
+      dts,
       banner: {
         js: createBanner(pkg.name, pkg.version),
       },

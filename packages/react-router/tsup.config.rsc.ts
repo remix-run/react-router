@@ -7,6 +7,7 @@ import pkg from "./package.json";
 
 const entry = ["index-react-server.ts"];
 const external = ["react-router", "react-router/internal/react-server-client"];
+const dts = { compilerOptions: { ignoreDeprecations: "6.0" } };
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
@@ -18,7 +19,7 @@ const config = (enableDevWarnings: boolean) =>
       removeNodeProtocol: false,
       splitting: true,
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
-      dts: true,
+      dts,
       banner: {
         js: createBanner(pkg.name, pkg.version),
       },

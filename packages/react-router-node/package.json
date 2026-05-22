@@ -45,6 +45,7 @@
     "@remix-run/node-fetch-server": "^0.13.0"
   },
   "devDependencies": {
+    "@types/node": "^22.19.0",
     "react-router": "workspace:*",
     "tsup": "catalog:",
     "typescript": "catalog:",

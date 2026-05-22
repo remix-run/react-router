@@ -3,6 +3,7 @@
   "exclude": ["dist", "node_modules"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["node"],
     "target": "ES2022",
     "module": "ES2022",
     "skipLibCheck": true,

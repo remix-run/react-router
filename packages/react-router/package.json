@@ -88,6 +88,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.19.0",
     "@types/set-cookie-parser": "^2.4.10",
     "jest-environment-jsdom": "^29.6.2",
     "premove": "^4.0.0",

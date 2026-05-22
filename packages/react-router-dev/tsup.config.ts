@@ -20,6 +20,7 @@ const external = [
   "./static/rsc-refresh-utils.mjs",
   /\.json$/,
 ];
+const dts = { compilerOptions: { ignoreDeprecations: "6.0" } };
 
 export default defineConfig([
   {
@@ -28,7 +29,7 @@ export default defineConfig([
     format: ["esm"],
     target: "node24",
     outDir: "dist",
-    dts: true,
+    dts,
     external,
     banner: {
       js: createBanner(pkg.name, pkg.version),
