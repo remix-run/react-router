@@ -1,5 +1,6 @@
 import type { ChildProcess } from "node:child_process";
 import { sync as spawnSync, spawn } from "cross-spawn";
+import { globSync } from "node:fs";
 import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { platform } from "node:os";
@@ -10,7 +11,6 @@ import stripIndent from "strip-indent";
 import waitOn from "wait-on";
 import getPort from "get-port";
 import shell from "shelljs";
-import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
@@ -595,10 +595,9 @@ export function createEditor(projectDir: string) {
 }
 
 export function grep(cwd: string, pattern: RegExp): string[] {
-  let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
-    cwd,
-    absolute: true,
-  });
+  let assetFiles = globSync("**/*.@(js|jsx|ts|tsx)", { cwd }).map((file) =>
+    path.resolve(cwd, file),
+  );
 
   let lines = shell
     .grep("-l", pattern, assetFiles)
