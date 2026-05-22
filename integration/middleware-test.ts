@@ -40,6 +40,7 @@ test.describe("Middleware", () => {
           // ...existing code...
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
+            splitRouteModules: false,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -367,7 +368,6 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            future: { v8_splitRouteModules: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -464,6 +464,7 @@ test.describe("Middleware", () => {
       fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
+            splitRouteModules: false,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -769,8 +770,7 @@ test.describe("Middleware", () => {
     }) => {
       let fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -890,8 +890,7 @@ test.describe("Middleware", () => {
     }) => {
       let fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1054,9 +1053,7 @@ test.describe("Middleware", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-            future: { v8_splitRouteModules: true },
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1150,8 +1147,7 @@ test.describe("Middleware", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1977,9 +1973,7 @@ test.describe("Middleware", () => {
       fixture = await createFixture(
         {
           files: {
-            "react-router.config.ts": reactRouterConfig({
-              
-            }),
+            "react-router.config.ts": reactRouterConfig(),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
               import { reactRouter } from "@react-router/dev/vite";

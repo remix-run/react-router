@@ -927,7 +927,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let enforceSplitRouteModules =
-      ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+      ctx.reactRouterConfig.splitRouteModules === "enforce";
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
@@ -1073,7 +1073,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let enforceSplitRouteModules =
-      ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+      ctx.reactRouterConfig.splitRouteModules === "enforce";
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
       let routeFile = route.file;
@@ -2045,7 +2045,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
 
         let enforceSplitRouteModules =
-          ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+          ctx.reactRouterConfig.splitRouteModules === "enforce";
 
         if (enforceSplitRouteModules && chunkName === "main" && chunk) {
           let exportNames = getExportNames(chunk.code);
@@ -3259,7 +3259,7 @@ async function detectRouteChunksIfEnabled(
       },
     };
   }
-  if (!ctx.reactRouterConfig.future.v8_splitRouteModules) {
+  if (!ctx.reactRouterConfig.splitRouteModules) {
     return noRouteChunks();
   }
 
@@ -3291,7 +3291,7 @@ async function getRouteChunkIfEnabled(
   chunkName: RouteChunkName,
   input: ResolveRouteFileCodeInput,
 ): Promise<ReturnType<typeof getRouteChunkCode> | null> {
-  if (!ctx.reactRouterConfig.future.v8_splitRouteModules) {
+  if (!ctx.reactRouterConfig.splitRouteModules) {
     return null;
   }
 
@@ -3605,8 +3605,7 @@ export async function getEnvironmentOptionsResolvers(
 
                   return [
                     `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-                    ...(ctx.reactRouterConfig.future.v8_splitRouteModules &&
-                    !isRootRoute
+                    ...(ctx.reactRouterConfig.splitRouteModules && !isRootRoute
                       ? routeChunkExportNames.map((exportName) =>
                           code.includes(exportName)
                             ? getRouteChunkModuleId(routeFilePath, exportName)

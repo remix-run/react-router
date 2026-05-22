@@ -215,7 +215,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({}),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,
@@ -297,7 +297,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({}),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,
@@ -337,7 +337,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({}),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,
@@ -406,7 +406,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({}),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,

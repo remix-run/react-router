@@ -91,11 +91,9 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
   unstable_trailingSlashAwareDataRequests: boolean;
-  /**
-   * Automatically split route modules into multiple chunks when possible.
-   */
-  v8_splitRouteModules: boolean | "enforce";
 }
+
+type SplitRouteModulesOption = boolean | "enforce";
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
@@ -134,6 +132,16 @@ export type ReactRouterConfig = {
     ? // Partial<FutureConfig> doesn't work when it's empty so just prevent any keys
       { [key: string]: never }
     : Partial<FutureConfig>;
+
+  /**
+   * Automatically split route modules into multiple chunks when possible.
+   *
+   * This can be set to `false` to keep route modules in a single chunk, or
+   * `"enforce"` to require all routes to be splittable.
+   *
+   * Defaults to `true`.
+   */
+  splitRouteModules?: SplitRouteModulesOption;
 
   /**
    * The React Router app basename.  Defaults to `"/"`.
@@ -277,6 +285,11 @@ export type ResolvedReactRouterConfig = Readonly<{
    * Enabled future flags
    */
   future: FutureConfig;
+  /**
+   * Whether to automatically split route modules into multiple chunks when
+   * possible.
+   */
+  splitRouteModules: SplitRouteModulesOption;
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
@@ -678,9 +691,12 @@ async function resolveConfig({
   // Check for renamed flags and provide helpful error messages
   let futureConfig = userAndPresetConfigs.future;
   if (futureConfig) {
-    if ("unstable_splitRouteModules" in futureConfig) {
+    if (
+      "unstable_splitRouteModules" in futureConfig ||
+      "v8_splitRouteModules" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
+        "The `future.v8_splitRouteModules` flag has been moved to a top-level `config.splitRouteModules` field (default `true`)",
       );
     }
     if (
@@ -704,11 +720,10 @@ async function resolveConfig({
     unstable_trailingSlashAwareDataRequests:
       userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
       false,
-    v8_splitRouteModules:
-      userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+  let splitRouteModules = userAndPresetConfigs.splitRouteModules ?? true;
   let subResourceIntegrity = userAndPresetConfigs.subResourceIntegrity ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
@@ -724,6 +739,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    splitRouteModules,
     subResourceIntegrity,
     allowedActionOrigins,
     unstable_routeConfig: routeConfig,
@@ -733,28 +749,7 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  logFutureFlagWarnings(userAndPresetConfigs.future || {});
-
   return ok(reactRouterConfig);
-}
-
-function logFutureFlagWarning(flag: string, message: string): void {
-  console.log(
-    colors.yellow(
-      `  ⚠️  Future Flag Warning: ${message}\n` +
-        `     You can use the \`future.${flag}\` flag to opt in early.\n` +
-        `     -> https://reactrouter.com/upgrading/future-flags#${flag}`,
-    ),
-  );
-}
-
-export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
-  if (future.v8_splitRouteModules === undefined) {
-    logFutureFlagWarning(
-      "v8_splitRouteModules",
-      "Route module splitting behavior is changing in React Router v8.",
-    );
-  }
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
