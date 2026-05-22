@@ -1182,6 +1182,7 @@ async function execCreateReactRouter({
       ...(mockNetwork
         ? [
             "--experimental-strip-types",
+            "--no-warnings=ExperimentalWarning",
             "--import",
             pathToFileURL(path.join(__dirname, "./msw-register.ts")).href,
           ]
