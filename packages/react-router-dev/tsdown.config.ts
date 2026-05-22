@@ -58,7 +58,6 @@ export default defineConfig([
     entry,
     format: "esm",
     fixedExtension: false,
-    unbundle: true,
     target: "node24",
     outDir: "dist",
     dts: true,
