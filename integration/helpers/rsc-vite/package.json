@@ -22,7 +22,7 @@
   "dependencies": {
     "@remix-run/node-fetch-server": "^0.13.0",
     "compression": "^1.8.1",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "express": "^4.21.2",
     "react": "catalog:",
     "react-dom": "catalog:",

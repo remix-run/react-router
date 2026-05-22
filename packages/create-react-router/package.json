@@ -39,9 +39,9 @@
   },
   "dependencies": {
     "arg": "^5.0.1",
-    "execa": "5.1.1",
+    "execa": "9.6.1",
     "gunzip-maybe": "^1.4.2",
-    "log-update": "^5.0.1",
+    "log-update": "^8.0.0",
     "picocolors": "^1.1.1",
     "semver": "^7.8.0",
     "sisteransi": "^1.0.5",

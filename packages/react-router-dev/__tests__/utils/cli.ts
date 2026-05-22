@@ -2,14 +2,14 @@ import { createRequire } from "node:module";
 import type { Stats } from "node:fs";
 import { statSync } from "node:fs";
 import path from "node:path";
-import execa from "execa";
+import { execa, type ExecaError, type Options } from "execa";
 import glob from "fast-glob";
 
 import captureError from "./captureError";
 
 const nodeRequire = createRequire(import.meta.url);
 
-export const isExecaError = (error: unknown): error is execa.ExecaError => {
+export const isExecaError = (error: unknown): error is ExecaError => {
   if (!(error instanceof Error)) return false;
   return "exitCode" in error;
 };
@@ -56,7 +56,7 @@ const mtimeDir = async (dir: string): Promise<Date> => {
   return maxMtime;
 };
 
-export const run = async (args: string[], options: execa.Options = {}) => {
+export const run = async (args: string[], options: Options = {}) => {
   // // Running build `.js` is ~8x faster than running source `.ts` via `esbuild-register`,
   // // so unless source code changes are not yet reflected in the build, prefer running the built `.js`.
   // // To get speed ups in dev, make sure you build before running tests or are running `pnpm watch`

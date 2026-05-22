@@ -29,6 +29,7 @@ const BUILT_CLI = path.resolve(__dirname, "../dist/cli.js");
 
 (jest as any).unstable_mockModule(execaModuleId, () => ({
   default: mockedExeca,
+  execa: mockedExeca,
 }));
 
 let createReactRouter: typeof import("../index").createReactRouter;
