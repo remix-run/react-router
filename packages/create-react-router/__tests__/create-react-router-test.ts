@@ -1181,10 +1181,10 @@ async function execCreateReactRouter({
     [
       ...(mockNetwork
         ? [
-            "--require",
-            nodeRequire.resolve("esbuild-register"),
-            "--require",
-            path.join(__dirname, "./msw-register.ts"),
+            "--experimental-strip-types",
+            "--no-warnings=ExperimentalWarning",
+            "--import",
+            pathToFileURL(path.join(__dirname, "./msw-register.ts")).href,
           ]
         : []),
       cliPath,

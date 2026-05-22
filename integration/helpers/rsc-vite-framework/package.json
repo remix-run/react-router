@@ -11,7 +11,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "devDependencies": {
-    "@mdx-js/rollup": "^3.1.0",
+    "@mdx-js/rollup": "^3.1.1",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@types/express": "^5.0.6",

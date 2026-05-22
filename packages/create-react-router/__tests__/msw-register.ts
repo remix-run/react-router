@@ -1,6 +1,6 @@
 import process from "node:process";
 
-import { server } from "./msw";
+import { server } from "./msw.ts";
 
 server.listen({ onUnhandledRequest: "error" });
 
