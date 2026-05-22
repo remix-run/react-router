@@ -663,12 +663,6 @@ importers:
       '@types/tar-fs':
         specifier: ^2.0.1
         version: 2.0.4
-      esbuild:
-        specifier: 0.25.0
-        version: 0.25.0
-      esbuild-register:
-        specifier: ^3.6.0
-        version: 3.6.0(esbuild@0.25.0)
       msw:
         specifier: ^2.14.6
         version: 2.14.6(@types/node@22.19.18)(typescript@5.4.5)
@@ -14635,13 +14629,6 @@ snapshots:
       is-callable: 1.2.7
       is-date-object: 1.0.5
       is-symbol: 1.0.4
-
-  esbuild-register@3.6.0(esbuild@0.25.0):
-    dependencies:
-      debug: 4.4.1
-      esbuild: 0.25.0
-    transitivePeerDependencies:
-      - supports-color
 
   esbuild-register@3.6.0(esbuild@0.28.0):
     dependencies:

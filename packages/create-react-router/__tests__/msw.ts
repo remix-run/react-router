@@ -3,7 +3,7 @@ import fsp from "node:fs/promises";
 import { setupServer } from "msw/node";
 import { http, type RequestHandler } from "msw";
 
-import { githubHandlers } from "./github-mocks";
+import { githubHandlers } from "./github-mocks.ts";
 const TEST_DIR =
   process.env.CREATE_REACT_ROUTER_TEST_DIR ??
   path.join(process.cwd(), "packages/create-react-router/__tests__");
