@@ -17,7 +17,7 @@
     "@react-router/fs-routes": "workspace:*",
     "@react-router/serve": "workspace:*",
     "@types/express": "^5.0.6",
-    "@types/node": "^22.13.1",
+    "@types/node": "^22.19.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^6.0.1",

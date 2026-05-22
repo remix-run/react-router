@@ -48,7 +48,7 @@
   "devDependencies": {
     "@react-router/node": "workspace:*",
     "@types/lambda-tester": "^3.6.1",
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.19.0",
     "lambda-tester": "^4.0.1",
     "react": "catalog:",
     "react-dom": "catalog:",

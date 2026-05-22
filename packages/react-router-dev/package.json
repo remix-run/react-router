@@ -105,7 +105,7 @@
     "@types/jest": "^29.5.4",
     "@types/jsesc": "^3.0.1",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.19.0",
     "@types/npmcli__package-json": "^4.0.0",
     "@types/semver": "^7.7.1",
     "@vitejs/plugin-rsc": "catalog:",
