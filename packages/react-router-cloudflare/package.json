@@ -27,7 +27,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsdown --config-loader unrun",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "sessions/**",

@@ -62,12 +62,12 @@
   },
   "scripts": {
     "build": "wireit",
-    "watch": "tsdown --config-loader unrun --watch & tsdown --config-loader unrun --config tsdown.config.rsc.ts --watch",
+    "watch": "tsdown --watch & tsdown --config tsdown.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "premove dist && tsdown --config-loader unrun && tsdown --config-loader unrun --config tsdown.config.rsc.ts",
+      "command": "premove dist && tsdown && tsdown --config tsdown.config.rsc.ts",
       "files": [
         "../../pnpm-workspace.yaml",
         "lib/**",

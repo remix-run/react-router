@@ -3,7 +3,7 @@ import { defineConfig, type UserConfig } from "tsdown";
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.ts";
 
-import pkg from "./package.json";
+import pkg from "./package.json" with { type: "json" };
 
 const entry = [
   "index.ts",
