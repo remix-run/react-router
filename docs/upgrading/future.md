@@ -19,33 +19,6 @@ First update to the latest minor version of v7.x to have the latest future flags
 npm install react-router@7 @react-router/{dev,node,etc.}@7
 ```
 
-## Route Module Splitting
-
-[MODES: framework]
-
-<br/>
-<br/>
-
-**Background**
-
-This feature enables splitting client-side route exports (`clientLoader`, `clientAction`, `clientMiddleware`, `HydrateFallback`) into separate chunks that can be loaded independently from the route component. This allows these exports to be fetched and executed while the component code is still downloading, improving performance for client-side data loading.
-
-This behavior is enabled by default in v8. You can set `splitRouteModules` to `false` to opt out, or `"enforce"` to require all routes to be splittable (which will cause build failures for routes that cannot be split due to shared code).
-
-👉 **Configure the Option**
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  splitRouteModules: false,
-} satisfies Config;
-```
-
-**Update your Code**
-
-No code changes are required. This optimization works automatically unless you opt out.
-
 ## Unstable Future Flags (Optional)
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
