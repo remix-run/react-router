@@ -6199,21 +6199,22 @@ function runClientMiddlewarePipeline(
           0,
         ),
       );
+
+      let deepestRouteId = matches[maxBoundaryIdx].route.id;
+
+      // Await lazy route promises before bubbling so any lazy error boundaries
+      // have been loaded
       for (let match of matches.slice(0, maxBoundaryIdx + 1)) {
         try {
           await match._lazyPromises?.route;
-        } catch (lazyRouteError) {
-          let boundaryRouteId = findNearestBoundary(matches, match.route.id)
-            .route.id;
-          return {
-            [boundaryRouteId]: { type: "error", result: lazyRouteError },
-          };
+        } catch {
+          deepestRouteId = match.route.id;
+          break;
         }
       }
-      let boundaryRouteId = findNearestBoundary(
-        matches,
-        matches[maxBoundaryIdx].route.id,
-      ).route.id;
+
+      let boundaryRouteId = findNearestBoundary(matches, deepestRouteId).route
+        .id;
       return {
         [boundaryRouteId]: { type: "error", result: error },
       };
