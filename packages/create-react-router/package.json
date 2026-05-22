@@ -25,7 +25,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown --config-loader unrun",
       "files": [
         "../../pnpm-workspace.yaml",
         "*.ts",
@@ -57,7 +57,7 @@
     "@types/tar-fs": "^2.0.1",
     "msw": "^2.14.6",
     "tiny-invariant": "^1.2.0",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },

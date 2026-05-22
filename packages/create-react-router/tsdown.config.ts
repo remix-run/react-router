@@ -1,20 +1,20 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from "tsdown";
 
 // @ts-ignore - out of scope
-import { createBanner } from "../../build.utils.js";
+import { createBanner } from "../../build.utils.ts";
 
 import pkg from "./package.json";
 
 const entry = ["cli.ts"];
-const dts = { compilerOptions: { ignoreDeprecations: "6.0" } };
 
 export default defineConfig([
   {
     clean: true,
     entry,
-    format: ["esm"],
+    format: "esm",
+    fixedExtension: false,
     outDir: "dist",
-    dts,
+    dts: true,
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },

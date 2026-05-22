@@ -62,12 +62,12 @@
   },
   "scripts": {
     "build": "wireit",
-    "watch": "tsup --watch & tsup --config tsup.config.rsc.ts --watch",
+    "watch": "tsdown --config-loader unrun --watch & tsdown --config-loader unrun --config tsdown.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
+      "command": "premove dist && tsdown --config-loader unrun && tsdown --config-loader unrun --config tsdown.config.rsc.ts",
       "files": [
         "../../pnpm-workspace.yaml",
         "lib/**",
@@ -95,7 +95,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-test-renderer": "^19.1.0",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "undici": "^6.19.2",
     "wireit": "catalog:"

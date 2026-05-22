@@ -47,7 +47,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown --config-loader unrun",
       "files": [
         "../../pnpm-workspace.yaml",
         "cli/**",
@@ -114,7 +114,7 @@
     "express": "^4.19.2",
     "fast-glob": "3.3.3",
     "react-router": "workspace:^",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "wireit": "catalog:",

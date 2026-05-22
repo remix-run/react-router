@@ -13,5 +13,5 @@ catalog:
   react-dom: ^19.2.6
   react-server-dom-webpack: ^19.2.6
   typescript: ^6.0.3
-  tsup: ^8.5.1
+  tsdown: ^0.21.10
   wireit: 0.14.9

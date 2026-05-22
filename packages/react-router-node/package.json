@@ -28,7 +28,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown --config-loader unrun",
       "files": [
         "../../pnpm-workspace.yaml",
         "sessions/**",
@@ -47,7 +47,7 @@
   "devDependencies": {
     "@types/node": "^22.19.0",
     "react-router": "workspace:*",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },
