@@ -22,7 +22,7 @@
     "@vanilla-extract/vite-plugin": "^5.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitejs/plugin-rsc": "catalog:",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "typescript": "catalog:",
     "vite": "^8.0.0",
     "vite-env-only": "^3.0.1"

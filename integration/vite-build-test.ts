@@ -1,7 +1,7 @@
 import * as path from "node:path";
+import { globSync } from "node:fs";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
-import glob from "glob";
 
 import {
   createProject,
@@ -332,7 +332,7 @@ test.describe("Build", () => {
       });
 
       test("removes assets (other than code-split JS) and CSS files from SSR build", async () => {
-        let assetFiles = glob.sync("build/server/assets/**/*", { cwd });
+        let assetFiles = globSync("build/server/assets/**/*", { cwd });
         let [asset, ...rest] = assetFiles;
         expect(rest).toEqual([]); // Provide more useful test output if this fails
         expect(asset).toMatch(/ssr-code-split-lib-.*\.js/);

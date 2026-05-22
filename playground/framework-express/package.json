@@ -28,7 +28,7 @@
     "@types/morgan": "^1.9.10",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "typescript": "catalog:",
     "vite": "^8.0.0"
   },

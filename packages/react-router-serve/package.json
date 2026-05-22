@@ -38,12 +38,12 @@
     }
   },
   "dependencies": {
-    "@remix-run/node-fetch-server": "^0.13.0",
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
+    "@remix-run/node-fetch-server": "^0.13.0",
     "compression": "^1.8.1",
     "express": "^4.19.2",
-    "get-port": "5.1.1",
+    "get-port": "7.2.0",
     "morgan": "^1.10.1",
     "source-map-support": "^0.5.21"
   },

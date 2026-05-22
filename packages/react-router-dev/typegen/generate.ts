@@ -349,7 +349,7 @@ function relativeImportSource(from: string, to: string) {
   let extension = Path.extname(path);
 
   // no extension
-  path = Path.join(Path.dirname(path), Pathe.filename(path));
+  path = Path.join(Path.dirname(path), Path.basename(path, extension));
   if (!path.startsWith("../")) path = "./" + path;
 
   // In typescript, we want to support "moduleResolution": "nodenext" as well as not having "allowImportingTsExtensions": true,
