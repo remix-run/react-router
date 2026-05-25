@@ -255,7 +255,7 @@ test("fetcher calls layout route loader when at parameterized route", async ({
   expect(dataElement.text()).toBe("layout loader data");
 });
 
-test("fetcher calls parameterized route route action", async ({ page }) => {
+test("fetcher calls parameterized route action", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action/foo");
   await app.clickElement("#param-fetcher");
@@ -266,7 +266,7 @@ test("fetcher calls parameterized route route action", async ({ page }) => {
   expect(dataElement.text()).toBe("foo");
 });
 
-test("fetcher calls parameterized route route loader", async ({ page }) => {
+test("fetcher calls parameterized route loader", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader/foo");
   await app.clickElement("#param-fetcher");
