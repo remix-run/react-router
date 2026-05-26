@@ -1,19 +1,11 @@
 {
+  "extends": "../../tsconfig.base.json",
   "include": ["**/*.ts", "**/*.tsx", "./.react-router/types/**/*"],
   "exclude": ["vite.config.ts"],
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "verbatimModuleSyntax": true,
-    "noUncheckedSideEffectImports": true,
     "noEmit": true,
-    "moduleResolution": "Bundler",
-    "moduleDetection": "force",
-    "module": "ESNext",
-    "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": [
       "vite/client",

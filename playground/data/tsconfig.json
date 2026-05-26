@@ -1,19 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "include": ["src"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "jsx": "react-jsx",
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "moduleDetection": "force",
     "resolveJsonModule": true,
-    "verbatimModuleSyntax": true,
-    "noUncheckedSideEffectImports": true,
     "esModuleInterop": true,
-    "strict": true,
     "allowJs": true,
-    "skipLibCheck": true,
     "noEmit": true
   }
 }

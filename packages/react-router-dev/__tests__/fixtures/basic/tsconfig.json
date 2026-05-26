@@ -1,24 +1,16 @@
 {
+  "extends": "../../../../../tsconfig.base.json",
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["@react-router/node", "vite/client"],
-    "verbatimModuleSyntax": true,
-    "noUncheckedSideEffectImports": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "moduleDetection": "force",
     "resolveJsonModule": true,
-    "target": "ES2022",
-    "strict": true,
     "allowJs": true,
     "paths": {
       "~/*": ["./app/*"]
     },
-
-    // Remix takes care of building everything in `remix build`.
     "noEmit": true
   }
 }

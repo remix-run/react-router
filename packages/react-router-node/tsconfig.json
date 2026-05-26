@@ -1,26 +1,16 @@
 {
+  "extends": "../../tsconfig.base.json",
   "include": ["**/*.ts"],
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node"],
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "moduleDetection": "force",
-    "verbatimModuleSyntax": true,
-    "allowImportingTsExtensions": true,
-    "noUncheckedSideEffectImports": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
     "jsx": "react",
     "declaration": true,
     "rootDir": ".",
     "outDir": "./dist",
     "noEmit": true,
     "resolveJsonModule": true,
-
-    // Avoid naming conflicts between lib.dom.d.ts and globals.ts
-    "skipLibCheck": true
   }
 }
