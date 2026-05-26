@@ -182,6 +182,59 @@ export async function loader({
 }
 ```
 
+## `future.v8_trailingSlashAwareDataRequests`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+React Router serves Framework mode data requests from `.data` URLs. Previously, data requests for routes with and without trailing slashes could map to the same `.data` URL because trailing slashes were not considered during URL generation. This flag preserves trailing slash semantics for data request URLs to avoid ambiguity when your app distinguishes between trailing-slash and non-trailing-slash URLs.
+
+Currently, your HTTP and `request` pathnames would be as follows for `/a/b/c` and `/a/b/c/`
+
+| URL `/a/b/c` | **HTTP pathname** | **`request` pathname`** |
+| ------------ | ----------------- | ----------------------- |
+| **Document** | `/a/b/c`          | `/a/b/c` ✅             |
+| **Data**     | `/a/b/c.data`     | `/a/b/c` ✅             |
+
+| URL `/a/b/c/` | **HTTP pathname** | **`request` pathname`** |
+| ------------- | ----------------- | ----------------------- |
+| **Document**  | `/a/b/c/`         | `/a/b/c/` ✅            |
+| **Data**      | `/a/b/c.data`     | `/a/b/c` ⚠️             |
+
+With this flag enabled, these pathnames will be made consistent though a new `_.data` format for client-side `.data` requests:
+
+| URL `/a/b/c` | **HTTP pathname** | **`request` pathname`** |
+| ------------ | ----------------- | ----------------------- |
+| **Document** | `/a/b/c`          | `/a/b/c` ✅             |
+| **Data**     | `/a/b/c.data`     | `/a/b/c` ✅             |
+
+| URL `/a/b/c/` | **HTTP pathname**  | **`request` pathname`** |
+| ------------- | ------------------ | ----------------------- |
+| **Document**  | `/a/b/c/`          | `/a/b/c/` ✅            |
+| **Data**      | `/a/b/c/_.data` ⬅️ | `/a/b/c/` ✅            |
+
+This flag also aligns the root data request to match this behavior by changing it from `/_root.data` to `/_.data`.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    v8_trailingSlashAwareDataRequests: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+If you have custom app, CDN, cache, or rewrite logic that matches `.data` request URLs, update it to handle the new trailing-slash-aware `/_.data` format.
+
 ## Unstable Future Flags (Optional)
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!

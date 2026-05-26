@@ -3312,7 +3312,7 @@ async function prerenderData(
   requestInit?: RequestInit,
 ) {
   let dataRequestPath: string;
-  if (reactRouterConfig.future.unstable_trailingSlashAwareDataRequests) {
+  if (reactRouterConfig.future.v8_trailingSlashAwareDataRequests) {
     if (prerenderPath.endsWith("/")) {
       dataRequestPath = `${prerenderPath}_.data`;
     } else {
