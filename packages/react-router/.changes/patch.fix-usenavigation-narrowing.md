@@ -1,1 +1,1 @@
-Fix `useNavigation()` return type so it stays a discriminated union
+Fix `useNavigation()` return type to preserve discriminated union across navigation states

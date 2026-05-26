@@ -1450,12 +1450,15 @@ export function useRouteId() {
   return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
-type UseNavigationResult = {
-  [K in keyof NavigationStates]: Omit<
-    NavigationStates[K],
-    "matches" | "historyAction"
-  >;
-}[keyof NavigationStates];
+// Omit the fields from each navigation state individually to preserve the discriminated union
+type UseNavigationResult =
+  UseNavigationResultStates[keyof UseNavigationResultStates];
+
+type UseNavigationResultStates = {
+  Idle: Omit<NavigationStates["Idle"], "matches" | "historyAction">;
+  Loading: Omit<NavigationStates["Loading"], "matches" | "historyAction">;
+  Submitting: Omit<NavigationStates["Submitting"], "matches" | "historyAction">;
+};
 
 /**
  * Returns the current {@link Navigation}, defaulting to an "idle" navigation
