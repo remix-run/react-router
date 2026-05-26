@@ -24,7 +24,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "*.ts",
@@ -54,8 +54,9 @@
     "@types/compression": "^1.8.1",
     "@types/express": "^4.17.9",
     "@types/morgan": "^1.9.10",
+    "@types/node": "^22.19.0",
     "@types/source-map-support": "^0.5.6",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },

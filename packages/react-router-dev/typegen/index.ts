@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 
 import * as Path from "pathe";
 import pc from "picocolors";
-import type vite from "vite";
+import type { Logger } from "vite";
 
 import { type Context, createContext } from "./context";
 import {
@@ -45,31 +45,29 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { mode, logger, rsc }: { mode: string; logger?: vite.Logger; rsc: boolean },
+  { mode, logger, rsc }: { mode: string; logger?: Logger; rsc: boolean },
 ): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   logger?.info(green("generated types"), { timestamp: true, clear: true });
 
-  ctx.configLoader.onChange(
-    async ({ result, routeConfigChanged }) => {
-      if (!result.ok) {
-        logger?.error(red(result.error), { timestamp: true, clear: true });
-        return;
-      }
-      ctx.config = result.value;
+  ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
+    if (!result.ok) {
+      logger?.error(red(result.error), { timestamp: true, clear: true });
+      return;
+    }
+    ctx.config = result.value;
 
-      if (routeConfigChanged) {
-        await clearRouteModuleAnnotations(ctx);
-        await write(...generateRoutes(ctx));
-        logger?.info(green("regenerated types"), {
-          timestamp: true,
-          clear: true,
-        });
-      }
-    },
-  );
+    if (routeConfigChanged) {
+      await clearRouteModuleAnnotations(ctx);
+      await write(...generateRoutes(ctx));
+      logger?.info(green("regenerated types"), {
+        timestamp: true,
+        clear: true,
+      });
+    }
+  });
 
   return {
     close: async () => await ctx.configLoader.close(),

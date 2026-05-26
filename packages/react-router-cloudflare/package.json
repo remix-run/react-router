@@ -27,7 +27,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "sessions/**",
@@ -43,7 +43,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260520.1",
     "react-router": "workspace:*",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },

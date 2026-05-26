@@ -25,7 +25,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "*.ts",
@@ -51,12 +51,13 @@
   },
   "devDependencies": {
     "@types/gunzip-maybe": "^1.4.3",
+    "@types/node": "^22.19.0",
     "@types/recursive-readdir": "^2.2.1",
     "@types/semver": "^7.7.1",
     "@types/tar-fs": "^2.0.1",
     "msw": "^2.14.6",
     "tiny-invariant": "^1.2.0",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },

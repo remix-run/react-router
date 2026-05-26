@@ -615,7 +615,6 @@ function getFetchAndDecodeViaRSC(
       // or even X-Remix-Response but then folks can't statically deploy their
       // prerendered .rsc files to a CDN unless they can tell that CDN to add
       // special headers to those certain files - which is a bit restrictive.
-      // @ts-expect-error - TS doesn't know about this yet
       throw new Error("Unable to decode RSC response", { cause });
     }
   };

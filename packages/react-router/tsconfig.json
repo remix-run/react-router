@@ -1,19 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "include": ["**/*.ts"],
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-
-    "strict": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "jsx": "react",
-
     "declaration": true,
-
-    "skipLibCheck": true,
-
     "outDir": "dist",
     "rootDir": ".",
     "noEmit": true,

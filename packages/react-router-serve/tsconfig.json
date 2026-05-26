@@ -1,15 +1,11 @@
 {
+  "extends": "../../tsconfig.base.json",
   "include": ["**/*.ts"],
   "exclude": ["dist", "node_modules"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "skipLibCheck": true,
-
-    "moduleResolution": "Bundler",
+    "types": ["node"],
     "allowSyntheticDefaultImports": true,
-    "strict": true,
     "jsx": "react",
     "declaration": true,
     "emitDeclarationOnly": true,

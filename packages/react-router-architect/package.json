@@ -28,7 +28,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "sessions/**",
@@ -47,13 +47,14 @@
   },
   "devDependencies": {
     "@react-router/node": "workspace:*",
+    "@types/jest": "^30.0.0",
     "@types/lambda-tester": "^4.0.3",
     "@types/node": "^22.19.0",
     "lambda-tester": "^4.0.1",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "workspace:*",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },
