@@ -4567,7 +4567,7 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("h1")).toMatch("It worked!");
   });
 
-  test("always uses /{path}.data without future.unstable_trailingSlashAwareDataRequests flag", async ({
+  test("always uses /{path}.data without future.v8_trailingSlashAwareDataRequests flag", async ({
     page,
   }) => {
     let fixture = await createFixture({
@@ -4659,7 +4659,7 @@ test.describe("single-fetch", () => {
     requests = [];
   });
 
-  test("uses {path}.data or {path}/_.data depending on trailing slash with future.unstable_trailingSlashAwareDataRequests flag", async ({
+  test("uses {path}.data or {path}/_.data depending on trailing slash with future.v8_trailingSlashAwareDataRequests flag", async ({
     page,
   }) => {
     let fixture = await createFixture({
@@ -4667,7 +4667,7 @@ test.describe("single-fetch", () => {
         ...files,
         "react-router.config.ts": reactRouterConfig({
           future: {
-            unstable_trailingSlashAwareDataRequests: true,
+            v8_trailingSlashAwareDataRequests: true,
           },
         }),
         "app/routes/_index.tsx": js`

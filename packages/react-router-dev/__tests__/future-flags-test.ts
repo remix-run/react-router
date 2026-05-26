@@ -14,11 +14,14 @@ describe("logFutureFlagWarnings", () => {
   it("warns about all stable v8_ flags when none are set", () => {
     logFutureFlagWarnings({});
 
-    expect(logSpy).toHaveBeenCalledTimes(4);
+    expect(logSpy).toHaveBeenCalledTimes(5);
     expect(logSpy.mock.calls[0][0]).toContain("v8_middleware");
     expect(logSpy.mock.calls[1][0]).toContain("v8_splitRouteModules");
     expect(logSpy.mock.calls[2][0]).toContain("v8_viteEnvironmentApi");
     expect(logSpy.mock.calls[3][0]).toContain("v8_passThroughRequests");
+    expect(logSpy.mock.calls[4][0]).toContain(
+      "v8_trailingSlashAwareDataRequests",
+    );
   });
 
   it("does not warn about flags that are already opted in (true)", () => {
@@ -27,6 +30,7 @@ describe("logFutureFlagWarnings", () => {
       v8_splitRouteModules: true,
       v8_viteEnvironmentApi: true,
       v8_passThroughRequests: true,
+      v8_trailingSlashAwareDataRequests: true,
     });
 
     expect(logSpy).not.toHaveBeenCalled();
@@ -38,6 +42,7 @@ describe("logFutureFlagWarnings", () => {
       v8_splitRouteModules: false,
       v8_viteEnvironmentApi: false,
       v8_passThroughRequests: false,
+      v8_trailingSlashAwareDataRequests: false,
     });
 
     expect(logSpy).not.toHaveBeenCalled();
@@ -49,9 +54,13 @@ describe("logFutureFlagWarnings", () => {
       v8_passThroughRequests: false,
     });
 
-    // Only v8_splitRouteModules and v8_viteEnvironmentApi are missing
-    expect(logSpy).toHaveBeenCalledTimes(2);
+    // Only v8_splitRouteModules, v8_viteEnvironmentApi, and
+    // v8_trailingSlashAwareDataRequests are missing
+    expect(logSpy).toHaveBeenCalledTimes(3);
     expect(logSpy.mock.calls[0][0]).toContain("v8_splitRouteModules");
     expect(logSpy.mock.calls[1][0]).toContain("v8_viteEnvironmentApi");
+    expect(logSpy.mock.calls[2][0]).toContain(
+      "v8_trailingSlashAwareDataRequests",
+    );
   });
 });
