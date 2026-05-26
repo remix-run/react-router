@@ -15,7 +15,7 @@
     "@react-router/node": "workspace:*",
     "compression": "^1.8.1",
     "express": "^4.19.2",
-    "isbot": "^5.1.11",
+    "isbot": "^5.1.40",
     "morgan": "^1.10.1",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -28,7 +28,7 @@
     "@types/morgan": "^1.9.10",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "typescript": "catalog:",
     "vite": "^8.0.0"
   },

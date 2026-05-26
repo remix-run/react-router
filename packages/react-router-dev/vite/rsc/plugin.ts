@@ -39,11 +39,11 @@ let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
     arguments &&
-      arguments.length === 1 &&
-      typeof arguments[0] === "object" &&
-      arguments[0] &&
-      "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
-      arguments[0].__runningWithinTheReactRouterMonoRepo === true,
+    arguments.length === 1 &&
+    typeof arguments[0] === "object" &&
+    arguments[0] &&
+    "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
+    arguments[0].__runningWithinTheReactRouterMonoRepo === true,
   );
   let configLoader: ConfigLoader;
   let viteCommand: Vite.ConfigEnv["command"];
@@ -157,8 +157,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.buildEnd) errors.push("buildEnd");
             if (userConfig.presets?.length) errors.push("presets");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.future?.v8_middleware === false)
-              errors.push("future.v8_middleware: false");
             if (userConfig.subResourceIntegrity)
               errors.push("subResourceIntegrity");
             if (errors.length) {
@@ -521,8 +519,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       getRouteIdForFile,
       isRootRouteModule,
       transformToJs,
-      enforceSplitRouteModules: () =>
-        config.future.v8_splitRouteModules === "enforce",
+      enforceSplitRouteModules: () => config.splitRouteModules === "enforce",
     }),
     {
       name: "react-router/rsc/virtual-basename",

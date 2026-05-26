@@ -29,6 +29,7 @@ const BUILT_CLI = path.resolve(__dirname, "../dist/cli.js");
 
 (jest as any).unstable_mockModule(execaModuleId, () => ({
   default: mockedExeca,
+  execa: mockedExeca,
 }));
 
 let createReactRouter: typeof import("../index").createReactRouter;
@@ -1181,10 +1182,10 @@ async function execCreateReactRouter({
     [
       ...(mockNetwork
         ? [
-            "--require",
-            nodeRequire.resolve("esbuild-register"),
-            "--require",
-            path.join(__dirname, "./msw-register.ts"),
+            "--experimental-strip-types", // Needed for Node 22.12
+            "--no-warnings=ExperimentalWarning",
+            "--import",
+            pathToFileURL(path.join(__dirname, "./msw-register.ts")).href,
           ]
         : []),
       cliPath,

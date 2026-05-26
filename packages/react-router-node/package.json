@@ -28,7 +28,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "sessions/**",
@@ -45,8 +45,9 @@
     "@remix-run/node-fetch-server": "^0.13.0"
   },
   "devDependencies": {
+    "@types/node": "^22.19.0",
     "react-router": "workspace:*",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },

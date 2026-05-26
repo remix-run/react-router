@@ -16,7 +16,6 @@ import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
 } from "../../router/utils";
-import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
@@ -112,7 +111,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  _context?: AppLoadContext | RouterContextProvider,
+  _context?: RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -126,10 +125,8 @@ export function createRoutesStub(
     if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
         future: {
-          v8_passThroughRequests: future?.v8_passThroughRequests === true,
-          v8_middleware: future?.v8_middleware === true,
-          unstable_trailingSlashAwareDataRequests:
-            future?.unstable_trailingSlashAwareDataRequests === true,
+          v8_trailingSlashAwareDataRequests:
+            future?.v8_trailingSlashAwareDataRequests === true,
         },
         manifest: {
           routes: {},
@@ -149,11 +146,7 @@ export function createRoutesStub(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
         // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
-        _context !== undefined
-          ? _context
-          : future?.v8_middleware
-            ? new RouterContextProvider()
-            : {},
+        _context ?? new RouterContextProvider(),
         frameworkContextRef.current.manifest,
         frameworkContextRef.current.routeModules,
       );
@@ -200,10 +193,18 @@ function processRoutes(
         ? withErrorBoundaryProps(route.ErrorBoundary)
         : undefined,
       action: route.action
-        ? (args: ActionFunctionArgs) => route.action!({ ...args, context })
+        ? (args: ActionFunctionArgs) =>
+            route.action!({
+              ...args,
+              context: context as Readonly<RouterContextProvider>,
+            })
         : undefined,
       loader: route.loader
-        ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
+        ? (args: LoaderFunctionArgs) =>
+            route.loader!({
+              ...args,
+              context: context as Readonly<RouterContextProvider>,
+            })
         : undefined,
       middleware: route.middleware
         ? route.middleware.map(

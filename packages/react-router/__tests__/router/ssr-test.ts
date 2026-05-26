@@ -103,7 +103,7 @@ describe("ssr", () => {
         {
           id: "errorBoundary",
           path: "error-boundary",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: () => Promise.reject("ERROR BOUNDARY LOADER ERROR"),
           action: () => Promise.reject("ERROR BOUNDARY ACTION ERROR"),
         },
@@ -602,13 +602,13 @@ describe("ssr", () => {
           id: "root",
           path: "/",
           loader: () => Promise.reject("ROOT"),
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           children: [
             {
               id: "child",
               path: "child",
               loader: () => Promise.reject("CHILD"),
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
             },
           ],
         },
@@ -630,7 +630,7 @@ describe("ssr", () => {
           id: "root",
           path: "/",
           loader: () => Promise.reject("ROOT"),
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           children: [
             {
               id: "child",
@@ -656,7 +656,7 @@ describe("ssr", () => {
         {
           id: "root",
           path: "/",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           children: [
             {
               id: "child",
@@ -954,7 +954,7 @@ describe("ssr", () => {
               path: "child",
               action: actionStub,
               loader: childLoaderStub,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
             },
           ],
         },

@@ -26,7 +26,6 @@ import type {
   RequestHandler,
   ServerBuild,
   DataRouteObject,
-  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
   RouterContextProvider,
 } from "react-router";
 import {
@@ -632,14 +631,10 @@ type MaybePromise<T> = T | Promise<T>;
 
 let reactRouterDevLoadContext: (
   request: Request,
-) => MaybePromise<
-  MiddlewareEnabled extends true
-    ? MaybePromise<RouterContextProvider | undefined>
-    : MaybePromise<Record<string, unknown> | undefined>
-> = () => undefined;
+) => MaybePromise<RouterContextProvider | undefined> = () => undefined;
 
 export let setReactRouterDevLoadContext = (
-  loadContext: (request: Request) => MaybePromise<Record<string, unknown>>,
+  loadContext: (request: Request) => MaybePromise<RouterContextProvider>,
 ) => {
   reactRouterDevLoadContext = loadContext;
 };
@@ -932,7 +927,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let enforceSplitRouteModules =
-      ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+      ctx.reactRouterConfig.splitRouteModules === "enforce";
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
@@ -1078,7 +1073,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     let enforceSplitRouteModules =
-      ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+      ctx.reactRouterConfig.splitRouteModules === "enforce";
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
       let routeFile = route.file;
@@ -2050,7 +2045,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
 
         let enforceSplitRouteModules =
-          ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+          ctx.reactRouterConfig.splitRouteModules === "enforce";
 
         if (enforceSplitRouteModules && chunkName === "main" && chunk) {
           let exportNames = getExportNames(chunk.code);
@@ -3264,7 +3259,7 @@ async function detectRouteChunksIfEnabled(
       },
     };
   }
-  if (!ctx.reactRouterConfig.future.v8_splitRouteModules) {
+  if (!ctx.reactRouterConfig.splitRouteModules) {
     return noRouteChunks();
   }
 
@@ -3296,7 +3291,7 @@ async function getRouteChunkIfEnabled(
   chunkName: RouteChunkName,
   input: ResolveRouteFileCodeInput,
 ): Promise<ReturnType<typeof getRouteChunkCode> | null> {
-  if (!ctx.reactRouterConfig.future.v8_splitRouteModules) {
+  if (!ctx.reactRouterConfig.splitRouteModules) {
     return null;
   }
 
@@ -3610,8 +3605,7 @@ export async function getEnvironmentOptionsResolvers(
 
                   return [
                     `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-                    ...(ctx.reactRouterConfig.future.v8_splitRouteModules &&
-                    !isRootRoute
+                    ...(ctx.reactRouterConfig.splitRouteModules && !isRootRoute
                       ? routeChunkExportNames.map((exportName) =>
                           code.includes(exportName)
                             ? getRouteChunkModuleId(routeFilePath, exportName)
@@ -3769,7 +3763,7 @@ function createDataRequest(
 ): PrerenderRequest<PrerenderMetadata> {
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
-      ? reactRouterConfig.future.unstable_trailingSlashAwareDataRequests
+      ? reactRouterConfig.future.v8_trailingSlashAwareDataRequests
         ? "/_.data"
         : "/_root.data"
       : `${prerenderPath.replace(/\/$/, "")}.data`

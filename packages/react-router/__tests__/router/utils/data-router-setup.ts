@@ -18,6 +18,7 @@ import type {
   NonIndexRouteObject,
 } from "../../../lib/router/utils";
 import {
+  defaultMapRouteProperties,
   matchRoutes,
   redirect,
   stripBasename,
@@ -37,10 +38,10 @@ export type TestIndexRouteObject = Pick<
   | "handle"
   | "lazy"
   | "middleware"
+  | "ErrorBoundary"
 > & {
   loader?: boolean;
   action?: boolean;
-  hasErrorBoundary?: boolean;
 };
 
 export type TestNonIndexRouteObject = Pick<
@@ -52,10 +53,10 @@ export type TestNonIndexRouteObject = Pick<
   | "handle"
   | "lazy"
   | "middleware"
+  | "ErrorBoundary"
 > & {
   loader?: boolean;
   action?: boolean;
-  hasErrorBoundary?: boolean;
   children?: TestRouteObject[];
 };
 
@@ -113,7 +114,7 @@ export const TASK_ROUTES: TestRouteObject[] = [
     id: "root",
     path: "/",
     loader: true,
-    hasErrorBoundary: true,
+    ErrorBoundary: () => null,
     children: [
       {
         id: "index",
@@ -125,14 +126,14 @@ export const TASK_ROUTES: TestRouteObject[] = [
         path: "tasks",
         loader: true,
         action: true,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       },
       {
         id: "tasksId",
         path: "tasks/:id",
         loader: true,
         action: true,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       },
       {
         id: "noLoader",
@@ -299,6 +300,9 @@ export function setup({
       if (!r.index && "children" in r && r.children) {
         enhancedRoute.children = enhanceRoutes(r.children);
       }
+      // Match what the router does internally so that tests comparing
+      // enhanceRoutes() output against router.routes line up
+      Object.assign(enhancedRoute, defaultMapRouteProperties(enhancedRoute));
       return enhancedRoute;
     });
   }

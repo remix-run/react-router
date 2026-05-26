@@ -2115,7 +2115,6 @@ describe("createMemoryRouter", () => {
       expect(html).toMatch("💿 Hey developer 👋");
     });
 
-    // This test ensures that when manual routes are used, we add hasErrorBoundary
     it("renders navigation errors on leaf elements (when using manual route objects)", async () => {
       let barDefer = createDeferred();
 

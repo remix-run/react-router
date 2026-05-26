@@ -109,7 +109,6 @@ async function gradient(
   let logUpdate = createLogUpdate(stdout);
   let frameIndex = 0;
   let frames = getGradientAnimationFrames();
-  let interval: NodeJS.Timeout;
   let rl = readline.createInterface({ input: stdin, escapeCodeTimeout: 50 });
   readline.emitKeypressEvents(stdin, rl);
 
@@ -155,7 +154,6 @@ async function gradient(
     stop() {
       done = true;
       stdin.removeListener("keypress", keypress);
-      clearInterval(interval);
       logUpdate.clear();
       rl.close();
     },

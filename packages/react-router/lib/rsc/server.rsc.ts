@@ -48,7 +48,7 @@ import {
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
-  // @ts-ignore There are no types before the tsup build when used internally, so
+  // @ts-ignore There are no types before the package build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
   // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
@@ -221,7 +221,6 @@ export type RSCRouteManifest = {
   handle?: any;
   hasAction: boolean;
   hasComponent: boolean;
-  hasErrorBoundary: boolean;
   hasLoader: boolean;
   hydrateFallbackElement?: React.ReactElement;
   id: string;
@@ -822,9 +821,6 @@ async function generateRenderResponse(
   // Create the handler here with exploded routes
   const staticHandler = createStaticHandler(routes, {
     basename,
-    mapRouteProperties: (r) => ({
-      hasErrorBoundary: (r as RouteObject).ErrorBoundary != null,
-    }),
   });
 
   let actionResult: Promise<unknown> | undefined;
@@ -1305,7 +1301,6 @@ async function getRSCRouteMatch({
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!Component,
-    hasErrorBoundary: !!ErrorBoundary,
     hasLoader: !!route.loader,
     hydrateFallbackElement,
     id: route.id,
@@ -1351,7 +1346,6 @@ async function getManifestRoute(
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!route.Component,
-    hasErrorBoundary: !!route.ErrorBoundary,
     errorElement,
     hasLoader: !!route.loader,
     id: route.id,

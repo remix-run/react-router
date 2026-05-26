@@ -533,7 +533,6 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
         handle: match.handle,
-        hasErrorBoundary: match.hasErrorBoundary,
         loader: match.hasLoader || !!match.clientLoader,
         index: match.index,
         path: match.path,
@@ -550,7 +549,6 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         element: match.element,
         errorElement: match.errorElement,
         handle: match.handle,
-        hasErrorBoundary: !!match.errorElement,
         hydrateFallbackElement: match.hydrateFallbackElement,
         index: match.index,
         loader: match.hasLoader || !!match.clientLoader,
@@ -567,11 +565,7 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
 
   const frameworkContext: FrameworkContextObject = {
     future: {
-      // These flags have no runtime impact so can always be false.  If we add
-      // flags that drive runtime behavior they'll need to be proxied through.
-      v8_middleware: false,
-      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-      v8_passThroughRequests: true, // always on for RSC
+      v8_trailingSlashAwareDataRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,

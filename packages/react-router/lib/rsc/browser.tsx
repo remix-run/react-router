@@ -369,7 +369,6 @@ function createRouterFromPayload({
         routeModule: any;
         hasAction: boolean;
         hasComponent: boolean;
-        hasErrorBoundary: boolean;
         hasLoader: boolean;
       }
     >,
@@ -386,13 +385,8 @@ function createRouterFromPayload({
         const routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const {
-            routeModule,
-            hasAction,
-            hasComponent,
-            hasErrorBoundary,
-            hasLoader,
-          } = routeUpdate;
+          const { routeModule, hasAction, hasComponent, hasLoader } =
+            routeUpdate;
           const newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
@@ -401,7 +395,6 @@ function createRouterFromPayload({
             handle: route.handle,
             hasAction,
             hasComponent,
-            hasErrorBoundary,
             hasLoader,
             hydrateFallbackElement:
               route.hydrateFallbackElement as React.ReactElement,
@@ -622,7 +615,6 @@ function getFetchAndDecodeViaRSC(
       // or even X-Remix-Response but then folks can't statically deploy their
       // prerendered .rsc files to a CDN unless they can tell that CDN to add
       // special headers to those certain files - which is a bit restrictive.
-      // @ts-expect-error - TS doesn't know about this yet
       throw new Error("Unable to decode RSC response", { cause });
     }
   };
@@ -836,11 +828,7 @@ export function RSCHydratedRouter({
 
   const frameworkContext: FrameworkContextObject = {
     future: {
-      // These flags have no runtime impact so can always be false.  If we add
-      // flags that drive runtime behavior they'll need to be proxied through.
-      v8_middleware: false,
-      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-      v8_passThroughRequests: true, // always on for RSC
+      v8_trailingSlashAwareDataRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
@@ -911,7 +899,6 @@ function createRouteFromServerManifest(
     element: match.element,
     errorElement: match.errorElement,
     handle: match.handle,
-    hasErrorBoundary: match.hasErrorBoundary,
     hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
     loader: match.clientLoader
@@ -1131,8 +1118,6 @@ function diffRoutes(a: DataRouteObject[], b: DataRouteObject[]): boolean {
       (route as any).hydrateFallbackElement !==
       (b[index] as any).hydrateFallbackElement
     )
-      return true;
-    if ((route as any).hasErrorBoundary !== (b[index] as any).hasErrorBoundary)
       return true;
     if ((route as any).hasLoader !== (b[index] as any).hasLoader) return true;
     if ((route as any).hasClientLoader !== (b[index] as any).hasClientLoader)

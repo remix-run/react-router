@@ -4,7 +4,7 @@ import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import stripAnsi from "strip-ansi";
-import execa from "execa";
+import { execa } from "execa";
 import arg from "arg";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";

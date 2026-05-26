@@ -28,7 +28,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "*.ts",
@@ -45,12 +45,12 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.9",
-    "@types/node": "^20.0.0",
-    "@types/supertest": "^2.0.10",
+    "@types/node": "^22.19.0",
+    "@types/supertest": "^7.2.0",
     "express": "^4.19.2",
-    "node-mocks-http": "^1.10.1",
+    "node-mocks-http": "^1.17.2",
     "supertest": "^6.3.3",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },
