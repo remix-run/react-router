@@ -42,7 +42,7 @@
     "@react-router/node": "workspace:*",
     "@remix-run/node-fetch-server": "^0.13.0",
     "compression": "^1.8.1",
-    "express": "^4.19.2",
+    "express": "^5.2.1",
     "get-port": "7.2.0",
     "morgan": "^1.10.1",
     "source-map-support": "^0.5.21"
@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
-    "@types/express": "^4.17.9",
+    "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^22.19.0",
     "@types/source-map-support": "^0.5.6",

@@ -8,6 +8,7 @@ import { createRequestHandler } from "@react-router/express";
 import { createRequestListener } from "@remix-run/node-fetch-server";
 import compression from "compression";
 import express from "express";
+import type { RequestHandler as ExpressRequestHandler } from "express";
 import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
 import getPort from "get-port";
@@ -124,7 +125,7 @@ async function run() {
   app.disable("x-powered-by");
 
   if (!isRSCBuild) {
-    app.use(compression());
+    app.use(compression() as unknown as ExpressRequestHandler);
   }
 
   app.use(
@@ -138,15 +139,18 @@ async function run() {
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
+  // Express 5 requires named wildcards and wrapping with `{}` includes `/`.
+  let catchAllRoute = "/{*splat}";
+
   if (build.fetch) {
-    app.all("*", createRequestListener(build.fetch));
+    app.all(catchAllRoute, createRequestListener(build.fetch));
   } else {
     app.all(
-      "*",
+      catchAllRoute,
       createRequestHandler({
         build: buildModule,
         mode: process.env.NODE_ENV,
-      }),
+      }) as unknown as ExpressRequestHandler,
     );
   }
 
