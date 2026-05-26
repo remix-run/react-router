@@ -7,9 +7,11 @@
   "compilerOptions": {
     "checkJs": true,
     "verbatimModuleSyntax": true,
+    "noUncheckedSideEffectImports": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    "moduleDetection": "force",
     "paths": {
       "~/*": ["./app/*"]
     }

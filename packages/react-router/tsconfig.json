@@ -2,11 +2,15 @@
   "include": ["**/*.ts"],
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"],
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noUncheckedSideEffectImports": true,
 
     "strict": true,
     "jsx": "react",

@@ -3,10 +3,12 @@
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "verbatimModuleSyntax": true,
+    "noUncheckedSideEffectImports": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "moduleDetection": "force",
     "resolveJsonModule": true,
     "target": "ES2022",
     "strict": true,

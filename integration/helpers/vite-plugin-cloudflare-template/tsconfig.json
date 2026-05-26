@@ -7,8 +7,10 @@
   "compilerOptions": {
     "checkJs": true,
     "verbatimModuleSyntax": true,
+    "noUncheckedSideEffectImports": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true
+    "noEmit": true,
+    "moduleDetection": "force"
   }
 }

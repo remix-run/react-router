@@ -8,6 +8,10 @@
     "types": ["@cloudflare/workers-types"],
 
     "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noUncheckedSideEffectImports": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "declaration": true,
