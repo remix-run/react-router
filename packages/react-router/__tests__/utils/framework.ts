@@ -29,9 +29,7 @@ export function mockFrameworkContext(
       url: "",
       version: "",
     },
-    future: {
-      v8_trailingSlashAwareDataRequests: false,
-    },
+    future: {},
     ssr: true,
     isSpaMode: false,
     routeDiscovery: {

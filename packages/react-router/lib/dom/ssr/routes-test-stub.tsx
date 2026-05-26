@@ -44,7 +44,8 @@ interface StubRouteExtensions {
 }
 
 interface StubIndexRouteObject
-  extends Omit<
+  extends
+    Omit<
       IndexRouteObject,
       | "Component"
       | "HydrateFallback"
@@ -58,7 +59,8 @@ interface StubIndexRouteObject
     StubRouteExtensions {}
 
 interface StubNonIndexRouteObject
-  extends Omit<
+  extends
+    Omit<
       NonIndexRouteObject,
       | "Component"
       | "HydrateFallback"
@@ -124,10 +126,7 @@ export function createRoutesStub(
 
     if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
-        future: {
-          v8_trailingSlashAwareDataRequests:
-            future?.v8_trailingSlashAwareDataRequests === true,
-        },
+        future: {},
         manifest: {
           routes: {},
           entry: { imports: [], module: "" },

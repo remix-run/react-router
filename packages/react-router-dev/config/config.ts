@@ -90,7 +90,6 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
-  v8_trailingSlashAwareDataRequests: boolean;
 }
 
 type SplitRouteModulesOption = boolean | "enforce";
@@ -709,7 +708,12 @@ async function resolveConfig({
     }
     if ("unstable_trailingSlashAwareDataRequests" in futureConfig) {
       return err(
-        "The `future.unstable_trailingSlashAwareDataRequests` flag has been stabilized as `future.v8_trailingSlashAwareDataRequests`",
+        "The `future.unstable_trailingSlashAwareDataRequests` flag has been removed because trailing slash-aware data requests are now the default behavior",
+      );
+    }
+    if ("v8_trailingSlashAwareDataRequests" in futureConfig) {
+      return err(
+        "The `future.v8_trailingSlashAwareDataRequests` flag has been removed because trailing slash-aware data requests are now the default behavior",
       );
     }
     if ("unstable_subResourceIntegrity" in futureConfig) {
@@ -722,8 +726,6 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    v8_trailingSlashAwareDataRequests:
-      userAndPresetConfigs.future?.v8_trailingSlashAwareDataRequests ?? false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;

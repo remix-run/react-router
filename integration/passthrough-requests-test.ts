@@ -120,29 +120,29 @@ test.describe("pass through requests", () => {
     // Client-side navigation with query params
     await app.clickLink("/?a=1");
     expect(await page.locator("[data-loader-url]").textContent()).toBe(
-      "/_root.data?a=1",
+      "/_.data?a=1",
     );
     expect(await page.locator("[data-loader-path]").textContent()).toBe(
       "/?a=1",
     );
-    expect(requests).toEqual(["/_root.data?a=1"]);
+    expect(requests).toEqual(["/_.data?a=1"]);
     requests = [];
 
     // Client-side form submission with query params
     await app.clickElement('button[type="submit"]');
     expect(await page.locator("[data-action-url]").textContent()).toBe(
-      "/_root.data?index&a=1",
+      "/_.data?index&a=1",
     );
     expect(await page.locator("[data-action-path]").textContent()).toBe(
       "/?a=1",
     );
     expect(await page.locator("[data-loader-url]").textContent()).toBe(
-      "/_root.data?a=1",
+      "/_.data?a=1",
     );
     expect(await page.locator("[data-loader-path]").textContent()).toBe(
       "/?a=1",
     );
-    expect(requests).toEqual(["/_root.data?index&a=1", "/_root.data?a=1"]);
+    expect(requests).toEqual(["/_.data?index&a=1", "/_.data?a=1"]);
     requests = [];
 
     // Navigate to new page

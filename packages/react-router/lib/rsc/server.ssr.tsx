@@ -564,9 +564,7 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   );
 
   const frameworkContext: FrameworkContextObject = {
-    future: {
-      v8_trailingSlashAwareDataRequests: true, // always on for RSC
-    },
+    future: {},
     isSpaMode: false,
     ssr: true,
     criticalCss: "",

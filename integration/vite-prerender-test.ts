@@ -218,7 +218,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -273,7 +273,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -327,7 +327,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -383,7 +383,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "a.data",
         "a/index.html",
         "about.data",
@@ -484,7 +484,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -565,7 +565,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -615,7 +615,7 @@ test.describe(`Prerendering`, () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -899,7 +899,7 @@ test.describe(`Prerendering`, () => {
 
     test("Ignores build-time headers at runtime", async () => {
       fixture = await createFixture({ files });
-      let res = await fixture.requestSingleFetchData("/_root.data", {
+      let res = await fixture.requestSingleFetchData("/_.data", {
         headers: {
           "X-React-Router-Prerender-Data": encodeURI(
             '[{"_1":2},"routes/_index",{"_3":4},"data","Hello World!"]',
@@ -1091,7 +1091,7 @@ test.describe(`Prerendering`, () => {
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
         "__spa-fallback.html",
-        "_root.data",
+        "_.data",
         "favicon.ico",
         "index.html",
       ]);

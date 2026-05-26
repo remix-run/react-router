@@ -48,9 +48,7 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export interface FutureConfig {
-  v8_trailingSlashAwareDataRequests: boolean;
-}
+export type FutureConfig = Record<string, never>;
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };
 
