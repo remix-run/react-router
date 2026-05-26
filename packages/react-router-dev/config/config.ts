@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
-import * as ViteNode from "../vite/vite-node";
+import * as ViteRunner from "../vite/vite-runner";
 import type * as Vite from "vite";
 import Path from "pathe";
 import chokidar, {
@@ -426,13 +426,13 @@ function err<T>(error: string): Result<T> {
 
 async function resolveConfig({
   root,
-  viteNodeContext,
+  viteRunnerContext,
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
 }: {
   root: string;
-  viteNodeContext: ViteNode.Context;
+  viteRunnerContext: ViteRunner.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
@@ -445,7 +445,7 @@ async function resolveConfig({
         return err(`${reactRouterConfigFile} no longer exists`);
       }
 
-      let configModule = await viteNodeContext.runner.executeFile(
+      let configModule = await viteRunnerContext.runner.import(
         reactRouterConfigFile,
       );
 
@@ -633,7 +633,7 @@ async function resolveConfig({
 
       setAppDirectory(appDirectory);
       let routeConfigExport = (
-        await viteNodeContext.runner.executeFile(
+        await viteRunnerContext.runner.import(
           Path.join(appDirectory, routeConfigFile),
         )
       ).default;
@@ -815,10 +815,10 @@ export async function createConfigLoader({
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
   let vite = await import("vite");
-  let viteNodeContext = await ViteNode.createContext({
+  let viteRunnerContext = await ViteRunner.createContext({
     root,
     mode,
-    // Filter out any info level logs from vite-node
+    // Filter out any info level logs from Vite's module runner
     customLogger: vite.createLogger("warn", {
       prefix: "[react-router]",
     }),
@@ -837,7 +837,7 @@ export async function createConfigLoader({
   let getConfig = () =>
     resolveConfig({
       root,
-      viteNodeContext,
+      viteRunnerContext,
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
@@ -903,7 +903,9 @@ export async function createConfigLoader({
           let moduleGraphChanged =
             configFileAddedOrRemoved ||
             Boolean(
-              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath),
+              viteRunnerContext.environment.moduleGraph.getModuleById(
+                filepath,
+              ),
             );
 
           // Bail out if no relevant changes detected
@@ -911,8 +913,8 @@ export async function createConfigLoader({
             return;
           }
 
-          viteNodeContext.devServer?.moduleGraph.invalidateAll();
-          viteNodeContext.runner?.moduleCache.clear();
+          viteRunnerContext.environment.moduleGraph.invalidateAll();
+          viteRunnerContext.runner.clearCache();
 
           let result = await getConfig();
 
@@ -930,7 +932,7 @@ export async function createConfigLoader({
             configFileAddedOrRemoved ||
             (reactRouterConfigFile !== undefined &&
               isEntryFileDependency(
-                viteNodeContext.devServer.moduleGraph,
+                viteRunnerContext.environment.moduleGraph,
                 reactRouterConfigFile,
                 filepath,
               ));
@@ -943,7 +945,7 @@ export async function createConfigLoader({
           let routeConfigCodeChanged =
             routeConfigFile !== undefined &&
             isEntryFileDependency(
-              viteNodeContext.devServer.moduleGraph,
+              viteRunnerContext.environment.moduleGraph,
               routeConfigFile,
               filepath,
             );
@@ -981,7 +983,7 @@ export async function createConfigLoader({
     },
     close: async () => {
       changeHandlers = [];
-      await viteNodeContext.devServer.close();
+      await viteRunnerContext.devServer.close();
       await fsWatcher?.close();
     },
   };
@@ -1174,7 +1176,7 @@ function findEntry(
 }
 
 function isEntryFileDependency(
-  moduleGraph: Vite.ModuleGraph,
+  moduleGraph: Vite.EnvironmentModuleGraph,
   entryFilepath: string,
   filepath: string,
   visited = new Set<string>(),

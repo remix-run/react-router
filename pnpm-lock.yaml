@@ -883,9 +883,6 @@ importers:
       valibot:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.4.5)
-      vite-node:
-        specifier: ^3.2.2
-        version: 3.2.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -18729,27 +18726,6 @@ snapshots:
       vite: 8.0.2(@types/node@22.19.18)(esbuild@0.27.4)(jiti@2.4.2)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
     transitivePeerDependencies:
       - supports-color
-
-  vite-node@3.2.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0):
-    dependencies:
-      cac: 6.7.14
-      debug: 4.4.1
-      es-module-lexer: 1.7.0
-      pathe: 2.0.3
-      vite: 7.3.1(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - jiti
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
 
   vite-node@3.2.4(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0):
     dependencies:
