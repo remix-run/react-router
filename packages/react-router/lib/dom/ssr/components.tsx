@@ -409,7 +409,7 @@ function RSCPrefetchPageLinksImpl({
     let url = singleFetchUrl(
       page,
       basename,
-      future.unstable_trailingSlashAwareDataRequests,
+      future.v8_trailingSlashAwareDataRequests,
       "rsc",
     );
 
@@ -430,7 +430,7 @@ function RSCPrefetchPageLinksImpl({
     return [url.pathname + url.search];
   }, [
     basename,
-    future.unstable_trailingSlashAwareDataRequests,
+    future.v8_trailingSlashAwareDataRequests,
     page,
     location,
     nextMatches,
@@ -520,7 +520,7 @@ function PrefetchPageLinksImpl({
     let url = singleFetchUrl(
       page,
       basename,
-      future.unstable_trailingSlashAwareDataRequests,
+      future.v8_trailingSlashAwareDataRequests,
       "data",
     );
     // When one or more routes have opted out, we add a _routes param to
@@ -539,7 +539,7 @@ function PrefetchPageLinksImpl({
     return [url.pathname + url.search];
   }, [
     basename,
-    future.unstable_trailingSlashAwareDataRequests,
+    future.v8_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,

@@ -49,7 +49,7 @@ export interface EntryContext extends FrameworkContextObject {
 }
 
 export interface FutureConfig {
-  unstable_trailingSlashAwareDataRequests: boolean;
+  v8_trailingSlashAwareDataRequests: boolean;
 }
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };

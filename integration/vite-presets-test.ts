@@ -247,7 +247,7 @@ test.describe("Vite / presets", async () => {
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
-        unstable_trailingSlashAwareDataRequests: false,
+        v8_trailingSlashAwareDataRequests: false,
       });
       expect(buildEndArgsMeta.splitRouteModules).toBe(true);
 

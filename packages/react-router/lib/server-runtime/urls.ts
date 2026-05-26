@@ -13,7 +13,7 @@ export function getNormalizedPath(
   let pathname = url.pathname;
 
   // Strip .data suffix
-  if (future?.unstable_trailingSlashAwareDataRequests) {
+  if (future?.v8_trailingSlashAwareDataRequests) {
     if (pathname.endsWith("/_.data")) {
       // Handle trailing slash URLs: /about/_.data -> /about/
       pathname = pathname.replace(/_\.data$/, "");

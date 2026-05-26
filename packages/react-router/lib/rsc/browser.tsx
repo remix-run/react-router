@@ -828,7 +828,7 @@ export function RSCHydratedRouter({
 
   const frameworkContext: FrameworkContextObject = {
     future: {
-      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
+      v8_trailingSlashAwareDataRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,

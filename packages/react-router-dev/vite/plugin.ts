@@ -3763,7 +3763,7 @@ function createDataRequest(
 ): PrerenderRequest<PrerenderMetadata> {
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
-      ? reactRouterConfig.future.unstable_trailingSlashAwareDataRequests
+      ? reactRouterConfig.future.v8_trailingSlashAwareDataRequests
         ? "/_.data"
         : "/_root.data"
       : `${prerenderPath.replace(/\/$/, "")}.data`

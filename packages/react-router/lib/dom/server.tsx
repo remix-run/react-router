@@ -366,6 +366,7 @@ export function createStaticRouter(
     },
     get future() {
       return {
+        v8_trailingSlashAwareDataRequests: false,
         ...opts?.future,
       };
     },

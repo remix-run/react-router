@@ -125,8 +125,8 @@ export function createRoutesStub(
     if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
         future: {
-          unstable_trailingSlashAwareDataRequests:
-            future?.unstable_trailingSlashAwareDataRequests === true,
+          v8_trailingSlashAwareDataRequests:
+            future?.v8_trailingSlashAwareDataRequests === true,
         },
         manifest: {
           routes: {},
