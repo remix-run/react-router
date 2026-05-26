@@ -24,7 +24,6 @@ import type {
   RelativeRoutingType,
   Router as DataRouter,
   RevalidationState,
-  Navigation,
   NavigationStates,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
@@ -1451,6 +1450,13 @@ export function useRouteId() {
   return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
+type UseNavigationResult = {
+  [K in keyof NavigationStates]: Omit<
+    NavigationStates[K],
+    "matches" | "historyAction"
+  >;
+}[keyof NavigationStates];
+
 /**
  * Returns the current {@link Navigation}, defaulting to an "idle" navigation
  * when no navigation is in progress. You can use this to render pending UI
@@ -1473,9 +1479,9 @@ export function useRouteId() {
  * @mode data
  * @returns The current {@link Navigation} object
  */
-export function useNavigation(): Omit<Navigation, "matches" | "historyAction"> {
+export function useNavigation(): UseNavigationResult {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
-  return React.useMemo<Omit<Navigation, "matches" | "historyAction">>(() => {
+  return React.useMemo<UseNavigationResult>(() => {
     let { matches, historyAction, ...rest } = state.navigation;
     return rest;
   }, [state.navigation]);
