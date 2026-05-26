@@ -238,7 +238,7 @@ export type MetaDescriptor =
   | { name: string; content: string }
   | { property: string; content: string }
   | { httpEquiv: string; content: string }
-  | { "script:ld+json": LdJsonObject }
+  | { "script:ld+json": LdJsonObject | LdJsonObject[] }
   | { tagName: "meta" | "link"; [name: string]: string }
   | { [name: string]: unknown };
 
