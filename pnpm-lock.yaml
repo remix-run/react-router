@@ -851,9 +851,6 @@ importers:
       valibot:
         specifier: ^1.4.0
         version: 1.4.0(typescript@6.0.3)
-      vite-node:
-        specifier: ^3.2.2
-        version: 3.2.4(@types/node@22.19.18)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.22.3)(yaml@2.9.0)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
