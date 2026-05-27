@@ -53,10 +53,10 @@
     "@types/react-test-renderer": "^18.3.1"
   },
   "dependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.5",
-    "@babel/preset-react": "^7.28.5",
-    "@babel/preset-typescript": "^7.28.5",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
     "@eslint/compat": "^2.1.0",
     "@mdx-js/rollup": "^3.1.1",
     "@playwright/test": "^1.60.0",
@@ -67,7 +67,7 @@
     "@types/react-test-renderer": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
-    "babel-jest": "^30.3.0",
+    "babel-jest": "^30.4.1",
     "babel-plugin-dev-expression": "^0.2.3",
     "dox": "^1.0.0",
     "eslint": "^10.4.0",
