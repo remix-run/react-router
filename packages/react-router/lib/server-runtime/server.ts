@@ -10,7 +10,6 @@ import {
   ErrorResponseImpl,
   RouterContextProvider,
   stripBasename,
-  removeTrailingSlash,
 } from "../router/utils";
 import {
   getStaticContextFromError,
@@ -147,8 +146,7 @@ function derive(build: ServerBuild, mode?: string) {
         isSpaMode = true;
       } else if (
         !build.prerender.includes(decodedPath) &&
-        !build.prerender.includes(decodedPath + "/") &&
-        !build.prerender.includes(removeTrailingSlash(decodedPath))
+        !build.prerender.includes(decodedPath + "/")
       ) {
         if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
