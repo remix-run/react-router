@@ -8,6 +8,7 @@ import { createRequestHandler } from "@react-router/express";
 import { createRequestListener } from "@remix-run/node-fetch-server";
 import compression from "compression";
 import express from "express";
+import type { RequestHandler as ExpressRequestHandler } from "express";
 import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
 import getPort from "get-port";
@@ -52,12 +53,12 @@ type NormalizedBuild = {
 function isRSCServerBuild(build: unknown): build is RSCServerBuildModule {
   return Boolean(
     typeof build === "object" &&
-      build &&
-      "default" in build &&
-      typeof build.default === "object" &&
-      build.default &&
-      "fetch" in build.default &&
-      typeof build.default.fetch === "function",
+    build &&
+    "default" in build &&
+    typeof build.default === "object" &&
+    build.default &&
+    "fetch" in build.default &&
+    typeof build.default.fetch === "function",
   );
 }
 
@@ -66,6 +67,20 @@ function parseNumber(raw?: string) {
   let maybe = Number(raw);
   if (Number.isNaN(maybe)) return undefined;
   return maybe;
+}
+
+function getExpressPath(publicPath: string) {
+  // Vite allows `base` to be an absolute URL, but Express route paths must be
+  // pathnames. Strip any origin before mounting static asset middleware.
+  let pathname: string;
+
+  try {
+    pathname = new URL(publicPath).pathname;
+  } catch {
+    pathname = publicPath;
+  }
+
+  return pathname.startsWith("/") ? pathname : `/${pathname}`;
 }
 
 async function run() {
@@ -103,7 +118,10 @@ async function run() {
     build = buildModule as ServerBuild;
   }
 
-  let onListen = () => {
+  let onListen = (error: unknown) => {
+    if (error) {
+      throw error;
+    }
     let address =
       process.env.HOST ||
       Object.values(os.networkInterfaces())
@@ -124,29 +142,34 @@ async function run() {
   app.disable("x-powered-by");
 
   if (!isRSCBuild) {
-    app.use(compression());
+    // `compression` may resolve to Express 4 types from transitive deps while
+    // `react-router-serve` uses Express 5, but the runtime middleware signature
+    // is compatible.
+    app.use(compression() as unknown as ExpressRequestHandler);
   }
 
+  let expressPublicPath = getExpressPath(build.publicPath);
+
   app.use(
-    path.posix.join(build.publicPath, "assets"),
+    path.posix.join(expressPublicPath, "assets"),
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
+  app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
   if (build.fetch) {
-    app.all("*", createRequestListener(build.fetch));
+    app.all("/{*splat}", createRequestListener(build.fetch));
   } else {
     app.all(
-      "*",
+      "/{*splat}",
       createRequestHandler({
         build: buildModule,
         mode: process.env.NODE_ENV,
-      }),
+      }) as unknown as ExpressRequestHandler,
     );
   }
 
