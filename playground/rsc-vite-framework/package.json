@@ -17,7 +17,7 @@
     "@react-router/fs-routes": "workspace:*",
     "@react-router/serve": "workspace:*",
     "@types/express": "^5.0.6",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^6.0.1",
@@ -29,7 +29,7 @@
     "vite": "^8.0.0"
   },
   "dependencies": {
-    "@remix-run/node-fetch-server": "^0.13.0",
+    "@remix-run/node-fetch-server": "^0.13.3",
     "compression": "^1.8.1",
     "express": "^4.21.2",
     "react": "catalog:",

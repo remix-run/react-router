@@ -43,7 +43,7 @@
     "gunzip-maybe": "^1.4.2",
     "log-update": "^8.0.0",
     "picocolors": "^1.1.1",
-    "semver": "^7.8.0",
+    "semver": "^7.8.1",
     "sisteransi": "^1.0.5",
     "sort-package-json": "^1.55.0",
     "strip-ansi": "^6.0.1",
@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@types/gunzip-maybe": "^1.4.3",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "@types/recursive-readdir": "^2.2.1",
     "@types/semver": "^7.7.1",
     "@types/tar-fs": "^2.0.1",

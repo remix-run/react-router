@@ -26,6 +26,7 @@
     "@types/compression": "^1.8.1",
     "@types/express": "^4.17.20",
     "@types/morgan": "^1.9.10",
+    "@types/node": "^22.19.19",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "cross-env": "^10.1.0",

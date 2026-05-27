@@ -49,7 +49,7 @@
     "@react-router/node": "workspace:*",
     "@types/jest": "^30.0.0",
     "@types/lambda-tester": "^4.0.3",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "lambda-tester": "^4.0.1",
     "react": "catalog:",
     "react-dom": "catalog:",

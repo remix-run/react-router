@@ -40,7 +40,7 @@
   "dependencies": {
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.13.0",
+    "@remix-run/node-fetch-server": "^0.13.3",
     "compression": "^1.8.1",
     "express": "^5.2.1",
     "get-port": "7.2.0",
@@ -54,7 +54,7 @@
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "@types/source-map-support": "^0.5.6",
     "tsdown": "catalog:",
     "typescript": "catalog:",

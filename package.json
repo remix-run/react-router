@@ -65,8 +65,8 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-test-renderer": "^19.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
-    "@typescript-eslint/parser": "^8.59.4",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
     "babel-jest": "^30.4.1",
     "babel-plugin-dev-expression": "^0.2.3",
     "dox": "^1.0.0",
@@ -74,14 +74,14 @@
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-flowtype": "^8.0.3",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jest": "^29.15.0",
+    "eslint-plugin-jest": "^29.15.2",
     "eslint-plugin-jsdoc": "^63.0.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "next",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "fast-glob": "3.3.3",
     "isbot": "^5.1.40",
-    "jest": "^30.3.0",
+    "jest": "^30.4.2",
     "jest-environment-jsdom": "^29.6.2",
     "jsdom": "^29.1.1",
     "picocolors": "^1.1.1",
@@ -90,7 +90,7 @@
     "typedoc": "^0.28.19",
     "typescript": "catalog:",
     "vite": "^7.0.0",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.7"
   },
   "engines": {
     "node": ">=22.12.0"

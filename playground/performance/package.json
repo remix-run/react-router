@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
+    "@types/node": "^22.19.19",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "typescript": "catalog:",

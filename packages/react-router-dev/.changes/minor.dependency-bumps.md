@@ -11,5 +11,8 @@ Bump dependencies
 - Bumped `jsesc` from `3.0.2` to `3.1.0`
 - Bumped `lodash` from `^4.17.21` to `^4.18.1`
 - Bumped `prettier` from `^3.6.2` to `^3.8.3`
-- Bumped `semver` from `^7.3.7` to `^7.8.0`
-- Bumped `valibot` from `^1.2.0` to `^1.4.0`
+- Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+- Bumped `react-refresh` from `^0.14.0` to `^0.18.0`
+- Bumped `semver` from `^7.3.7` to `^7.8.1`
+- Bumped `tinyglobby` from `^0.2.14` to `^0.2.16`
+- Bumped `valibot` from `^1.2.0` to `^1.4.1`
