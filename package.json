@@ -50,7 +50,7 @@
   "resolutions": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/react-test-renderer": "^18.3.1"
+    "@types/react-test-renderer": "^19.1.0"
   },
   "dependencies": {
     "@babel/core": "^7.29.7",
@@ -64,7 +64,7 @@
     "@types/jsdom": "^28.0.3",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/react-test-renderer": "^19.0.0",
+    "@types/react-test-renderer": "^19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.60.0",
     "babel-jest": "^30.4.1",
@@ -82,7 +82,7 @@
     "fast-glob": "3.3.3",
     "isbot": "^5.1.40",
     "jest": "^30.4.2",
-    "jest-environment-jsdom": "^29.6.2",
+    "jest-environment-jsdom": "^30.4.1",
     "jsdom": "^29.1.1",
     "picocolors": "^1.1.1",
     "prettier": "^3.8.3",

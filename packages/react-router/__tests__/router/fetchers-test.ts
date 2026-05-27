@@ -2310,7 +2310,7 @@ describe("fetchers", () => {
          "currentUrl": "http://localhost/one",
          "defaultShouldRevalidate": true,
          "formAction": "/two/three",
-         "formData": FormDataWithSubmitter {},
+         "formData": FormData {},
          "formEncType": "application/x-www-form-urlencoded",
          "formMethod": "POST",
          "json": undefined,
