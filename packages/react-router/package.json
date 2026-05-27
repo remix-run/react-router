@@ -82,7 +82,7 @@
   },
   "dependencies": {
     "cookie": "^1.1.1",
-    "set-cookie-parser": "^2.6.0"
+    "set-cookie-parser": "^3.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
