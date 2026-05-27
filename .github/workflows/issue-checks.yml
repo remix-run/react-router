@@ -15,6 +15,9 @@ jobs:
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'no-reproduction'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
       - name: Close issue
         env:
           GH_TOKEN: ${{ github.token }}
@@ -36,6 +39,9 @@ jobs:
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'support'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
       - name: Close issue
         env:
           GH_TOKEN: ${{ github.token }}
