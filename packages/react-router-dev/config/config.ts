@@ -706,12 +706,10 @@ async function resolveConfig({
         "The `future.v8_viteEnvironmentApi` flag has been removed because Vite Environment API usage is now always enabled",
       );
     }
-    if ("unstable_trailingSlashAwareDataRequests" in futureConfig) {
-      return err(
-        "The `future.unstable_trailingSlashAwareDataRequests` flag has been removed because trailing slash-aware data requests are now the default behavior",
-      );
-    }
-    if ("v8_trailingSlashAwareDataRequests" in futureConfig) {
+    if (
+      "unstable_trailingSlashAwareDataRequests" in futureConfig ||
+      "v8_trailingSlashAwareDataRequests" in futureConfig
+    ) {
       return err(
         "The `future.v8_trailingSlashAwareDataRequests` flag has been removed because trailing slash-aware data requests are now the default behavior",
       );
