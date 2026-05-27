@@ -70,6 +70,8 @@ function parseNumber(raw?: string) {
 }
 
 function getExpressPath(publicPath: string) {
+  // Vite allows `base` to be an absolute URL, but Express route paths must be
+  // pathnames. Strip any origin before mounting static asset middleware.
   let pathname: string;
 
   try {
