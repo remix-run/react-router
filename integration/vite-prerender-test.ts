@@ -220,10 +220,12 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "favicon.ico",
         "index.html",
         "parent/child.data",
+        "parent/child/_.data",
         "parent/child/index.html",
         "parent/index.html",
       ]);
@@ -275,6 +277,7 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "favicon.ico",
         "index.html",
@@ -329,6 +332,7 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "favicon.ico",
         "index.html",
@@ -385,10 +389,13 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "a.data",
+        "a/_.data",
         "a/index.html",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "b.data",
+        "b/_.data",
         "b/index.html",
         "favicon.ico",
         "index.html",
@@ -486,6 +493,7 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "favicon.ico",
         "image.png",
@@ -567,6 +575,7 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "favicon.ico",
         "index.html",
@@ -617,6 +626,7 @@ test.describe(`Prerendering`, () => {
       expect(listAllFiles(clientDir).sort()).toEqual([
         "_.data",
         "about.data",
+        "about/_.data",
         "about/index.html",
         "favicon.ico",
         "index.html",

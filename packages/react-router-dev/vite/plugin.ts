@@ -2529,6 +2529,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 requests.push(
                   createDataRequest(prerenderPath, reactRouterConfig, null),
                 );
+                if (prerenderPath !== "/" && !prerenderPath.endsWith("/")) {
+                  requests.push(
+                    createDataRequest(
+                      prerenderPath,
+                      reactRouterConfig,
+                      null,
+                      false,
+                      `${prerenderPath}/`,
+                    ),
+                  );
+                }
               } else {
                 requests.push(
                   createRouteRequest(prerenderPath, reactRouterConfig),
@@ -3760,10 +3771,11 @@ function createDataRequest(
   reactRouterConfig: ResolvedReactRouterConfig,
   onlyRoutes: string[] | null,
   isResourceRoute?: boolean,
+  dataPath: string = prerenderPath,
 ): PrerenderRequest<PrerenderMetadata> {
-  let dataRequestPath = prerenderPath.endsWith("/")
-    ? `${prerenderPath}_.data`
-    : `${prerenderPath}.data`;
+  let dataRequestPath = dataPath.endsWith("/")
+    ? `${dataPath}_.data`
+    : `${dataPath}.data`;
   let normalizedPath =
     `${reactRouterConfig.basename}${dataRequestPath}`.replace(/\/\/+/g, "/");
   let url = new URL(`http://localhost${normalizedPath}`);

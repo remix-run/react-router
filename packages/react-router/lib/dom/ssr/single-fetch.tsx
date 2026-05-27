@@ -365,6 +365,9 @@ async function singleFetchLoaderNavigationStrategy(
   // We'll build up this results object as we loop through matches
   let results: Record<string, DataStrategyResult> = {};
 
+  let isInitialLoad =
+    !router.state.initialized && router.state.navigation.state === "idle";
+
   let resolvePromise = Promise.all(
     args.matches.map(async (m, i) =>
       m.resolve(async (handler) => {
@@ -418,6 +421,13 @@ async function singleFetchLoaderNavigationStrategy(
           });
           results[routeId] = { type: "data", result };
         } catch (e) {
+          if (isInitialLoad && e instanceof SingleFetchNoResultError) {
+            results[routeId] = {
+              type: "data",
+              result: router.state.loaderData[routeId],
+            };
+            return;
+          }
           results[routeId] = { type: "error", result: e };
         }
       }),
@@ -437,10 +447,11 @@ async function singleFetchLoaderNavigationStrategy(
   // One exception - if we are performing an HDR revalidation we have to call
   // the server in case a new loader has shown up that the manifest doesn't yet
   // know about
-  let isInitialLoad =
-    !router.state.initialized && router.state.navigation.state === "idle";
+  let missingHydrationData = [...routesParams].some(
+    (routeId) => !(routeId in router.state.loaderData),
+  );
   if (
-    (isInitialLoad || routesParams.size === 0) &&
+    ((isInitialLoad && !missingHydrationData) || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
@@ -508,7 +519,7 @@ async function bubbleMiddlewareErrors(
 
     if (middlewareError !== undefined) {
       Array.from(routesParams.values()).forEach((routeId) => {
-        if (results[routeId].result instanceof SingleFetchNoResultError) {
+        if (results[routeId]?.result instanceof SingleFetchNoResultError) {
           results[routeId].result = middlewareError;
         }
       });
