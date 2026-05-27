@@ -166,10 +166,7 @@ function isSsrBundleEnvironmentName(
   return name.startsWith(SSR_BUNDLE_PREFIX);
 }
 
-type EnvironmentOptions = Pick<
-  Vite.EnvironmentOptions,
-  "build" | "dev" | "resolve"
->;
+type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -3576,15 +3573,6 @@ export async function getEnvironmentOptionsResolvers(
     ];
 
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
-      dev: {
-        createEnvironment: (name, config, context) =>
-          vite.createRunnableDevEnvironment(name, config, {
-            ...context,
-            runnerOptions: {
-              sourcemapInterceptor: "prepareStackTrace",
-            },
-          }),
-      },
       resolve: {
         // `resolve.external` is set in the `configEnvironment` hook so plugins
         // that configure custom SSR environments can override it.
