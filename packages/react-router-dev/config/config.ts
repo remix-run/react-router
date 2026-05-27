@@ -878,9 +878,7 @@ export async function createConfigLoader({
           let moduleGraphChanged =
             configFileAddedOrRemoved ||
             Boolean(
-              viteRunnerContext.environment.moduleGraph.getModuleById(
-                filepath,
-              ),
+              viteRunnerContext.environment.moduleGraph.getModuleById(filepath),
             );
 
           // Bail out if no relevant changes detected

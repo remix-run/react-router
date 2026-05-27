@@ -48,14 +48,23 @@ export async function createContext({
     configFile: false,
     envFile: false,
     plugins: [],
+    environments: {
+      __config_loader: {
+        consumer: "server",
+        dev: {
+          createEnvironment: (name, config, context) =>
+            vite.createRunnableDevEnvironment(name, config),
+        },
+      },
+    },
   });
 
-  const environment = devServer.environments.ssr;
+  const environment = devServer.environments.__config_loader;
 
   if (!vite.isRunnableDevEnvironment(environment)) {
     await devServer.close();
     throw new Error(
-      "React Router config loading requires Vite's ssr environment to be runnable.",
+      "React Router config loading requires Vite's __config_loader environment to be runnable.",
     );
   }
 
