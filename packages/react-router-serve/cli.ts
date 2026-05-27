@@ -118,7 +118,10 @@ async function run() {
     build = buildModule as ServerBuild;
   }
 
-  let onListen = () => {
+  let onListen = (error: unknown) => {
+    if (error) {
+      throw error;
+    }
     let address =
       process.env.HOST ||
       Object.values(os.networkInterfaces())
