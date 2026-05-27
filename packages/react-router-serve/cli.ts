@@ -53,12 +53,12 @@ type NormalizedBuild = {
 function isRSCServerBuild(build: unknown): build is RSCServerBuildModule {
   return Boolean(
     typeof build === "object" &&
-      build &&
-      "default" in build &&
-      typeof build.default === "object" &&
-      build.default &&
-      "fetch" in build.default &&
-      typeof build.default.fetch === "function",
+    build &&
+    "default" in build &&
+    typeof build.default === "object" &&
+    build.default &&
+    "fetch" in build.default &&
+    typeof build.default.fetch === "function",
   );
 }
 
@@ -142,16 +142,11 @@ async function run() {
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
-  // Express 5 requires named wildcards and wrapping with `{}` includes `/`.
-  let catchAllRoute = "/{*splat}";
-
   if (build.fetch) {
-    app.all(catchAllRoute, createRequestListener(build.fetch));
+    app.all("/{*splat}", createRequestListener(build.fetch));
   } else {
     app.all(
-      catchAllRoute,
-      // `@react-router/express` is still typed against Express 4, but its
-      // runtime handler signature is compatible with Express 5.
+      "/{*splat}",
       createRequestHandler({
         build: buildModule,
         mode: process.env.NODE_ENV,
