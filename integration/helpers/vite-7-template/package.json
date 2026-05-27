@@ -29,7 +29,6 @@
     "@react-router/remix-routes-option-adapter": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "eslint": "^8.38.0",
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "vite-env-only": "^3.0.1",
