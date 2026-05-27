@@ -230,7 +230,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("returns data without errors", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data");
+      let { data } = await fixture.requestSingleFetchData("/_.data");
       expect(data).toEqual({
         "routes/_index": {
           data: "LOADER",
@@ -239,7 +239,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
+      let { data } = await fixture.requestSingleFetchData("/_.data?loader");
       expect(data).toEqual({
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
@@ -388,7 +388,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("returns data without errors", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data");
+      let { data } = await fixture.requestSingleFetchData("/_.data");
       expect(data).toEqual({
         "routes/_index": {
           data: "LOADER",
@@ -397,7 +397,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
+      let { data } = await fixture.requestSingleFetchData("/_.data?loader");
       expect(data).toEqual({
         "routes/_index": {
           error: new Error("Loader Error"),
@@ -634,7 +634,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("returns data without errors", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data");
+      let { data } = await fixture.requestSingleFetchData("/_.data");
       expect(data).toEqual({
         "routes/_index": {
           data: "LOADER",
@@ -643,7 +643,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
+      let { data } = await fixture.requestSingleFetchData("/_.data?loader");
       expect(data).toEqual({
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
@@ -651,7 +651,7 @@ test.describe("Error Sanitization", () => {
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(
-        "  Request: GET test://test/_root.data?loader",
+        "  Request: GET test://test/_.data?loader",
       );
       expect(errorLogs[2][0]).toEqual("  Error: Loader Error");
       expect(errorLogs[3][0]).toMatch(" at ");

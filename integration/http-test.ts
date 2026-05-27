@@ -59,7 +59,7 @@ test.describe("HTTP behavior", () => {
     expect(await response.text()).toBe("RESOURCE");
 
     let singleFetchResponse =
-      await appFixture.requestSingleFetchData("/_root.data");
+      await appFixture.requestSingleFetchData("/_.data");
     expect(response.status).toBe(202);
     expect(singleFetchResponse.data).toEqual({
       "routes/_index": { data: "INDEX" },
@@ -78,7 +78,7 @@ test.describe("HTTP behavior", () => {
     expect(response.body).toBe(null);
 
     let singleFetchResponse = await appFixture.requestSingleFetchData(
-      "/_root.data",
+      "/_.data",
       { method: "HEAD" },
     );
     expect(response.status).toBe(202);

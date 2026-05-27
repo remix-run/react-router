@@ -107,7 +107,6 @@ function derive(build: ServerBuild, mode?: string) {
     let normalizedPathname = getNormalizedPath(
       request,
       build.basename,
-      build.future,
     ).pathname;
 
     let isSpaMode =
@@ -495,7 +494,7 @@ async function handleDocumentRequest(
           return new Response(null, { status: 500 });
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
+      normalizePath: (r) => getNormalizedPath(r, build.basename),
     });
 
     if (!isResponse(result)) {
@@ -671,7 +670,7 @@ async function handleResourceRequest(
           return handleQueryRouteError(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
+      normalizePath: (r) => getNormalizedPath(r, build.basename),
     });
 
     return handleQueryRouteResult(result);

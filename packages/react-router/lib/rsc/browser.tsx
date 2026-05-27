@@ -339,7 +339,6 @@ function createRouterFromPayload({
     dataStrategy: getRSCSingleFetchDataStrategy(
       () => globalVar.__reactRouterDataRouter,
       true,
-      payload.basename,
       createFromReadableStream,
       fetchImplementation,
     ),
@@ -440,7 +439,6 @@ const renderedRoutesContext = createContext<RSCRouteManifest[]>();
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
-  basename: string | undefined,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
 ): DataStrategyFunction {
@@ -471,9 +469,6 @@ export function getRSCSingleFetchDataStrategy(
     // pass map into fetchAndDecode so it can add payloads
     getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
     ssr,
-    basename,
-    // .rsc requests are always trailing slash aware
-    true,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
@@ -535,12 +530,10 @@ function getFetchAndDecodeViaRSC(
 ): FetchAndDecodeFunction {
   return async (
     args: DataStrategyFunctionArgs<unknown>,
-    basename: string | undefined,
-    trailingSlashAware: boolean,
     targetRoutes?: string[],
   ) => {
     let { request, context } = args;
-    let url = singleFetchUrl(request.url, basename, trailingSlashAware, "rsc");
+    let url = singleFetchUrl(request.url, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
       if (targetRoutes) {
@@ -827,9 +820,7 @@ export function RSCHydratedRouter({
   }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
 
   const frameworkContext: FrameworkContextObject = {
-    future: {
-      v8_trailingSlashAwareDataRequests: true, // always on for RSC
-    },
+    future: {},
     isSpaMode: false,
     ssr: true,
     criticalCss: "",

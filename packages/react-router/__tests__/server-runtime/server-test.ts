@@ -56,15 +56,15 @@ describe("server", () => {
 
     let allowThrough = [
       ["GET", "/", "COMPONENT"],
-      ["GET", "/_root.data", "LOADER"],
+      ["GET", "/_.data", "LOADER"],
       ["POST", "/", "COMPONENT"],
-      ["POST", "/_root.data", "ACTION"],
+      ["POST", "/_.data", "ACTION"],
       ["PUT", "/", "COMPONENT"],
-      ["PUT", "/_root.data", "ACTION"],
+      ["PUT", "/_.data", "ACTION"],
       ["DELETE", "/", "COMPONENT"],
-      ["DELETE", "/_root.data", "ACTION"],
+      ["DELETE", "/_.data", "ACTION"],
       ["PATCH", "/", "COMPONENT"],
-      ["PATCH", "/_root.data", "ACTION"],
+      ["PATCH", "/_.data", "ACTION"],
     ];
     it.each(allowThrough)(
       `allows through %s request to %s`,
@@ -113,7 +113,7 @@ describe("server", () => {
       );
       let handler = createRequestHandler(build);
       let response = await handler(
-        new Request("http://localhost:3000/_root.data"),
+        new Request("http://localhost:3000/_.data"),
         new RouterContextProvider(new Map([[fooContext, "FOO"]])),
       );
 
@@ -139,7 +139,7 @@ describe("server", () => {
       );
       let handler = createRequestHandler(build);
       let response = await handler(
-        new Request("http://localhost:3000/_root.data"),
+        new Request("http://localhost:3000/_.data"),
         {
           foo: "FOO",
         },

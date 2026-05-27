@@ -3761,13 +3761,11 @@ function createDataRequest(
   onlyRoutes: string[] | null,
   isResourceRoute?: boolean,
 ): PrerenderRequest<PrerenderMetadata> {
-  let normalizedPath = `${reactRouterConfig.basename}${
-    prerenderPath === "/"
-      ? reactRouterConfig.future.v8_trailingSlashAwareDataRequests
-        ? "/_.data"
-        : "/_root.data"
-      : `${prerenderPath.replace(/\/$/, "")}.data`
-  }`.replace(/\/\/+/g, "/");
+  let dataRequestPath = prerenderPath.endsWith("/")
+    ? `${prerenderPath}_.data`
+    : `${prerenderPath}.data`;
+  let normalizedPath =
+    `${reactRouterConfig.basename}${dataRequestPath}`.replace(/\/\/+/g, "/");
   let url = new URL(`http://localhost${normalizedPath}`);
   if (onlyRoutes?.length) {
     url.searchParams.set("_routes", onlyRoutes.join(","));
