@@ -42,7 +42,7 @@
     }
   },
   "dependencies": {
-    "@architect/functions": "^7.0.0",
+    "@architect/functions": "^8.1.9",
     "@types/aws-lambda": "^8.10.161"
   },
   "devDependencies": {
