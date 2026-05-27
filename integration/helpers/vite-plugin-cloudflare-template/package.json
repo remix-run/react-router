@@ -19,7 +19,7 @@
     "serialize-javascript": "^6.0.1"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.28.0",
+    "@cloudflare/vite-plugin": "^1.39.0",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@types/node": "^22.19.0",
@@ -29,7 +29,7 @@
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "vite-tsconfig-paths": "^4.2.1",
-    "wrangler": "^4.93.1"
+    "wrangler": "^4.95.0"
   },
   "engines": {
     "node": ">=22.12.0"

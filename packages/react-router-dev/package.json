@@ -118,7 +118,7 @@
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "wireit": "catalog:",
-    "wrangler": "^4.93.1"
+    "wrangler": "^4.95.0"
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",
