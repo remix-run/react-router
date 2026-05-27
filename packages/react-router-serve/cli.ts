@@ -69,6 +69,18 @@ function parseNumber(raw?: string) {
   return maybe;
 }
 
+function getExpressPath(publicPath: string) {
+  let pathname: string;
+
+  try {
+    pathname = new URL(publicPath).pathname;
+  } catch {
+    pathname = publicPath;
+  }
+
+  return pathname.startsWith("/") ? pathname : `/${pathname}`;
+}
+
 async function run() {
   let port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
 
@@ -131,14 +143,16 @@ async function run() {
     app.use(compression() as unknown as ExpressRequestHandler);
   }
 
+  let expressPublicPath = getExpressPath(build.publicPath);
+
   app.use(
-    path.posix.join(build.publicPath, "assets"),
+    path.posix.join(expressPublicPath, "assets"),
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
+  app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
