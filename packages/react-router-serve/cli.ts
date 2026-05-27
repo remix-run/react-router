@@ -125,6 +125,9 @@ async function run() {
   app.disable("x-powered-by");
 
   if (!isRSCBuild) {
+    // `compression` may resolve to Express 4 types from transitive deps while
+    // `react-router-serve` uses Express 5, but the runtime middleware signature
+    // is compatible.
     app.use(compression() as unknown as ExpressRequestHandler);
   }
 
@@ -147,6 +150,8 @@ async function run() {
   } else {
     app.all(
       catchAllRoute,
+      // `@react-router/express` is still typed against Express 4, but its
+      // runtime handler signature is compatible with Express 5.
       createRequestHandler({
         build: buildModule,
         mode: process.env.NODE_ENV,
