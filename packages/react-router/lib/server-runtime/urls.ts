@@ -1,6 +1,12 @@
 import type { Path } from "../router/history";
+import { stripBasename } from "../router/utils";
 
-export function getNormalizedPath(request: Request): Path {
+export function getNormalizedPath(
+  request: Request,
+  basename: string | undefined,
+): Path {
+  basename = basename || "/";
+
   let url = new URL(request.url);
   let pathname = url.pathname;
 
@@ -10,6 +16,10 @@ export function getNormalizedPath(request: Request): Path {
     pathname = pathname.replace(/_\.data$/, "");
   } else {
     pathname = pathname.replace(/\.data$/, "");
+  }
+
+  if (stripBasename(pathname, basename) !== "/" && pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
   }
 
   // Strip _routes param

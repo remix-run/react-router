@@ -747,7 +747,7 @@ async function generateResourceResponse(
           return generateErrorResponse(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r),
+      normalizePath: (r) => getNormalizedPath(r, basename),
     });
     return response;
   } catch (error) {
@@ -837,7 +837,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
-      normalizePath: (r) => getNormalizedPath(r),
+      normalizePath: (r) => getNormalizedPath(r, basename),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
