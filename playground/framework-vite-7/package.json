@@ -25,7 +25,7 @@
     "@types/react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "^7.0.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite-tsconfig-paths": "^4.2.2"
   },
   "engines": {
     "node": ">=22.12.0"

@@ -30,7 +30,7 @@
   "dependencies": {
     "@remix-run/node-fetch-server": "^0.13.3",
     "compression": "^1.8.1",
-    "express": "^4.21.2",
+    "express": "^4.22.2",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "workspace:*",
