@@ -445,8 +445,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
-      async buildEnd() {
-        await configLoader.close();
+      buildApp: {
+        order: "post",
+        async handler() {
+          await configLoader.close();
+        },
       },
     },
     (() => {
