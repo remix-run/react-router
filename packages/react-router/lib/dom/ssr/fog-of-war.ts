@@ -245,10 +245,14 @@ export async function fetchAndApplyManifestPatches(
     try {
       res = await fetch(url, { signal });
     } catch (e) {
+      // The browser can terminate a /__manifest fetch at the network layer
+      // (e.g. during rapid navigation) before AbortController.abort() runs,
+      // surfacing as TypeError("Failed to fetch") while signal.aborted is
+      // still false. Yield a microtask to let any pending abort() propagate,
+      // then retry once if the signal is still active.
       if (
         signal &&
         !signal.aborted &&
-        e instanceof TypeError &&
         isAbortError(e, signal, { allowTypeError: true })
       ) {
         await Promise.resolve();

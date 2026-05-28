@@ -380,6 +380,28 @@ async function nonSsrStrategy(
   return results;
 }
 
+// During navigation races the turbo-stream response can omit data for a
+// route the data-strategy was expecting. If we have prior loaderData for
+// that route, reuse it (mirroring how mergeLoaderData preserves existing
+// data for absent routes) instead of crashing.
+function unwrapSingleFetchResultWithFallback(
+  data: DecodedSingleFetchResults,
+  routeId: string,
+  router: DataRouter,
+) {
+  try {
+    return unwrapSingleFetchResult(data, routeId);
+  } catch (e) {
+    if (
+      e instanceof SingleFetchNoResultError &&
+      router.state.loaderData.hasOwnProperty(routeId)
+    ) {
+      return router.state.loaderData[routeId];
+    }
+    throw e;
+  }
+}
+
 // Loaders are trickier since we only want to hit the server once, so we
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
@@ -444,17 +466,7 @@ async function singleFetchLoaderNavigationStrategy(
                 trailingSlashAware,
                 [routeId],
               );
-              try {
-                return unwrapSingleFetchResult(data, routeId);
-              } catch (e) {
-                if (
-                  e instanceof SingleFetchNoResultError &&
-                  router.state.loaderData.hasOwnProperty(routeId)
-                ) {
-                  return router.state.loaderData[routeId];
-                }
-                throw e;
-              }
+              return unwrapSingleFetchResultWithFallback(data, routeId, router);
             });
 
             results[routeId] = { type: "data", result };
@@ -473,17 +485,7 @@ async function singleFetchLoaderNavigationStrategy(
         try {
           let result = await handler(async () => {
             let data = await singleFetchDfd.promise;
-            try {
-              return unwrapSingleFetchResult(data, routeId);
-            } catch (e) {
-              if (
-                e instanceof SingleFetchNoResultError &&
-                router.state.loaderData.hasOwnProperty(routeId)
-              ) {
-                return router.state.loaderData[routeId];
-              }
-              throw e;
-            }
+            return unwrapSingleFetchResultWithFallback(data, routeId, router);
           });
           results[routeId] = { type: "data", result };
         } catch (e) {

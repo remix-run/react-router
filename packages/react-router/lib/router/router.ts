@@ -1228,9 +1228,7 @@ export function createRouter(init: RouterInit): Router {
       removePageHideEventListener();
     }
     subscribers.clear();
-    if (pendingNavigationController) {
-      pendingNavigationController.abort();
-    }
+    pendingNavigationController && pendingNavigationController.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
     state.blockers.forEach((_, key) => deleteBlocker(key));
   }
@@ -1679,9 +1677,7 @@ export function createRouter(init: RouterInit): Router {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
-    if (pendingNavigationController) {
-      pendingNavigationController.abort();
-    }
+    pendingNavigationController && pendingNavigationController.abort();
     pendingNavigationController = null;
     pendingAction = historyAction;
     isUninterruptedRevalidation =
@@ -2736,9 +2732,7 @@ export function createRouter(init: RouterInit): Router {
       loadId > pendingNavigationLoadId
     ) {
       invariant(pendingAction, "Expected pending action");
-      if (pendingNavigationController) {
-        pendingNavigationController.abort();
-      }
+      pendingNavigationController && pendingNavigationController.abort();
 
       completeNavigation(state.navigation.location, {
         matches,
