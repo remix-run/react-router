@@ -41,7 +41,7 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useNavigation(): Omit<Navigation, "matches" | "historyAction">
+function useNavigation(): UseNavigationResult
 ```
 
 ## Returns

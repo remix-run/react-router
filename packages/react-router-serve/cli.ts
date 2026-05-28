@@ -88,7 +88,7 @@ async function run() {
   if ((isRSCBuild = isRSCServerBuild(buildModule))) {
     const config = {
       publicPath: "/",
-      assetsBuildDirectory: "../client",
+      assetsBuildDirectory: path.join("..", "client"),
       ...(buildModule.unstable_reactRouterServeConfig || {}),
     };
     build = {

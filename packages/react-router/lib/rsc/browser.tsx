@@ -840,7 +840,7 @@ export function RSCHydratedRouter({
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
-      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
+      v8_trailingSlashAwareDataRequests: true, // always on for RSC
       v8_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
