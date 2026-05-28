@@ -3,12 +3,12 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@octokit/request": "^10.0.9",
+    "@octokit/request": "^10.0.10",
     "react-router": "workspace:^",
-    "semver": "^7.8.0"
+    "semver": "^7.8.1"
   },
   "devDependencies": {
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.7.1"
   },

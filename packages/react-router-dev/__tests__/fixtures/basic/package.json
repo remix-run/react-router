@@ -20,7 +20,6 @@
     "@react-router/dev": "*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "eslint": "^8.38.0",
     "typescript": "catalog:"
   },
   "engines": {

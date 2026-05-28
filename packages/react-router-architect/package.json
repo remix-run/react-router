@@ -42,14 +42,14 @@
     }
   },
   "dependencies": {
-    "@architect/functions": "^7.0.0",
+    "@architect/functions": "^8.1.9",
     "@types/aws-lambda": "^8.10.161"
   },
   "devDependencies": {
     "@react-router/node": "workspace:*",
     "@types/jest": "^30.0.0",
     "@types/lambda-tester": "^4.0.3",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "lambda-tester": "^4.0.1",
     "react": "catalog:",
     "react-dom": "catalog:",

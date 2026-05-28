@@ -6,12 +6,12 @@ packages:
   - "scripts"
 
 catalog:
-  "@types/react": ^19.2.14
+  "@types/react": ^19.2.15
   "@types/react-dom": ^19.2.3
-  "@vitejs/plugin-rsc": ~0.5.21
+  "@vitejs/plugin-rsc": ~0.5.26
   react: ^19.2.6
   react-dom: ^19.2.6
   react-server-dom-webpack: ^19.2.6
   typescript: ^6.0.3
-  tsdown: ^0.21.10
-  wireit: 0.14.9
+  tsdown: ^0.22.0
+  wireit: 0.14.12

@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.19",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
