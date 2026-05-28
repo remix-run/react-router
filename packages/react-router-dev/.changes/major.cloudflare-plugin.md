@@ -1,3 +1,3 @@
-- Require Vite 7+ and make the Vite Environment API build path mandatory
-- Remove `@react-router/dev/vite/cloudflare` dev proxy export; use `@cloudflare/vite-plugin` instead
+Remove `@react-router/dev/vite/cloudflare` dev proxy export; use `@cloudflare/vite-plugin` instead
+
 - Drops support for `wrangler@3` as a peer dependency of `@react-router/dev`
