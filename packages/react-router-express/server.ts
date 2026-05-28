@@ -139,6 +139,11 @@ export async function sendRemixResponse(
   res: express.Response,
   nodeResponse: Response,
 ): Promise<void> {
+  if (isResponseClosed(res)) {
+    await nodeResponse.body?.cancel();
+    return;
+  }
+
   res.statusMessage = nodeResponse.statusText;
   res.status(nodeResponse.status);
 
@@ -151,8 +156,20 @@ export async function sendRemixResponse(
   }
 
   if (nodeResponse.body) {
-    await writeReadableStreamToWritable(nodeResponse.body, res);
+    try {
+      await writeReadableStreamToWritable(nodeResponse.body, res);
+    } catch (error) {
+      if (isResponseClosed(res)) {
+        return;
+      }
+
+      throw error;
+    }
   } else {
     res.end();
   }
+}
+
+function isResponseClosed(res: express.Response): boolean {
+  return res.destroyed || res.writableEnded;
 }
