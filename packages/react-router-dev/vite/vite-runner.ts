@@ -1,6 +1,5 @@
-import type * as Vite from "vite";
+import * as Vite from "vite";
 
-import { preloadVite, getVite } from "./vite";
 import { ssrExternals } from "./ssr-externals";
 
 export type Context = {
@@ -18,10 +17,7 @@ export async function createContext({
   mode: Vite.ConfigEnv["mode"];
   customLogger: Vite.UserConfig["customLogger"];
 }): Promise<Context> {
-  await preloadVite();
-  const vite = getVite();
-
-  const devServer = await vite.createServer({
+  const devServer = await Vite.createServer({
     root,
     mode,
     customLogger,
@@ -53,7 +49,7 @@ export async function createContext({
         consumer: "server",
         dev: {
           createEnvironment: (name, config, context) =>
-            vite.createRunnableDevEnvironment(name, config),
+            Vite.createRunnableDevEnvironment(name, config),
         },
       },
     },
@@ -61,7 +57,7 @@ export async function createContext({
 
   const environment = devServer.environments.__config_loader;
 
-  if (!vite.isRunnableDevEnvironment(environment)) {
+  if (!Vite.isRunnableDevEnvironment(environment)) {
     await devServer.close();
     throw new Error(
       "React Router config loading requires Vite's __config_loader environment to be runnable.",

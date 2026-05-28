@@ -1,4 +1,4 @@
-import type * as Vite from "vite";
+import * as Vite from "vite";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
 import colors from "picocolors";
@@ -18,8 +18,6 @@ import {
 import {
   defineCompilerOptions,
   defineOptimizeDepsCompilerOptions,
-  getVite,
-  preloadVite,
 } from "../vite";
 import { hasDependency } from "../has-dependency";
 import { getOptimizeDepsEntries } from "../optimize-deps-entries";
@@ -106,13 +104,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     code: string,
     filename: string,
   ): Promise<string> {
-    await preloadVite();
-    let vite = getVite();
     let lang = getTransformLanguage(filename);
 
     return (
-      "transformWithOxc" in vite && typeof vite.transformWithOxc === "function"
-        ? await vite.transformWithOxc(code, filename, {
+      "transformWithOxc" in Vite && typeof Vite.transformWithOxc === "function"
+        ? await Vite.transformWithOxc(code, filename, {
             lang,
             jsx: {
               runtime: "automatic",
@@ -120,7 +116,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               target: "esnext",
             },
           })
-        : await vite.transformWithEsbuild(code, filename, {
+        : await Vite.transformWithEsbuild(code, filename, {
             loader: lang,
             target: "esnext",
             format: "esm",
@@ -135,7 +131,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       name: "react-router/rsc",
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
-        await preloadVite();
 
         viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);

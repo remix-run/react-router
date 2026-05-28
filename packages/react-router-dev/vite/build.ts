@@ -1,5 +1,4 @@
-import type * as Vite from "vite";
-import { preloadVite, getVite } from "./vite";
+import * as Vite from "vite";
 
 export interface ViteBuildOptions {
   assetsInlineLimit?: number;
@@ -16,9 +15,6 @@ export interface ViteBuildOptions {
 }
 
 export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
-  // Ensure Vite's ESM build is preloaded at the start of the process
-  // so it can be accessed synchronously via `getVite`
-  await preloadVite();
   let {
     assetsInlineLimit,
     clearScreen,
@@ -32,8 +28,7 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
     sourcemapServer,
   } = viteBuildOptions;
 
-  let vite = getVite();
-  let builder = await vite.createBuilder({
+  let builder = await Vite.createBuilder({
     root,
     mode,
     configFile,

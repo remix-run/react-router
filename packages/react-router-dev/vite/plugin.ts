@@ -1,6 +1,4 @@
-// We can only import types from Vite at the top level since we're in a CJS
-// context but want to use Vite's ESM build since Vite 7+ is ESM only
-import type * as Vite from "vite";
+import * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import {
@@ -72,7 +70,7 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
-import { preloadVite, getVite, defineCompilerOptions } from "./vite";
+import { defineCompilerOptions } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
@@ -106,9 +104,7 @@ export async function resolveViteConfig({
   plugins?: Vite.Plugin[];
   root: string;
 }) {
-  let vite = getVite();
-
-  let viteConfig = await vite.resolveConfig(
+  let viteConfig = await Vite.resolveConfig(
     { mode, configFile, root, plugins },
     "build", // command
     "production", // default mode
@@ -250,11 +246,10 @@ const normalizeRelativeFilePath = (
   file: string,
   reactRouterConfig: ResolvedReactRouterConfig,
 ) => {
-  let vite = getVite();
   let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
   let relativePath = path.relative(reactRouterConfig.appDirectory, fullPath);
 
-  return vite.normalizePath(relativePath).split("?")[0];
+  return Vite.normalizePath(relativePath).split("?")[0];
 };
 
 let virtual = {
@@ -282,8 +277,7 @@ const resolveChunk = (
   viteManifest: Vite.Manifest,
   absoluteFilePath: string,
 ) => {
-  let vite = getVite();
-  let rootRelativeFilePath = vite.normalizePath(
+  let rootRelativeFilePath = Vite.normalizePath(
     path.relative(ctx.rootDirectory, absoluteFilePath),
   );
   let entryChunk = viteManifest[rootRelativeFilePath];
@@ -889,7 +883,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .update(contents)
           .digest()
           .toString("base64");
-        let filepath = getVite().normalizePath(
+        let filepath = Vite.normalizePath(
           path.relative(
             clientBuildDirectory,
             path.join(entryNormalizedPath, entry.name),
@@ -1202,12 +1196,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     {
       name: "react-router",
       config: async (_viteUserConfig, _viteConfigEnv) => {
-        // Preload Vite's ESM build up-front as soon as we're in an async context
-        await preloadVite();
-
-        // Ensure sync import of Vite works after async preload
-        let vite = getVite();
-
         viteUserConfig = _viteUserConfig;
         viteCommand = _viteConfigEnv.command;
 
@@ -1216,10 +1204,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // using the provided default conditions arrays exported from Vite.
         // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
         let viteClientConditions: string[] = [
-          ...(vite.defaultClientConditions ?? []),
+          ...(Vite.defaultClientConditions ?? []),
         ];
 
-        logger = vite.createLogger(viteUserConfig.logLevel, {
+        logger = Vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
         });
 
@@ -1233,7 +1221,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             mode,
             rsc: false,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
-            logger: vite.createLogger("warn", { prefix: "[react-router]" }),
+            logger: Vite.createLogger("warn", { prefix: "[react-router]" }),
           });
         }
 
@@ -1396,8 +1384,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ? isSsrBundleEnvironmentName(name)
             : name === "ssr"
         ) {
-          const vite = getVite();
-
           return {
             resolve: {
               external:
@@ -1413,7 +1399,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               options.optimizeDeps?.noDiscovery === false
                 ? {
                     entries: [
-                      vite.normalizePath(ctx.entryServerFilePath),
+                      Vite.normalizePath(ctx.entryServerFilePath),
                       ...Object.values(ctx.reactRouterConfig.routes).map(
                         (route) =>
                           resolveRelativeRouteFilePath(
@@ -1453,9 +1439,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           );
         }
 
-        let vite = getVite();
-
-        let childCompilerConfigFile = await vite.loadConfigFromFile(
+        let childCompilerConfigFile = await Vite.loadConfigFromFile(
           {
             command: viteConfig.command,
             mode: viteConfig.mode,
@@ -1472,7 +1456,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           childCompilerConfigFile.config.plugins ?? [],
         );
 
-        viteChildCompiler = await vite.createServer({
+        viteChildCompiler = await Vite.createServer({
           ...viteUserConfig,
           // Ensure child compiler cannot overwrite the default cache directory
           cacheDir: "node_modules/.vite-child-compiler",
@@ -1536,9 +1520,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // stack trace so it maps back to the actual source code
           processRequestError: (error) => {
             if (error instanceof Error) {
-              let vite = getVite();
               if (
-                !vite.isRunnableDevEnvironment(viteDevServer.environments.ssr)
+                !Vite.isRunnableDevEnvironment(viteDevServer.environments.ssr)
               ) {
                 viteDevServer.ssrFixStacktrace(error);
               }
@@ -1612,9 +1595,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           if (!viteDevServer.config.server.middlewareMode) {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
-                let vite = getVite();
                 let ssrEnvironment = viteDevServer.environments.ssr;
-                if (!vite.isRunnableDevEnvironment(ssrEnvironment)) {
+                if (!Vite.isRunnableDevEnvironment(ssrEnvironment)) {
                   next();
                   return;
                 }
@@ -2181,8 +2163,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return;
         }
 
-        let vite = getVite();
-        let importerShort = vite.normalizePath(
+        let importerShort = Vite.normalizePath(
           path.relative(ctx.rootDirectory, importer),
         );
         if (isRoute(ctx.reactRouterConfig, importer)) {
@@ -2822,12 +2803,11 @@ function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
   file: string,
 ): RouteManifestEntry | undefined {
-  let vite = getVite();
-  let routePath = vite.normalizePath(
+  let routePath = Vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file),
   );
   let route = Object.values(pluginConfig.routes).find(
-    (r) => vite.normalizePath(r.file) === routePath,
+    (r) => Vite.normalizePath(r.file) === routePath,
   );
   return route;
 }
@@ -3485,10 +3465,8 @@ function mergeEnvironmentOptions(
   base: EnvironmentOptions,
   ...overrides: EnvironmentOptions[]
 ): EnvironmentOptions {
-  let vite = getVite();
-
   return overrides.reduce(
-    (merged, override) => vite.mergeConfig(merged, override, false),
+    (merged, override) => Vite.mergeConfig(merged, override, false),
     base,
   );
 }
@@ -3505,8 +3483,6 @@ export async function getEnvironmentOptionsResolvers(
   let { moduleSyncEnabled } = await import(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
   );
-  let vite = getVite();
-
   function getBaseOptions({
     viteUserConfig,
   }: {
@@ -3560,7 +3536,7 @@ export async function getEnvironmentOptionsResolvers(
     // to retain the default conditions, we need to manually merge them using
     // the provided default conditions arrays exported from Vite.
     // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
-    let maybeDefaultServerConditions = vite.defaultServerConditions || [];
+    let maybeDefaultServerConditions = Vite.defaultServerConditions || [];
 
     // There is no helpful export with the default external conditions (see
     // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,

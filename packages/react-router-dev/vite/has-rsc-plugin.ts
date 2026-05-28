@@ -1,6 +1,4 @@
-import type * as Vite from "vite";
-
-import { getVite, preloadVite } from "./vite";
+import * as Vite from "vite";
 
 export async function hasReactRouterRscPlugin({
   root,
@@ -13,9 +11,7 @@ export async function hasReactRouterRscPlugin({
     mode?: string;
   };
 }): Promise<boolean> {
-  await preloadVite();
-  const vite = getVite();
-  const viteConfig = await vite.resolveConfig(
+  const viteConfig = await Vite.resolveConfig(
     {
       configFile: config,
       logLevel,

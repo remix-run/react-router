@@ -16,7 +16,7 @@ import type { RoutesFormat } from "../config/format";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
-import { preloadVite, getVite } from "../vite/vite";
+import * as Vite from "vite";
 import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
 
 const nodeRequire = createRequire(import.meta.url);
@@ -290,9 +290,7 @@ export async function typegen(
   });
 
   if (flags.watch) {
-    await preloadVite();
-    const vite = getVite();
-    const logger = vite.createLogger("info", { prefix: "[react-router]" });
+    const logger = Vite.createLogger("info", { prefix: "[react-router]" });
 
     await Typegen.watch(root, {
       mode: flags.mode ?? "development",
