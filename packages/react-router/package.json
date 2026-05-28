@@ -81,15 +81,13 @@
     }
   },
   "dependencies": {
-    "cookie": "^1.1.1",
-    "set-cookie-parser": "^3.1.0"
+    "cookie-es": "^3.1.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.19.19",
-    "@types/set-cookie-parser": "^2.4.10",
     "jest-environment-jsdom": "^30.4.1",
     "premove": "^4.0.0",
     "react": "catalog:",

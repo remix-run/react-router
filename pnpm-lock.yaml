@@ -651,12 +651,9 @@ importers:
 
   packages/react-router:
     dependencies:
-      cookie:
-        specifier: ^1.1.1
-        version: 1.1.1
-      set-cookie-parser:
-        specifier: ^3.1.0
-        version: 3.1.0
+      cookie-es:
+        specifier: ^3.1.1
+        version: 3.1.1
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.9.1
@@ -670,9 +667,6 @@ importers:
       '@types/node':
         specifier: ^22.19.19
         version: 22.19.19
-      '@types/set-cookie-parser':
-        specifier: ^2.4.10
-        version: 2.4.10
       jest-environment-jsdom:
         specifier: ^30.4.1
         version: 30.4.1
@@ -5787,6 +5781,9 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  cookie-es@3.1.1:
+    resolution: {integrity: sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==}
 
   cookie-signature@1.0.6:
     resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
@@ -14135,6 +14132,8 @@ snapshots:
   convert-source-map@1.9.0: {}
 
   convert-source-map@2.0.0: {}
+
+  cookie-es@3.1.1: {}
 
   cookie-signature@1.0.6: {}
 

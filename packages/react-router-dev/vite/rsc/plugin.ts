@@ -254,8 +254,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                     "react-router/dom",
                     "react-router/internal/react-server-client",
                   ]),
-              "react-router > cookie",
-              "react-router > set-cookie-parser",
             ],
           },
           ...defineCompilerOptions({
