@@ -1,5 +1,12 @@
 # `@react-router/cloudflare`
 
+## v7.16.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+
 ## v7.15.1
 
 ### Patch Changes
