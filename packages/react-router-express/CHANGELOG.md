@@ -5,8 +5,8 @@
 ### Patch Changes
 
 - Ignore writes after Express responses close ([#15107](https://github.com/remix-run/react-router/pull/15107))
-
   - Avoid surfacing client disconnects as adapter errors when the response stream has already been destroyed or ended.
+
 - Updated dependencies:
   - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
   - [`@react-router/node@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.16.0)
