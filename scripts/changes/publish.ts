@@ -1,11 +1,6 @@
 /**
  * Publishes packages to npm and creates tags/releases for what was published.
  *
- * This script uses pnpm publish with --report-summary, reads the summary file,
- * and creates Git tags + GitHub releases. When the remix package is in prerelease
- * mode (has .changes/config.json with prereleaseChannel), it publishes in two phases:
- * all other packages as "latest", then remix with the "next" tag.
- *
  * This script is designed for CI use. For previewing releases, use `pnpm changes:preview`.
  *
  * Usage:
@@ -35,9 +30,7 @@ let rootDir = getRootDir();
 let args = process.argv.slice(2);
 let skipCiCheck = args.includes("--skip-ci-check");
 
-// TODO: Temporarily hardcoded to dryRun mode for initial testing
-// let dryRun = args.includes("--dry-run");
-let dryRun = true;
+let dryRun = args.includes("--dry-run");
 
 interface PublishedPackage {
   packageName: string;
