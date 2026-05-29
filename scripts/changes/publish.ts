@@ -236,7 +236,7 @@ async function main() {
   console.log(`\nCreating tags...`);
   let tagsCreated = 0;
   for (let pkg of packageInfo) {
-    let pkgJson = readJson(getPackageFile(pkg.dir, "package.json"));
+    let pkgJson = readJson(path.join(pkg.dir, "package.json"));
     let tag = getGitTag(pkgJson.name, pkgJson.version);
     if (tagExists(tag)) {
       console.log(`  ⊘ ${tag} (already exists)`);
@@ -263,7 +263,7 @@ async function main() {
   }> = [];
 
   for (let pkg of packageInfo) {
-    let pkgJson = readJson(getPackageFile(pkg.dir, "package.json"));
+    let pkgJson = readJson(path.join(pkg.dir, "package.json"));
     if (pkgJson.name !== "react-router") {
       continue;
     }
