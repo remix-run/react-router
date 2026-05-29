@@ -17,12 +17,14 @@ if [[ "${COMMAND}" == "start" ]]; then
     exit 1
   fi
 
+  set +e
   git ls-remote --exit-code --heads origin release
   EXIT_CODE=$?
   if [[ $EXIT_CODE == '0' ]]; then
     echo "Error: Remote branch 'release' already exists."
     exit 1
   fi
+  set -e
 
   git checkout main
   git pull
@@ -74,8 +76,22 @@ elif [[ "${COMMAND}" == "finish" ]]; then
 
   git push
 
+  git branch -d release-pr &> /dev/null || true
   git branch -d release
 
+  set +e
+  git ls-remote --exit-code --heads origin release-pr
+  EXIT_CODE=$?
+  if [[ $EXIT_CODE == '0' ]]; then
+    git push origin --delete release-pr
+  fi
+
+  git ls-remote --exit-code --heads origin release
+  EXIT_CODE=$?
+  if [[ $EXIT_CODE == '0' ]]; then
+    git push origin --delete release
+  fi
+  set -e
 fi
 
 set +e

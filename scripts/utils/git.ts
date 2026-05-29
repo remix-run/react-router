@@ -57,6 +57,7 @@ export function findVersionIntroductionCommit(
     }
 
     let parentLine = execGit(["rev-list", "--parents", "-n", "1", commit]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let [_commit, ...parents] = parentLine
       .split(" ")
       .filter((line) => line.length > 0);
@@ -128,4 +129,47 @@ export function getRemoteTagTarget(tag: string): string | null {
  */
 export function tagExists(tag: string): boolean {
   return getLocalTagTarget(tag) !== null || getRemoteTagTarget(tag) !== null;
+}
+
+/**
+ * Gets the git SHA of the commit that introduced a file (the add commit),
+ * so subsequent edits don't steal credit from the PR that introduced it.
+ * Falls back to HEAD if the file has no git history (e.g., untracked or newly staged).
+ */
+export function getFileSha(filePath: string): string {
+  let normalizedPath = filePath.replaceAll("\\", "/");
+  try {
+    let sha = execGit([
+      "log",
+      "-1",
+      "--diff-filter=A",
+      "--format=%H",
+      "--",
+      normalizedPath,
+    ]);
+    if (sha) return sha;
+  } catch {}
+  return execGit(["rev-parse", "HEAD"]);
+}
+
+/**
+ * Gets the subject line (first line) of a commit message for a given SHA.
+ */
+export function getCommitSubject(sha: string): string {
+  return execGit(["log", "-1", "--format=%s", sha]);
+}
+
+/**
+ * Parses a GitHub PR number from a commit subject line.
+ * Supports squash merge format "description (#123)" and
+ * merge commit format "Merge pull request #123 from ...".
+ */
+export function parsePrNumber(subject: string): number | null {
+  let squashMatch = subject.match(/\(#(\d+)\)\s*$/);
+  if (squashMatch) return parseInt(squashMatch[1], 10);
+
+  let mergeMatch = subject.match(/^Merge pull request #(\d+)/i);
+  if (mergeMatch) return parseInt(mergeMatch[1], 10);
+
+  return null;
 }

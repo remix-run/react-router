@@ -17,10 +17,14 @@
  *   node scripts/changes/migrate-changesets-files.ts [--dry-run]
  */
 
+import * as cp from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { packageNameToDirectoryName } from "../utils/packages.ts";
+import {
+  GITHUB_REPO_URL,
+  packageNameToDirectoryName,
+} from "../utils/packages.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -72,6 +76,34 @@ function parseChangeset(content: string): ParsedChangeset | null {
   }
 
   return { packages, description };
+}
+
+/**
+ * Returns a markdown link to the PR or commit that introduced the given file.
+ * Prefers a PR link like `([#123](...))`, falls back to a short SHA link.
+ */
+function getSourceLink(filePath: string): string {
+  let result = cp.spawnSync(
+    "git",
+    ["log", "--format=%H %s", "-1", "--", filePath],
+    { encoding: "utf-8" },
+  );
+
+  let line = result.stdout.trim();
+  if (!line) return "";
+
+  let spaceIndex = line.indexOf(" ");
+  let sha = line.slice(0, spaceIndex);
+  let subject = line.slice(spaceIndex + 1);
+
+  let prMatch = subject.match(/\(#(\d+)\)$/);
+  if (prMatch) {
+    let pr = prMatch[1];
+    return ` ([#${pr}](${GITHUB_REPO_URL}/pull/${pr}))`;
+  }
+
+  let shortSha = sha.slice(0, 8);
+  return ` ([${shortSha}](${GITHUB_REPO_URL}/commit/${sha}))`;
 }
 
 function slugify(name: string): string {
@@ -185,7 +217,11 @@ async function main() {
       console.log(`  ✅ ${packageName} → ${destRelative}`);
 
       if (!dryRun) {
-        fs.writeFileSync(destPath, parsed.description + "\n", "utf-8");
+        let link = getSourceLink(filePath);
+        let lines = parsed.description.trim().split("\n");
+        lines[0] += link;
+        let content = lines.join("\n") + "\n";
+        fs.writeFileSync(destPath, content, "utf-8");
       }
 
       totalCreated++;
