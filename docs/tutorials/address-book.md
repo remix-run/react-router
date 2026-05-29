@@ -1939,7 +1939,7 @@ Now the star _immediately_ changes to the new state when you click it.
 That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do, so make sure to check out all the [APIs][react-router-apis] 😀
 
 [http-localhost-5173]: http://localhost:5173
-[root-route]: ../explanation/special-files#roottsx
+[root-route]: ../api/framework-conventions/root.tsx
 [error-boundaries]: ../how-to/error-boundary
 [links]: ../start/framework/route-module#links
 [outlet-component]: https://api.reactrouter.com/v7/functions/react-router.Outlet
@@ -1949,7 +1949,7 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [client-loader]: ../start/framework/route-module#clientloader
 [spa]: ../how-to/spa
 [type-safety]: ../explanation/type-safety
-[react-router-config]: ../explanation/special-files#react-routerconfigts
+[react-router-config]: ../api/framework-conventions/react-router.config.ts
 [rendering-strategies]: ../start/framework/rendering
 [index-route]: ../start/framework/routing#index-routes
 [layout-route]: ../start/framework/routing#layout-routes

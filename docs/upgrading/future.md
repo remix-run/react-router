@@ -61,7 +61,7 @@ const router = createBrowserRouter(routes, {
 If you're using the `context` parameter in `loader` and `action` functions, you may need to update your code:
 
 - In Framework mode, if you're using `react-router-serve`, you should not need to make any updates. Otherwise, this only applies if you have a custom server with a `getLoadContext` function. Please see the docs on the middleware [`getLoadContext` changes](../how-to/middleware#changes-to-getloadcontextapploadcontext) and the instructions to [migrate to the new API](../how-to/middleware#migration-from-apploadcontext).
-- In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#2-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
+- In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#1-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
 
 ## `future.v8_splitRouteModules`
 
