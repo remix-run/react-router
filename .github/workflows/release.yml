@@ -1,10 +1,18 @@
+# We use this singular file for all of our releases because we can only specify
+# a singular GitHub workflow file in npm's Trusted Publishing configuration.
+# See https://docs.npmjs.com/trusted-publishers for more info.
+#
+# Specific jobs only run on the proper trigger:
+#
+# - Change file driven stable releases (push to release/hotfix branches)
+# - Experimental releases (from a workflow_dispatch trigger)
+
 name: 🚢 Release/Publish
 
 on:
   push:
     branches:
-      - "release"
-      - "hotfix"
+      - "release-v6"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,7 +27,7 @@ jobs:
       has_change_files: ${{ steps.check.outputs.has_change_files }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check for change files
         id: check
@@ -45,18 +53,19 @@ jobs:
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24 # Needed to run typescript scripts directly
-          cache: pnpm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -79,13 +88,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v6
         with:
           node-version: 24 # Needed for npm@11 for Trusted Publishing
-          cache: "pnpm"
+          package-manager-cache: false
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
