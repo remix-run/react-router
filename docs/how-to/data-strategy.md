@@ -184,9 +184,9 @@ return results;
 
 <docs-info>This is an unlikely use-case now that React Router has built-in middleware, but if you wish to use a custom middleware you can do so with a `dataStrategy`.</docs-info>
 
-Let's define a middleware on each route via [`handle`](../../start/data/route-object#handle)
+Let's define a middleware on each route via [`handle`](../start/data/route-object#handle)
 and call middleware sequentially first, then call all
-[`loader`](../../start/data/route-object#loader)s in parallel - providing
+[`loader`](../start/data/route-object#loader)s in parallel - providing
 any data made available via the middleware:
 
 ```ts
@@ -258,7 +258,7 @@ let router = createBrowserRouter(routes, {
 
 ### Custom Handler
 
-It's also possible you don't even want to define a [`loader`](../../start/daoute-object#loader)
+It's also possible you don't even want to define a [`loader`](../start/data/route-object#loader)
 implementation at the route level. Maybe you want to just determine the
 routes and issue a single GraphQL request for all of your data. You can do
 that by setting your `route.loader=true` so it qualifies as "having a
