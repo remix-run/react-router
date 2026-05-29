@@ -1,5 +1,12 @@
 # `react-router-native`
 
+## v6.30.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@6.30.4`](https://github.com/remix-run/react-router/releases/tag/react-router@6.30.4)
+
 ## 6.30.3
 
 ### Patch Changes
