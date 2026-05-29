@@ -32,7 +32,7 @@ When you opt-in to an unstable flag you are becoming a contributor to the projec
 
 Because unstable flags are experimental and not guaranteed to stick around, we ship them in SemVer patch releases because they're not new _stable_/_documented_ APIs. When an unstable flag stabilizes into a Future Flag, that will be released in a SemVer minor release and will be properly documented and added to the [Future Flags Guide](../upgrading/future).
 
-To learn about current unstable flags, keep an eye on the [CHANGELOG](../start/changelog).
+To learn about current unstable flags, keep an eye on the [CHANGELOG](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md).
 
 ### Example New Feature Flow
 
