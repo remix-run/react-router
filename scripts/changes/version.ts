@@ -79,7 +79,6 @@ for (let release of releases) {
   );
 
   // Update package.json
-  // FIXME: NEed to update the router version separate from RR version since it's not 6.x
   updatePackageJson(release.packageDirName, release.nextVersion);
 
   // Update CHANGELOG.md

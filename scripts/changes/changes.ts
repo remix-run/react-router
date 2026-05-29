@@ -16,6 +16,8 @@ import { getCommitSubject, getFileSha, parsePrNumber } from "../utils/git.ts";
 const bumpTypes = ["major", "minor", "patch", "unstable"] as const;
 type BumpType = (typeof bumpTypes)[number];
 
+const ROUTER_PACKAGE_NAME = "@remix-run/router";
+
 /**
  * Calculates the next version based on current version, bump type, and changes config.
  */
@@ -33,6 +35,21 @@ function getNextVersion(currentVersion: string, bumpType: BumpType): string {
     );
   }
   return nextVersion;
+}
+
+/**
+ * Calculates the highest bump from a list of changes.
+ *
+ * Packages without direct changes still release as patches when the repo has
+ * changes, and `unstable` changes also publish on a patch version.
+ */
+function getHighestBump(changes: ChangeFile[]): BumpType {
+  let bumpTypes = new Set(changes.map((change) => change.bump));
+  return bumpTypes.has("major")
+    ? "major"
+    : bumpTypes.has("minor")
+      ? "minor"
+      : "patch";
 }
 
 interface ChangeFile {
@@ -268,12 +285,33 @@ export function parseAllChangeFiles(): ParsedChanges {
     return { valid: true, releases: [] };
   }
 
-  let bump: BumpType = allChanges.has("major")
-    ? "major"
-    : allChanges.has("minor")
-      ? "minor"
-      : "patch";
-  let nextVersion = getNextVersion(parsedPackages[0].currentVersion, bump);
+  // All packages except @remix-run/router bump in unison based on the highest
+  // change type across that group. @remix-run/router is the sole exception and
+  // bumps based only on its own change files.
+  let nonRouterBump = getHighestBump(
+    parsedPackages
+      .filter((pkg) => pkg.packageName !== ROUTER_PACKAGE_NAME)
+      .flatMap((pkg) => pkg.changes),
+  );
+
+  let packageBumps = new Map<string, BumpType>();
+  let packageNextVersions = new Map<string, string>();
+  for (let pkg of parsedPackages) {
+    if (pkg.packageName === ROUTER_PACKAGE_NAME && pkg.changes.length === 0) {
+      continue;
+    }
+
+    let bump =
+      pkg.packageName === ROUTER_PACKAGE_NAME
+        ? getHighestBump(pkg.changes)
+        : nonRouterBump;
+
+    packageBumps.set(pkg.packageName, bump);
+    packageNextVersions.set(
+      pkg.packageName,
+      getNextVersion(pkg.currentVersion, bump),
+    );
+  }
 
   // Find packages with direct changes
   let directlyChangedPackages = new Set<string>();
@@ -283,25 +321,40 @@ export function parseAllChangeFiles(): ParsedChanges {
     }
   }
 
-  // All packages that will be released
+  // All non-router packages release in lockstep. @remix-run/router only
+  // releases when it has direct changes.
   let allReleasingPackages = new Set<string>(
-    parsedPackages.map((p) => p.packageName),
+    parsedPackages
+      .filter(
+        (pkg) =>
+          pkg.packageName !== ROUTER_PACKAGE_NAME || pkg.changes.length > 0,
+      )
+      .map((p) => p.packageName),
   );
 
   // Now build the final releases with dependency bumps
   let releases: PackageRelease[] = [];
 
   for (let pkg of parsedPackages) {
+    if (!allReleasingPackages.has(pkg.packageName)) {
+      continue;
+    }
+
     // Compute dependency bumps: which of this package's direct dependencies are being released?
     let dependencyBumps: DependencyBump[] = [];
     let deps = getPackageDependencies(pkg.packageName);
 
     for (let depName of deps) {
       if (allReleasingPackages.has(depName)) {
+        let depNextVersion = packageNextVersions.get(depName);
+        if (depNextVersion == null) {
+          throw new Error(`Missing next version for dependency ${depName}`);
+        }
+
         dependencyBumps.push({
           packageName: depName,
-          version: nextVersion,
-          releaseUrl: getGitHubReleaseUrl(depName, nextVersion),
+          version: depNextVersion,
+          releaseUrl: getGitHubReleaseUrl(depName, depNextVersion),
         });
       }
     }
@@ -317,6 +370,12 @@ export function parseAllChangeFiles(): ParsedChanges {
         bump: "patch",
         content: "_No changes_",
       });
+    }
+
+    let nextVersion = packageNextVersions.get(pkg.packageName);
+    let bump = packageBumps.get(pkg.packageName);
+    if (nextVersion == null || bump == null) {
+      throw new Error(`Missing release info for package ${pkg.packageName}`);
     }
 
     releases.push({

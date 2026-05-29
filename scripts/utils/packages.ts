@@ -99,7 +99,7 @@ interface PackageInfo {
   name: string;
   version: string;
   dirName: string;
-  dependencies: string[]; // Only @react-router/* dependencies
+  dependencies: string[]; // Only internal workspace dependencies
 }
 
 /**
@@ -127,7 +127,7 @@ let getPackageInfoMap = (() => {
           let name = packageJson.name as string;
           let version = packageJson.version as string;
 
-          // Collect @react-router/* dependencies from the dependencies field
+          // Collect internal workspace dependencies from the dependencies field
           let dependencies: string[] = [];
           let deps = {
             ...packageJson.dependencies,
@@ -137,7 +137,8 @@ let getPackageInfoMap = (() => {
             for (let depName of Object.keys(deps)) {
               if (
                 depName.startsWith("@react-router/") ||
-                depName === "react-router"
+                depName === "react-router" ||
+                depName === "@remix-run/router"
               ) {
                 dependencies.push(depName);
               }
@@ -156,7 +157,7 @@ let getPackageInfoMap = (() => {
 })();
 
 /**
- * Gets the @react-router/* dependencies for a package.
+ * Gets the internal workspace dependencies for a package.
  */
 export function getPackageDependencies(packageName: string): string[] {
   let info = getPackageInfoMap().get(packageName);
