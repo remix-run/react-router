@@ -135,7 +135,7 @@ async function main() {
   console.log("Publishing packages to npm...\n");
 
   // Multi-phase publish to handle differing tags
-  let publishCommand = "pnpm publish --access public";
+  let publishCommand = "pnpm publish --access public --no-git-checks";
   let packageInfo = [
     {
       dir: "./packages/react-router",
@@ -165,11 +165,10 @@ async function main() {
   if (dryRun) {
     console.log("Would run:");
     for (let pkg of packageInfo) {
-      console.log(`  $ cd ${pkg.dir}`);
+      console.log(`  from cwd: ${pkg.dir}`);
       console.log(`  $ ${publishCommand} --tag ${pkg.tag}`);
-      console.log(`  $ cd ../..`);
+      console.log();
     }
-    console.log(`  $ ${publishCommand}`);
     console.log();
 
     console.log("Checking npm for unpublished versions...\n");
@@ -272,7 +271,8 @@ async function main() {
     let result = await createRelease(
       pkgJson.name,
       pkgJson.version,
-      getGithubReleaseBody(pkgJson.version)
+      getGithubReleaseBody(pkgJson.version),
+      false // Don't mark as latest
     );
     if (result.status === "created") {
       console.log(`  ✓ ${pkgJson.name} v${pkgJson.version}`);

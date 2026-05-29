@@ -52,6 +52,7 @@ export async function createRelease(
   packageName: string,
   version: string,
   body: string,
+  makeLatest = true
 ): Promise<CreateReleaseResult> {
   let tagName = getGitTag(packageName, version);
   let releaseName = `v${version}`;
@@ -71,6 +72,7 @@ export async function createRelease(
       tag_name: tagName,
       name: releaseName,
       body,
+      make_latest: makeLatest ? "true" : "false",
     });
 
     return { status: "created", url: response.data.html_url };
@@ -84,7 +86,7 @@ export async function createRelease(
  * List open PRs
  */
 export async function listOpenPrs(
-  options: { createdAfter?: Date; base?: string; author?: string } = {},
+  options: { createdAfter?: Date; base?: string; author?: string } = {}
 ) {
   let response = await request("GET /repos/{owner}/{repo}/pulls", {
     ...requestOptions(),
@@ -99,7 +101,7 @@ export async function listOpenPrs(
     (pr) =>
       (!options.createdAfter ||
         new Date(pr.created_at) >= options.createdAfter) &&
-      (!options.author || pr.user?.login === options.author),
+      (!options.author || pr.user?.login === options.author)
   );
 }
 
@@ -142,7 +144,7 @@ export async function createPr(options: {
  */
 export async function updatePr(
   prNumber: number,
-  options: { title?: string; body?: string },
+  options: { title?: string; body?: string }
 ) {
   await request("PATCH /repos/{owner}/{repo}/pulls/{pull_number}", {
     ...requestOptions(),
@@ -179,7 +181,7 @@ export async function getPrComments(prNumber: number) {
     {
       ...requestOptions(),
       issue_number: prNumber,
-    },
+    }
   );
 
   return response.data;
@@ -195,7 +197,7 @@ export async function createPrComment(prNumber: number, body: string) {
       ...requestOptions(),
       issue_number: prNumber,
       body,
-    },
+    }
   );
 
   return response.data;
@@ -222,7 +224,7 @@ export async function getPrFiles(prNumber: number) {
       ...requestOptions(),
       pull_number: prNumber,
       per_page: 100,
-    },
+    }
   );
 
   return response.data;
@@ -248,6 +250,6 @@ export async function removePrLabel(prNumber: number, label: string) {
       ...requestOptions(),
       issue_number: prNumber,
       name: label,
-    },
+    }
   );
 }
