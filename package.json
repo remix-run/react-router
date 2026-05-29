@@ -16,12 +16,7 @@
     "size": "filesize",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
-    "watch": "rollup -c -w",
-    "__disabled_release": "./scripts/changesets-release.sh",
-    "__disabled_changeset": "changeset",
-    "__disabled_changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
-    "__disabled_publish": "node scripts/publish.js",
-    "__disabled_version": "node ./scripts/version"
+    "watch": "rollup -c -w"
   },
   "jest": {
     "projects": [

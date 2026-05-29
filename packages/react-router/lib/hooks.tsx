@@ -298,7 +298,7 @@ export function useParams<
 > {
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];
-  return routeMatch ? (routeMatch.params as any) : ({} as any);
+  return routeMatch ? (routeMatch.params as any) : {};
 }
 
 /**
