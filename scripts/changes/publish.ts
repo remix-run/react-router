@@ -18,7 +18,6 @@
  *                    what the GitHub releases would look like.
  */
 import * as cp from "node:child_process";
-import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { tagExists } from "../utils/git.ts";
@@ -44,13 +43,6 @@ interface PublishedPackage {
   packageName: string;
   version: string;
   tag: string;
-}
-
-interface PublishSummary {
-  publishedPackages: Array<{
-    name: string;
-    version: string;
-  }>;
 }
 
 /**
@@ -126,7 +118,7 @@ async function getUnpublishedPackages(): Promise<PublishedPackage[]> {
 }
 
 function getGithubReleaseBody(version: string) {
-  return `See the changelog for release notes: https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v${version.replace(
+  return `See the changelog for release notes: https://github.com/remix-run/react-router/blob/v6/CHANGELOG.md#v${version.replace(
     /\./g,
     ""
   )}`;
