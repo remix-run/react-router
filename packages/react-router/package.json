@@ -101,6 +101,8 @@
         "default": "./dist/development/index.js"
       }
     },
+    "./docs": "./dist/docs/index.md",
+    "./docs/*": "./dist/docs/*",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -110,10 +112,12 @@
   },
   "wireit": {
     "build": {
-      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
+      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts && node ./scripts/copy-docs.mjs",
       "files": [
         "../../pnpm-workspace.yaml",
+        "../../docs/**",
         "lib/**",
+        "scripts/copy-docs.mjs",
         "*.ts",
         "tsconfig.json",
         "package.json"
