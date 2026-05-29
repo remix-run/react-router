@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## v1.23.3
+
+### Patch Changes
+
+- Lift `decodePath` call out of hot path during route matching ([#15119](https://github.com/remix-run/react-router/pull/15119))
+- Normalize double slashes in redirect paths ([#15118](https://github.com/remix-run/react-router/pull/15118))
+
 ## 1.23.2
 
 ### Patch Changes
