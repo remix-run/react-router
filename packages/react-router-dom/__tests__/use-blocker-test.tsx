@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
 import type { Blocker, RouteObject } from "../index";
 import {
   createMemoryRouter,
@@ -51,7 +50,7 @@ describe("navigation blocking with useBlocker", () => {
       },
     ];
     router = createMemoryRouter(routes, { initialEntries });
-    act(() => {
+    React.act(() => {
       root = ReactDOM.createRoot(node);
       root.render(<RouterProvider router={router} />);
     });
@@ -60,7 +59,7 @@ describe("navigation blocking with useBlocker", () => {
       proceed: undefined,
       reset: undefined,
     });
-    act(() => {
+    React.act(() => {
       root.unmount();
     });
   });
@@ -97,12 +96,12 @@ describe("navigation blocking with useBlocker", () => {
       }
     );
 
-    act(() => {
+    React.act(() => {
       root = ReactDOM.createRoot(node);
       root.render(<RouterProvider router={router} />);
     });
 
-    act(() => click(node.querySelector("a[href='/base/about']")));
+    React.act(() => click(node.querySelector("a[href='/base/about']")));
 
     expect(router.state.location.pathname).toBe("/base/about");
     expect(shouldBlock).toHaveBeenCalledWith({
@@ -111,7 +110,7 @@ describe("navigation blocking with useBlocker", () => {
       historyAction: "PUSH",
     });
 
-    act(() => root.unmount());
+    React.act(() => root.unmount());
   });
 
   it("handles unstable blocker function identities", async () => {
@@ -145,17 +144,17 @@ describe("navigation blocking with useBlocker", () => {
       },
     ]);
 
-    act(() => {
+    React.act(() => {
       root = ReactDOM.createRoot(node);
       root.render(<RouterProvider router={router} />);
     });
 
     expect(node.querySelector("h1")?.textContent).toBe("Home");
 
-    act(() => click(node.querySelector("a[href='/about']")));
+    React.act(() => click(node.querySelector("a[href='/about']")));
     expect(node.querySelector("h1")?.textContent).toBe("About");
 
-    act(() => root.unmount());
+    React.act(() => root.unmount());
   });
 
   it("handles reused blocker in a layout route", async () => {
@@ -192,7 +191,7 @@ describe("navigation blocking with useBlocker", () => {
       },
     ]);
 
-    act(() => {
+    React.act(() => {
       root = ReactDOM.createRoot(node);
       root.render(<RouterProvider router={router} />);
     });
@@ -203,30 +202,30 @@ describe("navigation blocking with useBlocker", () => {
     expect(node.querySelector("button")).toBeNull();
 
     // Blocked navigation to /one
-    act(() => click(node.querySelector("a[href='/one']")));
+    React.act(() => click(node.querySelector("a[href='/one']")));
     expect(node.querySelector("h1")?.textContent).toBe("Home");
     expect(node.querySelector("p")?.textContent).toBe("blocked");
     expect(node.querySelector("button")?.textContent).toBe("Proceed");
 
     // Proceed to /one
-    act(() => click(node.querySelector("button")));
+    React.act(() => click(node.querySelector("button")));
     expect(node.querySelector("h1")?.textContent).toBe("One");
     expect(node.querySelector("p")?.textContent).toBe("unblocked");
     expect(node.querySelector("button")).toBeNull();
 
     // Blocked navigation to /two
-    act(() => click(node.querySelector("a[href='/two']")));
+    React.act(() => click(node.querySelector("a[href='/two']")));
     expect(node.querySelector("h1")?.textContent).toBe("One");
     expect(node.querySelector("p")?.textContent).toBe("blocked");
     expect(node.querySelector("button")?.textContent).toBe("Proceed");
 
     // Proceed to /two
-    act(() => click(node.querySelector("button")));
+    React.act(() => click(node.querySelector("button")));
     expect(node.querySelector("h1")?.textContent).toBe("Two");
     expect(node.querySelector("p")?.textContent).toBe("unblocked");
     expect(node.querySelector("button")).toBeNull();
 
-    act(() => root.unmount());
+    React.act(() => root.unmount());
   });
 
   describe("on <Link> navigation", () => {
@@ -266,18 +265,18 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("navigates", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -286,7 +285,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
         expect(blocker).toEqual({
@@ -298,7 +297,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after navigation completes", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -347,18 +346,18 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("does not navigate", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -367,7 +366,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
         expect(blocker).toEqual({
@@ -379,7 +378,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets a 'blocked' blocker after navigation promise resolves", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -438,21 +437,21 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='proceed']"));
         });
         expect(blocker).toEqual({
@@ -464,10 +463,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -480,10 +479,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("navigates after proceeding navigation completes", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -492,10 +491,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='reset']"));
         });
         expect(blocker).toEqual({
@@ -507,10 +506,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("stays at current location after resetting", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='reset']"));
           // wait for '/about' loader so we catch failure if navigation proceeds
           await sleep(LOADER_LATENCY_MS);
@@ -562,18 +561,18 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("navigates", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -582,7 +581,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
         expect(blocker).toEqual({
@@ -594,7 +593,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after navigation completes", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -647,18 +646,18 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("does not navigate", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -667,7 +666,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
         expect(blocker).toEqual({
@@ -679,7 +678,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets a 'blocked' blocker after navigation promise resolves", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("a[href='/about']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -742,21 +741,21 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='proceed']"));
         });
         expect(blocker).toEqual({
@@ -768,10 +767,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -784,10 +783,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("navigates after proceeding navigation completes", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -796,10 +795,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='reset']"));
         });
         expect(blocker).toEqual({
@@ -811,10 +810,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("stays at current location after resetting", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("a[href='/about']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='reset']"));
           // wait for '/about' loader so we catch failure if navigation proceeds
           await sleep(LOADER_LATENCY_MS);
@@ -874,18 +873,18 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("navigates", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='back']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -894,7 +893,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
         expect(blocker).toEqual({
@@ -906,7 +905,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after navigation completes", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='back']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -967,18 +966,18 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("does not navigate", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='back']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -987,7 +986,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
         expect(blocker).toEqual({
@@ -999,7 +998,7 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets a 'blocked' blocker after navigation promise resolves", async () => {
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='back']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -1070,22 +1069,22 @@ describe("navigation blocking with useBlocker", () => {
             initialIndex,
           }
         );
-        act(() => {
+        React.act(() => {
           root = ReactDOM.createRoot(node);
           root.render(<RouterProvider router={router} />);
         });
       });
 
       afterEach(() => {
-        act(() => root.unmount());
+        React.act(() => root.unmount());
       });
 
       it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
         expect(node.innerHTML).toContain("<h1>Contact</h1>");
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           expect([...router.state.blockers.values()][0]).toEqual({
             state: "proceeding",
@@ -1105,10 +1104,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -1121,10 +1120,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("navigates after proceeding navigation completes", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='proceed']"));
           await sleep(LOADER_LATENCY_MS);
         });
@@ -1133,10 +1132,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='reset']"));
         });
         expect(blocker).toEqual({
@@ -1148,10 +1147,10 @@ describe("navigation blocking with useBlocker", () => {
       });
 
       it("stays at current location after resetting", async () => {
-        act(() => {
+        React.act(() => {
           click(node.querySelector("[data-action='back']"));
         });
-        await act(async () => {
+        await React.act(async () => {
           click(node.querySelector("[data-action='reset']"));
           // wait for '/about' loader so we catch failure if navigation proceeds
           await sleep(LOADER_LATENCY_MS);

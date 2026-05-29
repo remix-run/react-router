@@ -214,25 +214,6 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 </details>
 
-<!-- To add a new release, copy from this template:
-
-## v6.X.Y
-
-Date: YYYY-MM-DD
-
-### What's Changed
-
-#### Big New Feature 1
-
-#### Big New Feature 2
-
-### Minor Changes
-
-### Patch Changes
-
-**Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
--->
-
 ## v6.30.3
 
 Date: 2026-01-07

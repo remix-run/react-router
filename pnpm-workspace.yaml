@@ -4,3 +4,4 @@ packages:
   - "packages/react-router-dom-v5-compat"
   - "packages/react-router-native"
   - "packages/router"
+  - "scripts"

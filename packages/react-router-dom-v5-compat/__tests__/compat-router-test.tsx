@@ -3,7 +3,6 @@
  */
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import { act } from "react-dom/test-utils";
 import { CompatRouter, Routes } from "../index";
 
 // Have to mock react-router-dom to have a comparable API to v5, otherwise it will
@@ -16,7 +15,7 @@ describe("CompatRouter", () => {
   it("should not warn about useLayoutEffect when server side rendering", () => {
     const consoleErrorSpy = jest.spyOn(console, "error");
 
-    act(() => {
+    React.act(() => {
       ReactDOMServer.renderToStaticMarkup(
         <CompatRouter>
           <Routes />
