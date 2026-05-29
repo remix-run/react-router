@@ -175,7 +175,7 @@ export function generatePrBody(releases: PackageRelease[]): string {
 function generateHeader(): string {
   return (
     "This PR is managed by the " +
-    "[`release`](https://github.com/remix-run/react-router/blob/main/.github/workflows/release.yml) " +
+    "[`release`](https://github.com/remix-run/react-router/blob/v6/.github/workflows/release.yml) " +
     "workflow. Do not edit it manually."
   );
 }
