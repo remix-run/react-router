@@ -545,6 +545,7 @@ export function matchRoutesImpl<
   rankRouteBranches(branches);
 
   let matches = null;
+  let decoded = decodePath(pathname);
   for (let i = 0; matches == null && i < branches.length; ++i) {
     // Incoming pathnames are generally encoded from either window.location
     // or from router.navigate, but we want to match against the unencoded
@@ -552,7 +553,6 @@ export function matchRoutesImpl<
     // encoded here but there also shouldn't be anything to decode so this
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
-    let decoded = decodePath(pathname);
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
       decoded,
