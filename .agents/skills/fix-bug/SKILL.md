@@ -1,6 +1,6 @@
 ---
 name: fix-bug
-description: Fix a reported bug in React Router from a GitHub issue. Use when the user provides a GitHub issue URL and asks to fix a bug, investigate an issue, or reproduce a problem. Handles the full workflow: fetching the issue, finding the reproduction, writing a failing test, and implementing the fix.
+description: "Fix a reported bug in React Router from a GitHub issue. Use when the user provides a GitHub issue URL and asks to fix a bug, investigate an issue, or reproduce a problem. Handles the full workflow: fetching the issue, finding the reproduction, writing a failing test, and implementing the fix."
 disable-model-invocation: true
 ---
 
