@@ -38,6 +38,12 @@ type OxcCompilerOptions = {
 };
 
 type RolldownJsxOptions = "react-jsx";
+type RolldownOptimizeDepsOptions = {
+  transform: {
+    jsx: RolldownJsxOptions;
+  };
+  plugins?: unknown[];
+};
 
 type OptimizeDepsESBuildOptions = NonNullable<
   DepOptimizationConfig["esbuildOptions"]
@@ -54,14 +60,10 @@ export function defineCompilerOptions(options: {
 }
 
 export function defineOptimizeDepsCompilerOptions(options: {
-  rolldown: {
-    transform: {
-      jsx: RolldownJsxOptions;
-    };
-  };
+  rolldown: RolldownOptimizeDepsOptions;
   esbuild: OptimizeDepsESBuildOptions;
 }):
-  | { rolldownOptions: { transform: { jsx: RolldownJsxOptions } } }
+  | { rolldownOptions: RolldownOptimizeDepsOptions }
   | { esbuildOptions: OptimizeDepsESBuildOptions } {
   let vite = getVite();
   return parseInt(vite.version.split(".")[0], 10) >= 8
