@@ -1150,7 +1150,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
     } else {
       if (toPathname.includes("//")) {
         let oldPathname = toPathname;
-        toPathname = toPathname.replace(/\/\/+/g, "/");
+        toPathname = removeDoubleSlashes(toPathname);
         warning(
           false,
           `Pathnames cannot have embedded double slashes - normalizing ` +
@@ -1353,11 +1353,14 @@ export function getToPathname(to: To): string | undefined {
     : to.pathname;
 }
 
+export const removeDoubleSlashes = (path: string): string =>
+  path.replace(/\/\/+/g, "/");
+
 /**
  * @private
  */
 export const joinPaths = (paths: string[]): string =>
-  paths.join("/").replace(/\/\/+/g, "/");
+  removeDoubleSlashes(paths.join("/"));
 
 /**
  * @private
