@@ -15,11 +15,20 @@ export function getRootDir(): string {
   return process.cwd();
 }
 
-export function logAndExec(args: string[], captureOutput?: boolean): string;
-export function logAndExec(command: string, captureOutput?: boolean): string;
+export function logAndExec(
+  args: string[],
+  captureOutput?: boolean,
+  cwd?: string
+): string;
+export function logAndExec(
+  command: string,
+  captureOutput?: boolean,
+  cwd?: string
+): string;
 export function logAndExec(
   commandOrArgs: string | string[],
   captureOutput = false,
+  cwd?: string
 ): string {
   let command: string;
   if (typeof commandOrArgs === "string") {
@@ -31,16 +40,18 @@ export function logAndExec(
       ...commandOrArgs
         .slice(1)
         .map((arg) =>
-          arg.startsWith("-") ? arg : `'${arg.replaceAll("'", "'\\''")}'`,
+          arg.startsWith("-") ? arg : `'${arg.replaceAll("'", "'\\''")}'`
         ),
     ].join(" ");
   }
 
   console.log(`$ ${command}`);
   if (captureOutput) {
-    return cp.execSync(command, { stdio: "pipe", encoding: "utf-8" }).trim();
+    return cp
+      .execSync(command, { stdio: "pipe", encoding: "utf-8", cwd })
+      .trim();
   } else {
-    cp.execSync(command, { stdio: "inherit" });
+    cp.execSync(command, { stdio: "inherit", cwd });
     return "";
   }
 }

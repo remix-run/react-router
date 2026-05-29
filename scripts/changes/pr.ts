@@ -20,13 +20,11 @@ let args = process.argv.slice(2);
 let preview = args.includes("--preview");
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
-if (!preview && !["release", "hotfix"].includes(baseBranch)) {
-  throw new Error(
-    "Error: script must be run from the hotfix or release branch",
-  );
+if (!preview && baseBranch !== "release-v6") {
+  throw new Error("Error: script must be run from the release-v6 branch");
 }
 
-let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
+let prBranch = "release-v6-pr";
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
 let maxBodyLength = 60_000;
@@ -58,7 +56,7 @@ async function main() {
         console.log(`\nClosing stale PR #${existingPr.number}...`);
         await closePr(
           existingPr.number,
-          "Closing automatically — all change files have been removed or released.",
+          "Closing automatically — all change files have been removed or released."
         );
         console.log(`✅ Closed PR: ${existingPr.html_url}`);
       }
@@ -68,18 +66,20 @@ async function main() {
   }
 
   console.log(
-    `\nFound ${releases.length} package${releases.length === 1 ? "" : "s"} with changes:`,
+    `\nFound ${releases.length} package${
+      releases.length === 1 ? "" : "s"
+    } with changes:`
   );
   for (let release of releases) {
     console.log(
-      `  • ${release.packageName}: ${release.currentVersion} → ${release.nextVersion}`,
+      `  • ${release.packageName}: ${release.currentVersion} → ${release.nextVersion}`
     );
   }
   console.log();
 
   // Generate content
   let commitMessage = generateCommitMessage(releases);
-  let prTitle = `${baseBranch === "hotfix" ? "Hotfix Release" : "Release"} ${releases[0].nextVersion}`;
+  let prTitle = `Release ${releases[0].nextVersion}`;
   let prBody = generatePrBody(releases);
 
   if (preview) {
@@ -166,7 +166,7 @@ export function generatePrBody(releases: PackageRelease[]): string {
   let availableForChangelogs = maxBodyLength - baseLength;
   let truncatedChangelogs = truncateChangelogs(
     releases,
-    availableForChangelogs,
+    availableForChangelogs
   );
 
   return [header, releasesTable, truncatedChangelogs].join("\n\n");
@@ -190,7 +190,7 @@ function generateReleasesTable(releases: PackageRelease[]): string {
 
   for (let release of releases) {
     lines.push(
-      `| ${release.packageName} | \`${release.currentVersion}\` → \`${release.nextVersion}\` |`,
+      `| ${release.packageName} | \`${release.currentVersion}\` → \`${release.nextVersion}\` |`
     );
   }
 
@@ -217,7 +217,7 @@ function generatePackageChangelog(release: PackageRelease): string {
 
 function truncateChangelogs(
   releases: PackageRelease[],
-  maxLength: number,
+  maxLength: number
 ): string {
   let lines = ["# Changelogs"];
   let currentLength = lines.join("\n").length;
@@ -240,7 +240,9 @@ function truncateChangelogs(
   if (omittedCount > 0) {
     lines.push("");
     lines.push(
-      `> ⚠️ ${omittedCount} changelog${omittedCount === 1 ? "" : "s"} omitted due to size limits. See the PR diff for full details.`,
+      `> ⚠️ ${omittedCount} changelog${
+        omittedCount === 1 ? "" : "s"
+      } omitted due to size limits. See the PR diff for full details.`
     );
   }
 

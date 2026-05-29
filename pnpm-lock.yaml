@@ -288,6 +288,9 @@ importers:
       '@octokit/request':
         specifier: ^9.1.3
         version: 9.2.4
+      prompts:
+        specifier: ^2.4.2
+        version: 2.4.2
       semver:
         specifier: ^7.7.2
         version: 7.7.4
