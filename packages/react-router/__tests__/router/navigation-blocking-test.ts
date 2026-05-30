@@ -112,6 +112,21 @@ describe("navigation blocking", () => {
           location: expect.any(Object),
         });
       });
+
+      it("keeps the 'blocked' blocker through a revalidation", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about");
+        expect(router.getBlocker("KEY", fn).state).toBe("blocked");
+
+        await router.revalidate();
+
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+          location: expect.any(Object),
+        });
+      });
     });
 
     describe("proceeds from blocked state", () => {
@@ -146,6 +161,22 @@ describe("navigation blocking", () => {
         await router.navigate("/about");
         router.getBlocker("KEY", fn).proceed?.();
         await sleep(LOADER_LATENCY_MS);
+        expect(router.state.location.pathname).toBe("/about");
+      });
+
+      it("still completes a proceeding navigation interrupted by a revalidation", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about");
+        router.getBlocker("KEY", fn).proceed?.();
+        expect(router.getBlocker("KEY", fn).state).toBe("proceeding");
+        await router.revalidate();
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
         expect(router.state.location.pathname).toBe("/about");
       });
     });
