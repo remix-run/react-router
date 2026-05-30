@@ -116,7 +116,7 @@ test.describe("cli", () => {
     // Filter out future flag warnings for the format:
     // ⚠️  Future Flag Warning: Route module splitting behavior is changing in React Router v8.
     //     You can use the `future.v8_splitRouteModules` flag to opt in early.
-    //     -> https://reactrouter.com/upgrading/future-flags#v8_splitRouteModules
+    //     -> https://reactrouter.com/upgrading/future#futurev8_splitroutemodules
     let filteredStdOut = stdout.toString().split("\n");
     while (filteredStdOut[0]?.includes("Future Flag Warning:")) {
       filteredStdOut.splice(0, 3);
