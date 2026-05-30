@@ -135,10 +135,13 @@ importers:
         version: 7.37.5(eslint@10.1.0(jiti@2.4.2))
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.1-canary-d1727fbf-20260417(eslint@10.1.0(jiti@2.4.2))
+        version: 7.1.1-canary-d5736f09-20260507(eslint@10.1.0(jiti@2.4.2))
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
+      form-data:
+        specifier: 4.0.4
+        version: 4.0.4
       isbot:
         specifier: ^5.1.11
         version: 5.1.11
@@ -5886,8 +5889,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.1-canary-d1727fbf-20260417:
-    resolution: {integrity: sha512-lGcF2qMJEgVLjyqMqoYUWjMqIqyd09FfXpbw9yVyvsVz6rcPdoPZheTReIiNtC/CaF5YKpGlVhyRw2VnpFwuRQ==}
+  eslint-plugin-react-hooks@7.1.1-canary-d5736f09-20260507:
+    resolution: {integrity: sha512-RQYy8OszUjO7INbw59O7pBCS/8PR9cRKSoOky4dW1kdG4LeIgtk/h1QLbD3N1dTq3X4/u/w/GDPwtx583XVyvA==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
@@ -6155,6 +6158,10 @@ packages:
 
   form-data@4.0.0:
     resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
+    engines: {node: '>= 6'}
+
+  form-data@4.0.4:
+    resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
 
   format@0.2.2:
@@ -8936,7 +8943,7 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uvu@0.5.6:
@@ -13843,7 +13850,7 @@ snapshots:
     dependencies:
       eslint: 10.1.0(jiti@2.4.2)
 
-  eslint-plugin-react-hooks@7.1.1-canary-d1727fbf-20260417(eslint@10.1.0(jiti@2.4.2)):
+  eslint-plugin-react-hooks@7.1.1-canary-d5736f09-20260507(eslint@10.1.0(jiti@2.4.2)):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
@@ -14253,6 +14260,14 @@ snapshots:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
+      mime-types: 2.1.35
+
+  form-data@4.0.4:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
       mime-types: 2.1.35
 
   format@0.2.2: {}

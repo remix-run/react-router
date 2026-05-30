@@ -81,6 +81,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "next",
     "fast-glob": "3.2.11",
+    "form-data": "4.0.4",
     "isbot": "^5.1.11",
     "jest": "^29.6.4",
     "jsonfile": "^6.1.0",
