@@ -3124,7 +3124,7 @@ async function fakeGetSlugsFromCms() {
     - If you are not using the Vite plugin and are manually calling `createBrowserRouter`/`createHashRouter`:
       - `import { RouterProvider } from "react-router/dom"`
 - Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
-- Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057]([https://github.com/remix-run/react-router/pull/1205))
+- Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057](https://github.com/remix-run/react-router/pull/12057))
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
 - Remove the deprecated `json` utility ([#12146](https://github.com/remix-run/react-router/pull/12146))
   - You can use [`Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static) if you still need to construct JSON responses in your app

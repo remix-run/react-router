@@ -158,11 +158,11 @@ const matchesToLoad = matches.filter((match) => {
 
 ## Migrating away from `shouldLoad`
 
-Now that we have stabilized the new `match.shouldCallHandler()`/`match.shouldRevalidateArgs` fields, it's recommended to move away from the now-deprecated `match.shouldLoad` API. The prior boolean approach did not allow for custom `dataStrategy`functions to alter the default revalidation behavior, so the new function-based APIs were created to allow that.
+Now that we have stabilized the new `match.shouldCallHandler()`/`match.shouldRevalidateArgs` fields, it's recommended to move away from the now-deprecated `match.shouldLoad` API. The prior boolean approach did not allow for custom `dataStrategy` functions to alter the default revalidation behavior, so the new function-based APIs were created to allow that.
 
 The major difference between these two APIs is that when using `shouldLoad`, calling `resolve()` would _only_ call the handler if `shouldLoad` was `true`. You could safely call it for all matches even if only a subset needed to have their handlers executed.
 
-With `shouldCallHandler`, you are in charge of which handlers should be called so calling resolve will automatically call the handler. You should only call resolve on a the set of matches you wish to run handlers for.
+With `shouldCallHandler`, you are in charge of which handlers should be called so calling resolve will automatically call the handler. You should only call resolve on the set of matches you wish to run handlers for.
 
 Here's an example change from the prior API to the new API. Note that we pre-filter the `matchesToLoad` before calling `resolve()`:
 
@@ -184,7 +184,7 @@ return results;
 
 <docs-info>This is an unlikely use-case now that React Router has built-in middleware, but if you wish to use a custom middleware you can do so with a `dataStrategy`.</docs-info>
 
-Let's define a middleware on each route via [`handle`](../start/data/route-object#handle)
+Let's define a middleware on each route via the route `handle` field
 and call middleware sequentially first, then call all
 [`loader`](../start/data/route-object#loader)s in parallel - providing
 any data made available via the middleware:
