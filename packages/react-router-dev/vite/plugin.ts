@@ -2297,7 +2297,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!resolved) return;
 
         let serverFileRE = /\.server(\.[cm]?[jt]sx?)?$/;
-        let serverDirRE = /\/\.server\//;
+        let serverDirRE = /\/(\.server)(\/|$)/;
         let isDotServer =
           serverFileRE.test(resolved!.id) || serverDirRE.test(resolved!.id);
         if (!isDotServer) return;
@@ -2352,7 +2352,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async transform(code, id, options) {
         if (!options?.ssr) return;
         let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
-        let clientDirRE = /\/\.client\//;
+        let clientDirRE = /\/(\.client)(\/|$)/;
         if (clientFileRE.test(id) || clientDirRE.test(id)) {
           let exports = getExportNames(code);
           return {
