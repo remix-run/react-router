@@ -105,17 +105,16 @@
   },
   "scripts": {
     "build": "wireit",
+    "prepublishOnly": "node ./scripts/copy-docs.mjs",
     "watch": "tsup --watch & tsup --config tsup.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts && node ./scripts/copy-docs.mjs",
+      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
       "files": [
         "../../pnpm-workspace.yaml",
-        "../../docs/**",
         "lib/**",
-        "scripts/copy-docs.mjs",
         "*.ts",
         "tsconfig.json",
         "package.json"
