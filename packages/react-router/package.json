@@ -105,6 +105,7 @@
   },
   "scripts": {
     "build": "wireit",
+    "prepublishOnly": "node ./scripts/copy-docs.mjs",
     "watch": "tsup --watch & tsup --config tsup.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
@@ -153,6 +154,7 @@
   },
   "files": [
     "dist/",
+    "docs/",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
