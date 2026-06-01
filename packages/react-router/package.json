@@ -101,8 +101,6 @@
         "default": "./dist/development/index.js"
       }
     },
-    "./docs": "./dist/docs/index.md",
-    "./docs/*": "./dist/docs/*",
     "./package.json": "./package.json"
   },
   "scripts": {
