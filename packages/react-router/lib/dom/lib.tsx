@@ -458,7 +458,7 @@ export interface DOMRouterOpts {
    *   **Co-locating route discovery with route definition**
    *
    *   If you don't wish to perform your own pseudo-matching, you can leverage
-   *   the partial `matches` array and the route `handle`
+   *   the partial `matches` array and the [`handle`](../../start/data/route-object#handle)
    *   field on a route to keep the children definitions co-located:
    *
    *   ```tsx
