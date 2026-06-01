@@ -184,7 +184,7 @@ return results;
 
 <docs-info>This is an unlikely use-case now that React Router has built-in middleware, but if you wish to use a custom middleware you can do so with a `dataStrategy`.</docs-info>
 
-Let's define a middleware on each route via the route `handle` field
+Let's define a middleware on each route via [`handle`](../start/data/route-object#handle)
 and call middleware sequentially first, then call all
 [`loader`](../start/data/route-object#loader)s in parallel - providing
 any data made available via the middleware:
