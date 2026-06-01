@@ -14,7 +14,7 @@ const PACKAGE_DIR = path.resolve(
   "..",
 );
 const SOURCE_DOCS_DIR = path.resolve(PACKAGE_DIR, "../../docs");
-const TARGET_DOCS_DIR = path.resolve(PACKAGE_DIR, "dist/docs");
+const TARGET_DOCS_DIR = path.resolve(PACKAGE_DIR, "docs");
 
 const EXCLUDED_TOP_LEVEL_DIRS = new Set(["api", "community", "tutorials"]);
 const EXCLUDED_FILES = new Set(["elements.md", "prettier.config.js"]);

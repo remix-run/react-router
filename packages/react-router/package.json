@@ -157,6 +157,7 @@
   },
   "files": [
     "dist/",
+    "docs/",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
