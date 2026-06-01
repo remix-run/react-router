@@ -240,9 +240,29 @@ createBrowserRouter([
 ]);
 ```
 
+## `handle`
+
+Route handle allows apps to add anything to a route match in `useMatches` to create abstractions (like breadcrumbs, etc.).
+
+```tsx
+createBrowserRouter([
+  {
+    path: "/app",
+    handle: {
+      breadcrumb: "App",
+    },
+  },
+]);
+```
+
+See also:
+
+- [`useMatches`][use-matches]
+
 ---
 
 Next: [Data Loading](./data-loading)
 
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react-router.LoaderFunctionArgs
 [middleware]: ../../how-to/middleware
+[use-matches]: ../../api/hooks/useMatches

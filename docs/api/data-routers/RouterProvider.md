@@ -77,7 +77,7 @@ The `errorInfo` parameter is passed along from
 and is only present for render errors.
 
 ```tsx
-<RouterProvider onError=(error, info) => {
+<RouterProvider onError={(error, info) => {
   let { location, params, pattern, errorInfo } = info;
   console.error(error, location, errorInfo);
   reportToErrorService(error, location, errorInfo);

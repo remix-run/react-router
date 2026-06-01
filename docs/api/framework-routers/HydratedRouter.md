@@ -51,7 +51,7 @@ The `errorInfo` parameter is passed along from
 and is only present for render errors.
 
 ```tsx
-<HydratedRouter onError=(error, info) => {
+<HydratedRouter onError={(error, info) => {
   let { location, params, pattern, errorInfo } = info;
   console.error(error, location, errorInfo);
   reportToErrorService(error, location, errorInfo);
