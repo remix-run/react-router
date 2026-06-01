@@ -62,6 +62,7 @@
   },
   "scripts": {
     "build": "wireit",
+    "prepublishOnly": "node ./scripts/copy-docs.mjs",
     "watch": "tsdown --watch & tsdown --config tsdown.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
@@ -109,6 +110,7 @@
   },
   "files": [
     "dist/",
+    "docs/",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

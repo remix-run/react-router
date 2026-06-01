@@ -23,8 +23,12 @@ import {
 } from "../vite";
 import { hasDependency } from "../has-dependency";
 import { getOptimizeDepsEntries } from "../optimize-deps-entries";
+import { resolveRelativeRouteFilePath } from "../resolve-relative-route-file-path";
 import { createVirtualRouteConfig } from "./virtual-route-config";
-import { virtualRouteModulesPlugin } from "./virtual-route-modules";
+import {
+  createClientRouteModuleForOptimizeDepsScan,
+  virtualRouteModulesPlugin,
+} from "./virtual-route-modules";
 import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
@@ -195,6 +199,15 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
         // Async import here to avoid CJS warnings on the console
         let viteNormalizePath = (await import("vite")).normalizePath;
+        let optimizeDepsEntries = getOptimizeDepsEntries({
+          entryClientFilePath: entries.client,
+          reactRouterConfig: config,
+        });
+        let routeFiles = new Set(
+          Object.values(config.routes).map((route) =>
+            resolveRelativeRouteFilePath(route, config),
+          ),
+        );
 
         return {
           resolve: {
@@ -219,15 +232,20 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             ],
           },
           optimizeDeps: {
-            entries: getOptimizeDepsEntries({
-              entryClientFilePath: entries.client,
-              reactRouterConfig: config,
-            }),
+            entries: optimizeDepsEntries,
             ...defineOptimizeDepsCompilerOptions({
               rolldown: {
                 transform: {
                   jsx: "react-jsx",
                 },
+                plugins: config.future.unstable_optimizeDeps
+                  ? [
+                      createRSCOptimizeDepsRouteModulesPlugin({
+                        routeFiles,
+                        transformToJs,
+                      }),
+                    ]
+                  : [],
               },
               esbuild: {
                 jsx: "automatic",
@@ -782,6 +800,51 @@ function invalidateVirtualModules(viteDevServer: Vite.ViteDevServer) {
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+}
+
+type RSCOptimizeDepsRouteModulesPlugin = {
+  name: string;
+  transform: {
+    filter: { id: RegExp };
+    handler(
+      code: string,
+      id: string,
+    ): Promise<{ code: string; map: null; moduleType: "js" } | undefined>;
+  };
+};
+
+const jsRouteModuleRE = /\.[cm]?[jt]sx?$/;
+
+function createRSCOptimizeDepsRouteModulesPlugin({
+  routeFiles,
+  transformToJs,
+}: {
+  routeFiles: Set<string>;
+  transformToJs: (code: string, filename: string) => Promise<string>;
+}): RSCOptimizeDepsRouteModulesPlugin {
+  return {
+    name: "react-router:rsc-optimize-deps-route-modules",
+    transform: {
+      filter: { id: jsRouteModuleRE },
+      async handler(code, id) {
+        let filename = id.split("?")[0];
+        let normalizedFilename = getVite().normalizePath(filename);
+
+        if (!routeFiles.has(normalizedFilename)) {
+          return;
+        }
+
+        let js = await transformToJs(code, filename);
+        let generated = createClientRouteModuleForOptimizeDepsScan(js);
+
+        return {
+          code: generated.code,
+          map: null,
+          moduleType: "js",
+        };
+      },
+    },
+  };
 }
 
 const getClientBuildDirectory = (

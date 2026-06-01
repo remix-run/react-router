@@ -1,7 +1,10 @@
 import * as assert from "node:assert";
 import ts from "typescript";
 
-import { virtualRouteModulesPlugin } from "../vite/rsc/virtual-route-modules";
+import {
+  createClientRouteModuleForOptimizeDepsScan,
+  virtualRouteModulesPlugin,
+} from "../vite/rsc/virtual-route-modules";
 
 const plugin = virtualRouteModulesPlugin({
   enforceSplitRouteModules: () => false,
@@ -585,5 +588,45 @@ describe("client-route-module=HydrateFallback", () => {
         "export function HydrateFallback() {\n  console.log(client, shared);\n}",
       ].join("\n"),
     );
+  });
+});
+
+describe("optimizeDeps scan", () => {
+  it("removes server-only route exports before scanning client deps", () => {
+    let transformed = createClientRouteModuleForOptimizeDepsScan(js`
+      import { clientOnly } from "./client";
+      import { serverOnly } from "server-only-package";
+      import { shared } from "./shared";
+
+      export async function loader() {
+        return serverOnly();
+      }
+
+      export async function action() {
+        return serverOnly();
+      }
+
+      export function ServerComponent() {
+        return serverOnly();
+      }
+
+      export const meta = () => [{ title: shared }];
+
+      export default function Route() {
+        return clientOnly(shared);
+      }
+    `);
+
+    expect(transformed.code).toContain(
+      'import { clientOnly } from "./client";',
+    );
+    expect(transformed.code).toContain('import { shared } from "./shared";');
+    expect(transformed.code).toContain("export const meta");
+    expect(transformed.code).toContain("export default function Route");
+    expect(transformed.code).not.toContain("server-only-package");
+    expect(transformed.code).not.toContain("serverOnly");
+    expect(transformed.code).not.toContain("loader");
+    expect(transformed.code).not.toContain("action");
+    expect(transformed.code).not.toContain("ServerComponent");
   });
 });
