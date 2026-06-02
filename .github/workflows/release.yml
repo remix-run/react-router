@@ -5,7 +5,7 @@
 # Specific jobs only run on the proper trigger:
 #
 # - Change file driven stable releases (push to release/hotfix branches)
-# - v8 prereleases (push to react-router@8.0.0-pre.N tags)
+# - v8 prereleases (from a workflow_dispatch trigger on the v8 branch)
 # - Experimental releases (from a workflow_dispatch trigger)
 
 name: 🚢 Release/Publish
@@ -15,8 +15,6 @@ on:
     branches:
       - "release"
       - "hotfix"
-    tags:
-      - "react-router@8.0.0-pre.*"
   workflow_dispatch:
     inputs:
       branch:
@@ -30,7 +28,7 @@ concurrency:
 jobs:
   check:
     name: Check release readiness
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'push' && github.ref_type == 'branch'
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       has_change_files: ${{ steps.check.outputs.has_change_files }}
@@ -55,7 +53,7 @@ jobs:
   pull_request:
     name: Open pull request
     needs: check
-    if: github.ref_type == 'branch' && needs.check.outputs.has_change_files == 'true'
+    if: needs.check.outputs.has_change_files == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -87,7 +85,7 @@ jobs:
   publish:
     name: Publish
     needs: check
-    if: github.ref_type == 'branch' && needs.check.outputs.has_change_files == 'false'
+    if: needs.check.outputs.has_change_files == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -119,7 +117,6 @@ jobs:
   comment:
     name: 📝 Comment on released issues/pull requests
     needs: publish
-    if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues
@@ -148,8 +145,8 @@ jobs:
         run: pnpm run release-comments
 
   prerelease:
-    name: Publish prerelease
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'push' && github.ref_type == 'tag'
+    name: Publish prerelease (v8)
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch' && github.event.inputs.branch == 'v8'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -180,7 +177,7 @@ jobs:
 
   experimental-release:
     name: 🧪 Experimental Release
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch' && github.event.inputs.branch != 'v8'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
