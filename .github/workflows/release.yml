@@ -5,6 +5,7 @@
 # Specific jobs only run on the proper trigger:
 #
 # - Change file driven stable releases (push to release/hotfix branches)
+# - v8 prereleases (push to react-router@8.0.0-pre.N tags)
 # - Experimental releases (from a workflow_dispatch trigger)
 
 name: 🚢 Release/Publish
@@ -14,6 +15,8 @@ on:
     branches:
       - "release"
       - "hotfix"
+    tags:
+      - "react-router@8.0.0-pre.*"
   workflow_dispatch:
     inputs:
       branch:
@@ -27,7 +30,7 @@ concurrency:
 jobs:
   check:
     name: Check release readiness
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'push'
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'push' && github.ref_type == 'branch'
     runs-on: ubuntu-latest
     outputs:
       has_change_files: ${{ steps.check.outputs.has_change_files }}
@@ -52,7 +55,7 @@ jobs:
   pull_request:
     name: Open pull request
     needs: check
-    if: needs.check.outputs.has_change_files == 'true'
+    if: github.ref_type == 'branch' && needs.check.outputs.has_change_files == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -84,7 +87,7 @@ jobs:
   publish:
     name: Publish
     needs: check
-    if: needs.check.outputs.has_change_files == 'false'
+    if: github.ref_type == 'branch' && needs.check.outputs.has_change_files == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
@@ -116,6 +119,7 @@ jobs:
   comment:
     name: 📝 Comment on released issues/pull requests
     needs: publish
+    if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues
@@ -142,6 +146,37 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: pnpm run release-comments
+
+  prerelease:
+    name: Publish prerelease
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # enable generation of an ID token for publishing
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗 Build
+        run: pnpm build
+
+      - name: 🚀 Publish prerelease
+        run: pnpm prerelease:publish
 
   experimental-release:
     name: 🧪 Experimental Release
