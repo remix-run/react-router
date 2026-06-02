@@ -9,6 +9,7 @@ import {
   test,
   type TemplateName,
   type Files,
+  reactRouterConfig,
 } from "./helpers/vite.js";
 
 const tsx = dedent;
