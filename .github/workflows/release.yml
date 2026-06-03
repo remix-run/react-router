@@ -155,7 +155,7 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch }}
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v6
