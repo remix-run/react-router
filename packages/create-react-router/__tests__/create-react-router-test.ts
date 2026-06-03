@@ -87,7 +87,7 @@ describe("create-react-router CLI", () => {
       args: ["--help"],
     });
     expect(stdout.trim()).toMatchInlineSnapshot(`
-     "create-react-router  
+     "create-react-router
 
      Usage:
 
@@ -1182,7 +1182,6 @@ async function execCreateReactRouter({
     [
       ...(mockNetwork
         ? [
-            "--experimental-strip-types", // Needed for Node 22.12
             "--no-warnings=ExperimentalWarning",
             "--import",
             pathToFileURL(path.join(__dirname, "./msw-register.ts")).href,
