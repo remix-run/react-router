@@ -156,6 +156,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0 # needed for tags
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v6
