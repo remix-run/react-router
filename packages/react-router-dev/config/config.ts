@@ -21,7 +21,6 @@ import {
   validateRouteConfig,
   configRoutesToRouteManifest,
 } from "./routes";
-import { warnOnce } from "./warnings";
 import { detectPackageManager } from "../cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -767,13 +766,8 @@ async function resolveConfig({
   return ok(reactRouterConfig);
 }
 
-function logFutureFlagWarning(
-  condition: boolean,
-  flag: string,
-  message: string,
-): void {
-  warnOnce(
-    condition,
+function logFutureFlagWarning(flag: string, message: string): void {
+  console.log(
     colors.yellow(
       `  ⚠️  Future Flag Warning: ${message}\n` +
         `     You can use the \`future.${flag}\` flag to opt in early.\n` +
@@ -783,31 +777,36 @@ function logFutureFlagWarning(
 }
 
 export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
-  logFutureFlagWarning(
-    future.v8_middleware !== undefined,
-    "v8_middleware",
-    "Route middleware support is changing in React Router v8.",
-  );
-  logFutureFlagWarning(
-    future.v8_splitRouteModules !== undefined,
-    "v8_splitRouteModules",
-    "Route module splitting behavior is changing in React Router v8.",
-  );
-  logFutureFlagWarning(
-    future.v8_viteEnvironmentApi !== undefined,
-    "v8_viteEnvironmentApi",
-    "Vite Environment API usage is changing in React Router v8.",
-  );
-  logFutureFlagWarning(
-    future.v8_passThroughRequests !== undefined,
-    "v8_passThroughRequests",
-    "Request handling behavior is changing in React Router v8.",
-  );
-  logFutureFlagWarning(
-    future.v8_trailingSlashAwareDataRequests !== undefined,
-    "v8_trailingSlashAwareDataRequests",
-    "Data request URL formats are changing in React Router v8.",
-  );
+  if (future.v8_middleware === undefined) {
+    logFutureFlagWarning(
+      "v8_middleware",
+      "Route middleware support is changing in React Router v8.",
+    );
+  }
+  if (future.v8_splitRouteModules === undefined) {
+    logFutureFlagWarning(
+      "v8_splitRouteModules",
+      "Route module splitting behavior is changing in React Router v8.",
+    );
+  }
+  if (future.v8_viteEnvironmentApi === undefined) {
+    logFutureFlagWarning(
+      "v8_viteEnvironmentApi",
+      "Vite Environment API usage is changing in React Router v8.",
+    );
+  }
+  if (future.v8_passThroughRequests === undefined) {
+    logFutureFlagWarning(
+      "v8_passThroughRequests",
+      "Request handling behavior is changing in React Router v8.",
+    );
+  }
+  if (future.v8_trailingSlashAwareDataRequests === undefined) {
+    logFutureFlagWarning(
+      "v8_trailingSlashAwareDataRequests",
+      "Data request URL formats are changing in React Router v8.",
+    );
+  }
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
