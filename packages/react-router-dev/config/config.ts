@@ -767,7 +767,7 @@ function logFutureFlagWarning(flag: string, message: string): void {
     colors.yellow(
       `  ⚠️  Future Flag Warning: ${message}\n` +
         `     You can use the \`future.${flag}\` flag to opt in early.\n` +
-        `     -> https://reactrouter.com/upgrading/future-flags#${flag}`,
+        `     -> https://reactrouter.com/upgrading/future#future.${flag}`,
     ),
   );
 }
