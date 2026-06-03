@@ -104,7 +104,7 @@ Date: 2026-06-03
 
 React Router v8 is here!
 
-We introduced a new [Open Governance](https://remix.run/blog/rr-governance) model last year and this marks the first major release on our new planned yearly major release cadence. We chose the May/June timeframe this year to align with the EOL timeframe for Node 20. Node 22 is [scheduled](https://nodejs.org/en/about/previous-releases) to reach EOL in the May 2027 timeframe so we'll be aiming for a v9 release around the same time next year.
+We introduced a new [Open Governance](https://remix.run/blog/rr-governance) model last year and this marks the first major release on our new planned yearly major release cadence. We chose the June timeframe this year to align with the EOL timeframe for Node 20. Node 22 is [scheduled](https://nodejs.org/en/about/previous-releases) to reach EOL in the May 2027 timeframe so we'll be aiming for a v9 release around the same time next year.
 
 Our [API Development Strategy](https://reactrouter.com/community/api-development-strategy) aims to make major releases relatively boring by introducing breaking changes ahead of time behind [Future flags](https://reactrouter.com/upgrading/future). If you've adopted all active future flags in v7, then from a React Router API surface you're in good shape for v8. All `future.v8_*` flags have been removed (or lifted to a top-level config) and their behaviors are now the default.
 
@@ -113,9 +113,9 @@ Our [API Development Strategy](https://reactrouter.com/community/api-development
 React Router v8 updates the following minimum supported versions:
 
 - Node 22.12.0+
-  - Starting with v8, React Router will officially support all Active LTS versions and only the latest minor release of Maintenance LTS versions
-  - This better allows us to bump minimum Maintenance LTS versions to account for released security patches
-  - It also allows us to more quickly and easily adopt new features shipped to Active LTS and backported to Maintenance LTS
+  - Starting with v8, React Router will officially support all Active LTS node versions and only the **latest** minor branch of Maintenance LTS versions
+  - This better allows us to bump minimum Maintenance LTS versions to account for newly released security patches
+  - It also allows us to more quickly and easily adopt new Active LTS features backported to Maintenance LTS lines
   - Upgraded minimum Maintenance LTS versions will be done in React Router minor releases
 - React 19.2.6+
 - Vite 7+
