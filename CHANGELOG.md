@@ -108,7 +108,7 @@ We introduced a new [Open Governance](https://remix.run/blog/rr-governance) mode
 
 Our [API Development Strategy](https://reactrouter.com/community/api-development-strategy) aims to make major releases relatively boring by introducing breaking changes ahead of time behind [Future flags](https://reactrouter.com/upgrading/future). If you've adopted all active future flags in v7, then from a React Router API surface you're in good shape for v8. All `future.v8_*` flags have been removed (or lifted to a top-level config) and their behaviors are now the default.
 
-### Baseline Support
+#### Baseline Support
 
 React Router v8 updates the following minimum supported versions:
 
@@ -122,7 +122,7 @@ React Router v8 updates the following minimum supported versions:
 
 To modernize the library, React Router is now published as an ESM-only module and tsconfig `target`/`lib` fields have been updated to ES2022 across the board
 
-## Removed `react-router-dom`
+#### Removed `react-router-dom`
 
 In v7, we collapsed the DOM APIs into `react-router/dom`, but to ease the v6->v7 upgrade we continued re-exporting everything through `react-router-dom`. We have now dropped `react-router-dom`, so if you didn't get around to swapping your imports in v7, you will need to swap them to `react-router` and `react-router/dom` for v8.
 
