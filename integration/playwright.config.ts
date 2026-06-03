@@ -3,7 +3,7 @@ import * as os from "node:os";
 import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
 
-// silence expected warnings in Node 22.12 about `require(esm)`
+// silence expected warnings in Node 22.22 about `require(esm)`
 // when it implicitly uses `react-router`'s `module-sync` export condition
 process.env.NODE_OPTIONS =
   (process.env.NODE_OPTIONS ?? "") + ` --no-warnings=ExperimentalWarning`;

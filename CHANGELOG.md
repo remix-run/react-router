@@ -112,7 +112,7 @@ Our [API Development Strategy](https://reactrouter.com/community/api-development
 
 React Router v8 updates the following minimum supported versions:
 
-- Node 22.12.0+
+- Node 22.22.0+
   - Starting with v8, React Router will officially support all Active LTS node versions and only the **latest** minor branch of Maintenance LTS versions
   - This better allows us to bump minimum Maintenance LTS versions to account for newly released security patches
   - It also allows us to more quickly and easily adopt new Active LTS features backported to Maintenance LTS lines
