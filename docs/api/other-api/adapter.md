@@ -160,7 +160,14 @@ While not a direct "adapter" like the above, this package contains utilities for
 
 ### Node Version Support
 
-React Router officially supports **Active** and **Maintenance** [Node LTS versions][node-releases] at any given point in time. Dropped support for End of Life Node versions is done in a React Router Minor release.
+React Router officially supports all versions of [**Active** LTS][node-releases] and the latest minor line of [**Maintenance** LTS][node-releases] at any given point in time.  Updating the minimum supported Maintenance LTS version will be done in a React Router minor release.
+
+We make this caveat for Maintenance LTS for 2 reasons
+
+- When security patches are released for old maintenance lines, we want to be able to bump our minimum supported versions
+- This better allows us to adopt new features shipped in Active LTS and backported to Maintenance LTS and keep our implementations aligned
+
+Dropped support for outdated Maintenance/End-of-Life LTS versions **may** be done in a React Router Minor release and will be noted in the release notes. When possible, we will try to align our major release schedule with planned Node LTS EOL timelines.
 
 [express]: https://expressjs.com
 [node-releases]: https://nodejs.org/en/about/previous-releases

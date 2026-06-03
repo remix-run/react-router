@@ -16,6 +16,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.0.0-pre.0](#v800-pre0)
+- [React Router v7 Releases](#react-router-v7-releases)
   - [v7.16.0](#v7160)
   - [v7.15.1](#v7151)
   - [v7.15.0](#v7150)
@@ -90,6 +92,163 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.0.0-pre.0
+
+Date: 2026-06-03
+
+### What's Changed
+
+> [!IMPORTANT]
+> React Router v8 is in prerelease mode. We're looking for early beta testers to help us iron out any remaining issues!
+
+React Router v8 is here!
+
+We introduced a new [Open Governance](https://remix.run/blog/rr-governance) model last year during v7 and this marks the first major release on our planned release cadence. We plan to ship major releases on a yearly basis going forward. We chose the May/June timeframe this year to align with the EOL timeframe for Node 20. Node is making some changes to it's [LTS Schedulje](https://nodejs.org/en/about/previous-releases) in the coming years so we'll likely continue to align our yearly releases with any planned EOL timelines so we can drop support accordingly.
+
+Our [API Development Strategy](https://reactrouter.com/community/api-development-strategy) aims to make major releases relatively boring by introducing breaking changes ahead of time behind [Future flags](https://reactrouter.com/upgrading/future). If you;'ve adopted all active future flag in v7, then from a React Router API surface you're in good shape for v8. All `future.v8_*` flags have been removed (or lifted to a top-level config) and their behaviors are now the default.
+
+### Baseline Support
+
+React Router v8 updates the following minimum supported versions:
+
+- Node 22.12.0+
+  - Starting with v8, React Router will officially support all Active LTS versions and only the latest minor release of Maintenance LTS versions
+  - This better allows us to bump minimum Maintenance LTS versions to account for released security patches
+  - It also allows us to more quickly and easily adopt new features shipped to Active LTS and backported to Maintenance LTS
+  - Upgraded minimum Maintenance LTS versions will be done in React Router minor releases
+- React 19.2.6+
+- Vite 7+
+
+To modernize the library, React Router is now published as an ESM-only module and tsconfig `target`/`lib` fields have been updated to ES2022 across the board
+
+## Removed `react-router-dom`
+
+In v7, we collapsed the DOM APIs into `react-router/dom`, but to ease the v6->v7 upgrade we continued re-exporting everything through `react-router-dom`. We have now dropped `react-router-dom`, so if you didn't get around to swapping your imports in v7, you will need to swap them to `react-router` and `react-router/dom` for v8.
+
+### Major Changes
+
+- `react-router` - Update minimum Node version to 22.12.0, the first version where `require(esm)` is enabled by default ([#14928](https://github.com/remix-run/react-router/pull/14928))
+- `react-router` - Bump minimum React version to 19.2.6 ([#15062](https://github.com/remix-run/react-router/pull/15062))
+- `@react-router/dev` - Require Vite 7+ and make the Vite Environment API build path mandatory ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- `react-router` - Update `tsconfig.json` `target`/`lib` from `ES2020 -> ES2022` ([591853e](https://github.com/remix-run/react-router/commit/591853e))
+- `react-router` - Switch the published packages in `packages/` to ESM-only. ([#14895](https://github.com/remix-run/react-router/pull/14895)) ([59ebcf1](https://github.com/remix-run/react-router/commit/59ebcf1))
+- `react-router` - Remove the `future.v8_trailingSlashAwareDataRequests` flag ([#15100](https://github.com/remix-run/react-router/pull/15100))
+  - Trailing slash-aware data request URLs are now the default behavior.
+- `react-router` - Remove `future.v8_passThroughRequests` flag ([#15079](https://github.com/remix-run/react-router/pull/15079))
+  - The raw incoming `request` is now always passed through to `loader`/`action`
+  - Use `url` for the normalized URL without React Router-specific implementation details (`.data` suffixes, `index`/`_routes` search params)
+- `react-router` - Remove `future.v8_middleware` flag — middleware is always enabled in v8 ([#15078](https://github.com/remix-run/react-router/pull/15078))
+  - The `future.v8_middleware` flag has been removed; middleware is now always enabled
+  - The `context` parameter passed to `loader`, `action`, and `middleware` functions is always a `RouterContextProvider` instance
+  - `getLoadContext` functions in custom servers must return a `RouterContextProvider` — returning a plain object is no longer supported
+  - The `MiddlewareEnabled` type (previously exported as `UNSAFE_MiddlewareEnabled`) has been removed since the conditional it gated is now unconditional
+  - The `Future` module augmentation pattern (`interface Future { v8_middleware: true }`) is no longer needed to type `context` in Data Mode
+- `@react-router/dev` - Move `future.v8_splitRouteModules` to a top-level `splitRouteModules` config option and change the default behavior to `true` ([#15086](https://github.com/remix-run/react-router/pull/15086))
+  - Set `splitRouteModules: false` to keep route modules in a single chunk
+  - Set `splitRouteModules: "enforce"` to require all routes to be splittable
+- `@react-router/dev` - Removed the `future.v8_viteEnvironmentApi` flag because the Vite Environment API is always enabled in Vite 7+ ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- `@react-router/dev` - Removed the `future.unstable_previewServerPrerendering` flag and make prerendering with the Vite Environment API the default ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- `react-router` - Remove `react-router-dom` package ([#15076](https://github.com/remix-run/react-router/pull/15076))
+  - In v7 everything DOM-specific was collapsed into `react-router/dom`
+    - `react-router-dom` was kept around as a convenience so existing v6 app imports would still work
+  - For v8, you will need to swap `react-router-dom` imports:
+    - `RouterProvider`/`HydratedRouter` should be imported from `react-router/dom`
+    - Everything else should be imported from `react-router`
+- `react-router` - Remove deprecated `data` parameter in favor of `loaderData` for `meta` APIs (to align with `Route.ComponentProps`) ([#14931](https://github.com/remix-run/react-router/pull/14931))
+  - `Route.MetaArgs`, `Route.MetaMatch`, `MetaArgs`, `MetaMatch`, `Route.ComponentProps.matches`, `UIMatch`
+- `react-router` - Remove internal `hasErrorBoundary` field added to `router.routes` when using a data router ([#15074](https://github.com/remix-run/react-router/pull/15074))
+  - This should not impact user-facing code since this was an internal prop and was computed based on the presence of `ErrorBoundary` or `errorElement` on your route
+  - `hasErrorBoundary` is no longer accepted on `RouteObject` (`IndexRouteObject`/`NonIndexRouteObject`), `DataRouteObject`, `<Route>` JSX props, or as a key in `lazy` route definitions.
+  - The `MapRoutePropertiesFunction` signature no longer requires returning `hasErrorBoundary`; the router infers it directly.
+
+- `@react-router/architect` - Bump `@architect/functions` to v8 ([#15106](https://github.com/remix-run/react-router/pull/15106))
+- `@react-router/dev` - Remove `@react-router/dev/vite/cloudflare` dev proxy export; use `@cloudflare/vite-plugin` instead ([#15077](https://github.com/remix-run/react-router/pull/15077))
+  - Drops support for `wrangler@3` as a peer dependency of `@react-router/dev`
+- `@react-router/express` - Bump dependencies ([#15106](https://github.com/remix-run/react-router/pull/15106))
+  - Bumped `express` from `^4.19.2` to `^4.22.2`
+  - Bumped the `express` peer dependency from `^4.17.1 || ^5` to `^4.22.2 || ^5`
+  - Bumped `@types/express` from `^4.17.9` to `^4.17.25`
+- `@react-router/node` - Switch from `@mjackson/node-fetch-server` to `@remix-run/node-fetch-server` now that we can directly use ESM-only packages ([#14930](https://github.com/remix-run/react-router/pull/14930))
+- `@react-router/serve` - Switch from `@mjackson/node-fetch-server` to `@remix-run/node-fetch-server` now that we can directly use ESM-only packages ([#14930](https://github.com/remix-run/react-router/pull/14930))
+- `create-react-router` - Switch from `@remix-run/web-fetch` to native `fetch` internally. ([#14929](https://github.com/remix-run/react-router/pull/14929))
+  - This removes the underlying `HTTPS_PROXY` support that `node-fetch` and subsequently `@remix-run/web-fetch` supported
+
+### Minor Changes
+
+- `react-router` - Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `cookie` from `^1.0.1` to `^1.1.1`
+  - Bumped `set-cookie-parser` from `^2.6.0` to `^3.1.0`
+- `@react-router/cloudflare` - Bump `@cloudflare/workers-types` fromn `^4.20260520.1` to `^4.20260527.1` ([#15106](https://github.com/remix-run/react-router/pull/15106))
+- `@react-router/dev` - Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `@babel/core` from `^7.27.7` to `^7.29.7`
+  - Bumped `@babel/generator` from `^7.27.5` to `^7.29.7`
+  - Bumped `@babel/parser` from `^7.27.7` to `^7.29.7`
+  - Bumped `@babel/plugin-syntax-jsx` from `^7.27.1` to `^7.29.7`
+  - Bumped `@babel/preset-typescript` from `^7.27.1` to `^7.29.7`
+  - Bumped `@babel/traverse` from `^7.27.7` to `^7.29.7`
+  - Bumped `@babel/types` from `^7.27.7` to `^7.29.7`
+  - Bumped `dedent` from `^1.5.3` to `^1.7.2`
+  - Bumped `jsesc` from `3.0.2` to `3.1.0`
+  - Bumped `lodash` from `^4.17.21` to `^4.18.1`
+  - Bumped `prettier` from `^3.6.2` to `^3.8.3`
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+  - Bumped `react-refresh` from `^0.14.0` to `^0.18.0`
+  - Bumped `semver` from `^7.3.7` to `^7.8.1`
+  - Bumped `tinyglobby` from `^0.2.14` to `^0.2.16`
+  - Bumped `valibot` from `^1.2.0` to `^1.4.1`
+- `@react-router/dev` - Replace `cookie` and `set-cookie-parser` with `cookie-es` ([#15109](https://github.com/remix-run/react-router/pull/15109))
+- `@react-router/dev` - Removed the `vite-node` dependency in favor of Vite's native module runner APIs ([#15104](https://github.com/remix-run/react-router/pull/15104))
+- `create-react-router` - Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `execa` from `5.1.1` to `9.6.1`
+  - Bumped `log-update` from `^5.0.1` to `^8.0.0`
+  - Bumped `semver` from `^7.3.7` to `^7.8.1`
+  - Bumped `sort-package-json` from `^1.55.0` to `^3.6.1`
+  - Bumped `strip-ansi` from `^6.0.1` to `^7.2.0`
+  - Bumped `tar-fs` from `^2.1.3` to `^3.1.2`
+
+### Patch Changes
+
+- `react-router` - Ensure client middleware errors load lazy route error boundaries before bubbling ([#15086](https://github.com/remix-run/react-router/pull/15086))
+- `react-router` - Remove explicit `onSubmit` type override from `SharedFormProps` to fix deprecation warning with `@types/react@19.x` ([#14932](https://github.com/remix-run/react-router/pull/14932)) ([59ebcf1](https://github.com/remix-run/react-router/commit/59ebcf1))
+- `react-router` - Update package builds to preserve individual module files in published artifacts. Public APIs and documented import paths are unchanged. ([#15092](https://github.com/remix-run/react-router/pull/15092))
+  - Updated package TypeScript configs to support modern module syntax used by the build configuration.
+- `react-router` - Migrate package builds from `tsup` to `tsdown`. Published package entry points and public APIs are unchanged. ([#15092](https://github.com/remix-run/react-router/pull/15092))
+- `react-router` - Upgrade React Router's TypeScript tooling to TypeScript 6. Runtime behavior and public APIs are unchanged. ([#15092](https://github.com/remix-run/react-router/pull/15092))
+- `@react-router/architect` - Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `@types/aws-lambda` from `^8.10.82` to `^8.10.161`
+- `@react-router/dev` - Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `@babel/core` from `^7.29.0` to `^7.29.7`
+  - Bumped `@babel/generator` from `^7.29.1` to `^7.29.7`
+  - Bumped `@babel/parser` from `^7.29.3` to `^7.29.7`
+  - Bumped `@babel/plugin-syntax-jsx` from `^7.28.6` to `^7.29.7`
+  - Bumped `@babel/preset-typescript` from `^7.28.5` to `^7.29.7`
+  - Bumped `@babel/traverse` from `^7.29.0` to `^7.29.7`
+  - Bumped `@babel/types` from `^7.29.0` to `^7.29.7`
+  - Bumped `babel-dead-code-elimination` from `^1.0.6` to `^1.0.12`
+  - Bumped `chokidar` from `^4.0.0` to `^5.0.0`
+  - Bumped `es-module-lexer` from `^1.3.1` to `^2.1.0`
+  - Bumped `exit-hook` from `2.2.1` to `5.1.0`
+  - Bumped `isbot` from `^5.1.11` to `^5.1.40`
+  - Bumped `p-map` from `^7.0.3` to `^7.0.4`
+  - Bumped `pathe` from `^1.1.2` to `^2.0.3`
+  - Bumped `pkg-types` from `^2.3.0` to `^2.3.1`
+  - Bumped `react-refresh` from `^0.14.0` to `^0.18.0`
+  - Bumped `semver` from `^7.8.0` to `^7.8.1`
+  - Bumped `tinyglobby` from `^0.2.14` to `^0.2.16`
+  - Bumped `valibot` from `^1.4.0` to `^1.4.1`
+- `@react-router/dev` - Fix Windows libuv assertion (`!(handle->flags & UV_HANDLE_CLOSING)` in `src/win/async.c`) during prerendering by using `node:http` instead of `fetch` for internal prerender requests against the Vite preview server ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- `@react-router/fs-routes` - Bump dependencies ([#15091](https://github.com/remix-run/react-router/pull/15091))
+  - Bumped `minimatch` from `^9.0.0` to `^10.2.5`
+- `@react-router/node` - Bump dependencies ([#15106](https://github.com/remix-run/react-router/pull/15106))
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+- `@react-router/serve` - Bump dependencies ([#15091](https://github.com/remix-run/react-router/pull/15091))
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+  - Bumped `get-port` from `5.1.1` to `7.2.0`
+
+**Full Changelog**: [`v7.16.0...v8.0.0-pre.0`](https://github.com/remix-run/react-router/compare/react-router@7.16.0...react-router@8.0.0-pre.0)
+
+# React Router v7 Releases
 
 ## v7.16.0
 
