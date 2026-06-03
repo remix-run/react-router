@@ -1082,8 +1082,9 @@ export async function resolveEntryFiles({
     }
 
     // TODO(v8): Remove - only required for Node 20.18 and below
-    let { readPackageJSON, sortPackage, updatePackage } =
-      await import("pkg-types");
+    let { readPackageJSON, sortPackage, updatePackage } = await import(
+      "pkg-types"
+    );
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
