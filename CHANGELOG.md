@@ -122,6 +122,16 @@ React Router v8 updates the following minimum supported versions:
 
 To modernize the library, React Router is now published as an ESM-only module and tsconfig `target`/`lib` fields have been updated to ES2022 across the board
 
+#### Adopted Future Flag Behavior
+
+The following v8 future flags have been removed and their behaviors are now the default:
+
+- `future.v8_trailingSlashAwareDataRequests`
+- `future.v8_passThroughRequests`
+- `future.v8_middleware`
+- `future.v8_viteEnvironmentApi`
+- `future.v8_splitRouteModules` has been moved to a to a top-level `splitRouteModules` config option and is enabled by default
+
 #### Removed `react-router-dom`
 
 In v7, we collapsed the DOM APIs into `react-router/dom`, but to ease the v6->v7 upgrade we continued re-exporting everything through `react-router-dom`. We have now dropped `react-router-dom`, so if you didn't get around to swapping your imports in v7, you will need to swap them to `react-router` and `react-router/dom` for v8.
