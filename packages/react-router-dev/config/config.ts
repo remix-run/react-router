@@ -707,6 +707,22 @@ async function resolveConfig({
       );
     }
     if (
+      "unstable_passThroughRequests" in futureConfig ||
+      "v8_passThroughRequests" in futureConfig
+    ) {
+      return err(
+        "The `future.v8_passThroughRequests` flag has been removed because pass-through requests are now the default behavior",
+      );
+    }
+    if (
+      "unstable_middleware" in futureConfig ||
+      "v8_middleware" in futureConfig
+    ) {
+      return err(
+        "The `future.v8_middleware` flag has been removed because middleware is now always enabled",
+      );
+    }
+    if (
       "unstable_trailingSlashAwareDataRequests" in futureConfig ||
       "v8_trailingSlashAwareDataRequests" in futureConfig
     ) {
