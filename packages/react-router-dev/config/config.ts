@@ -21,6 +21,7 @@ import {
   validateRouteConfig,
   configRoutesToRouteManifest,
 } from "./routes";
+import { warnOnce } from "./warnings";
 import { detectPackageManager } from "../cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -435,12 +436,14 @@ async function resolveConfig({
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
+  shouldLogFutureFlagWarnings,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
+  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -757,52 +760,54 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  logFutureFlagWarnings(userAndPresetConfigs.future || {});
+  if (shouldLogFutureFlagWarnings) {
+    logFutureFlagWarnings(userAndPresetConfigs.future || {});
+  }
 
   return ok(reactRouterConfig);
 }
 
-function logFutureFlagWarning(flag: string, message: string): void {
-  console.log(
+function logFutureFlagWarning(
+  condition: boolean,
+  flag: string,
+  message: string,
+): void {
+  warnOnce(
+    condition,
     colors.yellow(
       `  ⚠️  Future Flag Warning: ${message}\n` +
         `     You can use the \`future.${flag}\` flag to opt in early.\n` +
-        `     -> https://reactrouter.com/upgrading/future#future${flag.toLowerCase()}`,
+        `     -> https://reactrouter.com/7.16.0/upgrading/future#future${flag.toLowerCase()}`,
     ),
   );
 }
 
 export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
-  if (future.v8_middleware === undefined) {
-    logFutureFlagWarning(
-      "v8_middleware",
-      "Route middleware support is changing in React Router v8.",
-    );
-  }
-  if (future.v8_splitRouteModules === undefined) {
-    logFutureFlagWarning(
-      "v8_splitRouteModules",
-      "Route module splitting behavior is changing in React Router v8.",
-    );
-  }
-  if (future.v8_viteEnvironmentApi === undefined) {
-    logFutureFlagWarning(
-      "v8_viteEnvironmentApi",
-      "Vite Environment API usage is changing in React Router v8.",
-    );
-  }
-  if (future.v8_passThroughRequests === undefined) {
-    logFutureFlagWarning(
-      "v8_passThroughRequests",
-      "Request handling behavior is changing in React Router v8.",
-    );
-  }
-  if (future.v8_trailingSlashAwareDataRequests === undefined) {
-    logFutureFlagWarning(
-      "v8_trailingSlashAwareDataRequests",
-      "Data request URL formats are changing in React Router v8.",
-    );
-  }
+  logFutureFlagWarning(
+    future.v8_middleware !== undefined,
+    "v8_middleware",
+    "Route middleware support is changing in React Router v8.",
+  );
+  logFutureFlagWarning(
+    future.v8_splitRouteModules !== undefined,
+    "v8_splitRouteModules",
+    "Route module splitting behavior is changing in React Router v8.",
+  );
+  logFutureFlagWarning(
+    future.v8_viteEnvironmentApi !== undefined,
+    "v8_viteEnvironmentApi",
+    "Vite Environment API usage is changing in React Router v8.",
+  );
+  logFutureFlagWarning(
+    future.v8_passThroughRequests !== undefined,
+    "v8_passThroughRequests",
+    "Request handling behavior is changing in React Router v8.",
+  );
+  logFutureFlagWarning(
+    future.v8_trailingSlashAwareDataRequests !== undefined,
+    "v8_trailingSlashAwareDataRequests",
+    "Data request URL formats are changing in React Router v8.",
+  );
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
@@ -829,12 +834,14 @@ export async function createConfigLoader({
   mode,
   skipRoutes,
   validateConfig,
+  shouldLogFutureFlagWarnings,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
+  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -865,11 +872,18 @@ export async function createConfigLoader({
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
+      shouldLogFutureFlagWarnings,
     });
 
   let appDirectory: string;
 
-  let initialConfigResult = await getConfig();
+  let initialConfigResult = await resolveConfig({
+    root,
+    viteNodeContext,
+    reactRouterConfigFile,
+    skipRoutes,
+    validateConfig,
+  });
 
   if (!initialConfigResult.ok) {
     throw new Error(initialConfigResult.error);
@@ -1069,9 +1083,8 @@ export async function resolveEntryFiles({
     }
 
     // TODO(v8): Remove - only required for Node 20.18 and below
-    let { readPackageJSON, sortPackage, updatePackage } = await import(
-      "pkg-types"
-    );
+    let { readPackageJSON, sortPackage, updatePackage } =
+      await import("pkg-types");
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
