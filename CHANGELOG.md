@@ -178,37 +178,37 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 Date: 2026-05-28
 
+### What's Changed
+
+#### Stabilized `future.v8_trailingSlashAwareDataRequests`
+
+We've stabilized this flag in preparation for the upcoming v8 release. Unless you are doing specific path-inspection on `.data` requests or have specific CDN/caching/pre-rendering logic around `.data` requests, this should largely be a zero-code-change adoptions. Please see the [docs](https://reactrouter.com/upgrading/future#futurev8_trailingslashawaredatarequests) for more info.
+
+#### Pre-v8 Future Flag Warnings
+
+In preparation for the upcoming v8 release, `7.16.0` begins logging console warnings during builds for future flags that you have not enabled yet. If you have all future flags enabled, the v8 upgrade should be mostly non-breaking (short of some underlying dependency minimum versions bumps - React 19, Node 22.12, Vite 7). You can suppress these warnings until you are ready top adopt flags by setting an explicit `false` in your `react-router.config.ts`.
+
 ### Minor Changes
 
 - `react-router` - Stabilize `future.unstable_trailingSlashAwareDataRequests` as `future.v8_trailingSlashAwareDataRequests` ([#15098](https://github.com/remix-run/react-router/pull/15098))
-
-- `@react-router/dev` - Stabilize `future.unstable_trailingSlashAwareDataRequests` as `future.v8_trailingSlashAwareDataRequests` ([#15098](https://github.com/remix-run/react-router/pull/15098))
-  - The unstable flag is no longer supported and will error during config resolution
-
 - `@react-router/dev` - Log future flag warnings for upcoming React Router v8 flags ([#15029](https://github.com/remix-run/react-router/pull/15029))
   - `v8_middleware`, `v8_splitRouteModules`, `v8_viteEnvironmentApi`, `v8_passThroughRequests`, `v8_trailingSlashAwareDataRequests`
 
 ### Patch Changes
 
-- `react-router` - Disable manifest path when lazy route dicovery is disabled ([#15068](https://github.com/remix-run/react-router/pull/15068))
-
-- `react-router` - Fix browser URL creation to use the configured history window instead of the global window. ([#15066](https://github.com/remix-run/react-router/pull/15066))
+- `react-router` - Disable manifest path when lazy route discovery is disabled ([#15068](https://github.com/remix-run/react-router/pull/15068))
+- `react-router` - Fix browser URL creation to use the configured history `window` instead of the global `window` ([#15066](https://github.com/remix-run/react-router/pull/15066))
   - Pass the history/router window through to `createBrowserURLImpl` so custom window contexts keep the correct URL origin.
-
 - `react-router` - Fix `useNavigation()` return type to preserve discriminated union across navigation states ([#15095](https://github.com/remix-run/react-router/pull/15095))
-
 - `react-router` - Widen `MetaDescriptor` `script:ld+json` type from `LdJsonObject` to `LdJsonObject | LdJsonObject[]` to permit multiple JSON-LD schemas in a single `<script type="application/ld+json">` tag emitted by `<Meta />` ([#15082](https://github.com/remix-run/react-router/pull/15082))
-
-- `react-router-dom` - Remove stale/invalid `unpkg` field from `package.json`. This was removed from other packages with the release of v7 but missed in the `react-router-dom` re-export package ([#15075](https://github.com/remix-run/react-router/pull/15075))
-
+- `react-router-dom` - Remove stale/invalid `unpkg` field from `package.json` ([#15075](https://github.com/remix-run/react-router/pull/15075))
+  - This was removed from other packages with the release of v7 but missed in the `react-router-dom` re-export package
 - `@react-router/express` - Ignore writes after Express responses close ([#15107](https://github.com/remix-run/react-router/pull/15107))
-  - Avoid surfacing client disconnects as adapter errors when the response stream has already been destroyed or ended.
-
+  - Avoid surfacing client disconnects as adapter errors when the response stream has already been destroyed or ended
 - `@react-router/node` - Honor Node writable backpressure in `writeReadableStreamToWritable` and `writeAsyncIterableToWritable` ([#15071](https://github.com/remix-run/react-router/pull/15071))
-  - Await `'drain'` when `writable.write()` returns `false` instead of letting chunks accumulate in the writable's internal buffer.
-  - Reject (rather than hang) if the writable errors or closes mid-stream.
-
-- `@react-router/serve` - Normalize `assetsBuildDirectory` path separators in `react-router-serve` so Windows-built server artifacts can serve `/assets/*` correctly when run on Linux. ([#14982](https://github.com/remix-run/react-router/pull/14982))
+  - Await `'drain'` when `writable.write()` returns `false` instead of letting chunks accumulate in the writable's internal buffer
+  - Reject (rather than hang) if the writable errors or closes mid-stream
+- `@react-router/serve` - Normalize `assetsBuildDirectory` path separators in `react-router-serve` so Windows-built server artifacts can serve `/assets/*` correctly when run on Linux ([#14982](https://github.com/remix-run/react-router/pull/14982))
 
 **Full Changelog**: [`v7.15.1...v7.16.0`](https://github.com/remix-run/react-router/compare/react-router@7.15.1...react-router@7.16.0)
 
@@ -3124,7 +3124,7 @@ async function fakeGetSlugsFromCms() {
     - If you are not using the Vite plugin and are manually calling `createBrowserRouter`/`createHashRouter`:
       - `import { RouterProvider } from "react-router/dom"`
 - Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
-- Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057]([https://github.com/remix-run/react-router/pull/1205))
+- Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057](https://github.com/remix-run/react-router/pull/12057))
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
 - Remove the deprecated `json` utility ([#12146](https://github.com/remix-run/react-router/pull/12146))
   - You can use [`Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static) if you still need to construct JSON responses in your app

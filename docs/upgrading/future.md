@@ -61,7 +61,7 @@ const router = createBrowserRouter(routes, {
 If you're using the `context` parameter in `loader` and `action` functions, you may need to update your code:
 
 - In Framework mode, if you're using `react-router-serve`, you should not need to make any updates. Otherwise, this only applies if you have a custom server with a `getLoadContext` function. Please see the docs on the middleware [`getLoadContext` changes](../how-to/middleware#changes-to-getloadcontextapploadcontext) and the instructions to [migrate to the new API](../how-to/middleware#migration-from-apploadcontext).
-- In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#2-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
+- In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#1-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
 
 ## `future.v8_splitRouteModules`
 
@@ -117,7 +117,38 @@ export default {
 
 **Update your Code**
 
-No code changes are required unless you have custom Vite configuration that needs to be updated for the [Environment API][vite-environment]. Most users won't need to make any changes.
+Most users won't need to make any changes. However, if you have custom Vite configuration that previously relied on the `isSsrBuild` flag — such as a custom server build that sets `build.rollupOptions.input` — you'll need to move that configuration under the per-environment [Environment API][vite-environment] config instead.
+
+For example, a custom server build should move its SSR `rollupOptions` from the top-level `build` config into `environments.ssr.build`:
+
+```diff filename=vite.config.ts
+import { reactRouter } from "@react-router/dev/vite";
+import { defineConfig } from "vite";
+
+-export default defineConfig(({ isSsrBuild }) => ({
+-  build: {
+-    rollupOptions: isSsrBuild
+-      ? {
+-          input: "./server/app.ts",
+-        }
+-      : undefined,
+-  },
++export default defineConfig({
++  environments: {
++    ssr: {
++      build: {
++        rollupOptions: {
++          input: "./server/app.ts",
++        },
++      },
++    },
++  },
+   plugins: [reactRouter()],
+-}));
++});
+```
+
+See the [`node-custom-server` template][node-custom-server-template] for a complete example.
 
 ## `future.v8_passThroughRequests`
 
@@ -246,3 +277,4 @@ _No current unstable flags to document_
 [observability]: ../how-to/instrumentation
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [vite-environment]: https://vite.dev/guide/api-environment
+[node-custom-server-template]: https://github.com/remix-run/react-router-templates/blob/7c617a435510bc3add3a5395c07bc65328b65e9e/node-custom-server/vite.config.ts
