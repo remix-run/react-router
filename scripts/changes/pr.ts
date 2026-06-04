@@ -20,10 +20,8 @@ let args = process.argv.slice(2);
 let preview = args.includes("--preview");
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
-if (!preview && !["release", "hotfix"].includes(baseBranch)) {
-  throw new Error(
-    "Error: script must be run from the hotfix or release branch",
-  );
+if (!preview && !["main", "hotfix"].includes(baseBranch)) {
+  throw new Error("Error: script must be run from the main or hotfix branch");
 }
 
 let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
@@ -79,7 +77,7 @@ async function main() {
 
   // Generate content
   let commitMessage = generateCommitMessage(releases);
-  let prTitle = `${baseBranch === "hotfix" ? "Hotfix Release" : "Release"} ${releases[0].nextVersion}`;
+  let prTitle = `${baseBranch === "hotfix" ? "Hotfix Release" : "Release"} v${releases[0].nextVersion}`;
   let prBody = generatePrBody(releases);
 
   if (preview) {
