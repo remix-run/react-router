@@ -55,23 +55,14 @@ jobs:
         if: steps.check.outputs.has_change_files == 'false'
         run: |
           version=$(node -p "require('./packages/react-router/package.json').version")
-          echo "Checking npm for react-router@$version..."
+          published_version=$(npm view "react-router@$version" version || true)
 
-          if npm view "react-router@$version" version > /tmp/npm-view.out 2> /tmp/npm-view.err; then
-            published_version=$(cat /tmp/npm-view.out)
-            if [ "$published_version" = "$version" ]; then
-              echo "react-router@$version is already published. Skipping publish."
-              echo "should_publish=false" >> $GITHUB_OUTPUT
-            else
-              echo "Unexpected npm version output: $published_version"
-              exit 1
-            fi
-          elif grep -E "E404|404 Not Found|No match found" /tmp/npm-view.err; then
+          if [ "$published_version" = "$version" ]; then
+            echo "react-router@$version is already published. Skipping publish."
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
             echo "react-router@$version is not published yet. Publishing is needed."
             echo "should_publish=true" >> $GITHUB_OUTPUT
-          else
-            cat /tmp/npm-view.err
-            exit 1
           fi
 
   pull_request:
