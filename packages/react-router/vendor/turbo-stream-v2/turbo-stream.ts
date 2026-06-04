@@ -244,14 +244,6 @@ export function encode(
                   },
                   (reason) => {
                     processingChain = processingChain.then(async () => {
-                      if (
-                        !reason ||
-                        typeof reason !== "object" ||
-                        !(reason instanceof Error)
-                      ) {
-                        reason = new Error("An unknown error occurred");
-                      }
-
                       const id = await flatten.call(encoder, reason);
                       if (Array.isArray(id)) {
                         controller.enqueue(
