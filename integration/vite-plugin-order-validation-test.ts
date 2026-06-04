@@ -31,19 +31,21 @@ test.describe("Vite plugin order validation", () => {
         "vite.config.js": dedent`
           import { defineConfig } from "vite";
           import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+          import react from "@vitejs/plugin-react";
           import rsc from "@vitejs/plugin-rsc";
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
             plugins: [
               reactRouterRSC(),
+              react(),
               rsc(),
               mdx(),
             ],
           });
         `,
         "react-router.config.ts": reactRouterConfig({
-          v8_viteEnvironmentApi: true,
+          future: { v8_viteEnvironmentApi: true },
         }),
       },
       "rsc-vite-framework",
@@ -72,7 +74,7 @@ test.describe("Vite plugin order validation", () => {
           });
         `,
         "react-router.config.ts": reactRouterConfig({
-          v8_viteEnvironmentApi: true,
+          future: { v8_viteEnvironmentApi: true },
         }),
       },
       "rsc-vite-framework",

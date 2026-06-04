@@ -3,11 +3,10 @@ const templates = [
   { name: "vite-5-template", displayName: "Vite 5" },
   { name: "vite-6-template", displayName: "Vite 6" },
   { name: "vite-7-beta-template", displayName: "Vite 7 Beta" },
-  { name: "vite-rolldown-template", displayName: "Vite Rolldown" },
+  { name: "vite-8-template", displayName: "Vite 8" },
 
   // RSC templates
   { name: "rsc-vite", displayName: "RSC (Vite)" },
-  { name: "rsc-parcel", displayName: "RSC (Parcel)" },
   { name: "rsc-vite-framework", displayName: "RSC Framework" },
 
   // Cloudflare
@@ -26,5 +25,5 @@ export const viteMajorTemplates = getTemplates([
   "vite-5-template",
   "vite-6-template",
   "vite-7-beta-template",
-  "vite-rolldown-template",
+  "vite-8-template",
 ]);

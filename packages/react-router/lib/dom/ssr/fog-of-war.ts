@@ -1,13 +1,17 @@
 import * as React from "react";
-import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
-import type { RouteManifest } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
+import type {
+  DataRouteObject,
+  PatchRoutesOnNavigationFunction,
+  RouteManifest,
+} from "../../router/utils";
+import { joinPaths, matchRoutesImpl } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
+import { createPath } from "../../router/history";
 
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
@@ -19,7 +23,7 @@ const discoveredPaths = new Set<string>();
 
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
-const URL_LIMIT = 7680;
+export const URL_LIMIT = 7680;
 
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
@@ -49,7 +53,13 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutes(router.routes, path, router.basename);
+    let matches = matchRoutesImpl<DataRouteObject>(
+      router.routes,
+      path,
+      router.basename || "/",
+      false,
+      router.branches,
+    );
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }
@@ -67,6 +77,7 @@ export function getPartialManifest(
 }
 
 export function getPatchRoutesOnNavigationFunction(
+  getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
@@ -82,9 +93,14 @@ export function getPatchRoutesOnNavigationFunction(
     if (discoveredPaths.has(path)) {
       return;
     }
+    let { state } = getRouter();
     await fetchAndApplyManifestPatches(
       [path],
-      fetcherKey ? window.location.href : path,
+      // If we're patching for a fetcher call, reload the current location
+      // Otherwise prefer any ongoing navigation location
+      fetcherKey
+        ? window.location.href
+        : createPath(state.navigation.location || state.location),
       manifest,
       routeModules,
       ssr,
@@ -195,12 +211,7 @@ export function getManifestPath(
   basename: string | undefined,
 ) {
   let manifestPath = _manifestPath || "/__manifest";
-
-  if (basename == null) {
-    return manifestPath;
-  }
-
-  return `${basename}${manifestPath}`.replace(/\/+/g, "/");
+  return basename == null ? manifestPath : joinPaths([basename, manifestPath]);
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";

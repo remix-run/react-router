@@ -1,5 +1,105 @@
 # `@react-router/express`
 
+## v7.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+  - [`@react-router/node@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.17.0)
+
+## v7.16.0
+
+### Patch Changes
+
+- Ignore writes after Express responses close ([#15107](https://github.com/remix-run/react-router/pull/15107))
+  - Avoid surfacing client disconnects as adapter errors when the response stream has already been destroyed or ended.
+
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+  - [`@react-router/node@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.16.0)
+
+## v7.15.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.1)
+  - [`@react-router/node@7.15.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.1)
+
+## v7.15.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.0)
+  - [`@react-router/node@7.15.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.0)
+
+## v7.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.2`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.2)
+  - [`@react-router/node@7.14.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.14.2)
+
+## v7.14.1
+
+### Patch Changes
+
+- Add TypeScript 6 support to peer dependency ranges
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+  - [`@react-router/node@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.14.1)
+
+## 7.14.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+  - `@react-router/node@7.14.0`
+
+## 7.13.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.2`
+  - `@react-router/node@7.13.2`
+
+## 7.13.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.1`
+  - `@react-router/node@7.13.1`
+
+## 7.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.0`
+  - `@react-router/node@7.13.0`
+
+## 7.12.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.12.0`
+  - `@react-router/node@7.12.0`
+
+## 7.11.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.11.0`
+  - `@react-router/node@7.11.0`
+
 ## 7.10.1
 
 ### Patch Changes

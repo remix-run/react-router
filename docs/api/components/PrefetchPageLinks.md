@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.PrefetchPageLinks.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.PrefetchPageLinks.html)
 
 Renders [`<link rel=prefetch|modulepreload>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rel)
 tags for modules and data of another page to enable an instant navigation to

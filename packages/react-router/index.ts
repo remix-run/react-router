@@ -30,6 +30,9 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  BaseRouteObject,
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
@@ -39,16 +42,22 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  IndexRouteObject,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
+  NonIndexRouteObject,
   ParamParseKey,
   Params,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  RouteMatch,
+  RouteObject,
   RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
@@ -62,12 +71,12 @@ export {
   parsePath,
 } from "./lib/router/history";
 export type {
-  unstable_ServerInstrumentation,
-  unstable_ClientInstrumentation,
-  unstable_InstrumentRequestHandlerFunction,
-  unstable_InstrumentRouterFunction,
-  unstable_InstrumentRouteFunction,
-  unstable_InstrumentationHandlerResult,
+  ServerInstrumentation,
+  ClientInstrumentation,
+  InstrumentRequestHandlerFunction,
+  InstrumentRouterFunction,
+  InstrumentRouteFunction,
+  InstrumentationHandlerResult,
 } from "./lib/router/instrumentation";
 export {
   IDLE_NAVIGATION,
@@ -87,23 +96,12 @@ export {
 } from "./lib/router/utils";
 
 // Expose react-router public API
-export type {
-  DataRouteMatch,
-  DataRouteObject,
-  IndexRouteObject,
-  NavigateOptions,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  PatchRoutesOnNavigationFunctionArgs,
-  RouteMatch,
-  RouteObject,
-} from "./lib/context";
+export type { NavigateOptions, Navigator } from "./lib/context";
 export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/context";
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,
@@ -129,7 +127,12 @@ export {
   createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
+export type {
+  NavigateFunction,
+  unstable_RouterState,
+  unstable_RouterStateActiveVariant,
+  unstable_RouterStatePendingVariant,
+} from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -153,6 +156,7 @@ export {
   useRouteLoaderData,
   useRoutes,
   useRoute as unstable_useRoute,
+  useRouterState as unstable_useRouterState,
 } from "./lib/hooks";
 
 // Expose old RR DOM API
@@ -316,7 +320,8 @@ export {
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 // Re-export of RSC types
-import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+import type { getRequest, matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export declare const unstable_getRequest: typeof getRequest;
 export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
 
 export type {
@@ -349,7 +354,9 @@ export type {
 
 /** @internal */
 export {
+  createMemoryHistory as UNSAFE_createMemoryHistory,
   createBrowserHistory as UNSAFE_createBrowserHistory,
+  createHashHistory as UNSAFE_createHashHistory,
   invariant as UNSAFE_invariant,
 } from "./lib/router/history";
 

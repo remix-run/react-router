@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLoaderData.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useLoaderData.html)
 
 Returns the data from the closest route
 [`loader`](../../start/framework/route-module#loader) or

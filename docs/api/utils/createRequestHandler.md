@@ -9,5 +9,4 @@ hidden: true
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createRequestHandler.html)
-
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createRequestHandler.html)

@@ -5,10 +5,11 @@ import { createPath, invariant } from "./history";
 import type { Router } from "./router";
 import type {
   ActionFunctionArgs,
-  AgnosticDataRouteObject,
+  DataRouteObject,
   FormEncType,
   HTMLFormMethod,
   LazyRouteObject,
+  LoaderFunction,
   LoaderFunctionArgs,
   MaybePromise,
   MiddlewareFunction,
@@ -17,35 +18,31 @@ import type {
 } from "./utils";
 
 // Public APIs
-export type unstable_ServerInstrumentation = {
-  handler?: unstable_InstrumentRequestHandlerFunction;
-  route?: unstable_InstrumentRouteFunction;
+export type ServerInstrumentation = {
+  handler?: InstrumentRequestHandlerFunction;
+  route?: InstrumentRouteFunction;
 };
 
-export type unstable_ClientInstrumentation = {
-  router?: unstable_InstrumentRouterFunction;
-  route?: unstable_InstrumentRouteFunction;
+export type ClientInstrumentation = {
+  router?: InstrumentRouterFunction;
+  route?: InstrumentRouteFunction;
 };
 
-export type unstable_InstrumentRequestHandlerFunction = (
+export type InstrumentRequestHandlerFunction = (
   handler: InstrumentableRequestHandler,
 ) => void;
 
-export type unstable_InstrumentRouterFunction = (
-  router: InstrumentableRouter,
-) => void;
+export type InstrumentRouterFunction = (router: InstrumentableRouter) => void;
 
-export type unstable_InstrumentRouteFunction = (
-  route: InstrumentableRoute,
-) => void;
+export type InstrumentRouteFunction = (route: InstrumentableRoute) => void;
 
-export type unstable_InstrumentationHandlerResult =
+export type InstrumentationHandlerResult =
   | { status: "success"; error: undefined }
   | { status: "error"; error: Error };
 
 // Shared
 type InstrumentFunction<T> = (
-  handler: () => Promise<unstable_InstrumentationHandlerResult>,
+  handler: () => Promise<InstrumentationHandlerResult>,
   info: T,
 ) => Promise<void>;
 
@@ -89,7 +86,7 @@ type RouteLazyInstrumentationInfo = undefined;
 type RouteHandlerInstrumentationInfo = Readonly<{
   request: ReadonlyRequest;
   params: LoaderFunctionArgs["params"];
-  unstable_pattern: string;
+  pattern: string;
   context: ReadonlyContext;
 }>;
 
@@ -139,8 +136,8 @@ type RequestHandlerInstrumentationInfo = Readonly<{
 const UninstrumentedSymbol = Symbol("Uninstrumented");
 
 export function getRouteInstrumentationUpdates(
-  fns: unstable_InstrumentRouteFunction[],
-  route: Readonly<AgnosticDataRouteObject>,
+  fns: InstrumentRouteFunction[],
+  route: Readonly<DataRouteObject>,
 ) {
   let aggregated: {
     lazy: InstrumentFunction<RouteLazyInstrumentationInfo>[];
@@ -177,23 +174,23 @@ export function getRouteInstrumentationUpdates(
   );
 
   let updates: {
-    middleware?: AgnosticDataRouteObject["middleware"];
-    loader?: AgnosticDataRouteObject["loader"];
-    action?: AgnosticDataRouteObject["action"];
-    lazy?: AgnosticDataRouteObject["lazy"];
+    middleware?: DataRouteObject["middleware"];
+    loader?: DataRouteObject["loader"];
+    action?: DataRouteObject["action"];
+    lazy?: DataRouteObject["lazy"];
   } = {};
 
   // Instrument lazy functions
   if (typeof route.lazy === "function" && aggregated.lazy.length > 0) {
     let instrumented = wrapImpl(aggregated.lazy, route.lazy, () => undefined);
     if (instrumented) {
-      updates.lazy = instrumented as AgnosticDataRouteObject["lazy"];
+      updates.lazy = instrumented as DataRouteObject["lazy"];
     }
   }
 
   // Instrument the lazy object format
   if (typeof route.lazy === "object") {
-    let lazyObject: LazyRouteObject<AgnosticDataRouteObject> = route.lazy;
+    let lazyObject: LazyRouteObject<DataRouteObject> = route.lazy;
     (["middleware", "loader", "action"] as const).forEach((key) => {
       let lazyFn = lazyObject[key];
       let instrumentations = aggregated[`lazy.${key}`];
@@ -218,6 +215,9 @@ export function getRouteInstrumentationUpdates(
         getHandlerInfo(args[0] as LoaderFunctionArgs | ActionFunctionArgs),
       );
       if (instrumented) {
+        if (key === "loader" && original.hydrate === true) {
+          (instrumented as LoaderFunction).hydrate = true;
+        }
         // @ts-expect-error
         instrumented[UninstrumentedSymbol] = original;
         updates[key] = instrumented;
@@ -251,7 +251,7 @@ export function getRouteInstrumentationUpdates(
 
 export function instrumentClientSideRouter(
   router: Router,
-  fns: unstable_InstrumentRouterFunction[],
+  fns: InstrumentRouterFunction[],
 ): Router {
   let aggregated: {
     navigate: InstrumentFunction<RouterNavigationInstrumentationInfo>[];
@@ -323,7 +323,7 @@ export function instrumentClientSideRouter(
 
 export function instrumentHandler(
   handler: RequestHandler,
-  fns: unstable_InstrumentRequestHandlerFunction[],
+  fns: InstrumentRequestHandlerFunction[],
 ): RequestHandler {
   let aggregated: {
     request: InstrumentFunction<RequestHandlerInstrumentationInfo>[];
@@ -402,20 +402,19 @@ async function recurseRight<T extends InstrumentationInfo>(
     // If they forget to call the handler, or if they throw before calling the
     // handler, we need to ensure the handlers still gets called
     let handlerPromise: ReturnType<typeof recurseRight> | undefined = undefined;
-    let callHandler =
-      async (): Promise<unstable_InstrumentationHandlerResult> => {
-        if (handlerPromise) {
-          console.error("You cannot call instrumented handlers more than once");
-        } else {
-          handlerPromise = recurseRight(impls, info, handler, index - 1);
-        }
-        result = await handlerPromise;
-        invariant(result, "Expected a result");
-        if (result.type === "error" && result.value instanceof Error) {
-          return { status: "error", error: result.value };
-        }
-        return { status: "success", error: undefined };
-      };
+    let callHandler = async (): Promise<InstrumentationHandlerResult> => {
+      if (handlerPromise) {
+        console.error("You cannot call instrumented handlers more than once");
+      } else {
+        handlerPromise = recurseRight(impls, info, handler, index - 1);
+      }
+      result = await handlerPromise;
+      invariant(result, "Expected a result");
+      if (result.type === "error" && result.value instanceof Error) {
+        return { status: "error", error: result.value };
+      }
+      return { status: "success", error: undefined };
+    };
 
     try {
       await impl(callHandler, info);
@@ -447,11 +446,11 @@ function getHandlerInfo(
     | ActionFunctionArgs
     | Parameters<MiddlewareFunction>[0],
 ): RouteHandlerInstrumentationInfo {
-  let { request, context, params, unstable_pattern } = args;
+  let { request, context, params, pattern } = args;
   return {
     request: getReadonlyRequest(request),
     params: { ...params },
-    unstable_pattern,
+    pattern,
     context: getReadonlyContext(context),
   };
 }

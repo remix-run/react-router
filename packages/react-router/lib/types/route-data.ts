@@ -78,6 +78,15 @@ export type ClientDataFunctionArgs<Params> = {
    **/
   request: Request;
   /**
+   * A URL instance representing the application location being navigated to or
+   * fetched. By default, this matches `request.url`.
+   *
+   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
+   * normalized URL with React-Router-specific implementation details removed
+   * (`.data` suffixes, `index`/`_routes` search params).
+   */
+  url: URL;
+  /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
    * // app/routes.ts
@@ -96,7 +105,7 @@ export type ClientDataFunctionArgs<Params> = {
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  unstable_pattern: string;
+  pattern: string;
   /**
    * When `future.v8_middleware` is not enabled, this is undefined.
    *
@@ -111,6 +120,15 @@ export type ClientDataFunctionArgs<Params> = {
 export type ServerDataFunctionArgs<Params> = {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
   request: Request;
+  /**
+   * A URL instance representing the application location being navigated to or
+   * fetched. By default, this matches `request.url`.
+   *
+   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
+   * normalized URL with React-Router-specific implementation details removed
+   * (`.data` suffixes, `index`/`_routes` search params).
+   */
+  url: URL;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -130,7 +148,7 @@ export type ServerDataFunctionArgs<Params> = {
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  unstable_pattern: string;
+  pattern: string;
   /**
    * Without `future.v8_middleware` enabled, this is the context passed in
    * to your server adapter's `getLoadContext` function. It's a way to bridge the
@@ -202,6 +220,7 @@ type _DataActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   // ServerDataFrom
   Expect<Equal<ServerDataFrom<any>, undefined>>,

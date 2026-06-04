@@ -48,6 +48,7 @@ export function generateServerBuild(ctx: Context): VirtualFile {
       export const routeDiscovery: ServerBuild["routeDiscovery"];
       export const routes: ServerBuild["routes"];
       export const ssr: ServerBuild["ssr"];
+      export const allowedActionOrigins: ServerBuild["allowedActionOrigins"];
       export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
     }
   `;
@@ -177,7 +178,7 @@ function routeFilesType({
                   t.tsPropertySignature(
                     t.identifier("page"),
                     t.tsTypeAnnotation(
-                      pages
+                      pages.size > 0
                         ? t.tsUnionType(
                             Array.from(pages).map((page) =>
                               t.tsLiteralType(t.stringLiteral(page)),
@@ -302,7 +303,7 @@ function getRouteAnnotations({
     Babel.generate(matchesType).code +
     "\n\n" +
     ts`
-      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, ${ctx.rsc}>;
+      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;
 
       export namespace Route {
         // links
@@ -339,11 +340,20 @@ function getRouteAnnotations({
         // HydrateFallback
         export type HydrateFallbackProps = Annotations["HydrateFallbackProps"];
 
+        // ServerHydrateFallback
+        export type ServerHydrateFallbackProps = Annotations["ServerHydrateFallbackProps"];
+
         // Component
         export type ComponentProps = Annotations["ComponentProps"];
 
+        // ServerComponent
+        export type ServerComponentProps = Annotations["ServerComponentProps"];
+
         // ErrorBoundary
         export type ErrorBoundaryProps = Annotations["ErrorBoundaryProps"];
+
+        // ServerErrorBoundary
+        export type ServerErrorBoundaryProps = Annotations["ServerErrorBoundaryProps"];
       }
     `;
   return { filename, content };

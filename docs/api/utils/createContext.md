@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createContext.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createContext.html)
 
-Creates a type-safe [`RouterContext`](https://api.reactrouter.com/v7/interfaces/react_router.RouterContext.html) object that can be used to
+Creates a type-safe [`RouterContext`](https://api.reactrouter.com/v7/interfaces/react-router.RouterContext.html) object that can be used to
 store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
 [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
 Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
@@ -83,7 +83,7 @@ An optional default value for the context. This value will be returned if no val
 
 ## Returns
 
-A [`RouterContext`](https://api.reactrouter.com/v7/interfaces/react_router.RouterContext.html) object that can be used with
+A [`RouterContext`](https://api.reactrouter.com/v7/interfaces/react-router.RouterContext.html) object that can be used with
 `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
 [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
 

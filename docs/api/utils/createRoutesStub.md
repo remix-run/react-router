@@ -8,7 +8,7 @@ title: createRoutesStub
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createRoutesStub.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createRoutesStub.html)
 
 ## Signature
 

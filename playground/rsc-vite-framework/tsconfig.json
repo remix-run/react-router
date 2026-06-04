@@ -1,5 +1,6 @@
 {
   "include": ["**/*.ts", "**/*.tsx", "./.react-router/types/**/*"],
+  "exclude": ["vite.config.ts"],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "strict": true,
@@ -12,7 +13,11 @@
     "module": "ESNext",
     "target": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "@vitejs/plugin-rsc/types"],
+    "types": [
+      "vite/client",
+      "@vitejs/plugin-rsc/types",
+      "@react-router/dev/rsc-types"
+    ],
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"]
   }

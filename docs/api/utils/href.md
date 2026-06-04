@@ -8,7 +8,7 @@ title: href
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.href.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.href.html)
 
 Returns a resolved URL path for the specified route.
 

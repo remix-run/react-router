@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RSCRouterContext, type DataRouteObject } from "../context";
+import { RSCRouterContext } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
@@ -9,9 +9,14 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
-import { isRouteErrorResponse } from "../router/utils";
-import { decodeRedirectErrorDigest } from "../errors";
+import { isRouteErrorResponse, type DataRouteObject } from "../router/utils";
+import {
+  decodeRedirectErrorDigest,
+  decodeRouteErrorResponseDigest,
+} from "../errors";
 import { escapeHtml } from "../dom/ssr/markup";
+
+const defaultManifestPath = "/__manifest";
 
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
@@ -184,6 +189,8 @@ export async function routeRSCServerRequest({
   };
 
   let renderRedirect: { status: number; location: string } | undefined;
+  let renderError: unknown;
+
   try {
     if (!detectRedirectResponse.body) {
       throw new Error("Failed to clone server response");
@@ -210,6 +217,9 @@ export async function routeRSCServerRequest({
     }
 
     let reactHeaders = new Headers();
+    let status = serverResponse.status;
+    let statusText = serverResponse.statusText;
+
     let html = await renderHTML(getPayload, {
       onError(error: unknown) {
         if (
@@ -220,6 +230,13 @@ export async function routeRSCServerRequest({
         ) {
           renderRedirect = decodeRedirectErrorDigest(error.digest);
           if (renderRedirect) {
+            return error.digest;
+          }
+          let routeErrorResponse = decodeRouteErrorResponseDigest(error.digest);
+          if (routeErrorResponse) {
+            renderError = routeErrorResponse;
+            status = routeErrorResponse.status;
+            statusText = routeErrorResponse.statusText;
             return error.digest;
           }
         }
@@ -259,7 +276,8 @@ export async function routeRSCServerRequest({
 
     if (!hydrate) {
       return new Response(html.pipeThrough(redirectTransform), {
-        status: serverResponse.status,
+        status,
+        statusText,
         headers,
       });
     }
@@ -272,12 +290,13 @@ export async function routeRSCServerRequest({
       .pipeThrough(injectRSCPayload(serverResponseB.body))
       .pipeThrough(redirectTransform);
     return new Response(body, {
-      status: serverResponse.status,
+      status,
+      statusText,
       headers,
     });
-  } catch (reason) {
-    if (reason instanceof Response) {
-      return reason;
+  } catch (error) {
+    if (error instanceof Response) {
+      return error;
     }
 
     if (renderRedirect) {
@@ -290,7 +309,10 @@ export async function routeRSCServerRequest({
     }
 
     try {
-      const status = isRouteErrorResponse(reason) ? reason.status : 500;
+      let normalizedError = renderError ?? error;
+      let [status, statusText] = isRouteErrorResponse(normalizedError)
+        ? [normalizedError.status, normalizedError.statusText]
+        : [500, ""];
 
       let retryRedirect: { status: number; location: string } | undefined;
       let reactHeaders = new Headers();
@@ -305,7 +327,7 @@ export async function routeRSCServerRequest({
               status,
               errors: deepestRenderedBoundaryId
                 ? {
-                    [deepestRenderedBoundaryId]: reason,
+                    [deepestRenderedBoundaryId]: normalizedError,
                   }
                 : {},
             }),
@@ -339,6 +361,14 @@ export async function routeRSCServerRequest({
             ) {
               retryRedirect = decodeRedirectErrorDigest(error.digest);
               if (retryRedirect) {
+                return error.digest;
+              }
+              let routeErrorResponse = decodeRouteErrorResponseDigest(
+                error.digest,
+              );
+              if (routeErrorResponse) {
+                status = routeErrorResponse.status;
+                statusText = routeErrorResponse.statusText;
                 return error.digest;
               }
             }
@@ -379,7 +409,8 @@ export async function routeRSCServerRequest({
 
       if (!hydrate) {
         return new Response(html.pipeThrough(retryRedirectTransform), {
-          status: status,
+          status,
+          statusText,
           headers,
         });
       }
@@ -393,13 +424,17 @@ export async function routeRSCServerRequest({
         .pipeThrough(retryRedirectTransform);
       return new Response(body, {
         status,
+        statusText,
         headers,
       });
-    } catch {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      error2
+    ) {
       // Throw the original error below
     }
 
-    throw reason;
+    throw error;
   }
 }
 
@@ -549,7 +584,8 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
       // These flags have no runtime impact so can always be false.  If we add
       // flags that drive runtime behavior they'll need to be proxied through.
       v8_middleware: false,
-      unstable_subResourceIntegrity: false,
+      v8_trailingSlashAwareDataRequests: true, // always on for RSC
+      v8_passThroughRequests: true, // always on for RSC
     },
     isSpaMode: false,
     ssr: true,
@@ -563,7 +599,14 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         imports: [],
       },
     },
-    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+    routeDiscovery:
+      payload.routeDiscovery.mode === "initial"
+        ? { mode: "initial", manifestPath: defaultManifestPath }
+        : {
+            mode: "lazy",
+            manifestPath:
+              payload.routeDiscovery.manifestPath || defaultManifestPath,
+          },
     routeModules: createRSCRouteModules(payload),
   };
 

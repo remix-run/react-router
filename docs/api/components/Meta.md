@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Meta.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.Meta.html)
 
 Renders all the [`<meta>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta)
 tags created by the route module's [`meta`](../../start/framework/route-module#meta)

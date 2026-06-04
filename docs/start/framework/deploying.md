@@ -90,3 +90,7 @@ Cloudflare maintains their own template for React Router. Checkout the [Cloudfla
 ### Netlify
 
 Netlify maintains their own template for React Router. Checkout the [Netlify Guide](https://docs.netlify.com/build/frameworks/framework-setup-guides/react-router/) for more information.
+
+### EdgeOne Pages
+
+EdgeOne Pages maintains their own template for React Router. Checkout the [EdgeOne Pages Guide](https://pages.edgeone.ai/document/framework-react-router) for more information.

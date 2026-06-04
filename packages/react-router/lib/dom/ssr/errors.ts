@@ -27,7 +27,10 @@ export function deserializeErrors(
             let error = new ErrorConstructor(val.message);
             error.stack = val.stack;
             serialized[key] = error;
-          } catch (e) {
+          } catch (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            e
+          ) {
             // no-op - fall through and create a normal Error
           }
         }

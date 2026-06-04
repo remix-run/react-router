@@ -134,6 +134,8 @@ export function flatRoutesUniversal(
   let prefixLookup = new PrefixLookupTrie();
   let uniqueRoutes = new Map<string, RouteManifestEntry>();
   let routeIdConflicts = new Map<string, string[]>();
+  let normalizedApp = normalizeSlashes(appDirectory);
+  let appWithPrefix = path.posix.join(normalizedApp, prefix);
 
   // id -> file
   let routeIds = new Map<string, string>();
@@ -142,9 +144,8 @@ export function flatRoutesUniversal(
     let normalizedFile = normalizeSlashes(file);
     let routeExt = path.extname(normalizedFile);
     let routeDir = path.dirname(normalizedFile);
-    let normalizedApp = normalizeSlashes(appDirectory);
     let routeId =
-      routeDir === path.posix.join(normalizedApp, prefix)
+      routeDir === appWithPrefix
         ? path.posix
             .relative(normalizedApp, normalizedFile)
             .slice(0, -routeExt.length)
@@ -174,7 +175,7 @@ export function flatRoutesUniversal(
     let pathname = createRoutePath(segments, raw, index);
 
     routeManifest[routeId] = {
-      file: file.slice(appDirectory.length + 1),
+      file: path.posix.relative(normalizedApp, file),
       id: routeId,
       path: pathname,
     };

@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.renderMatches.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.renderMatches.html)
 
 Renders the result of [`matchRoutes`](../utils/matchRoutes) into a React element.
 
@@ -36,7 +36,7 @@ function renderMatches(
 
 ### matches
 
-The array of [route matches](https://api.reactrouter.com/v7/interfaces/react_router.RouteMatch.html) to render
+The array of [route matches](https://api.reactrouter.com/v7/interfaces/react-router.RouteMatch.html) to render
 
 ## Returns
 

@@ -278,4 +278,4 @@ const { "*": splat } = params;
 
 Next: [Route Object](./route-object)
 
-[outlet]: https://api.reactrouter.com/v7/functions/react_router.Outlet.html
+[outlet]: https://api.reactrouter.com/v7/functions/react-router.Outlet.html

@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useOutletContext.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useOutletContext.html)
 
 Returns the parent route [`<Outlet context>`](../components/Outlet).
 

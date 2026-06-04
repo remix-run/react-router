@@ -259,7 +259,7 @@ test.describe("Split route modules", async () => {
       port = await getPort();
       cwd = await createProject({
         "react-router.config.ts": reactRouterConfig({
-          v8_splitRouteModules,
+          future: { v8_splitRouteModules },
         }),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
@@ -366,7 +366,7 @@ test.describe("Split route modules", async () => {
       port = await getPort();
       cwd = await createProject({
         "react-router.config.ts": reactRouterConfig({
-          v8_splitRouteModules,
+          future: { v8_splitRouteModules },
         }),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
@@ -457,7 +457,7 @@ test.describe("Split route modules", async () => {
         port = await getPort();
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({
-            v8_splitRouteModules,
+            future: { v8_splitRouteModules },
           }),
           "vite.config.js": await viteConfig.basic({ port }),
           // Make unsplittable routes valid so the build can pass
@@ -477,7 +477,7 @@ test.describe("Split route modules", async () => {
         port = await getPort();
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({
-            v8_splitRouteModules,
+            future: { v8_splitRouteModules },
           }),
           "vite.config.js": await viteConfig.basic({ port }),
           "app/root.tsx": js`
@@ -505,7 +505,7 @@ test.describe("Split route modules", async () => {
         port = await getPort();
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({
-            v8_splitRouteModules,
+            future: { v8_splitRouteModules },
           }),
           "vite.config.js": await viteConfig.basic({ port }),
           "app/root.tsx": js`
@@ -534,7 +534,7 @@ test.describe("Split route modules", async () => {
         port = await getPort();
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({
-            v8_splitRouteModules,
+            future: { v8_splitRouteModules },
           }),
           "vite.config.js": await viteConfig.basic({ port }),
           ...files,

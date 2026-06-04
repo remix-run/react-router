@@ -14,8 +14,8 @@
     "@react-router/cloudflare": "workspace:*",
     "isbot": "^4.1.0",
     "miniflare": "^3.20250214.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {
@@ -23,9 +23,9 @@
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@react-router/remix-routes-option-adapter": "workspace:*",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "typescript": "^5.1.6",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
     "vite": "^6.3.0",
     "wrangler": "^4.23.0"
   },

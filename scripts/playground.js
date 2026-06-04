@@ -4,7 +4,7 @@ let { existsSync, readdirSync } = require("node:fs");
 let { cp } = require("node:fs/promises");
 let path = require("node:path");
 let prompts = require("prompts");
-let chalk = require("chalk");
+let pc = require("picocolors");
 
 copyPlayground();
 
@@ -40,8 +40,8 @@ async function copyPlayground() {
   console.log(
     [
       "",
-      chalk.green`Created local copy of "${templateName}"`,
-      chalk.green`To start playground, run:`,
+      pc.green(`Created local copy of "${templateName}"`),
+      pc.green(`To start playground, run:`),
       "",
       `cd ${relativeDestDir}`,
       "pnpm dev",

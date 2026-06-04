@@ -66,9 +66,6 @@ describe("Partial Hydration Behavior", () => {
           },
         ],
         {
-          future: {
-            v7_partialHydration: true,
-          },
           patchRoutesOnNavigation({ path, patch }) {
             if (path === "/parent/child") {
               patch("parent", [
@@ -155,9 +152,6 @@ describe("Partial Hydration Behavior", () => {
           },
         ],
         {
-          future: {
-            v7_partialHydration: true,
-          },
           patchRoutesOnNavigation({ path, patch }) {
             if (path === "/parent/child") {
               patch("parent", [
@@ -181,6 +175,107 @@ describe("Partial Hydration Behavior", () => {
       );
 
       parentDfd.resolve("PARENT DATA");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Root Loading...
+          </p>
+        </div>"
+      `);
+
+      childDfd.resolve("CHILD DATA");
+      await waitFor(() => screen.getByText(/CHILD DATA/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Parent - PARENT DATA
+          </h2>
+          <h3>
+            Child - CHILD DATA
+          </h3>
+        </div>"
+      `);
+    });
+
+    it("supports partial hydration w/patchRoutesOnNavigation and matching splat", async () => {
+      let patchDfd = createDeferred();
+      let parentDfd = createDeferred();
+      let childDfd = createDeferred();
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            HydrateFallback: () => <p>Root Loading...</p>,
+            Component() {
+              return (
+                <>
+                  <h1>Root</h1>
+                  <Outlet />
+                </>
+              );
+            },
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                loader: () => parentDfd.promise,
+                Component() {
+                  let data = useLoaderData() as string;
+                  return (
+                    <>
+                      <h2>{`Parent - ${data}`}</h2>
+                      <Outlet />
+                    </>
+                  );
+                },
+              },
+              {
+                path: "*",
+                Component() {
+                  return <h2>Splat</h2>;
+                },
+              },
+            ],
+          },
+        ],
+        {
+          async patchRoutesOnNavigation({ path, patch }) {
+            await patchDfd.promise;
+            if (path === "/parent/child") {
+              patch("parent", [
+                {
+                  path: "child",
+                  loader: () => childDfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h3>{`Child - ${data}`}</h3>;
+                  },
+                },
+              ]);
+            }
+          },
+          initialEntries: ["/parent/child"],
+        },
+      );
+      let { container } = render(
+        // eslint-disable-next-line react/jsx-pascal-case
+        <ReactRouter_RouterProvider router={router} />,
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Root Loading...
+          </p>
+        </div>"
+      `);
+
+      patchDfd.resolve();
+      parentDfd.resolve("PARENT DATA");
+      await tick();
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <p>
@@ -748,5 +843,77 @@ function testPartialHydration(
 
     expect(rootSpy).toHaveBeenCalledTimes(1);
     expect(indexSpy).not.toHaveBeenCalled();
+  });
+
+  it("renders child fallback when ancestor route has hydration data and a hydrating loader", async () => {
+    let rootDfd = createDeferred();
+    let rootLoader: LoaderFunction = () => rootDfd.promise;
+    rootLoader.hydrate = true;
+    let indexDfd = createDeferred();
+    let indexLoader: LoaderFunction = () => indexDfd.promise;
+    indexLoader.hydrate = true;
+    let router = createTestRouter(
+      [
+        {
+          id: "root",
+          path: "/",
+          loader: rootLoader,
+          Component() {
+            let data = useLoaderData() as string;
+            return (
+              <>
+                <h1>{`Home - ${data}`}</h1>
+                <Outlet />
+              </>
+            );
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              loader: indexLoader,
+              HydrateFallback: () => <p>Index Loading...</p>,
+              Component() {
+                let data = useLoaderData() as string;
+                return <h2>{`Index - ${data}`}</h2>;
+              },
+            },
+          ],
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: {
+            root: "HYDRATED ROOT",
+          },
+        },
+      },
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home - HYDRATED ROOT
+        </h1>
+        <p>
+          Index Loading...
+        </p>
+      </div>"
+    `);
+
+    rootDfd.resolve("ROOT UPDATED");
+    indexDfd.resolve("INDEX UPDATED");
+    await waitFor(() => screen.getByText(/INDEX UPDATED/));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home - ROOT UPDATED
+        </h1>
+        <h2>
+          Index - INDEX UPDATED
+        </h2>
+      </div>"
+    `);
   });
 }

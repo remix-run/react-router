@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Scripts.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.Scripts.html)
 
 Renders the client runtime of your app. It should be rendered inside the
 [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body)

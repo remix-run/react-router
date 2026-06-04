@@ -24,7 +24,7 @@
 **RSC mode differences:**
 
 - **RSC Framework**: `unstable_reactRouterRSC` plugin, `@vitejs/plugin-rsc`, different entry points/format
-- **RSC Data**: Manual bundler, runtime route config typically in `src/routes.ts`, `unstable_RSCRouteConfig`, different runtime APIs, `setupRscTest` in `integration/rsc/`, tests Vite + Parcel
+- **RSC Data**: Manual bundler, runtime route config typically in `src/routes.ts`, `unstable_RSCRouteConfig`, different runtime APIs, `setupRscTest` in `integration/rsc/`
 
 ## Architecture
 
@@ -70,7 +70,7 @@ pnpm test:integration:run --project chromium -g "middleware"                 # T
 **RSC testing**:
 
 - **RSC Framework**: Use `createFixture` with `rsc-vite-framework/` template
-- **RSC Data**: Use `setupRscTest` in `integration/rsc/`, tests Vite + Parcel
+- **RSC Data**: Use `setupRscTest` in `integration/rsc/`
 
 Test shared behavior across multiple templates (e.g., `["vite-5-template", "rsc-vite-framework"]`). Test RSC-specific features against RSC template.
 
@@ -122,18 +122,13 @@ export default [
 
 Test both states (on/off) for future flags. Don't break existing behavior without a flag.
 
-## Changesets
+## Change Files
 
-When making changes that affect users, create a changeset at `.changeset/<unique-meaningful-name>.md`. If iterating on a change that hasn't shipped yet, update the existing changeset file instead of creating a new one.
+When making changes that affect users, create a change file at `packages/<package>/.changes/<type>.<unique-meaningful-name>.md`. `<type>` should be either `patch`, `minor`, `major` or `unstable` to indicate the type of API change being made. If iterating on a change that hasn't shipped yet, update the existing change file instead of creating a new one.
 
 Format:
 
 ```markdown
----
-"react-router": patch
-"@react-router/dev": minor
----
-
 Brief description of the change
 
 - Additional details if needed
@@ -141,10 +136,9 @@ Brief description of the change
 
 ## Branching
 
-- **`main`**: Latest stable release
-- **`dev`**: Active development (branch from here for code changes)
+- **`main`**: Active Development
 - **`v6`**: v6.x maintenance
-- Branch from `main` for docs-only changes
+- Branch from `main` for code and docs changes
 
 ## Key Files
 

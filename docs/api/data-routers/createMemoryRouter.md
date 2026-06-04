@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createMemoryRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createMemoryRouter.html)
 
-Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application path using an
+Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) that manages the application path using an
 in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 stack. Useful for non-browser environments without a DOM API.
 
@@ -99,7 +99,7 @@ Initial entries in the in-memory history stack
 
 Index of `initialEntries` the application should initialize to
 
-### opts.unstable_instrumentations
+### opts.instrumentations
 
 Array of instrumentation objects allowing you to instrument the router and
 individual routes prior to router initialization (and on any subsequently
@@ -110,7 +110,7 @@ tracing.  See the [docs](../../how-to/instrumentation) for more information.
 
 ```tsx
 let router = createBrowserRouter(routes, {
-  unstable_instrumentations: [logging]
+  instrumentations: [logging]
 });
 
 
@@ -154,5 +154,5 @@ Lazily define portions of the route tree on navigations.
 
 ## Returns
 
-An initialized [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

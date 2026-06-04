@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.resolvePath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.resolvePath.html)
 
-Returns a resolved [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object relative to the given pathname.
+Returns a resolved [`Path`](https://api.reactrouter.com/v7/interfaces/react-router.Path.html) object relative to the given pathname.
 
 ## Signature
 
@@ -34,7 +34,7 @@ function resolvePath(to: To, fromPathname = "/"): Path
 
 ### to
 
-The path to resolve, either a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object.
+The path to resolve, either a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react-router.Path.html) object.
 
 ### fromPathname
 
@@ -42,5 +42,5 @@ The pathname to resolve the path from. Defaults to `/`.
 
 ## Returns
 
-A [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object with the resolved pathname, search, and hash.
+A [`Path`](https://api.reactrouter.com/v7/interfaces/react-router.Path.html) object with the resolved pathname, search, and hash.
 

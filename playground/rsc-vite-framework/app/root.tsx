@@ -1,11 +1,32 @@
 import type { Route } from "./+types/root";
 
-import { Meta, Link, Outlet, isRouteErrorResponse } from "react-router";
+import { Meta, Link, Outlet, isRouteErrorResponse, type MiddlewareFunction } from "react-router";
 import "./root.css";
+
+export const middleware: MiddlewareFunction[] = [
+  async ({ request }, next) => {
+    let response = await next();
+
+    if (
+      request.method === "GET" &&
+      response instanceof Response &&
+      response.status === 200 &&
+      request.headers.get("sec-purpose") === "prefetch" &&
+      !response.headers.has("Cache-Control")
+    ) {
+      let cachedResponse = new Response(response.body, response);
+      cachedResponse.headers.set("Cache-Control", "max-age=5");
+      return cachedResponse;
+    }
+    return response;
+  }
+];
 
 export const meta = () => [{ title: "React Router Vite" }];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+// export const shouldRevalidate = () => false;
+
+export function ServerLayout({ children }: { children: React.ReactNode }) {
   console.log("Layout");
   return (
     <html lang="en">
@@ -23,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Link to="/">Home</Link>
               </li>
               <li>
-                <Link to="/server-loader">Server loader</Link>
+                <Link to="/server-loader" prefetch="intent">Server loader</Link>
               </li>
               <li>
                 <Link to="/client-loader">Client loader</Link>
@@ -51,13 +72,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ServerComponent() {
+export function ServerComponent({}: Route.ServerComponentProps) {
   console.log("Root");
   return (
     <>
       <Outlet />
     </>
   );
+}
+
+// export default function ClientComponent() {
+//   console.log("Root");
+//   return (
+//     <>
+//       <Outlet />
+//     </>
+//   );
+// }
+
+export function HydrateFallback() {
+  return <div>Loading...</div>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

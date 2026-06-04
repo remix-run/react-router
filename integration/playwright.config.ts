@@ -1,3 +1,5 @@
+import * as os from "node:os";
+
 import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
 
@@ -7,6 +9,8 @@ process.env.NODE_OPTIONS =
   (process.env.NODE_OPTIONS ?? "") + ` --no-warnings=ExperimentalWarning`;
 
 const isWindows = process.platform === "win32";
+let workers = Math.floor(os.cpus().length / 2);
+if (workers < 2) workers = 2;
 
 const config: PlaywrightTestConfig = {
   testDir: ".",
@@ -18,8 +22,8 @@ const config: PlaywrightTestConfig = {
   },
   /* Maximum time one test can run for. */
   timeout: isWindows ? 60_000 : 30_000,
-  fullyParallel: !(isWindows && process.env.CI),
-  workers: isWindows && process.env.CI ? 1 : undefined,
+  fullyParallel: true,
+  workers,
   expect: {
     /* Maximum time expect() should wait for the condition to be met. */
     timeout: isWindows ? 10_000 : 5_000,

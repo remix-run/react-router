@@ -42,6 +42,7 @@ describe("a memory router", () => {
         },
       ],
       initialized: true,
+      renderFallback: false,
       navigation: {
         location: undefined,
         state: "idle",

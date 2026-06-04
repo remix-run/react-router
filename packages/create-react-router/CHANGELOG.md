@@ -1,5 +1,63 @@
 # `create-react-router`
 
+## v7.17.0
+
+### Patch Changes
+
+- _No changes_
+
+## v7.16.0
+
+### Patch Changes
+
+- _No changes_
+
+## v7.15.1
+
+### Patch Changes
+
+- _No changes_
+
+## v7.15.0
+
+### Patch Changes
+
+- _No changes_
+
+## v7.14.2
+
+### Patch Changes
+
+- _No changes_
+
+## v7.14.1
+
+### Patch Changes
+
+- _No changes_
+
+## 7.14.0
+
+## 7.13.2
+
+### Patch Changes
+
+- chore: replace chalk with picocolors ([#14837](https://github.com/remix-run/react-router/pull/14837))
+
+## 7.13.1
+
+## 7.13.0
+
+_No changes_
+
+## 7.12.0
+
+_No changes_
+
+## 7.11.0
+
+_No changes_
+
 ## 7.10.1
 
 _No changes_

@@ -56,6 +56,7 @@ test(
     // This sets up the Remix modules cache in memory, priming the error case.
     await app.goto("/");
     await app.clickLink("/burgers");
+    await page.waitForSelector("#cheeseburger");
     expect(await page.content()).toContain("cheeseburger");
     await page.goBack();
     await page.waitForSelector("#pizza");
@@ -146,7 +147,7 @@ test("allows users to pass an onError function to HydratedRouter", async ({
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_onError={(error, errorInfo) => {
+                onError={(error, errorInfo) => {
                   console.log(error.message, JSON.stringify(errorInfo))
                 }}
               />
@@ -212,7 +213,7 @@ test("allows users to instrument the client side router via HydratedRouter", asy
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_instrumentations={[{
+                instrumentations={[{
                   router(router) {
                     router.instrument({
                       async navigate(impl, info) {

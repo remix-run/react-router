@@ -1,5 +1,5 @@
 import type { Location } from "../../router/history";
-import type { AgnosticDataRouteMatch } from "../../router/utils";
+import type { DataRouteMatch } from "../../router/utils";
 
 import type { AssetsManifest } from "./entry";
 import type { RouteModules, RouteModule } from "./routeModules";
@@ -16,7 +16,7 @@ import type {
  * loaded already.
  */
 export function getKeyedLinksForMatches(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   routeModules: RouteModules,
   manifest: AssetsManifest,
 ): KeyedLinkDescriptor[] {
@@ -147,7 +147,7 @@ function isHtmlLinkDescriptor(object: any): object is HtmlLinkDescriptor {
 export type KeyedHtmlLinkDescriptor = { key: string; link: HtmlLinkDescriptor };
 
 export async function getKeyedPrefetchLinks(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   manifest: AssetsManifest,
   routeModules: RouteModules,
 ): Promise<KeyedHtmlLinkDescriptor[]> {
@@ -178,18 +178,18 @@ export async function getKeyedPrefetchLinks(
 // This is ridiculously identical to transition.ts `filterMatchesToLoad`
 export function getNewMatchesForLinks(
   page: string,
-  nextMatches: AgnosticDataRouteMatch[],
-  currentMatches: AgnosticDataRouteMatch[],
+  nextMatches: DataRouteMatch[],
+  currentMatches: DataRouteMatch[],
   manifest: AssetsManifest,
   location: Location,
   mode: "data" | "assets",
-): AgnosticDataRouteMatch[] {
-  let isNew = (match: AgnosticDataRouteMatch, index: number) => {
+): DataRouteMatch[] {
+  let isNew = (match: DataRouteMatch, index: number) => {
     if (!currentMatches[index]) return true;
     return match.route.id !== currentMatches[index].route.id;
   };
 
-  let matchPathChanged = (match: AgnosticDataRouteMatch, index: number) => {
+  let matchPathChanged = (match: DataRouteMatch, index: number) => {
     return (
       // param change, /users/123 -> /users/456
       currentMatches[index].pathname !== match.pathname ||
@@ -244,7 +244,7 @@ export function getNewMatchesForLinks(
 }
 
 export function getModuleLinkHrefs(
-  matches: AgnosticDataRouteMatch[],
+  matches: DataRouteMatch[],
   manifest: AssetsManifest,
   { includeHydrateFallback }: { includeHydrateFallback?: boolean } = {},
 ): string[] {

@@ -163,10 +163,7 @@ implementations.forEach((implementation) => {
     test("Supports React Server Functions side-effect redirect headers for document requests", async ({
       page,
     }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+      test.skip(project.name !== "chromium");
 
       await page.goto(`http://localhost:${port}/`);
 
@@ -191,12 +188,12 @@ implementations.forEach((implementation) => {
     });
 
     test("Supports form state without JS", async ({ page }, { project }) => {
-      test.skip(
-        implementation.name === "parcel" || project.name !== "chromium",
-        "TODO: figure out why parcel isn't working here",
-      );
+      test.skip(project.name !== "chromium");
 
-      await page.goto(`http://localhost:${port}/`);
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      await page.waitForSelector("[data-action-state-increment-result]");
 
       await expect(
         page.locator("[data-action-state-increment-result]"),
@@ -223,8 +220,13 @@ implementations.forEach((implementation) => {
     });
 
     test("Suppport throwing external redirect Response from render", async ({
+      browserName,
       page,
     }) => {
+      test.skip(
+        browserName === "firefox",
+        "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+      );
       await page.goto(`http://localhost:${port}/render-redirect`);
       await expect(page.getByText("home")).toBeAttached();
       await page.getByText("External").click();
@@ -248,7 +250,7 @@ implementations.forEach((implementation) => {
     }) => {
       test.skip(
         browserName === "firefox",
-        "Playwright doesn't like external meta redirects for tests. It times out waiting for the URL even though it navigates.",
+        "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
       );
       await page.goto(`http://localhost:${port}/render-redirect/lazy/external`);
       await page.waitForURL(`https://example.com/`);

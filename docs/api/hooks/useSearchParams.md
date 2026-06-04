@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useSearchParams.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useSearchParams.html)
 
 Returns a tuple of the current URL's [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
 and a function to update them. Setting the search params causes a navigation.

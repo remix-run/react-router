@@ -40,7 +40,7 @@ test.describe("Middleware", () => {
           // ...existing code...
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            v8_middleware: true,
+            future: { v8_middleware: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -368,8 +368,7 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            v8_middleware: true,
-            v8_splitRouteModules: true,
+            future: { v8_middleware: true, v8_splitRouteModules: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -466,7 +465,7 @@ test.describe("Middleware", () => {
       fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
+            future: { v8_middleware: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -773,7 +772,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
+            future: { v8_middleware: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -895,7 +894,7 @@ test.describe("Middleware", () => {
       let fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
+            future: { v8_middleware: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1060,8 +1059,7 @@ test.describe("Middleware", () => {
       fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
-            v8_splitRouteModules: true,
+            future: { v8_middleware: true, v8_splitRouteModules: true },
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -1156,7 +1154,9 @@ test.describe("Middleware", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({ v8_middleware: true }),
+          "react-router.config.ts": reactRouterConfig({
+            future: { v8_middleware: true },
+          }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1983,7 +1983,7 @@ test.describe("Middleware", () => {
         {
           files: {
             "react-router.config.ts": reactRouterConfig({
-              v8_middleware: true,
+              future: { v8_middleware: true },
             }),
             "vite.config.ts": js`
               import { defineConfig } from "vite";

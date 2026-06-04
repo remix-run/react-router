@@ -12,7 +12,6 @@ import type {
   Router as DataRouter,
   RevalidationState,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
-  RouterState,
   StaticHandlerContext,
 } from "../router/router";
 import {
@@ -21,20 +20,24 @@ import {
   IDLE_NAVIGATION,
   createStaticHandler as routerCreateStaticHandler,
 } from "../router/router";
-import type { RouteManifest } from "../router/utils";
+import type {
+  DataRouteObject,
+  RouteBranch,
+  RouteManifest,
+  RouteObject,
+} from "../router/utils";
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import { Router, mapRouteProperties } from "../components";
-import type { DataRouteObject, RouteObject } from "../context";
+import { DataRoutes, Router, mapRouteProperties } from "../components";
 import {
   DataRouterContext,
   DataRouterStateContext,
   FetchersContext,
   ViewTransitionContext,
 } from "../context";
-import { useRoutesImpl } from "../hooks";
+import { escapeHtml } from "./ssr/markup";
 
 /**
  * @category Types
@@ -83,6 +86,7 @@ export function StaticRouter({
     hash: locationProp.hash || "",
     state: locationProp.state != null ? locationProp.state : null,
     key: locationProp.key || "default",
+    mask: undefined,
   };
 
   let staticNavigator = getStatelessNavigator();
@@ -94,7 +98,7 @@ export function StaticRouter({
       navigationType={action}
       navigator={staticNavigator}
       static={true}
-      unstable_useTransitions={false}
+      useTransitions={false}
     />
   );
 }
@@ -187,7 +191,7 @@ export function StaticRouterProvider({
     // up parsing on the client.  Dual-stringify is needed to ensure all quotes
     // are properly escaped in the resulting string.  See:
     //   https://v8.dev/blog/cost-of-javascript-2019#json
-    let json = htmlEscape(JSON.stringify(JSON.stringify(data)));
+    let json = escapeHtml(JSON.stringify(JSON.stringify(data)));
     hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
   }
 
@@ -205,12 +209,14 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
-                unstable_useTransitions={false}
+                useTransitions={false}
               >
                 <DataRoutes
+                  manifest={router.manifest}
                   routes={router.routes}
                   future={router.future}
                   state={state}
+                  isStatic={true}
                 />
               </Router>
             </ViewTransitionContext.Provider>
@@ -226,18 +232,6 @@ export function StaticRouterProvider({
       ) : null}
     </>
   );
-}
-
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: DataRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, undefined, future);
 }
 
 function serializeErrors(
@@ -384,12 +378,14 @@ export function createStaticHandler(
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
+ * @param opts.branches Optional pre-computed route branches
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
@@ -401,9 +397,9 @@ export function createStaticRouter(
     manifest,
   );
 
-  // Because our context matches may be from a framework-agnostic set of
-  // routes passed to createStaticHandler(), we update them here with our
-  // newly created/enhanced data routes
+  // Because our context matches may be from a set of routes passed to
+  // createStaticHandler(), we update them here with our newly created/enhanced
+  // data routes
   let matches = context.matches.map((match) => {
     let route = manifest[match.route.id] || match.route;
     return {
@@ -422,6 +418,8 @@ export function createStaticRouter(
     get future() {
       return {
         v8_middleware: false,
+        v8_passThroughRequests: false,
+        v8_trailingSlashAwareDataRequests: false,
         ...opts?.future,
       };
     },
@@ -434,6 +432,7 @@ export function createStaticRouter(
         actionData: context.actionData,
         errors: context.errors,
         initialized: true,
+        renderFallback: false,
         navigation: IDLE_NAVIGATION,
         restoreScrollPosition: null,
         preventScrollReset: false,
@@ -444,6 +443,12 @@ export function createStaticRouter(
     },
     get routes() {
       return dataRoutes;
+    },
+    get branches() {
+      return opts.branches;
+    },
+    get manifest() {
+      return manifest;
     },
     get window() {
       return undefined;
@@ -520,19 +525,3 @@ function encodeLocation(to: To): Path {
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-
-// This utility is based on https://github.com/zertosh/htmlescape
-// License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
-const ESCAPE_LOOKUP: { [match: string]: string } = {
-  "&": "\\u0026",
-  ">": "\\u003e",
-  "<": "\\u003c",
-  "\u2028": "\\u2028",
-  "\u2029": "\\u2029",
-};
-
-const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
-
-function htmlEscape(str: string): string {
-  return str.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
-}

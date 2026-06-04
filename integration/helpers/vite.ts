@@ -23,42 +23,23 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
 
-export const reactRouterConfig = ({
-  ssr,
-  basename,
-  prerender,
-  appDirectory,
-  v8_middleware,
-  v8_splitRouteModules,
-  v8_viteEnvironmentApi,
-  routeDiscovery,
-}: {
-  ssr?: boolean;
-  basename?: string;
-  prerender?: boolean | string[];
-  appDirectory?: string;
-  v8_middleware?: boolean;
-  v8_splitRouteModules?: NonNullable<Config["future"]>["v8_splitRouteModules"];
-  v8_viteEnvironmentApi?: boolean;
-  routeDiscovery?: Config["routeDiscovery"];
-}) => {
-  let config: Config = {
-    ssr,
-    basename,
-    prerender,
-    appDirectory,
-    routeDiscovery,
-    future: {
-      v8_middleware,
-      v8_splitRouteModules,
-      v8_viteEnvironmentApi,
-    },
-  };
+export const reactRouterConfig = (
+  // Don't support function configs due to JSON.stringify()
+  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles">,
+) => {
+  if (
+    typeof config.prerender === "function" ||
+    (typeof config.prerender === "object" &&
+      !Array.isArray(config.prerender) &&
+      typeof config.prerender.paths === "function")
+  ) {
+    throw new Error("reactRouterConfig() does not support prerender functions");
+  }
 
   return dedent`
     import type { Config } from "@react-router/dev/config";
 
-    export default ${JSON.stringify(config)} satisfies Config;
+    export default ${JSON.stringify(config, null, 2)} satisfies Config;
   `;
 };
 
@@ -109,18 +90,6 @@ export const viteConfig = {
   }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
-        // Detect rolldown-vite. This should ideally use "rolldownVersion"
-        // but that's not exported. Once that's available, this
-        // check should be updated to use it.
-        rollupOptions: "transformWithOxc" in (await import("vite"))
-          ? {
-              onwarn(warning, warn) {
-                // Ignore "The built-in minifier is still under development." warning
-                if (warning.code === "MINIFY_WARNING") return;
-                warn(warning);
-              },
-            }
-          : undefined,
         assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
         assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
         cssCodeSplit: ${
@@ -137,28 +106,42 @@ export const viteConfig = {
           ? "import { reactRouter } from '@react-router/dev/vite';"
           : [
               "import { unstable_reactRouterRSC as reactRouterRSC } from '@react-router/dev/vite';",
+              "import react from '@vitejs/plugin-react';",
               "import rsc from '@vitejs/plugin-rsc';",
             ].join("\n")
       }
       ${args.mdx ? 'import mdx from "@mdx-js/rollup";' : ""}
       ${args.vanillaExtract ? 'import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";' : ""}
       import { envOnlyMacros } from "vite-env-only";
-      import tsconfigPaths from "vite-tsconfig-paths";
 
-      export default async () => ({
-        ${args.port ? await viteConfig.server(args) : ""}
-        ${viteConfig.build(args)}
-        ${args.base ? `base: "${args.base}",` : ""}
-        envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
-        plugins: [
-          ${args.mdx ? "mdx()," : ""}
+      export default async () => {
+        let vite = await import("vite");
+        let useNativeTsconfigPaths =
+          parseInt(vite.version.split(".")[0], 10) >= 8;
+        let plugins = [
+          ${args.mdx ? "{enforce: 'pre', ...mdx()}," : ""}
           ${args.vanillaExtract ? "vanillaExtractPlugin({ emitCssInSsr: true })," : ""}
-          ${isRsc ? "reactRouterRSC()," : "reactRouter(),"}
-          ${isRsc ? "rsc()," : ""}
+          ${isRsc ? "    reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true })," : "reactRouter(),"}
+          ${isRsc ? "react(), rsc()," : ""}
           envOnlyMacros(),
-          tsconfigPaths()
-        ],
-      });
+        ];
+
+        if (!useNativeTsconfigPaths) {
+          let { default: tsconfigPaths } = await import(
+            /* @vite-ignore */ "vite-tsconfig-paths"
+          );
+          plugins.push(tsconfigPaths());
+        }
+
+        return {
+          ${args.port ? await viteConfig.server(args) : ""}
+          ${viteConfig.build(args)}
+          ${args.base ? `base: "${args.base}",` : ""}
+          envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
+          resolve: { tsconfigPaths: useNativeTsconfigPaths },
+          plugins,
+        };
+      };
     `;
   },
 };
@@ -250,8 +233,8 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
   | "vite-6-template"
   | "vite-7-beta-template"
-  | "vite-plugin-cloudflare-template"
-  | "vite-rolldown-template";
+  | "vite-8-template"
+  | "vite-plugin-cloudflare-template";
 
 type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
@@ -259,7 +242,7 @@ type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
   | "vite-plugin-cloudflare-template";
 
-export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+export type RscBundlerTemplateName = "rsc-vite";
 
 export type TemplateName =
   | FrameworkModeViteMajorTemplateName
@@ -271,10 +254,7 @@ export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
   { templateName: "vite-7-beta-template", templateDisplayName: "Vite 7 Beta" },
-  {
-    templateName: "vite-rolldown-template",
-    templateDisplayName: "Vite Rolldown",
-  },
+  { templateName: "vite-8-template", templateDisplayName: "Vite 8" },
 ] as const satisfies Array<{
   templateName: FrameworkModeViteMajorTemplateName;
   templateDisplayName: string;
@@ -282,7 +262,6 @@ export const viteMajorTemplates = [
 
 export const rscBundlerTemplates = [
   { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
-  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
 ] as const satisfies Array<{
   templateName: RscBundlerTemplateName;
   templateDisplayName: string;
@@ -335,9 +314,6 @@ export const build = ({
       ...process.env,
       ...colorEnv,
       ...env,
-      // Ensure build can pass in Rolldown. This can be removed once
-      // "preserveEntrySignatures" is supported in rolldown-vite.
-      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 };
@@ -526,6 +502,7 @@ export const test = base.extend<Fixtures>({
     });
     stop?.();
   },
+  // eslint-disable-next-line no-empty-pattern
   vitePreview: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {

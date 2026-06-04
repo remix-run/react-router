@@ -20,7 +20,6 @@ export type Implementation = {
   dev: ({ cwd, port }: { cwd: string; port: number }) => Promise<() => void>;
 };
 
-// Run tests against vite and parcel to ensure our code is bundler agnostic
 export const implementations: Implementation[] = [
   {
     name: "vite",
@@ -36,28 +35,6 @@ export const implementations: Implementation[] = [
       }),
     dev: ({ cwd, port }) =>
       createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
-        cwd,
-        port,
-      }),
-  },
-  {
-    name: "parcel",
-    template: "rsc-parcel",
-    build: ({ cwd }: { cwd: string }) => spawnSync("pnpm", ["build"], { cwd }),
-    run: ({ cwd, port }) =>
-      createDev(["dist/server/server.js", "-p", String(port)])({
-        cwd,
-        port,
-        env: {
-          NODE_ENV: "production",
-        },
-      }),
-    dev: ({ cwd, port }) =>
-      createDev(["node_modules/parcel/lib/bin.js"])({
-        // Since we run through parcels dev server we can't use `-p` because that
-        // only changes the dev server and doesn't pass through to the internal
-        // server.  So we setup the internal server to choose from `RR_PORT`
-        env: { RR_PORT: String(port) },
         cwd,
         port,
       }),

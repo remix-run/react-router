@@ -1,5 +1,5 @@
 import type {
-  AgnosticDataRouteObject,
+  DataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
@@ -44,22 +44,6 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   return routes;
 }
 
-// Create a map of routes by parentId to use recursively instead of
-// repeatedly filtering the manifest.
-export function createRoutes(
-  manifest: ServerRouteManifest,
-  parentId: string = "",
-  routesByParentId: Record<
-    string,
-    Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest),
-): ServerRoute[] {
-  return (routesByParentId[parentId] || []).map((route) => ({
-    ...route,
-    children: createRoutes(manifest, route.id, routesByParentId),
-  }));
-}
-
 // Convert the Remix ServerManifest into DataRouteObject's for use with
 // createStaticHandler
 export function createStaticHandlerDataRoutes(
@@ -70,7 +54,7 @@ export function createStaticHandlerDataRoutes(
     string,
     Omit<ServerRoute, "children">[]
   > = groupRoutesByParentId(manifest),
-): AgnosticDataRouteObject[] {
+): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
       // Always include root due to default boundaries
@@ -131,13 +115,17 @@ export function createStaticHandlerDataRoutes(
                 return result.data;
               }
             }
-            let val = await callRouteHandler(route.module.loader!, args);
+            let val = await callRouteHandler(
+              route.module.loader!,
+              args,
+              future,
+            );
             return val;
           }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>
-            callRouteHandler(route.module.action!, args)
+            callRouteHandler(route.module.action!, args, future)
         : undefined,
       handle: route.module.handle,
     };

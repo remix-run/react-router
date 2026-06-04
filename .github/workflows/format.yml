@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,7 +21,7 @@ jobs:
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v6

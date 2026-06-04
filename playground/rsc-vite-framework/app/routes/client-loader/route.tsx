@@ -7,7 +7,7 @@ export function loader() {
 }
 
 export function clientLoader() {
-  return "hello, world from client loader";
+  return "hello, world from client loader!";
 }
 
 export default function ClientLoaderRoute({

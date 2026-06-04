@@ -1,22 +1,6 @@
 import { resolvePath } from "react-router";
 
 describe("resolvePath", () => {
-  it("does not touch with protocol-less absolute paths", () => {
-    expect(resolvePath("//google.com")).toMatchObject({
-      pathname: "//google.com",
-    });
-
-    expect(resolvePath("//google.com/../../path")).toMatchObject({
-      pathname: "//google.com/../../path",
-    });
-
-    expect(resolvePath("//google.com?q=query#hash")).toMatchObject({
-      pathname: "//google.com",
-      search: "?q=query",
-      hash: "#hash",
-    });
-  });
-
   it('resolves absolute paths irrespective of the "from" pathname', () => {
     expect(resolvePath("/search", "/inbox")).toMatchObject({
       pathname: "/search",
@@ -77,6 +61,32 @@ describe("resolvePath", () => {
     });
 
     spy.mockRestore();
+  });
+
+  it("handles relative paths with an embedded colon", () => {
+    expect(resolvePath("foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("./foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("../foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("foo:bar", "/path")).toMatchObject({
+      pathname: "/path/foo:bar",
+    });
+
+    expect(resolvePath("./foo:bar", "/path")).toMatchObject({
+      pathname: "/path/foo:bar",
+    });
+
+    expect(resolvePath("../foo:bar", "/path")).toMatchObject({
+      pathname: "/foo:bar",
+    });
   });
 
   it('ignores trailing slashes on the "from" pathname when resolving relative paths', () => {

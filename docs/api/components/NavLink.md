@@ -20,19 +20,19 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.NavLink.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.NavLink.html)
 
 Wraps [`<Link>`](../components/Link) with additional props for styling active and
 pending states.
 
 - Automatically applies classes to the link based on its `active` and `pending`
-states, see [`NavLinkProps.className`](https://api.reactrouter.com/v7/interfaces/react_router.NavLinkProps.html#className)
+states, see [`NavLinkProps.className`](https://api.reactrouter.com/v7/interfaces/react-router.NavLinkProps.html#className)
   - Note that `pending` is only available with Framework and Data modes.
 - Automatically applies `aria-current="page"` to the link when the link is active.
 See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current)
 on MDN.
 - States are additionally available through the className, style, and children
-render props. See [`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps.html).
+render props. See [`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react-router.NavLinkRenderProps.html).
 
 ```tsx
 <NavLink to="/message">Messages</NavLink>
@@ -94,7 +94,7 @@ a.transitioning {
 }
 ```
 
-Or you can specify a function that receives [`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps.html) and
+Or you can specify a function that receives [`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react-router.NavLinkRenderProps.html) and
 returns the `className`:
 
 ```tsx
@@ -109,7 +109,10 @@ returns the `className`:
 
 [modes: framework]
 
-Defines the link discovery behavior
+Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
+
+- **render** — default, discover the route when the link renders
+- **none** — don't eagerly discover, only discover if the link is clicked
 
 ```tsx
 <Link /> // default ("render")
@@ -117,15 +120,12 @@ Defines the link discovery behavior
 <Link discover="none" />
 ```
 
-- **render** — default, discover the route when the link renders
-- **none** — don't eagerly discover, only discover if the link is clicked
-
 ### end
 
 [modes: framework, data, declarative]
 
 Changes the matching logic for the `active` and `pending` states to only match
-to the "end" of the [`NavLinkProps.to`](https://api.reactrouter.com/v7/interfaces/react_router.NavLinkProps.html#to). If the URL is longer, it will no
+to the "end" of the [`NavLinkProps.to`](https://api.reactrouter.com/v7/interfaces/react-router.NavLinkProps.html#to). If the URL is longer, it will no
 longer be considered active.
 
 | Link                          | URL          | isActive |
@@ -269,7 +269,7 @@ This state is inaccessible on the server as it is implemented on top of
 [modes: framework, data, declarative]
 
 Styles can also be applied dynamically via a function that receives
-[`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps.html) and returns the styles:
+[`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react-router.NavLinkRenderProps.html) and returns the styles:
 
 ```tsx
 <NavLink to="/tasks" style={{ color: "red" }} />
@@ -284,7 +284,7 @@ Styles can also be applied dynamically via a function that receives
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
+Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react-router.Path.html):
 
 ```tsx
 <Link to="/some/path" />

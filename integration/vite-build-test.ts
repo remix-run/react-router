@@ -38,7 +38,7 @@ test.describe("Build", () => {
                 ENV_VAR_FROM_DOTENV_FILE=true
               `,
               "react-router.config.ts": reactRouterConfig({
-                v8_viteEnvironmentApi,
+                future: { v8_viteEnvironmentApi },
               }),
               "vite.config.ts": js`
                 import { defineConfig } from "vite";

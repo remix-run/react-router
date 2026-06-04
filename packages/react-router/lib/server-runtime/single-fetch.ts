@@ -23,6 +23,8 @@ import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
+import { throwIfPotentialCSRFAttack } from "../actions";
+import { getNormalizedPath } from "./urls";
 
 // Add 304 for server side - that is not included in the client side logic
 // because the browser should fill those responses with the cached data
@@ -42,13 +44,29 @@ export async function singleFetchAction(
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
-    let handlerRequest = new Request(handlerUrl, {
-      method: request.method,
-      body: request.body,
-      headers: request.headers,
-      signal: request.signal,
-      ...(request.body ? { duplex: "half" } : undefined),
-    });
+    try {
+      throwIfPotentialCSRFAttack(
+        request.headers,
+        Array.isArray(build.allowedActionOrigins)
+          ? build.allowedActionOrigins
+          : [],
+      );
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
+      return handleQueryError(new Error("Bad Request"), 400);
+    }
+
+    let handlerRequest = build.future.v8_passThroughRequests
+      ? request
+      : new Request(handlerUrl, {
+          method: request.method,
+          body: request.body,
+          headers: request.headers,
+          signal: request.signal,
+          ...(request.body ? { duplex: "half" } : undefined),
+        });
 
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
@@ -64,6 +82,7 @@ export async function singleFetchAction(
             }
           }
         : undefined,
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryResult(result);
@@ -77,13 +96,13 @@ export async function singleFetchAction(
     return isResponse(result) ? result : staticContextToResponse(result);
   }
 
-  function handleQueryError(error: unknown) {
+  function handleQueryError(error: unknown, status = 500) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs
     return generateSingleFetchResponse(request, build, serverMode, {
       result: { error },
       headers: new Headers(),
-      status: 500,
+      status,
     });
   }
 
@@ -135,10 +154,12 @@ export async function singleFetchLoaders(
   let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
   try {
-    let handlerRequest = new Request(handlerUrl, {
-      headers: request.headers,
-      signal: request.signal,
-    });
+    let handlerRequest = build.future.v8_passThroughRequests
+      ? request
+      : new Request(handlerUrl, {
+          headers: request.headers,
+          signal: request.signal,
+        });
 
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
@@ -154,6 +175,7 @@ export async function singleFetchLoaders(
             }
           }
         : undefined,
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryResult(result);
@@ -370,13 +392,27 @@ export function encodeViaTurboStream(
   // user provides their own it's up to them to decouple the aborting of the
   // stream from the aborting of React's `renderToPipeableStream`
   let timeoutId = setTimeout(
-    () => controller.abort(new Error("Server Timeout")),
+    () => {
+      controller.abort(new Error("Server Timeout"));
+      cleanupCallbacks();
+    },
     typeof streamTimeout === "number" ? streamTimeout : 4950,
   );
-  requestSignal.addEventListener("abort", () => clearTimeout(timeoutId));
+
+  let abortControllerOnRequestAbort = () => {
+    controller.abort(requestSignal.reason);
+    cleanupCallbacks();
+  };
+  requestSignal.addEventListener("abort", abortControllerOnRequestAbort);
+
+  let cleanupCallbacks = () => {
+    clearTimeout(timeoutId);
+    requestSignal.removeEventListener("abort", abortControllerOnRequestAbort);
+  };
 
   return encode(data, {
     signal: controller.signal,
+    onComplete: cleanupCallbacks,
     plugins: [
       (value) => {
         // Even though we sanitized errors on context.errors prior to responding,

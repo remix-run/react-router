@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/classes/react_router.RouterContextProvider.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/classes/react-router.RouterContextProvider.html)
 
 Provides methods for writing/reading values in application context in a
 type-safe way. Primarily for usage with [middleware](../../how-to/middleware).

@@ -219,10 +219,6 @@ implementations.forEach((implementation) => {
         });
 
         test("Forces revalidation of routes with errors", async ({ page }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Parcel's built-in error overlay get's in the way of the test",
-          );
           await page.goto(
             `http://localhost:${port}/errors-force-revalidation`,
             {
@@ -545,6 +541,16 @@ implementations.forEach((implementation) => {
                       path: "/render-redirect/:id?",
                       lazy: () => import("./routes/render-redirect/home"),
                     },
+                    {
+                      id: "render-route-error-response",
+                      path: "render-route-error-response/:id?",
+                      lazy: () => import("./routes/render-route-error-response/home"),
+                    },
+                    {
+                      id: "get-request",
+                      path: "/get-request",
+                      lazy: () => import("./routes/get-request/get-request"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -571,6 +577,7 @@ implementations.forEach((implementation) => {
                     </head>
                     <body>
                       {children}
+                      {Array(1000).fill(null).map((_, i)=><p key={i}>YOOOOOOOOOO   {i}</p>)}
                       <ScrollRestoration />
                     </body>
                   </html>
@@ -1524,6 +1531,41 @@ implementations.forEach((implementation) => {
                 );
               }
             `,
+
+            "src/routes/render-route-error-response/home.tsx": js`
+              import { data } from "react-router";
+
+              export { ErrorBoundary } from "./home.client";
+
+              export default function RenderRouteErrorResponse({ params: { id } }) {
+                if (!id) throw new Response(null, { status: 400, statusText: "Oh no!" });
+
+                throw data({ message: id }, { status: 400, statusText: "Oh no!" });
+              }
+            `,
+            "src/routes/render-route-error-response/home.client.tsx": js`
+              "use client";
+              import { useRouteError, isRouteErrorResponse } from "react-router";
+
+              export function ErrorBoundary() {
+                const error = useRouteError();
+                if (isRouteErrorResponse(error)) {
+                  return <p>{error.status} {error.statusText} {error.data?.message || "no"}</p>;
+                }
+                return <p>Oh no D:</p>;
+              }
+            `,
+
+            "src/routes/get-request/get-request.tsx": js`
+              import { unstable_getRequest as getRequest } from "react-router";
+
+              export function action() { return null; }
+
+              export default function GetRequest() {
+                const request = getRequest();
+                return <p>{request.method}</p>;
+              }
+            `,
           },
         });
       });
@@ -1679,11 +1721,6 @@ implementations.forEach((implementation) => {
         });
 
         test("Supports client context using getContext", async ({ page }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Parcel is having trouble resolving modules, should probably file a bug report for this.",
-          );
-
           await page.goto(`http://localhost:${port}/get-context`);
           await page.waitForSelector("[data-client-context]");
           expect(
@@ -1816,8 +1853,13 @@ implementations.forEach((implementation) => {
         });
 
         test("Suppport throwing external redirect Response from render", async ({
+          browserName,
           page,
         }) => {
+          test.skip(
+            browserName === "firefox",
+            "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+          );
           await page.goto(`http://localhost:${port}/render-redirect`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
@@ -1838,13 +1880,48 @@ implementations.forEach((implementation) => {
         });
 
         test("Suppport throwing external redirect Response from suspended render", async ({
+          browserName,
           page,
         }) => {
+          test.skip(
+            browserName === "firefox",
+            "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
+          );
           await page.goto(`http://localhost:${port}/render-redirect/lazy`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
           await page.waitForURL(`https://example.com/`);
           await expect(page.getByText("Example Domain")).toBeAttached();
+        });
+
+        test("Support throwing Responses", async ({ page }) => {
+          await page.goto(
+            `http://localhost:${port}/render-route-error-response`,
+          );
+          await expect(page.getByText("400 Oh no! no")).toBeAttached();
+        });
+
+        test("Support throwing data() responses with data", async ({
+          page,
+        }) => {
+          await page.goto(
+            `http://localhost:${port}/render-route-error-response/Test`,
+          );
+          await expect(page.getByText("400 Oh no! Test")).toBeAttached();
+        });
+
+        test("Supports getRequest in server components", async ({ page }) => {
+          await page.goto(`http://localhost:${port}/get-request`);
+          await expect(page.getByText("GET")).toBeAttached();
+
+          const response = await page.request.fetch(
+            `http://localhost:${port}/get-request`,
+            {
+              method: "POST",
+            },
+          );
+          const body = await response.text();
+          expect(body).toContain("<p>POST</p>");
         });
       });
 
@@ -1873,12 +1950,6 @@ implementations.forEach((implementation) => {
         });
 
         test("Supports Inline React Server Functions", async ({ page }) => {
-          // FIXME: Waiting on parcel support: https://github.com/parcel-bundler/parcel/pull/10165
-          test.skip(
-            implementation.name === "parcel",
-            "Not supported in parcel yet",
-          );
-
           await page.goto(`http://localhost:${port}/inline-server-action/`);
 
           // Verify initial server render
@@ -1945,9 +2016,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions thrown external redirects", async ({
           page,
         }) => {
-          // Test is expected to fail currently — skip running it
-          // test.skip(true, "Known failing test for external redirect behavior");
-
           await page.goto(
             `http://localhost:${port}/throw-external-redirect-server-action/`,
           );
@@ -1972,8 +2040,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions side-effect redirects", async ({
           page,
         }) => {
-          test.skip(implementation.name === "parcel", "Not working in parcel?");
-
           await page.goto(
             `http://localhost:${port}/side-effect-redirect-server-action`,
           );
@@ -2025,9 +2091,6 @@ implementations.forEach((implementation) => {
         test("Supports React Server Functions side-effect external redirects", async ({
           page,
         }) => {
-          // Test is expected to fail currently — skip running it
-          test.skip(implementation.name === "parcel", "Not working in parcel?");
-
           await page.goto(
             `http://localhost:${port}/side-effect-external-redirect-server-action`,
           );
@@ -2109,7 +2172,9 @@ implementations.forEach((implementation) => {
           await page.click("[data-submit]");
           await page.waitForSelector("[data-state]");
           await page.waitForSelector("[data-pending]", { state: "hidden" });
-          await page.waitForSelector("[data-revalidated]", { state: "hidden" });
+          await page.waitForSelector("[data-revalidated]", {
+            state: "hidden",
+          });
           expect(await page.locator("[data-state]").textContent()).toBe(
             "no revalidate",
           );
@@ -2121,11 +2186,6 @@ implementations.forEach((implementation) => {
         test("Supports transition state throughout the revalidation lifecycle", async ({
           page,
         }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Uses inline server actions which parcel doesn't support yet",
-          );
-
           await page.goto(`http://localhost:${port}/action-transition-state`, {
             waitUntil: "networkidle",
           });
@@ -2177,10 +2237,6 @@ implementations.forEach((implementation) => {
         test("Handles errors thrown in SSR components correctly", async ({
           page,
         }) => {
-          test.skip(
-            implementation.name === "parcel",
-            "Parcel's error overlays are interfering with this test",
-          );
           await page.goto(`http://localhost:${port}/ssr-error`);
 
           // Verify error boundary is shown
@@ -2635,8 +2691,6 @@ implementations.forEach((implementation) => {
         test("Supports redirects in server actions without JavaScript with basename", async ({
           page,
         }) => {
-          test.skip(implementation.name === "parcel", "Not working in parcel?");
-
           // Start on home route
           await page.goto(
             `http://localhost:${port}${basename}/server-action-redirects`,

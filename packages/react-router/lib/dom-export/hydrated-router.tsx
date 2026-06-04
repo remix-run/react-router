@@ -6,7 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   RouterInit,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
 } from "react-router";
 import {
   UNSAFE_getHydrationData as getHydrationData,
@@ -27,7 +27,7 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
-import type { unstable_ClientInstrumentation } from "../router/instrumentation";
+import type { ClientInstrumentation } from "../router/instrumentation";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -79,10 +79,10 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   getContext,
-  unstable_instrumentations,
+  instrumentations,
 }: {
   getContext?: RouterInit["getContext"];
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
 }): DataRouter {
   initSsrInfo();
 
@@ -166,6 +166,16 @@ function createHydratedRouter({
     }
   }
 
+  // We cannot support history-state-driven masking with SSR, so if a hard
+  // reload is performed we remove the mask and hydrate according to the
+  // browser URL
+  if (window.history.state && window.history.state.masked) {
+    window.history.replaceState(
+      { ...window.history.state, masked: undefined },
+      "",
+    );
+  }
+
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
@@ -175,10 +185,10 @@ function createHydratedRouter({
     getContext,
     hydrationData,
     hydrationRouteProperties,
-    unstable_instrumentations,
+    instrumentations,
     mapRouteProperties,
     future: {
-      middleware: ssrInfo.context.future.v8_middleware,
+      v8_passThroughRequests: ssrInfo.context.future.v8_passThroughRequests,
     },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
@@ -186,8 +196,10 @@ function createHydratedRouter({
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename,
+      ssrInfo.context.future.v8_trailingSlashAwareDataRequests,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
@@ -274,16 +286,16 @@ export interface HydratedRouterProps {
    * startTransition(() => {
    *   hydrateRoot(
    *     document,
-   *     <HydratedRouter unstable_instrumentations={[logging]} />
+   *     <HydratedRouter instrumentations={[logging]} />
    *   );
    * });
    * ```
    */
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   /**
-   * An error handler function that will be called for any loader/action/render
-   * errors that are encountered in your application.  This is useful for
-   * logging or reporting errors instead of the `ErrorBoundary` because it's not
+   * An error handler function that will be called for any middleware, loader, action,
+   * or render errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of in the {@link ErrorBoundary} because it's not
    * subject to re-rendering and will only run one time per error.
    *
    * The `errorInfo` parameter is passed along from
@@ -291,13 +303,14 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter unstable_onError={(error, errorInfo) => {
-   *   console.error(error, errorInfo);
-   *   reportToErrorService(error, errorInfo);
+   * <HydratedRouter onError={(error, info) => {
+   *   let { location, params, pattern, errorInfo } = info;
+   *   console.error(error, location, errorInfo);
+   *   reportToErrorService(error, location, errorInfo);
    * }} />
    * ```
    */
-  unstable_onError?: unstable_ClientOnErrorFunction;
+  onError?: ClientOnErrorFunction;
   /**
    * Control whether router state updates are internally wrapped in
    * [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -314,9 +327,9 @@ export interface HydratedRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition` or
    *   `React.useOptimistic` on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
 }
 
 /**
@@ -328,14 +341,14 @@ export interface HydratedRouterProps {
  * @mode framework
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
- * @param {dom.HydratedRouterProps.unstable_onError} props.unstable_onError n/a
+ * @param {dom.HydratedRouterProps.onError} props.onError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       getContext: props.getContext,
-      unstable_instrumentations: props.unstable_instrumentations,
+      instrumentations: props.instrumentations,
     });
   }
 
@@ -423,8 +436,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
         <RemixErrorBoundary location={location}>
           <RouterProvider
             router={router}
-            unstable_useTransitions={props.unstable_useTransitions}
-            unstable_onError={props.unstable_onError}
+            useTransitions={props.useTransitions}
+            onError={props.onError}
           />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>

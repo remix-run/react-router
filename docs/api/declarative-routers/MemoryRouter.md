@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.MemoryRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.MemoryRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) that stores all entries in memory.
 
@@ -32,7 +32,7 @@ function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
-  unstable_useTransitions,
+  useTransitions,
 }: MemoryRouterProps): React.ReactElement
 ```
 
@@ -54,7 +54,7 @@ Initial entries in the in-memory history stack
 
 Index of `initialEntries` the application should initialize to
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -67,5 +67,5 @@ Control whether router state updates are internally wrapped in
 - When set to `false`, the router will not leverage `React.startTransition`
   on any navigations or state changes.
 
-For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+For more information, please see the [docs](../../explanation/react-transitions).
 

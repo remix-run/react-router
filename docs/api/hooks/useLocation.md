@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLocation.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useLocation.html)
 
-Returns the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html). This can be useful if you'd like to
+Returns the current [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html). This can be useful if you'd like to
 perform some side effect whenever it changes.
 
 ```tsx
@@ -51,5 +51,5 @@ function useLocation(): Location
 
 ## Returns
 
-The current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object
+The current [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html) object
 

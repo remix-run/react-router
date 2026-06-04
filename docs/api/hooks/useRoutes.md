@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRoutes.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useRoutes.html)
 
 Hook version of [`<Routes>`](../components/Routes) that uses objects instead of
 components. These objects have the same properties as the component props.
@@ -63,11 +63,11 @@ function useRoutes(
 
 ### routes
 
-An array of [`RouteObject`](https://api.reactrouter.com/v7/types/react_router.RouteObject.html)s that define the route hierarchy
+An array of [`RouteObject`](https://api.reactrouter.com/v7/types/react-router.RouteObject.html)s that define the route hierarchy
 
 ### locationArg
 
-An optional [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object or pathname string to use instead of the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html)
+An optional [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html) object or pathname string to use instead of the current [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html)
 
 ## Returns
 

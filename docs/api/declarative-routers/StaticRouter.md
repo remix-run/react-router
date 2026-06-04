@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.StaticRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.StaticRouter.html)
 
-A [`<Router>`](../declarative-routers/Router) that may not navigate to any other [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html).
+A [`<Router>`](../declarative-routers/Router) that may not navigate to any other [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html).
 This is useful on the server where there is no stateful UI.
 
 ## Signature
@@ -47,5 +47,5 @@ The child elements to render inside the static router
 
 ### location
 
-The [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to render the static router at (default: `/`)
+The [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html) to render the static router at (default: `/`)
 

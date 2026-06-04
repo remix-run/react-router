@@ -21,7 +21,7 @@ on:
       timeout:
         required: false
         type: number
-        default: 40
+        default: 45
 
 env:
   CI: true
@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: ⎔ Setup node ${{ matrix.node }}
         uses: actions/setup-node@v6

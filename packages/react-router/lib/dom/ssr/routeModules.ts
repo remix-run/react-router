@@ -8,11 +8,11 @@ import type {
   MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
+  DataRouteMatch,
   DataStrategyResult,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
-import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
 import type { SerializeFrom } from "../../types/route-data";
 
@@ -248,7 +248,7 @@ export type MetaDescriptor =
   | { name: string; content: string }
   | { property: string; content: string }
   | { httpEquiv: string; content: string }
-  | { "script:ld+json": LdJsonObject }
+  | { "script:ld+json": LdJsonObject | LdJsonObject[] }
   | { tagName: "meta" | "link"; [name: string]: string }
   | { [name: string]: unknown };
 

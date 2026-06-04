@@ -1,9 +1,13 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse } from "../router/utils";
-import { RouterContextProvider } from "../router/utils";
+import type {
+  DataRouteObject,
+  ErrorResponse,
+  RouteBranch,
+} from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
+  RouterContextProvider,
   stripBasename,
 } from "../router/utils";
 import {
@@ -11,6 +15,7 @@ import {
   createStaticHandler,
   isRedirectResponse,
   isResponse,
+  isMutationMethod,
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
@@ -21,7 +26,7 @@ import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
-import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
+import { createStaticHandlerDataRoutes } from "./routes";
 import type { ServerHandoff } from "./serverHandoff";
 import { createServerHandoffString } from "./serverHandoff";
 import { getBuildTimeHeader, getDevServerHooks } from "./dev";
@@ -35,9 +40,11 @@ import {
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import type { MiddlewareEnabled } from "../types/future";
-import { getManifestPath } from "../dom/ssr/fog-of-war";
-import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
+import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
+import { throwIfPotentialCSRFAttack } from "../actions";
+import { getNormalizedPath } from "./urls";
 
 export type RequestHandler = (
   request: Request,
@@ -52,12 +59,12 @@ export type CreateRequestHandlerFunction = (
 ) => RequestHandler;
 
 function derive(build: ServerBuild, mode?: string) {
-  let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
-    unstable_instrumentations: build.entry.module.unstable_instrumentations,
+    instrumentations: build.entry.module.instrumentations,
+    future: build.future,
   });
 
   let errorHandler =
@@ -105,22 +112,12 @@ function derive(build: ServerBuild, mode?: string) {
       loadContext = initialContext || {};
     }
 
-    let url = new URL(request.url);
-
-    let normalizedBasename = build.basename || "/";
-    let normalizedPath = url.pathname;
-    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-      normalizedPath = normalizedBasename;
-    } else if (normalizedPath.endsWith(".data")) {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
-    }
-
-    if (
-      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-      normalizedPath.endsWith("/")
-    ) {
-      normalizedPath = normalizedPath.slice(0, -1);
-    }
+    let requestUrl = new URL(request.url);
+    let normalizedPathname = getNormalizedPath(
+      request,
+      build.basename,
+      build.future,
+    ).pathname;
 
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
@@ -129,17 +126,17 @@ function derive(build: ServerBuild, mode?: string) {
     // pre-rendered site would
     if (!build.ssr) {
       // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPath);
+      let decodedPath = decodeURI(normalizedPathname);
 
-      if (normalizedBasename !== "/") {
-        let strippedPath = stripBasename(decodedPath, normalizedBasename);
+      if (build.basename && build.basename !== "/") {
+        let strippedPath = stripBasename(decodedPath, build.basename);
         if (strippedPath == null) {
           errorHandler(
             new ErrorResponseImpl(
               404,
               "Not Found",
               `Refusing to prerender the \`${decodedPath}\` path because it does ` +
-                `not start with the basename \`${normalizedBasename}\``,
+                `not start with the basename \`${build.basename}\``,
             ),
             {
               context: loadContext,
@@ -164,7 +161,7 @@ function derive(build: ServerBuild, mode?: string) {
         !build.prerender.includes(decodedPath) &&
         !build.prerender.includes(decodedPath + "/")
       ) {
-        if (url.pathname.endsWith(".data")) {
+        if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
           errorHandler(
             new ErrorResponseImpl(
@@ -192,11 +189,19 @@ function derive(build: ServerBuild, mode?: string) {
     // Manifest request for fog of war
     let manifestUrl = getManifestPath(
       build.routeDiscovery.manifestPath,
-      normalizedBasename,
+      build.basename,
     );
-    if (url.pathname === manifestUrl) {
+    if (
+      build.routeDiscovery.mode === "lazy" &&
+      requestUrl.pathname === manifestUrl
+    ) {
       try {
-        let res = await handleManifestRequest(build, routes, url);
+        let res = await handleManifestRequest(
+          build,
+          staticHandler.dataRoutes,
+          staticHandler._internalRouteBranches,
+          requestUrl,
+        );
         return res;
       } catch (e) {
         handleError(e);
@@ -204,28 +209,25 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
-    let matches = matchServerRoutes(routes, normalizedPath, build.basename);
+    let matches = matchServerRoutes(
+      build.routes,
+      staticHandler.dataRoutes,
+      staticHandler._internalRouteBranches,
+      normalizedPathname,
+      build.basename,
+    );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
 
     let response: Response;
-    if (url.pathname.endsWith(".data")) {
-      let handlerUrl = new URL(request.url);
-      handlerUrl.pathname = normalizedPath;
-
-      let singleFetchMatches = matchServerRoutes(
-        routes,
-        handlerUrl.pathname,
-        build.basename,
-      );
-
+    if (requestUrl.pathname.endsWith(".data")) {
       response = await handleSingleFetchRequest(
         serverMode,
         build,
         staticHandler,
         request,
-        handlerUrl,
+        normalizedPathname,
         loadContext,
         handleError,
       );
@@ -242,7 +244,7 @@ function derive(build: ServerBuild, mode?: string) {
       if (build.entry.module.handleDataRequest) {
         response = await build.entry.module.handleDataRequest(response, {
           context: loadContext,
-          params: singleFetchMatches ? singleFetchMatches[0].params : {},
+          params: matches ? matches[0].params : {},
           request,
         });
 
@@ -271,7 +273,7 @@ function derive(build: ServerBuild, mode?: string) {
         handleError,
       );
     } else {
-      let { pathname } = url;
+      let { pathname } = requestUrl;
 
       let criticalCss: CriticalCss | undefined = undefined;
       if (build.unstable_getCriticalCss) {
@@ -306,18 +308,16 @@ function derive(build: ServerBuild, mode?: string) {
     return response;
   };
 
-  if (build.entry.module.unstable_instrumentations) {
+  if (build.entry.module.instrumentations) {
     requestHandler = instrumentHandler(
       requestHandler,
-      build.entry.module.unstable_instrumentations
+      build.entry.module.instrumentations
         .map((i) => i.handler)
-        .filter(Boolean) as unstable_InstrumentRequestHandlerFunction[],
+        .filter(Boolean) as InstrumentRequestHandlerFunction[],
     );
   }
 
   return {
-    routes,
-    dataRoutes,
     serverMode,
     staticHandler,
     errorHandler,
@@ -330,7 +330,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   mode,
 ) => {
   let _build: ServerBuild;
-  let routes: ServerRoute[];
   let serverMode: ServerMode;
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
@@ -341,20 +340,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     if (typeof build === "function") {
       let derived = derive(_build, mode);
-      routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
       _requestHandler = derived.requestHandler;
     } else if (
-      !routes ||
       !serverMode ||
       !staticHandler ||
       !errorHandler ||
       !_requestHandler
     ) {
       let derived = derive(_build, mode);
-      routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
@@ -367,7 +363,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  routes: ServerRoute[],
+  dataRoutes: DataRouteObject[],
+  branches: RouteBranch<DataRouteObject>[],
   url: URL,
 ) {
   if (build.assets.version !== url.searchParams.get("version")) {
@@ -376,6 +373,13 @@ async function handleManifestRequest(
       headers: {
         "X-Remix-Reload-Document": "true",
       },
+    });
+  }
+
+  if (url.toString().length > URL_LIMIT) {
+    return new Response(null, {
+      statusText: "Bad Request",
+      status: 400,
     });
   }
 
@@ -406,7 +410,13 @@ async function handleManifestRequest(
     });
 
     for (let path of paths) {
-      let matches = matchServerRoutes(routes, path, build.basename);
+      let matches = matchServerRoutes(
+        build.routes,
+        dataRoutes,
+        branches,
+        path,
+        build.basename,
+      );
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -433,30 +443,32 @@ async function handleSingleFetchRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
+  normalizedPath: string,
   loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
-  let response =
-    request.method !== "GET"
-      ? await singleFetchAction(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        )
-      : await singleFetchLoaders(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        );
+  let handlerUrl = new URL(request.url);
+  handlerUrl.pathname = normalizedPath;
+
+  let response = isMutationMethod(request.method)
+    ? await singleFetchAction(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      )
+    : await singleFetchLoaders(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError,
+      );
 
   return response;
 }
@@ -472,6 +484,19 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
+    if (isMutationMethod(request.method)) {
+      try {
+        throwIfPotentialCSRFAttack(
+          request.headers,
+          Array.isArray(build.allowedActionOrigins)
+            ? build.allowedActionOrigins
+            : [],
+        );
+      } catch (e) {
+        handleError(e);
+        return new Response("Bad Request", { status: 400 });
+      }
+    }
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
       generateMiddlewareResponse: build.future.v8_middleware
@@ -488,6 +513,7 @@ async function handleDocumentRequest(
             }
           }
         : undefined,
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     if (!isResponse(result)) {
@@ -535,6 +561,7 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
+      branches: staticHandler._internalRouteBranches,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
@@ -582,7 +609,10 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (e) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          e
+        ) {
           // If we can't unwrap the response - just leave it as-is
         }
       }
@@ -665,6 +695,7 @@ async function handleResourceRequest(
             }
           }
         : undefined,
+      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
     });
 
     return handleQueryRouteResult(result);

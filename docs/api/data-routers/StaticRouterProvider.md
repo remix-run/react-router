@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.StaticRouterProvider.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.StaticRouterProvider.html)
 
-A [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that may not navigate to any other [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html).
+A [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) that may not navigate to any other [`Location`](https://api.reactrouter.com/v7/interfaces/react-router.Location.html).
 This is useful on the server where there is no stateful UI.
 
 ```tsx
@@ -57,7 +57,7 @@ function StaticRouterProvider({
 
 ### context
 
-The [`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandlerContext.html) returned from [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandler.html)'s
+The [`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandlerContext.html) returned from [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandler.html)'s
 `query`
 
 ### hydrate
@@ -72,5 +72,5 @@ tag
 
 ### router
 
-The static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) from [`createStaticRouter`](../data-routers/createStaticRouter)
+The static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) from [`createStaticRouter`](../data-routers/createStaticRouter)
 

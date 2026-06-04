@@ -1,15 +1,14 @@
 name: Branch
 
-# main/dev branches will get the full run across
+# The main branch gets the full run across
 # all OS/browsers for multiple node versions
 
 on:
   push:
     branches:
       - main
-      - dev
     paths-ignore:
-      - ".changeset/**"
+      - "packages/*/.changes/**"
       - "decisions/**"
       - "docs/**"
       - "examples/**"
@@ -31,7 +30,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[20.18, 22]"
+      node_version: "[20.19, 22]"
       browser: '["chromium", "firefox"]'
 
   integration-windows:
@@ -42,6 +41,7 @@ jobs:
       os: "windows-latest"
       node_version: "[22]"
       browser: '["msedge"]'
+      timeout: 90
 
   integration-macos:
     name: "👀 Integration Test"
@@ -49,5 +49,5 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "macos-latest"
-      node_version: "[20.18, 22]"
+      node_version: "[20.19, 22]"
       browser: '["webkit"]'

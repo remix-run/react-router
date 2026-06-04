@@ -1,11 +1,16 @@
-import { Link, Links, Outlet, ScrollRestoration } from "react-router";
+// import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 import { type MiddlewareFunction } from "react-router";
 
 import { Counter } from "../../counter";
-import { ErrorReporter, NavigationState } from "./root.client";
+// import { ErrorReporter, NavigationState } from "./root.client";
 import "./root.css";
 
-export { shouldRevalidate } from "./root.client";
+export {
+  shouldRevalidate,
+  default,
+  ErrorBoundary,
+  Layout,
+} from "./root.client";
 
 export function headers() {
   return new Headers({ "x-root": "yes" });
@@ -28,63 +33,63 @@ export async function loader() {
   };
 }
 
-export default function RootRoute({
-  loaderData,
-}: {
-  loaderData: Awaited<ReturnType<typeof loader>>;
-}) {
-  return (
-    <div style={{ border: "1px solid black", padding: "10px" }}>
-      <h1>Root Route</h1>
-      <p>Loader data: {loaderData.message}</p>
-      {loaderData.counter}
-      <Outlet />
-    </div>
-  );
-}
+// export default function RootRoute({
+//   loaderData,
+// }: {
+//   loaderData: Awaited<ReturnType<typeof loader>>;
+// }) {
+//   return (
+//     <div style={{ border: "1px solid black", padding: "10px" }}>
+//       <h1>Root Route</h1>
+//       <p>Loader data: {loaderData.message}</p>
+//       {loaderData.counter}
+//       <Outlet />
+//     </div>
+//   );
+// }
 
 export function HydrateFallback() {
   return <h1>Loading...</h1>;
 }
 
-export function ErrorBoundary() {
-  return (
-    <>
-      <h1>Root - Something went wrong!</h1>
-      <ErrorReporter />
-    </>
-  );
-}
+// export function ErrorBoundary() {
+//   return (
+//     <>
+//       <h1>Root - Something went wrong!</h1>
+//       <ErrorReporter />
+//     </>
+//   );
+// }
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>React Server</title>
-        <Links />
-      </head>
-      <body>
-        <div className="server-box">
-          <header>
-            <Link to="/">Home</Link>
-            {" | "}
-            <Link to="/about">About</Link>
-            {" | "}
-            <Link to="/parent">Parent</Link>
-            {" | "}
-            <Link to="/parent/child">Child</Link>
-            {" | "}
-            <Link to="/redirect">Redirect</Link>
-          </header>
-          <h1>Root Layout</h1>
-          <NavigationState />
-          <Counter />
-          {children}
-        </div>
-        <ScrollRestoration />
-      </body>
-    </html>
-  );
-}
+// export function Layout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <html lang="en">
+//       <head>
+//         <meta charSet="utf-8" />
+//         <meta name="viewport" content="width=device-width, initial-scale=1" />
+//         <title>React Server</title>
+//         <Links />
+//       </head>
+//       <body>
+//         <div className="server-box">
+//           <header>
+//             <Link to="/">Home</Link>
+//             {" | "}
+//             <Link to="/about">About</Link>
+//             {" | "}
+//             <Link to="/parent">Parent</Link>
+//             {" | "}
+//             <Link to="/parent/child">Child</Link>
+//             {" | "}
+//             <Link to="/redirect">Redirect</Link>
+//           </header>
+//           <h1>Root Layout</h1>
+//           <NavigationState />
+//           <Counter />
+//           {children}
+//         </div>
+//         <ScrollRestoration />
+//       </body>
+//     </html>
+//   );
+// }

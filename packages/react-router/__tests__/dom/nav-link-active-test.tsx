@@ -1045,13 +1045,19 @@ function createDeferred() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
     reject = async (error?: Error) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
   });
   return {

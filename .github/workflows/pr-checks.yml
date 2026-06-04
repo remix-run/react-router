@@ -1,0 +1,53 @@
+name: PR (Check)
+
+# Read-only PR inspection. Computes a list of "actions" (sticky comments,
+# label changes, close, etc.) and uploads them as an artifact. The PR (Actions)
+# workflow consumes the artifact and applies the actions with write
+# permissions — keeping that step out of the PR's untrusted code path.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action }}-${{ github.event.label.name }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 🔍 Check PR
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v6
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Run checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          EVENT_ACTION: ${{ github.event.action }}
+          LABEL_NAME: ${{ github.event.label.name }}
+        run: node scripts/pr.ts check
+
+      - name: 📤 Upload result
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-checks-result
+          path: pr-checks-result.json

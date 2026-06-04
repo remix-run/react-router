@@ -37,6 +37,5 @@ npx create-react-router@latest --template remix-run/react-router-templates/<temp
 
 Next: [Routing](./routing)
 
-[manual_usage]: ../how-to/manual-usage
 [default-template]: https://github.com/remix-run/react-router-templates/tree/main/default
 [react-router-templates]: https://github.com/remix-run/react-router-templates

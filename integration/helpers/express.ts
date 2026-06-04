@@ -57,7 +57,7 @@ export function rsc() {
         "/assets",
         express.static("build/client/assets", { immutable: true, maxAge: "1y" })
       );
-      app.all("*", createRequestListener((await import("./build/server/index.js")).default));
+      app.all("*", createRequestListener((await import("./build/server/index.js")).default.fetch));
     } else {
       const viteDevServer = await import("vite").then(
         (vite) => vite.createServer({

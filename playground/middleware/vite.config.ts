@@ -1,15 +1,15 @@
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig(({ isSsrBuild }) => ({
+  resolve: { tsconfigPaths: true },
   build: {
     minify: false,
-    rollupOptions: isSsrBuild
+    rolldownOptions: isSsrBuild
       ? {
           input: "./server.ts",
         }
       : undefined,
   },
-  plugins: [reactRouter(), tsconfigPaths()],
+  plugins: [reactRouter()],
 }));

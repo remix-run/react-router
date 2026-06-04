@@ -146,7 +146,10 @@ function isFormDataSubmitterSupported() {
         0,
       );
       _formDataSupportsSubmitter = false;
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       _formDataSupportsSubmitter = true;
     }
   }
@@ -192,6 +195,19 @@ interface SharedSubmitOptions {
    * Enable flushSync for this submission's state updates
    */
   flushSync?: boolean;
+
+  /**
+   * Specify the default revalidation behavior after this submission
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  defaultShouldRevalidate?: boolean;
 }
 
 /**
