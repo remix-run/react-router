@@ -365,6 +365,14 @@ ${result}`;
   } satisfies Vite.Plugin;
 }
 
+export function createClientRouteModuleForOptimizeDepsScan(code: string) {
+  const ast = babel.parse(code, {
+    sourceType: "module",
+  });
+  removeExports(ast, SERVER_ROUTE_EXPORTS);
+  return babel.generate(ast);
+}
+
 function createId(
   id: string,
   type: "client-route-module",

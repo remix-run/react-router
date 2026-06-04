@@ -196,7 +196,7 @@ function createHydratedRouter({
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename,
-      ssrInfo.context.future.unstable_trailingSlashAwareDataRequests,
+      ssrInfo.context.future.v8_trailingSlashAwareDataRequests,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       () => router,
@@ -303,7 +303,7 @@ export interface HydratedRouterProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <HydratedRouter onError=(error, info) => {
+   * <HydratedRouter onError={(error, info) => {
    *   let { location, params, pattern, errorInfo } = info;
    *   console.error(error, location, errorInfo);
    *   reportToErrorService(error, location, errorInfo);

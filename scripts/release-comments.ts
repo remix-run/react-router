@@ -13,7 +13,7 @@ let DIRECTORY_TO_CHECK = "packages/.";
 let GITHUB_REPOSITORY = "remix-run/react-router";
 let PR_LABELS_TO_REMOVE = "awaiting release";
 let ISSUE_LABELS_TO_REMOVE = "awaiting release";
-let ISSUE_LABELS_TO_KEEP_OPEN = "🗺️Roadmap";
+let ISSUE_LABELS_TO_KEEP_OPEN = "🗺 Roadmap";
 let DRY_RUN = process.argv.includes("--dry-run");
 
 if (DRY_RUN) {

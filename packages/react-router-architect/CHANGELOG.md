@@ -1,5 +1,21 @@
 # `@react-router/architect`
 
+## v7.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+  - [`@react-router/node@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.17.0)
+
+## v7.16.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+  - [`@react-router/node@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.16.0)
+
 ## v7.15.1
 
 ### Patch Changes

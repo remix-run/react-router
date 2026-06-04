@@ -179,14 +179,21 @@ export type EnvironmentBuildContext = {
   resolveOptions: EnvironmentOptionsResolver;
 };
 
+function isReactRouterServerEnvironment(
+  ctx: ReactRouterPluginContext,
+  environmentName: string,
+): environmentName is SsrEnvironmentName {
+  return ctx.buildManifest?.serverBundles
+    ? isSsrBundleEnvironmentName(environmentName)
+    : environmentName === "ssr";
+}
+
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>,
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
-    ctx.buildManifest?.serverBundles
-      ? isSsrBundleEnvironmentName(name)
-      : name === "ssr",
+    isReactRouterServerEnvironment(ctx, name),
   ) as [SsrEnvironmentName, T][];
 }
 
@@ -1306,6 +1313,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           rootDirectory,
           mode,
           watch: viteCommand === "serve",
+          shouldLogFutureFlagWarnings:
+            viteCommand !== "build" || viteConfigEnv.isSsrBuild === true,
         });
 
         await updatePluginContext();
@@ -1458,9 +1467,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       configEnvironment(name, options) {
         if (
           ctx.reactRouterConfig.future.v8_viteEnvironmentApi &&
-          (ctx.buildManifest?.serverBundles
-            ? isSsrBundleEnvironmentName(name)
-            : name === "ssr")
+          isReactRouterServerEnvironment(ctx, name)
         ) {
           const vite = getVite();
 
@@ -1858,7 +1865,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           if (
             future.v8_viteEnvironmentApi
-              ? this.environment.name === "client"
+              ? !isReactRouterServerEnvironment(ctx, this.environment.name)
               : !viteConfigEnv.isSsrBuild
           ) {
             return;
@@ -3312,7 +3319,7 @@ async function prerenderData(
   requestInit?: RequestInit,
 ) {
   let dataRequestPath: string;
-  if (reactRouterConfig.future.unstable_trailingSlashAwareDataRequests) {
+  if (reactRouterConfig.future.v8_trailingSlashAwareDataRequests) {
     if (prerenderPath.endsWith("/")) {
       dataRequestPath = `${prerenderPath}_.data`;
     } else {

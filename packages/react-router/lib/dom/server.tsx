@@ -419,6 +419,7 @@ export function createStaticRouter(
       return {
         v8_middleware: false,
         v8_passThroughRequests: false,
+        v8_trailingSlashAwareDataRequests: false,
         ...opts?.future,
       };
     },

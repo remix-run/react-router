@@ -87,7 +87,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
   v8_passThroughRequests: boolean;
-  unstable_trailingSlashAwareDataRequests: boolean;
+  v8_trailingSlashAwareDataRequests: boolean;
   /**
    * Prerender with Vite Preview server
    */
@@ -435,12 +435,14 @@ async function resolveConfig({
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
+  shouldLogFutureFlagWarnings,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
+  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -702,6 +704,11 @@ async function resolveConfig({
         "The `future.unstable_passThroughRequests` flag has been stabilized as `future.v8_passThroughRequests`",
       );
     }
+    if ("unstable_trailingSlashAwareDataRequests" in futureConfig) {
+      return err(
+        "The `future.unstable_trailingSlashAwareDataRequests` flag has been stabilized as `future.v8_trailingSlashAwareDataRequests`",
+      );
+    }
     if ("unstable_subResourceIntegrity" in futureConfig) {
       return err(
         "The `future.unstable_subResourceIntegrity` flag has been stabilized and moved to a top-level `config.subResourceIntegrity` field",
@@ -714,9 +721,8 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
     v8_passThroughRequests:
       userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
-    unstable_trailingSlashAwareDataRequests:
-      userAndPresetConfigs.future?.unstable_trailingSlashAwareDataRequests ??
-      false,
+    v8_trailingSlashAwareDataRequests:
+      userAndPresetConfigs.future?.v8_trailingSlashAwareDataRequests ?? false,
     unstable_previewServerPrerendering:
       userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
     v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
@@ -753,7 +759,9 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  logFutureFlagWarnings(userAndPresetConfigs.future || {});
+  if (shouldLogFutureFlagWarnings) {
+    logFutureFlagWarnings(userAndPresetConfigs.future || {});
+  }
 
   return ok(reactRouterConfig);
 }
@@ -763,7 +771,7 @@ function logFutureFlagWarning(flag: string, message: string): void {
     colors.yellow(
       `  ⚠️  Future Flag Warning: ${message}\n` +
         `     You can use the \`future.${flag}\` flag to opt in early.\n` +
-        `     -> https://reactrouter.com/upgrading/future-flags#${flag}`,
+        `     -> https://reactrouter.com/v7/upgrading/future#future${flag.toLowerCase()}`,
     ),
   );
 }
@@ -793,6 +801,12 @@ export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
       "Request handling behavior is changing in React Router v8.",
     );
   }
+  if (future.v8_trailingSlashAwareDataRequests === undefined) {
+    logFutureFlagWarning(
+      "v8_trailingSlashAwareDataRequests",
+      "Data request URL formats are changing in React Router v8.",
+    );
+  }
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
@@ -819,12 +833,14 @@ export async function createConfigLoader({
   mode,
   skipRoutes,
   validateConfig,
+  shouldLogFutureFlagWarnings,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
+  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -855,11 +871,18 @@ export async function createConfigLoader({
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
+      shouldLogFutureFlagWarnings,
     });
 
   let appDirectory: string;
 
-  let initialConfigResult = await getConfig();
+  let initialConfigResult = await resolveConfig({
+    root,
+    viteNodeContext,
+    reactRouterConfigFile,
+    skipRoutes,
+    validateConfig,
+  });
 
   if (!initialConfigResult.ok) {
     throw new Error(initialConfigResult.error);

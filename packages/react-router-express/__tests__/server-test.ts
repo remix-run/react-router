@@ -1,4 +1,6 @@
 import { Readable } from "node:stream";
+import type { AddressInfo } from "node:net";
+import http from "node:http";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import express from "express";
@@ -149,6 +151,70 @@ describe("express createRequestHandler", () => {
         "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax",
         "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax",
       ]);
+    });
+
+    it("ignores response writes after the client disconnects", async () => {
+      let server: http.Server | undefined;
+      let errors: unknown[] = [];
+      let closeServerTimeout: ReturnType<typeof setTimeout> | undefined;
+      let handlerStarted!: () => void;
+      let handlerStartedPromise = new Promise<void>((resolve) => {
+        handlerStarted = resolve;
+      });
+
+      mockedCreateRequestHandler.mockImplementation(() => async (req) => {
+        handlerStarted();
+
+        await new Promise<void>((resolve) => {
+          req.signal.addEventListener("abort", () => resolve(), {
+            once: true,
+          });
+        });
+
+        let readable = Readable.from("hello world");
+        let stream = createReadableStreamFromReadable(readable);
+        closeServerTimeout = setTimeout(() => server?.close(), 25);
+        return new Response(stream, { status: 200 });
+      });
+
+      let app = createApp();
+      app.use(
+        (
+          error: unknown,
+          _req: express.Request,
+          _res: express.Response,
+          _next: express.NextFunction,
+        ) => {
+          errors.push(error);
+          server?.close();
+        },
+      );
+
+      await new Promise<void>((resolve) => {
+        server = app.listen(0, "127.0.0.1", () => resolve());
+      });
+
+      let { port } = server.address() as AddressInfo;
+      let request = http.get({
+        host: "127.0.0.1",
+        port,
+        path: "/",
+      });
+
+      request.on("error", () => {});
+      await handlerStartedPromise;
+      request.destroy();
+
+      await new Promise<void>((resolve, reject) => {
+        server!.on("close", () => resolve());
+        setTimeout(
+          () => reject(new Error("Timed out waiting for server to close")),
+          1000,
+        );
+      });
+
+      clearTimeout(closeServerTimeout);
+      expect(errors).toEqual([]);
     });
   });
 });

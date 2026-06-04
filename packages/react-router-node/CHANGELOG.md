@@ -1,5 +1,23 @@
 # `@react-router/node`
 
+## v7.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+
+## v7.16.0
+
+### Patch Changes
+
+- Honor Node writable backpressure in `writeReadableStreamToWritable` and `writeAsyncIterableToWritable` ([#15071](https://github.com/remix-run/react-router/pull/15071))
+  - Await `'drain'` when `writable.write()` returns `false` instead of letting chunks accumulate in the writable's internal buffer.
+  - Reject (rather than hang) if the writable errors or closes mid-stream.
+
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+
 ## v7.15.1
 
 ### Patch Changes

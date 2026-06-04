@@ -1,5 +1,24 @@
 # `@react-router/serve`
 
+## v7.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+  - [`@react-router/express@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.17.0)
+  - [`@react-router/node@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.17.0)
+
+## v7.16.0
+
+### Patch Changes
+
+- Normalize `assetsBuildDirectory` path separators in `react-router-serve` so Windows-built server artifacts can serve `/assets/*` correctly when run on Linux. ([#14982](https://github.com/remix-run/react-router/pull/14982))
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+  - [`@react-router/express@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.16.0)
+  - [`@react-router/node@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.16.0)
+
 ## v7.15.1
 
 ### Patch Changes

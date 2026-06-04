@@ -13,6 +13,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.17.0](#v7170)
+  - [v7.16.0](#v7160)
+    - [Stabilized `future.v8_trailingSlashAwareDataRequests`](#stabilized-futurev8_trailingslashawaredatarequests)
+    - [Pre-v8 Future Flag Warnings](#pre-v8-future-flag-warnings)
   - [v7.15.1](#v7151)
   - [v7.15.0](#v7150)
     - [Stabilizations](#stabilizations)
@@ -173,29 +177,113 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 </details>
 
-## v7.15.1
+## v7.17.0
 
-Date: 2026-05-13
+Date: 2026-06-04
+
+### Minor Changes
+
+- `react-router` - Ship a subset of the official documentation inside the `react-router` package ([#15121](https://github.com/remix-run/react-router/pull/15121))
+  - Markdown docs are now available in `node_modules/react-router/docs`, letting AI coding agents and the React Router agent skills read official docs locally
+  - Excludes auto-generated API docs (`api/`), `community/` content, and tutorials (`tutorials/`)
 
 ### Patch Changes
 
-- `react-router` - Update router to operate on fetcher Maps in an immutable manner to avoid delayed React renders from potentially reading an updated but not yet committed Map. This could result in brief flickers in some fetcher-driven optimistic UI scenarios. ([#15028](https://github.com/remix-run/react-router/pull/15028))
+- `@react-router/dev` - Fix future flag warning URLs and only log each future flag warning one time ([#15138](https://github.com/remix-run/react-router/pull/15138))
 
-- `react-router` - Fix `serverLoader()` returning stale SSR data when a client navigation aborts pending hydration before the hydration `clientLoader` resolves ([#15022](https://github.com/remix-run/react-router/pull/15022))
+### Unstable Changes
 
-- `react-router` - Fix `RouterProvider` `onError` callback not being called for synchronous initial loader errors in SPA mode ([#15039](https://github.com/remix-run/react-router/pull/15039)) ([#14942](https://github.com/remix-run/react-router/pull/14942))
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `@react-router/dev` - Prevent RSC route module server exports from being scanned by the client dependency optimizer when `future.unstable_optimizeDeps` is enabled. ([#15005](https://github.com/remix-run/react-router/pull/15005))
+
+**Full Changelog**: [`v7.16.0...v7.17.0`](https://github.com/remix-run/react-router/compare/react-router@7.16.0...react-router@7.17.0)
+
+## v7.16.0
+
+Date: 2026-05-28
+
+### What's Changed
+
+#### Stabilized `future.v8_trailingSlashAwareDataRequests`
+
+We've stabilized this flag in preparation for the upcoming v8 release. Unless you are doing specific path-inspection on `.data` requests or have specific CDN/caching/pre-rendering logic around `.data` requests, this should largely be a zero-code-change adoptions. Please see the [docs](https://reactrouter.com/upgrading/future#futurev8_trailingslashawaredatarequests) for more info.
+
+#### Pre-v8 Future Flag Warnings
+
+In preparation for the upcoming v8 release, `7.16.0` begins logging console warnings during builds for future flags that you have not enabled yet. If you have all future flags enabled, the v8 upgrade should be mostly non-breaking (short of some underlying dependency minimum versions bumps - React 19, Node 22.12, Vite 7). You can suppress these warnings until you are ready top adopt flags by setting an explicit `false` in your `react-router.config.ts`.
+
+### Minor Changes
+
+- `react-router` - Stabilize `future.unstable_trailingSlashAwareDataRequests` as `future.v8_trailingSlashAwareDataRequests` ([#15098](https://github.com/remix-run/react-router/pull/15098))
+- `@react-router/dev` - Log future flag warnings for upcoming React Router v8 flags ([#15029](https://github.com/remix-run/react-router/pull/15029))
+  - `v8_middleware`, `v8_splitRouteModules`, `v8_viteEnvironmentApi`, `v8_passThroughRequests`, `v8_trailingSlashAwareDataRequests`
+
+### Patch Changes
+
+- `react-router` - Disable manifest path when lazy route discovery is disabled ([#15068](https://github.com/remix-run/react-router/pull/15068))
+- `react-router` - Fix browser URL creation to use the configured history `window` instead of the global `window` ([#15066](https://github.com/remix-run/react-router/pull/15066))
+  - Pass the history/router window through to `createBrowserURLImpl` so custom window contexts keep the correct URL origin.
+- `react-router` - Fix `useNavigation()` return type to preserve discriminated union across navigation states ([#15095](https://github.com/remix-run/react-router/pull/15095))
+- `react-router` - Widen `MetaDescriptor` `script:ld+json` type from `LdJsonObject` to `LdJsonObject | LdJsonObject[]` to permit multiple JSON-LD schemas in a single `<script type="application/ld+json">` tag emitted by `<Meta />` ([#15082](https://github.com/remix-run/react-router/pull/15082))
+- `react-router-dom` - Remove stale/invalid `unpkg` field from `package.json` ([#15075](https://github.com/remix-run/react-router/pull/15075))
+  - This was removed from other packages with the release of v7 but missed in the `react-router-dom` re-export package
+- `@react-router/express` - Ignore writes after Express responses close ([#15107](https://github.com/remix-run/react-router/pull/15107))
+  - Avoid surfacing client disconnects as adapter errors when the response stream has already been destroyed or ended
+- `@react-router/node` - Honor Node writable backpressure in `writeReadableStreamToWritable` and `writeAsyncIterableToWritable` ([#15071](https://github.com/remix-run/react-router/pull/15071))
+  - Await `'drain'` when `writable.write()` returns `false` instead of letting chunks accumulate in the writable's internal buffer
+  - Reject (rather than hang) if the writable errors or closes mid-stream
+- `@react-router/serve` - Normalize `assetsBuildDirectory` path separators in `react-router-serve` so Windows-built server artifacts can serve `/assets/*` correctly when run on Linux ([#14982](https://github.com/remix-run/react-router/pull/14982))
+
+**Full Changelog**: [`v7.15.1...v7.16.0`](https://github.com/remix-run/react-router/compare/react-router@7.15.1...react-router@7.16.0)
+
+## v7.15.1
+
+Date: 2026-05-14
+
+### What's New
+
+#### `useRouterState` (unstable)
+
+Following our [Less is More](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals) design goal, this release includes a new `unstable_useRouterState()` hook (Framework + Data Mode) that consolidates access to active and pending router states ([RFC](https://github.com/remix-run/react-router/discussions/12358), [Roadmap Issue](https://github.com/remix-run/react-router/issues/13073)).
+
+This should allow you to consolidate usages of a bunch of different hooks which will likely be marked deprecated later on in v8 and potentially removed in an eventual v9:
+
+```ts
+let { active, pending } = unstable_useRouterState();
+
+// Active is always populated with the current location
+active.location; // replaces `useLocation()`
+active.searchParams; // replaces `useSearchParams()[0]`
+active.params; // replaces `useParams()`
+active.matches; // replaces `useMatches()`
+active.type; // replaces `useNavigationType()`
+
+// Pending is only populated during a navigation
+pending.location; // replaces `useNavigation().location`
+pending.searchParams; // equivalent to `new URLSearchParams(useNavigation().search)`
+pending.params; // Not directly accessible today
+pending.matches; // Not directly accessible today
+pending.type; // Not directly accessible today
+pending.state; // replaces `useNavigation().state`
+pending.formMethod; // replaces useNavigation().formMethod
+pending.formAction; // replaces useNavigation().formAction
+pending.formEncType; // replaces useNavigation().formEncType
+pending.formData; // replaces useNavigation().formData
+pending.json; // replaces useNavigation().json
+pending.text; // replaces useNavigation().text
+```
+
+### Patch Changes
 
 - `react-router` - Memoize `useFetchers` to return a stable identity and only change if fetchers changed ([#15028](https://github.com/remix-run/react-router/pull/15028))
-
+- `react-router` - Update router to operate on fetcher Maps in an immutable manner to avoid delayed React renders from potentially reading an updated but not yet committed Map. This could result in brief flickers in some fetcher-driven optimistic UI scenarios ([#15028](https://github.com/remix-run/react-router/pull/15028))
+- `react-router` - Fix `serverLoader()` returning stale SSR data when a client navigation aborts pending hydration before the hydration `clientLoader` resolves ([#15022](https://github.com/remix-run/react-router/pull/15022))
+- `react-router` - Fix `RouterProvider` `onError` callback not being called for synchronous initial loader errors in SPA mode ([#15039](https://github.com/remix-run/react-router/pull/15039)) ([#14942](https://github.com/remix-run/react-router/pull/14942))
 - `react-router` - Internal refactor to consolidate mutation request detection through shared utility ([#15033](https://github.com/remix-run/react-router/pull/15033))
-
 - `@react-router/dev` - Fix `basename` conflicting with `app` directory name when Vite `base` is set ([#15027](https://github.com/remix-run/react-router/pull/15027))
-
-  When the Vite `base` config and React Router `basename` both match the
-  app directory name (e.g. `base: "/app/"`, `basename: "/app/"`), Vite would
-  strip the base prefix from server-build virtual module import paths, causing
-  "Failed to load url /root.tsx" errors. The fix uses `/@fs/` absolute paths
-  for those imports to bypass Vite's base-stripping logic.
+  - When the Vite `base` config and React Router `basename` both match the app directory name (e.g. `base: "/app/"`, `basename: "/app/"`), Vite would strip the base prefix from server-build virtual module import paths, causing "Failed to load url /root.tsx" errors
+  - The fix uses `/@fs/` absolute paths for those imports to bypass Vite's base-stripping logic
 
 ### Unstable Changes
 
@@ -203,38 +291,6 @@ Date: 2026-05-13
 
 - `react-router` - Add a new `unstable_useRouterState()` hook that consolidates access to active and pending router states (RFC: #12358) ([#15017](https://github.com/remix-run/react-router/pull/15017))
   - Data/Framework/RSC only — throws when used without a data router
-  - This should allow you to consolidate usages of the following hooks which will likely be deprecated and removed in a future major version
-    - `useLocation`
-    - `useSearchParams`
-    - `useParams`
-    - `useMatches`
-    - `useNavigationType`
-    - `useNavigation`
-
-    ```ts
-    let { active, pending } = unstable_useRouterState();
-
-    // Active is always populated with the current location
-    active.location; // replaces `useLocation()`
-    active.searchParams; // replaces `useSearchParams()[0]`
-    active.params; // replaces `useParams()`
-    active.matches; // replaces `useMatches()`
-    active.type; // replaces `useNavigationType()`
-
-    // Pending is only populated during a navigation
-    pending.location; // replaces `useNavigation().location`
-    pending.searchParams; // equivalent to `new URLSearchParams(useNavigation().search)`
-    pending.params; // Not directly accessible today
-    pending.matches; // Not directly accessible today
-    pending.type; // Not directly accessible today
-    pending.state; // replaces `useNavigation().state`
-    pending.formMethod; // replaces useNavigation().formMethod
-    pending.formAction; // replaces useNavigation().formAction
-    pending.formEncType; // replaces useNavigation().formEncType
-    pending.formData; // replaces useNavigation().formData
-    pending.json; // replaces useNavigation().json
-    pending.text; // replaces useNavigation().text
-    ```
 
 **Full Changelog**: [`v7.15.0...v7.15.1`](https://github.com/remix-run/react-router/compare/react-router@7.15.0...react-router@7.15.1)
 
@@ -3093,7 +3149,7 @@ async function fakeGetSlugsFromCms() {
     - If you are not using the Vite plugin and are manually calling `createBrowserRouter`/`createHashRouter`:
       - `import { RouterProvider } from "react-router/dom"`
 - Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
-- Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057]([https://github.com/remix-run/react-router/pull/1205))
+- Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057](https://github.com/remix-run/react-router/pull/12057))
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
 - Remove the deprecated `json` utility ([#12146](https://github.com/remix-run/react-router/pull/12146))
   - You can use [`Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static) if you still need to construct JSON responses in your app

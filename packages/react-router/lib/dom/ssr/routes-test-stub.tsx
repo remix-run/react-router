@@ -128,8 +128,8 @@ export function createRoutesStub(
         future: {
           v8_passThroughRequests: future?.v8_passThroughRequests === true,
           v8_middleware: future?.v8_middleware === true,
-          unstable_trailingSlashAwareDataRequests:
-            future?.unstable_trailingSlashAwareDataRequests === true,
+          v8_trailingSlashAwareDataRequests:
+            future?.v8_trailingSlashAwareDataRequests === true,
         },
         manifest: {
           routes: {},
