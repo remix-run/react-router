@@ -192,8 +192,8 @@ function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>,
 ): [SsrEnvironmentName, T][] {
-  return Object.entries(record).filter(
-    ([name]) => isReactRouterServerEnvironment(ctx, name),
+  return Object.entries(record).filter(([name]) =>
+    isReactRouterServerEnvironment(ctx, name),
   ) as [SsrEnvironmentName, T][];
 }
 
