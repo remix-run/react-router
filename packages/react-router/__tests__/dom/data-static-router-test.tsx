@@ -558,6 +558,27 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
+  it("does not crash on encoded backslash in splat route path", async () => {
+    let routes = [{ path: "/*", element: <h1>splat</h1> }];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/%5C", {
+        signal: new AbortController().signal,
+      }),
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>,
+    );
+    expect(html).toContain("<h1>splat</h1>");
+  });
+
   it("does not encode user-specified <a href> values", async () => {
     let routes = [
       { path: "/", element: <Link to="/path/with space">👋</Link> },
