@@ -12,10 +12,10 @@ Implement the RFC from the following GitHub discussion: $ARGUMENTS
 
 RFC implementations should start from a clean working tree. If there are uncommitted changes, stop and ask me to resolve them before continuing.
 
-- If you are already on a named branch that is at the same HEAD as `dev`, use that branch.
-- Otherwise, create a branch from `dev` using the format `{author}/rfc-{semantic-name}`:
+- If you are already on a named branch that is at the same HEAD as `main`, use that branch.
+- Otherwise, create a branch from `main` using the format `{author}/rfc-{semantic-name}`:
   ```sh
-  git branch {author}/rfc-{semantic-name} dev
+  git branch {author}/rfc-{semantic-name} main
   git checkout {author}/rfc-{semantic-name}
   ```
 
@@ -224,10 +224,10 @@ Ask me to review and iterate before opening a PR.
 
 ### 12. Commit
 
-Once I approve, commit and open a PR to `dev`:
+Once I approve, commit and open a PR to `main`:
 
 ```sh
-gh pr create --base dev --title "feat: <RFC title>" --body "..."
+gh pr create --base main --title "feat: <RFC title>" --body "..."
 ```
 
 PR body should include:
