@@ -435,12 +435,14 @@ async function resolveConfig({
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
+  shouldLogFutureFlagWarnings,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
+  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -757,7 +759,9 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  logFutureFlagWarnings(userAndPresetConfigs.future || {});
+  if (shouldLogFutureFlagWarnings) {
+    logFutureFlagWarnings(userAndPresetConfigs.future || {});
+  }
 
   return ok(reactRouterConfig);
 }
@@ -767,7 +771,7 @@ function logFutureFlagWarning(flag: string, message: string): void {
     colors.yellow(
       `  ⚠️  Future Flag Warning: ${message}\n` +
         `     You can use the \`future.${flag}\` flag to opt in early.\n` +
-        `     -> https://reactrouter.com/upgrading/future-flags#${flag}`,
+        `     -> https://reactrouter.com/v7/upgrading/future#future${flag.toLowerCase()}`,
     ),
   );
 }
@@ -829,12 +833,14 @@ export async function createConfigLoader({
   mode,
   skipRoutes,
   validateConfig,
+  shouldLogFutureFlagWarnings,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
+  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -865,11 +871,18 @@ export async function createConfigLoader({
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
+      shouldLogFutureFlagWarnings,
     });
 
   let appDirectory: string;
 
-  let initialConfigResult = await getConfig();
+  let initialConfigResult = await resolveConfig({
+    root,
+    viteNodeContext,
+    reactRouterConfigFile,
+    skipRoutes,
+    validateConfig,
+  });
 
   if (!initialConfigResult.ok) {
     throw new Error(initialConfigResult.error);

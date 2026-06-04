@@ -13,7 +13,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.17.0](#v7170)
   - [v7.16.0](#v7160)
+    - [Stabilized `future.v8_trailingSlashAwareDataRequests`](#stabilized-futurev8_trailingslashawaredatarequests)
+    - [Pre-v8 Future Flag Warnings](#pre-v8-future-flag-warnings)
   - [v7.15.1](#v7151)
   - [v7.15.0](#v7150)
     - [Stabilizations](#stabilizations)
@@ -173,6 +176,29 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.17.0
+
+Date: 2026-06-04
+
+### Minor Changes
+
+- `react-router` - Ship a subset of the official documentation inside the `react-router` package ([#15121](https://github.com/remix-run/react-router/pull/15121))
+
+  - Markdown docs are now available in `node_modules/react-router/docs`, letting AI coding agents and the React Router agent skills read official docs locally
+  - Excludes auto-generated API docs (`api/`), `community/` content, and tutorials (`tutorials/`)
+
+### Patch Changes
+
+- `@react-router/dev` - Fix future flag warning URLs and only log each future flag warning one time ([#15138](https://github.com/remix-run/react-router/pull/15138))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `@react-router/dev` - Prevent RSC route module server exports from being scanned by the client dependency optimizer when `future.unstable_optimizeDeps` is enabled. ([#15005](https://github.com/remix-run/react-router/pull/15005))
+
+**Full Changelog**: [`v7.16.0...v7.17.0`](https://github.com/remix-run/react-router/compare/react-router@7.16.0...react-router@7.17.0)
 
 ## v7.16.0
 
