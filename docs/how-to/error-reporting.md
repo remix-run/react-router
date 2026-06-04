@@ -104,7 +104,11 @@ See also:
 This function is called whenever React Router catches an error in your application on the client.
 
 ```tsx
-import { type ClientOnErrorFunction } from "react-router";
+import {
+  createBrowserRouter,
+  type ClientOnErrorFunction,
+} from "react-router";
+import { RouterProvider } from "react-router/dom";
 
 const onError: ClientOnErrorFunction = (
   error,
@@ -116,8 +120,12 @@ const onError: ClientOnErrorFunction = (
   console.error(error, errorInfo);
 };
 
+const router = createBrowserRouter(routes);
+
 function App() {
-  return <RouterProvider onError={onError} />;
+  return (
+    <RouterProvider router={router} onError={onError} />
+  );
 }
 ```
 

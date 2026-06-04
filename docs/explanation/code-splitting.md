@@ -58,4 +58,4 @@ export default function Component({ loaderData }) {
 
 After building for the browser, only the `Component` will still be in the bundle, so you can use server-only code in the other module exports.
 
-[route-module]: ../../start/framework/route-module
+[route-module]: ../start/framework/route-module
