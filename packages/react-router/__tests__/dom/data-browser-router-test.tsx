@@ -541,14 +541,16 @@ function testDomRouter(
 
         // Resolve data strategy with only an error at the index route but nothing
         // for the root route
-        await dfd.resolve({
-          index: {
-            type: "error",
-            result: "INDEX ERROR",
-          },
+        // Wrap resolve in act() so React flushes all pending state updates
+        // triggered by the dataStrategy result before we assert.
+        await act(async () => {
+          await dfd.resolve({
+            index: {
+              type: "error",
+              result: "INDEX ERROR",
+            },
+          });
         });
-        await tick();
-        await tick();
 
         // The router stubs in an error for the root route to get out of
         // displaying the HydrateFallback
