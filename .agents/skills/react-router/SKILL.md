@@ -24,6 +24,8 @@ Use Framework Mode guidance when you see:
 - imports from `./+types/...`
 - the React Router Vite plugin from `@react-router/dev/vite`
 
+Framework examples usually use the default `app/` directory, but check `react-router.config.ts` for a custom `appDirectory` before assuming exact paths.
+
 Then read `references/framework-mode.md`.
 
 ### Data Mode
@@ -79,6 +81,8 @@ node -p "require.resolve('react-router/docs')"
 node -p "require.resolve('react-router/docs/start/modes.md')"
 ```
 
+When this skill references `react-router/docs/...`, treat it as a package-doc specifier: resolve it through package exports when possible, or read the matching file under `node_modules/react-router/dist/docs/`.
+
 If `react-router/docs` is not exported by the installed version, that package did not ship local markdown docs. In that case, use the repo `docs/` directory when working inside the React Router repository; in a consuming app, fall back to version-matched website docs.
 
 ### How the Docs Are Organized
@@ -123,7 +127,15 @@ node_modules/react-router/dist/docs/how-to/react-server-components.md
   npm list react-router @react-router/dev
   ```
 - Identify the mode before editing routes or data APIs.
+- If the mode is ambiguous, inspect `package.json`, the top-level router setup, and route configuration before editing. Ask the user if the app appears to be mid-migration.
 - If changing shared behavior, consider all five modes: Declarative, Data, Framework, RSC Data, and RSC Framework.
+
+### Imports
+
+- Match the app's existing import style.
+- For new React Router v7+ code, prefer imports from `react-router`.
+- Do not churn existing `react-router-dom` imports unless the user is intentionally migrating import paths.
+- In Framework Mode, keep Framework tooling imports from `@react-router/dev/*` where the docs show them.
 
 ### Navigation
 

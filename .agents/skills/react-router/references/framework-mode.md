@@ -30,6 +30,8 @@ Always check the `[MODES: framework, ...]` marker in a doc before applying it.
 
 ## Framework Shape
 
+Examples usually assume the default `appDirectory` of `app`. Check `react-router.config.ts` before assuming exact paths.
+
 Look for these files and conventions:
 
 ```txt
