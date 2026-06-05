@@ -1537,59 +1537,59 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         "app/routes.ts": js`
-        import { type RouteConfig, index, route } from "@react-router/dev/routes";
-        export default [
-          index("routes/_index.tsx"),
-          route("*", "routes/catchall.tsx"),
-        ] satisfies RouteConfig;
-      `,
+          import { type RouteConfig, index, route } from "@react-router/dev/routes";
+          export default [
+            index("routes/_index.tsx"),
+            route("*", "routes/catchall.tsx"),
+          ] satisfies RouteConfig;
+        `,
         "app/root.tsx": js`
-        import { Links, Meta, Outlet, Scripts } from "react-router";
-        export default function Root() {
-          return (
-            <html lang="en">
-              <head>
-                <Meta />
-                <Links />
-              </head>
-              <body>
-                <Outlet />
-                <Scripts />
-              </body>
-            </html>
-          );
-        }
-      `,
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
         "app/routes/_index.tsx": js`
-        import { Link } from "react-router";
-        export function meta() {
-          return [{ title: "Home" }];
-        }
-        export default function Index() {
-          return (
-            <div>
-              <h1>Home</h1>
-              <Link to="/catchall" data-testid="go-catchall">
-                Go to catchall
-              </Link>
-            </div>
-          );
-        }
-      `,
+          import { Link } from "react-router";
+          export function meta() {
+            return [{ title: "Home" }];
+          }
+          export default function Index() {
+            return (
+              <div>
+                <h1>Home</h1>
+                <Link to="/catchall" data-testid="go-catchall">
+                  Go to catchall
+                </Link>
+              </div>
+            );
+          }
+        `,
         "app/routes/catchall.tsx": js`
-        import { Link } from "react-router";
-        export function meta() {
-          return [{ title: "Catchall" }];
-        }
-        export default function Catchall() {
-          return (
-            <div>
-              <h1 data-testid="catchall-heading">Catchall route</h1>
-              <Link to="#hash" data-testid="hash-link">Hash link</Link>
-            </div>
-          );
-        }
-      `,
+          import { Link } from "react-router";
+          export function meta() {
+            return [{ title: "Catchall" }];
+          }
+          export default function Catchall() {
+            return (
+              <div>
+                <h1 data-testid="catchall-heading">Catchall route</h1>
+                <Link to="#hash" data-testid="hash-link">Hash link</Link>
+              </div>
+            );
+          }
+        `,
       },
     });
 
