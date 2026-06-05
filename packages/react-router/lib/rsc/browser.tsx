@@ -5,7 +5,7 @@ import { RouterProvider } from "../components";
 import { RSCRouterContext } from "../context";
 import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
-import { createBrowserHistory, invariant } from "../router/history";
+import { createBrowserHistory, createPath, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
 import {
   createRouter,
@@ -24,7 +24,7 @@ import type {
   DataStrategyFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext } from "../router/utils";
+import { ErrorResponseImpl, createContext, joinPaths } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -66,7 +66,11 @@ type WindowWithRouterGlobals = Window &
     __reactRouterDataRouter: DataRouter;
     __routerInitialized: boolean;
     __routerActionID: number;
+    __reactRouterRSCVersion?: string;
   };
+
+const RSC_VERSION_HEADER = "X-React-Router-RSC-Version";
+const RSC_RELOAD_DOCUMENT_STORAGE_KEY = "react-router-rsc-reload-document";
 
 /**
  * Create a React `callServer` implementation for React Router.
@@ -123,23 +127,32 @@ export function createCallServer({
       (globalVar.__routerActionID ??= 0) + 1);
 
     const temporaryReferences = createTemporaryReferenceSet();
-    const payloadPromise = fetchImplementation(
-      new Request(location.href, {
-        body: await encodeReply(args, { temporaryReferences }),
-        method: "POST",
-        headers: {
-          Accept: "text/x-component",
-          "rsc-action-id": id,
-        },
-      }),
-    ).then((response) => {
-      if (!response.body) {
-        throw new Error("No response body");
-      }
-      return createFromReadableStream(response.body, {
-        temporaryReferences,
-      }) as Promise<RSCPayload>;
+    let version = getRSCVersion();
+    const request = new Request(location.href, {
+      body: await encodeReply(args, { temporaryReferences }),
+      method: "POST",
+      headers: {
+        Accept: "text/x-component",
+        "rsc-action-id": id,
+        ...(version ? { [RSC_VERSION_HEADER]: version } : {}),
+      },
     });
+    const payloadPromise = fetchImplementation(request).then(
+      async (response) => {
+        if (isRSCReloadDocumentResponse(response)) {
+          await reloadRSCResponseDocument(getRSCReloadDocumentTarget(request));
+        }
+
+        clearRSCReloadDocumentAttempt();
+
+        if (!response.body) {
+          throw new Error("No response body");
+        }
+        return createFromReadableStream(response.body, {
+          temporaryReferences,
+        }) as Promise<RSCPayload>;
+      },
+    );
 
     React.startTransition(() =>
       // @ts-expect-error - Needs React 19 types
@@ -249,13 +262,15 @@ function createRouterFromPayload({
 } {
   const globalVar = window as WindowWithRouterGlobals;
 
+  if (payload.type !== "render") throw new Error("Invalid payload type");
+
+  globalVar.__reactRouterRSCVersion = payload.version;
+
   if (globalVar.__reactRouterDataRouter && globalVar.__reactRouterRouteModules)
     return {
       router: globalVar.__reactRouterDataRouter,
       routeModules: globalVar.__reactRouterRouteModules,
     };
-
-  if (payload.type !== "render") throw new Error("Invalid payload type");
 
   globalVar.__reactRouterRouteModules =
     globalVar.__reactRouterRouteModules ?? {};
@@ -301,7 +316,7 @@ function createRouterFromPayload({
       basename: payload.basename,
       isSpaMode: false,
     }),
-    async patchRoutesOnNavigation({ path, signal }) {
+    async patchRoutesOnNavigation({ path, signal, fetcherKey }) {
       if (payload.routeDiscovery.mode === "initial") {
         if (!applyPatchesPromise) {
           applyPatchesPromise = (async () => {
@@ -333,7 +348,10 @@ function createRouterFromPayload({
         [path],
         createFromReadableStream,
         fetchImplementation,
+        payload.routeDiscovery.manifestPath,
+        payload.basename,
         signal,
+        getRSCManifestReloadDocumentTarget(path, fetcherKey),
       );
     },
     // FIXME: Pass `build.ssr` into this function
@@ -557,8 +575,16 @@ function getFetchAndDecodeViaRSC(
     }
 
     let res = await fetchImplementation(
-      new Request(url, await createRequestInit(request)),
+      createRSCSubRequest(url, await createRequestInit(request)),
     );
+
+    if (isRSCReloadDocumentResponse(res)) {
+      await reloadRSCResponseDocument(
+        getRSCReloadDocumentTarget(request, args.fetcherKey),
+      );
+    }
+
+    clearRSCReloadDocumentAttempt();
 
     // If this error'd without hitting the running server, then bubble a normal
     // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
@@ -706,17 +732,18 @@ export function RSCHydratedRouter({
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let { routeDiscovery } = payload;
+  let renderPayload = payload;
+  let { basename, routeDiscovery } = renderPayload;
 
   let { router, routeModules } = React.useMemo(
     () =>
       createRouterFromPayload({
-        payload,
+        payload: renderPayload,
         fetchImplementation,
         getContext,
         createFromReadableStream,
       }),
-    [createFromReadableStream, payload, fetchImplementation, getContext],
+    [createFromReadableStream, renderPayload, fetchImplementation, getContext],
   );
 
   React.useEffect(() => {
@@ -770,6 +797,7 @@ export function RSCHydratedRouter({
     ) {
       return;
     }
+    let manifestPath = routeDiscovery.manifestPath;
 
     // Register a link href for patching
     function registerElement(el: Element) {
@@ -814,6 +842,8 @@ export function RSCHydratedRouter({
           paths,
           createFromReadableStream,
           fetchImplementation,
+          manifestPath,
+          basename,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -833,7 +863,7 @@ export function RSCHydratedRouter({
       attributes: true,
       attributeFilter: ["data-discover", "href", "action"],
     });
-  }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
+  }, [basename, routeDiscovery, createFromReadableStream, fetchImplementation]);
 
   const frameworkContext: FrameworkContextObject = {
     future: {
@@ -856,12 +886,11 @@ export function RSCHydratedRouter({
       },
     },
     routeDiscovery:
-      payload.routeDiscovery.mode === "initial"
+      routeDiscovery.mode === "initial"
         ? { mode: "initial", manifestPath: defaultManifestPath }
         : {
             mode: "lazy",
-            manifestPath:
-              payload.routeDiscovery.manifestPath || defaultManifestPath,
+            manifestPath: routeDiscovery.manifestPath || defaultManifestPath,
           },
     routeModules,
   };
@@ -1015,33 +1044,46 @@ const nextPaths = new Set<string>();
 const discoveredPathsMaxSize = 1000;
 const discoveredPaths = new Set<string>();
 
-function getManifestUrl(paths: string[]): URL | null {
+function getManifestUrl(
+  paths: string[],
+  manifestPath: string | undefined,
+  basename: string | undefined,
+): URL | null {
   if (paths.length === 0) {
     return null;
   }
 
-  if (paths.length === 1) {
-    return new URL(`${paths[0]}.manifest`, window.location.origin);
-  }
-
-  const globalVar = window as WindowWithRouterGlobals;
-  let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
-    /^\/|\/$/g,
-    "",
+  let version = getRSCVersion();
+  let url = new URL(
+    getRouteDiscoveryManifestPath(manifestPath, basename),
+    window.location.origin,
   );
-  let url = new URL(`${basename}/.manifest`, window.location.origin);
   url.searchParams.set("paths", paths.sort().join(","));
+  if (version) url.searchParams.set("version", version);
 
   return url;
+}
+
+function getRouteDiscoveryManifestPath(
+  manifestPath: string | undefined,
+  basename: string | undefined,
+): string {
+  let resolvedManifestPath = manifestPath || defaultManifestPath;
+  return basename == null
+    ? resolvedManifestPath
+    : joinPaths([basename, resolvedManifestPath]);
 }
 
 async function fetchAndApplyManifestPatches(
   paths: string[],
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  manifestPath?: string,
+  basename?: string,
   signal?: AbortSignal,
+  reloadDocumentPath?: string,
 ) {
-  let url = getManifestUrl(paths);
+  let url = getManifestUrl(paths, manifestPath, basename);
   if (url == null) {
     return;
   }
@@ -1054,7 +1096,22 @@ async function fetchAndApplyManifestPatches(
     return;
   }
 
-  let response = await fetchImplementation(new Request(url, { signal }));
+  let response = await fetchImplementation(
+    createRSCSubRequest(url, { signal }),
+  );
+  if (isRSCReloadDocumentResponse(response)) {
+    if (reloadDocumentPath) {
+      await reloadRSCResponseDocument(reloadDocumentPath);
+    }
+    console.warn(
+      "Detected an RSC manifest version mismatch during eager route discovery. " +
+        "The next navigation to an undiscovered route will reload the document.",
+    );
+    return;
+  }
+
+  clearRSCReloadDocumentAttempt();
+
   if (!response.body || response.status < 200 || response.status >= 300) {
     throw new Error("Unable to fetch new route matches from the server");
   }
@@ -1089,6 +1146,102 @@ function addToFifoQueue(path: string, queue: Set<string>) {
     if (typeof first === "string") queue.delete(first);
   }
   queue.add(path);
+}
+
+export function isRSCReloadDocumentResponse(response: Response): boolean {
+  return (
+    response.status === 204 && response.headers.has("X-Remix-Reload-Document")
+  );
+}
+
+export function getRSCReloadDocumentTarget(
+  request: Request,
+  fetcherKey?: string | null,
+): string {
+  if (request.method === "GET" && !fetcherKey) {
+    let navigation = (window as WindowWithRouterGlobals).__reactRouterDataRouter
+      ?.state.navigation;
+    if (navigation?.location) {
+      return createPath(navigation.location);
+    }
+    return new URL(request.url, window.location.href).toString();
+  }
+
+  return window.location.href;
+}
+
+export function getRSCManifestReloadDocumentTarget(
+  path: string,
+  fetcherKey?: string,
+): string {
+  if (fetcherKey) {
+    return window.location.href;
+  }
+
+  let navigation = (window as WindowWithRouterGlobals).__reactRouterDataRouter
+    ?.state.navigation;
+  if (navigation?.location) {
+    return createPath(navigation.location);
+  }
+
+  return path;
+}
+
+export function claimRSCReloadDocumentAttempt(target: string): boolean {
+  let href = new URL(target, window.location.href).toString();
+  let version = getRSCVersion() ?? "";
+  let attemptKey = `${version}:${href}`;
+  try {
+    if (
+      sessionStorage.getItem(RSC_RELOAD_DOCUMENT_STORAGE_KEY) === attemptKey
+    ) {
+      return false;
+    }
+    sessionStorage.setItem(RSC_RELOAD_DOCUMENT_STORAGE_KEY, attemptKey);
+  } catch {
+    // If sessionStorage is unavailable, still attempt the reload.
+  }
+  return true;
+}
+
+export function clearRSCReloadDocumentAttempt(): void {
+  try {
+    sessionStorage.removeItem(RSC_RELOAD_DOCUMENT_STORAGE_KEY);
+  } catch {
+    // Session storage unavailable
+  }
+}
+
+async function reloadRSCResponseDocument(target: string): Promise<never> {
+  let href = new URL(target, window.location.href).toString();
+  if (!claimRSCReloadDocumentAttempt(href)) {
+    console.error("Unable to reload document due to RSC version mismatch.");
+    throw new Error("Unable to reload document due to RSC version mismatch.");
+  }
+
+  window.location.assign(href);
+  console.warn("Detected RSC version mismatch, reloading...");
+
+  // Stall here and let the browser reload, avoiding an ErrorBoundary flash.
+  return await new Promise<never>(() => {
+    // Intentionally never resolves.
+  });
+}
+
+function createRSCSubRequest(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Request {
+  let request = new Request(input, init);
+  let version = getRSCVersion();
+  if (version) {
+    request.headers.set(RSC_VERSION_HEADER, version);
+  }
+  return request;
+}
+
+function getRSCVersion(): string | undefined {
+  return (window as WindowWithRouterGlobals).__reactRouterRSCVersion;
 }
 
 // Thanks Josh!

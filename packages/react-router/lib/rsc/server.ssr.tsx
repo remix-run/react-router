@@ -17,6 +17,7 @@ import {
 import { escapeHtml } from "../dom/ssr/markup";
 
 const defaultManifestPath = "/__manifest";
+const RSC_MANIFEST_RESPONSE_HEADER = "React-Router-RSC-Manifest";
 
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
@@ -109,10 +110,15 @@ export async function routeRSCServerRequest({
 }): Promise<Response> {
   const url = new URL(request.url);
   const isDataRequest = isReactServerRequest(url);
+  const isReloadDocumentResponse =
+    serverResponse.status === 204 &&
+    serverResponse.headers.has("X-Remix-Reload-Document");
   const respondWithRSCPayload =
     isDataRequest ||
     isManifestRequest(url) ||
-    request.headers.has("rsc-action-id");
+    request.headers.has("rsc-action-id") ||
+    serverResponse.headers.get(RSC_MANIFEST_RESPONSE_HEADER) === "true" ||
+    isReloadDocumentResponse;
 
   if (
     respondWithRSCPayload ||

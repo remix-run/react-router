@@ -35,4 +35,9 @@ declare module "virtual:react-router/unstable_rsc/route-discovery" {
   export default routeDiscovery;
 }
 
+declare module "virtual:react-router/unstable_rsc/version" {
+  const version: string;
+  export default version;
+}
+
 declare module "virtual:react-router/unstable_rsc/inject-hmr-runtime" {}

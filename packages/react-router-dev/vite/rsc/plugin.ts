@@ -58,6 +58,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 
   let config: ResolvedReactRouterConfig;
   let rootRouteFile: string;
+  let rscVersion = `${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
   function updateConfig(newConfig: ResolvedReactRouterConfig) {
     config = newConfig;
     rootRouteFile = Path.resolve(
@@ -580,6 +583,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     {
+      name: "react-router/rsc/virtual-version",
+      resolveId(id) {
+        if (id === virtual.version.id) {
+          return virtual.version.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.version.resolvedId) {
+          return `export default ${JSON.stringify(rscVersion)};`;
+        }
+      },
+    },
+    {
       name: "react-router/rsc/hmr/inject-runtime",
       enforce: "pre",
       resolveId(id) {
@@ -789,6 +805,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
   routeDiscovery: create("unstable_rsc/route-discovery"),
+  version: create("unstable_rsc/version"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   basename: create("unstable_rsc/basename"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
