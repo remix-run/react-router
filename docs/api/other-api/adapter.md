@@ -112,13 +112,15 @@ Update the `dev` and `start` scripts to use your new Express server:
 {
   // ...
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node server.js",
+    "dev": "cross-env NODE_ENV=development node --conditions development server.js",
     "start": "node server.js"
     // ...
   }
   // ...
 }
 ```
+
+Make sure that `--conditions development` is included in the `dev` script so that the proper version of React Router is used in development.
 
 ## `@react-router/cloudflare`
 
