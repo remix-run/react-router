@@ -110,7 +110,8 @@ The easiest way is to simply append to the parent headers. This avoids overwriti
 ```tsx
 export function headers({ parentHeaders }: HeadersArgs) {
   parentHeaders.append(
-    "Permissions-Policy: geolocation=()",
+    "Permissions-Policy",
+    "geolocation=()",
   );
   return parentHeaders;
 }
