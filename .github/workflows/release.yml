@@ -72,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
+      issues: write # enable applying labels to the release PR
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: Checkout

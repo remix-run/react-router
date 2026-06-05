@@ -239,6 +239,17 @@ export async function deletePrComment(commentId: number) {
 }
 
 /**
+ * Add labels to a PR (or issue)
+ */
+export async function addPrLabels(prNumber: number, labels: string[]) {
+  await request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+    ...requestOptions(),
+    issue_number: prNumber,
+    labels,
+  });
+}
+
+/**
  * Remove a label from a PR (or issue)
  */
 export async function removePrLabel(prNumber: number, label: string) {

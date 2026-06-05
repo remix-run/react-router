@@ -7,7 +7,13 @@
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
  */
-import { closePr, createPr, findOpenPr, updatePr } from "../utils/github.ts";
+import {
+  addPrLabels,
+  closePr,
+  createPr,
+  findOpenPr,
+  updatePr,
+} from "../utils/github.ts";
 import { logAndExec } from "../utils/process.ts";
 import type { PackageRelease } from "./changes.ts";
 import {
@@ -25,6 +31,7 @@ if (!preview && !["main", "hotfix"].includes(baseBranch)) {
 }
 
 let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
+let prLabels = ["pkg:react-router"];
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
 let maxBodyLength = 60_000;
@@ -135,6 +142,13 @@ async function main() {
       head: prBranch,
       base: baseBranch,
     });
+    try {
+      await addPrLabels(newPr.number, prLabels);
+    } catch (error) {
+      console.warn(
+        `⚠️ Unable to add labels (${prLabels.join(", ")}) to PR #${newPr.number}: ${getErrorMessage(error)}`,
+      );
+    }
     console.log(`\n✅ Created PR #${newPr.number}: ${newPr.html_url}`);
   }
 }
@@ -211,6 +225,10 @@ function generatePackageChangelog(release: PackageRelease): string {
     includePackageName: true,
     headingLevel: 2,
   });
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function truncateChangelogs(
