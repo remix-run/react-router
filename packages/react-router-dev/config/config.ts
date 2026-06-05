@@ -438,14 +438,12 @@ async function resolveConfig({
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
-  shouldLogFutureFlagWarnings,
 }: {
   root: string;
   viteRunnerContext: ViteRunner.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
-  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -798,14 +796,12 @@ export async function createConfigLoader({
   mode,
   skipRoutes,
   validateConfig,
-  shouldLogFutureFlagWarnings,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
-  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -836,14 +832,13 @@ export async function createConfigLoader({
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
-      shouldLogFutureFlagWarnings,
     });
 
   let appDirectory: string;
 
   let initialConfigResult = await resolveConfig({
     root,
-    viteNodeContext,
+    viteRunnerContext,
     reactRouterConfigFile,
     skipRoutes,
     validateConfig,

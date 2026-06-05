@@ -1259,8 +1259,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           rootDirectory,
           mode,
           watch: viteCommand === "serve",
-          shouldLogFutureFlagWarnings:
-            viteCommand !== "build" || viteConfigEnv.isSsrBuild === true,
         });
 
         await updatePluginContext();
