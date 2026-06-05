@@ -38,6 +38,23 @@ let tsconfig = (aliases: Record<string, string[]>) => `
   }
 `;
 
+test("Vite / exact-name .server directory is detected (regression for #14997)", async () => {
+  let cwd = await createProject({
+    "app/.server/utils.ts": serverOnlyModule,
+    "app/routes/_index.tsx": `
+      import { serverOnly as unused } from "../.server/utils";
+      export default () => <h1>no server-only usage in route exports</h1>;
+    `,
+  });
+  let { status } = build({ cwd });
+  expect(status).toBe(0);
+  let lines = grep(
+    path.join(cwd, "build/client"),
+    /SERVER_ONLY/,
+  );
+  expect(lines).toHaveLength(0);
+});
+
 test("Vite / dead-code elimination for server exports", async () => {
   let cwd = await createProject({
     "app/utils.server.ts": serverOnlyModule,
