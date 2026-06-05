@@ -23,33 +23,55 @@ type Props = {
   actionData: unknown;
 };
 
-type RouteInfo = Props & {
-  module: RouteModule;
-  matches: Array<MatchInfo>;
-};
-
 type MatchInfo = {
   id: string;
   module: RouteModule;
 };
 
-type MetaMatch<T extends MatchInfo> = Pretty<{
+// Used for the current route's entry in the matches tuple instead of
+// `{ module: RouteModule }` to avoid a circular type reference when the
+// default export is an arrow function. The `RouteModule` assignability check
+// evaluates `["default"]`, which for arrow functions requires resolving
+// `Route.ComponentProps` — creating a cycle. Pre-computed `loaderData`
+// breaks the chain (see react-router#12499).
+type MatchInfoWithLoaderData = {
+  id: string;
+  module?: never; // ensures MatchData<T> discriminant is disjoint from MatchInfo
+  loaderData: unknown;
+};
+
+type AnyMatchInfo = MatchInfo | MatchInfoWithLoaderData;
+
+type RouteInfo = Props & {
+  module: RouteModule;
+  matches: Array<AnyMatchInfo>;
+};
+
+// prettier-ignore
+type MatchData<T extends AnyMatchInfo> =
+  T extends MatchInfo
+    ? GetLoaderData<T["module"]>
+    : T extends MatchInfoWithLoaderData
+      ? T["loaderData"]
+      : never;
+
+type MetaMatch<T extends AnyMatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
   meta: MetaDescriptor[];
   /** @deprecated Use `MetaMatch.loaderData` instead */
-  data: GetLoaderData<T["module"]>;
-  loaderData: GetLoaderData<T["module"]>;
+  data: MatchData<T>;
+  loaderData: MatchData<T>;
   handle?: unknown;
   error?: unknown;
 }>;
 
 // prettier-ignore
-type MetaMatches<T extends Array<MatchInfo>> =
-  T extends [infer F extends MatchInfo, ...infer R extends Array<MatchInfo>]
+type MetaMatches<T extends Array<AnyMatchInfo>> =
+  T extends [infer F extends AnyMatchInfo, ...infer R extends Array<AnyMatchInfo>]
     ? [MetaMatch<F>, ...MetaMatches<R>]
-    : Array<MetaMatch<MatchInfo> | undefined>;
+    : Array<MetaMatch<AnyMatchInfo> | undefined>;
 
 type HasErrorBoundary<T extends RouteInfo> = T["module"] extends {
   ErrorBoundary: Func;
@@ -139,21 +161,21 @@ type CreateHydrateFallbackProps<
       actionData?: T["actionData"];
     });
 
-type Match<T extends MatchInfo> = Pretty<{
+type Match<T extends AnyMatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
   /** @deprecated Use `Match.loaderData` instead */
-  data: GetLoaderData<T["module"]>;
-  loaderData: GetLoaderData<T["module"]>;
+  data: MatchData<T>;
+  loaderData: MatchData<T>;
   handle: unknown;
 }>;
 
 // prettier-ignore
-type Matches<T extends Array<MatchInfo>> =
-  T extends [infer F extends MatchInfo, ...infer R extends Array<MatchInfo>]
+type Matches<T extends Array<AnyMatchInfo>> =
+  T extends [infer F extends AnyMatchInfo, ...infer R extends Array<AnyMatchInfo>]
     ? [Match<F>, ...Matches<R>]
-    : Array<Match<MatchInfo> | undefined>;
+    : Array<Match<AnyMatchInfo> | undefined>;
 
 type CreateComponentProps<T extends RouteInfo, RSCEnabled extends boolean> = {
   /**
