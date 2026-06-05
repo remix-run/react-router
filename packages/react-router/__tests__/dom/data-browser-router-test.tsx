@@ -3574,6 +3574,48 @@ function testDomRouter(
             "/foo/bar",
           );
         });
+
+        it("preserves encoded hash (%23) in form action and submission for param routes", async () => {
+          let actionPathname: string | null = null;
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: ":slug",
+                    action: ({ request }) => {
+                      actionPathname = new URL(request.url).pathname;
+                      return "slug action";
+                    },
+                    Component: () => {
+                      let actionData = useActionData();
+                      return (
+                        <>
+                          <Form method="post">
+                            <button type="submit">Submit</button>
+                          </Form>
+                          {actionData && <p>{String(actionData)}</p>}
+                        </>
+                      );
+                    },
+                  },
+                ],
+              },
+            ],
+            { window: getWindow("/%23routeWithHashTag") },
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/%23routeWithHashTag",
+          );
+
+          fireEvent.click(screen.getByText("Submit"));
+          await waitFor(() => screen.getByText("slug action"));
+
+          expect(actionPathname).toBe("/%23routeWithHashTag");
+        });
       });
 
       describe("splat routes", () => {
