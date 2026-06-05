@@ -22,6 +22,7 @@ export function Layout({ children }: Route.LayoutProps) {
 
 export default function Component({ loaderData }: Route.ComponentProps) {
 // We can call React.use directly in the Component as it's wrapped in Suspense boundary
+// @ts-expect-error – React types resolve to 18 via catalog
   let data = React.use(loaderData.data);
   return <p>Data: {data}</p>;
 }
