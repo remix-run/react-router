@@ -1,7 +1,7 @@
 # Create "installable" preview branches
 #
-# Commits to `dev` push builds to a `preview/dev` branch:
-#   pnpm install "remix-run/react-router#preview/dev&path:packages/react-router"
+# Commits to `main` push builds to a `preview/main` branch:
+#   pnpm install "remix-run/react-router#preview/main&path:packages/react-router"
 #
 # Pull Requests create `preview/pr-{number}` branches:
 #   pnpm install "remix-run/react-router#preview/pr-12345&path:packages/react-router"
@@ -14,7 +14,7 @@ name: Preview Build
 on:
   push:
     branches:
-      - dev
+      - main
   workflow_dispatch:
     inputs:
       baseBranch:
@@ -28,8 +28,8 @@ on:
 
 concurrency:
   # Include `event_name` here because when a pull_request is merged (closed), the
-  # `github.ref` goes back to `ref/heads/dev` which will conflict with the run on
-  # `dev` from the merged PR
+  # `github.ref` goes back to `ref/heads/main` which will conflict with the run on
+  # `main` from the merged PR
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -72,12 +72,12 @@ jobs:
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
 
-      # Build and force push over the preview/dev branch
+      # Build and force push over the preview/main branch
       - name: Build/push branch (push)
         if: github.event_name == 'push'
         run: |
-          pnpm run previews:branch preview/dev
-          git push --force --set-upstream origin preview/dev
+          pnpm run previews:branch preview/main
+          git push --force --set-upstream origin preview/main
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
       # Build and force push over the PR preview/pr-{number} branch + comment on the PR

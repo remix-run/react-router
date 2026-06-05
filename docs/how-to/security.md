@@ -27,4 +27,4 @@ If you are implementing a [Content-Security-Policy (CSP)][csp] in your applicati
 [renderToReadableStream]: https://react.dev/reference/react-dom/server/renderToReadableStream
 [scripts]: ../api/components/Scripts
 [scrollrestoration]: ../api/components/ScrollRestoration
-[serverrouter]: ../api/components/ServerRouter
+[serverrouter]: ../api/framework-routers/ServerRouter

@@ -84,7 +84,7 @@ Remix will not yet support import maps.
 
 ### VS Code type hints
 
-Users may configure an import map for the [Deno extension for VS Code](denoland.vscode-deno) to enable type hints for NPM-managed dependencies within their Deno editor:
+Users may configure an import map for the [Deno extension for VS Code](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) to enable type hints for NPM-managed dependencies within their Deno editor:
 
 `.vscode/resolve_npm_imports_in_deno.json`
 

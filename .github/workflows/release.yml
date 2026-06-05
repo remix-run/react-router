@@ -4,7 +4,7 @@
 #
 # Specific jobs only run on the proper trigger:
 #
-# - Change file driven stable releases (push to release/hotfix branches)
+# - Change file driven stable releases (push to main/hotfix branches)
 # - v8 prereleases (from a workflow_dispatch trigger on the v8 branch)
 # - Experimental releases (from a workflow_dispatch trigger)
 
@@ -13,7 +13,7 @@ name: 🚢 Release/Publish
 on:
   push:
     branches:
-      - "release"
+      - "main"
       - "hotfix"
   workflow_dispatch:
     inputs:
@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_change_files: ${{ steps.check.outputs.has_change_files }}
+      should_publish: ${{ steps.needs-publish.outputs.should_publish }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -46,8 +47,23 @@ jobs:
             echo "$change_files"
             echo "has_change_files=true" >> $GITHUB_OUTPUT
           else
-            echo "No change files found, proceeding to publish."
+            echo "No change files found."
             echo "has_change_files=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: needs-publish
+        id: needs-publish
+        if: steps.check.outputs.has_change_files == 'false'
+        run: |
+          version=$(node -p "require('./packages/react-router/package.json').version")
+          published_version=$(npm view "react-router@$version" version || true)
+
+          if [ "$published_version" = "$version" ]; then
+            echo "react-router@$version is already published. Skipping publish."
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "react-router@$version is not published yet. Publishing is needed."
+            echo "should_publish=true" >> $GITHUB_OUTPUT
           fi
 
   pull_request:
@@ -57,11 +73,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
+      issues: write # enable applying labels to the release PR
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
           token: ${{ secrets.FORMAT_PAT }}
 
@@ -85,7 +103,7 @@ jobs:
   publish:
     name: Publish
     needs: check
-    if: needs.check.outputs.has_change_files == 'false'
+    if: needs.check.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin

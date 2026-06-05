@@ -135,10 +135,9 @@ Brief description of the change
 
 ## Branching
 
-- **`main`**: Latest stable release
-- **`dev`**: Active development (branch from here for code changes)
+- **`main`**: Active Development
 - **`v6`**: v6.x maintenance
-- Branch from `main` for docs-only changes
+- Branch from `main` for code and docs changes
 
 ## Key Files
 

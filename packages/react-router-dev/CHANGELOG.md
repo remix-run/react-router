@@ -1,5 +1,21 @@
 # `@react-router/dev`
 
+## v7.17.0
+
+### Patch Changes
+
+- Fix future flag warning URLs and only log each future flag warning one time ([#15138](https://github.com/remix-run/react-router/pull/15138))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Prevent RSC route module server exports from being scanned by the client dependency optimizer when `future.unstable_optimizeDeps` is enabled. ([#15005](https://github.com/remix-run/react-router/pull/15005))
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+  - [`@react-router/node@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.17.0)
+  - [`@react-router/serve@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.17.0)
+
 ## v7.16.0
 
 ### Minor Changes

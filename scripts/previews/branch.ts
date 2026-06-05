@@ -4,10 +4,10 @@ import * as util from "node:util";
 import { logAndExec } from "../utils/process.ts";
 
 /**
- * This script prepares a base branch (usually `dev`) to be PNPM-installable
- * directly from GitHub via a new branch (usually `preview/dev`):
+ * This script prepares a base branch (usually `main`) to be PNPM-installable
+ * directly from GitHub via a new branch (usually `preview/main`):
  *
- *   pnpm install "remix-run/react-router#preview/dev&path:packages/react-router"
+ *   pnpm install "remix-run/react-router#preview/main&path:packages/react-router"
  *
  * To do this, we can run a build, make some minor changes to the repo, and
  * commit the build + changes to the new branch. These changes would never be
@@ -22,7 +22,7 @@ import { logAndExec } from "../utils/process.ts";
  *  - Copies all `publishConfig`'s down so we get `exports` from `dist/` instead of `src/`
  *  - Commits the changes
  *
- * Then, after pushing, `pnpm install "remix-run/react-router#preview/dev&path:packages/react-router"`
+ * Then, after pushing, `pnpm install "remix-run/react-router#preview/main&path:packages/react-router"`
  * sees the `react-router` nested deps and they all point to github with similar URLs so
  * they install as nested deps the same way.
  */

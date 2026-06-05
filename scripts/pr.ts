@@ -132,7 +132,7 @@ async function runChecks() {
 }
 
 async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
-  if (ctx.baseBranch !== "dev") return [];
+  if (ctx.baseBranch !== "main") return [];
   if (!["opened", "synchronize", "reopened"].includes(ctx.eventAction)) {
     return [];
   }

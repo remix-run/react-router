@@ -1,6 +1,6 @@
 ---
 name: fix-bug
-description: Fix a reported bug in React Router from a GitHub issue. Use when the user provides a GitHub issue URL and asks to fix a bug, investigate an issue, or reproduce a problem. Handles the full workflow: fetching the issue, finding the reproduction, writing a failing test, and implementing the fix.
+description: "Fix a reported bug in React Router from a GitHub issue. Use when the user provides a GitHub issue URL and asks to fix a bug, investigate an issue, or reproduce a problem. Handles the full workflow: fetching the issue, finding the reproduction, writing a failing test, and implementing the fix."
 disable-model-invocation: true
 ---
 
@@ -12,10 +12,10 @@ Fix the bug reported in the following GitHub issue: $ARGUMENTS
 
 Bug fixes should start from a clean working tree. If there are changes, prompt me to resolve them before continuing.
 
-Bugs should be fixed from the `dev` branch in in a new branch using the format `{author}/{semantic-branch-name}` (i.e., `brophdawg11/fix-navigation`):
+Bugs should be fixed from the `main` branch in a new branch using the format `{author}/{semantic-branch-name}` (i.e., `brophdawg11/fix-navigation`):
 
 ```sh
-git branch {author}/{semantic-branch-name} dev
+git branch {author}/{semantic-branch-name} main
 git checkout {author}/{semantic-branch-name}
 ```
 
@@ -144,4 +144,4 @@ Ask me to review the changes and iterate based on any feedback.
 
 ### 8. Open PR
 
-Once I approve the fix, commit the changes and open a PR to `dev`. Include a `Closes #NNNN` in the description to link the PR to the original issue. Also link the issue in the `Development` sidebar
+Once I approve the fix, commit the changes and open a PR to `main`. Include a `Closes #NNNN` in the description to link the PR to the original issue. Also link the issue in the `Development` sidebar

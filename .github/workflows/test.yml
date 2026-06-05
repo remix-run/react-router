@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
     tags-ignore:
       - v*
     paths-ignore:
@@ -18,6 +17,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:

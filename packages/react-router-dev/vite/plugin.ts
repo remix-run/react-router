@@ -176,14 +176,26 @@ type EnvironmentOptionsResolvers = Partial<
   Record<EnvironmentName, EnvironmentOptionsResolver>
 >;
 
+export type EnvironmentBuildContext = {
+  name: EnvironmentName;
+  resolveOptions: EnvironmentOptionsResolver;
+};
+
+function isReactRouterServerEnvironment(
+  ctx: ReactRouterPluginContext,
+  environmentName: string,
+): environmentName is SsrEnvironmentName {
+  return ctx.buildManifest?.serverBundles
+    ? isSsrBundleEnvironmentName(environmentName)
+    : environmentName === "ssr";
+}
+
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>,
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
-    ctx.buildManifest?.serverBundles
-      ? isSsrBundleEnvironmentName(name)
-      : name === "ssr",
+    isReactRouterServerEnvironment(ctx, name),
   ) as [SsrEnvironmentName, T][];
 }
 
@@ -1247,6 +1259,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           rootDirectory,
           mode,
           watch: viteCommand === "serve",
+          shouldLogFutureFlagWarnings:
+            viteCommand !== "build" || viteConfigEnv.isSsrBuild === true,
         });
 
         await updatePluginContext();
@@ -1391,11 +1405,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       //   },
       // },
       configEnvironment(name, options) {
-        if (
-          ctx.buildManifest?.serverBundles
-            ? isSsrBundleEnvironmentName(name)
-            : name === "ssr"
-        ) {
+        if (isReactRouterServerEnvironment(ctx, name)) {
           const vite = getVite();
 
           return {
@@ -1778,7 +1788,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
         async handler() {
-          if (this.environment.name === "client") {
+          if (!isReactRouterServerEnvironment(ctx, this.environment.name)) {
             return;
           }
           invariant(viteConfig);
