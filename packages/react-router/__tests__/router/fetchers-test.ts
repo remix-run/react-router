@@ -3807,7 +3807,7 @@ describe("fetchers", () => {
     });
 
     it("does not mutate the Map reference handed to subscribers (fetcher revalidation during navigation)", async () => {
-      // getUpdatedRevalidatingFetchers() (dev branch) calls state.fetchers.set()
+      // getUpdatedRevalidatingFetchers() calls state.fetchers.set()
       // on the current Map before returning a copy. This mutates MapPrev.
       // Later, processLoaderData mutates the Map that subscribers received for
       // the "loading" revalidation state. Test that the subscriber's loading
