@@ -118,6 +118,9 @@ let specialChars = [
   { char: "a%25b", pathChar: "a%25b", searchChar: "a%25b", hashChar: "a%25b", decodedChar: "a%b" },
   { char: "a%23b%25c", pathChar: "a%23b%25c", searchChar: "a%23b%25c", hashChar: "a%23b%25c", decodedChar: "a#b%c" },
   { char: "a%26b%25c", pathChar: "a%26b%25c", searchChar: "a%26b%25c", hashChar: "a%26b%25c", decodedChar: "a&b%c" },
+  // Encoded backslash (%5C) — previously caused an Internal Server Error because
+  // decodePath decoded it to `\` and new URL() rejects bare backslashes (#15140)
+  { char: "%5C", pathChar: "%5C", searchChar: "%5C", hashChar: "%5C", decodedChar: "\\" },
 ];
 
 describe("special character tests", () => {
