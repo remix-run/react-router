@@ -65,6 +65,7 @@ export function mockEntryContext(
       loaderHeaders: {},
     },
     serverHandoffStream: undefined,
+    isPrerender: false,
     ...overrides,
   };
 }
