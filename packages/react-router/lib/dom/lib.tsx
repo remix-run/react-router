@@ -2044,7 +2044,10 @@ export type ScrollRestorationProps = ScriptsProps & {
  * }
  * ```
  *
- * This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * This component renders an inline `<script>` to prevent scroll flashing. The
+ * `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * If not provided in Framework Mode, it will default to any
+ * {@link ServerRouter | `<ServerRouter nonce>`} prop.
  *
  * ```tsx
  * <ScrollRestoration nonce={cspNonce} />
@@ -2120,6 +2123,7 @@ export function ScrollRestoration({
   return (
     <script
       {...props}
+      nonce={props.nonce ?? remixContext?.nonce}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{
         __html: `(${restoreScroll})(${escapeHtml(

@@ -291,6 +291,46 @@ describe("<HydratedRouter>", () => {
 });
 
 describe("<Links />", () => {
+  it("uses the FrameworkContext nonce when one is not provided", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("nonce", "server-nonce");
+  });
+
+  it("prefers an explicit nonce over the FrameworkContext nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="explicit-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("nonce", "explicit-nonce");
+  });
+
   it("renders critical css with nonce", () => {
     let context = mockFrameworkContext({
       criticalCss: ".critical { color: red; }",
@@ -384,6 +424,60 @@ describe("<Links />", () => {
 
     let link = container.querySelector("link[href='/style.css']");
     expect(link).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates the FrameworkContext nonce to route links", () => {
+    let context = mockFrameworkContext({
+      nonce: "server-nonce",
+      routeModules: {
+        root: {
+          default: () => null,
+          links: () => [{ rel: "stylesheet", href: "/style.css" }],
+        },
+      },
+      manifest: {
+        routes: {
+          root: {
+            id: "root",
+            module: "root.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            hasClientAction: false,
+            hasClientLoader: false,
+            hasClientMiddleware: false,
+            clientActionModule: undefined,
+            clientLoaderModule: undefined,
+            clientMiddlewareModule: undefined,
+            hydrateFallbackModule: undefined,
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={
+          {
+            matches: [
+              {
+                route: { id: "root" },
+              },
+            ],
+          } as any
+        }
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[href='/style.css']");
+    expect(link).toHaveAttribute("nonce", "server-nonce");
   });
 });
 

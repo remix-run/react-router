@@ -224,7 +224,8 @@ export interface LinksProps {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
   /**
@@ -265,8 +266,13 @@ export interface LinksProps {
  * tags
  */
 export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
-  let { isSpaMode, manifest, routeModules, criticalCss } =
-    useFrameworkContext();
+  let {
+    isSpaMode,
+    manifest,
+    routeModules,
+    criticalCss,
+    nonce: contextNonce,
+  } = useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -275,6 +281,10 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
     [matches, routeModules, manifest],
   );
+
+  if (nonce == null && contextNonce) {
+    nonce = contextNonce;
+  }
 
   return (
     <>
@@ -344,6 +354,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  */
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let rsc = useIsRSCRouterContext();
+  let { nonce: contextNonce } = useFrameworkContext();
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -352,6 +363,10 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
 
   if (!matches) {
     return null;
+  }
+
+  if (linkProps.nonce == null && contextNonce) {
+    linkProps = { ...linkProps, nonce: contextNonce };
   }
 
   if (rsc) {
@@ -785,7 +800,8 @@ export type ScriptsProps = Omit<
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
 };
@@ -831,19 +847,20 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
-    nonce,
+    nonce: contextNonce,
   } = useFrameworkContext();
-  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
-  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
-  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
-  // internally without props (such as in the default `HydrateFallback`).
-  if (scriptProps.nonce == null && nonce != null) {
-    scriptProps = { ...scriptProps, nonce };
-  }
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
+
+  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
+  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
+  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
+  // internally without props (such as in the default `HydrateFallback`).
+  if (scriptProps.nonce == null && contextNonce) {
+    scriptProps = { ...scriptProps, nonce: contextNonce };
+  }
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts

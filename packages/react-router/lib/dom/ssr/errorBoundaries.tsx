@@ -77,9 +77,9 @@ export function RemixRootDefaultErrorBoundary({
   error: unknown;
   isOutsideRemixApp?: boolean;
 }) {
-  console.error(error);
-
   let { nonce } = useFrameworkContext();
+
+  console.error(error);
 
   let heyDeveloper = (
     <script

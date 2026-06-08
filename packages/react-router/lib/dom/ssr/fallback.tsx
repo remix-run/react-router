@@ -10,6 +10,7 @@ import { ENABLE_DEV_WARNINGS } from "../../context";
 // `clientLoader` functions
 export function RemixRootDefaultHydrateFallback() {
   let { nonce } = useFrameworkContext();
+
   return (
     <BoundaryShell title="Loading..." renderScripts>
       {ENABLE_DEV_WARNINGS ? (
