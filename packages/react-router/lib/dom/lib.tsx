@@ -2052,7 +2052,10 @@ export type ScrollRestorationProps = ScriptsProps & {
  * }
  * ```
  *
- * This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * This component renders an inline `<script>` to prevent scroll flashing. The
+ * `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * If not provided in Framework Mode, it will default to any
+ * {@link ServerRouter | `<ServerRouter nonce>`} prop.
  *
  * ```tsx
  * <ScrollRestoration nonce={cspNonce} />
@@ -2124,6 +2127,10 @@ export function ScrollRestoration({
       sessionStorage.removeItem(storageKey);
     }
   }).toString();
+
+  if (props.nonce == null && remixContext?.nonce) {
+    props.nonce = remixContext.nonce;
+  }
 
   return (
     <script

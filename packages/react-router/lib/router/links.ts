@@ -186,7 +186,9 @@ export interface PageLinkDescriptor
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
+
    */
   nonce?: string | undefined;
   /**

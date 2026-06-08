@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { BoundaryShell } from "./errorBoundaries";
+import { useFrameworkContext } from "./components";
 import { ENABLE_DEV_WARNINGS } from "../../context";
 
 // If the user sets `clientLoader.hydrate=true` somewhere but does not
@@ -8,10 +9,13 @@ import { ENABLE_DEV_WARNINGS } from "../../context";
 // least include `<Scripts>` in the SSR so we can hydrate the app and call the
 // `clientLoader` functions
 export function RemixRootDefaultHydrateFallback() {
+  let { nonce } = useFrameworkContext();
+
   return (
     <BoundaryShell title="Loading..." renderScripts>
       {ENABLE_DEV_WARNINGS ? (
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               console.log(

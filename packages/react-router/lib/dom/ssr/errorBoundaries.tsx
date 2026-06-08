@@ -77,10 +77,13 @@ export function RemixRootDefaultErrorBoundary({
   error: unknown;
   isOutsideRemixApp?: boolean;
 }) {
+  let { nonce } = useFrameworkContext();
+
   console.error(error);
 
   let heyDeveloper = (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `
         console.log(
