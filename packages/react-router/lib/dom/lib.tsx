@@ -2120,10 +2120,13 @@ export function ScrollRestoration({
     }
   }).toString();
 
+  if (props.nonce == null && remixContext?.nonce) {
+    props.nonce = remixContext.nonce;
+  }
+
   return (
     <script
       {...props}
-      nonce={props.nonce ?? remixContext?.nonce}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{
         __html: `(${restoreScroll})(${escapeHtml(
