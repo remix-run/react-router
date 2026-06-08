@@ -50,7 +50,7 @@ jobs:
           cache: "pnpm"
 
       - name: Setup wireit cache ${{ matrix.node }}
-        uses: google/wireit@setup-github-actions-caching/v2
+        uses: google/wireit@setup-github-actions-caching/v2.0.4
 
       - name: Disable GitHub Actions Annotations
         run: |
