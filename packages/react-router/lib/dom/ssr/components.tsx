@@ -831,7 +831,15 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
+    nonce,
   } = useFrameworkContext();
+  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
+  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
+  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
+  // internally without props (such as in the default `HydrateFallback`).
+  if (scriptProps.nonce == null && nonce != null) {
+    scriptProps = { ...scriptProps, nonce };
+  }
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
   let isRSCRouterContext = useIsRSCRouterContext();

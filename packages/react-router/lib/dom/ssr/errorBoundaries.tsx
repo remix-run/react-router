@@ -79,8 +79,11 @@ export function RemixRootDefaultErrorBoundary({
 }) {
   console.error(error);
 
+  let { nonce } = useFrameworkContext();
+
   let heyDeveloper = (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `
         console.log(

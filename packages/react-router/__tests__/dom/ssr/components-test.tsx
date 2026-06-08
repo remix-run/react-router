@@ -463,6 +463,62 @@ describe("<Scripts />", () => {
       ),
     ).toHaveAttribute("nonce", "test-nonce");
   });
+
+  it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/"),
+    );
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      manifest: {
+        routes: {
+          root: {
+            // No server loader and a hydrating clientLoader with no
+            // HydrateFallback => the default HydrateFallback is rendered on the
+            // server, emitting `<Scripts>` (and a dev console script) inline.
+            hasLoader: false,
+            hasClientLoader: true,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: [],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeModules: {
+        root: {
+          default: () => <h1>Root</h1>,
+          clientLoader: Object.assign(() => null, { hydrate: true as const }),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter
+        context={context}
+        url="http://localhost/"
+        nonce="test-nonce"
+      />,
+    );
+
+    let scripts = container.ownerDocument.querySelectorAll("script");
+    expect(scripts.length).toBeGreaterThan(0);
+    scripts.forEach((script) => {
+      expect(script).toHaveAttribute("nonce", "test-nonce");
+    });
+  });
 });
 
 describe("usePrefetchBehavior", () => {

@@ -106,6 +106,7 @@ export function ServerRouter({
           ssr: context.ssr,
           isSpaMode: context.isSpaMode,
           routeDiscovery: context.routeDiscovery,
+          nonce,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,
         }}
