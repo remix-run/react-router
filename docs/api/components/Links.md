@@ -54,7 +54,8 @@ function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
 attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-element
+element. If not provided in Framework Mode, it will default to any
+``<ServerRouter nonce>`` prop.
 
 ### crossOrigin
 

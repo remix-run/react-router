@@ -46,7 +46,10 @@ needed for rendering.
 ### nonce
 
 An optional `nonce` for [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)
-compliance, used to allow inline scripts to run safely.
+compliance. This is applied to inline scripts rendered by React Router and
+used as the default for nonce-aware components such as ``<Links>``,
+``<Scripts>``, and ``<ScrollRestoration>``
+when they do not provide their own `nonce`.
 
 ### url
 
