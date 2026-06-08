@@ -1,4 +1,4 @@
-name: Test
+name: Unit Test
 
 on:
   push:
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   test:
-    name: "Unit (Node ${{ matrix.node }})"
+    name: "Node ${{ matrix.node }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
