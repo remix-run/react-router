@@ -1,4 +1,4 @@
-name: PR (Check)
+name: PR Checks
 
 # Read-only PR inspection. Computes a list of "actions" (sticky comments,
 # label changes, close, etc.) and uploads them as an artifact. The PR (Actions)
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check:
-    name: Check PR
+    name: Checks
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     permissions:
