@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import * as fs from "node:fs";
+import path from "node:path";
 
 import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
 
@@ -111,8 +112,8 @@ test("ignores external server environments without skipping React Router build h
   expect(status).toBe(0);
   expect(
     fs
-      .readdirSync("build/client/assets")
-      .filter((file) => file.startsWith("test-") && file.endsWith(".txt"))
+      .readdirSync(path.join(cwd, "build/client/assets"))
+      .filter((file) => /^test-.*\.txt$/.test(file))
       .length,
   ).toBe(1);
 });
