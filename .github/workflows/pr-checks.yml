@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check:
-    name: 🔍 Check PR
+    name: Check PR
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     permissions:

@@ -1,4 +1,4 @@
-name: 🧪 Test
+name: Test
 
 on:
   push:
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   test:
-    name: "🧪 Test: (Node: ${{ matrix.node }})"
+    name: "Unit (Node ${{ matrix.node }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -33,20 +33,20 @@ jobs:
           - 24
 
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
           check-latest: true
 
-      - name: Setup wireit cache ${{ matrix.node }}
+      - name: Setup wireit cache
         uses: google/wireit@setup-github-actions-caching/v2.0.4
 
       - name: Disable GitHub Actions Annotations
@@ -55,17 +55,17 @@ jobs:
           echo "::remove-matcher owner=eslint-compact::"
           echo "::remove-matcher owner=eslint-stylish::"
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗 Build
+      - name: Build
         run: pnpm build
 
-      - name: 🔍 Typecheck
+      - name: Typecheck
         run: pnpm typecheck
 
-      - name: 🔬 Lint
+      - name: Lint
         run: pnpm lint
 
-      - name: 🧪 Run tests
+      - name: Run tests
         run: pnpm test
