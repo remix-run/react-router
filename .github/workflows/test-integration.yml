@@ -1,8 +1,12 @@
 name: Integration Test
 
-# Source changes get the base Ubuntu/Node 24/Chromium run. PRs that touch
-# @react-router/dev add broader Node 24/browser coverage and Node 22/Chromium.
-# PRs targeting main and main branch pushes also add Node 22 for other browsers.
+# Incrementally comprehensive based on the type of change:
+#
+# | Type   | Description           | Test Runs                                 |
+# |--------|-----------------------|-------------------------------------------|
+# | base   | Source code PRs       | Chromium (Node 24)                        |
+# | normal | @react-router/dev PRs | + Firefox/Webkit/Edge (n24), Chromium (n22) |
+# | full   | Commits on `main`     | + Firefox/Webkit (n22)                     |
 
 on:
   push:
