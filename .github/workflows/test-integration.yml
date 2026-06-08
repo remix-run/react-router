@@ -60,7 +60,7 @@ jobs:
 
   # base only runs Node 24/Chromium
   integration-chromium:
-    name: Integration (Node 24/Chromium)"
+    name: "Integration (Node 24/Chromium)"
     needs: changes
     if: github.repository == 'remix-run/react-router'
     uses: ./.github/workflows/integration-run.yml
