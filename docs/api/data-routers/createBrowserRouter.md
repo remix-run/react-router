@@ -26,6 +26,10 @@ Create a new [data router](https://api.reactrouter.com/v7/interfaces/react-route
 path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
 and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
 
+Data Routers should not be held in React state. You should create your router
+once outside of the React tree and pass it to [`<RouterProvider>`](../data-routers/RouterProvider).
+You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+
 ## Signature
 
 ```tsx
