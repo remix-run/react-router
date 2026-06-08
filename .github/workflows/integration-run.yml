@@ -28,7 +28,6 @@ env:
 
 jobs:
   integration:
-    name: "${{ inputs.os }} / node@${{ matrix.node }} / ${{ matrix.browser }}"
     strategy:
       fail-fast: false
       matrix:
