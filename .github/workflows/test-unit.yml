@@ -1,4 +1,4 @@
-name: 🧪 Test
+name: Unit Test
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - v*
     paths-ignore:
       - "docs/**"
-      - "**/README.md"
+      - "**/*.md"
   pull_request:
     paths-ignore:
       - "docs/**"
@@ -23,7 +23,8 @@ permissions:
 
 jobs:
   test:
-    name: "🧪 Test: (Node: ${{ matrix.node }})"
+    name: "Node ${{ matrix.node }}"
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -31,24 +32,22 @@ jobs:
           - 22.22
           - 24
 
-    runs-on: ubuntu-latest
-
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
           check-latest: true
 
-      # TODO: Track and renable once this has been fixed: https://github.com/google/wireit/issues/1297
-      # - uses: google/wireit@setup-github-actions-caching/v2
+      - name: Setup wireit cache
+        uses: google/wireit@setup-github-actions-caching/v2.0.4
 
       - name: Disable GitHub Actions Annotations
         run: |
@@ -56,17 +55,17 @@ jobs:
           echo "::remove-matcher owner=eslint-compact::"
           echo "::remove-matcher owner=eslint-stylish::"
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗 Build
+      - name: Build
         run: pnpm build
 
-      - name: 🔍 Typecheck
+      - name: Typecheck
         run: pnpm typecheck
 
-      - name: 🔬 Lint
+      - name: Lint
         run: pnpm lint
 
-      - name: 🧪 Run tests
+      - name: Run tests
         run: pnpm test

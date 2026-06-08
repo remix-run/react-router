@@ -3,7 +3,7 @@
 [npm-badge]: https://img.shields.io/npm/v/react-router.svg
 [npm]: https://www.npmjs.org/package/react-router
 [build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test.yml?branch=dev&style=square
-[build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
+[build]: https://github.com/remix-run/react-router/actions/workflows/test-unit.yml
 
 React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or minimally as a library with your own architecture.
 

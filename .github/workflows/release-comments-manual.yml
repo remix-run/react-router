@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   comment:
-    name: 📝 Comment on released issues/pull requests
+    name: Comment on released issues/pull requests
     runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues
