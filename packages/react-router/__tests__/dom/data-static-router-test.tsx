@@ -23,6 +23,30 @@ beforeEach(() => {
 });
 
 describe("A <StaticRouterProvider>", () => {
+  it("handles encoded backslashes in splat routes", async () => {
+    let routes = [
+      {
+        path: "*",
+        element: <h1>Splat</h1>,
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/%5C", {
+        signal: new AbortController().signal,
+      }),
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <StaticRouterProvider
+        router={createStaticRouter(routes, context)}
+        context={context}
+      />,
+    );
+    expect(html).toMatch("<h1>Splat</h1>");
+  });
+
   it("renders an initialized router", async () => {
     let hooksData1: {
       location: ReturnType<typeof useLocation>;

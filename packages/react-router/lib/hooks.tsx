@@ -756,6 +756,18 @@ export function useRoutes(
   return useRoutesImpl(routes, locationArg);
 }
 
+function safelyEncodePathname(pathname: string) {
+  // Re-encode pathnames that were decoded inside matchRoutes.
+  // Pre-encode `%`, `?`, `#`, and `\` ahead of `encodeLocation` because it uses
+  // `new URL()` internally and we need to prevent it from treating them as
+  // separators or invalid URL syntax.
+  return pathname
+    .replace(/%/g, "%25")
+    .replace(/\?/g, "%3F")
+    .replace(/#/g, "%23")
+    .replace(/\\/g, "%5C");
+}
+
 // Internal implementation with accept optional param for RouterProvider usage
 export function useRoutesImpl(
   routes: RouteObject[],
@@ -897,17 +909,9 @@ export function useRoutesImpl(
           params: Object.assign({}, parentParams, match.params),
           pathname: joinPaths([
             parentPathnameBase,
-            // Re-encode pathnames that were decoded inside matchRoutes.
-            // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
-            // `new URL()` internally and we need to prevent it from treating
-            // them as separators
             navigator.encodeLocation
-              ? navigator.encodeLocation(
-                  match.pathname
-                    .replace(/%/g, "%25")
-                    .replace(/\?/g, "%3F")
-                    .replace(/#/g, "%23"),
-                ).pathname
+              ? navigator.encodeLocation(safelyEncodePathname(match.pathname))
+                  .pathname
               : match.pathname,
           ]),
           pathnameBase:
@@ -915,16 +919,9 @@ export function useRoutesImpl(
               ? parentPathnameBase
               : joinPaths([
                   parentPathnameBase,
-                  // Re-encode pathnames that were decoded inside matchRoutes
-                  // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
-                  // `new URL()` internally and we need to prevent it from treating
-                  // them as separators
                   navigator.encodeLocation
                     ? navigator.encodeLocation(
-                        match.pathnameBase
-                          .replace(/%/g, "%25")
-                          .replace(/\?/g, "%3F")
-                          .replace(/#/g, "%23"),
+                        safelyEncodePathname(match.pathnameBase),
                       ).pathname
                     : match.pathnameBase,
                 ]),
