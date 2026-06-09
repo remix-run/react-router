@@ -26,6 +26,10 @@ Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react-rout
 in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 stack. Useful for non-browser environments without a DOM API.
 
+Data Routers should not be held in React state. You should create your router
+once outside of the React tree and pass it to [`<RouterProvider>`](../data-routers/RouterProvider).
+You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+
 ## Signature
 
 ```tsx

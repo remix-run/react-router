@@ -625,6 +625,10 @@ export interface DOMRouterOpts {
  * path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
  * and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
  *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+ *
  * @public
  * @category Data Routers
  * @mode data
@@ -663,6 +667,10 @@ export function createBrowserRouter(
 /**
  * Create a new {@link DataRouter| data router} that manages the application
  * path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
+ *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
  *
  * @public
  * @category Data Routers
@@ -2036,7 +2044,10 @@ export type ScrollRestorationProps = ScriptsProps & {
  * }
  * ```
  *
- * This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * This component renders an inline `<script>` to prevent scroll flashing. The
+ * `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * If not provided in Framework Mode, it will default to any
+ * {@link ServerRouter | `<ServerRouter nonce>`} prop.
  *
  * ```tsx
  * <ScrollRestoration nonce={cspNonce} />
@@ -2108,6 +2119,10 @@ export function ScrollRestoration({
       sessionStorage.removeItem(storageKey);
     }
   }).toString();
+
+  if (props.nonce == null && remixContext?.nonce) {
+    props.nonce = remixContext.nonce;
+  }
 
   return (
     <script

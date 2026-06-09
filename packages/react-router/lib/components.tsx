@@ -203,6 +203,10 @@ export interface MemoryRouterOpts {
  * in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * stack. Useful for non-browser environments without a DOM API.
  *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+ *
  * @public
  * @category Data Routers
  * @mode data
@@ -287,7 +291,9 @@ export interface ClientOnErrorFunction {
  */
 export interface RouterProviderProps {
   /**
-   * The {@link DataRouter} instance to use for navigation and data fetching.
+   * The {@link DataRouter} instance to use for navigation and data fetching. The
+   * router prop should be a single router instance created outside of the React
+   * tree. Avoid creating new routers during React renders/re-renders.
    */
   router: DataRouter;
   /**
@@ -343,7 +349,9 @@ export interface RouterProviderProps {
 
 /**
  * Render the UI for the given {@link DataRouter}. This component should
- * typically be at the top of an app's element tree.
+ * typically be at the top of an app's element tree. The router prop should
+ * be a single router instance created outside of the React tree. Avoid
+ * creating new routers during React renders/re-renders.
  *
  * ```tsx
  * import { createBrowserRouter } from "react-router";

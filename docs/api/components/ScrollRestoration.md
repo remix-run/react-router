@@ -39,7 +39,10 @@ export default function Root() {
 }
 ```
 
-This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+This component renders an inline `<script>` to prevent scroll flashing. The
+`nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+If not provided in Framework Mode, it will default to any
+[`<ServerRouter nonce>`](../framework-routers/ServerRouter) prop.
 
 ```tsx
 <ScrollRestoration nonce={cspNonce} />
@@ -80,7 +83,8 @@ that later navigations to prior paths will restore the scroll. Defaults to
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
 attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
-element
+element. If not provided in Framework Mode, it will default to any
+``<ServerRouter nonce>`` prop.
 
 ### storageKey
 

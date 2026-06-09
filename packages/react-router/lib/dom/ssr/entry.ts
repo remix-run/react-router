@@ -24,6 +24,7 @@ export interface FrameworkContextObject {
   ssr: boolean;
   isSpaMode: boolean;
   routeDiscovery: ServerBuild["routeDiscovery"];
+  nonce?: string;
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;

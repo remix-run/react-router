@@ -25,6 +25,10 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 Create a new [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) that manages the application
 path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
 
+Data Routers should not be held in React state. You should create your router
+once outside of the React tree and pass it to [`<RouterProvider>`](../data-routers/RouterProvider).
+You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+
 ## Signature
 
 ```tsx
