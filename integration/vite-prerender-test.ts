@@ -3066,6 +3066,581 @@ for (let previewServerPrerendering of [false, true]) {
         );
         expect(requests).toEqual([]);
       });
+
+      test.describe("future.trailingSlashAwareDataRequests=true", () => {
+        test("Navigates between prerendered parent and child SPA route", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            prerender: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                prerender: ["/", "/parent"],
+                future: {
+                  v8_trailingSlashAwareDataRequests: true,
+                },
+              }),
+              "vite.config.ts": files["vite.config.ts"],
+              "app/root.tsx": js`
+            import * as React from "react";
+            import { Outlet, Scripts } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root({ loaderData }) {
+              return <Outlet />
+            }
+          `,
+              "app/routes/parent.tsx": js`
+            import { Link, Form, Outlet } from 'react-router';
+            export async function loader() {
+              return "PARENT DATA"
+            }
+            export async function clientLoader() {
+              return "PARENT CLIENT DATA"
+            }
+            export function clientAction() {
+              return "PARENT ACTION"
+            }
+            export default function Parent({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-parent>{loaderData}</p>
+                  {actionData ? <p data-parent-action>{actionData}</p> : null}
+                  <Link to="/parent/child">Go to child</Link>
+                  <Form method="post" action="/parent">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/parent/child">
+                    <button type="submit">Submit child</button>
+                  </Form>
+                  <Outlet />
+                </>
+              );
+            }
+          `,
+              "app/routes/parent.child.tsx": js`
+            import { Link, Form } from 'react-router';
+            export function clientLoader() {
+              return "CHILD DATA"
+            }
+            export function clientAction() {
+              return "CHILD ACTION"
+            }
+            export default function Child({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-child>{loaderData}</p>
+                  {actionData ? <p data-child-action>{actionData}</p> : null}
+                  <Link to="/parent">Go to parent</Link>
+                  <Form method="post" action="/parent/child">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/parent">
+                    <button type="submit">Submit parent</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let requests = captureRequests(page);
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/parent", true);
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+
+          await app.clickLink("/parent/child");
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          // Submit to self
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.goBack();
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Submit across routes
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          // Submit to self
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          // Submit across routes
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Submit to self
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // We should never make this call because we started on this route and it never unmounts
+          expect(requests).toEqual([]);
+        });
+
+        test("Navigates between SPA parent and prerendered child route", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            prerender: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                prerender: ["/", "/parent/child"],
+                future: {
+                  v8_trailingSlashAwareDataRequests: true,
+                },
+              }),
+              "vite.config.ts": files["vite.config.ts"],
+              "app/root.tsx": js`
+            import * as React from "react";
+            import { Outlet, Scripts } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root({ loaderData }) {
+              return <Outlet />
+            }
+          `,
+              "app/routes/parent.tsx": js`
+            import { Link, Form, Outlet } from 'react-router';
+            export async function clientLoader() {
+              return "PARENT DATA"
+            }
+            export function clientAction() {
+              return "PARENT ACTION"
+            }
+            export default function Parent({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-parent>{loaderData}</p>
+                  {actionData ? <p data-parent-action>{actionData}</p> : null}
+                  <Link to="/parent/child">Go to child</Link>
+                  <Form method="post" action="/parent">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/parent/child">
+                    <button type="submit">Submit child</button>
+                  </Form>
+                  <Outlet />
+                </>
+              );
+            }
+          `,
+              "app/routes/parent.child.tsx": js`
+            import { Link, Form } from 'react-router';
+            export function loader() {
+              return "CHILD DATA"
+            }
+            export function clientAction() {
+              return "CHILD ACTION"
+            }
+            export default function Child({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-child>{loaderData}</p>
+                  {actionData ? <p data-child-action>{actionData}</p> : null}
+                  <Link to="/parent">Go to parent</Link>
+                  <Form method="post" action="/parent/child">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/parent">
+                    <button type="submit">Submit parent</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let requests = captureRequests(page);
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/parent", true);
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+
+          await app.clickLink("/parent/child");
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.goBack();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Initial navigation and submission from /parent
+          expect(requests).toEqual([
+            "/parent/child.data",
+            "/parent/child.data",
+          ]);
+          while (requests.length) requests.pop();
+
+          await app.goto("/parent/child", true);
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.clickLink("/parent");
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Submission from /parent
+          expect(requests).toEqual(["/parent/child.data"]);
+        });
+
+        test("Navigates between prerendered parent and child SPA route (with a root loader)", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            prerender: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                prerender: ["/", "/parent"],
+                future: {
+                  v8_trailingSlashAwareDataRequests: true,
+                },
+              }),
+              "vite.config.ts": files["vite.config.ts"],
+              "app/root.tsx": js`
+                import * as React from "react";
+                import { Outlet, Scripts } from "react-router";
+
+                export function loader() {
+                  return "ROOT DATA"
+                }
+
+                export function Layout({ children }) {
+                  return (
+                    <html lang="en">
+                      <head />
+                      <body>
+                        {children}
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+
+                export default function Root({ loaderData }) {
+                  return (
+                    <>
+                      <p data-root>{loaderData}</p>
+                      <Outlet/>
+                    </>
+                  );
+                }
+
+                export function HydrateFallback() {
+                  return <p>Loading...</p>;
+                }
+              `,
+              "app/routes/parent.tsx": js`
+                import { Link, Form, Outlet } from 'react-router';
+                export async function loader() {
+                  return "PARENT DATA"
+                }
+                export async function clientLoader() {
+                  return "PARENT CLIENT DATA"
+                }
+                export function clientAction() {
+                  return "PARENT ACTION"
+                }
+                export default function Parent({ loaderData, actionData }) {
+                  return (
+                    <>
+                      <p data-parent>{loaderData}</p>
+                      {actionData ? <p data-parent-action>{actionData}</p> : null}
+                      <Link to="/parent/child">Go to child</Link>
+                      <Form method="post" action="/parent">
+                        <button type="submit">Submit</button>
+                      </Form>
+                      <Form method="post" action="/parent/child">
+                        <button type="submit">Submit child</button>
+                      </Form>
+                      <Outlet />
+                    </>
+                  );
+                }
+              `,
+              "app/routes/parent.child.tsx": js`
+                import { Link, Form } from 'react-router';
+                export function clientLoader() {
+                  return "CHILD DATA"
+                }
+                export function clientAction() {
+                  return "CHILD ACTION"
+                }
+                export default function Child({ loaderData, actionData }) {
+                  return (
+                    <>
+                      <p data-child>{loaderData}</p>
+                      {actionData ? <p data-child-action>{actionData}</p> : null}
+                      <Link to="/parent">Go to parent</Link>
+                      <Form method="post" action="/parent/child">
+                        <button type="submit">Submit</button>
+                      </Form>
+                      <Form method="post" action="/parent">
+                        <button type="submit">Submit parent</button>
+                      </Form>
+                    </>
+                  );
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let requests = captureRequests(page);
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/parent", true);
+          await expect(page.getByText("ROOT DATA")).toBeVisible();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+
+          await app.clickLink("/parent/child");
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          // Submit to self
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.goBack();
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Submit across routes
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          // Submit to self
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          // Submit across routes
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Submit to self
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT CLIENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // We should never make this call because we started on this route and it never unmounts
+          expect(requests).toEqual([]);
+        });
+
+        test("Navigates between SPA parent and prerendered child route (with a root loader)", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            prerender: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                prerender: ["/", "/parent/child"],
+                future: {
+                  v8_trailingSlashAwareDataRequests: true,
+                },
+              }),
+              "vite.config.ts": files["vite.config.ts"],
+              "app/root.tsx": js`
+                import * as React from "react";
+                import { Outlet, Scripts } from "react-router";
+
+                export function loader() {
+                  return "ROOT DATA"
+                }
+
+                export function Layout({ children }) {
+                  return (
+                    <html lang="en">
+                      <head />
+                      <body>
+                        {children}
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+
+
+                export default function Root({ loaderData }) {
+                  return (
+                    <>
+                      <p data-root>{loaderData}</p>
+                      <Outlet/>
+                    </>
+                  );
+                }          `,
+              "app/routes/parent.tsx": js`
+                import { Link, Form, Outlet } from 'react-router';
+                export async function clientLoader() {
+                  return "PARENT DATA"
+                }
+                export function clientAction() {
+                  return "PARENT ACTION"
+                }
+                export default function Parent({ loaderData, actionData }) {
+                  return (
+                    <>
+                      <p data-parent>{loaderData}</p>
+                      {actionData ? <p data-parent-action>{actionData}</p> : null}
+                      <Link to="/parent/child">Go to child</Link>
+                      <Form method="post" action="/parent">
+                        <button type="submit">Submit</button>
+                      </Form>
+                      <Form method="post" action="/parent/child">
+                        <button type="submit">Submit child</button>
+                      </Form>
+                      <Outlet />
+                    </>
+                  );
+                }
+              `,
+              "app/routes/parent.child.tsx": js`
+                import { Link, Form } from 'react-router';
+                export function loader() {
+                  return "CHILD DATA"
+                }
+                export function clientAction() {
+                  return "CHILD ACTION"
+                }
+                export default function Child({ loaderData, actionData }) {
+                  return (
+                    <>
+                      <p data-child>{loaderData}</p>
+                      {actionData ? <p data-child-action>{actionData}</p> : null}
+                      <Link to="/parent">Go to parent</Link>
+                      <Form method="post" action="/parent/child">
+                        <button type="submit">Submit</button>
+                      </Form>
+                      <Form method="post" action="/parent">
+                        <button type="submit">Submit parent</button>
+                      </Form>
+                    </>
+                  );
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let requests = captureRequests(page);
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/parent", true);
+          await expect(page.getByText("ROOT DATA")).toBeVisible();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+
+          await app.clickLink("/parent/child");
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.goBack();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Initial navigation and submission from /parent
+          expect(requests).toEqual([
+            "/parent/child.data",
+            "/parent/child.data",
+          ]);
+          while (requests.length) requests.pop();
+
+          await app.goto("/parent/child", true);
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.clickLink("/parent");
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          await app.clickSubmitButton("/parent/child");
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD ACTION")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).toBeVisible();
+
+          await app.clickSubmitButton("/parent");
+          await expect(page.getByText("PARENT ACTION")).toBeVisible();
+          await expect(page.getByText("PARENT DATA")).toBeVisible();
+          await expect(page.getByText("CHILD DATA")).not.toBeVisible();
+
+          // Submission from /parent
+          expect(requests).toEqual(["/parent/child.data"]);
+        });
+      });
     });
   });
 }
