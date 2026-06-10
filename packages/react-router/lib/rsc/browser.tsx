@@ -9,7 +9,7 @@ import { createBrowserHistory, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
 import {
   createRouter,
-  invalidProtocols,
+  hasInvalidProtocol,
   isMutationMethod,
 } from "../router/router";
 import type {
@@ -1104,14 +1104,6 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
 function isExternalLocation(location: string) {
   const newLocation = new URL(location, window.location.href);
   return newLocation.origin !== window.location.origin;
-}
-
-function hasInvalidProtocol(location: string): boolean {
-  try {
-    return invalidProtocols.includes(new URL(location).protocol);
-  } catch {
-    return false;
-  }
 }
 
 function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {
