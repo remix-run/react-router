@@ -26,10 +26,10 @@ export function getNormalizedPath(
     } else if (pathname.endsWith(".data")) {
       pathname = pathname.replace(/\.data$/, "");
     }
-  }
 
-  if (stripBasename(pathname, basename) !== "/" && pathname.endsWith("/")) {
-    pathname = pathname.slice(0, -1);
+    if (stripBasename(pathname, basename) !== "/" && pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
   }
 
   // Strip _routes param
