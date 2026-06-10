@@ -775,19 +775,13 @@ export function decodeViaTurboStream(
         }
 
         if (type === "ErrorResponse") {
-          let [data, status, statusText, internal] = rest as [
+          let [data, status, statusText] = rest as [
             unknown,
             number,
             string | undefined,
-            boolean | undefined,
           ];
           return {
-            value: new ErrorResponseImpl(
-              status,
-              statusText,
-              data,
-              internal === true,
-            ),
+            value: new ErrorResponseImpl(status, statusText, data),
           };
         }
 

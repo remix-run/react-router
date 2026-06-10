@@ -41,7 +41,7 @@ describe("loaders", () => {
 });
 
 describe("turbo-stream error decoding", () => {
-  it("preserves ErrorResponse internal flag", async () => {
+  it("decodes ErrorResponse instances", async () => {
     let body = encodeViaTurboStream(
       {
         errors: {
@@ -60,6 +60,6 @@ describe("turbo-stream error decoding", () => {
     expect(error.status).toBe(404);
     expect(error.statusText).toBe("Not Found");
     expect(error.data).toBe("Missing");
-    expect(error.internal).toBe(true);
+    expect(error.internal).toBe(false);
   });
 });
