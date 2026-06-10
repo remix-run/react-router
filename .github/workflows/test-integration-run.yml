@@ -1,4 +1,4 @@
-name: 🧪 Test (Integration)
+name: Test (Integration)
 
 on:
   workflow_call:
@@ -26,13 +26,13 @@ jobs:
 
     runs-on: ${{ inputs.os }}
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node ${{ inputs.node_version }}
+      - name: Setup node ${{ inputs.node_version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node_version }}
@@ -47,12 +47,12 @@ jobs:
           echo "::remove-matcher owner=eslint-compact::"
           echo "::remove-matcher owner=eslint-stylish::"
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 📥 Install Playwright
+      - name: Install Playwright
         run: npx playwright install --with-deps ${{ inputs.browser }}
 
-      - name: 👀 Run Integration Tests ${{ inputs.browser }}
+      - name: Run Integration Tests ${{ inputs.browser }}
         run: "pnpm test:integration --project=${{ inputs.browser }}"
         timeout-minutes: ${{inputs.timeout}}

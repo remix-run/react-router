@@ -1,4 +1,4 @@
-name: 💬 Release Comments (manual)
+name: Release Comments (manual)
 
 on:
   workflow_dispatch:
@@ -15,24 +15,24 @@ jobs:
       issues: write # enable commenting on released issues
       pull-requests: write # enable commenting on released pull requests
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 📝 Comment on released issues and pull requests
+      - name: Comment on released issues and pull requests
         env:
           GH_TOKEN: ${{ github.token }}
         run: pnpm run release-comments

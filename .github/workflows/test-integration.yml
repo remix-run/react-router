@@ -48,7 +48,7 @@ jobs:
     outputs:
       type: ${{ steps.suites.outputs.type }}
     steps:
-      - name: 🔎 Select integration suites
+      - name: Select integration suites
         id: suites
         env:
           GH_TOKEN: ${{ github.token }}
