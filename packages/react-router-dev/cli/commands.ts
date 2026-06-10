@@ -1,7 +1,9 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile, copyFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import exitHook from "exit-hook";
+import { readPackageJSON } from "pkg-types";
 import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
@@ -16,6 +18,8 @@ import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
+
+const nodeRequire = createRequire(import.meta.url);
 
 export async function routes(
   rootDirectory?: string,
@@ -147,7 +151,7 @@ export async function generateEntry(
   }
 
   let defaultsDirectory = path.resolve(
-    path.dirname(require.resolve("@react-router/dev/package.json")),
+    path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     configDir,
@@ -166,8 +170,6 @@ export async function generateEntry(
 
     await copyFile(defaultEntry, outputFile);
   } else {
-    // TODO(v8): Remove - only required for Node 20.18 and below
-    let { readPackageJSON } = await import("pkg-types");
     let pkgJson = await readPackageJSON(rootDirectory);
     let deps = pkgJson.dependencies ?? {};
 

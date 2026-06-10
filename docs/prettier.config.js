@@ -1,7 +1,9 @@
 /**
  * @type {import('prettier').Options}
  */
-module.exports = {
-  ...require("../prettier.config"),
+import config from "../prettier.config.js";
+
+export default {
+  ...config,
   printWidth: 60,
 };

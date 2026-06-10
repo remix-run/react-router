@@ -4,12 +4,11 @@ import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import stripAnsi from "strip-ansi";
-import execa from "execa";
+import { execa } from "execa";
 import arg from "arg";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
 
-import { version as thisReactRouterVersion } from "./package.json";
 import { prompt } from "./prompt";
 import {
   IGNORED_TEMPLATE_DIRECTORIES,
@@ -29,6 +28,7 @@ import {
 } from "./utils";
 import { renderLoadingIndicator } from "./loading-indicator";
 import { copyTemplate, CopyTemplateError } from "./copy-template";
+import pkgJson from "./package.json" with { type: "json" };
 
 async function createReactRouter(argv: string[]) {
   let ctx = await getContext(argv);
@@ -37,7 +37,7 @@ async function createReactRouter(argv: string[]) {
     return;
   }
   if (ctx.versionRequested) {
-    log(thisReactRouterVersion);
+    log(pkgJson.version);
     return;
   }
 
@@ -128,7 +128,7 @@ async function getContext(argv: string[]): Promise<Context> {
     } else {
       log(
         `\n${color.warning(
-          `${selectedReactRouterVersion} is an invalid version specifier. Using React Router v${thisReactRouterVersion}.`,
+          `${selectedReactRouterVersion} is an invalid version specifier. Using React Router v${pkgJson.version}.`,
         )}`,
       );
       selectedReactRouterVersion = undefined;
@@ -157,7 +157,7 @@ async function getContext(argv: string[]): Promise<Context> {
     ),
     projectName,
     prompt,
-    reactRouterVersion: selectedReactRouterVersion || thisReactRouterVersion,
+    reactRouterVersion: selectedReactRouterVersion || pkgJson.version,
     template,
     token,
     versionRequested,
@@ -586,8 +586,7 @@ async function updatePackageJSON(ctx: Context) {
       let version = dependencies[dependency];
       if (
         (dependency.startsWith("@react-router/") ||
-          dependency === "react-router" ||
-          dependency === "react-router-dom") &&
+          dependency === "react-router") &&
         version === "*"
       ) {
         dependencies[dependency] = semver.prerelease(ctx.reactRouterVersion)

@@ -3,12 +3,7 @@
 /// <reference lib="DOM.Iterable" />
 
 import type * as express from "express";
-import type {
-  AppLoadContext,
-  ServerBuild,
-  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  RouterContextProvider,
-} from "react-router";
+import type { ServerBuild, RouterContextProvider } from "react-router";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import {
   createReadableStreamFromReadable,
@@ -28,9 +23,7 @@ type MaybePromise<T> = T | Promise<T>;
 export type GetLoadContextFunction = (
   req: express.Request,
   res: express.Response,
-) => MiddlewareEnabled extends true
-  ? MaybePromise<RouterContextProvider>
-  : MaybePromise<AppLoadContext>;
+) => MaybePromise<RouterContextProvider>;
 
 export type RequestHandler = (
   req: express.Request,

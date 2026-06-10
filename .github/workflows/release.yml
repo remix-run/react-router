@@ -5,9 +5,10 @@
 # Specific jobs only run on the proper trigger:
 #
 # - Change file driven stable releases (push to main/hotfix branches)
+# - v8 prereleases (from a workflow_dispatch trigger on the v8 branch)
 # - Experimental releases (from a workflow_dispatch trigger)
 
-name: 🚢 Release/Publish
+name: Release
 
 on:
   push:
@@ -88,7 +89,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed to run typescript scripts directly
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: Install dependencies
@@ -108,19 +109,19 @@ jobs:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
@@ -132,44 +133,76 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   comment:
-    name: 📝 Comment on released issues/pull requests
+    name: Comment on released issues/pull requests
     needs: publish
     runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues
       pull-requests: write # enable commenting on released pull requests
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for node TS support
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 📝 Comment on released issues and pull requests
+      - name: Comment on released issues and pull requests
         env:
           GH_TOKEN: ${{ github.token }}
         run: pnpm run release-comments
 
+  prerelease:
+    name: Publish prerelease (v8)
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch' && github.event.inputs.branch == 'v8'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # enable generation of an ID token for publishing
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0 # needed for tags
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish prerelease
+        run: pnpm prerelease:publish
+
   experimental-release:
-    name: 🧪 Experimental Release
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
+    name: Experimental Release
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch' && github.event.inputs.branch != 'v8'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.branch }}
@@ -177,27 +210,27 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: ⤴️ Update version
+      - name: Update version
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
           pnpm run experimental:version
           git push origin --tags
 
-      - name: 🏗 Build
+      - name: Build
         run: pnpm build
 
-      - name: 🚀 Publish
+      - name: Publish
         run: pnpm run experimental:publish

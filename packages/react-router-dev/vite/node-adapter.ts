@@ -1,5 +1,5 @@
 import type { ServerResponse } from "node:http";
-
+import { createRequest } from "@remix-run/node-fetch-server";
 import type * as Vite from "vite";
 import invariant from "../invariant";
 
@@ -19,8 +19,5 @@ export async function fromNodeRequest(
   );
   nodeReq.url = nodeReq.originalUrl;
 
-  // Async import here to allow ESM only module on Node 20.18.
-  // TODO(v8): Can move to a normal import when Node 20 support
-  const { createRequest } = await import("@remix-run/node-fetch-server");
   return createRequest(nodeReq, nodeRes);
 }

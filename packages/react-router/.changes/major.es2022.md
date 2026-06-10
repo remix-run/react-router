@@ -1,0 +1,1 @@
+Update `tsconfig.json` `target`/`lib` from `ES2020 -> ES2022`

@@ -16,7 +16,6 @@ import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
 } from "../../router/utils";
-import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
@@ -45,7 +44,8 @@ interface StubRouteExtensions {
 }
 
 interface StubIndexRouteObject
-  extends Omit<
+  extends
+    Omit<
       IndexRouteObject,
       | "Component"
       | "HydrateFallback"
@@ -59,7 +59,8 @@ interface StubIndexRouteObject
     StubRouteExtensions {}
 
 interface StubNonIndexRouteObject
-  extends Omit<
+  extends
+    Omit<
       NonIndexRouteObject,
       | "Component"
       | "HydrateFallback"
@@ -112,7 +113,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  _context?: AppLoadContext | RouterContextProvider,
+  _context?: RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -120,17 +121,12 @@ export function createRoutesStub(
     hydrationData,
     future,
   }: RoutesTestStubProps) {
-    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let frameworkContextRef = React.useRef<FrameworkContextObject>();
+    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>(null);
+    let frameworkContextRef = React.useRef<FrameworkContextObject>(null);
 
-    if (routerRef.current == null) {
+    if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
-        future: {
-          v8_passThroughRequests: future?.v8_passThroughRequests === true,
-          v8_middleware: future?.v8_middleware === true,
-          v8_trailingSlashAwareDataRequests:
-            future?.v8_trailingSlashAwareDataRequests === true,
-        },
+        future: {},
         manifest: {
           routes: {},
           entry: { imports: [], module: "" },
@@ -149,11 +145,7 @@ export function createRoutesStub(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
         // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
-        _context !== undefined
-          ? _context
-          : future?.v8_middleware
-            ? new RouterContextProvider()
-            : {},
+        _context ?? new RouterContextProvider(),
         frameworkContextRef.current.manifest,
         frameworkContextRef.current.routeModules,
       );
@@ -200,10 +192,18 @@ function processRoutes(
         ? withErrorBoundaryProps(route.ErrorBoundary)
         : undefined,
       action: route.action
-        ? (args: ActionFunctionArgs) => route.action!({ ...args, context })
+        ? (args: ActionFunctionArgs) =>
+            route.action!({
+              ...args,
+              context: context as Readonly<RouterContextProvider>,
+            })
         : undefined,
       loader: route.loader
-        ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
+        ? (args: LoaderFunctionArgs) =>
+            route.loader!({
+              ...args,
+              context: context as Readonly<RouterContextProvider>,
+            })
         : undefined,
       middleware: route.middleware
         ? route.middleware.map(

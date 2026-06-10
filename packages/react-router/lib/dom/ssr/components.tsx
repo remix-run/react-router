@@ -105,7 +105,7 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
-): [boolean, React.RefObject<T>, PrefetchHandlers] {
+): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
@@ -412,8 +412,6 @@ function RSCPrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
 
   let dataHrefs = React.useMemo(() => {
     if (page === location.pathname + location.search + location.hash) {
@@ -421,12 +419,7 @@ function RSCPrefetchPageLinksImpl({
       // since it would always trigger a prefetch of the existing loaders
       return [];
     }
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.v8_trailingSlashAwareDataRequests,
-      "rsc",
-    );
+    let url = singleFetchUrl(page, "rsc");
 
     let hasSomeRoutesWithShouldRevalidate = false;
     let targetRoutes: string[] = [];
@@ -443,13 +436,7 @@ function RSCPrefetchPageLinksImpl({
     }
 
     return [url.pathname + url.search];
-  }, [
-    basename,
-    future.v8_trailingSlashAwareDataRequests,
-    page,
-    location,
-    nextMatches,
-  ]);
+  }, [page, location, nextMatches]);
 
   return (
     <>
@@ -468,8 +455,7 @@ function PrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future, manifest, routeModules } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
+  let { manifest, routeModules } = useFrameworkContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -532,12 +518,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.v8_trailingSlashAwareDataRequests,
-      "data",
-    );
+    let url = singleFetchUrl(page, "data");
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -553,8 +534,6 @@ function PrefetchPageLinksImpl({
 
     return [url.pathname + url.search];
   }, [
-    basename,
-    future.v8_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,
@@ -649,7 +628,6 @@ export function Meta(): React.JSX.Element {
 
     let match: MetaMatch = {
       id: routeId,
-      data,
       loaderData: data,
       meta: [],
       params: _match.params,
@@ -663,7 +641,6 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
               loaderData: data,
               params,
               location,

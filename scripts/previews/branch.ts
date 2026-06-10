@@ -108,9 +108,7 @@ async function updatePackageDependencies() {
       for (let name of Object.keys(pkg.dependencies)) {
         if (
           name.startsWith("@react-router/") ||
-          ["react-router", "react-router-dom", "create-react-router"].includes(
-            name,
-          )
+          ["react-router", "create-react-router"].includes(name)
         ) {
           let packageDirName = name.startsWith("@react-router/")
             ? name.replace(/^@react-router\//, "react-router-")

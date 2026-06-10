@@ -2,7 +2,11 @@
  * @jest-environment node
  */
 
-import { createContext, type StaticHandlerContext } from "react-router";
+import {
+  createContext,
+  RouterContextProvider,
+  type StaticHandlerContext,
+} from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
@@ -52,15 +56,15 @@ describe("server", () => {
 
     let allowThrough = [
       ["GET", "/", "COMPONENT"],
-      ["GET", "/_root.data", "LOADER"],
+      ["GET", "/_.data", "LOADER"],
       ["POST", "/", "COMPONENT"],
-      ["POST", "/_root.data", "ACTION"],
+      ["POST", "/_.data", "ACTION"],
       ["PUT", "/", "COMPONENT"],
-      ["PUT", "/_root.data", "ACTION"],
+      ["PUT", "/_.data", "ACTION"],
       ["DELETE", "/", "COMPONENT"],
-      ["DELETE", "/_root.data", "ACTION"],
+      ["DELETE", "/_.data", "ACTION"],
       ["PATCH", "/", "COMPONENT"],
-      ["PATCH", "/_root.data", "ACTION"],
+      ["PATCH", "/_.data", "ACTION"],
     ];
     it.each(allowThrough)(
       `allows through %s request to %s`,
@@ -91,33 +95,7 @@ describe("server", () => {
       expect(await response.text()).toBe("");
     });
 
-    it("accepts proper values from getLoadContext (without middleware)", async () => {
-      let build = mockServerBuild(
-        {
-          root: {
-            path: "",
-            loader: ({ context }) => context.foo,
-            default: () => "COMPONENT",
-          },
-        },
-        {
-          handleDocumentRequest(request) {
-            return new Response(`${request.method}, ${request.url} COMPONENT`);
-          },
-        },
-      );
-      let handler = createRequestHandler(build);
-      let response = await handler(
-        new Request("http://localhost:3000/_root.data"),
-        {
-          foo: "FOO",
-        },
-      );
-
-      expect(await response.text()).toContain("FOO");
-    });
-
-    it("accepts proper values from getLoadContext (with middleware)", async () => {
+    it("accepts proper values from getLoadContext", async () => {
       let fooContext = createContext<string>();
       let build = mockServerBuild(
         {
@@ -135,15 +113,14 @@ describe("server", () => {
       );
       let handler = createRequestHandler(build);
       let response = await handler(
-        new Request("http://localhost:3000/_root.data"),
-        // @ts-expect-error In apps the expected type is handled via the Future interface
-        new Map([[fooContext, "FOO"]]),
+        new Request("http://localhost:3000/_.data"),
+        new RouterContextProvider(new Map([[fooContext, "FOO"]])),
       );
 
       expect(await response.text()).toContain("FOO");
     });
 
-    it("errors if an invalid value is returned from getLoadContext (with middleware)", async () => {
+    it("errors if an invalid value is returned from getLoadContext", async () => {
       let handleErrorSpy = jest.fn();
       let build = mockServerBuild(
         {
@@ -154,9 +131,6 @@ describe("server", () => {
           },
         },
         {
-          future: {
-            v8_middleware: true,
-          },
           handleError: handleErrorSpy,
           handleDocumentRequest(request) {
             return new Response(`${request.method}, ${request.url} COMPONENT`);
@@ -165,7 +139,7 @@ describe("server", () => {
       );
       let handler = createRequestHandler(build);
       let response = await handler(
-        new Request("http://localhost:3000/_root.data"),
+        new Request("http://localhost:3000/_.data"),
         {
           foo: "FOO",
         },
@@ -175,9 +149,9 @@ describe("server", () => {
       expect(await response.text()).toContain("Unexpected Server Error");
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "Invalid `context` value provided to `handleRequest`. When middleware is " +
-          "enabled you must return an instance of `RouterContextProvider` " +
-          "from your `getLoadContext` function.",
+        "Invalid `context` value provided to `handleRequest`. You must " +
+          "return an instance of `RouterContextProvider` from your " +
+          "`getLoadContext` function.",
       );
       handleErrorSpy.mockRestore();
     });
@@ -2204,6 +2178,7 @@ describe("shared server runtime", () => {
     let indexLoader = jest.fn(() => {
       return "index";
     });
+    let loadValueContext = createContext<string>();
     let build = mockServerBuild(
       {
         root: {
@@ -2218,8 +2193,14 @@ describe("shared server runtime", () => {
         },
       },
       {
-        handleDocumentRequest(request, responseStatusCode, responseHeaders) {
-          return new Response(JSON.stringify(loadContext), {
+        handleDocumentRequest(
+          request,
+          responseStatusCode,
+          responseHeaders,
+          _remixContext,
+          loadContext,
+        ) {
+          return new Response(loadContext.get(loadValueContext), {
             status: responseStatusCode,
             headers: responseHeaders,
           });
@@ -2229,9 +2210,11 @@ describe("shared server runtime", () => {
 
     let handler = createRequestHandler(build, ServerMode.Development);
     let request = new Request(`${baseUrl}/`, { method: "get" });
-    let loadContext = { "load-context": "load-value" };
+    let loadContext = new RouterContextProvider(
+      new Map([[loadValueContext, "load-value"]]),
+    );
 
     let result = await handler(request, loadContext);
-    expect(await result.text()).toBe(JSON.stringify(loadContext));
+    expect(await result.text()).toBe("load-value");
   });
 });

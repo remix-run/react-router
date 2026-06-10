@@ -35,6 +35,7 @@ import type {
   UIMatch,
 } from "../router/utils";
 import {
+  defaultMapRouteProperties,
   ErrorResponseImpl,
   joinPaths,
   matchPath,
@@ -70,11 +71,7 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import {
-  Router,
-  mapRouteProperties,
-  hydrationRouteProperties,
-} from "../components";
+import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
@@ -658,7 +655,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -701,7 +698,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -729,7 +726,7 @@ function deserializeErrors(
   let serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // serializeErrors in react-router-dom/server.tsx :)
+    // serializeErrors in lib/dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
       serialized[key] = new ErrorResponseImpl(
         val.status,
@@ -833,7 +830,7 @@ export function BrowserRouter({
   useTransitions,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  let historyRef = React.useRef<BrowserHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
@@ -924,7 +921,7 @@ export function HashRouter({
   useTransitions,
   window,
 }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  let historyRef = React.useRef<HashHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }
@@ -1050,8 +1047,10 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 /**
  * @category Types
  */
-export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+export interface LinkProps extends Omit<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href"
+> {
   /**
    * Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
    *
@@ -1485,8 +1484,10 @@ export type NavLinkRenderProps = {
 /**
  * @category Types
  */
-export interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style" | "children"> {
+export interface NavLinkProps extends Omit<
+  LinkProps,
+  "className" | "style" | "children"
+> {
   /**
    *  Can be regular React children or a function that receives an object with the
    * `active` and `pending` states of the link.
@@ -1785,13 +1786,6 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   preventScrollReset?: boolean;
 
   /**
-   * A function to call when the form is submitted. If you call
-   * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
-   * then this form will not do anything.
-   */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
-
-  /**
    * Specify the default revalidation behavior after this submission
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
@@ -1919,7 +1913,6 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.fetcherKey} fetcherKey n/a
  * @param {FormProps.method} method n/a
  * @param {FormProps.navigate} navigate n/a
- * @param {FormProps.onSubmit} onSubmit n/a
  * @param {FormProps.preventScrollReset} preventScrollReset n/a
  * @param {FormProps.relative} relative n/a
  * @param {FormProps.reloadDocument} reloadDocument n/a
@@ -1957,7 +1950,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let isAbsolute =
       typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+    let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
       event.preventDefault();
@@ -1983,7 +1976,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         });
 
       if (useTransitions && navigate !== false) {
-        // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
         doSubmit();
@@ -2270,7 +2262,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           });
 
         if (useTransitions) {
-          // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
           doNavigate();
@@ -3370,7 +3361,7 @@ export function useViewTransitionState(
 
   invariant(
     vtContext != null,
-    "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+    "`useViewTransitionState` must be used within `react-router/dom`'s `RouterProvider`.  " +
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 

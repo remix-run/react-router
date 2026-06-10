@@ -107,7 +107,7 @@ describe("handleError", () => {
           throw error;
         },
       });
-      let request = new Request("http://example.com/_root.data");
+      let request = new Request("http://example.com/_.data");
       await handler(request);
       expect(handleErrorSpy).toHaveBeenCalledWith(error, {
         request,
@@ -118,7 +118,7 @@ describe("handleError", () => {
 
     it("provides router-thrown ErrorResponse", async () => {
       let { handler, handleErrorSpy } = getHandler({});
-      let request = new Request("http://example.com/_root.data", {
+      let request = new Request("http://example.com/_.data", {
         method: "post",
       });
       await handler(request);
@@ -127,7 +127,7 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
+            'You made a POST request to "/_.data" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
           true,
         ),
@@ -148,7 +148,7 @@ describe("handleError", () => {
           );
         },
       });
-      let request = new Request("http://example.com/_root.data");
+      let request = new Request("http://example.com/_.data");
       await handler(request);
       expect(handleErrorSpy).not.toHaveBeenCalled();
     });

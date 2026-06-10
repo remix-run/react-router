@@ -1,6 +1,4 @@
-import type { AppLoadContext } from "../server-runtime/data";
 import type { RequestHandler } from "../server-runtime/server";
-import type { MiddlewareEnabled } from "../types/future";
 import { createPath, invariant } from "./history";
 import type { Router } from "./router";
 import type {
@@ -59,9 +57,7 @@ type ReadonlyRequest = {
   headers: Pick<Headers, "get">;
 };
 
-type ReadonlyContext = MiddlewareEnabled extends true
-  ? Pick<RouterContextProvider, "get">
-  : Readonly<AppLoadContext>;
+type ReadonlyContext = Pick<RouterContextProvider, "get">;
 
 // Route Instrumentation
 type InstrumentableRoute = {
@@ -486,39 +482,9 @@ function getReadonlyRequest(request: Request): {
 }
 
 function getReadonlyContext(
-  context: MiddlewareEnabled extends true
-    ? RouterContextProvider
-    : AppLoadContext,
-): MiddlewareEnabled extends true
-  ? Pick<RouterContextProvider, "get">
-  : Readonly<AppLoadContext> {
-  if (isPlainObject(context)) {
-    let frozen = { ...context };
-    Object.freeze(frozen);
-    return frozen;
-  } else {
-    return {
-      get: <T>(ctx: RouterContext<T>) =>
-        (context as unknown as RouterContextProvider).get(ctx),
-    };
-  }
-}
-
-// From turbo-stream-v2/flatten.ts
-const objectProtoNames = Object.getOwnPropertyNames(Object.prototype)
-  .sort()
-  .join("\0");
-
-function isPlainObject(
-  thing: unknown,
-): thing is Record<string | number | symbol, unknown> {
-  if (thing === null || typeof thing !== "object") {
-    return false;
-  }
-  const proto = Object.getPrototypeOf(thing);
-  return (
-    proto === Object.prototype ||
-    proto === null ||
-    Object.getOwnPropertyNames(proto).sort().join("\0") === objectProtoNames
-  );
+  context: Readonly<RouterContextProvider>,
+): Pick<RouterContextProvider, "get"> {
+  return {
+    get: <T>(ctx: RouterContext<T>) => context.get(ctx),
+  };
 }

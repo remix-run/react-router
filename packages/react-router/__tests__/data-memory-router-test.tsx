@@ -811,7 +811,6 @@ describe("createMemoryRouter", () => {
     await waitFor(() => screen.getByText("Bar"));
     expect(spy).toHaveBeenCalledWith("Layout", [
       {
-        data: undefined,
         loaderData: undefined,
         handle: undefined,
         id: "0",
@@ -819,7 +818,6 @@ describe("createMemoryRouter", () => {
         pathname: "/",
       },
       {
-        data: "BAR LOADER",
         loaderData: "BAR LOADER",
         handle: {
           key: "value",
@@ -2117,7 +2115,6 @@ describe("createMemoryRouter", () => {
       expect(html).toMatch("💿 Hey developer 👋");
     });
 
-    // This test ensures that when manual routes are used, we add hasErrorBoundary
     it("renders navigation errors on leaf elements (when using manual route objects)", async () => {
       let barDefer = createDeferred();
 

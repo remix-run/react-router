@@ -1,4 +1,4 @@
-name: 👔 Format
+name: Format
 
 on:
   push:
@@ -15,30 +15,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.FORMAT_PAT }}
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: pnpm
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🔃 Sort contributors.yml
+      - name: Sort contributors.yml
         run: sort --ignore-case --output contributors.yml contributors.yml
 
-      - name: 👔 Format
+      - name: Format
         run: pnpm format
 
-      - name: 💪 Commit
+      - name: Commit
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
