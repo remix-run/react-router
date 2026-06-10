@@ -71,6 +71,10 @@ import {
   removeDoubleSlashes,
   flattenAndRankRoutes,
 } from "./utils";
+import {
+  normalizeProtocolRelativeUrl,
+  PROTOCOL_RELATIVE_URL_REGEX,
+} from "./url";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -6840,8 +6844,10 @@ function normalizeRedirectLocation(
   if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
     let normalizedLocation = location;
-    let url = normalizedLocation.startsWith("//")
-      ? new URL(currentUrl.protocol + normalizedLocation)
+    let url = PROTOCOL_RELATIVE_URL_REGEX.test(normalizedLocation)
+      ? new URL(
+          normalizeProtocolRelativeUrl(normalizedLocation, currentUrl.protocol),
+        )
       : new URL(normalizedLocation);
     if (invalidProtocols.includes(url.protocol)) {
       throw new Error("Invalid redirect location");

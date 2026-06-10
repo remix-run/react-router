@@ -24,7 +24,8 @@ import type {
   DataStrategyFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext } from "../router/utils";
+import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
+import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -146,16 +147,17 @@ export function createCallServer({
       Promise.resolve(payloadPromise)
         .then(async (payload) => {
           if (payload.type === "redirect") {
-            if (payload.reload || isExternalLocation(payload.location)) {
-              if (hasInvalidProtocol(payload.location)) {
+            let location = normalizeRedirectLocation(payload.location);
+            if (payload.reload || isExternalLocation(location)) {
+              if (hasInvalidProtocol(location)) {
                 throw new Error("Invalid redirect location");
               }
-              window.location.href = payload.location;
+              window.location.href = location;
               return;
             }
 
             React.startTransition(() => {
-              globalVar.__reactRouterDataRouter.navigate(payload.location, {
+              globalVar.__reactRouterDataRouter.navigate(location, {
                 replace: payload.replace,
               });
             });
@@ -173,15 +175,16 @@ export function createCallServer({
             globalVar.__routerActionID <= actionId
           ) {
             if (rerender.type === "redirect") {
-              if (rerender.reload || isExternalLocation(rerender.location)) {
-                if (hasInvalidProtocol(rerender.location)) {
+              let location = normalizeRedirectLocation(rerender.location);
+              if (rerender.reload || isExternalLocation(location)) {
+                if (hasInvalidProtocol(location)) {
                   throw new Error("Invalid redirect location");
                 }
-                window.location.href = rerender.location;
+                window.location.href = location;
                 return;
               }
               React.startTransition(() => {
-                globalVar.__reactRouterDataRouter.navigate(rerender.location, {
+                globalVar.__reactRouterDataRouter.navigate(location, {
                   replace: rerender.replace,
                 });
               });
@@ -1112,6 +1115,15 @@ function hasInvalidProtocol(location: string): boolean {
   } catch {
     return false;
   }
+}
+
+function normalizeRedirectLocation(location: string): string {
+  if (PROTOCOL_RELATIVE_URL_REGEX.test(location)) {
+    let path = resolvePath(location);
+    return path.pathname + path.search + path.hash;
+  }
+
+  return location;
 }
 
 function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {

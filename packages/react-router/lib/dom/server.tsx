@@ -30,6 +30,7 @@ import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
 import { DataRoutes, Router, mapRouteProperties } from "../components";
 import {
   DataRouterContext,
@@ -523,5 +524,3 @@ function encodeLocation(to: To): Path {
     hash: encoded.hash,
   };
 }
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;

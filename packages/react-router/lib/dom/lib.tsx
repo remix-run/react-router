@@ -42,6 +42,7 @@ import {
   resolveTo,
   stripBasename,
 } from "../router/utils";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -1282,8 +1283,6 @@ export interface LinkProps
    */
   mask?: To;
 }
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
  * A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
