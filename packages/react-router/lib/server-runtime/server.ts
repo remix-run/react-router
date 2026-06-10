@@ -10,6 +10,7 @@ import {
   ErrorResponseImpl,
   RouterContextProvider,
   stripBasename,
+  removeTrailingSlash,
 } from "../router/utils";
 import {
   getStaticContextFromError,
@@ -144,8 +145,9 @@ function derive(build: ServerBuild, mode?: string) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !build.prerender.includes(decodedPath.replace(/\/$/, "")) &&
-        !build.prerender.includes(decodedPath.replace(/[^/]$/, "/"))
+        !build.prerender.some(
+          (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
+        )
       ) {
         if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
