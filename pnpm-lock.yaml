@@ -2022,6 +2022,9 @@ importers:
       '@octokit/request':
         specifier: ^9.1.3
         version: 9.2.4
+      '@unveil/identity':
+        specifier: ^1.5.1
+        version: 1.5.1
       react-router:
         specifier: workspace:^
         version: link:../packages/react-router
@@ -2029,6 +2032,9 @@ importers:
         specifier: ^7.7.2
         version: 7.7.4
     devDependencies:
+      '@octokit/types':
+        specifier: ^14.1.0
+        version: 14.1.0
       '@types/node':
         specifier: ^22.18.0
         version: 22.19.15
@@ -4685,6 +4691,9 @@ packages:
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
+
+  '@unveil/identity@1.5.1':
+    resolution: {integrity: sha512-+ZjfBwEn46azRkr5NrrfUIDeNvAHyEFOcGVN2ZUFrthsjhn+lAHdw5yMO+dzmO3V4B1DwwrBmT4XJnBtuGRciA==}
 
   '@vanilla-extract/babel-plugin-debug-ids@1.2.2':
     resolution: {integrity: sha512-MeDWGICAF9zA/OZLOKwhoRlsUW+fiMwnfuOAqFVohL31Agj7Q/RBWAYweqjHLgFBCsdnr6XIfwjJnmb2znEWxw==}
@@ -12128,6 +12137,8 @@ snapshots:
       eslint-visitor-keys: 5.0.1
 
   '@ungap/structured-clone@1.2.0': {}
+
+  '@unveil/identity@1.5.1': {}
 
   '@vanilla-extract/babel-plugin-debug-ids@1.2.2':
     dependencies:
