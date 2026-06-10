@@ -36,6 +36,7 @@ import type {
 } from "../router/utils";
 import {
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   joinPaths,
   matchPath,
   parseToInfo,
@@ -739,7 +740,10 @@ function deserializeErrors(
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
-      if (val.__subType) {
+      if (
+        typeof val.__subType === "string" &&
+        SUPPORTED_ERROR_TYPES.includes(val.__subType)
+      ) {
         let ErrorConstructor = window[val.__subType];
         if (typeof ErrorConstructor === "function") {
           try {

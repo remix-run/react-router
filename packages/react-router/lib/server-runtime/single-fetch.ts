@@ -428,7 +428,9 @@ export function encodeViaTurboStream(
 
         if (value instanceof ErrorResponseImpl) {
           let { data, status, statusText } = value;
-          return ["ErrorResponse", data, status, statusText];
+          // @ts-expect-error This is "private" from users but intended for internal use
+          let internal = value.internal;
+          return ["ErrorResponse", data, status, statusText, internal];
         }
 
         if (

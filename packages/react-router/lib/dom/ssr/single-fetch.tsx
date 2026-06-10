@@ -1,9 +1,6 @@
 import * as React from "react";
 
-import {
-  SUPPORTED_ERROR_TYPES,
-  decode,
-} from "../../../vendor/turbo-stream-v2/turbo-stream";
+import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
@@ -14,6 +11,7 @@ import type {
 } from "../../router/utils";
 import {
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   isRouteErrorResponse,
   redirect,
   data,
@@ -777,13 +775,19 @@ export function decodeViaTurboStream(
         }
 
         if (type === "ErrorResponse") {
-          let [data, status, statusText] = rest as [
+          let [data, status, statusText, internal] = rest as [
             unknown,
             number,
             string | undefined,
+            boolean | undefined,
           ];
           return {
-            value: new ErrorResponseImpl(status, statusText, data),
+            value: new ErrorResponseImpl(
+              status,
+              statusText,
+              data,
+              internal === true,
+            ),
           };
         }
 
