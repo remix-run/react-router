@@ -1398,6 +1398,11 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
+    let mergedRef = React.useMemo(
+      () => mergeRefs(forwardedRef, prefetchRef),
+      [forwardedRef, prefetchRef],
+    );
+
     let isSpaLink = !(parsed.isExternal || reloadDocument);
     let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
@@ -1408,7 +1413,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
           (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
         }
         onClick={isSpaLink ? handleClick : onClick}
-        ref={mergeRefs(forwardedRef, prefetchRef)}
+        ref={mergedRef}
         target={target}
         data-discover={
           !isAbsolute && discover === "render" ? "true" : undefined
