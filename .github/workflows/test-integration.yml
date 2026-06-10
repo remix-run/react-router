@@ -48,6 +48,10 @@ jobs:
     outputs:
       type: ${{ steps.suites.outputs.type }}
     steps:
+      # Need to checkout the repo so we can use the `gh` CLI
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
       - name: Select integration suites
         id: suites
         env:
