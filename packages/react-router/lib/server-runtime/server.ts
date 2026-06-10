@@ -158,8 +158,8 @@ function derive(build: ServerBuild, mode?: string) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !build.prerender.includes(decodedPath) &&
-        !build.prerender.includes(decodedPath + "/")
+        !build.prerender.includes(decodedPath.replace(/\/$/, "")) &&
+        !build.prerender.includes(decodedPath.replace(/[^/]$/, "/"))
       ) {
         if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
