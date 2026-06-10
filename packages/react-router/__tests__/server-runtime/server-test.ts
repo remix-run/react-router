@@ -95,6 +95,40 @@ describe("server", () => {
       expect(await response.text()).toBe("");
     });
 
+    it("reflects trailing slash in static handler locations", async () => {
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            default: {},
+          },
+          "routes/random": {
+            parentId: "root",
+            path: "random",
+            default: {},
+          },
+        },
+        {
+          handleDocumentRequest(_request, _status, _headers, context) {
+            return Response.json({
+              pathname: context.staticHandlerContext.location.pathname,
+            });
+          },
+        },
+      );
+
+      let handler = createRequestHandler(build);
+      let response = await handler(new Request("http://localhost:3000/random"));
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ pathname: "/random" });
+
+      response = await handler(new Request("http://localhost:3000/random/"));
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ pathname: "/random/" });
+    });
+
     it("accepts proper values from getLoadContext", async () => {
       let fooContext = createContext<string>();
       let build = mockServerBuild(

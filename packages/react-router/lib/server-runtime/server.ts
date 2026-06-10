@@ -104,11 +104,7 @@ function derive(build: ServerBuild, mode?: string) {
     loadContext = initialContext || new RouterContextProvider();
 
     let requestUrl = new URL(request.url);
-    let normalizedPathname = getNormalizedPath(
-      request,
-      build.basename,
-    ).pathname;
-
+    let normalizedPathname = getNormalizedPath(request).pathname;
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -494,7 +490,7 @@ async function handleDocumentRequest(
           return new Response(null, { status: 500 });
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename),
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     if (!isResponse(result)) {
@@ -670,7 +666,7 @@ async function handleResourceRequest(
           return handleQueryRouteError(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename),
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryRouteResult(result);
