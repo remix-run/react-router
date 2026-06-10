@@ -2,11 +2,11 @@ name: Integration Test
 
 # Incrementally comprehensive based on the type of change:
 #
-# | Type   | Description            | Test Runs                                   |
-# |--------|------------------------|---------------------------------------------|
-# | base   | Non-docs and draft PRs | Chromium (Node 24).                         |
-# | normal | @react-router/dev PRs  | + Firefox/Webkit/Edge (n24), Chromium (n22) |
-# | full   | Commits on `main`      | + Firefox/Webkit (n22)                      |
+# | Type | Description                        | Test Runs                                           |
+# |------|------------------------------------|-----------------------------------------------------|
+# | base | Non-docs and draft PRs             | Chromium (Node 24).                                 |
+# | dev  | @react-router/dev or v8 branch PRs | + Firefox/Webkit/Edge (Node 24), Chromium (Node 22) |
+# | full | Commits on `main`                  | + Firefox/Webkit (Node 22)                          |
 
 on:
   push:
@@ -52,20 +52,33 @@ jobs:
         id: suites
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
         # If `gh pr diff` exits with a non-zero code, it might be because the PR
         # has >300 files, or it could be for any number of unknown reasons.  If
         # that happens take the conservative route and run the larger `dev` suite.
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Selected integration suite: full (push to main)"
             echo "type=full" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.pull_request.head.ref }}" = "v8" ]; then
+            echo "Selected integration suite: dev (v8 PR)"
+            echo "type=dev" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "Selected integration suite: base (draft PR)"
             echo "type=base" >> "$GITHUB_OUTPUT"
           else
-            OUTPUT=$(gh pr diff "$PR_NUMBER" --name-only)
-            if [ $? != 0 ] || echo "$OUTPUT" | grep -q '^packages/react-router-dev/'; then
+            set +e
+            OUTPUT=$(gh pr diff "${{ github.event.pull_request.number }}" --name-only)
+            CODE=$?
+            set -e
+
+            if [ $CODE != 0 ]; then
+              echo "Selected integration suite: dev (failed to fetch PR diff - gh cli exited with $CODE)"
+              echo "type=dev" >> "$GITHUB_OUTPUT"
+            elif echo "$OUTPUT" | grep -q '^packages/react-router-dev/'; then
+              echo "Selected integration suite: dev (changes to packages/react-router-dev/)"
               echo "type=dev" >> "$GITHUB_OUTPUT"
             else
+              echo "Selected integration suite: base (no packages/react-router-dev/ changes detected)"
               echo "type=base" >> "$GITHUB_OUTPUT"
             fi
           fi
