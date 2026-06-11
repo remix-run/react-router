@@ -60,6 +60,22 @@ describe("resolvePath", () => {
       pathname: "/foo",
     });
 
+    expect(resolvePath("//foo")).toMatchObject({
+      pathname: "/foo",
+    });
+
+    expect(resolvePath("\\\\foo")).toMatchObject({
+      pathname: "/foo",
+    });
+
+    expect(resolvePath("/\\foo")).toMatchObject({
+      pathname: "/foo",
+    });
+
+    expect(resolvePath("\\/foo")).toMatchObject({
+      pathname: "/foo",
+    });
+
     spy.mockRestore();
   });
 

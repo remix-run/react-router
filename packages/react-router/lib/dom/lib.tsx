@@ -36,12 +36,14 @@ import type {
 } from "../router/utils";
 import {
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   joinPaths,
   matchPath,
   parseToInfo,
   resolveTo,
   stripBasename,
 } from "../router/utils";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -739,7 +741,10 @@ function deserializeErrors(
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
-      if (val.__subType) {
+      if (
+        typeof val.__subType === "string" &&
+        SUPPORTED_ERROR_TYPES.includes(val.__subType)
+      ) {
         let ErrorConstructor = window[val.__subType];
         if (typeof ErrorConstructor === "function") {
           try {
@@ -1282,8 +1287,6 @@ export interface LinkProps
    */
   mask?: To;
 }
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
  * A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)

@@ -1,3 +1,4 @@
+import { SUPPORTED_ERROR_TYPES } from "../../lib/router/utils";
 import {
   Deferred,
   HOLE,
@@ -19,7 +20,6 @@ import {
   TYPE_SYMBOL,
   TYPE_URL,
   type ThisDecode,
-  SUPPORTED_ERROR_TYPES,
 } from "./utils";
 
 const globalObj = (

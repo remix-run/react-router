@@ -3,6 +3,11 @@ import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+import {
+  ABSOLUTE_URL_REGEX,
+  normalizeProtocolRelativeUrl,
+  PROTOCOL_RELATIVE_URL_REGEX,
+} from "./url";
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -1706,7 +1711,6 @@ export function prependBasename({
   return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 /**
@@ -1901,7 +1905,7 @@ export function resolveTo(
 }
 
 export const removeDoubleSlashes = (path: string): string =>
-  path.replace(/\/\/+/g, "/");
+  path.replace(/[\\/]{2,}/g, "/");
 
 export const joinPaths = (paths: string[]): string =>
   removeDoubleSlashes(paths.join("/"));
@@ -2105,6 +2109,15 @@ export type ErrorResponse = {
   data: any;
 };
 
+export const SUPPORTED_ERROR_TYPES = [
+  "EvalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError",
+];
+
 /*
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
  *
@@ -2223,8 +2236,8 @@ export function parseToInfo<T extends To | string>(
   if (isBrowser) {
     try {
       let currentUrl = new URL(window.location.href);
-      let targetUrl = to.startsWith("//")
-        ? new URL(currentUrl.protocol + to)
+      let targetUrl = PROTOCOL_RELATIVE_URL_REGEX.test(to)
+        ? new URL(normalizeProtocolRelativeUrl(to, currentUrl.protocol))
         : new URL(to);
       let path = stripBasename(targetUrl.pathname, basename);
 

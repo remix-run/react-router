@@ -44,15 +44,6 @@ export interface ThisEncode {
   signal?: AbortSignal;
 }
 
-export const SUPPORTED_ERROR_TYPES = [
-  "EvalError",
-  "RangeError",
-  "ReferenceError",
-  "SyntaxError",
-  "TypeError",
-  "URIError",
-];
-
 export class Deferred<T = unknown> {
   promise: Promise<T>;
   resolve!: (value: T) => void;

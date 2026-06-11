@@ -1,8 +1,8 @@
+import { SUPPORTED_ERROR_TYPES } from "../../lib/router/utils";
 import { flatten } from "./flatten";
 import { unflatten } from "./unflatten";
 import {
   Deferred,
-  SUPPORTED_ERROR_TYPES,
   TYPE_ERROR,
   TYPE_PREVIOUS_RESOLVED,
   TYPE_PROMISE,

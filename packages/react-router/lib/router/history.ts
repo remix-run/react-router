@@ -1,3 +1,5 @@
+import { PROTOCOL_RELATIVE_URL_REGEX } from "./url";
+
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -803,7 +805,7 @@ export function createBrowserURLImpl(
   // then we need to avoid the URL constructor treating a leading double slash
   // as a protocol-less URL. By prepending the base, it forces the double slash
   // to be parsed correctly as part of the pathname.
-  if (!isAbsolute && href.startsWith("//")) {
+  if (!isAbsolute && PROTOCOL_RELATIVE_URL_REGEX.test(href)) {
     // new URL('//', 'https://localhost') -> error!
     // new URL('https://localhost//', 'https://localhost') -> no error!
     href = base + href;
