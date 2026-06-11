@@ -68,7 +68,7 @@ export async function singleFetchAction(
           return handleQueryError(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename),
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryResult(result);
@@ -151,7 +151,7 @@ export async function singleFetchLoaders(
           return handleQueryError(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename),
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryResult(result);

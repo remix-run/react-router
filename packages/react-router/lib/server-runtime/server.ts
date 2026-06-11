@@ -10,6 +10,7 @@ import {
   ErrorResponseImpl,
   RouterContextProvider,
   stripBasename,
+  removeTrailingSlash,
 } from "../router/utils";
 import {
   getStaticContextFromError,
@@ -104,11 +105,7 @@ function derive(build: ServerBuild, mode?: string) {
     loadContext = initialContext || new RouterContextProvider();
 
     let requestUrl = new URL(request.url);
-    let normalizedPathname = getNormalizedPath(
-      request,
-      build.basename,
-    ).pathname;
-
+    let normalizedPathname = getNormalizedPath(request).pathname;
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -148,8 +145,9 @@ function derive(build: ServerBuild, mode?: string) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !build.prerender.includes(decodedPath) &&
-        !build.prerender.includes(decodedPath + "/")
+        !build.prerender.some(
+          (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
+        )
       ) {
         if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
@@ -494,7 +492,7 @@ async function handleDocumentRequest(
           return new Response(null, { status: 500 });
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename),
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     if (!isResponse(result)) {
@@ -670,7 +668,7 @@ async function handleResourceRequest(
           return handleQueryRouteError(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, build.basename),
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryRouteResult(result);
