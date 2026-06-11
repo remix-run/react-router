@@ -1490,11 +1490,16 @@ implementations.forEach((implementation) => {
                   throw redirect("https://example.com/")
                 }
 
+                if (id === "unsupported-protocol") {
+                  throw redirect("about:blank")
+                }
+
                 return (
                   <>
                     <h1>{id || "home"}</h1>
                     <Link to="/render-redirect/redirect">Redirect</Link>
                     <Link to="/render-redirect/external">External</Link>
+                    <Link to="/render-redirect/unsupported-protocol">Unsupported</Link>
                   </>
                 )
               }
@@ -1522,11 +1527,16 @@ implementations.forEach((implementation) => {
                   throw redirect("https://example.com/")
                 }
 
+                if (id === "unsupported-protocol") {
+                  throw redirect("about:blank")
+                }
+
                 return (
                   <>
                     <h1>{id || "home"}</h1>
                     <Link to="/render-redirect/lazy/redirect">Redirect</Link>
                     <Link to="/render-redirect/external">External</Link>
+                    <Link to="/render-redirect/lazy/unsupported-protocol">Unsupported</Link>
                   </>
                 );
               }
@@ -1867,6 +1877,18 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("Example Domain")).toBeAttached();
         });
 
+        test("Handles unsupported protocol redirect Responses from render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("Unsupported").click();
+          await page.waitForTimeout(500);
+          await expect(page).toHaveURL(
+            `http://localhost:${port}/render-redirect/unsupported-protocol`,
+          );
+        });
+
         test("Suppport throwing redirect Response from suspended render", async ({
           page,
         }) => {
@@ -1892,6 +1914,18 @@ implementations.forEach((implementation) => {
           await page.getByText("External").click();
           await page.waitForURL(`https://example.com/`);
           await expect(page.getByText("Example Domain")).toBeAttached();
+        });
+
+        test("Handles unsupported protocol redirect Responses from suspended render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect/lazy`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("Unsupported").click();
+          await page.waitForTimeout(500);
+          await expect(page).toHaveURL(
+            `http://localhost:${port}/render-redirect/lazy/unsupported-protocol`,
+          );
         });
 
         test("Support throwing Responses", async ({ page }) => {

@@ -26,7 +26,7 @@ import type {
   RevalidationState,
   NavigationStates,
 } from "./router/router";
-import { IDLE_BLOCKER } from "./router/router";
+import { hasInvalidProtocol, IDLE_BLOCKER } from "./router/router";
 import type {
   DataRouteMatch,
   ParamParseKey,
@@ -1118,6 +1118,7 @@ export class RenderErrorBoundary extends React.Component<
 }
 
 const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
+
 function RSCErrorHandler({
   children,
   error,
@@ -1139,10 +1140,14 @@ function RSCErrorHandler({
       if (existingRedirect) throw existingRedirect;
 
       let parsed = parseToInfo(redirect.location, basename);
+      let target = parsed.absoluteURL || parsed.to;
+      if (hasInvalidProtocol(target)) {
+        throw new Error("Invalid redirect location");
+      }
 
       if (isBrowser && !errorRedirectHandledMap.get(error)) {
         if (parsed.isExternal || redirect.reloadDocument) {
-          window.location.href = parsed.absoluteURL || parsed.to;
+          window.location.href = target;
         } else {
           const redirectPromise: Promise<void> = Promise.resolve().then(() =>
             window.__reactRouterDataRouter!.navigate(parsed.to, {
@@ -1154,12 +1159,7 @@ function RSCErrorHandler({
         }
       }
 
-      return (
-        <meta
-          httpEquiv="refresh"
-          content={`0;url=${parsed.absoluteURL || parsed.to}`}
-        />
-      );
+      return <meta httpEquiv="refresh" content={`0;url=${target}`} />;
     }
   }
   return children;

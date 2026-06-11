@@ -6835,6 +6835,14 @@ export const invalidProtocols = [
   "javascript:",
 ];
 
+export function hasInvalidProtocol(location: string): boolean {
+  try {
+    return invalidProtocols.includes(new URL(location).protocol);
+  } catch {
+    return false;
+  }
+}
+
 function normalizeRedirectLocation(
   location: string,
   currentUrl: URL,
@@ -6849,7 +6857,7 @@ function normalizeRedirectLocation(
           normalizeProtocolRelativeUrl(normalizedLocation, currentUrl.protocol),
         )
       : new URL(normalizedLocation);
-    if (invalidProtocols.includes(url.protocol)) {
+    if (hasInvalidProtocol(url.toString())) {
       throw new Error("Invalid redirect location");
     }
     let isSameBasename = stripBasename(url.pathname, basename) != null;
@@ -6860,7 +6868,7 @@ function normalizeRedirectLocation(
 
   try {
     let url = historyInstance.createURL(location);
-    if (invalidProtocols.includes(url.protocol)) {
+    if (hasInvalidProtocol(url.toString())) {
       throw new Error("Invalid redirect location");
     }
   } catch (
