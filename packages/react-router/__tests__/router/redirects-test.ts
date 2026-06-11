@@ -448,6 +448,40 @@ describe("redirects", () => {
     });
   });
 
+  it("normalizes mixed leading separators in redirects", async () => {
+    let locations = [
+      "\\\\localhost/parent",
+      "/\\localhost/parent",
+      "\\/localhost/parent",
+    ];
+
+    for (let location of locations) {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.child.redirectReturn(
+        location,
+        undefined,
+        undefined,
+        ["parent"],
+      );
+      await B.loaders.parent.resolve("PARENT");
+      expect(t.router.state.location).toMatchObject({
+        hash: "",
+        pathname: "/parent",
+        search: "",
+        state: {
+          _isRedirect: true,
+        },
+      });
+      expect(t.window.location.assign).not.toHaveBeenCalled();
+    }
+  });
+
   it("properly handles same-origin absolute URLs when using a basename", async () => {
     let t = setup({ routes: REDIRECT_ROUTES, basename: "/base" });
 
