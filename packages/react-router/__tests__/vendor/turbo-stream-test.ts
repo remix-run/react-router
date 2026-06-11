@@ -321,6 +321,46 @@ test("should encode and decode object with rejected promise", async () => {
   return decoded.done;
 });
 
+test("should encode and decode rejected promise with plain object reason", async () => {
+  const reason = { code: "NOT_FOUND", id: 42 };
+  const input = Promise.reject(reason);
+  input.catch(() => {});
+  const decoded = await decode(encode(input));
+  expect(decoded.value).toBeInstanceOf(Promise);
+  await expect(decoded.value).rejects.toEqual(reason);
+  await decoded.done;
+});
+
+test("should encode and decode rejected promise with string reason", async () => {
+  const input = Promise.reject("something went wrong");
+  input.catch(() => {});
+  const decoded = await decode(encode(input));
+  expect(decoded.value).toBeInstanceOf(Promise);
+  await expect(decoded.value).rejects.toBe("something went wrong");
+  await decoded.done;
+});
+
+test("should encode and decode rejected promise with null reason", async () => {
+  const input = Promise.reject(null);
+  input.catch(() => {});
+  const decoded = await decode(encode(input));
+  expect(decoded.value).toBeInstanceOf(Promise);
+  await expect(decoded.value).rejects.toBeNull();
+  await decoded.done;
+});
+
+test("should encode and decode object with rejected promise with plain object reason", async () => {
+  const reason = { code: "NOT_FOUND" };
+  const prom = Promise.reject(reason);
+  prom.catch(() => {});
+  const input = { item: prom };
+  const decoded = await decode(encode(input));
+  const value = decoded.value as typeof input;
+  expect(value.item).toBeInstanceOf(Promise);
+  await expect(value.item).rejects.toEqual(reason);
+  return decoded.done;
+});
+
 test("should encode and decode set with promises as values", async () => {
   const prom = Promise.resolve("foo");
   const input = new Set([prom, prom]);

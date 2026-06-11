@@ -1,0 +1,1 @@
+Fix deferred loader promises that reject with a non-Error value being replaced by a generic "An unknown error occurred" error. Plain objects, strings, and other non-Error rejection reasons thrown from a streaming loader now reach the ErrorBoundary intact on client navigation, matching the behavior of a full-page load.
