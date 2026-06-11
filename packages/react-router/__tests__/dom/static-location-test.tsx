@@ -1,6 +1,12 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server.edge";
-import { Routes, Route, StaticRouter, useLocation } from "../../index";
+import {
+  Routes,
+  Route,
+  StaticRouter,
+  useLocation,
+  useParams,
+} from "../../index";
 
 describe("A <StaticRouter>", () => {
   describe("with a string location prop", () => {
@@ -30,6 +36,24 @@ describe("A <StaticRouter>", () => {
   });
 
   describe("with an object location prop", () => {
+    it("handles decoded backslashes in splat route pathnames", () => {
+      let params!: ReturnType<typeof useParams>;
+      function ParamsChecker() {
+        params = useParams();
+        return null;
+      }
+
+      ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter location={{ pathname: "/\\" }}>
+          <Routes>
+            <Route path="*" element={<ParamsChecker />} />
+          </Routes>
+        </StaticRouter>,
+      );
+
+      expect(params).toEqual({ "*": "\\" });
+    });
+
     it("adds missing properties", () => {
       let location!: ReturnType<typeof useLocation>;
       function LocationChecker() {

@@ -514,6 +514,13 @@ function encodeLocation(to: To): Path {
   // pre-encode them since they might be part of a matching splat param from
   // an ancestor route
   href = href.replace(/ $/, "%20");
+  if (!ABSOLUTE_URL_REGEX.test(href)) {
+    let path = parsePath(href);
+    if (path.pathname) {
+      path.pathname = path.pathname.replace(/\\/g, "%5C");
+      href = createPath(path);
+    }
+  }
   let encoded = ABSOLUTE_URL_REGEX.test(href)
     ? new URL(href)
     : new URL(href, "http://localhost");
