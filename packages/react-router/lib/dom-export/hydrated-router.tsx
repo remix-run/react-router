@@ -157,7 +157,6 @@ function createHydratedRouter({
       basename: window.__reactRouterContext?.basename,
       isSpaMode: ssrInfo.context.isSpaMode,
     });
-
   }
 
   // We cannot support history-state-driven masking with SSR, so if a hard
