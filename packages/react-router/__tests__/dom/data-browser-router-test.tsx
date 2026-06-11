@@ -8103,6 +8103,56 @@ function testDomRouter(
         `);
       });
 
+      it("does not deserialize custom Error subclass instances from the window", () => {
+        try {
+          (window as any).CustomError = class CustomError extends Error {};
+          window.__staticRouterHydrationData = {
+            loaderData: {},
+            actionData: null,
+            errors: {
+              "0": {
+                message: "custom error message",
+                __type: "Error",
+                __subType: "CustomError",
+              },
+            },
+          };
+          let router = createTestRouter([
+            {
+              path: "/",
+              Component: () => <h1>Nope</h1>,
+              ErrorBoundary: () => <Boundary />,
+            },
+          ]);
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Boundary() {
+            let error = useRouteError() as Error;
+            return error instanceof Error ? (
+              <>
+                <pre>{error.constructor.name}</pre>
+                <pre>{error.toString()}</pre>
+              </>
+            ) : (
+              <p>No :(</p>
+            );
+          }
+
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <pre>
+                Error
+              </pre>
+              <pre>
+                Error: custom error message
+              </pre>
+            </div>"
+          `);
+        } finally {
+          delete (window as any).CustomError;
+        }
+      });
+
       it("renders hydration errors on leaf elements", async () => {
         let router = createTestRouter(
           [

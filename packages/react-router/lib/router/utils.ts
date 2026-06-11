@@ -2109,6 +2109,15 @@ export type ErrorResponse = {
   data: any;
 };
 
+export const SUPPORTED_ERROR_TYPES = [
+  "EvalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError",
+];
+
 /*
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
  *

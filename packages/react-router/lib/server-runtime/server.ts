@@ -21,7 +21,7 @@ import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { CriticalCss, EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
-import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
+import { sanitizeErrors, serializeError } from "./errors";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
@@ -550,7 +550,7 @@ async function handleDocumentRequest(
     let state = {
       loaderData: context.loaderData,
       actionData: context.actionData,
-      errors: serializeErrors(context.errors, serverMode),
+      errors: context.errors,
     };
     let baseServerHandoff: ServerHandoff = {
       basename: build.basename,
@@ -636,7 +636,7 @@ async function handleDocumentRequest(
       let state = {
         loaderData: context.loaderData,
         actionData: context.actionData,
-        errors: serializeErrors(context.errors, serverMode),
+        errors: context.errors,
       };
       entryContext = {
         ...entryContext,
