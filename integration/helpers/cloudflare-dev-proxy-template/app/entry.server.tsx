@@ -23,7 +23,10 @@ export default async function handleRequest(
   );
 
   const userAgent = request.headers.get("user-agent");
-  if (userAgent && isbot(userAgent)) {
+  if (
+    (userAgent && isbot(userAgent)) ||
+    routerContext.isPrerender
+  ) {
     await body.allReady;
   }
 

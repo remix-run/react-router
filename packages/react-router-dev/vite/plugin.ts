@@ -3258,13 +3258,14 @@ async function handlePrerender(
         clientBuildDirectory,
         reactRouterConfig,
         viteConfig,
-        data
-          ? {
-              headers: {
-                "X-React-Router-Prerender-Data": encodeURI(data),
-              },
-            }
-          : undefined,
+        {
+          headers: {
+            "X-React-Router-Prerender": "yes",
+            ...(data
+              ? { "X-React-Router-Prerender-Data": encodeURI(data) }
+              : {}),
+          },
+        },
       );
     }
   };
@@ -4327,6 +4328,10 @@ function createRouteRequest(
       headers.set("X-React-Router-Prerender-Data", encodedData);
     }
   }
+
+  // Signal to entry.server that this is a prerender request so it can use
+  // onAllReady and avoid shipping Suspense fallback + $RC swap scripts
+  headers.set("X-React-Router-Prerender", "yes");
 
   return {
     request: new Request(`http://localhost${normalizedPath}`, { headers }),

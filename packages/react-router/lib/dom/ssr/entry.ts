@@ -47,6 +47,7 @@ export interface EntryContext extends FrameworkContextObject {
   branches: RouteBranch<DataRouteObject>[];
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
+  isPrerender: boolean;
 }
 
 export interface FutureConfig {

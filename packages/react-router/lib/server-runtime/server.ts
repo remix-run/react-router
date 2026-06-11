@@ -121,6 +121,8 @@ function derive(build: ServerBuild, mode?: string) {
 
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
+    let isPrerender =
+      getBuildTimeHeader(request, "X-React-Router-Prerender") === "yes";
 
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
@@ -293,6 +295,7 @@ function derive(build: ServerBuild, mode?: string) {
         loadContext,
         handleError,
         isSpaMode,
+        isPrerender,
         criticalCss,
       );
     }
@@ -481,6 +484,7 @@ async function handleDocumentRequest(
   loadContext: AppLoadContext | RouterContextProvider,
   handleError: (err: unknown) => void,
   isSpaMode: boolean,
+  isPrerender: boolean,
   criticalCss?: CriticalCss,
 ) {
   try {
@@ -504,7 +508,7 @@ async function handleDocumentRequest(
             try {
               let innerResult = await query(request);
               if (!isResponse(innerResult)) {
-                innerResult = await renderHtml(innerResult, isSpaMode);
+                innerResult = await renderHtml(innerResult, isSpaMode, isPrerender);
               }
               return innerResult;
             } catch (error: unknown) {
@@ -517,7 +521,7 @@ async function handleDocumentRequest(
     });
 
     if (!isResponse(result)) {
-      result = await renderHtml(result, isSpaMode);
+      result = await renderHtml(result, isSpaMode, isPrerender);
     }
     return result;
   } catch (error: unknown) {
@@ -525,7 +529,7 @@ async function handleDocumentRequest(
     return new Response(null, { status: 500 });
   }
 
-  async function renderHtml(context: StaticHandlerContext, isSpaMode: boolean) {
+  async function renderHtml(context: StaticHandlerContext, isSpaMode: boolean, isPrerender: boolean) {
     let headers = getDocumentHeaders(context, build);
 
     // Skip response body for unsupported status codes
@@ -580,6 +584,7 @@ async function handleDocumentRequest(
       ssr: build.ssr,
       routeDiscovery: build.routeDiscovery,
       isSpaMode,
+      isPrerender,
       serializeError: (err) => serializeError(err, serverMode),
     };
 
