@@ -44,7 +44,7 @@ import type {
 } from "../manifest";
 import invariant from "../invariant";
 import type { Cache } from "./cache";
-import { generate, parse } from "./babel";
+import { generate, parseModulePreservingSyntax } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest } from "./node-adapter";
 import {
@@ -70,6 +70,7 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
+import { stripForEsModuleLexer } from "./strip-for-es-module-lexer";
 import { preloadVite, getVite, defineCompilerOptions } from "./vite";
 import {
   type ResolvedReactRouterConfig,
@@ -519,8 +520,13 @@ const writeFileSafe = async (file: string, contents: string): Promise<void> => {
 };
 
 const getExportNames = (code: string): string[] => {
-  let [, exportSpecifiers] = esModuleLexer(code);
-  return exportSpecifiers.map(({ n: name }) => name);
+  try {
+    let [, exportSpecifiers] = esModuleLexer(code);
+    return exportSpecifiers.map(({ n: name }) => name);
+  } catch {
+    let [, exportSpecifiers] = esModuleLexer(stripForEsModuleLexer(code));
+    return exportSpecifiers.map(({ n: name }) => name);
+  }
 };
 
 const getRouteManifestModuleExports = async (
@@ -2092,7 +2098,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
 
         let { hasRouteChunks, chunkedExports } =
-          await detectRouteChunksIfEnabled(cache, ctx, id, code);
+          await detectRouteChunksIfEnabled(
+            cache,
+            ctx,
+            id,
+            routeTransformInputFromHook(viteChildCompiler, ctx, id, code),
+          );
 
         // If there are no chunks, we can let this resolve to the raw route
         // module since there's no risk of duplication
@@ -2148,7 +2159,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { chunkedExports = [] } = options?.ssr
           ? {}
-          : await detectRouteChunksIfEnabled(cache, ctx, id, code);
+          : await detectRouteChunksIfEnabled(
+              cache,
+              ctx,
+              routeModuleId,
+              routeTransformInputFromHook(
+                viteChildCompiler,
+                ctx,
+                routeModuleId,
+                code,
+              ),
+            );
 
         let reexports = sourceExports
           .filter((exportName) => {
@@ -2193,7 +2214,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ctx,
           id,
           chunkName,
-          code,
+          routeTransformInputFromHook(viteChildCompiler, ctx, id, code),
         );
 
         let preventEmptyChunkSnippet = ({ reason }: { reason: string }) =>
@@ -2423,7 +2444,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let [filepath] = id.split("?");
 
-        let ast = parse(code, { sourceType: "module" });
+        let ast = parseModulePreservingSyntax(code, id);
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
         }
@@ -3728,6 +3749,23 @@ type ResolveRouteFileCodeInput =
       readRouteFile?: () => string | Promise<string>;
       viteChildCompiler: Vite.ViteDevServer | null;
     };
+
+function routeTransformInputFromHook(
+  viteChildCompiler: Vite.ViteDevServer | null,
+  ctx: ReactRouterPluginContext,
+  moduleId: string,
+  code: string,
+): ResolveRouteFileCodeInput {
+  return {
+    viteChildCompiler,
+    routeFile: normalizeRelativeFilePath(
+      moduleId.split("?")[0],
+      ctx.reactRouterConfig,
+    ),
+    readRouteFile: () => code,
+  };
+}
+
 const resolveRouteFileCode = async (
   ctx: ReactRouterPluginContext,
   input: ResolveRouteFileCodeInput,

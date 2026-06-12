@@ -19,6 +19,7 @@ const entry = [
 const external = [
   "./static/refresh-utils.mjs",
   "./static/rsc-refresh-utils.mjs",
+  "esbuild",
   /\.json$/,
 ];
 
