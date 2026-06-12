@@ -1543,9 +1543,11 @@ export function createRouter(init: RouterInit): Router {
       : state.loaderData;
 
     // On a successful navigation we can assume we got through all blockers
-    // so we can start fresh
+    // so we can start fresh.  Skip this on an uninterrupted revalidation
+    // (router.revalidate()), which lands here without going through any blocker
+    // and should leave a pending blocker's state intact.
     let blockers = state.blockers;
-    if (blockers.size > 0) {
+    if (!isUninterruptedRevalidation && blockers.size > 0) {
       blockers = new Map(blockers);
       blockers.forEach((_, k) => blockers.set(k, IDLE_BLOCKER));
     }
