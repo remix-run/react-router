@@ -869,6 +869,62 @@ test.describe("typegen", () => {
     });
   });
 
+  test("arrow function component and meta can access matches without circular type error (#12499)", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("parent/:parentId", "routes/parent.tsx", [
+            route("child", "routes/child.tsx")
+          ])
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/parent.tsx": tsx`
+        import { Outlet } from "react-router"
+
+        export function loader() {
+          return { parentValue: "hello" }
+        }
+
+        export default function ParentComponent() {
+          return <Outlet />
+        }
+      `,
+      "app/routes/child.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/child"
+
+        export function loader() {
+          return { childValue: 42 }
+        }
+
+        // Arrow function meta — accessing matches must not cause a circular TS error (#12499)
+        export const meta = ({ matches }: Route.MetaArgs) => {
+          const parent = matches[1]
+          type TestParentLoaderData = Expect<Equal<typeof parent.loaderData, { parentValue: string }>>
+
+          const self = matches[2]
+          type TestSelfLoaderData = Expect<Equal<typeof self.loaderData, { childValue: number }>>
+          return []
+        }
+
+        // Arrow function Component — accessing matches must not cause a circular TS error (#12499)
+        const Component = ({ matches }: Route.ComponentProps) => {
+          const parent = matches[1]
+          type TestParentLoaderData = Expect<Equal<typeof parent.loaderData, { parentValue: string }>>
+
+          const self = matches[2]
+          type TestSelfLoaderData = Expect<Equal<typeof self.loaderData, { childValue: number }>>
+          return null
+        }
+
+        export default Component
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
   test("layout without pages", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`
