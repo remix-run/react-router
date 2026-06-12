@@ -360,11 +360,17 @@ const getReactRouterManifestBuildAssets = (
   allDynamicCssFiles: Set<string>,
   entryFilePath: string,
   route: RouteManifestEntry | null,
+  ancestorRouteCssHrefs = new Set<string>(),
 ): ReactRouterManifest["entry"] & { css: string[] } => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
   invariant(entryChunk, `Chunk not found: ${entryFilePath}`);
 
   let isRootRoute = Boolean(route && route.parentId === undefined);
+  let shouldUseForciblyUniqueCssHrefs =
+    route !== null &&
+    !Object.values(ctx.reactRouterConfig.routes).some(
+      (candidateRoute) => candidateRoute.parentId === route.id,
+    );
 
   let routeModuleChunks = routeChunkNames
     .map((routeChunkName) =>
@@ -408,6 +414,9 @@ const getReactRouterManifestBuildAssets = (
           .flatMap((e) => e.css ?? [])
           .map((href) => {
             let publicHref = `${ctx.publicPath}${href}`;
+            if (ancestorRouteCssHrefs.has(publicHref)) {
+              return null;
+            }
             // If this CSS file is also dynamically imported anywhere in the
             // application, we append a hash to the href so Vite ignores it when
             // managing dynamic CSS injection. If we don't do this, Vite's
@@ -420,7 +429,10 @@ const getReactRouterManifestBuildAssets = (
             // route-level CSS is removed from the document. We use a hash here
             // because it's a unique `href` value but isn't a unique network
             // request and only adds a single character.
-            return allDynamicCssFiles.has(href) ? `${publicHref}#` : publicHref;
+            return allDynamicCssFiles.has(href) &&
+              shouldUseForciblyUniqueCssHrefs
+              ? `${publicHref}#`
+              : publicHref;
           }),
       ]
         .flat(1)
@@ -511,6 +523,10 @@ function getAllDynamicCssFiles(
 
 function dedupe<T>(array: T[]): T[] {
   return [...new Set(array)];
+}
+
+function normalizeManifestCssHref(href: string): string {
+  return href.endsWith("#") ? href.slice(0, -1) : href;
 }
 
 const writeFileSafe = async (file: string, contents: string): Promise<void> => {
@@ -999,6 +1015,48 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let enforceSplitRouteModules =
       ctx.reactRouterConfig.future.v8_splitRouteModules === "enforce";
+    let routeBuildAssetsCache = new Map<
+      string,
+      ReactRouterManifest["entry"] & { css: string[] }
+    >();
+    let getRouteBuildAssets = (
+      route: RouteManifestEntry,
+    ): ReactRouterManifest["entry"] & { css: string[] } => {
+      let cachedAssets = routeBuildAssetsCache.get(route.id);
+      if (cachedAssets) {
+        return cachedAssets;
+      }
+
+      let ancestorRouteCssHrefs = new Set<string>();
+      let ancestorRoute =
+        route.parentId === undefined
+          ? undefined
+          : ctx.reactRouterConfig.routes[route.parentId];
+      while (ancestorRoute) {
+        let ancestorAssets = getRouteBuildAssets(ancestorRoute);
+        for (let cssHref of ancestorAssets.css) {
+          ancestorRouteCssHrefs.add(normalizeManifestCssHref(cssHref));
+        }
+        ancestorRoute =
+          ancestorRoute.parentId === undefined
+            ? undefined
+            : ctx.reactRouterConfig.routes[ancestorRoute.parentId];
+      }
+
+      let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
+      let assets = getReactRouterManifestBuildAssets(
+        ctx,
+        viteConfig,
+        viteManifest,
+        allDynamicCssFiles,
+        `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
+        route,
+        ancestorRouteCssHrefs,
+      );
+      routeBuildAssetsCache.set(route.id, assets);
+      return assets;
+    };
+
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
@@ -1045,14 +1103,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasClientMiddleware,
         hasDefaultExport: sourceExports.includes("default"),
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
-        ...getReactRouterManifestBuildAssets(
-          ctx,
-          viteConfig,
-          viteManifest,
-          allDynamicCssFiles,
-          `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-          route,
-        ),
+        ...getRouteBuildAssets(route),
         clientActionModule: hasRouteChunkByExportName.clientAction
           ? getPublicModulePathForEntry(
               ctx,
