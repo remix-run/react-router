@@ -51,6 +51,18 @@ export function generateServerBuild(ctx: Context): VirtualFile {
       export const allowedActionOrigins: ServerBuild["allowedActionOrigins"];
       export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
     }
+
+    declare module "*.md" {
+      import * as React from "react";
+      const MDComponent: React.FunctionComponent<any>;
+      export default MDComponent;
+    }
+
+    declare module "*.mdx" {
+      import * as React from "react";
+      const MDXComponent: React.FunctionComponent<any>;
+      export default MDXComponent;
+    }
   `;
   return { filename, content };
 }
