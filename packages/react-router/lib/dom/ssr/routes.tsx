@@ -85,7 +85,7 @@ function getRouteComponents(
       ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
       : undefined;
 
-  if (route.id === "root" && routeModule.Layout) {
+  if (routeModule.Layout) {
     return {
       ...(Component
         ? {
@@ -537,11 +537,25 @@ export function createClientRoutes(
           );
         },
         handle: async () => (await getLazyRoute()).handle,
-        // No need to wrap these in layout since the root route is never
-        // loaded via route.lazy()
-        Component: async () => (await getLazyRoute()).Component,
+        Component: async () => {
+          let { Component, Layout } = await getLazyRoute();
+          if (!Layout || !Component) return Component;
+          return () => (
+            <Layout>
+              <Component />
+            </Layout>
+          );
+        },
         ErrorBoundary: route.hasErrorBoundary
-          ? async () => (await getLazyRoute()).ErrorBoundary
+          ? async () => {
+              let { ErrorBoundary, Layout } = await getLazyRoute();
+              if (!Layout || !ErrorBoundary) return ErrorBoundary;
+              return () => (
+                <Layout>
+                  <ErrorBoundary />
+                </Layout>
+              );
+            }
           : undefined,
       };
     }
@@ -648,6 +662,7 @@ async function loadRouteModuleWithBlockingLinks(
   return {
     Component: getRouteModuleComponent(routeModule),
     ErrorBoundary: routeModule.ErrorBoundary,
+    Layout: routeModule.Layout,
     clientMiddleware: routeModule.clientMiddleware,
     clientAction: routeModule.clientAction,
     clientLoader: routeModule.clientLoader,
