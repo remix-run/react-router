@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { expect } from "@playwright/test";
+import { sync as spawnSync } from "cross-spawn";
 import stripAnsi from "strip-ansi";
 import dedent from "dedent";
 
@@ -37,6 +38,22 @@ let tsconfig = (aliases: Record<string, string[]>) => `
     }
   }
 `;
+
+let vitest = ({ cwd }: { cwd: string }) => {
+  let nodeBin = process.argv[0];
+  return spawnSync(
+    nodeBin,
+    [path.join(process.cwd(), "node_modules/vitest/vitest.mjs"), "run"],
+    {
+      cwd,
+      env: {
+        ...process.env,
+        FORCE_COLOR: undefined,
+        NO_COLOR: "1",
+      },
+    },
+  );
+};
 
 test("Vite / dead-code elimination for server exports", async () => {
   let cwd = await createProject({
@@ -210,6 +227,101 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
       ].forEach(expect(stderr).toMatch);
     });
   }
+});
+
+test("Vite / Vitest setup files can import server-only modules", async () => {
+  let cwd = await createProject({
+    "tsconfig.json": tsconfig({
+      "#app/*": ["app/*"],
+    }),
+    "vite.config.ts": dedent`
+      import { reactRouter } from "@react-router/dev/vite";
+      import { defineConfig } from "vite";
+      import tsconfigPaths from "vite-tsconfig-paths";
+
+      export default defineConfig({
+        plugins: [reactRouter(), tsconfigPaths()],
+        test: {
+          environment: "jsdom",
+          setupFiles: ["./tests/setup/setup-test-env.ts"],
+        },
+      });
+    `,
+    "app/utils/env.server.ts": serverOnlyModule,
+    "tests/setup/setup-test-env.ts": `
+      import { serverOnly } from "#app/utils/env.server.ts";
+
+      (globalThis as any).__serverOnlyFromSetup = serverOnly;
+    `,
+    "tests/example.test.ts": `
+      import { expect, test } from "vitest";
+
+      test("runs", () => {
+        expect(document.body).toBeDefined();
+        expect((globalThis as any).__serverOnlyFromSetup).toBe("SERVER_ONLY");
+      });
+    `,
+  });
+
+  let result = vitest({ cwd });
+  let stderr = stripAnsi(result.stderr.toString("utf8"));
+
+  expect(stderr).not.toContain("Server-only module referenced by client");
+  expect(result.status).toBe(0);
+});
+
+test("Vite / Vitest keeps server-only guard for client-reachable imports", async () => {
+  let cwd = await createProject({
+    "tsconfig.json": tsconfig({
+      "#app/*": ["app/*"],
+    }),
+    "vite.config.ts": dedent`
+      import { reactRouter } from "@react-router/dev/vite";
+      import { defineConfig } from "vite";
+      import tsconfigPaths from "vite-tsconfig-paths";
+
+      export default defineConfig({
+        plugins: [reactRouter(), tsconfigPaths()],
+        test: {
+          environment: "jsdom",
+          setupFiles: ["./tests/setup/setup-test-env.ts"],
+        },
+      });
+    `,
+    "app/utils/env.server.ts": serverOnlyModule,
+    "shared/helper.ts": `
+      import { serverOnly } from "../app/utils/env.server.ts";
+
+      export const helper = serverOnly;
+    `,
+    "tests/setup/setup-test-env.ts": `
+      import { serverOnly } from "#app/utils/env.server.ts";
+
+      (globalThis as any).__serverOnlyFromSetup = serverOnly;
+    `,
+    "app/routes/_index.tsx": `
+      import { helper } from "../../shared/helper";
+
+      export default function Index() {
+        return <div>{helper}</div>;
+      }
+    `,
+    "tests/example.test.ts": `
+      import { expect, test } from "vitest";
+      import Index from "#app/routes/_index";
+
+      test("imports route", () => {
+        expect(Index).toBeDefined();
+      });
+    `,
+  });
+
+  let result = vitest({ cwd });
+  let stderr = stripAnsi(result.stderr.toString("utf8"));
+
+  expect(stderr).toContain("Server-only module referenced by client");
+  expect(stderr).toContain("'../app/utils/env.server.ts' imported by");
+  expect(result.status).not.toBe(0);
 });
 
 test.describe("Vite / server-only escape hatch", async () => {

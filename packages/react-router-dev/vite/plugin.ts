@@ -692,6 +692,12 @@ export let setReactRouterDevLoadContext = (
 };
 
 type ReactRouterVitePlugin = () => Vite.Plugin[];
+type VitestResolvedConfig = Vite.ResolvedConfig & {
+  test?: {
+    setupFiles?: string | string[];
+  };
+};
+
 /**
  * React Router [Vite plugin.](https://vitejs.dev/guide/using-plugins.html)
  */
@@ -2322,6 +2328,24 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let importerShort = vite.normalizePath(
           path.relative(ctx.rootDirectory, importer),
         );
+        if (viteCommand === "serve" && viteConfigEnv.mode === "test") {
+          invariant(viteConfig);
+          let setupFiles = (viteConfig as VitestResolvedConfig).test
+            ?.setupFiles;
+          let setupFilePaths = (
+            Array.isArray(setupFiles)
+              ? setupFiles
+              : setupFiles
+                ? [setupFiles]
+                : []
+          ).map((setupFile) =>
+            vite.normalizePath(path.resolve(ctx.rootDirectory, setupFile)),
+          );
+          if (setupFilePaths.includes(vite.normalizePath(importer))) {
+            return;
+          }
+        }
+
         if (isRoute(ctx.reactRouterConfig, importer)) {
           let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
             (xport) => `\`${xport}\``,
