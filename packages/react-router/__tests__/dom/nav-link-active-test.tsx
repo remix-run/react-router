@@ -953,6 +953,39 @@ describe("NavLink using a data router", () => {
     expect(screen.getByText("Link to Baz").className).toBe("active");
   });
 
+  it("does not throw on a splat route matching an encoded backslash (#15140)", () => {
+    // `/%5C` is decoded to `/\` inside `matchRoutes`, and a relative `NavLink`
+    // resolves its `to` against that match before handing the result to
+    // `navigator.encodeLocation` (which uses `new URL()` internally and throws
+    // `ERR_INVALID_URL` on a bare backslash).  The re-encoding in
+    // `useRoutesImpl` keeps the backslash escaped as `%5C` so the resolved
+    // pathname stays a valid URL.
+    let router = createBrowserRouter(
+      createRoutesFromElements(
+        <Route
+          path="*"
+          element={
+            <>
+              <NavLink to=".">Self</NavLink>
+              <Outlet />
+            </>
+          }
+        />,
+      ),
+      {
+        window: getWindow("/%5C"),
+      },
+    );
+
+    expect(() => render(<RouterProvider router={router} />)).not.toThrow();
+
+    let anchor = screen.getByText("Self") as HTMLAnchorElement;
+    // The relative link resolves back to the current (encoded) location, so it
+    // is "active" and its href round-trips the encoded backslash.
+    expect(anchor.className).toBe("active");
+    expect(anchor.getAttribute("href")).toBe("/%5C");
+  });
+
   it("applies the default 'active'/'pending' classNames when a basename is used", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
