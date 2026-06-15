@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## v7.18.0
+
+### Patch Changes
+
+- _No changes_
+
 ## v7.17.0
 
 ### Patch Changes

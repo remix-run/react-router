@@ -1,5 +1,18 @@
 # `react-router`
 
+## v7.18.0
+
+### Patch Changes
+
+- Fix server handler prerender responses when using `ssr: false` and `future.v8_trailingSlashAwareDataRequests: true`. Avoids false positive "SPA Mode" detection when serving prerendered paths ([#15173](https://github.com/remix-run/react-router/pull/15173))
+- Use the `ServerRouter` nonce for nonce-aware SSR components when they don't provide their own value so strict CSP pages can load them. ([#15170](https://github.com/remix-run/react-router/pull/15170))
+- Use `turbo-stream` to serialize and deserialize Framework Mode hydration errors ([#15175](https://github.com/remix-run/react-router/pull/15175))
+- Precompute route branch matchers to avoid recompiling route path regexes during matching ([#15186](https://github.com/remix-run/react-router/pull/15186))
+- Use the constructed request URL host when validating action request origins. ([#15185](https://github.com/remix-run/react-router/pull/15185))
+- Remove the un-documented custom error serialization logic from Data Mode SSR built-in hydration flows ([#15175](https://github.com/remix-run/react-router/pull/15175))
+- Validate protocols in RSC render redirects ([#15177](https://github.com/remix-run/react-router/pull/15177))
+- Consolidate url normalization logic and better handle mixed slashes ([#15176](https://github.com/remix-run/react-router/pull/15176))
+
 ## v7.17.0
 
 ### Minor Changes
