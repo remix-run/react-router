@@ -18,7 +18,7 @@ If you initialized your app with `npx create-react-router@latest` with something
 
 <docs-info>If you're using the built-in React Router App Server, you don't interact with this API</docs-info>
 
-Each adapter has the same API. In the future, we may have helpers specific to the platform you're deploying to.
+Each adapter has the same API. Some adapters also have options specific to the platform you're deploying to.
 
 ## `@react-router/express`
 
@@ -119,6 +119,24 @@ Update the `dev` and `start` scripts to use your new Express server:
   // ...
 }
 ```
+
+## `@react-router/architect`
+
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_architect.html)
+
+Here's an example with Architect:
+
+```ts
+import { createRequestHandler } from "@react-router/architect";
+import * as build from "./build/server";
+
+export const handler = createRequestHandler({
+  build,
+  useRequestContextDomainName: true,
+});
+```
+
+The `useRequestContextDomainName` option tells the adapter to use `event.requestContext.domainName` when creating the `request`, instead of the prior behavior of `X-Forwarded-Host` - falling back on the `Host` header in both cases.  This argument will be removed in v8 and the domain name will be used by default.
 
 ## `@react-router/cloudflare`
 
