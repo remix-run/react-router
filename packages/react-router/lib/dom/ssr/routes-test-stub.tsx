@@ -130,7 +130,6 @@ export function createRoutesStub(
           v8_middleware: future?.v8_middleware === true,
           v8_trailingSlashAwareDataRequests:
             future?.v8_trailingSlashAwareDataRequests === true,
-          v8_architectHostFromRequestContext: false,
         },
         manifest: {
           routes: {},

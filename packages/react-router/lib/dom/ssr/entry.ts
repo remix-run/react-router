@@ -53,7 +53,6 @@ export interface FutureConfig {
   v8_passThroughRequests: boolean;
   v8_trailingSlashAwareDataRequests: boolean;
   v8_middleware: boolean;
-  v8_architectHostFromRequestContext: boolean;
 }
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };

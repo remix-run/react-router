@@ -248,7 +248,6 @@ test.describe("Vite / presets", async () => {
         unstable_optimizeDeps: true,
         v8_trailingSlashAwareDataRequests: false,
         unstable_previewServerPrerendering: false,
-        v8_architectHostFromRequestContext: false,
         v8_middleware: true,
         v8_passThroughRequests: false,
         v8_splitRouteModules: false,

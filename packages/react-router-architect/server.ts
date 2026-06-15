@@ -48,10 +48,7 @@ export function createRequestHandler({
   let handleRequest = createReactRouterRequestHandler(build, mode);
 
   return async (event) => {
-    let request = createReactRouterRequest(
-      event,
-      build?.future?.v8_architectHostFromRequestContext === true,
-    );
+    let request = createReactRouterRequest(event);
     let loadContext = await getLoadContext?.(event);
 
     let response = await handleRequest(request, loadContext);
@@ -62,16 +59,8 @@ export function createRequestHandler({
 
 export function createReactRouterRequest(
   event: APIGatewayProxyEventV2,
-  useRequestContextDomainName: boolean = false,
 ): Request {
-  let rawHost = useRequestContextDomainName
-    ? event.requestContext.domainName || event.headers.host || ""
-    : event.headers["x-forwarded-host"] || event.headers.host || "";
-  let [hostname, portStr] = rawHost.split(":");
-  hostname = hostname.split(/[\\/?#@]/)[0] || "localhost";
-  let hostPort = Number.parseInt(portStr ?? "", 10);
-  let port = Number.isSafeInteger(hostPort) ? hostPort : undefined;
-  let host = `${hostname}${port ? `:${port}` : ""}`;
+  let host = event.headers["x-forwarded-host"] || event.headers.host;
   let search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
   let scheme = process.env.ARC_SANDBOX ? "http" : "https";
   let url = new URL(`${scheme}://${host}${event.rawPath}${search}`);
