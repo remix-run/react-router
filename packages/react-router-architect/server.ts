@@ -33,18 +33,15 @@ export function createRequestHandler({
   build,
   getLoadContext,
   mode = process.env.NODE_ENV,
-  // TODO(v8): Remove this flag and make this the default behavior
-  useRequestContextDomainName = false,
 }: {
   build: ServerBuild;
   getLoadContext?: GetLoadContextFunction;
   mode?: string;
-  useRequestContextDomainName?: boolean;
 }): RequestHandler {
   let handleRequest = createReactRouterRequestHandler(build, mode);
 
   return async (event) => {
-    let request = createReactRouterRequest(event, useRequestContextDomainName);
+    let request = createReactRouterRequest(event);
     let loadContext = await getLoadContext?.(event);
 
     let response = await handleRequest(request, loadContext);
@@ -55,11 +52,8 @@ export function createRequestHandler({
 
 export function createReactRouterRequest(
   event: APIGatewayProxyEventV2,
-  useRequestContextDomainName: boolean = false,
 ): Request {
-  let rawHost = useRequestContextDomainName
-    ? event.requestContext.domainName || event.headers.host || ""
-    : event.headers["x-forwarded-host"] || event.headers.host || "";
+  let rawHost = event.requestContext.domainName || event.headers.host || "";
   let [hostname, portStr] = rawHost.split(":");
   hostname = hostname.split(/[\\/?#@]/)[0] || "localhost";
   let hostPort = Number.parseInt(portStr ?? "", 10);
