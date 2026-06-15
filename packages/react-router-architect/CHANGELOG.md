@@ -1,5 +1,17 @@
 # `@react-router/architect`
 
+## v7.18.0
+
+### Minor Changes
+
+- Add a `useRequestContextDomainName` option to `createRequestHandler` to derive request URL hosts from the API Gateway request context. ([#15185](https://github.com/remix-run/react-router/pull/15185))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+  - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes
