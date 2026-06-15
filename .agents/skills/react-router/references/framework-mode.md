@@ -82,16 +82,19 @@ react-router/docs/start/framework/route-module.md
 
 Common exports include:
 
-- `default` route component
-- `loader` / `clientLoader`
-- `action` / `clientAction`
-- `ErrorBoundary`
-- `HydrateFallback`
-- `headers`
-- `meta`
-- `links`
-- `handle`
-- `shouldRevalidate`
+| Export                            | Use                                                                 |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `default`                         | Route component rendered for the match                              |
+| `loader`                          | Server data loading for SSR/pre-rendering/server data requests      |
+| `clientLoader`                    | Browser-only data loading or supplementing server loader data       |
+| `action`                          | Server mutation called by `<Form>`, `useSubmit`, or fetchers        |
+| `clientAction`                    | Browser-only mutation or client-side wrapper around a server action |
+| `ErrorBoundary`                   | UI for errors thrown by this route's loaders/actions/component      |
+| `HydrateFallback`                 | Initial fallback while client loader hydration runs                 |
+| `links` / `meta`                  | Route document links and metadata                                   |
+| `handle`                          | Arbitrary route metadata consumed via `useMatches`                  |
+| `shouldRevalidate`                | Overrides default loader revalidation behavior                      |
+| `middleware` / `clientMiddleware` | Server/client request pipeline hooks when enabled                   |
 
 Use generated `Route.*` types from `./+types/<route>` for route module args and props.
 
@@ -125,6 +128,13 @@ Framework rules:
 - Prefer route loaders/actions over ad hoc `useEffect` fetching for route data.
 - Use `data()`/Responses and redirects according to the docs.
 - Let React Router revalidate after actions unless the docs point you to `shouldRevalidate`.
+- In SSR/server data routes, keep Node-only/database code in server-only modules and call it from `loader`/`action`, not from browser-rendered component code.
+
+Common patterns:
+
+- Validation failure from an action: return `data({ errors, values }, { status: 400 })`, then render errors from `Route.ComponentProps["actionData"]` or `fetcher.data`.
+- Missing record in a loader: throw `data("Not Found", { status: 404 })` and render the route `ErrorBoundary`.
+- Search/filter data: parse the route request URL/search params in the loader so the URL is shareable and bookmarkable.
 
 ## Forms, Fetchers, and Pending UI
 
@@ -140,8 +150,8 @@ react-router/docs/explanation/form-vs-fetcher.md
 Rules of thumb:
 
 - Search/filter form that updates the URL: `<Form method="get">`.
-- Mutation that should navigate or refresh route state: `<Form method="post">`.
-- Inline mutation without navigation: `useFetcher` / `<fetcher.Form>`.
+- Mutation that should change URL/history or redirect after completion: `<Form method="post">`.
+- Mutation that should keep the user on the same page: `useFetcher` / `<fetcher.Form>`.
 - Optimistic UI: derive from `fetcher.formData` or `navigation.formData`.
 
 ## Type Safety

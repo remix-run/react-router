@@ -101,6 +101,12 @@ Rules:
 - Use `request`, `params`, and returned/throwable Responses as described in the docs.
 - Let React Router revalidate after actions unless there is a documented reason to customize revalidation.
 
+Common patterns:
+
+- Validation failure from an action: return `data({ errors, values }, { status: 400 })`, then render errors with `useActionData()` or `fetcher.data`.
+- Missing record in a loader: throw `data("Not Found", { status: 404 })` and render the route `ErrorBoundary`.
+- Search/filter data: parse `new URL(request.url).searchParams` in the loader so the URL is shareable and bookmarkable.
+
 ## Forms, Fetchers, and Pending UI
 
 For forms and pending UI, read:
@@ -115,8 +121,8 @@ react-router/docs/explanation/form-vs-fetcher.md
 Rules of thumb:
 
 - Search/filter form that updates the URL: `<Form method="get">`.
-- Mutation that should navigate or refresh route state: `<Form method="post">`.
-- Inline mutation without navigation: `useFetcher` / `<fetcher.Form>`.
+- Mutation that should change URL/history or redirect after completion: `<Form method="post">`.
+- Mutation that should keep the user on the same page: `useFetcher` / `<fetcher.Form>`.
 - Optimistic UI: derive from `fetcher.formData` or `navigation.formData`.
 
 ## Navigation and URL State

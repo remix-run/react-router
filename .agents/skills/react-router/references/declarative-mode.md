@@ -120,4 +120,4 @@ Declarative Mode does not have Data/Framework APIs such as:
 - route module exports
 - generated `./+types` route types
 
-If the user asks for route data loading, actions, pending UI, fetchers, or form mutations, recommend either Data Mode or Framework Mode depending on how much structure they want. Do not partially copy Data/Framework patterns into a Declarative app.
+If the user asks for route data loading, DB/API-backed data, CRUD, form mutations, validation returned from submissions, revalidation, pending UI, optimistic UI, or fetchers, recommend Data Mode or Framework Mode depending on how much structure they want. Ask before migrating unless they already requested it.

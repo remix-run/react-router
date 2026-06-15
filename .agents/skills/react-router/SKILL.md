@@ -109,3 +109,14 @@ Load the relevant reference after identifying the mode:
 | `references/data-mode.md`        | Data Mode or RSC Data base behavior           |
 | `references/declarative-mode.md` | Declarative Mode                              |
 | `references/rsc.md`              | Any unstable RSC app                          |
+
+## Mode Migration Doc Index
+
+If the user explicitly asks to switch modes, read the target mode reference plus the migration-relevant docs:
+
+| Migration                            | Docs to read                                                                                                                                                                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Declarative → Data                   | `react-router/docs/start/modes.md`, `react-router/docs/start/data/routing.md`, `react-router/docs/start/data/data-loading.md`, `react-router/docs/start/data/actions.md`                                                              |
+| Declarative/Data → Framework         | `react-router/docs/start/modes.md`, `react-router/docs/start/framework/routing.md`, `react-router/docs/start/framework/route-module.md`, `react-router/docs/how-to/route-module-type-safety.md`                                       |
+| Framework SPA/SSR/pre-render changes | `react-router/docs/start/framework/rendering.md`, `react-router/docs/how-to/spa.md`, `react-router/docs/how-to/pre-rendering.md`, `react-router/docs/start/framework/data-loading.md`, `react-router/docs/start/framework/actions.md` |
+| Future flags/upgrades                | `react-router/docs/upgrading/future.md` and relevant files under `react-router/docs/upgrading/`                                                                                                                                       |
