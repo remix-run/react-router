@@ -44,7 +44,7 @@ import {
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
-import { URL_LIMIT } from "../dom/ssr/fog-of-war";
+import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
 
 const defaultManifestPath = "/__manifest";
 
@@ -1044,6 +1044,8 @@ async function fetchAndApplyManifestPatches(
   fetchImplementation: (request: Request) => Promise<Response>,
   signal?: AbortSignal,
 ) {
+  paths = getPathsWithAncestors(paths);
+
   let url = getManifestUrl(paths);
   if (url == null) {
     return;

@@ -367,6 +367,13 @@ async function handleManifestRequest(
   branches: RouteBranch<DataRouteObject>[],
   url: URL,
 ) {
+  if (url.toString().length > URL_LIMIT) {
+    return new Response(null, {
+      statusText: "Bad Request",
+      status: 400,
+    });
+  }
+
   if (build.assets.version !== url.searchParams.get("version")) {
     return new Response(null, {
       status: 204,
@@ -376,40 +383,15 @@ async function handleManifestRequest(
     });
   }
 
-  if (url.toString().length > URL_LIMIT) {
-    return new Response(null, {
-      statusText: "Bad Request",
-      status: 400,
-    });
-  }
-
   let patches: Record<string, EntryRoute> = {};
 
   if (url.searchParams.has("paths")) {
-    let paths = new Set<string>();
-
-    // In addition to responding with the patches for the requested paths, we
-    // need to include patches for each partial path so that we pick up any
-    // pathless/index routes below ancestor segments.  So if we
-    // get a request for `/parent/child`, we need to look for a match on `/parent`
-    // so that if a `parent._index` route exists we return it so it's available
-    // for client side matching if the user routes back up to `/parent`.
-    // This is the same thing we do on initial load in <Scripts> via
-    // `getPartialManifest()`
     let pathParam = url.searchParams.get("paths") || "";
-    let requestedPaths = pathParam.split(",").filter(Boolean);
-    requestedPaths.forEach((path) => {
+    let paths = new Set(pathParam.split(",").filter(Boolean));
+    for (let path of paths) {
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let segments = path.split("/").slice(1);
-      segments.forEach((_, i) => {
-        let partialPath = segments.slice(0, i + 1).join("/");
-        paths.add(`/${partialPath}`);
-      });
-    });
-
-    for (let path of paths) {
       let matches = matchServerRoutes(
         build.routes,
         dataRoutes,

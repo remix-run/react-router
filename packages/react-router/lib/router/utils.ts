@@ -1105,6 +1105,8 @@ interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   caseSensitive: boolean;
   childrenIndex: number;
   route: RouteObjectType;
+  matcher?: RegExp;
+  compiledParams?: CompiledPathParam[];
 }
 
 /**
@@ -1205,9 +1207,21 @@ function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
     branches.push({
       path,
       score: computeScore(path, route.index),
-      routesMeta,
+      routesMeta: routesMeta.map((meta, i) => {
+        let [matcher, params] = compilePath(
+          meta.relativePath,
+          meta.caseSensitive,
+          i === routesMeta.length - 1,
+        );
+        return {
+          ...meta,
+          matcher,
+          compiledParams: params,
+        } satisfies RouteMeta<RouteObjectType>;
+      }),
     });
   };
+
   routes.forEach((route, index) => {
     // coarse-grain check for optional params
     if (route.path === "" || !route.path?.includes("?")) {
@@ -1360,10 +1374,21 @@ function matchRouteBranch<
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
-    let match = matchPath(
-      { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
-      remainingPathname,
-    );
+    let pattern = {
+      path: meta.relativePath,
+      caseSensitive: meta.caseSensitive,
+      end,
+    };
+    let match =
+      // Use precomputed matcher if it exists
+      meta.matcher && meta.compiledParams
+        ? matchPathImpl(
+            pattern,
+            remainingPathname,
+            meta.matcher,
+            meta.compiledParams,
+          )
+        : matchPath(pattern, remainingPathname);
 
     let route = meta.route;
 
@@ -1546,6 +1571,15 @@ export function matchPath<Path extends string>(
     pattern.end,
   );
 
+  return matchPathImpl(pattern, pathname, matcher, compiledParams);
+}
+
+function matchPathImpl<Path extends string>(
+  pattern: PathPattern<Path>,
+  pathname: string,
+  matcher: RegExp,
+  compiledParams: CompiledPathParam[],
+): PathMatch<ParamParseKey<Path>> | null {
   let match = pathname.match(matcher);
   if (!match) return null;
 

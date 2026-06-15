@@ -6,6 +6,7 @@ import { createContext, type StaticHandlerContext } from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
+import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 import { mockServerBuild } from "./utils";
 
 function spyConsole() {
@@ -2133,7 +2134,7 @@ describe("shared server runtime", () => {
       let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(
-        `${baseUrl}/__manifest?paths=%2Fa%2Fb&version=${build.assets.version}`,
+        `${baseUrl}/__manifest?paths=%2Fa,%2Fa%2Fb&version=${build.assets.version}`,
       );
 
       let result = await handler(request);
@@ -2163,6 +2164,24 @@ describe("shared server runtime", () => {
           path: "b",
         },
       });
+    });
+
+    test("rejects manifest requests over the URL limit", async () => {
+      let build = mockServerBuild({
+        root: {
+          default: {},
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let request = new Request(
+        `${baseUrl}/__manifest?paths=${encodeURIComponent(
+          `/${"a".repeat(URL_LIMIT)}`,
+        )}&version=${build.assets.version}`,
+      );
+
+      let result = await handler(request);
+      expect(result.status).toBe(400);
     });
 
     test("disabled when route discovery is disabled", async () => {
