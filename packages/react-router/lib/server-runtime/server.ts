@@ -487,7 +487,7 @@ async function handleDocumentRequest(
     if (isMutationMethod(request.method)) {
       try {
         throwIfPotentialCSRFAttack(
-          request.headers,
+          request,
           Array.isArray(build.allowedActionOrigins)
             ? build.allowedActionOrigins
             : [],

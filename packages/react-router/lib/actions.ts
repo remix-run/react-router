@@ -1,8 +1,8 @@
 export function throwIfPotentialCSRFAttack(
-  headers: Headers,
+  request: Request,
   allowedActionOrigins: string[] | undefined,
 ) {
-  let originHeader = headers.get("origin");
+  let originHeader = request.headers.get("origin");
   let originDomain: string | null = null;
 
   try {
@@ -15,24 +15,15 @@ export function throwIfPotentialCSRFAttack(
       `\`origin\` header is not a valid URL. Aborting the action.`,
     );
   }
-  let host = parseHostHeader(headers);
+  let host = new URL(request.url).host;
 
-  if (originDomain && (!host || originDomain !== host.value)) {
+  if (originDomain && originDomain !== host) {
     if (!isAllowedOrigin(originDomain, allowedActionOrigins)) {
-      if (host) {
-        // This seems to be an CSRF attack. We should not proceed with the action.
-        throw new Error(
-          `${host.type} header does not match \`origin\` header from a forwarded ` +
-            `action request. Aborting the action.`,
-        );
-      } else {
-        // This is an attack. We should not proceed with the action.
-        throw new Error(
-          "`x-forwarded-host` or `host` headers are not provided. One of these " +
-            "is needed to compare the `origin` header from a forwarded action " +
-            "request. Aborting the action.",
-        );
-      }
+      // This seems to be an CSRF attack. We should not proceed with the action.
+      throw new Error(
+        "The `request.url` host does not match `origin` header from a forwarded " +
+          "action request. Aborting the action.",
+      );
     }
   }
 }
@@ -100,22 +91,4 @@ function isAllowedOrigin(
       (allowedOrigin === originDomain ||
         matchWildcardDomain(originDomain, allowedOrigin)),
   );
-}
-
-function parseHostHeader(headers: Headers) {
-  let forwardedHostHeader = headers.get("x-forwarded-host");
-  let forwardedHostValue = forwardedHostHeader?.split(",")[0]?.trim();
-  let hostHeader = headers.get("host");
-
-  return forwardedHostValue
-    ? {
-        type: "x-forwarded-host",
-        value: forwardedHostValue,
-      }
-    : hostHeader
-      ? {
-          type: "host",
-          value: hostHeader,
-        }
-      : undefined;
 }

@@ -852,7 +852,7 @@ async function generateRenderResponse(
         let potentialCSRFAttackError: unknown | undefined;
         if (isMutationMethod(request.method)) {
           try {
-            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+            throwIfPotentialCSRFAttack(request, allowedActionOrigins);
 
             ctx.runningAction = true;
             let result = await processServerAction(

@@ -28,9 +28,19 @@ let mockedCreateRequestHandler =
     typeof createReactRequestHandler
   >;
 
-function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
+type MockEvent = Omit<Partial<APIGatewayProxyEventV2>, "requestContext"> & {
+  requestContext?: Partial<APIGatewayProxyEventV2["requestContext"]>;
+};
+
+function createMockEvent(event: MockEvent = {}) {
   let now = new Date();
   return {
+    isBase64Encoded: false,
+    rawPath: "/",
+    rawQueryString: "",
+    routeKey: "foo",
+    version: "2.0",
+    ...event,
     headers: {
       host: "localhost:3333",
       accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -41,9 +51,6 @@ function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
       "accept-encoding": "gzip, deflate",
       ...event.headers,
     },
-    isBase64Encoded: false,
-    rawPath: "/",
-    rawQueryString: "",
     requestContext: {
       http: {
         method: "GET",
@@ -65,9 +72,6 @@ function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
       timeEpoch: now.getTime(),
       ...event.requestContext,
     },
-    routeKey: "foo",
-    version: "2.0",
-    ...event,
   };
 }
 
@@ -110,6 +114,37 @@ describe("architect createRequestHandler", () => {
         .expectResolve((res: any) => {
           expect(res.statusCode).toBe(200);
           expect(res.body).toBe("URL: //");
+        });
+    });
+
+    it("can use the request context domain name", async () => {
+      mockedCreateRequestHandler.mockImplementation(() => async (req) => {
+        return new Response(`Host: ${new URL(req.url).host}`);
+      });
+
+      await lambdaTester(
+        createRequestHandler({
+          // We don't have a real app to test, but it doesn't matter. We won't ever
+          // call through to the real createRequestHandler
+          // @ts-expect-error
+          build: undefined,
+          useRequestContextDomainName: true,
+        }),
+      )
+        .event(
+          createMockEvent({
+            headers: {
+              host: "localhost:3333",
+              "x-forwarded-host": "ignore.com",
+            },
+            requestContext: {
+              domainName: "example.com",
+            },
+          }),
+        )
+        .expectResolve((res: APIGatewayProxyStructuredResultV2) => {
+          expect(res.statusCode).toBe(200);
+          expect(res.body).toBe("Host: example.com");
         });
     });
 
@@ -247,6 +282,82 @@ describe("architect createReactRouterRequest", () => {
 
     expect(request.method).toBe("GET");
     expect(request.headers.get("cookie")).toBe("__session=value");
+  });
+
+  it("uses x-forwarded-host by default", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+          "x-forwarded-host": "example.com",
+        },
+      }),
+    );
+
+    expect(request.url).toBe("https://example.com/");
+  });
+
+  it("uses request context domain name when enabled", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+          "x-forwarded-host": "ignore.com",
+        },
+        requestContext: {
+          domainName: "example.com",
+        },
+      }),
+      true,
+    );
+
+    expect(request.url).toBe("https://example.com/");
+  });
+
+  it("ignores invalid characters in x-forwarded-host", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+          "x-forwarded-host": "example.com:4444/invalid@chars",
+        },
+        rawPath: "/foo",
+      }),
+    );
+
+    expect(request.url).toBe("https://example.com:4444/foo");
+  });
+
+  it("ignores invalid characters in request context domain name", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+          "x-forwarded-host": "example.com",
+        },
+        requestContext: {
+          domainName: "context.example.com:4444/invalid@chars",
+        },
+        rawPath: "/foo",
+      }),
+      true,
+    );
+
+    expect(request.url).toBe("https://context.example.com:4444/foo");
+  });
+
+  it("falls back for invalid host values", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "#invalid",
+          "x-forwarded-host": "@invalid",
+        },
+        rawPath: "/foo",
+      }),
+    );
+
+    expect(request.url).toBe("https://localhost/foo");
   });
 });
 
