@@ -39,6 +39,7 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
+import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -531,6 +532,14 @@ async function generateManifestResponse(
   temporaryReferences: unknown,
   routeDiscovery: RouteDiscovery | undefined,
 ) {
+  let url = new URL(request.url);
+  if (url.toString().length > URL_LIMIT) {
+    return new Response(null, {
+      statusText: "Bad Request",
+      status: 400,
+    });
+  }
+
   if (routeDiscovery?.mode === "initial") {
     let payload: RSCManifestPayload = {
       type: "manifest",
@@ -549,7 +558,6 @@ async function generateManifestResponse(
     );
   }
 
-  let url = new URL(request.url);
   let pathParam = url.searchParams.get("paths");
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
@@ -848,7 +856,7 @@ async function generateRenderResponse(
         let potentialCSRFAttackError: unknown | undefined;
         if (isMutationMethod(request.method)) {
           try {
-            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+            throwIfPotentialCSRFAttack(request, allowedActionOrigins);
 
             ctx.runningAction = true;
             let result = await processServerAction(
@@ -1189,7 +1197,7 @@ async function getRenderPayload(
           ),
         )
       : getAdditionalRoutePatches(
-          [staticContext.location.pathname],
+          getPathsWithAncestors([staticContext.location.pathname]),
           routes,
           basename,
           staticContext.matches.map((m) => m.route.id),
@@ -1422,33 +1430,18 @@ async function getAdditionalRoutePatches(
   let matchedPaths = new Set<string>();
 
   for (const pathname of pathnames) {
-    let segments = pathname.split("/").filter(Boolean);
-    let paths: string[] = ["/"];
-
-    // We've already matched to the last segment
-    segments.pop();
-
-    // Traverse each path for our parents and match in case they have pathless/index
-    // children we need to include in the initial manifest
-    while (segments.length > 0) {
-      paths.push(`/${segments.join("/")}`);
-      segments.pop();
+    if (matchedPaths.has(pathname)) {
+      continue;
     }
-
-    paths.forEach((path) => {
-      if (matchedPaths.has(path)) {
+    matchedPaths.add(pathname);
+    let matches = matchRoutes(routes, pathname, basename) || [];
+    matches.forEach((m, i) => {
+      if (patchRouteMatches.get(m.route.id)) {
         return;
       }
-      matchedPaths.add(path);
-      let matches = matchRoutes(routes, path, basename) || [];
-      matches.forEach((m, i) => {
-        if (patchRouteMatches.get(m.route.id)) {
-          return;
-        }
-        patchRouteMatches.set(m.route.id, {
-          ...m.route,
-          parentId: matches[i - 1]?.route.id,
-        });
+      patchRouteMatches.set(m.route.id, {
+        ...m.route,
+        parentId: matches[i - 1]?.route.id,
       });
     });
   }

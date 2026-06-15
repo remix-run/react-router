@@ -71,6 +71,10 @@ import {
   removeDoubleSlashes,
   flattenAndRankRoutes,
 } from "./utils";
+import {
+  normalizeProtocolRelativeUrl,
+  PROTOCOL_RELATIVE_URL_REGEX,
+} from "./url";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -6864,6 +6868,14 @@ export const invalidProtocols = [
   "javascript:",
 ];
 
+export function hasInvalidProtocol(location: string): boolean {
+  try {
+    return invalidProtocols.includes(new URL(location).protocol);
+  } catch {
+    return false;
+  }
+}
+
 function normalizeRedirectLocation(
   location: string,
   currentUrl: URL,
@@ -6873,10 +6885,12 @@ function normalizeRedirectLocation(
   if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
     let normalizedLocation = location;
-    let url = normalizedLocation.startsWith("//")
-      ? new URL(currentUrl.protocol + normalizedLocation)
+    let url = PROTOCOL_RELATIVE_URL_REGEX.test(normalizedLocation)
+      ? new URL(
+          normalizeProtocolRelativeUrl(normalizedLocation, currentUrl.protocol),
+        )
       : new URL(normalizedLocation);
-    if (invalidProtocols.includes(url.protocol)) {
+    if (hasInvalidProtocol(url.toString())) {
       throw new Error("Invalid redirect location");
     }
     let isSameBasename = stripBasename(url.pathname, basename) != null;
@@ -6887,7 +6901,7 @@ function normalizeRedirectLocation(
 
   try {
     let url = historyInstance.createURL(location);
-    if (invalidProtocols.includes(url.protocol)) {
+    if (hasInvalidProtocol(url.toString())) {
       throw new Error("Invalid redirect location");
     }
   } catch (

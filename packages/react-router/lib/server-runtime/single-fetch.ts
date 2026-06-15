@@ -44,7 +44,7 @@ export async function singleFetchAction(
   try {
     try {
       throwIfPotentialCSRFAttack(
-        request.headers,
+        request,
         Array.isArray(build.allowedActionOrigins)
           ? build.allowedActionOrigins
           : [],

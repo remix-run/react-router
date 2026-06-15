@@ -12,19 +12,19 @@ When you are ready to begin the release process:
 - Merge all release-bound changes to `main` with their change files
 - The `release.yml` workflow will see the `main` branch with change files in it:
   - This triggers the "PR" step and runs `scripts/changes/pr.ts`
-  - This will create or update a `release-pr` branch from `main`
+  - This will create or update a versioned release branch from `main` such as `release-v7-pr`
   - Runs `scripts/changes/version.ts`
     - Updates versions
     - Generate changelogs
     - Deletes change files
-  - Opens a PR from `release-pr` to `main`
+  - Opens a PR from `release-v<major>-pr` to `main`
 - Once that PR is merged, the `release.yml` workflow will run again against `main` and see no change files:
   - This triggers the `needs-publish` step, which checks npm to see if the current `react-router` version is already published
   - If publishing is needed, this triggers the "publish" step and runs `scripts/changes/publish.ts`
   - Publishes all packages to npm
   - Tags the commits and pushes tags to the origin
   - Creates a github release
-- The `release-pr` branch can be deleted after the PR is merged
+- The `release-v<major>-pr` branch can be deleted after the PR is merged
 
 ### Iterating a release PR
 
@@ -48,11 +48,11 @@ Hotfix releases operate like the above but off of a hotfix branch that is create
 - Merge into `hotfix`
 - The `release.yml` workflow will see the `hotfix` branch with change files in it:
   - This triggers the "PR" step (`scripts/changes/pr.ts`)
-  - This will create a new branch from `hotfix`
+  - This will create or update a versioned hotfix branch from `hotfix` such as `hotfix-v7-pr`
   - Update the versions in the new branch
   - Generate the proper `CHANGELOG.md` entries
   - Delete the change files
-  - Open a PR to the `hotfix` branch
+  - Open a PR from `hotfix-v<major>-pr` to the `hotfix` branch
 - Once that PR is merged, the `release.yml` workflow will run again against `hotfix` and see no change files:
   - This triggers the "publish" step (`scripts/changes/publish.ts`)
   - Publishes all packages to npm

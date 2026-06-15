@@ -179,11 +179,8 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Index Error");
       expect(html).not.toMatch("LOADER");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs.length).toBe(1);
       expect(errorLogs[0][0].message).toMatch("Loader Error");
@@ -195,11 +192,8 @@ test.describe("Error Sanitization", () => {
       let html = await response.text();
       expect(html).toMatch("Index Error");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs.length).toBe(1);
       expect(errorLogs[0][0].message).toMatch("Render Error");
@@ -579,11 +573,8 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Index Error");
       expect(html).not.toMatch("LOADER");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual("  Request: GET test://test/?loader");
@@ -597,11 +588,8 @@ test.describe("Error Sanitization", () => {
       let html = await response.text();
       expect(html).toMatch("Index Error");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual("  Request: GET test://test/?render");

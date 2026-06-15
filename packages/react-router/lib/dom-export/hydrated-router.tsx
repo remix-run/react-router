@@ -18,7 +18,6 @@ import {
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
   UNSAFE_defaultMapRouteProperties as defaultMapRouteProperties,
-  UNSAFE_deserializeErrors as deserializeErrors,
   UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
@@ -158,12 +157,6 @@ function createHydratedRouter({
       basename: window.__reactRouterContext?.basename,
       isSpaMode: ssrInfo.context.isSpaMode,
     });
-
-    if (hydrationData && hydrationData.errors) {
-      // TODO: De-dup this or remove entirely in v7 where single fetch is the
-      // only approach and we have already serialized or deserialized on the server
-      hydrationData.errors = deserializeErrors(hydrationData.errors);
-    }
   }
 
   // We cannot support history-state-driven masking with SSR, so if a hard

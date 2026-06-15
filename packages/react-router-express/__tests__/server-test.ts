@@ -305,4 +305,77 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.headers.get("host")).toBe("localhost:3000");
     expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
   });
+
+  it("does not use x-forwarded-host port unless trust proxy is enabled", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("uses x-forwarded-host port when trust proxy is enabled", async () => {
+    let app = express();
+    app.set("trust proxy", true);
+    let expressRequest = createRequest({
+      app,
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "example.com",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
+  });
+
+  it("ignores invalid characters in host values", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost/invalid",
+      headers: {
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("falls back for invalid host values", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "/invalid",
+      headers: {
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
 });

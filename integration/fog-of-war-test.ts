@@ -715,7 +715,9 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#parent")).toMatch(`Parent`);
     expect(await app.getHtml("#child2")).toMatch(`Child 2`);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?paths=%2Fparent%2Fchild2&version=/),
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Fparent%2C%2Fparent%2Fchild2&version=/,
+      ),
     ]);
   });
 
@@ -1065,7 +1067,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#splat");
     expect(await app.getHtml("#splat")).toMatch("Splat: b/c");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?paths=%2Fb%2Fc&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fb%2C%2Fb%2Fc&version=/),
     ]);
   });
 
@@ -1137,7 +1139,9 @@ test.describe("Fog of War", () => {
     await app.clickLink("/not/a/path");
     await page.waitForSelector("#error");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?paths=%2Fnot%2Fa%2Fpath&version=/),
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Fnot%2C%2Fnot%2Fa%2C%2Fnot%2Fa%2Fpath&version=/,
+      ),
     ]);
     manifestRequests = [];
 
@@ -1449,7 +1453,9 @@ test.describe("Fog of War", () => {
     // Wait for eager discovery to kick off
     await new Promise((r) => setTimeout(r, 500));
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/custom-manifest\?paths=%2Fa%2Fb&version=/),
+      expect.stringMatching(
+        /\/custom-manifest\?paths=%2Fa%2C%2Fa%2Fb&version=/,
+      ),
     ]);
 
     expect(wrongManifestRequests).toEqual([]);

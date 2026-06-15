@@ -395,9 +395,6 @@ export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/compo
 export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entry";
 
 /** @internal */
-export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
-
-/** @internal */
 export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";
 
 /** @internal */

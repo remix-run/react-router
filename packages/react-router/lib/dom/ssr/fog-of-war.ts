@@ -25,6 +25,31 @@ const discoveredPaths = new Set<string>();
 // https://stackoverflow.com/a/417184
 export const URL_LIMIT = 7680;
 
+export function getPathsWithAncestors(paths: string[]): string[] {
+  let result = new Set<string>();
+
+  paths.forEach((path) => {
+    if (!path.startsWith("/")) {
+      path = `/${path}`;
+    }
+    // In addition to the requested path, we need to include patches for each
+    // ancestor path so that we pick up any pathless/index routes below ancestor
+    // segments. So if we get a request for `/parent/child`, we need to look for
+    // a match on `/parent` so that if a `parent._index` route exists we return
+    // it and it's available for client side matching if the user routes back up
+    // to `/parent`. This is the same thing we do on initial load in <Scripts>
+    // via `getPartialManifest()`.
+    for (let i = 1; i < path.length; i++) {
+      if (path[i] === "/") {
+        result.add(path.slice(0, i));
+      }
+    }
+    result.add(path);
+  });
+
+  return Array.from(result);
+}
+
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
   ssr: boolean,
@@ -228,6 +253,8 @@ export async function fetchAndApplyManifestPatches(
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
 ): Promise<void> {
+  paths = getPathsWithAncestors(paths);
+
   // NOTE: Intentionally using a standalone `URLSearchParams` instance
   // instead of mutating `url.searchParams`, which is *significantly* slower:
   // https://issues.chromium.org/issues/331406951
