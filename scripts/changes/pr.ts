@@ -7,6 +7,9 @@
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
  */
+import * as semver from "semver";
+
+import { readJson } from "../utils/fs.ts";
 import {
   addPrLabels,
   closePr,
@@ -14,6 +17,7 @@ import {
   findOpenPr,
   updatePr,
 } from "../utils/github.ts";
+import { getPackageFile } from "../utils/packages.ts";
 import { logAndExec } from "../utils/process.ts";
 import type { PackageRelease } from "./changes.ts";
 import {
@@ -30,7 +34,6 @@ if (!preview && !["main", "hotfix"].includes(baseBranch)) {
   throw new Error("Error: script must be run from the main or hotfix branch");
 }
 
-let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
 let prLabels = ["pkg:react-router"];
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
@@ -52,6 +55,11 @@ async function main() {
   }
 
   let { releases } = result;
+
+  let pkgJson = readJson(getPackageFile("react-router", "package.json"));
+  let majorVersion = semver.major(releases[0]?.nextVersion ?? pkgJson.version);
+  let prBranchPrefix = baseBranch === "hotfix" ? "hotfix" : "release";
+  let prBranch = `${prBranchPrefix}-v${majorVersion}-pr`;
 
   if (releases.length === 0) {
     console.log("No pending changes to release.");
