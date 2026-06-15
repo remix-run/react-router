@@ -331,7 +331,6 @@ describe("architect createReactRouterRequest", () => {
         },
         rawPath: "/foo",
       }),
-      true,
     );
 
     expect(request.url).toBe("https://context.example.com:4444/foo");
