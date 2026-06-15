@@ -402,11 +402,12 @@ async function handleManifestRequest(
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let segments = path.split("/").slice(1);
-      segments.forEach((_, i) => {
-        let partialPath = segments.slice(0, i + 1).join("/");
-        paths.add(`/${partialPath}`);
-      });
+      for (let i = 1; i < path.length; i++) {
+        if (path[i] === "/") {
+          paths.add(path.slice(0, i));
+        }
+      }
+      paths.add(path);
     });
 
     for (let path of paths) {
