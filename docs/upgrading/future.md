@@ -266,6 +266,33 @@ export default {
 
 If you have custom app, CDN, cache, or rewrite logic that matches `.data` request URLs, update it to handle the new trailing-slash-aware `/_.data` format.
 
+## `future.v8_architectHostFromRequestContext`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+When using `@react-router/architect`, React Router constructs a standard [`Request`][Request] object from the AWS API Gateway event before calling your app. This flag changes how the Architect adapter determines the host for that request URL. With the flag enabled, the adapter uses `event.requestContext.domainName` (falling back to the `Host` header) instead of a forwarded host header (falling back to the `Host` header).
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    v8_architectHostFromRequestContext: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+Most apps do not need code changes. If your Architect deployment relies on forwarded host values for custom domains, verify that generated `request` URLs still match your expected public host after enabling the flag.
+
 ## Unstable Future Flags (Optional)
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
@@ -275,6 +302,7 @@ _No current unstable flags to document_
 [api-development-strategy]: ../community/api-development-strategy
 [unstable]: ../community/api-development-strategy#unstable-flags
 [observability]: ../how-to/instrumentation
+[Request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [vite-environment]: https://vite.dev/guide/api-environment
 [node-custom-server-template]: https://github.com/remix-run/react-router-templates/blob/7c617a435510bc3add3a5395c07bc65328b65e9e/node-custom-server/vite.config.ts

@@ -44,6 +44,7 @@ export function mockServerBuild(
     ssr: true,
     future: {
       v8_middleware: false,
+      v8_architectHostFromRequestContext: false,
       ...opts.future,
     },
     prerender: [],

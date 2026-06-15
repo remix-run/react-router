@@ -14,13 +14,16 @@ describe("logFutureFlagWarnings", () => {
   it("warns about all stable v8_ flags when none are set", () => {
     logFutureFlagWarnings({});
 
-    expect(logSpy).toHaveBeenCalledTimes(5);
+    expect(logSpy).toHaveBeenCalledTimes(6);
     expect(logSpy.mock.calls[0][0]).toContain("v8_middleware");
     expect(logSpy.mock.calls[1][0]).toContain("v8_splitRouteModules");
     expect(logSpy.mock.calls[2][0]).toContain("v8_viteEnvironmentApi");
     expect(logSpy.mock.calls[3][0]).toContain("v8_passThroughRequests");
     expect(logSpy.mock.calls[4][0]).toContain(
       "v8_trailingSlashAwareDataRequests",
+    );
+    expect(logSpy.mock.calls[5][0]).toContain(
+      "v8_architectHostFromRequestContext",
     );
   });
 
@@ -31,6 +34,7 @@ describe("logFutureFlagWarnings", () => {
       v8_viteEnvironmentApi: true,
       v8_passThroughRequests: true,
       v8_trailingSlashAwareDataRequests: true,
+      v8_architectHostFromRequestContext: true,
     });
 
     expect(logSpy).not.toHaveBeenCalled();
@@ -43,6 +47,7 @@ describe("logFutureFlagWarnings", () => {
       v8_viteEnvironmentApi: false,
       v8_passThroughRequests: false,
       v8_trailingSlashAwareDataRequests: false,
+      v8_architectHostFromRequestContext: false,
     });
 
     expect(logSpy).not.toHaveBeenCalled();
@@ -54,13 +59,17 @@ describe("logFutureFlagWarnings", () => {
       v8_passThroughRequests: false,
     });
 
-    // Only v8_splitRouteModules, v8_viteEnvironmentApi, and
-    // v8_trailingSlashAwareDataRequests are missing
-    expect(logSpy).toHaveBeenCalledTimes(3);
+    // Only v8_splitRouteModules, v8_viteEnvironmentApi,
+    // v8_trailingSlashAwareDataRequests, and
+    // v8_architectHostFromRequestContext are missing
+    expect(logSpy).toHaveBeenCalledTimes(4);
     expect(logSpy.mock.calls[0][0]).toContain("v8_splitRouteModules");
     expect(logSpy.mock.calls[1][0]).toContain("v8_viteEnvironmentApi");
     expect(logSpy.mock.calls[2][0]).toContain(
       "v8_trailingSlashAwareDataRequests",
+    );
+    expect(logSpy.mock.calls[3][0]).toContain(
+      "v8_architectHostFromRequestContext",
     );
   });
 });

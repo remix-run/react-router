@@ -104,6 +104,10 @@ interface FutureConfig {
    * Use Vite Environment API
    */
   v8_viteEnvironmentApi: boolean;
+  /**
+   * Use the API Gateway request context domain name for Architect request URLs.
+   */
+  v8_architectHostFromRequestContext: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -732,6 +736,8 @@ async function resolveConfig({
       (userAndPresetConfigs.future?.v8_viteEnvironmentApi ||
         userAndPresetConfigs.future?.unstable_previewServerPrerendering) ??
       false,
+    v8_architectHostFromRequestContext:
+      userAndPresetConfigs.future?.v8_architectHostFromRequestContext ?? false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
@@ -805,6 +811,12 @@ export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
     logFutureFlagWarning(
       "v8_trailingSlashAwareDataRequests",
       "Data request URL formats are changing in React Router v8.",
+    );
+  }
+  if (future.v8_architectHostFromRequestContext === undefined) {
+    logFutureFlagWarning(
+      "v8_architectHostFromRequestContext",
+      "Architect request URL host derivation is changing in React Router v8.",
     );
   }
 }
