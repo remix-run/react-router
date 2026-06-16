@@ -30,8 +30,11 @@ let args = process.argv.slice(2);
 let preview = args.includes("--preview");
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
-if (!preview && !["main", "hotfix"].includes(baseBranch)) {
-  throw new Error("Error: script must be run from the main or hotfix branch");
+let releaseBranches = ["main", "hotfix", "v7"];
+if (!preview && !releaseBranches.includes(baseBranch)) {
+  throw new Error(
+    `Error: script must be run from one of these release branches: ${releaseBranches.join(", ")}`,
+  );
 }
 
 let prLabels = ["pkg:react-router"];
