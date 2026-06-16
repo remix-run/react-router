@@ -1,7 +1,11 @@
 {
   "name": "@react-router/dev",
+<<<<<<< HEAD
   "type": "module",
   "version": "8.0.0-pre.0",
+=======
+  "version": "7.18.0",
+>>>>>>> main
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {

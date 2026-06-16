@@ -11,7 +11,8 @@ concurrency:
 
 jobs:
   format:
-    if: github.repository == 'remix-run/react-router'
+    # Don't run on release commits since it would just interrupt the publish workflow
+    if: github.repository == 'remix-run/react-router' && !startsWith(github.event.head_commit.message, 'Release v')
     runs-on: ubuntu-latest
 
     steps:
