@@ -36,9 +36,11 @@ npm install react-router@8 @react-router/{dev,node,etc.}@8
 
 ## Future Flags
 
+_No future flags yet_
+
 ## Other Planned Breaking Changes
 
-No known planned breaking changes yet.
+_No known planned breaking changes yet_
 
 ## Unstable Future Flags (Optional)
 
