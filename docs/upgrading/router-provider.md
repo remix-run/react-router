@@ -26,8 +26,8 @@ The initial setup requires the most work. However, once complete, you can adopt 
 
 To use the Vite plugin, your project requires:
 
-- Node.js 20+ (if using Node as your runtime)
-- Vite 5+
+- Node.js 22.22.0+
+- Vite 7+ or Vite 8+
 
 ## 1. Move route definitions into route modules
 
@@ -276,7 +276,7 @@ If your current `src/main.tsx` looks like this:
 ```tsx filename=src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import App from "./App";
 
 const router = createBrowserRouter([
