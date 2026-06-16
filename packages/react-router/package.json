@@ -93,15 +93,15 @@
     "premove": "^4.0.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-test-renderer": "^19.2.6",
+    "react-test-renderer": "^19.2.7",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "undici": "^6.19.2",
     "wireit": "catalog:"
   },
   "peerDependencies": {
-    "react": ">=19.2.6",
-    "react-dom": ">=19.2.6"
+    "react": ">=19.2.7",
+    "react-dom": ">=19.2.7"
   },
   "peerDependenciesMeta": {
     "react-dom": {
