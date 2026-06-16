@@ -27,16 +27,6 @@ catalogs:
     wireit:
       specifier: 0.14.9
       version: 0.14.9
-  react-canary:
-    react:
-      specifier: ^19.2.2
-      version: 19.2.3
-    react-dom:
-      specifier: ^19.2.2
-      version: 19.2.3
-    react-server-dom-webpack:
-      specifier: ^19.2.2
-      version: 19.2.3
 
 overrides:
   '@types/react': ^18.0.27
@@ -135,7 +125,7 @@ importers:
         version: 7.37.5(eslint@10.1.0(jiti@2.4.2))
       eslint-plugin-react-hooks:
         specifier: next
-        version: 7.1.1-canary-d1727fbf-20260417(eslint@10.1.0(jiti@2.4.2))
+        version: 7.1.1-canary-f4e0d4ed-20260429(eslint@10.1.0(jiti@2.4.2))
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -1032,6 +1022,9 @@ importers:
       es-module-lexer:
         specifier: ^1.3.1
         version: 1.7.0
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.0
       exit-hook:
         specifier: 2.2.1
         version: 2.2.1
@@ -1064,7 +1057,7 @@ importers:
         version: 0.14.2
       react-server-dom-webpack:
         specifier: 'catalog:'
-        version: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4))
+        version: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0))
       semver:
         specifier: ^7.3.7
         version: 7.7.4
@@ -1116,10 +1109,10 @@ importers:
         version: 7.7.0
       '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 0.5.21(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.19.37)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
+        version: 0.5.21(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.19.37)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
       esbuild-register:
         specifier: ^3.6.0
-        version: 3.6.0(esbuild@0.27.4)
+        version: 3.6.0(esbuild@0.25.0)
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -1146,7 +1139,7 @@ importers:
         version: 0.14.9
       wrangler:
         specifier: ^4.23.0
-        version: 4.73.0(@cloudflare/workers-types@4.20250805.0)
+        version: 4.73.0
 
   packages/react-router-dom:
     dependencies:
@@ -5886,8 +5879,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@7.1.1-canary-d1727fbf-20260417:
-    resolution: {integrity: sha512-lGcF2qMJEgVLjyqMqoYUWjMqIqyd09FfXpbw9yVyvsVz6rcPdoPZheTReIiNtC/CaF5YKpGlVhyRw2VnpFwuRQ==}
+  eslint-plugin-react-hooks@7.1.1-canary-f4e0d4ed-20260429:
+    resolution: {integrity: sha512-owCmCBsGpoYmugCly//Z9DDTRyf6+mDupOCd5tyHF03jqf4cAbpHM+T+W/FwqjBSStbbPJM3oFHTushw6Q0uhw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
@@ -8936,7 +8929,7 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uvu@0.5.6:
@@ -12339,7 +12332,7 @@ snapshots:
     optionalDependencies:
       react-server-dom-webpack: 19.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.103.0)
 
-  '@vitejs/plugin-rsc@0.5.21(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.19.37)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
+  '@vitejs/plugin-rsc@0.5.21(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)))(react@19.3.0-canary-d763f313-20251210)(vite@6.4.1(@types/node@20.19.37)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.5
       es-module-lexer: 2.0.0
@@ -12354,7 +12347,7 @@ snapshots:
       vite: 6.4.1(@types/node@20.19.37)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0)
       vitefu: 1.1.2(vite@6.4.1(@types/node@20.19.37)(jiti@2.4.2)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.19.3)(yaml@2.8.0))
     optionalDependencies:
-      react-server-dom-webpack: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4))
+      react-server-dom-webpack: 19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0))
 
   '@vitest/expect@4.1.0':
     dependencies:
@@ -13520,13 +13513,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  esbuild-register@3.6.0(esbuild@0.27.4):
-    dependencies:
-      debug: 4.4.3
-      esbuild: 0.27.4
-    transitivePeerDependencies:
-      - supports-color
-
   esbuild@0.19.12:
     optionalDependencies:
       '@esbuild/aix-ppc64': 0.19.12
@@ -13843,7 +13829,7 @@ snapshots:
     dependencies:
       eslint: 10.1.0(jiti@2.4.2)
 
-  eslint-plugin-react-hooks@7.1.1-canary-d1727fbf-20260417(eslint@10.1.0(jiti@2.4.2)):
+  eslint-plugin-react-hooks@7.1.1-canary-f4e0d4ed-20260429(eslint@10.1.0(jiti@2.4.2)):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
@@ -15168,7 +15154,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 20.19.37
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -16702,13 +16688,13 @@ snapshots:
       webpack: 5.103.0
       webpack-sources: 3.3.3
 
-  react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4)):
+  react-server-dom-webpack@19.2.3(react-dom@19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210))(react@19.3.0-canary-d763f313-20251210)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)):
     dependencies:
       acorn-loose: 8.5.2
       neo-async: 2.6.2
       react: 19.3.0-canary-d763f313-20251210
       react-dom: 19.3.0-canary-d763f313-20251210(react@19.3.0-canary-d763f313-20251210)
-      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.27.4)
+      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)
       webpack-sources: 3.3.3
 
   react-test-renderer@19.1.0(react@19.2.3):
@@ -17448,17 +17434,17 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  terser-webpack-plugin@5.3.15(@swc/core@1.11.24)(esbuild@0.27.4)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4)):
+  terser-webpack-plugin@5.3.15(@swc/core@1.11.24)(esbuild@0.25.0)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
       terser: 5.44.1
-      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.27.4)
+      webpack: 5.103.0(@swc/core@1.11.24)(esbuild@0.25.0)
     optionalDependencies:
       '@swc/core': 1.11.24
-      esbuild: 0.27.4
+      esbuild: 0.25.0
 
   terser-webpack-plugin@5.3.15(esbuild@0.27.4)(webpack@5.103.0(esbuild@0.27.4)):
     dependencies:
@@ -18268,7 +18254,7 @@ snapshots:
       - esbuild
       - uglify-js
 
-  webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4):
+  webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.8
@@ -18292,7 +18278,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.3.15(@swc/core@1.11.24)(esbuild@0.27.4)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.27.4))
+      terser-webpack-plugin: 5.3.15(@swc/core@1.11.24)(esbuild@0.25.0)(webpack@5.103.0(@swc/core@1.11.24)(esbuild@0.25.0))
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     transitivePeerDependencies:
@@ -18420,6 +18406,22 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20250705.0
       '@cloudflare/workerd-linux-arm64': 1.20250705.0
       '@cloudflare/workerd-windows-64': 1.20250705.0
+
+  wrangler@4.73.0:
+    dependencies:
+      '@cloudflare/kv-asset-handler': 0.4.2
+      '@cloudflare/unenv-preset': 2.15.0(unenv@2.0.0-rc.24)(workerd@1.20250705.0)
+      blake3-wasm: 2.1.5
+      esbuild: 0.27.3
+      miniflare: 4.20260312.0
+      path-to-regexp: 6.3.0
+      unenv: 2.0.0-rc.24
+      workerd: 1.20250705.0
+    optionalDependencies:
+      fsevents: 2.3.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   wrangler@4.73.0(@cloudflare/workers-types@4.20250805.0):
     dependencies:
