@@ -1,9 +1,9 @@
 ---
-title: Upgrading from Remix
+title: Upgrading from Remix v2
 order: 3
 ---
 
-# Upgrading from Remix
+# Upgrading from Remix v2
 
 <docs-info>
 

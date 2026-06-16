@@ -1,17 +1,34 @@
 ---
-title: Future Flags
+title: Preparing for v8
 order: 1
 ---
 
-# Future Flags and Deprecations
+# Preparing for v8
 
-This guide walks you through the process of adopting future flags in your React Router app. By following this strategy, you will be able to upgrade to the next major version of React Router with minimal changes. To read more about future flags see [API Development Strategy][api-development-strategy].
+We try our best to keep major version upgrades simple and boring through the use of of [Future Flags][api-development-strategy].  We use a future flag to gate breaking changes that don't otherwise have a good call-site opt-in flag. By adopting all future flags and opt-in flags, you should be able to upgrade to the next major version of React Router with minimal changes.
 
 We highly recommend you make a commit after each step and ship it instead of doing everything all at once. Most flags can be adopted in any order, with exceptions noted below.
 
+## Minimum Versions
+
+[MODES: framework, data, declarative]
+
+<br/>
+<br/>
+
+React Router v8 will require the following minimum versions. You can prepare for the upgrade by updating them while still on v7:
+
+- `node@22.22+`
+- `react@19.2.7+`/`react-dom@19.2.7+`
+
+Framework mode will also require:
+
+- `vite@7+` (requires `future.v8_viteEnvironmentApi`)
+  - also make sure any custom Vite plugins or config are compatible with Vite 7.
+
 ## Update to latest v7.x
 
-First update to the latest minor version of v7.x to have the latest future flags. You may see a number of deprecation warnings as you upgrade, which we'll cover below.
+Before adopting any future flags or call-site opt-in changes, you should update to the latest minor version of v7.x to make sure you have access to the latest flags. You may see a number of deprecation warnings as you upgrade, which we'll cover below.
 
 👉 Update to latest v7
 
@@ -19,7 +36,9 @@ First update to the latest minor version of v7.x to have the latest future flags
 npm install react-router@7 @react-router/{dev,node,etc.}@7
 ```
 
-## `future.v8_middleware`
+## Future Flags
+
+### `future.v8_middleware`
 
 [MODES: framework, data]
 
@@ -47,7 +66,7 @@ export default {
 In Data mode:
 
 ```ts
-import { createBrowserRouter } from "react-router/dom";
+import { createBrowserRouter } from "react-router";
 
 const router = createBrowserRouter(routes, {
   future: {
@@ -63,7 +82,7 @@ If you're using the `context` parameter in `loader` and `action` functions, you 
 - In Framework mode, if you're using `react-router-serve`, you should not need to make any updates. Otherwise, this only applies if you have a custom server with a `getLoadContext` function. Please see the docs on the middleware [`getLoadContext` changes](../how-to/middleware#changes-to-getloadcontextapploadcontext) and the instructions to [migrate to the new API](../how-to/middleware#migration-from-apploadcontext).
 - In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#1-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
 
-## `future.v8_splitRouteModules`
+### `future.v8_splitRouteModules`
 
 [MODES: framework]
 
@@ -92,7 +111,7 @@ export default {
 
 No code changes are required. This is an optimization feature that works automatically once enabled.
 
-## `future.v8_viteEnvironmentApi`
+### `future.v8_viteEnvironmentApi`
 
 [MODES: framework]
 
@@ -150,7 +169,7 @@ import { defineConfig } from "vite";
 
 See the [`node-custom-server` template][node-custom-server-template] for a complete example.
 
-## `future.v8_passThroughRequests`
+### `future.v8_passThroughRequests`
 
 [MODES: framework]
 
@@ -213,7 +232,7 @@ export async function loader({
 }
 ```
 
-## `future.v8_trailingSlashAwareDataRequests`
+### `future.v8_trailingSlashAwareDataRequests`
 
 [MODES: framework]
 
@@ -266,11 +285,201 @@ export default {
 
 If you have custom app, CDN, cache, or rewrite logic that matches `.data` request URLs, update it to handle the new trailing-slash-aware `/_.data` format.
 
+## Other Planned Breaking Changes
+
+The changes in this section are not controlled by future flags, but you can update your code in v7 to be ready for v8.
+
+### `meta` `data` Argument
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+The `data` fields passed to route module `meta` functions are deprecated and will be removed in React Router v8. Use `loaderData` instead on `MetaArgs` and each item in `MetaArgs.matches`.
+
+👉 **Update your Code**
+
+Replace `data` with `loaderData` in your `meta` functions:
+
+```diff
+export function meta({
+-  data,
++  loaderData,
+  matches,
+}: Route.MetaArgs) {
+  return [
+    {
+-      title: data.title,
++      title: loaderData.title,
+    },
+  ];
+}
+```
+
+If you read data from parent matches, update those references too:
+
+```diff
+export function meta({ matches }: Route.MetaArgs) {
+  let rootMatch = matches.find((match) => match.id === "root");
+-  let rootData = rootMatch?.data;
++  let rootData = rootMatch?.loaderData;
+
+  return [{ title: rootData?.siteTitle }];
+}
+```
+
+### `react-router-dom`
+
+[MODES: framework, data, declarative]
+
+<br/>
+<br/>
+
+**Background**
+
+React Router v8 will remove the `react-router-dom` re-export package. In v8, you should import DOM-specific APIs from `react-router/dom` and everything else from `react-router`.
+
+👉 **Update your Code**
+
+Uninstall `react-router-dom`:
+
+```sh
+npm uninstall react-router-dom
+```
+
+Replace `react-router-dom` imports with `react-router` imports:
+
+```diff
+-import { Link, useLocation } from "react-router-dom";
++import { Link, useLocation } from "react-router";
+```
+
+For DOM-specific APIs, import from `react-router/dom`:
+
+```diff
+-import { RouterProvider } from "react-router-dom";
++import { RouterProvider } from "react-router/dom";
+```
+
+### Cloudflare Vite Plugin
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+React Router v8 will remove the React Router Cloudflare dev proxy. Cloudflare projects should use [`@cloudflare/vite-plugin`][cloudflare-vite-plugin] instead.
+
+👉 **Update your Code**
+
+Replace `cloudflareDevProxy` with `cloudflare`:
+
+```diff filename=vite.config.ts
+import { reactRouter } from "@react-router/dev/vite";
+-import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
++import { cloudflare } from "@cloudflare/vite-plugin";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+-    cloudflareDevProxy(),
++    cloudflare(),
+    reactRouter(),
+  ],
+});
+```
+
+### `@react-router/architect` `useRequestContextDomainName`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+The `@react-router/architect` adapter currently uses `X-Forwarded-Host` when creating the `request`, falling back to the `Host` header. In React Router v8, the adapter will use `event.requestContext.domainName` by default, falling back to the `Host` header.
+
+👉 **Update your Code**
+
+Opt in to the v8 behavior now by passing `useRequestContextDomainName: true`:
+
+```ts
+import { createRequestHandler } from "@react-router/architect";
+import * as build from "./build/server";
+
+export const handler = createRequestHandler({
+  build,
+  useRequestContextDomainName: true,
+});
+```
+
+This option will be removed in v8 once the `event.requestContext.domainName` behavior is the default.
+
 ## Unstable Future Flags (Optional)
 
-We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
+We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
-_No current unstable flags to document_
+### `future.unstable_optimizeDeps`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+This flag lets React Router provide Vite's dependency optimizer with the client entry file and route module files. This can improve dependency optimization in development, but the behavior is still experimental.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_optimizeDeps: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required. If you run into dependency optimization issues after enabling this flag, remove the flag and restart the dev server.
+
+### `future.unstable_previewServerPrerendering`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+This flag switches prerendering to use Vite's preview-server request flow instead of the current build-time prerendering path so that it works in non-Node environments such as `workerd`. Enabling this flag also enables `future.v8_viteEnvironmentApi`, so you should review the `future.v8_viteEnvironmentApi` guidance above before adopting it.
+
+<docs-info>This ends up only changing the underlying prerender implementation but is not expected to cause any breaking changes. Because it is not expected to break, you do not _have_ to adopt this flag prior to v8 and therefore it wasn't ever converted to a `v8_` flag.</docs-info>
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_previewServerPrerendering: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required unless your app has custom Vite configuration that is affected by `future.v8_viteEnvironmentApi`.
 
 [api-development-strategy]: ../community/api-development-strategy
 [unstable]: ../community/api-development-strategy#unstable-flags
@@ -278,3 +487,4 @@ _No current unstable flags to document_
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [vite-environment]: https://vite.dev/guide/api-environment
 [node-custom-server-template]: https://github.com/remix-run/react-router-templates/blob/7c617a435510bc3add3a5395c07bc65328b65e9e/node-custom-server/vite.config.ts
+[cloudflare-vite-plugin]: https://developers.cloudflare.com/workers/vite-plugin/
