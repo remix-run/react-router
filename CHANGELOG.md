@@ -180,38 +180,30 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 ## v7.18.0
 
-Date: 2026-06-15
+Date: 2026-06-16
 
 ### Minor Changes
 
-- `@react-router/architect` - Add a `useRequestContextDomainName` option to `createRequestHandler` to derive request URL hosts from the API Gateway request context. ([#15185](https://github.com/remix-run/react-router/pull/15185))
+- `@react-router/architect` - Add a `useRequestContextDomainName` option to `createRequestHandler` to derive request URL hosts from the API Gateway request context ([#15185](https://github.com/remix-run/react-router/pull/15185))
+  - This flag will become the default behavior in v8, so it is recommended to adopt to prepare for and to v8 better align with your deployment architecture and rely less on manual header parsing in the adapter
+  - See the [docs](https://reactrouter.com/api/other-api/adapter#react-routerarchitect) for more information
 
 ### Patch Changes
 
-- `react-router` - Fix server handler prerender responses when using `ssr: false` and `future.v8_trailingSlashAwareDataRequests: true`. Avoids false positive "SPA Mode" detection when serving prerendered paths ([#15173](https://github.com/remix-run/react-router/pull/15173))
-
-- `react-router` - Use the `ServerRouter` nonce for nonce-aware SSR components when they don't provide their own value so strict CSP pages can load them. ([#15170](https://github.com/remix-run/react-router/pull/15170))
-
+- `react-router` - Fix server handler prerender responses when using `ssr: false` and `future.v8_trailingSlashAwareDataRequests: true` ([#15173](https://github.com/remix-run/react-router/pull/15173))
+  - Avoids false positive "SPA Mode" detection when serving prerendered paths
+- `react-router` - Use the `ServerRouter` `nonce` for nonce-aware SSR components when they don't provide their own value so strict CSP pages can load them ([#15170](https://github.com/remix-run/react-router/pull/15170))
 - `react-router` - Use `turbo-stream` to serialize and deserialize Framework Mode hydration errors ([#15175](https://github.com/remix-run/react-router/pull/15175))
-
-- `react-router` - Precompute route branch matchers to avoid recompiling route path regexes during matching ([#15186](https://github.com/remix-run/react-router/pull/15186))
-
-- `react-router` - Use the constructed request URL host when validating action request origins. ([#15185](https://github.com/remix-run/react-router/pull/15185))
-
+- `react-router` - Optimize route matching by extending precomputed route branches to include matchers ([#15186](https://github.com/remix-run/react-router/pull/15186))
+- `react-router` - Use the constructed `request` URL `host` instead of header checks when validating action request origins in the CSRF check ([#15185](https://github.com/remix-run/react-router/pull/15185))
 - `react-router` - Remove the un-documented custom error serialization logic from Data Mode SSR built-in hydration flows ([#15175](https://github.com/remix-run/react-router/pull/15175))
-
 - `react-router` - Validate protocols in RSC render redirects ([#15177](https://github.com/remix-run/react-router/pull/15177))
-
 - `react-router` - Consolidate url normalization logic and better handle mixed slashes ([#15176](https://github.com/remix-run/react-router/pull/15176))
-
 - `@react-router/dev` - Pass Vite `server.watch` config to child compiler in development mode. ([#15178](https://github.com/remix-run/react-router/pull/15178))
-
 - `@react-router/dev` - Ignore external Vite server environments in Framework Mode build hooks ([#14883](https://github.com/remix-run/react-router/pull/14883))
-
-  When `future.v8_viteEnvironmentApi` is enabled, React Router previously treated any non-client Vite environment as its own server build. This caused issues with integrations like Nitro, where plugins can register additional environments.
-
-  Framework Mode build hooks now ignore external server environments and only process the app's own server build.
-
+  - When `future.v8_viteEnvironmentApi` is enabled, React Router previously treated any non-client Vite environment as its own server build
+  - This caused issues with integrations like Nitro, where plugins can register additional environments
+  - Framework Mode build hooks now ignore external server environments and only process the app's own server build
 - `@react-router/express` - Adjust express adapter host computation ([#15185](https://github.com/remix-run/react-router/pull/15185))
   - read port from `x-forwarded-host` based on `trust proxy` setting
   - handle invalid hostname characters
