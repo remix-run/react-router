@@ -481,7 +481,7 @@ export default {
 
 **Update your Code**
 
-No code changes are required unless your app has custom Vite configuration that is affected by `future.v8_viteEnvironmentApi`.
+No code changes are required unless your app has a custom Vite configuration that is affected by `future.v8_viteEnvironmentApi`.
 
 [api-development-strategy]: ../community/api-development-strategy
 [governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals
