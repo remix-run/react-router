@@ -134,11 +134,8 @@ import * as build from "./build/server";
 
 export const handler = createRequestHandler({
   build,
-  useRequestContextDomainName: true,
 });
 ```
-
-The `useRequestContextDomainName` option tells the adapter to use `event.requestContext.domainName` when creating the `request`, instead of the prior behavior of `X-Forwarded-Host` - falling back on the `Host` header in both cases.  This argument will be removed in v8 and the domain name will be used by default.
 
 ## `@react-router/cloudflare`
 

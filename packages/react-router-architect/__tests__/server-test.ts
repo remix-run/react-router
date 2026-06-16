@@ -123,7 +123,7 @@ describe("architect createRequestHandler", () => {
         });
     });
 
-    it("can use the request context domain name", async () => {
+    it("uses the request context domain name", async () => {
       mockedCreateRequestHandler.mockImplementation(() => async (req) => {
         return new Response(`Host: ${new URL(req.url).host}`);
       });
@@ -134,7 +134,6 @@ describe("architect createRequestHandler", () => {
           // call through to the real createRequestHandler
           // @ts-expect-error
           build: undefined,
-          useRequestContextDomainName: true,
         }),
       )
         .event(
@@ -290,20 +289,7 @@ describe("architect createReactRouterRequest", () => {
     expect(request.headers.get("cookie")).toBe("__session=value");
   });
 
-  it("uses x-forwarded-host by default", () => {
-    let request = createReactRouterRequest(
-      createMockEvent({
-        headers: {
-          host: "localhost:3333",
-          "x-forwarded-host": "example.com",
-        },
-      }),
-    );
-
-    expect(request.url).toBe("https://example.com/");
-  });
-
-  it("uses request context domain name when enabled", () => {
+  it("uses request context domain name", () => {
     let request = createReactRouterRequest(
       createMockEvent({
         headers: {
@@ -314,24 +300,9 @@ describe("architect createReactRouterRequest", () => {
           domainName: "example.com",
         },
       }),
-      true,
     );
 
     expect(request.url).toBe("https://example.com/");
-  });
-
-  it("ignores invalid characters in x-forwarded-host", () => {
-    let request = createReactRouterRequest(
-      createMockEvent({
-        headers: {
-          host: "localhost:3333",
-          "x-forwarded-host": "example.com:4444/invalid@chars",
-        },
-        rawPath: "/foo",
-      }),
-    );
-
-    expect(request.url).toBe("https://example.com:4444/foo");
   });
 
   it("ignores invalid characters in request context domain name", () => {
@@ -339,14 +310,12 @@ describe("architect createReactRouterRequest", () => {
       createMockEvent({
         headers: {
           host: "localhost:3333",
-          "x-forwarded-host": "example.com",
         },
         requestContext: {
           domainName: "context.example.com:4444/invalid@chars",
         },
         rawPath: "/foo",
       }),
-      true,
     );
 
     expect(request.url).toBe("https://context.example.com:4444/foo");
@@ -357,9 +326,11 @@ describe("architect createReactRouterRequest", () => {
       createMockEvent({
         headers: {
           host: "#invalid",
-          "x-forwarded-host": "@invalid",
         },
         rawPath: "/foo",
+        requestContext: {
+          domainName: "@invalid",
+        },
       }),
     );
 
