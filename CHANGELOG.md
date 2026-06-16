@@ -213,7 +213,6 @@ Date: 2026-06-15
   Framework Mode build hooks now ignore external server environments and only process the app's own server build.
 
 - `@react-router/express` - Adjust express adapter host computation ([#15185](https://github.com/remix-run/react-router/pull/15185))
-
   - read port from `x-forwarded-host` based on `trust proxy` setting
   - handle invalid hostname characters
 

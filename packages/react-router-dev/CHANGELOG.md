@@ -11,6 +11,7 @@
   When `future.v8_viteEnvironmentApi` is enabled, React Router previously treated any non-client Vite environment as its own server build. This caused issues with integrations like Nitro, where plugins can register additional environments.
 
   Framework Mode build hooks now ignore external server environments and only process the app's own server build.
+
 - Updated dependencies:
   - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
   - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)

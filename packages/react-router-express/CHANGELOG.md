@@ -5,9 +5,9 @@
 ### Patch Changes
 
 - Adjust express adapter host computation ([#15185](https://github.com/remix-run/react-router/pull/15185))
-
   - read port from `x-forwarded-host` based on `trust proxy` setting
   - handle invalid hostname characters
+
 - Updated dependencies:
   - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
   - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
