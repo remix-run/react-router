@@ -1,11 +1,13 @@
 ---
-title: Preparing for v8
+title: Future Changes
 order: 1
 ---
 
-# Preparing for v8
+# Future Changes
 
-We try our best to keep major version upgrades simple and boring through the use of of [Future Flags][api-development-strategy].  We use a future flag to gate breaking changes that don't otherwise have a good call-site opt-in flag. By adopting all future flags and opt-in flags, you should be able to upgrade to the next major version of React Router with minimal changes.
+We try our best to keep major version upgrades simple and boring through the use of opt-in APIs and [Future Flags][api-development-strategy]. Future flags are used to gate breaking changes that don't otherwise have a good call-site opt-in strategy. By adopting all opt-in APIs and future flags, you should be able to upgrade to the next major version of React Router with minimal changes.
+
+We plan to ship new major versions roughly once a year as described in our [Open Governance Model][governance], so this guide will continue to track future changes you can adopt ahead of the next major release (currently estimated for mid-2027 when Node 22 reaches EOL).
 
 We highly recommend you make a commit after each step and ship it instead of doing everything all at once. Most flags can be adopted in any order, with exceptions noted below.
 
@@ -482,6 +484,7 @@ export default {
 No code changes are required unless your app has custom Vite configuration that is affected by `future.v8_viteEnvironmentApi`.
 
 [api-development-strategy]: ../community/api-development-strategy
+[governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals
 [unstable]: ../community/api-development-strategy#unstable-flags
 [observability]: ../how-to/instrumentation
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
