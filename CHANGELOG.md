@@ -16,7 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v8.0.0-pre.0](#v800-pre0)
+  - [v8.0.0-pre.1](#v800-pre1)
 - [React Router v7 Releases](#react-router-v7-releases)
   - [v7.18.0](#v7180)
   - [v7.17.0](#v7170)
