@@ -119,7 +119,7 @@ React Router v8 updates the following minimum supported versions:
   - This better allows us to bump minimum Maintenance LTS versions to account for newly released security patches
   - It also allows us to more quickly and easily adopt new Active LTS features backported to Maintenance LTS lines
   - Upgraded minimum Maintenance LTS versions will be done in React Router minor releases
-- React 19.2.6+
+- React 19.2.7+
 - Vite 7+
 
 To modernize the library, React Router is now published as an ESM-only module and tsconfig `target`/`lib` fields have been updated to ES2022 across the board
@@ -141,7 +141,7 @@ In v7, we collapsed the DOM APIs into `react-router/dom`, but to ease the v6->v7
 ### Major Changes
 
 - `react-router` - Update minimum Node version to 22.12.0, the first version where `require(esm)` is enabled by default ([#14928](https://github.com/remix-run/react-router/pull/14928))
-- `react-router` - Bump minimum React version to 19.2.6 ([#15062](https://github.com/remix-run/react-router/pull/15062))
+- `react-router` - Bump minimum React version to 19.2.7 ([#15062](https://github.com/remix-run/react-router/pull/15062))
 - `react-router` - Require Vite 7+ and make the Vite Environment API build path mandatory ([#15077](https://github.com/remix-run/react-router/pull/15077))
 - `react-router` - Update `tsconfig.json` `target`/`lib` from `ES2020 -> ES2022` ([591853e](https://github.com/remix-run/react-router/commit/591853e))
 - `react-router` - Switch the published packages in `packages/` to ESM-only. ([#14895](https://github.com/remix-run/react-router/pull/14895)) ([59ebcf1](https://github.com/remix-run/react-router/commit/59ebcf1))
