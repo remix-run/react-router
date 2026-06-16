@@ -182,6 +182,12 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 Date: 2026-06-16
 
+### What's Changed
+
+#### CSRF Check Logic Fix
+
+We made a bug fix in our underlying CSRF checks in this release that may be a "breaking bug fix" for some users deployed behind a reverse proxy. The CSRF check now checks directly against the `host` in the `request` url provided, instead of looking directly at HTTP headers which is an adapter concern. If your adapter is not setting the expected host in the request URL, you may need to add the new internal host to your `allowedActionOrigins` config. This is most likely to occur in `@react-router/serve` apps or `@react-router/express` apps without the `trust proxy` setting enabled. We recommend testing this against application mutation requests as part of your upgrade.
+
 ### Minor Changes
 
 - `@react-router/architect` - Add a `useRequestContextDomainName` option to `createRequestHandler` to derive request URL hosts from the API Gateway request context ([#15185](https://github.com/remix-run/react-router/pull/15185))
