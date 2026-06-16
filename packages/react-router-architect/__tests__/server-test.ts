@@ -305,26 +305,11 @@ describe("architect createReactRouterRequest", () => {
     expect(request.url).toBe("https://example.com/");
   });
 
-  it("ignores invalid characters in x-forwarded-host", () => {
-    let request = createReactRouterRequest(
-      createMockEvent({
-        headers: {
-          host: "localhost:3333",
-          "x-forwarded-host": "example.com:4444/invalid@chars",
-        },
-        rawPath: "/foo",
-      }),
-    );
-
-    expect(request.url).toBe("https://example.com:4444/foo");
-  });
-
   it("ignores invalid characters in request context domain name", () => {
     let request = createReactRouterRequest(
       createMockEvent({
         headers: {
           host: "localhost:3333",
-          "x-forwarded-host": "example.com",
         },
         requestContext: {
           domainName: "context.example.com:4444/invalid@chars",
@@ -341,9 +326,11 @@ describe("architect createReactRouterRequest", () => {
       createMockEvent({
         headers: {
           host: "#invalid",
-          "x-forwarded-host": "@invalid",
         },
         rawPath: "/foo",
+        requestContext: {
+          domainName: "@invalid",
+        },
       }),
     );
 
