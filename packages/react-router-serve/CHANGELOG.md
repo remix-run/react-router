@@ -7,6 +7,10 @@
 - Switch from `@mjackson/node-fetch-server` to `@remix-run/node-fetch-server` now that we can directly use ESM-only packages ([#14930](https://github.com/remix-run/react-router/pull/14930))
 - Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
 
+### Minor Changes
+
+- Bump `express` from `4.21.2` to `5.2.1`
+
 ### Patch Changes
 
 - Bump dependencies ([#15091](https://github.com/remix-run/react-router/pull/15091))
