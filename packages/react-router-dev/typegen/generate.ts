@@ -253,8 +253,33 @@ function getRouteAnnotations({
       Array.from(routeIds).map((routeId) => {
         const lineage = lineages.get(routeId)!;
         return t.tsTupleType(
-          lineage.map((route) =>
-            t.tsTypeLiteral([
+          lineage.map((route) => {
+            const isSelf = route.file === file;
+            if (isSelf) {
+              // Use Info["loaderData"] rather than `module: typeof import("./self")` to
+              // avoid a circular type reference when the default export is an arrow
+              // function.  The `RouteModule` assignability check evaluates `["default"]`,
+              // which for arrow functions requires resolving `Route.ComponentProps` —
+              // creating a cycle.  Pre-computed loaderData breaks the chain (#12499).
+              return t.tsTypeLiteral([
+                t.tsPropertySignature(
+                  t.identifier("id"),
+                  t.tsTypeAnnotation(
+                    t.tsLiteralType(t.stringLiteral(route.id)),
+                  ),
+                ),
+                t.tsPropertySignature(
+                  t.identifier("loaderData"),
+                  t.tsTypeAnnotation(
+                    t.tsIndexedAccessType(
+                      t.tsTypeReference(t.identifier("Info")),
+                      t.tsLiteralType(t.stringLiteral("loaderData")),
+                    ),
+                  ),
+                ),
+              ]);
+            }
+            return t.tsTypeLiteral([
               t.tsPropertySignature(
                 t.identifier("id"),
                 t.tsTypeAnnotation(t.tsLiteralType(t.stringLiteral(route.id))),
@@ -274,8 +299,8 @@ function getRouteAnnotations({
                   ),
                 ),
               ),
-            ]),
-          ),
+            ]);
+          }),
         );
       }),
     ),
