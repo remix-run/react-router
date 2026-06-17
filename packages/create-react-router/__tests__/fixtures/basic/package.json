@@ -9,12 +9,11 @@
   },
   "dependencies": {
     "react-router": "*",
-    "react-router-dom": "*",
     "@react-router/node": "*",
     "not-react-router": "*"
   },
   "devDependencies": {},
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   }
 }

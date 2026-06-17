@@ -37,6 +37,12 @@ let { values } = parseArgs({
 
 let skipCommit = values["no-commit"];
 let preview = values.preview;
+let whatsChangedPath = path.join(
+  getRootDir(),
+  "scripts",
+  "changes",
+  "whats-changed.md",
+);
 
 console.log("Validating change files...\n");
 
@@ -95,6 +101,7 @@ for (let release of releases) {
 // Update root CHANGELOG.md with combined changes
 console.log(colorize(`Root React Router Release:`, colors.gray));
 let { currentVersion, nextVersion, bump } = releases[0];
+let whatsChangedContent = readWhatsChangedContent();
 let rootContent = generateChangelogContent(
   {
     packageName: "react-router",
@@ -113,6 +120,9 @@ let rootContent = generateChangelogContent(
     ),
   },
   {
+    whatsChanged: whatsChangedContent
+      ? formatWhatsChangedSection(whatsChangedContent)
+      : undefined,
     footerLines: [
       `**Full Changelog**: [\`v${currentVersion}...v${nextVersion}\`]` +
         `(https://github.com/remix-run/react-router/compare/react-router@${currentVersion}...react-router@${nextVersion})`,
@@ -122,9 +132,55 @@ let rootContent = generateChangelogContent(
   },
 );
 updateChangelog("/", rootContent);
+deleteWhatsChangedFile();
 updateTableOfContents();
 
 commitChanges();
+
+/**
+ * Reads optional manually-authored release notes for the root changelog.
+ */
+function readWhatsChangedContent(): string | null {
+  if (!fs.existsSync(whatsChangedPath)) {
+    return null;
+  }
+
+  let content = readFile(whatsChangedPath).trim();
+  if (content.length === 0) {
+    return null;
+  }
+
+  console.log(`  ✓ Found scripts/changes/whats-changed.md`);
+  return content;
+}
+
+/**
+ * Formats manually-authored release notes as a "What's Changed" section.
+ */
+function formatWhatsChangedSection(content: string): string {
+  if (/^### What's Changed\s*$/im.test(content)) {
+    return content;
+  }
+
+  return `### What's Changed\n\n${content}`;
+}
+
+/**
+ * Deletes the manually-authored release notes file after consuming it.
+ */
+function deleteWhatsChangedFile() {
+  if (!fs.existsSync(whatsChangedPath)) {
+    return;
+  }
+
+  if (preview) {
+    console.log(`  • Would delete scripts/changes/whats-changed.md`);
+    return;
+  }
+
+  fs.unlinkSync(whatsChangedPath);
+  console.log(`  ✓ Deleted scripts/changes/whats-changed.md`);
+}
 
 /**
  * Updates package.json version

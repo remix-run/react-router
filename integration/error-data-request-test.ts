@@ -108,7 +108,7 @@ test.describe("ErrorBoundary", () => {
 
   test("returns a 200 empty response on a data fetch to a path with no loaders", async () => {
     let { status, headers, data } =
-      await fixture.requestSingleFetchData("/_root.data");
+      await fixture.requestSingleFetchData("/_.data");
     expect(status).toBe(200);
     expect(headers.has("X-Remix-Response")).toBe(true);
     expect(data).toEqual({});
@@ -116,7 +116,7 @@ test.describe("ErrorBoundary", () => {
 
   test("returns a 405 on a data fetch POST to a path with no action", async () => {
     let { status, headers, data } = await fixture.requestSingleFetchData(
-      "/_root.data?index",
+      "/_.data?index",
       {
         method: "POST",
       },
@@ -127,11 +127,11 @@ test.describe("ErrorBoundary", () => {
       error: new ErrorResponseImpl(
         405,
         "Method Not Allowed",
-        'Error: You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
+        'Error: You made a POST request to "/_.data" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
       ),
     });
     assertLoggedErrorInstance(
-      'You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
+      'You made a POST request to "/_.data" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
     );
   });
 

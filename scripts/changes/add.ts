@@ -176,9 +176,8 @@ function getPackages(): Package[] {
     .sort((a, b) => {
       const order = (name: string) => {
         if (name === "react-router") return 0;
-        if (name === "react-router-dom") return 1;
-        if (name.startsWith("@react-router/")) return 2;
-        return 3;
+        if (name.startsWith("@react-router/")) return 1;
+        return 2;
       };
       const oa = order(a.name);
       const ob = order(b.name);

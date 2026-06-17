@@ -45,6 +45,6 @@ export async function loader() {
         "x-root": "override",
         "x-about": "yes",
       },
-    }
+    },
   );
 }

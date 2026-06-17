@@ -143,7 +143,6 @@ export function createCallServer({
     });
 
     React.startTransition(() =>
-      // @ts-expect-error - Needs React 19 types
       Promise.resolve(payloadPromise)
         .then(async (payload) => {
           if (payload.type === "redirect") {
@@ -343,7 +342,6 @@ function createRouterFromPayload({
     dataStrategy: getRSCSingleFetchDataStrategy(
       () => globalVar.__reactRouterDataRouter,
       true,
-      payload.basename,
       createFromReadableStream,
       fetchImplementation,
     ),
@@ -373,7 +371,6 @@ function createRouterFromPayload({
         routeModule: any;
         hasAction: boolean;
         hasComponent: boolean;
-        hasErrorBoundary: boolean;
         hasLoader: boolean;
       }
     >,
@@ -390,13 +387,8 @@ function createRouterFromPayload({
         const routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const {
-            routeModule,
-            hasAction,
-            hasComponent,
-            hasErrorBoundary,
-            hasLoader,
-          } = routeUpdate;
+          const { routeModule, hasAction, hasComponent, hasLoader } =
+            routeUpdate;
           const newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
@@ -405,7 +397,6 @@ function createRouterFromPayload({
             handle: route.handle,
             hasAction,
             hasComponent,
-            hasErrorBoundary,
             hasLoader,
             hydrateFallbackElement:
               route.hydrateFallbackElement as React.ReactElement,
@@ -451,7 +442,6 @@ const renderedRoutesContext = createContext<RSCRouteManifest[]>();
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
-  basename: string | undefined,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
 ): DataStrategyFunction {
@@ -482,9 +472,6 @@ export function getRSCSingleFetchDataStrategy(
     // pass map into fetchAndDecode so it can add payloads
     getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
     ssr,
-    basename,
-    // .rsc requests are always trailing slash aware
-    true,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
@@ -546,12 +533,10 @@ function getFetchAndDecodeViaRSC(
 ): FetchAndDecodeFunction {
   return async (
     args: DataStrategyFunctionArgs<unknown>,
-    basename: string | undefined,
-    trailingSlashAware: boolean,
     targetRoutes?: string[],
   ) => {
     let { request, context } = args;
-    let url = singleFetchUrl(request.url, basename, trailingSlashAware, "rsc");
+    let url = singleFetchUrl(request.url, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
       if (targetRoutes) {
@@ -626,7 +611,6 @@ function getFetchAndDecodeViaRSC(
       // or even X-Remix-Response but then folks can't statically deploy their
       // prerendered .rsc files to a CDN unless they can tell that CDN to add
       // special headers to those certain files - which is a bit restrictive.
-      // @ts-expect-error - TS doesn't know about this yet
       throw new Error("Unable to decode RSC response", { cause });
     }
   };
@@ -839,13 +823,7 @@ export function RSCHydratedRouter({
   }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
 
   const frameworkContext: FrameworkContextObject = {
-    future: {
-      // These flags have no runtime impact so can always be false.  If we add
-      // flags that drive runtime behavior they'll need to be proxied through.
-      v8_middleware: false,
-      v8_trailingSlashAwareDataRequests: true, // always on for RSC
-      v8_passThroughRequests: true, // always on for RSC
-    },
+    future: {},
     isSpaMode: false,
     ssr: true,
     criticalCss: "",
@@ -915,7 +893,6 @@ function createRouteFromServerManifest(
     element: match.element,
     errorElement: match.errorElement,
     handle: match.handle,
-    hasErrorBoundary: match.hasErrorBoundary,
     hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
     loader: match.clientLoader
@@ -1138,8 +1115,6 @@ function diffRoutes(a: DataRouteObject[], b: DataRouteObject[]): boolean {
       (route as any).hydrateFallbackElement !==
       (b[index] as any).hydrateFallbackElement
     )
-      return true;
-    if ((route as any).hasErrorBoundary !== (b[index] as any).hasErrorBoundary)
       return true;
     if ((route as any).hasLoader !== (b[index] as any).hasLoader) return true;
     if ((route as any).hasClientLoader !== (b[index] as any).hasClientLoader)

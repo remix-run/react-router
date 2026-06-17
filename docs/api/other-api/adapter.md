@@ -112,13 +112,15 @@ Update the `dev` and `start` scripts to use your new Express server:
 {
   // ...
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node server.js",
+    "dev": "cross-env NODE_ENV=development node --conditions development server.js",
     "start": "node server.js"
     // ...
   }
   // ...
 }
 ```
+
+Make sure that `--conditions development` is included in the `dev` script so that the proper version of React Router is used in development.
 
 ## `@react-router/architect`
 
@@ -132,11 +134,8 @@ import * as build from "./build/server";
 
 export const handler = createRequestHandler({
   build,
-  useRequestContextDomainName: true,
 });
 ```
-
-The `useRequestContextDomainName` option tells the adapter to use `event.requestContext.domainName` when creating the `request`, instead of the prior behavior of `X-Forwarded-Host` - falling back on the `Host` header in both cases.  This argument will be removed in v8 and the domain name will be used by default.
 
 ## `@react-router/cloudflare`
 
@@ -178,7 +177,15 @@ While not a direct "adapter" like the above, this package contains utilities for
 
 ### Node Version Support
 
-React Router officially supports **Active** and **Maintenance** [Node LTS versions][node-releases] at any given point in time. Dropped support for End of Life Node versions is done in a React Router Minor release.
+React Router officially supports all versions of [**Active** LTS][node-releases] and the latest minor line of [**Maintenance** LTS][node-releases] at any given point in time.
+
+We make this distinction for Maintenance LTS for 2 reasons:
+
+- When security patches are released for old maintenance lines, we want to be able to bump our minimum supported versions
+- This better allows us to adopt new features shipped in Active LTS and backported to Maintenance LTS and keep our implementations aligned
+
+Updating the minimum supported Maintenance LTS **minor** version may be done in a React Router **minor** release.
+Dropping support for an EOL Node **major** version will always be done in a React Router **major** release.
 
 [express]: https://expressjs.com
 [node-releases]: https://nodejs.org/en/about/previous-releases

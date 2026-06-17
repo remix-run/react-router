@@ -390,36 +390,36 @@ test.describe("typegen", () => {
 
         export function meta({ matches }: Route.MetaArgs) {
           const parent1 = matches[1]
-          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+          type Test1 = Expect<Equal<typeof parent1.loaderData, { parent1: number }>>
 
           const parent2 = matches[2]
-          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+          type Test2 = Expect<Equal<typeof parent2.loaderData, { parent2: number }>>
 
           const current = matches[3]
-          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
+          type Test3 = Expect<Equal<typeof current.loaderData, { current: number }>>
 
           const child1 = matches[4]
           type Test4a = Expect<undefined extends typeof child1 ? true : false>
           if (child1) {
-            type Test4b = Expect<Equal<typeof child1.data, unknown>>
+            type Test4b = Expect<Equal<typeof child1.loaderData, unknown>>
           }
           return []
         }
 
         export default function Component({ matches }: Route.ComponentProps) {
           const parent1 = matches[1]
-          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+          type Test1 = Expect<Equal<typeof parent1.loaderData, { parent1: number }>>
 
           const parent2 = matches[2]
-          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+          type Test2 = Expect<Equal<typeof parent2.loaderData, { parent2: number }>>
 
           const current = matches[3]
-          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
+          type Test3 = Expect<Equal<typeof current.loaderData, { current: number }>>
 
           const child1 = matches[4]
           type Test4a = Expect<undefined extends typeof child1 ? true : false>
           if (child1) {
-            type Test4b = Expect<Equal<typeof child1.data, unknown>>
+            type Test4b = Expect<Equal<typeof child1.loaderData, unknown>>
           }
         }
       `,
@@ -434,7 +434,7 @@ test.describe("typegen", () => {
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
         export default [
-          route("absolute/:id", path.resolve(__dirname, "routes/absolute.tsx")),
+          route("absolute/:id", path.resolve(import.meta.dirname, "routes/absolute.tsx")),
         ] satisfies RouteConfig;
       `,
       "app/routes/absolute.tsx": tsx`

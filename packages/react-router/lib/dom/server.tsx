@@ -11,15 +11,9 @@ import type {
   FutureConfig,
   Router as DataRouter,
   RevalidationState,
-  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   StaticHandlerContext,
 } from "../router/router";
-import {
-  IDLE_BLOCKER,
-  IDLE_FETCHER,
-  IDLE_NAVIGATION,
-  createStaticHandler as routerCreateStaticHandler,
-} from "../router/router";
+import { IDLE_BLOCKER, IDLE_FETCHER, IDLE_NAVIGATION } from "../router/router";
 import type {
   DataRouteObject,
   RouteBranch,
@@ -31,7 +25,7 @@ import {
   isRouteErrorResponse,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
-import { DataRoutes, Router, mapRouteProperties } from "../components";
+import { DataRoutes, Router } from "../components";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -243,7 +237,7 @@ function serializeErrors(
   let serialized: StaticHandlerContext["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // deserializeErrors in react-router-dom/index.tsx :)
+    // deserializeErrors in lib/dom/lib.tsx :)
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
     } else if (val instanceof Error) {
@@ -307,51 +301,6 @@ function getStatelessNavigator() {
   };
 }
 
-type CreateStaticHandlerOptions = Omit<
-  RouterCreateStaticHandlerOptions,
-  "mapRouteProperties"
->;
-
-/**
- * Create a static handler to perform server-side data loading
- *
- * @example
- * export async function handleRequest(request: Request) {
- *   let { query, dataRoutes } = createStaticHandler(routes);
- *   let context = await query(request);
- *
- *   if (context instanceof Response) {
- *     return context;
- *   }
- *
- *   let router = createStaticRouter(dataRoutes, context);
- *   return new Response(
- *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
- *     { headers: { "Content-Type": "text/html" } }
- *   );
- * }
- *
- * @public
- * @category Data Routers
- * @mode data
- * @param routes The {@link RouteObject | route objects} to create a static
- * handler for
- * @param opts Options
- * @param opts.basename The base URL for the static handler (default: `/`)
- * @param opts.future Future flags for the static handler
- * @returns A static handler that can be used to query data for the provided
- * routes
- */
-export function createStaticHandler(
-  routes: RouteObject[],
-  opts?: CreateStaticHandlerOptions,
-) {
-  return routerCreateStaticHandler(routes, {
-    ...opts,
-    mapRouteProperties,
-  });
-}
-
 /**
  * Create a static {@link DataRouter} for server-side rendering
  *
@@ -393,7 +342,7 @@ export function createStaticRouter(
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    mapRouteProperties,
+    undefined,
     undefined,
     manifest,
   );
@@ -418,9 +367,6 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        v8_middleware: false,
-        v8_passThroughRequests: false,
-        v8_trailingSlashAwareDataRequests: false,
         ...opts?.future,
       };
     },

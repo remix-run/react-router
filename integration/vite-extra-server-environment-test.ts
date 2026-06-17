@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import glob from "glob";
+import * as fs from "node:fs";
+import path from "node:path";
 
 import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
 
@@ -8,9 +9,7 @@ const js = String.raw;
 test("ignores external server environments without skipping React Router build hooks", async () => {
   let cwd = await createProject(
     {
-      "react-router.config.ts": reactRouterConfig({
-        future: { v8_viteEnvironmentApi: true },
-      }),
+      "react-router.config.ts": reactRouterConfig(),
       "vite.config.ts": js`
         import { defineConfig } from "vite";
         import { reactRouter } from "@react-router/dev/vite";
@@ -104,12 +103,17 @@ test("ignores external server environments without skipping React Router build h
         };
       `,
     },
-    "vite-6-template",
+    "vite-7-template",
   );
 
   let { status, stderr } = build({ cwd });
 
   expect(stderr.toString().trim()).toBeFalsy();
   expect(status).toBe(0);
-  expect(glob.sync("build/client/assets/test-*.txt", { cwd }).length).toBe(1);
+  expect(
+    fs
+      .readdirSync(path.join(cwd, "build/client/assets"))
+      .filter((file) => /^test-.*\.txt$/.test(file))
+      .length,
+  ).toBe(1);
 });

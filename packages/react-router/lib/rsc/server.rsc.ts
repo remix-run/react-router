@@ -49,7 +49,7 @@ import {
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
-  // @ts-ignore There are no types before the tsup build when used internally, so
+  // @ts-ignore There are no types before the package build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
   // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
@@ -136,11 +136,11 @@ export const replace: typeof baseReplace = (...args) => {
 
 const cachedResolvePromise: <T>(
   resolve: T,
-) => Promise<PromiseSettledResult<Awaited<T>>> =
-  // @ts-expect-error - on 18 types, requires 19.
-  React.cache(async <T>(resolve: T) => {
+) => Promise<PromiseSettledResult<Awaited<T>>> = React.cache(
+  async <T>(resolve: T) => {
     return Promise.allSettled([resolve]).then((r) => r[0]);
-  });
+  },
+);
 
 export const Await: typeof AwaitType = (async ({
   children,
@@ -222,7 +222,6 @@ export type RSCRouteManifest = {
   handle?: any;
   hasAction: boolean;
   hasComponent: boolean;
-  hasErrorBoundary: boolean;
   hasLoader: boolean;
   hydrateFallbackElement?: React.ReactElement;
   id: string;
@@ -756,7 +755,7 @@ async function generateResourceResponse(
           return generateErrorResponse(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, basename, null),
+      normalizePath: (r) => getNormalizedPath(r),
     });
     return response;
   } catch (error) {
@@ -830,9 +829,6 @@ async function generateRenderResponse(
   // Create the handler here with exploded routes
   const staticHandler = createStaticHandler(routes, {
     basename,
-    mapRouteProperties: (r) => ({
-      hasErrorBoundary: (r as RouteObject).ErrorBoundary != null,
-    }),
   });
 
   let actionResult: Promise<unknown> | undefined;
@@ -849,7 +845,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
-      normalizePath: (r) => getNormalizedPath(r, basename, null),
+      normalizePath: (r) => getNormalizedPath(r),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
@@ -1313,7 +1309,6 @@ async function getRSCRouteMatch({
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!Component,
-    hasErrorBoundary: !!ErrorBoundary,
     hasLoader: !!route.loader,
     hydrateFallbackElement,
     id: route.id,
@@ -1359,7 +1354,6 @@ async function getManifestRoute(
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!route.Component,
-    hasErrorBoundary: !!route.ErrorBoundary,
     errorElement,
     hasLoader: !!route.loader,
     id: route.id,

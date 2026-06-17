@@ -32,6 +32,7 @@ export async function generateHTML(
         {
           ...options,
           bootstrapScriptContent,
+          // @ts-expect-error - no types for this yet
           formState,
           signal: request.signal,
         },

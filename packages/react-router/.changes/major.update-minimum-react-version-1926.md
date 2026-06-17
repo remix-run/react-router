@@ -1,0 +1,1 @@
+Update minimum React version to 19.2.7

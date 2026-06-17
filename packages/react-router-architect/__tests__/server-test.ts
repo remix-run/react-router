@@ -1,32 +1,38 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { createRequestHandler as createReactRequestHandler } from "react-router";
+import { fileURLToPath } from "node:url";
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
 import lambdaTester from "lambda-tester";
+import "@react-router/node";
 
-import {
-  createRequestHandler,
-  createReactRouterHeaders,
-  createReactRouterRequest,
-  sendReactRouterResponse,
-} from "../server";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+let createRequestHandler: typeof import("../server").createRequestHandler;
+let createReactRouterHeaders: typeof import("../server").createReactRouterHeaders;
+let createReactRouterRequest: typeof import("../server").createReactRouterRequest;
+let sendReactRouterResponse: typeof import("../server").sendReactRouterResponse;
 
 // We don't want to test that the React Router server works here,
 // we just want to test the architect adapter
-jest.mock("react-router", () => {
-  let original = jest.requireActual("react-router");
-  return {
-    ...original,
-    createRequestHandler: jest.fn(),
-  };
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
+
+(jest as any).unstable_mockModule("react-router", () => ({
+  createRequestHandler: mockedCreateRequestHandler,
+}));
+
+beforeAll(async () => {
+  ({
+    createRequestHandler,
+    createReactRouterHeaders,
+    createReactRouterRequest,
+    sendReactRouterResponse,
+  } = await import("../server"));
 });
-let mockedCreateRequestHandler =
-  createReactRequestHandler as jest.MockedFunction<
-    typeof createReactRequestHandler
-  >;
 
 type MockEvent = Omit<Partial<APIGatewayProxyEventV2>, "requestContext"> & {
   requestContext?: Partial<APIGatewayProxyEventV2["requestContext"]>;
@@ -117,7 +123,7 @@ describe("architect createRequestHandler", () => {
         });
     });
 
-    it("can use the request context domain name", async () => {
+    it("uses the request context domain name", async () => {
       mockedCreateRequestHandler.mockImplementation(() => async (req) => {
         return new Response(`Host: ${new URL(req.url).host}`);
       });
@@ -128,7 +134,6 @@ describe("architect createRequestHandler", () => {
           // call through to the real createRequestHandler
           // @ts-expect-error
           build: undefined,
-          useRequestContextDomainName: true,
         }),
       )
         .event(
@@ -284,20 +289,7 @@ describe("architect createReactRouterRequest", () => {
     expect(request.headers.get("cookie")).toBe("__session=value");
   });
 
-  it("uses x-forwarded-host by default", () => {
-    let request = createReactRouterRequest(
-      createMockEvent({
-        headers: {
-          host: "localhost:3333",
-          "x-forwarded-host": "example.com",
-        },
-      }),
-    );
-
-    expect(request.url).toBe("https://example.com/");
-  });
-
-  it("uses request context domain name when enabled", () => {
+  it("uses request context domain name", () => {
     let request = createReactRouterRequest(
       createMockEvent({
         headers: {
@@ -308,24 +300,9 @@ describe("architect createReactRouterRequest", () => {
           domainName: "example.com",
         },
       }),
-      true,
     );
 
     expect(request.url).toBe("https://example.com/");
-  });
-
-  it("ignores invalid characters in x-forwarded-host", () => {
-    let request = createReactRouterRequest(
-      createMockEvent({
-        headers: {
-          host: "localhost:3333",
-          "x-forwarded-host": "example.com:4444/invalid@chars",
-        },
-        rawPath: "/foo",
-      }),
-    );
-
-    expect(request.url).toBe("https://example.com:4444/foo");
   });
 
   it("ignores invalid characters in request context domain name", () => {
@@ -333,14 +310,12 @@ describe("architect createReactRouterRequest", () => {
       createMockEvent({
         headers: {
           host: "localhost:3333",
-          "x-forwarded-host": "example.com",
         },
         requestContext: {
           domainName: "context.example.com:4444/invalid@chars",
         },
         rawPath: "/foo",
       }),
-      true,
     );
 
     expect(request.url).toBe("https://context.example.com:4444/foo");
@@ -351,9 +326,11 @@ describe("architect createReactRouterRequest", () => {
       createMockEvent({
         headers: {
           host: "#invalid",
-          "x-forwarded-host": "@invalid",
         },
         rawPath: "/foo",
+        requestContext: {
+          domainName: "@invalid",
+        },
       }),
     );
 

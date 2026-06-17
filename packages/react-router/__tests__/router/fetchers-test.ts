@@ -26,7 +26,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {
@@ -608,7 +608,7 @@ describe("fetchers", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "index",
@@ -642,7 +642,7 @@ describe("fetchers", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
           },
         ],
       });
@@ -668,13 +668,13 @@ describe("fetchers", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "wit",
                 path: "wit",
                 loader: true,
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
               },
               {
                 id: "witout",
@@ -2301,26 +2301,26 @@ describe("fetchers", () => {
       expect(fetcherData.get(key)).toBe(1);
 
       expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
-        {
-          "actionResult": null,
-          "actionStatus": undefined,
-          "currentParams": {
-            "a": "one",
-          },
-          "currentUrl": "http://localhost/one",
-          "defaultShouldRevalidate": true,
-          "formAction": "/two/three",
-          "formData": FormData {},
-          "formEncType": "application/x-www-form-urlencoded",
-          "formMethod": "POST",
-          "json": undefined,
-          "nextParams": {
-            "a": "two",
-            "b": "three",
-          },
-          "nextUrl": "http://localhost/two/three",
-          "text": undefined,
-        }
+       {
+         "actionResult": null,
+         "actionStatus": undefined,
+         "currentParams": {
+           "a": "one",
+         },
+         "currentUrl": "http://localhost/one",
+         "defaultShouldRevalidate": true,
+         "formAction": "/two/three",
+         "formData": FormData {},
+         "formEncType": "application/x-www-form-urlencoded",
+         "formMethod": "POST",
+         "json": undefined,
+         "nextParams": {
+           "a": "two",
+           "b": "three",
+         },
+         "nextUrl": "http://localhost/two/three",
+         "text": undefined,
+       }
       `);
 
       expect(router._internalFetchControllers.size).toBe(0);

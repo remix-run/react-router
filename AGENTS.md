@@ -32,7 +32,6 @@
 - **Key packages**:
   - `react-router`: Core (all modes) - `lib/components.tsx`, `lib/hooks.tsx`, `lib/router/`, `lib/dom/`, `lib/rsc/`
   - `@react-router/dev`: Framework tooling - `vite/plugin.ts` (Framework), `vite/rsc/plugin.ts` (RSC Framework), `typegen/`
-  - `react-router-dom`: Re-exports `react-router` (v6→v7 compat)
   - `@react-router/node`, `@react-router/cloudflare`, `@react-router/express`: Server adapters
   - `@react-router/serve`: Minimal server for Framework Mode
   - `@react-router/fs-routes`: File-system routing (`flatRoutes()`)

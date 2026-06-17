@@ -7,7 +7,6 @@ import type {
 } from "../router/utils";
 import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
-import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
 import type {
   SingleFetchResult,
@@ -48,7 +47,6 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
 // createStaticHandler
 export function createStaticHandlerDataRoutes(
   manifest: ServerRouteManifest,
-  future: FutureConfig,
   parentId: string = "",
   routesByParentId: Record<
     string,
@@ -57,9 +55,6 @@ export function createStaticHandlerDataRoutes(
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
-      // Always include root due to default boundaries
-      hasErrorBoundary:
-        route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
       middleware: route.module.middleware as unknown as
@@ -115,18 +110,19 @@ export function createStaticHandlerDataRoutes(
                 return result.data;
               }
             }
-            let val = await callRouteHandler(
-              route.module.loader!,
-              args,
-              future,
-            );
+            let val = await callRouteHandler(route.module.loader!, args);
             return val;
           }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>
-            callRouteHandler(route.module.action!, args, future)
+            callRouteHandler(route.module.action!, args)
         : undefined,
+      // Always include root due to default boundaries
+      ErrorBoundary:
+        route.id === "root" || route.module.ErrorBoundary != null
+          ? () => null
+          : undefined,
       handle: route.module.handle,
     };
 
@@ -139,7 +135,6 @@ export function createStaticHandlerDataRoutes(
           caseSensitive: route.caseSensitive,
           children: createStaticHandlerDataRoutes(
             manifest,
-            future,
             route.id,
             routesByParentId,
           ),

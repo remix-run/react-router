@@ -109,7 +109,7 @@ const files = {
           name: "test-preset",
           reactRouterConfig: async () => ({
             serverBundles() {
-              return "preset-server-bundle-id";
+              return "preset_server_bundle_id";
             },
           }),
         },
@@ -119,7 +119,6 @@ const files = {
           name: "test-preset",
           reactRouterConfig: async () => ({
             future: {
-              v8_middleware: true,
               unstable_optimizeDeps: true,
             },
           }),
@@ -140,7 +139,8 @@ const files = {
                   "export const reactRouterConfig = " + serializeJs(reactRouterConfig, { space: 2, unsafe: true }) + ";",
                   "export const assetsDir = " + JSON.stringify(viteConfig.build.assetsDir) + ";",
                   "export const futureFlags = " + JSON.stringify(reactRouterConfig.future) + ";",
-                ].join("\\n"),
+                  "export const splitRouteModules = " + JSON.stringify(reactRouterConfig.splitRouteModules) + ";",
+                ].join("\n"),
                 "utf-8"
               );
             },
@@ -238,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "splitRouteModules",
         "subResourceIntegrity",
         "allowedActionOrigins",
         "unstable_routeConfig",
@@ -246,18 +247,13 @@ test.describe("Vite / presets", async () => {
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_optimizeDeps: true,
-        v8_trailingSlashAwareDataRequests: false,
-        unstable_previewServerPrerendering: false,
-        v8_middleware: true,
-        v8_passThroughRequests: false,
-        v8_splitRouteModules: false,
-        v8_viteEnvironmentApi: false,
       });
+      expect(buildEndArgsMeta.splitRouteModules).toBe(true);
 
       // Ensure we get a valid build manifest
       expect(buildEndArgsMeta.buildManifest).toEqual({
         routeIdToServerBundleId: {
-          "routes/_index": "preset-server-bundle-id",
+          "routes/_index": "preset_server_bundle_id",
         },
         routes: {
           root: {
@@ -273,9 +269,9 @@ test.describe("Vite / presets", async () => {
           },
         },
         serverBundles: {
-          "preset-server-bundle-id": {
-            file: "build/server/preset-server-bundle-id/index.js",
-            id: "preset-server-bundle-id",
+          preset_server_bundle_id: {
+            file: "build/server/preset_server_bundle_id/index.js",
+            id: "preset_server_bundle_id",
           },
         },
       });

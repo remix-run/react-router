@@ -16,15 +16,15 @@ test.describe("SPA Mode", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
-  [true, false].forEach((v8_splitRouteModules) => {
-    test.describe(`v8_splitRouteModules: ${v8_splitRouteModules}`, () => {
+  [true, false].forEach((splitRouteModules) => {
+    test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
       test.describe("custom builds", () => {
         test.describe("build errors", () => {
           test("errors on server-only exports", async () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/routes/invalid-exports.tsx": String.raw`
               // Invalid exports
@@ -51,7 +51,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/root.tsx": String.raw`
                 // Invalid exports
@@ -83,7 +83,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/routes/invalid-exports.tsx": String.raw`
               // Invalid exports
@@ -108,7 +108,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/entry.server.tsx": js`
               import { ServerRouter } from "react-router";
@@ -167,7 +167,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-                "prerendering your `index.html` file.",
+                "prerendering your SPA Fallback HTML file.",
             );
             expect(stderr).toMatch("<h1>Loading...</h1>");
           });
@@ -176,7 +176,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/root.tsx": String.raw`
               export function HydrateFallback() {
@@ -199,7 +199,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -238,7 +238,7 @@ test.describe("SPA Mode", () => {
           let fixture = await createFixture({
             files: {
               "react-router.config.ts": reactRouterConfig({
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -272,7 +272,7 @@ test.describe("SPA Mode", () => {
               "react-router.config.ts": reactRouterConfig({
                 basename: "/base/",
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -345,7 +345,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/index.html": String.raw`
                 <!DOCTYPE html>
@@ -529,7 +529,7 @@ test.describe("SPA Mode", () => {
                 // file below
                 appDirectory: "src",
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "src/routes.ts": js`
                 import { type RouteConfig } from "@react-router/dev/routes";
@@ -611,7 +611,7 @@ test.describe("SPA Mode", () => {
                 // file below
                 appDirectory: "src",
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "src/routes.ts": js`
                 import { type RouteConfig } from "@react-router/dev/routes";
@@ -638,7 +638,9 @@ test.describe("SPA Mode", () => {
                         <Links />
                       </head>
                       <body>
-                        {children}
+                        <div data-layout>
+                          {children}
+                        </div>
                         <ScrollRestoration />
                         <Scripts />
                       </body>
@@ -666,7 +668,7 @@ test.describe("SPA Mode", () => {
           expect(html.match(/<html/g)?.length).toBe(1);
           expect(html.match(/<\/html/g)?.length).toBe(1);
           expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
-          expect(html.match(/💿 Hey developer 👋/g)?.length).toBe(1);
+          expect(html).toMatch('<div data-layout="true">');
         });
 
         test("does not inherit single fetch revalidation behavior", async ({
@@ -677,7 +679,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/routes/_index.tsx": js`
                 import { Link } from 'react-router';
@@ -732,7 +734,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "app/root.tsx": js`
                 import {
@@ -805,7 +807,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                future: { v8_splitRouteModules },
+                splitRouteModules,
               }),
               "vite.config.ts": js`
                 import { defineConfig } from "vite";
@@ -830,7 +832,7 @@ test.describe("SPA Mode", () => {
                 import * as React from "react";
                 import { Form, Link, Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta() {
                   return [{
                     title: "Root Title"
                   }];
@@ -913,9 +915,9 @@ test.describe("SPA Mode", () => {
                 import * as React  from "react";
                 import { useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta({ loaderData }) {
                   return [{
-                    title: "Index Title: " + data
+                    title: "Index Title: " + loaderData
                   }];
                 }
 
@@ -950,9 +952,9 @@ test.describe("SPA Mode", () => {
               "app/routes/about.tsx": js`
                 import { useActionData, useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta({ loaderData }) {
                   return [{
-                    title: "About Title: " + data
+                    title: "About Title: " + loaderData
                   }];
                 }
 

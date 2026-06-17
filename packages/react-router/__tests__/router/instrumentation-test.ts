@@ -4,6 +4,7 @@ import type { StaticHandlerContext } from "../../lib/router/router";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
 import {
   ErrorResponseImpl,
+  RouterContextProvider,
   data,
   redirect,
   type ActionFunction,
@@ -1958,6 +1959,7 @@ describe("instrumentation", () => {
 
   describe("request handler", () => {
     it("allows instrumentation of the request handler", async () => {
+      let context = new RouterContextProvider();
       let spy = jest.fn();
       let build = mockServerBuild(
         {
@@ -1990,7 +1992,7 @@ describe("instrumentation", () => {
         },
       );
       let handler = createRequestHandler(build);
-      let response = await handler(new Request("http://localhost/"), {});
+      let response = await handler(new Request("http://localhost/"), context);
 
       expect(await response.text()).toBe("GET http://localhost/ COMPONENT");
       expect(spy.mock.calls).toEqual([
@@ -2004,7 +2006,7 @@ describe("instrumentation", () => {
                 get: expect.any(Function),
               },
             },
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
         ["loader"],
@@ -2018,7 +2020,7 @@ describe("instrumentation", () => {
                 get: expect.any(Function),
               },
             },
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
       ]);
@@ -2044,9 +2046,6 @@ describe("instrumentation", () => {
           },
         },
         {
-          future: {
-            v8_middleware: true,
-          },
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
@@ -2158,7 +2157,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
         ["loader"],
@@ -2174,7 +2173,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
       ]);
@@ -2231,7 +2230,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
         ["action"],
@@ -2247,7 +2246,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
       ]);

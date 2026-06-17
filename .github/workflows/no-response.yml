@@ -1,4 +1,4 @@
-name: 🥺 No Response
+name: No Response
 
 on:
   schedule:
@@ -14,7 +14,7 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     steps:
-      - name: 🥺 Handle Ghosting
+      - name: Handle Ghosting
         uses: actions/stale@v10
         with:
           days-before-close: 10
