@@ -11,117 +11,74 @@ import {
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-////////////////////////////////////////////////////////////////////////////////
-// 👋 Hola! I'm here to help you write a great bug report pull request.
+// Regression test for:
+// PR #15185 changed throwIfPotentialCSRFAttack to derive the host from
+// new URL(request.url).host instead of reading X-Forwarded-Host / Host
+// headers via parseHostHeader(). This breaks all form actions when the
+// app is running behind a reverse proxy or CDN (e.g. AWS CloudFront),
+// where request.url resolves to an internal origin URL while the browser's
+// Origin header contains the public-facing domain.
 //
-// You don't need to fix the bug, this is just to report one.
-//
-// The pull request you are submitting is supposed to fail when created, to let
-// the team see the erroneous behavior, and understand what's going wrong.
-//
-// If you happen to have a fix as well, it will have to be applied in a subsequent
-// commit to this pull request, and your now-succeeding test will have to be moved
-// to the appropriate file.
-//
-// First, make sure to install dependencies and build React Router. From the root of
-// the project, run this:
-//
-//    ```
-//    pnpm install && pnpm build
-//    ```
-//
-// If you have never installed playwright on your system before, you may also need
-// to install a browser engine:
-//
-//    ```
-//    pnpm exec playwright install chromium
-//    ```
-//
-// Now try running this test:
-//
-//    ```
-//    pnpm test:integration bug-report --project chromium
-//    ```
-//
-// You can add `--watch` to the end to have it re-run on file changes:
-//
-//    ```
-//    pnpm test:integration bug-report --project chromium --watch
-//    ```
-////////////////////////////////////////////////////////////////////////////////
-
-test.beforeEach(async ({ context }) => {
-  await context.route(/\.data$/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    route.continue();
-  });
-});
+// 7.17.0 (works): reads X-Forwarded-Host header set by the proxy
+// 7.18.0 (broken): reads request.url host, which is the internal URL
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    ////////////////////////////////////////////////////////////////////////////
-    // 💿 Next, add files to this object, just like files in a real app,
-    // `createFixture` will make an app and run your tests against it.
-    ////////////////////////////////////////////////////////////////////////////
     files: {
       "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+        import { Form, useActionData } from "react-router";
 
-        export function loader() {
-          return "pizza";
+        export async function action({ request }) {
+          return { ok: true };
         }
 
         export default function Index() {
-          let data = useLoaderData();
+          const data = useActionData();
           return (
-            <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
-            </div>
-          )
-        }
-      `,
-
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+            <Form method="post">
+              <button type="submit" id="submit">Submit</button>
+              {data?.ok && <p id="result">success</p>}
+            </Form>
+          );
         }
       `,
     },
   });
 
-  // This creates an interactive app using playwright.
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(() => {
-  appFixture.close();
-});
+test.afterAll(() => appFixture.close());
 
-////////////////////////////////////////////////////////////////////////////////
-// 💿 Almost done, now write your failing test case(s) down here Make sure to
-// add a good description for what you expect React Router to do 👇🏽
-////////////////////////////////////////////////////////////////////////////////
-
-test("[description of what you expect it to do]", async ({ page }) => {
+test("form action succeeds when X-Forwarded-Host differs from request.url host (reverse proxy / CDN scenario)", async ({
+  page,
+}) => {
+  // Simulate what a CDN/reverse proxy does:
+  // The public domain is "example.com" but internally request.url resolves
+  // to a different host (e.g. a Lambda URL or internal NLB endpoint).
+  // The proxy sets X-Forwarded-Host: example.com to signal the original host.
   let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
 
-  // If you need to test interactivity use the `app`
   await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
 
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
-  // await app.poke(20);
+  // Intercept the action request and inject headers as a proxy would:
+  // Origin and X-Forwarded-Host match (example.com) but request.url host
+  // is "localhost" (the internal origin), causing the mismatch in 7.18.0.
+  await page.route("**/*.data", (route) => {
+    route.continue({
+      headers: {
+        ...route.request().headers(),
+        "x-forwarded-host": "example.com",
+        origin: "https://example.com",
+      },
+    });
+  });
 
-  // Go check out the other tests to see what else you can do.
+  await page.click("#submit");
+
+  // Should succeed — X-Forwarded-Host matches Origin header.
+  // In 7.18.0 this fails with 400 Bad Request because request.url host
+  // is "localhost" (internal), not "example.com".
+  await page.waitForSelector("#result");
+  expect(await page.textContent("#result")).toBe("success");
 });
-
-////////////////////////////////////////////////////////////////////////////////
-// 💿 Finally, push your changes to your fork of React Router
-// and open a pull request!
-////////////////////////////////////////////////////////////////////////////////
