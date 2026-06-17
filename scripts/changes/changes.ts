@@ -497,6 +497,8 @@ export function generateChangelogContent(
     headingLevel?: 2 | 3;
     /** Optional footer to append at the end */
     footerLines?: string[];
+    /** Optional "What's Changed" section to include before generated change sections */
+    whatsChanged?: string;
     /** Whether to skip sorting changes (for root changelog generation). Default: false */
     skipSort?: boolean;
   } = {},
@@ -525,6 +527,11 @@ export function generateChangelogContent(
   }
 
   let subheadingLevel = headingLevel + 1;
+
+  if (options.whatsChanged) {
+    lines.push(options.whatsChanged.trim());
+    lines.push("");
+  }
 
   // Generate sections in order: major, minor, patch (skipping empty sections)
   for (let bumpType of bumpTypes) {
