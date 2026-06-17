@@ -1,1 +1,0 @@
-Migrate package builds from `tsup` to `tsdown`. Published package entry points and public APIs are unchanged.

@@ -1,1 +1,0 @@
-Upgrade React Router's TypeScript tooling to TypeScript 6. Runtime behavior and public APIs are unchanged.

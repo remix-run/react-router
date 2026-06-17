@@ -1,5 +1,21 @@
 # `@react-router/express`
 
+## v8.0.0
+
+### Major Changes
+
+- Bump dependencies ([#15106](https://github.com/remix-run/react-router/pull/15106))
+  - Bumped `express` from `^4.19.2` to `^4.22.2`
+  - Bumped the `express` peer dependency from `^4.17.1 || ^5` to `^4.22.2 || ^5`
+  - Bumped `@types/express` from `^4.17.9` to `^4.17.25`
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+  - [`@react-router/node@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.0)
+
 ## v7.18.0
 
 ### Patch Changes

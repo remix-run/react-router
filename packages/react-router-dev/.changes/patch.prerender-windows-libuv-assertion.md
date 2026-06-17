@@ -1,1 +1,0 @@
-Fix Windows libuv assertion (`!(handle->flags & UV_HANDLE_CLOSING)` in `src/win/async.c`) during prerendering by using `node:http` instead of `fetch` for internal prerender requests against the Vite preview server
