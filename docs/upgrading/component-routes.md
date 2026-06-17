@@ -28,8 +28,8 @@ The initial setup requires the most work. However, once complete, you can adopt 
 
 To use the Vite plugin, your project requires:
 
-- Node.js 20+ (if using Node as your runtime)
-- Vite 5+
+- Node.js 22.22.0+
+- Vite 7+ or Vite 8+
 
 ## 1. Install the Vite plugin
 
