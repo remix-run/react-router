@@ -9,7 +9,7 @@ hidden: true
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createSession.html)
+[Reference Documentation ↗](https://reactrouter.com/api/utils/createSession)
 
 Creates a new Session object.
 

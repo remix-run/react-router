@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.NavLink.html)
+[Reference Documentation ↗](https://reactrouter.com/api/components/NavLink)
 
 Wraps [`<Link>`](../components/Link) with additional props for styling active and
 pending states.
