@@ -60,6 +60,7 @@ if (!branch) {
 }
 
 let isLatest = branch === "main";
+let isV7 = branch === "v7";
 
 interface PublishedPackage {
   packageName: string;
@@ -195,16 +196,25 @@ async function main() {
   // Publish packages to npm
   console.log("Publishing packages to npm...\n");
 
-  // Single-phase publish: everything as latest
-  let publishCommand =
-    'pnpm publish --recursive --filter "./packages/*" --access public --no-git-checks --report-summary';
+  let args = `--access public --no-git-checks --report-summary`;
+  let publishCommands = isV7
+    ? // Publish v7 releases with the `version-7` tag, except `react-router-dom`
+      // which was dropped in v8 so it continues to get the `latest` tag
+      [
+        `pnpm publish --recursive --filter "./packages/*" --filter "!react-router-dom" --tag version-7 ${args}`,
+        `pnpm publish --recursive --filter react-router-dom ${args}`,
+      ]
+    : // Publish all as latest
+      [`pnpm publish --recursive --filter "./packages/*" ${args}`];
 
   // In dry run mode, query npm to determine what would be published
   // and preview the GitHub releases. This is designed to be run against
   // the contents of the "Release" PR / `pnpm changes:version` output.
   if (dryRun) {
     console.log("Would run:");
-    console.log(`  $ ${publishCommand}`);
+    for (let publishCommand of publishCommands) {
+      console.log(`  $ ${publishCommand}`);
+    }
     console.log();
 
     console.log("Checking npm for unpublished versions...\n");
@@ -251,8 +261,10 @@ async function main() {
   }
 
   // Publish to npm
-  logAndExec(publishCommand);
-  let published = readPublishSummary();
+  let published = publishCommands.flatMap((publishCommand) => {
+    logAndExec(publishCommand);
+    return readPublishSummary();
+  });
 
   if (published.length === 0) {
     console.log("\nNo packages were published.");
