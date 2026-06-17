@@ -11,35 +11,39 @@ import {
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-// Regression test for:
-// PR #15185 changed throwIfPotentialCSRFAttack to derive the host from
-// new URL(request.url).host instead of reading X-Forwarded-Host / Host
-// headers via parseHostHeader(). This breaks all form actions when the
-// app is running behind a reverse proxy or CDN (e.g. AWS CloudFront),
-// where request.url resolves to an internal origin URL while the browser's
-// Origin header contains the public-facing domain.
-//
-// 7.17.0 (works): reads X-Forwarded-Host header set by the proxy
-// 7.18.0 (broken): reads request.url host, which is the internal URL
+test.beforeEach(async ({ context }) => {
+  await context.route(/\.data$/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    route.continue();
+  });
+});
 
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { Form, useActionData } from "react-router";
+        import { useLoaderData, Form } from "react-router";
+
+        export function loader() {
+          return "pizza";
+        }
 
         export async function action({ request }) {
+          let formData = await request.formData();
           return { ok: true };
         }
 
         export default function Index() {
-          const data = useActionData();
+          let data = useLoaderData();
           return (
-            <Form method="post">
-              <button type="submit" id="submit">Submit</button>
-              {data?.ok && <p id="result">success</p>}
-            </Form>
-          );
+            <div>
+              {data}
+              <Form method="post">
+                <input name="key" defaultValue="value" />
+                <button type="submit">Submit</button>
+              </Form>
+            </div>
+          )
         }
       `,
     },
@@ -48,37 +52,44 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(() => appFixture.close());
+test.afterAll(() => {
+  appFixture.close();
+});
 
-test("form action succeeds when X-Forwarded-Host differs from request.url host (reverse proxy / CDN scenario)", async ({
-  page,
-}) => {
-  // Simulate what a CDN/reverse proxy does:
-  // The public domain is "example.com" but internally request.url resolves
-  // to a different host (e.g. a Lambda URL or internal NLB endpoint).
-  // The proxy sets X-Forwarded-Host: example.com to signal the original host.
-  let app = new PlaywrightFixture(appFixture, page);
+////////////////////////////////////////////////////////////////////////////////
+// Regression introduced in 7.18.0 by PR #15185.
+//
+// throwIfPotentialCSRFAttack now derives the host from new URL(request.url).host
+// instead of parseHostHeader() which read X-Forwarded-Host / Host headers.
+// parseHostHeader no longer exists in 7.18.0.
+//
+// The fixture builds every Request from the base URL "test://test", so
+// new URL(request.url).host === "test" for all fixture requests.
+//
+// A POST with Origin: https://example.com and X-Forwarded-Host: example.com
+// should pass the CSRF check — the headers agree it's the same origin.
+// But 7.18.0 compares "example.com" !== "test" and rejects with 400 Bad Request.
+//
+// 7.17.0: parseHostHeader reads X-Forwarded-Host "example.com"
+//         === Origin "example.com" → 200 ✓
+// 7.18.0: new URL(request.url).host === "test"
+//         !== Origin "example.com" → 400 Bad Request ✗
+//
+// This test is expected to FAIL on 7.18.0 and PASS on 7.17.0.
+////////////////////////////////////////////////////////////////////////////////
 
-  await app.goto("/");
-
-  // Intercept the action request and inject headers as a proxy would:
-  // Origin and X-Forwarded-Host match (example.com) but request.url host
-  // is "localhost" (the internal origin), causing the mismatch in 7.18.0.
-  await page.route("**/*.data", (route) => {
-    route.continue({
-      headers: {
-        ...route.request().headers(),
-        "x-forwarded-host": "example.com",
-        origin: "https://example.com",
-      },
-    });
+test("action accepts POST when Origin matches X-Forwarded-Host (reverse proxy scenario)", async () => {
+  let response = await fixture.requestDocument("/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Origin: "https://example.com",
+      "X-Forwarded-Host": "example.com",
+    },
+    body: new URLSearchParams({ key: "value" }),
   });
 
-  await page.click("#submit");
-
-  // Should succeed — X-Forwarded-Host matches Origin header.
-  // In 7.18.0 this fails with 400 Bad Request because request.url host
-  // is "localhost" (internal), not "example.com".
-  await page.waitForSelector("#result");
-  expect(await page.textContent("#result")).toBe("success");
+  // 7.17.0: passes  → 200
+  // 7.18.0: rejects → 400 Bad Request
+  expect(response.status).toBe(200);
 });
