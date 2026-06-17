@@ -4,7 +4,7 @@
 #
 # Specific jobs only run on the proper trigger:
 #
-# - Change file driven stable releases (push to main/hotfix branches)
+# - Change file driven stable releases (push to main/hotfix/v7 branches)
 # - Experimental releases (from a workflow_dispatch trigger)
 
 name: 🚢 Release/Publish
@@ -14,6 +14,7 @@ on:
     branches:
       - "main"
       - "hotfix"
+      - "v7"
   workflow_dispatch:
     inputs:
       branch:
@@ -127,13 +128,15 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm and create releases
-        run: pnpm changes:publish
+        run: pnpm changes:publish -- --branch=${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   comment:
     name: 📝 Comment on released issues/pull requests
     needs: publish
+    # Only comment on issues/PRs for latest releases from main.
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues

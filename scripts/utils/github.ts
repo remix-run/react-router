@@ -52,6 +52,7 @@ export async function createRelease(
   packageName: string,
   version: string,
   body: string,
+  options: { makeLatest?: boolean } = {},
 ): Promise<CreateReleaseResult> {
   let tagName = getGitTag(packageName, version);
   let releaseName = `v${version}`;
@@ -71,6 +72,7 @@ export async function createRelease(
       tag_name: tagName,
       name: releaseName,
       body,
+      ...(options.makeLatest === false ? { make_latest: "false" } : {}),
     });
 
     return { status: "created", url: response.data.html_url };
