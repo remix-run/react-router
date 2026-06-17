@@ -2846,7 +2846,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   submit: FetcherSubmitFunction;
 };
 
-// TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
+// TODO: (v9) Change the useFetcher generic default from `any` to `unknown`
 
 /**
  * Useful for creating complex, dynamic user interfaces that require multiple,

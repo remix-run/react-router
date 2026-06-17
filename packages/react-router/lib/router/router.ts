@@ -343,7 +343,7 @@ export interface Router {
  * reflect the "old" location unless otherwise noted.
  */
 export interface RouterState {
-  // TODO: (v7) should we consider renaming this `navigationType` to align with
+  // TODO: (v9) should we consider renaming this `navigationType` to align with
   // `useNavigationType` at some point?
   /**
    * The action of the most recent navigation
@@ -2553,7 +2553,7 @@ export function createRouter(init: RouterInit): Router {
     if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
       // This is cast to `any` currently because `RouteData`uses any and it
       // would be a breaking change to use any.
-      // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
+      // TODO: (v9) change `RouteData` to use `unknown` instead of `any`
       return {
         [pendingActionResult[0]]: pendingActionResult[1].data as any,
       };
@@ -5463,9 +5463,7 @@ function getMatchesToLoad(
   fetchLoadMatches.forEach((f, key) => {
     // Don't revalidate:
     //  - on initial hydration (shouldn't be any fetchers then anyway)
-    //  - if fetcher won't be present in the subsequent render
-    //    - no longer matches the URL (v7_fetcherPersist=false)
-    //    - was unmounted but persisted due to v7_fetcherPersist=true
+    //  - if fetcher won't be present in the subsequent render (was unmounted but persisted)
     if (
       initialHydration ||
       !matches.some((m) => m.route.id === f.routeId) ||
