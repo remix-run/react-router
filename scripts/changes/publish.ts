@@ -54,6 +54,11 @@ let { values } = parseArgs({
 let skipCiCheck = values["skip-ci-check"];
 let dryRun = values["dry-run"];
 let branch = values.branch;
+
+if (!branch) {
+  throw new Error("--branch is required");
+}
+
 let isLatest = branch === "main";
 
 interface PublishedPackage {

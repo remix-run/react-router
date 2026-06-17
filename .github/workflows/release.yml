@@ -129,7 +129,7 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm and create releases
-        run: pnpm changes:publish -- --branch=${{ github.ref_name }}
+        run: pnpm changes:publish --branch=${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
