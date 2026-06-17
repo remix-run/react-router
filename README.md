@@ -5,7 +5,7 @@
 [build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test-unit.yml?branch=main&style=square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test-unit.yml
 
-React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or minimally as a library with your own architecture.
+React Router is a multi-strategy router for React. You can use it maximally as a React framework or minimally as a library with your own architecture.
 
 - [Getting Started - Framework](https://reactrouter.com/start/framework/installation)
 - [Getting Started - Library](https://reactrouter.com/start/library/installation)
