@@ -13,7 +13,7 @@ This file is auto-generated from the JSDoc comments in the source
 code, so please edit the JSDoc comments in the file below and this
 file will be re-generated once those changes are merged.
 
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/server.tsx
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/router/router.ts
 -->
 
 [MODES: data]
@@ -47,7 +47,7 @@ export async function handleRequest(request: Request) {
 function createStaticHandler(
   routes: RouteObject[],
   opts?: CreateStaticHandlerOptions,
-)
+): StaticHandler
 ```
 
 ## Params

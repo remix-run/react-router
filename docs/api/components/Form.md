@@ -103,12 +103,6 @@ When `false`, skips the navigation and submits via a fetcher internally.
 This is essentially a shorthand for [`useFetcher`](../hooks/useFetcher) + `<fetcher.Form>` where
 you don't care about the resulting data in this component.
 
-### onSubmit
-
-A function to call when the form is submitted. If you call
-[`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
-then this form will not do anything.
-
 ### preventScrollReset
 
 Prevent the scroll position from resetting to the top of the viewport on
