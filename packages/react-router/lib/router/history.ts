@@ -51,7 +51,7 @@ export interface Path {
   hash: string;
 }
 
-// TODO: (v7) Change the Location generic default from `any` to `unknown` and
+// TODO: (v9) Change the Location generic default from `any` to `unknown` and
 // remove Remix `useLocation` wrapper.
 
 /**

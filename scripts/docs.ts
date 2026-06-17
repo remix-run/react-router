@@ -6,6 +6,7 @@ import fg from "fast-glob";
 // @ts-expect-error
 import dox from "dox";
 import prettier from "prettier";
+import * as semver from "semver";
 import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
 
@@ -163,7 +164,8 @@ const outputDir = args.output || "docs/api";
 
 // Build lookup table for @link resolution
 const repoApiLookup = buildRepoDocsLinks(outputDir);
-const typedocLookup = buildTypedocLinks(outputDir);
+const reactRouterApiDocsVersion = getReactRouterApiDocsVersion();
+const typedocLookup = buildTypedocLinks(outputDir, reactRouterApiDocsVersion);
 
 run();
 
@@ -204,7 +206,23 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   return lookup;
 }
 
-function buildTypedocLinks(outputDir: string) {
+function getReactRouterApiDocsVersion() {
+  let packageJsonPath = "packages/react-router/package.json";
+  let packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
+    version?: string;
+  };
+  let version = packageJson.version ? semver.parse(packageJson.version) : null;
+
+  if (!version) {
+    throw new Error(
+      `Unable to detect React Router major version from ${packageJsonPath}`,
+    );
+  }
+
+  return `v${version.major}`;
+}
+
+function buildTypedocLinks(outputDir: string, apiDocsVersion: string) {
   const lookup = new Map<string, { href: string; description?: string }>();
 
   // Prerequisite: `typedoc` has been run first via `npm run docs`
@@ -215,7 +233,7 @@ function buildTypedocLinks(outputDir: string) {
 
     apiData.children
       ?.filter((c) => c.kind === ReflectionKind.Module)
-      .forEach((child) => processTypedocModule(child, lookup));
+      .forEach((child) => processTypedocModule(child, lookup, apiDocsVersion));
   } else {
     warn(
       'Typedoc API data not found at "public/dev/api.json", will not ' +
@@ -229,6 +247,7 @@ function buildTypedocLinks(outputDir: string) {
 function processTypedocModule(
   child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
   lookup: Map<string, { href: string; description?: string }>,
+  apiDocsVersion: string,
   prefix: string[] = [],
 ) {
   let newPrefix = [...prefix, child.name];
@@ -236,7 +255,7 @@ function processTypedocModule(
   child.children?.forEach((subChild) => {
     // Recurse into submodules
     if (subChild.kind === ReflectionKind.Module) {
-      processTypedocModule(subChild, lookup, newPrefix);
+      processTypedocModule(subChild, lookup, apiDocsVersion, newPrefix);
       return;
     }
 
@@ -289,7 +308,7 @@ function processTypedocModule(
 
     let modulePath = moduleName.replace(/[@/]/g, "_");
     let path = `${type}/${modulePath}.${subChild.name}.html`;
-    let url = `https://api.reactrouter.com/v7/${path}`;
+    let url = `https://api.reactrouter.com/${apiDocsVersion}/${path}`;
     lookup.set(apiName, { href: url });
 
     // When this is an interface, also include it's child properties in the lookup

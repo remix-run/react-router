@@ -179,12 +179,18 @@ While not a direct "adapter" like the above, this package contains utilities for
 
 React Router officially supports all versions of [**Active** LTS][node-releases] and the latest minor line of [**Maintenance** LTS][node-releases] at any given point in time.
 
+For example, at the time of this writing (6/17/2026):
+
+- Node 24 is in _Active LTS_ status, so React Router officially supports all `24.x` versions
+- Node 22 is in _Maintenance LTS_ status and the latest release is `22.22.3`, so React Router officially supports all `22.22.x` versions
+
 We make this distinction for Maintenance LTS for 2 reasons:
 
 - When security patches are released for old maintenance lines, we want to be able to bump our minimum supported versions
 - This better allows us to adopt new features shipped in Active LTS and backported to Maintenance LTS and keep our implementations aligned
 
 Updating the minimum supported Maintenance LTS **minor** version may be done in a React Router **minor** release.
+
 Dropping support for an EOL Node **major** version will always be done in a React Router **major** release.
 
 [express]: https://expressjs.com
