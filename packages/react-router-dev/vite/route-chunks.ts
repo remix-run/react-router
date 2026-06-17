@@ -147,8 +147,8 @@ function getExportDependencies(
             identifier.findParent((path) =>
               Boolean(
                 path.isPattern() &&
-                  path.parentPath?.isVariableDeclarator() &&
-                  path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration(),
+                path.parentPath?.isVariableDeclarator() &&
+                path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration(),
               ),
             ),
           );

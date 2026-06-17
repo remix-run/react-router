@@ -30,7 +30,7 @@ function defineFiles({
       ]${reversePlugins ? ".reverse()" : ""},
     });
   `,
-    "app/routes/env.tsx": tsx`
+      "app/routes/env.tsx": tsx`
     import type { Route } from "./+types/env";
     import { cloudflareContext } from "../cloudflare";
     export function loader({ context }: Route.LoaderArgs) {
@@ -40,18 +40,18 @@ function defineFiles({
       return <div data-loader-message>{loaderData.message}</div>;
     }
   `,
-    "app/routes/css-side-effect/route.tsx": tsx`
+      "app/routes/css-side-effect/route.tsx": tsx`
     import "./styles.css";
 
     export default function CssSideEffectRoute() {
       return <div className="css-side-effect" data-css-side-effect>CSS Side Effect</div>;
     }
   `,
-    "app/routes/css-side-effect/styles.css": css`
-      .css-side-effect {
-        padding: 20px;
-      }
-    `,
+      "app/routes/css-side-effect/styles.css": css`
+        .css-side-effect {
+          padding: 20px;
+        }
+      `,
     };
   };
   return files;

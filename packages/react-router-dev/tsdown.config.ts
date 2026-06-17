@@ -7,12 +7,7 @@ import { createBanner } from "../../build.utils.ts";
 
 import pkg from "./package.json" with { type: "json" };
 
-const entry = [
-  "cli/index.ts",
-  "config.ts",
-  "routes.ts",
-  "vite.ts",
-];
+const entry = ["cli/index.ts", "config.ts", "routes.ts", "vite.ts"];
 
 const neverBundle = [
   "./static/refresh-utils.mjs",

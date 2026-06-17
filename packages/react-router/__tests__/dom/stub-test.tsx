@@ -372,9 +372,7 @@ test("can pass context values (w/middleware)", async () => {
     new RouterContextProvider(new Map([[helloContext, "hello"]])),
   );
 
-  render(
-    <RoutesStub initialEntries={["/hello"]} />,
-  );
+  render(<RoutesStub initialEntries={["/hello"]} />);
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
   expect(await screen.findByTestId("hello")).toHaveTextContent(

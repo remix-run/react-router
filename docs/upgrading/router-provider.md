@@ -276,7 +276,10 @@ If your current `src/main.tsx` looks like this:
 ```tsx filename=src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router";
 import App from "./App";
 
 const router = createBrowserRouter([

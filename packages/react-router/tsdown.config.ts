@@ -12,7 +12,10 @@ const entry = [
   "lib/types/internal.ts",
 ];
 
-const neverBundle = ["react-router", "react-router/internal/react-server-client"];
+const neverBundle = [
+  "react-router",
+  "react-router/internal/react-server-client",
+];
 
 const config = (enableDevWarnings: boolean): UserConfig => ({
   clean: false,

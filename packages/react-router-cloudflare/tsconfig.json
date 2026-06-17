@@ -9,6 +9,6 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "./dist",
+    "outDir": "./dist"
   }
 }

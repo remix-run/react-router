@@ -170,19 +170,18 @@ export type HtmlLinkDescriptor =
   | (HtmlLinkPreloadImage &
       Pick<Required<HtmlLinkPreloadImage>, "href"> & { imageSizes?: never });
 
-export interface PageLinkDescriptor
-  extends Omit<
-    HtmlLinkDescriptor,
-    | "href"
-    | "rel"
-    | "type"
-    | "sizes"
-    | "imageSrcSet"
-    | "imageSizes"
-    | "as"
-    | "color"
-    | "title"
-  > {
+export interface PageLinkDescriptor extends Omit<
+  HtmlLinkDescriptor,
+  | "href"
+  | "rel"
+  | "type"
+  | "sizes"
+  | "imageSrcSet"
+  | "imageSizes"
+  | "as"
+  | "color"
+  | "title"
+> {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)

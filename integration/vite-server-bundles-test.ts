@@ -177,286 +177,283 @@ test.describe("Server bundles", () => {
     );
   });
 
-      test.describe(() => {
-        let stop: () => void;
-        test.beforeAll(async () => {
-          stop = await dev({ cwd, port });
-        });
+  test.describe(() => {
+    let stop: () => void;
+    test.beforeAll(async () => {
+      stop = await dev({ cwd, port });
+    });
 
-        test.afterAll(() => stop());
+    test.afterAll(() => stop());
 
-        test("dev", async ({ page }) => {
-          // There are no server bundles in dev mode, this is just a smoke test to
-          // ensure dev mode works and that routes from all bundles are available
-          let pageErrors: Error[] = [];
-          page.on("pageerror", (error) => pageErrors.push(error));
+    test("dev", async ({ page }) => {
+      // There are no server bundles in dev mode, this is just a smoke test to
+      // ensure dev mode works and that routes from all bundles are available
+      let pageErrors: Error[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error));
 
-          await page.goto(`http://localhost:${port}/`);
-          await expectRenderedRoutes(page, ["_index.tsx"]);
+      await page.goto(`http://localhost:${port}/`);
+      await expectRenderedRoutes(page, ["_index.tsx"]);
 
-          await page.goto(`http://localhost:${port}/bundle_a`);
-          await expectRenderedRoutes(page, [
-            "bundle_a.tsx",
-            "bundle_a._index.tsx",
-          ]);
+      await page.goto(`http://localhost:${port}/bundle_a`);
+      await expectRenderedRoutes(page, ["bundle_a.tsx", "bundle_a._index.tsx"]);
 
-          await page.goto(`http://localhost:${port}/bundle_b`);
-          await expectRenderedRoutes(page, ["bundle_b.tsx"]);
+      await page.goto(`http://localhost:${port}/bundle_b`);
+      await expectRenderedRoutes(page, ["bundle_b.tsx"]);
 
-          await page.goto(`http://localhost:${port}/bundle_c`);
-          await expectRenderedRoutes(page, [
-            "_pathless.tsx",
-            "_pathless.bundle_c.tsx",
-          ]);
+      await page.goto(`http://localhost:${port}/bundle_c`);
+      await expectRenderedRoutes(page, [
+        "_pathless.tsx",
+        "_pathless.bundle_c.tsx",
+      ]);
 
-          expect(pageErrors).toEqual([]);
-        });
+      expect(pageErrors).toEqual([]);
+    });
+  });
+
+  test.describe("build", () => {
+    let stdout: string;
+    test.beforeAll(() => {
+      let buildResult = build({ cwd });
+      stdout = buildResult.stdout.toString();
+    });
+
+    test("Vite Environment API message", () => {
+      expect(stdout).toContain("Using Vite Environment API");
+    });
+
+    test("server", async ({ page }) => {
+      let pageErrors: Error[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error));
+
+      await withBundleServer(cwd, "root", async (port) => {
+        await page.goto(`http://localhost:${port}/`);
+        await expectRenderedRoutes(page, ["_index.tsx"]);
+
+        let _404s = ["/bundle_a", "/bundle_b", "/bundle_c"];
+        for (let path of _404s) {
+          let response = await page.goto(`http://localhost:${port}${path}`);
+          expect(response?.status()).toBe(404);
+        }
       });
 
-      test.describe("build", () => {
-        let stdout: string;
-        test.beforeAll(() => {
-          let buildResult = build({ cwd });
-          stdout = buildResult.stdout.toString();
-        });
+      await withBundleServer(cwd, "bundle_a", async (port) => {
+        await page.goto(`http://localhost:${port}/bundle_a`);
+        await expectRenderedRoutes(page, [
+          "bundle_a.tsx",
+          "bundle_a._index.tsx",
+        ]);
 
-        test("Vite Environment API message", () => {
-          expect(stdout).toContain("Using Vite Environment API");
-        });
+        await page.goto(`http://localhost:${port}/bundle_a/route_a`);
+        await expectRenderedRoutes(page, [
+          "bundle_a.tsx",
+          "bundle_a.route_a.tsx",
+        ]);
 
-        test("server", async ({ page }) => {
-          let pageErrors: Error[] = [];
-          page.on("pageerror", (error) => pageErrors.push(error));
+        await page.goto(`http://localhost:${port}/bundle_a/route_b`);
+        await expectRenderedRoutes(page, [
+          "bundle_a.tsx",
+          "bundle_a.route_b.tsx",
+        ]);
 
-          await withBundleServer(cwd, "root", async (port) => {
-            await page.goto(`http://localhost:${port}/`);
-            await expectRenderedRoutes(page, ["_index.tsx"]);
-
-            let _404s = ["/bundle_a", "/bundle_b", "/bundle_c"];
-            for (let path of _404s) {
-              let response = await page.goto(`http://localhost:${port}${path}`);
-              expect(response?.status()).toBe(404);
-            }
-          });
-
-          await withBundleServer(cwd, "bundle_a", async (port) => {
-            await page.goto(`http://localhost:${port}/bundle_a`);
-            await expectRenderedRoutes(page, [
-              "bundle_a.tsx",
-              "bundle_a._index.tsx",
-            ]);
-
-            await page.goto(`http://localhost:${port}/bundle_a/route_a`);
-            await expectRenderedRoutes(page, [
-              "bundle_a.tsx",
-              "bundle_a.route_a.tsx",
-            ]);
-
-            await page.goto(`http://localhost:${port}/bundle_a/route_b`);
-            await expectRenderedRoutes(page, [
-              "bundle_a.tsx",
-              "bundle_a.route_b.tsx",
-            ]);
-
-            let _404s = ["/bundle_b", "/bundle_c"];
-            for (let path of _404s) {
-              let response = await page.goto(`http://localhost:${port}${path}`);
-              expect(response?.status()).toBe(404);
-            }
-          });
-
-          await withBundleServer(cwd, "bundle_b", async (port) => {
-            await page.goto(`http://localhost:${port}/bundle_b`);
-            await expectRenderedRoutes(page, ["bundle_b.tsx"]);
-
-            await page.goto(`http://localhost:${port}/bundle_b/route_a`);
-            await expectRenderedRoutes(page, [
-              "bundle_b.tsx",
-              "bundle_b.route_a.tsx",
-            ]);
-
-            await page.goto(`http://localhost:${port}/bundle_b/route_b`);
-            await expectRenderedRoutes(page, [
-              "bundle_b.tsx",
-              "bundle_b.route_b.tsx",
-            ]);
-
-            let _404s = ["/bundle_a", "/bundle_c"];
-            for (let path of _404s) {
-              let response = await page.goto(`http://localhost:${port}${path}`);
-              expect(response?.status()).toBe(404);
-            }
-          });
-
-          await withBundleServer(cwd, "bundle_c", async (port) => {
-            await page.goto(`http://localhost:${port}/bundle_c`);
-            await expectRenderedRoutes(page, [
-              "_pathless.tsx",
-              "_pathless.bundle_c.tsx",
-            ]);
-
-            await page.goto(`http://localhost:${port}/bundle_c/route_a`);
-            await expectRenderedRoutes(page, [
-              "_pathless.tsx",
-              "_pathless.bundle_c.tsx",
-              "_pathless.bundle_c.route_a.tsx",
-            ]);
-
-            await page.goto(`http://localhost:${port}/bundle_c/route_b`);
-            await expectRenderedRoutes(page, [
-              "_pathless.tsx",
-              "_pathless.bundle_c.tsx",
-              "_pathless.bundle_c.route_b.tsx",
-            ]);
-
-            let _404s = ["/bundle_a", "/bundle_b"];
-            for (let path of _404s) {
-              let response = await page.goto(`http://localhost:${port}${path}`);
-              expect(response?.status()).toBe(404);
-            }
-          });
-
-          expect(pageErrors).toEqual([]);
-        });
-
-        test("React Router browser manifest", () => {
-          let clientAssetFiles = fs.readdirSync(
-            path.join(cwd, "build", "client", "assets"),
-          );
-          let manifestFiles = clientAssetFiles.filter((filename) =>
-            filename.startsWith("manifest-"),
-          );
-
-          expect(manifestFiles.length).toEqual(1);
-        });
-
-        test("Vite manifests", () => {
-          [
-            ["client"],
-            ["server", "bundle_a"],
-            ["server", "bundle_b"],
-            ["server", "bundle_c"],
-            ["server", "root"],
-          ].forEach((buildPaths) => {
-            let viteManifestFiles = fs.readdirSync(
-              path.join(cwd, "build", ...buildPaths, ".vite"),
-            );
-            expect(viteManifestFiles).toEqual(["manifest.json"]);
-          });
-        });
-
-        test("React Router build manifest", () => {
-          let manifestPath = path.join(cwd, "build", "test-manifest.json");
-          expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
-            serverBundles: {
-              bundle_c: {
-                id: "bundle_c",
-                file: "build/server/bundle_c/index.js",
-              },
-              bundle_a: {
-                id: "bundle_a",
-                file: "build/server/bundle_a/index.js",
-              },
-              bundle_b: {
-                id: "bundle_b",
-                file: "build/server/bundle_b/index.js",
-              },
-              root: {
-                id: "root",
-                file: "build/server/root/index.js",
-              },
-            },
-            routeIdToServerBundleId: {
-              "routes/_pathless.bundle_c.route_a": "bundle_c",
-              "routes/_pathless.bundle_c.route_b": "bundle_c",
-              "routes/_pathless.bundle_c": "bundle_c",
-              "routes/bundle_a.route_a": "bundle_a",
-              "routes/bundle_a.route_b": "bundle_a",
-              "routes/bundle_b.route_a": "bundle_b",
-              "routes/bundle_b.route_b": "bundle_b",
-              "routes/bundle_a._index": "bundle_a",
-              "routes/bundle_b": "bundle_b",
-              "routes/_index": "root",
-            },
-            routes: {
-              root: {
-                path: "",
-                id: "root",
-                file: "app/root.tsx",
-              },
-              "routes/_pathless.bundle_c.route_a": {
-                file: "app/routes/_pathless.bundle_c.route_a.tsx",
-                id: "routes/_pathless.bundle_c.route_a",
-                path: "route_a",
-                parentId: "routes/_pathless.bundle_c",
-              },
-              "routes/_pathless.bundle_c.route_b": {
-                file: "app/routes/_pathless.bundle_c.route_b.tsx",
-                id: "routes/_pathless.bundle_c.route_b",
-                path: "route_b",
-                parentId: "routes/_pathless.bundle_c",
-              },
-              "routes/_pathless.bundle_c": {
-                file: "app/routes/_pathless.bundle_c.tsx",
-                id: "routes/_pathless.bundle_c",
-                path: "bundle_c",
-                parentId: "routes/_pathless",
-              },
-              "routes/bundle_a.route_a": {
-                file: "app/routes/bundle_a.route_a.tsx",
-                id: "routes/bundle_a.route_a",
-                path: "route_a",
-                parentId: "routes/bundle_a",
-              },
-              "routes/bundle_a.route_b": {
-                file: "app/routes/bundle_a.route_b.tsx",
-                id: "routes/bundle_a.route_b",
-                path: "route_b",
-                parentId: "routes/bundle_a",
-              },
-              "routes/bundle_b.route_a": {
-                file: "app/routes/bundle_b.route_a.tsx",
-                id: "routes/bundle_b.route_a",
-                path: "route_a",
-                parentId: "routes/bundle_b",
-              },
-              "routes/bundle_b.route_b": {
-                file: "app/routes/bundle_b.route_b.tsx",
-                id: "routes/bundle_b.route_b",
-                path: "route_b",
-                parentId: "routes/bundle_b",
-              },
-              "routes/bundle_a._index": {
-                file: "app/routes/bundle_a._index.tsx",
-                id: "routes/bundle_a._index",
-                index: true,
-                parentId: "routes/bundle_a",
-              },
-              "routes/_pathless": {
-                file: "app/routes/_pathless.tsx",
-                id: "routes/_pathless",
-                parentId: "root",
-              },
-              "routes/bundle_a": {
-                file: "app/routes/bundle_a.tsx",
-                id: "routes/bundle_a",
-                path: "bundle_a",
-                parentId: "root",
-              },
-              "routes/bundle_b": {
-                file: "app/routes/bundle_b.tsx",
-                id: "routes/bundle_b",
-                path: "bundle_b",
-                parentId: "root",
-              },
-              "routes/_index": {
-                file: "app/routes/_index.tsx",
-                id: "routes/_index",
-                index: true,
-                parentId: "root",
-              },
-            },
-          });
-        });
+        let _404s = ["/bundle_b", "/bundle_c"];
+        for (let path of _404s) {
+          let response = await page.goto(`http://localhost:${port}${path}`);
+          expect(response?.status()).toBe(404);
+        }
       });
+
+      await withBundleServer(cwd, "bundle_b", async (port) => {
+        await page.goto(`http://localhost:${port}/bundle_b`);
+        await expectRenderedRoutes(page, ["bundle_b.tsx"]);
+
+        await page.goto(`http://localhost:${port}/bundle_b/route_a`);
+        await expectRenderedRoutes(page, [
+          "bundle_b.tsx",
+          "bundle_b.route_a.tsx",
+        ]);
+
+        await page.goto(`http://localhost:${port}/bundle_b/route_b`);
+        await expectRenderedRoutes(page, [
+          "bundle_b.tsx",
+          "bundle_b.route_b.tsx",
+        ]);
+
+        let _404s = ["/bundle_a", "/bundle_c"];
+        for (let path of _404s) {
+          let response = await page.goto(`http://localhost:${port}${path}`);
+          expect(response?.status()).toBe(404);
+        }
+      });
+
+      await withBundleServer(cwd, "bundle_c", async (port) => {
+        await page.goto(`http://localhost:${port}/bundle_c`);
+        await expectRenderedRoutes(page, [
+          "_pathless.tsx",
+          "_pathless.bundle_c.tsx",
+        ]);
+
+        await page.goto(`http://localhost:${port}/bundle_c/route_a`);
+        await expectRenderedRoutes(page, [
+          "_pathless.tsx",
+          "_pathless.bundle_c.tsx",
+          "_pathless.bundle_c.route_a.tsx",
+        ]);
+
+        await page.goto(`http://localhost:${port}/bundle_c/route_b`);
+        await expectRenderedRoutes(page, [
+          "_pathless.tsx",
+          "_pathless.bundle_c.tsx",
+          "_pathless.bundle_c.route_b.tsx",
+        ]);
+
+        let _404s = ["/bundle_a", "/bundle_b"];
+        for (let path of _404s) {
+          let response = await page.goto(`http://localhost:${port}${path}`);
+          expect(response?.status()).toBe(404);
+        }
+      });
+
+      expect(pageErrors).toEqual([]);
+    });
+
+    test("React Router browser manifest", () => {
+      let clientAssetFiles = fs.readdirSync(
+        path.join(cwd, "build", "client", "assets"),
+      );
+      let manifestFiles = clientAssetFiles.filter((filename) =>
+        filename.startsWith("manifest-"),
+      );
+
+      expect(manifestFiles.length).toEqual(1);
+    });
+
+    test("Vite manifests", () => {
+      [
+        ["client"],
+        ["server", "bundle_a"],
+        ["server", "bundle_b"],
+        ["server", "bundle_c"],
+        ["server", "root"],
+      ].forEach((buildPaths) => {
+        let viteManifestFiles = fs.readdirSync(
+          path.join(cwd, "build", ...buildPaths, ".vite"),
+        );
+        expect(viteManifestFiles).toEqual(["manifest.json"]);
+      });
+    });
+
+    test("React Router build manifest", () => {
+      let manifestPath = path.join(cwd, "build", "test-manifest.json");
+      expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
+        serverBundles: {
+          bundle_c: {
+            id: "bundle_c",
+            file: "build/server/bundle_c/index.js",
+          },
+          bundle_a: {
+            id: "bundle_a",
+            file: "build/server/bundle_a/index.js",
+          },
+          bundle_b: {
+            id: "bundle_b",
+            file: "build/server/bundle_b/index.js",
+          },
+          root: {
+            id: "root",
+            file: "build/server/root/index.js",
+          },
+        },
+        routeIdToServerBundleId: {
+          "routes/_pathless.bundle_c.route_a": "bundle_c",
+          "routes/_pathless.bundle_c.route_b": "bundle_c",
+          "routes/_pathless.bundle_c": "bundle_c",
+          "routes/bundle_a.route_a": "bundle_a",
+          "routes/bundle_a.route_b": "bundle_a",
+          "routes/bundle_b.route_a": "bundle_b",
+          "routes/bundle_b.route_b": "bundle_b",
+          "routes/bundle_a._index": "bundle_a",
+          "routes/bundle_b": "bundle_b",
+          "routes/_index": "root",
+        },
+        routes: {
+          root: {
+            path: "",
+            id: "root",
+            file: "app/root.tsx",
+          },
+          "routes/_pathless.bundle_c.route_a": {
+            file: "app/routes/_pathless.bundle_c.route_a.tsx",
+            id: "routes/_pathless.bundle_c.route_a",
+            path: "route_a",
+            parentId: "routes/_pathless.bundle_c",
+          },
+          "routes/_pathless.bundle_c.route_b": {
+            file: "app/routes/_pathless.bundle_c.route_b.tsx",
+            id: "routes/_pathless.bundle_c.route_b",
+            path: "route_b",
+            parentId: "routes/_pathless.bundle_c",
+          },
+          "routes/_pathless.bundle_c": {
+            file: "app/routes/_pathless.bundle_c.tsx",
+            id: "routes/_pathless.bundle_c",
+            path: "bundle_c",
+            parentId: "routes/_pathless",
+          },
+          "routes/bundle_a.route_a": {
+            file: "app/routes/bundle_a.route_a.tsx",
+            id: "routes/bundle_a.route_a",
+            path: "route_a",
+            parentId: "routes/bundle_a",
+          },
+          "routes/bundle_a.route_b": {
+            file: "app/routes/bundle_a.route_b.tsx",
+            id: "routes/bundle_a.route_b",
+            path: "route_b",
+            parentId: "routes/bundle_a",
+          },
+          "routes/bundle_b.route_a": {
+            file: "app/routes/bundle_b.route_a.tsx",
+            id: "routes/bundle_b.route_a",
+            path: "route_a",
+            parentId: "routes/bundle_b",
+          },
+          "routes/bundle_b.route_b": {
+            file: "app/routes/bundle_b.route_b.tsx",
+            id: "routes/bundle_b.route_b",
+            path: "route_b",
+            parentId: "routes/bundle_b",
+          },
+          "routes/bundle_a._index": {
+            file: "app/routes/bundle_a._index.tsx",
+            id: "routes/bundle_a._index",
+            index: true,
+            parentId: "routes/bundle_a",
+          },
+          "routes/_pathless": {
+            file: "app/routes/_pathless.tsx",
+            id: "routes/_pathless",
+            parentId: "root",
+          },
+          "routes/bundle_a": {
+            file: "app/routes/bundle_a.tsx",
+            id: "routes/bundle_a",
+            path: "bundle_a",
+            parentId: "root",
+          },
+          "routes/bundle_b": {
+            file: "app/routes/bundle_b.tsx",
+            id: "routes/bundle_b",
+            path: "bundle_b",
+            parentId: "root",
+          },
+          "routes/_index": {
+            file: "app/routes/_index.tsx",
+            id: "routes/_index",
+            index: true,
+            parentId: "root",
+          },
+        },
+      });
+    });
+  });
 });

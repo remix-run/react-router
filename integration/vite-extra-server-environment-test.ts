@@ -113,7 +113,6 @@ test("ignores external server environments without skipping React Router build h
   expect(
     fs
       .readdirSync(path.join(cwd, "build/client/assets"))
-      .filter((file) => /^test-.*\.txt$/.test(file))
-      .length,
+      .filter((file) => /^test-.*\.txt$/.test(file)).length,
   ).toBe(1);
 });

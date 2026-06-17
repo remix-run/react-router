@@ -11,6 +11,6 @@
     "rootDir": ".",
     "outDir": "./dist",
     "noEmit": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   }
 }
