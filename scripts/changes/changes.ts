@@ -399,7 +399,7 @@ function hasBreakingChangePrefix(content: string): boolean {
  * Formats a changelog entry from change file content
  */
 function formatChangelogEntry(change: ChangeFile): string {
-  let lines = change.content.trim().split("\n");
+  let lines = normalizeChangeContent(change.content).split("\n");
   let base = "https://github.com/remix-run/react-router";
   // prettier-ignore
   let link =
@@ -421,6 +421,26 @@ function formatChangelogEntry(change: ChangeFile): string {
   }
 
   return formatted.join("\n");
+}
+
+/**
+ * Collapses editor-formatted "summary + bullet list" content without changing
+ * multi-paragraph entries or entries with richer markdown like code blocks.
+ */
+function normalizeChangeContent(content: string): string {
+  let normalized = content.trim();
+  let lines = normalized.split("\n");
+
+  if (
+    lines.length >= 3 &&
+    lines[0].trim().length > 0 &&
+    lines[1].trim() === "" &&
+    lines.slice(2).every((line) => line.trimStart().startsWith("- "))
+  ) {
+    return [lines[0], ...lines.slice(2)].join("\n");
+  }
+
+  return normalized;
 }
 
 /**
@@ -470,7 +490,7 @@ function generateBumpTypeSection(
   }
 
   let includeBlankLine = changes.some((change) =>
-    change.content.trim().includes("\n\n"),
+    normalizeChangeContent(change.content).includes("\n\n"),
   );
 
   for (let change of changes) {
