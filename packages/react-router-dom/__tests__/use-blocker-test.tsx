@@ -25,6 +25,7 @@ describe("navigation blocking with useBlocker", () => {
   let node: HTMLDivElement;
   let router: Router;
   let blocker: Blocker | null = null;
+  let secondBlocker: Blocker | null = null;
   let root: ReactDOM.Root;
 
   beforeEach(() => {
@@ -518,6 +519,130 @@ describe("navigation blocking with useBlocker", () => {
         expect(h1?.textContent).toBe("Home");
       });
     });
+
+    describe.only("exiting from blocked state with 2 blockers", () => {
+      beforeEach(() => {
+        let initialEntries = ["/"];
+        let initialIndex = 0;
+        router = createMemoryRouter(
+          [
+            {
+              element: React.createElement(() => {
+                let b = useBlocker(true);
+                blocker = b;
+                let b2 = useBlocker(false);
+                secondBlocker = b2;
+                return (
+                  <div>
+                    <NavLink to="/">Home</NavLink>
+                    <NavLink to="/about">About</NavLink>
+                    {b.state === "blocked" && (
+                      <div>
+                        <button data-action="proceed" onClick={b.proceed}>
+                          Proceed
+                        </button>
+                        <button data-action="reset" onClick={b.reset}>
+                          Reset
+                        </button>
+                      </div>
+                    )}
+                    {b2.state === "blocked" && (
+                      <div>
+                        <button data-action="proceed-2" onClick={b2.proceed}>
+                          Proceed 2
+                        </button>
+                        <button data-action="reset-2" onClick={b2.reset}>
+                          Reset 2
+                        </button>
+                      </div>
+                    )}
+                    <Outlet />
+                  </div>
+                );
+              }),
+              children: [
+                {
+                  path: "/",
+                  element: <h1>Home</h1>,
+                },
+                {
+                  path: "/about",
+                  element: <h1>About</h1>,
+                  loader: slowLoader,
+                },
+              ],
+            },
+          ],
+          {
+            initialEntries,
+            initialIndex,
+          }
+        );
+        React.act(() => {
+          root = ReactDOM.createRoot(node);
+          root.render(<RouterProvider router={router} />);
+        });
+      });
+
+      afterEach(() => {
+        React.act(() => root.unmount());
+      });
+
+      it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
+        React.act(() => {
+          click(node.querySelector("a[href='/about']"));
+        });
+        React.act(() => {
+          click(node.querySelector("[data-action='proceed']"));
+        });
+        expect(blocker).toEqual({
+          state: "proceeding",
+          proceed: undefined,
+          reset: undefined,
+          location: expect.any(Object),
+        });
+        expect(secondBlocker).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
+      });
+
+      it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
+        React.act(() => {
+          click(node.querySelector("a[href='/about']"));
+        });
+        await React.act(async () => {
+          click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
+        });
+        expect(blocker).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
+        expect(secondBlocker).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
+      });
+
+      it("navigates after proceeding navigation completes", async () => {
+        React.act(() => {
+          click(node.querySelector("a[href='/about']"));
+        });
+        await React.act(async () => {
+          click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
+        });
+        let h1 = node.querySelector("h1");
+        expect(h1?.textContent).toBe("About");
+      });
+    })
   });
 
   describe("on <Link replace> navigation", () => {

@@ -1045,40 +1045,43 @@ export function createRouter(init: RouterInit): Router {
             "createHashRouter and the user manually changes the URL."
         );
 
-        let blockerKey = shouldBlockNavigation({
+        let blockerKeys = shouldBlockNavigation({
           currentLocation: state.location,
           nextLocation: location,
           historyAction,
         });
 
-        if (blockerKey && delta != null) {
+        if (blockerKeys.length > 0 && delta != null) {
           // Restore the URL to match the current UI, but don't update router state
           let nextHistoryUpdatePromise = new Promise<void>((resolve) => {
             unblockBlockerHistoryUpdate = resolve;
           });
           init.history.go(delta * -1);
 
-          // Put the blocker into a blocked state
-          updateBlocker(blockerKey, {
-            state: "blocked",
-            location,
-            proceed() {
-              updateBlocker(blockerKey!, {
-                state: "proceeding",
-                proceed: undefined,
-                reset: undefined,
-                location,
-              });
-              // Re-do the same POP navigation we just blocked, after the url
-              // restoration is also complete.  See:
-              // https://github.com/remix-run/react-router/issues/11613
-              nextHistoryUpdatePromise.then(() => init.history.go(delta));
-            },
-            reset() {
-              let blockers = new Map(state.blockers);
-              blockers.set(blockerKey!, IDLE_BLOCKER);
-              updateState({ blockers });
-            },
+          blockerKeys.forEach((blockerKey) => {
+            // Put the blocker into a blocked state
+            updateBlocker(blockerKey, {
+              state: "blocked",
+              location,
+              proceed() {
+                updateBlocker(blockerKey!, {
+                  state: "proceeding",
+                  proceed: undefined,
+                  reset: undefined,
+                  location,
+                });
+                // Re-do the same POP navigation we just blocked, after the url
+                // restoration is also complete.  See:
+                // https://github.com/remix-run/react-router/issues/11613
+                // TODO : do we need a condition here to check that this is the last blocker
+                nextHistoryUpdatePromise.then(() => init.history.go(delta));
+              },
+              reset() {
+                let blockers = new Map(state.blockers);
+                blockers.set(blockerKey!, IDLE_BLOCKER);
+                updateState({ blockers });
+              },
+            });
           });
           return;
         }
@@ -1409,33 +1412,36 @@ export function createRouter(init: RouterInit): Router {
 
     let flushSync = (opts && opts.flushSync) === true;
 
-    let blockerKey = shouldBlockNavigation({
+    let blockerKeys = shouldBlockNavigation({
       currentLocation,
       nextLocation,
       historyAction,
     });
 
-    if (blockerKey) {
-      // Put the blocker into a blocked state
-      updateBlocker(blockerKey, {
-        state: "blocked",
-        location: nextLocation,
-        proceed() {
-          updateBlocker(blockerKey!, {
-            state: "proceeding",
-            proceed: undefined,
-            reset: undefined,
-            location: nextLocation,
-          });
-          // Send the same navigation through
-          navigate(to, opts);
-        },
-        reset() {
-          let blockers = new Map(state.blockers);
-          blockers.set(blockerKey!, IDLE_BLOCKER);
-          updateState({ blockers });
-        },
-      });
+    if (blockerKeys.length > 0) {
+      blockerKeys.forEach((blockerKey) => {
+        // Put the blocker into a blocked state
+        updateBlocker(blockerKey, {
+          state: "blocked",
+          location: nextLocation,
+          proceed() {
+            updateBlocker(blockerKey!, {
+              state: "proceeding",
+              proceed: undefined,
+              reset: undefined,
+              location: nextLocation,
+            });
+            // Send the same navigation through
+            // TODO Do we need to add a condition here to check this is the last blocker
+            navigate(to, opts);
+          },
+          reset() {
+            let blockers = new Map(state.blockers);
+            blockers.set(blockerKey!, IDLE_BLOCKER);
+            updateState({ blockers });
+          },
+        });
+      })
       return;
     }
 
@@ -3114,32 +3120,25 @@ export function createRouter(init: RouterInit): Router {
     currentLocation: Location;
     nextLocation: Location;
     historyAction: HistoryAction;
-  }): string | undefined {
+  }): string[] {
     if (blockerFunctions.size === 0) {
-      return;
+      return [];
     }
 
-    // We ony support a single active blocker at the moment since we don't have
-    // any compelling use cases for multi-blocker yet
-    if (blockerFunctions.size > 1) {
-      warning(false, "A router only supports one blocker at a time");
-    }
+    return Array.from(blockerFunctions.entries()).map(([blockerKey, blockerFunction]) => {
+      let blocker = state.blockers.get(blockerKey);
+      if (blocker && blocker.state === "proceeding") {
+        // If the blocker is currently proceeding, we don't need to re-check
+        // it and can let this navigation continue
+        return;
+      }
 
-    let entries = Array.from(blockerFunctions.entries());
-    let [blockerKey, blockerFunction] = entries[entries.length - 1];
-    let blocker = state.blockers.get(blockerKey);
-
-    if (blocker && blocker.state === "proceeding") {
-      // If the blocker is currently proceeding, we don't need to re-check
-      // it and can let this navigation continue
-      return;
-    }
-
-    // At this point, we know we're unblocked/blocked so we need to check the
-    // user-provided blocker function
-    if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
-      return blockerKey;
-    }
+      // At this point, we know we're unblocked/blocked so we need to check the
+      // user-provided blocker function
+      if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
+        return blockerKey;
+      }
+    }).filter((blockerKey) => blockerKey !== undefined)
   }
 
   function handleNavigational404(pathname: string) {
