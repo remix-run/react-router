@@ -716,6 +716,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   // change or route file addition/removal.
   let ctx: ReactRouterPluginContext;
 
+  let closePluginResources = async () => {
+    await viteChildCompiler?.close();
+    viteChildCompiler = null;
+    await reactRouterConfigLoader.close();
+
+    let typegenWatcher = await typegenWatcherPromise;
+    await typegenWatcher?.close();
+  };
+
   /** Mutates `ctx` as a side effect */
   let updatePluginContext = async (): Promise<void> => {
     let reactRouterConfig: ResolvedReactRouterConfig;
@@ -1429,8 +1438,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                       "Using Vite Environment API (experimental)",
                     );
 
-                    let { reactRouterConfig } = ctx;
-
                     await cleanBuildDirectory(viteConfig, ctx);
 
                     await builder.build(builder.environments.client);
@@ -1443,15 +1450,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     await Promise.all(serverEnvironments.map(builder.build));
 
                     await cleanViteManifests(environments, ctx);
-
-                    let { buildManifest } = ctx;
-                    invariant(buildManifest, "Expected build manifest");
-
-                    await reactRouterConfig.buildEnd?.({
-                      buildManifest,
-                      reactRouterConfig,
-                      viteConfig,
-                    });
                   },
                 },
               }
@@ -2052,11 +2050,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         },
       },
       async buildEnd() {
-        await viteChildCompiler?.close();
-        await reactRouterConfigLoader.close();
+        if (
+          viteConfig?.command === "build" &&
+          ctx.reactRouterConfig.future.v8_viteEnvironmentApi
+        ) {
+          return;
+        }
 
-        let typegenWatcher = await typegenWatcherPromise;
-        await typegenWatcher?.close();
+        await closePluginResources();
       },
     },
     {
@@ -2889,6 +2890,42 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     }),
+    {
+      name: "react-router-build-end",
+      sharedDuringBuild: true,
+      config: {
+        order: "post",
+        handler({ builder: { buildApp } = {} }) {
+          return {
+            builder: {
+              async buildApp(builder) {
+                try {
+                  await buildApp?.(builder);
+
+                  if (!ctx.reactRouterConfig.future.v8_viteEnvironmentApi) {
+                    return;
+                  }
+
+                  invariant(viteConfig);
+                  let { buildManifest, reactRouterConfig } = ctx;
+                  invariant(buildManifest, "Expected build manifest");
+
+                  await reactRouterConfig.buildEnd?.({
+                    buildManifest,
+                    reactRouterConfig,
+                    viteConfig,
+                  });
+                } finally {
+                  if (ctx?.reactRouterConfig.future.v8_viteEnvironmentApi) {
+                    await closePluginResources();
+                  }
+                }
+              },
+            },
+          };
+        },
+      },
+    },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
   ];

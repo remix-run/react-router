@@ -120,7 +120,7 @@ for (let previewServerPrerendering of [false, true]) {
     }
   `,
     "app/routes/about.tsx": js`
-    import { useActionData, useLoaderData } from "react-router";
+    import { useLoaderData } from "react-router";
 
     export function meta({ data }) {
       return [{
@@ -306,6 +306,59 @@ for (let previewServerPrerendering of [false, true]) {
         expect(html).toMatch('<h2 data-route="true">About</h2>');
         expect(html).toMatch(
           '<p data-loader-data="true">About Loader Data</p>',
+        );
+      });
+
+      test("Runs buildEnd after prerendering is complete", async () => {
+        test.skip(!previewServerPrerendering);
+
+        let cwd = await createProject(
+          {
+            ...files,
+            "react-router.config.ts": js`
+            import fs from "node:fs";
+            import path from "node:path";
+
+            export default {
+              prerender: ["/about"],
+              future: {
+                unstable_previewServerPrerendering: true,
+              },
+              async buildEnd({ reactRouterConfig }) {
+                let clientBuildDirectory = path.join(
+                  reactRouterConfig.buildDirectory,
+                  "client"
+                );
+
+                fs.writeFileSync(
+                  "BUILD_END_META.json",
+                  JSON.stringify({
+                    htmlExists: fs.existsSync(
+                      path.join(clientBuildDirectory, "about", "index.html")
+                    ),
+                    dataExists: fs.existsSync(
+                      path.join(clientBuildDirectory, "about.data")
+                    ),
+                  })
+                );
+              },
+            };
+          `,
+          },
+          "vite-6-template",
+        );
+
+        let result = build({ cwd });
+        expect(result.stderr.toString()).toBeFalsy();
+        expect(result.status).toBe(0);
+
+        await expect(
+          fs.promises.readFile(path.join(cwd, "BUILD_END_META.json"), "utf8"),
+        ).resolves.toEqual(
+          JSON.stringify({
+            htmlExists: true,
+            dataExists: true,
+          }),
         );
       });
 
