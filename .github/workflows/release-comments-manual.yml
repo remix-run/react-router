@@ -2,6 +2,10 @@ name: Release Comments (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        required: true
+        description: Release version, e.g. 7.18.0
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -35,4 +39,4 @@ jobs:
       - name: Comment on released issues and pull requests
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm run release-comments
+        run: pnpm run release-comments --release=${{ github.event.inputs.release }}

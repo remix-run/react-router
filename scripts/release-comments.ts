@@ -6,6 +6,7 @@
 // 6. close issues that are referenced in the PRs using `gh issue close`
 
 import semver from "semver";
+import { parseArgs } from "node:util";
 import { logAndExec } from "./utils/process.ts";
 
 let PACKAGE_NAME = "react-router"; // Package name used in git tags: react-router@x.x.x
@@ -14,13 +15,34 @@ let GITHUB_REPOSITORY = "remix-run/react-router";
 let PR_LABELS_TO_REMOVE = "awaiting release";
 let ISSUE_LABELS_TO_REMOVE = "awaiting release";
 let ISSUE_LABELS_TO_KEEP_OPEN = "🗺 Roadmap";
-let DRY_RUN = process.argv.includes("--dry-run");
+
+let { values } = parseArgs({
+  strict: true,
+  options: {
+    "dry-run": {
+      type: "boolean",
+    },
+    release: {
+      type: "string",
+    },
+  },
+});
+
+let DRY_RUN = values["dry-run"];
+let RELEASE = values.release;
+
+if (RELEASE) {
+  invariant(
+    semver.valid(RELEASE),
+    `Expected --release to be a semver version, got ${RELEASE}`,
+  );
+}
 
 if (DRY_RUN) {
   console.log("⚠️ Running in dry-run mode -- no changes will be made");
 }
 
-let { latest, previous } = findBoundingTags();
+let { latest, previous } = findBoundingTags(RELEASE);
 
 // Find the git comments between the tags
 let gitCommits = getCommits(previous, latest);
@@ -38,7 +60,7 @@ for (let pr of prs) {
   await commentOnPrAndLinkedIssues(pr, latest);
 }
 
-function findBoundingTags() {
+function findBoundingTags(release?: string) {
   // Determine the tags making up the delta from the prior release to this release
   let packageRegex = new RegExp(`^${PACKAGE_NAME}@`);
   let stdout = logAndExec(
@@ -54,7 +76,13 @@ function findBoundingTags() {
     .split("\n")
     .map((tag): Tag => ({ raw: tag, clean: tag.replace(packageRegex, "") }));
 
-  let latest = stableGitTags[0];
+  let latest = release
+    ? stableGitTags.find(
+        (tag) => tag.raw === `${PACKAGE_NAME}@${release}` || tag.clean === release,
+      )
+    : stableGitTags[0];
+  invariant(latest, `No stable release found for ${release}`);
+
   let expectedMajor = semver.major(latest.clean);
   if (semver.minor(latest.clean) === 0 && semver.patch(latest.clean) === 0) {
     expectedMajor -= 1;
@@ -91,7 +119,7 @@ function getCommits(from: Tag, to: Tag): Array<string> {
 }
 
 async function commentOnPrAndLinkedIssues(pr: MergedPR, latest: Tag) {
-  let prComment = `🤖 Hello there,\n\nWe just published version \`${latest.clean}\` which includes this pull request. If you'd like to take it for a test run please try it out and let us know what you think!\n\nThanks!`;
+  let prComment = `🤖 Hello there,\n\nWe recently published version \`${latest.clean}\` which includes this pull request. If you'd like to take it for a test run please try it out and let us know what you think!\n\nThanks!`;
 
   debug(`\nPR: https://github.com/${GITHUB_REPOSITORY}/pull/${pr.number}`);
 
@@ -124,7 +152,7 @@ async function commentOnPrAndLinkedIssues(pr: MergedPR, latest: Tag) {
 }
 
 async function commentOnIssue(issue: number, latest: Tag) {
-  let issueComment = `🤖 Hello there,\n\nWe just published version \`${latest.clean}\` which involves this issue. If you'd like to take it for a test run please try it out and let us know what you think!\n\nThanks!`;
+  let issueComment = `🤖 Hello there,\n\nWe recently published version \`${latest.clean}\` which involves this issue. If you'd like to take it for a test run please try it out and let us know what you think!\n\nThanks!`;
 
   debug(`Issue: https://github.com/${GITHUB_REPOSITORY}/issues/${issue}`);
 

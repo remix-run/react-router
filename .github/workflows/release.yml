@@ -24,7 +24,10 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Don't cancel in-progress runs - once a release flow has started we want it
+  # to run all the way through so subsequent commits (like formatting) don't
+  # interrupt publishing/commenting
+  cancel-in-progress: false
 
 jobs:
   check:
