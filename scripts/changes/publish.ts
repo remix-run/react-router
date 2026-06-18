@@ -59,8 +59,8 @@ if (!branch) {
   throw new Error("--branch is required");
 }
 
-let isLatest = branch === "main";
-let isV7 = branch === "v7";
+let shouldTagGithubReleaseAsLatest = branch === "main";
+let shouldUseVersion7NpmTag = branch === "v7";
 
 interface PublishedPackage {
   packageName: string;
@@ -197,7 +197,7 @@ async function main() {
   console.log("Publishing packages to npm...\n");
 
   let args = `--access public --no-git-checks --report-summary`;
-  let publishCommands = isV7
+  let publishCommands = shouldUseVersion7NpmTag
     ? // Two-phase publish:
       //  - everything except `react-router-dom` as `version-7`
       //  - `react-router-dom` as `latest` because it was dropped in v8
@@ -318,7 +318,7 @@ async function main() {
       pkg.packageName,
       pkg.version,
       getGithubReleaseBody(pkg.version),
-      { makeLatest: isLatest },
+      { makeLatest: shouldTagGithubReleaseAsLatest },
     );
     if (result.status === "created") {
       console.log(`  ✓ ${pkg.packageName} v${pkg.version}`);
