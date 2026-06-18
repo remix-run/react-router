@@ -25,7 +25,7 @@ jobs:
     steps:
       # Check's out the base (main) branch - not the PR branch
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6

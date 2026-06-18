@@ -50,7 +50,7 @@ jobs:
     steps:
       # Need to checkout the repo so we can use the `gh` CLI
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Select integration suites
         id: suites
