@@ -23,6 +23,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Removed deprecated `meta` `data` fields](#removed-deprecated-meta-data-fields)
     - [Cloudflare Vite Plugin](#cloudflare-vite-plugin)
     - [`@react-router/architect` `useRequestContextDomainName`](#react-routerarchitect-userequestcontextdomainname)
+    - [Pre-rendering Flow](#pre-rendering-flow)
 - [React Router v7 Releases](#react-router-v7-releases)
   - [v7.18.0](#v7180)
     - [CSRF Check Logic Fix](#csrf-check-logic-fix)
@@ -153,6 +154,10 @@ The React Router Cloudflare dev proxy (`@react-router/dev/vite/cloudflare`) has 
 #### `@react-router/architect` `useRequestContextDomainName`
 
 The `@react-router/architect` `createRequestHandler` `useRequestContextDomainName` option has been removed as that is now the default behavior in v8.
+
+#### Pre-rendering Flow
+
+In v7 we had a `future.unstable_previewServerPrerendering` flag that would opt you into a new pre-rendering flow using the Vite preview server (leveraging the Vite environment API). Now that the Vite environment API is always available on our new Vite 7+ baseline, we dropped this flag and the preview server flow has replaced our old pre-rendering implementation. It _should_ be a non-breaking change but if you see issues, please let us know!
 
 ### Major Changes
 
