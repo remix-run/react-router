@@ -11,7 +11,7 @@ export function hasDependency({
 }) {
   try {
     return Boolean(nodeRequire.resolve(name, { paths: [rootDirectory] }));
-  } catch (err) {
+  } catch {
     return false;
   }
 }

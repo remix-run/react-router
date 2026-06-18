@@ -2,7 +2,7 @@
 // context but want to use Vite's ESM build since Vite 7+ is ESM only
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import {
   cp,
   mkdir,
@@ -219,28 +219,6 @@ const isRouteEntryModuleId = (id: string): boolean => {
 
 const isRouteVirtualModule = (id: string): boolean => {
   return isRouteEntryModuleId(id) || isRouteChunkModuleId(id);
-};
-
-const isServerBuildVirtualModuleId = (id: string): boolean => {
-  return id.split("?")[0] === virtual.serverBuild.id;
-};
-
-const getServerBuildFile = (viteManifest: Vite.Manifest): string => {
-  let serverBuildIds = Object.keys(viteManifest).filter(
-    isServerBuildVirtualModuleId,
-  );
-
-  invariant(
-    serverBuildIds.length <= 1,
-    "Multiple server build files found in manifest",
-  );
-
-  invariant(
-    serverBuildIds.length === 1,
-    "Server build file not found in manifest",
-  );
-
-  return viteManifest[serverBuildIds[0]].file;
 };
 
 type ReactRouterPluginContext = {

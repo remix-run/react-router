@@ -211,6 +211,7 @@ export function encode(
                 deferred,
               ])
                 .then(
+                  // eslint-disable-next-line no-loop-func
                   (resolved) => {
                     processingChain = processingChain.then(async () => {
                       const id = await flatten.call(encoder, resolved);
@@ -242,6 +243,7 @@ export function encode(
                     });
                     return processingChain;
                   },
+                  // eslint-disable-next-line no-loop-func
                   (reason) => {
                     processingChain = processingChain.then(async () => {
                       if (

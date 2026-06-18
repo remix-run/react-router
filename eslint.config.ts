@@ -111,7 +111,7 @@ export default defineConfig([
     },
     settings: {
       react: {
-        version: "detect",
+        version: "19.2.7",
       },
     },
     rules: {
@@ -119,6 +119,12 @@ export default defineConfig([
       "import/first": "off",
       "react/jsx-uses-react": "warn",
       "react/jsx-uses-vars": "warn",
+    },
+  },
+  {
+    files: ["**/*.config.js", "**/jest.config*.js"],
+    rules: {
+      "import/no-anonymous-default-export": "off",
     },
   },
   {
