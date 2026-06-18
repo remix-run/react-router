@@ -4226,9 +4226,7 @@ export function createStaticHandler(
             pattern: getRoutePattern(matches),
             matches,
             params: matches[0].params,
-            // If we're calling middleware then it must be enabled so we can cast
-            // this to the proper type knowing it's not an `AppLoadContext`
-            context: requestContext as RouterContextProvider,
+            context: requestContext,
           },
           async () => {
             let res = await generateMiddlewareResponse(
@@ -4471,9 +4469,7 @@ export function createStaticHandler(
           pattern: getRoutePattern(matches),
           matches,
           params: matches[0].params,
-          // If we're calling middleware then it must be enabled so we can cast
-          // this to the proper type knowing it's not an `AppLoadContext`
-          context: requestContext as RouterContextProvider,
+          context: requestContext,
         },
         async () => {
           let res = await generateMiddlewareResponse(

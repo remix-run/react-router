@@ -335,7 +335,7 @@ Client middleware is simpler because since we are already on the client and are 
 
 ### Context API
 
-The new context system provides type safety and prevents naming conflicts and allows you to provide data to nested middlewares and `action`/`loader` functions. In Framework Mode, this replaces the previous `AppLoadContext` API.
+The context system provides type safety, prevents naming conflicts, and allows you to provide data to nested middlewares and `action`/`loader` functions.
 
 ```ts
 // ✅ Type-safe

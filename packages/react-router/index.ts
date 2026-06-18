@@ -277,8 +277,6 @@ export type {
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
 
-export type { AppLoadContext } from "./lib/server-runtime/data";
-
 export type {
   PageLinkDescriptor,
   HtmlLinkDescriptor,

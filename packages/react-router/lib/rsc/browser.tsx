@@ -488,11 +488,7 @@ export function getRSCSingleFetchDataStrategy(
       // requests returning multiple server payloads (due to clientLoaders, fine
       // grained revalidation, etc.).  This lets us stitch them all together and
       // patch them all at the end
-      // This cast should be fine since this is always run client side and
-      // `context` is always of this type on the client -- unlike on the server
-      // in framework mode when it could be `AppLoadContext`
-      let context = args.context as RouterContextProvider;
-      context.set(renderedRoutesContext, []);
+      args.context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
       // TODO: Confirm that it's correct for us to have multiple rendered routes
@@ -500,7 +496,7 @@ export function getRSCSingleFetchDataStrategy(
       // where we're calling `fetchAndDecode` multiple times. This may be a
       // sign of a logical error in how we're handling client loader routes.
       const renderedRoutesById = new Map<string, RSCRouteManifest[]>();
-      for (const route of context.get(renderedRoutesContext)) {
+      for (const route of args.context.get(renderedRoutesContext)) {
         if (!renderedRoutesById.has(route.id)) {
           renderedRoutesById.set(route.id, []);
         }
@@ -531,10 +527,7 @@ function getFetchAndDecodeViaRSC(
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
 ): FetchAndDecodeFunction {
-  return async (
-    args: DataStrategyFunctionArgs<unknown>,
-    targetRoutes?: string[],
-  ) => {
+  return async (args: DataStrategyFunctionArgs, targetRoutes?: string[]) => {
     let { request, context } = args;
     let url = singleFetchUrl(request.url, "rsc");
     if (request.method === "GET") {
@@ -584,13 +577,8 @@ function getFetchAndDecodeViaRSC(
       }
 
       // Track routes rendered per-single-fetch call so we can gather them up
-      // and patch them in together at the end.  This cast should be fine since
-      // this is always run client side and `context` is always of this type on
-      // the client -- unlike on the server in framework mode when it could be
-      // `AppLoadContext`
-      (context as RouterContextProvider)
-        .get(renderedRoutesContext)
-        .push(...payload.matches);
+      // and patch them in together at the end.
+      context.get(renderedRoutesContext).push(...payload.matches);
 
       let results: DecodedSingleFetchResults = { routes: {} };
       const dataKey = isMutationMethod(request.method)
