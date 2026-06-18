@@ -5,6 +5,11 @@
 [build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test.yml?branch=dev&style=square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
 
+> [!WARNING]
+> With the release of [React Router v8](https://remix.run/blog/react-router-v8), React Router v6 has officially reached End of Life (EOL) and will no longer be receiving further updates.
+>
+> We have upgrade guides for upgrading to [React Router v7](https://reactrouter.com/v7/upgrading/v6) and [React Router v8](https://reactrouter.com/v8/upgrading/v7). We've tried to make the upgrade process as smooth as possible via [Future Flags](https://reactrouter.com/community/api-development-strategy).
+
 React Router is a lightweight, fully-featured routing library for the [React](https://reactjs.org) JavaScript library. React Router runs everywhere that React runs; on the web, on the server (using node.js), and on React Native.
 
 If you're new to React Router, we recommend you start with [the tutorial](https://reactrouter.com/v6/start/tutorial).
