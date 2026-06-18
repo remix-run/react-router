@@ -44,7 +44,7 @@ if (command === "version") {
   await publishPackages();
 } else {
   console.error(
-    `Usage: node scripts/prerelease.ts [version --version <version> | publish] [--dry-run]`,
+    `Usage: node ./scripts/prerelease.ts [version --version <version> | publish] [--dry-run]`,
   );
   process.exit(1);
 }
