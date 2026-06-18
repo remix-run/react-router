@@ -81,6 +81,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fast-glob": "3.3.3",
+    "globals": "^17.6.0",
     "isbot": "^5.1.40",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
