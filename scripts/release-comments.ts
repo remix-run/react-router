@@ -78,7 +78,8 @@ function findBoundingTags(release?: string) {
 
   let latest = release
     ? stableGitTags.find(
-        (tag) => tag.raw === `${PACKAGE_NAME}@${release}` || tag.clean === release,
+        (tag) =>
+          tag.raw === `${PACKAGE_NAME}@${release}` || tag.clean === release,
       )
     : stableGitTags[0];
   invariant(latest, `No stable release found for ${release}`);
