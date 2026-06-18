@@ -198,13 +198,14 @@ async function main() {
 
   let args = `--access public --no-git-checks --report-summary`;
   let publishCommands = isV7
-    ? // Publish v7 releases with the `version-7` tag, except `react-router-dom`
-      // which was dropped in v8 so it continues to get the `latest` tag
+    ? // Two-phase publish:
+      //  - everything except `react-router-dom` as `version-7`
+      //  - `react-router-dom` as `latest` because it was dropped in v8
       [
         `pnpm publish --recursive --filter "./packages/*" --filter "!react-router-dom" --tag version-7 ${args}`,
         `pnpm publish --recursive --filter react-router-dom ${args}`,
       ]
-    : // Publish all as latest
+    : // Single-phase publish: everything as latest
       [`pnpm publish --recursive --filter "./packages/*" ${args}`];
 
   // In dry run mode, query npm to determine what would be published
