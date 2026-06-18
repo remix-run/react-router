@@ -39,4 +39,4 @@ jobs:
       - name: Comment on released issues and pull requests
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm run release-comments --release=${{ github.event.inputs.release }} --dry-run
+        run: pnpm run release-comments --release=${{ github.event.inputs.release }}
