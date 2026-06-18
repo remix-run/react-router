@@ -5,6 +5,13 @@ packages:
   - "playground/*"
   - "scripts"
 
+allowBuilds:
+  esbuild: false
+  msw: false
+  sharp: false
+  unrs-resolver: false
+  workerd: false
+
 catalog:
   "@types/react": ^19.2.17
   "@types/react-dom": ^19.2.3
