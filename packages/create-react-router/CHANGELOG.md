@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## v8.0.1
+
+### Patch Changes
+
+- _No changes_
+
 ## v8.0.0
 
 ### Major Changes

@@ -1,5 +1,12 @@
 # `@react-router/fs-routes`
 
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.0.1)
+
 ## v8.0.0
 
 ### Major Changes

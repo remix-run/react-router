@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.0.1](#v801)
   - [v8.0.0](#v800)
     - [Baseline Support](#baseline-support)
     - [Adopted Future Flag Behavior](#adopted-future-flag-behavior)
@@ -102,6 +103,16 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.0.1
+
+Date: 2026-06-18
+
+### Patch Changes
+
+- `react-router` - Remove the obsolete `AppLoadContext` type export accidentally left over from v7 now that middleware is always enabled and server request context is provided through `RouterContextProvider`. ([#15207](https://github.com/remix-run/react-router/pull/15207))
+
+**Full Changelog**: [`v8.0.0...v8.0.1`](https://github.com/remix-run/react-router/compare/react-router@8.0.0...react-router@8.0.1)
 
 ## v8.0.0
 
