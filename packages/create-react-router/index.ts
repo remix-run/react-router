@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import stripAnsi from "strip-ansi";
 import { execa } from "execa";
 import arg from "arg";
@@ -30,6 +31,13 @@ import { renderLoadingIndicator } from "./loading-indicator";
 import { copyTemplate, CopyTemplateError } from "./copy-template";
 import pkgJson from "./package.json" with { type: "json" };
 
+const currentFileDir = path.dirname(fileURLToPath(import.meta.url));
+const packageDir =
+  path.basename(currentFileDir) === "dist"
+    ? path.dirname(currentFileDir)
+    : currentFileDir;
+const agentSkillPath = path.join(packageDir, "dist/agent-skills/react-router");
+
 async function createReactRouter(argv: string[]) {
   let ctx = await getContext(argv);
   if (ctx.help) {
@@ -48,6 +56,8 @@ async function createReactRouter(argv: string[]) {
     copyTempDirToAppDirStep,
     gitInitQuestionStep,
     installDependenciesQuestionStep,
+    agentSkillsQuestionStep,
+    copyAgentSkillsToAppDirStep,
     installDependenciesStep,
     gitInitStep,
     doneStep,
@@ -79,6 +89,9 @@ async function getContext(argv: string[]): Promise<Context> {
       "--no-install": Boolean,
       "--package-manager": String,
       "--show-install-output": Boolean,
+      "--agent-skills": Boolean,
+      "--with-agent-skills": "--agent-skills",
+      "--no-agent-skills": Boolean,
       "--git-init": Boolean,
       "--no-git-init": Boolean,
       "--help": Boolean,
@@ -102,6 +115,8 @@ async function getContext(argv: string[]): Promise<Context> {
     "--no-install": noInstall,
     "--package-manager": pkgManager,
     "--show-install-output": showInstallOutput = false,
+    "--agent-skills": agentSkills,
+    "--no-agent-skills": noAgentSkills,
     "--git-init": git,
     "--no-git-init": noGit,
     "--no-motion": noMotion,
@@ -144,6 +159,7 @@ async function getContext(argv: string[]): Promise<Context> {
     overwrite,
     interactive,
     debug,
+    agentSkills: agentSkills ?? (noAgentSkills ? false : yes),
     git: git ?? (noGit ? false : yes),
     help,
     install: install ?? (noInstall ? false : yes),
@@ -171,6 +187,7 @@ interface Context {
   cwd: string;
   interactive: boolean;
   debug: boolean;
+  agentSkills?: boolean;
   git?: boolean;
   help: boolean;
   install?: boolean;
@@ -297,6 +314,57 @@ async function copyTemplateToTempDirStep(ctx: Context) {
     },
     ctx,
   });
+}
+
+async function agentSkillsQuestionStep(ctx: Context) {
+  if (ctx.agentSkills === undefined) {
+    let { agentSkills = true } = await ctx.prompt({
+      name: "agentSkills",
+      type: "confirm",
+      label: title("agents"),
+      message: "Include the React Router agent skill?",
+      hint: "recommended",
+      initial: true,
+    });
+    ctx.agentSkills = agentSkills;
+  }
+}
+
+async function copyAgentSkillsToAppDirStep(ctx: Context) {
+  if (!ctx.agentSkills) {
+    await sleep(100);
+    info("Skipping agent skill.", [
+      "You can add it later from ",
+      color.reset(
+        "https://github.com/remix-run/react-router/tree/main/.agents/skills/react-router",
+      ),
+      ".",
+    ]);
+    return;
+  }
+
+  if (!existsSync(path.join(agentSkillPath, "SKILL.md"))) {
+    error(
+      "Oh no!",
+      "React Router agent skill files were not found in this package.",
+    );
+    throw new Error("React Router agent skill files were not found");
+  }
+
+  let destPath = path.join(ctx.cwd, ".agents", "skills", "react-router");
+
+  if (existsSync(destPath)) {
+    info("Agent skill:", "React Router agent skill already included");
+    return;
+  }
+
+  await ensureDirectory(path.dirname(destPath));
+  await cp(agentSkillPath, destPath, {
+    errorOnExist: true,
+    force: false,
+    recursive: true,
+  });
+  info("Agent skill:", "Included React Router agent skill");
 }
 
 async function copyTempDirToAppDirStep(ctx: Context) {
@@ -647,6 +715,7 @@ ${color.arg("--template <name>")}   ${color.dim(`The project template to use`)}
 ${color.arg("--[no-]install")}      ${color.dim(`Whether or not to install dependencies after creation`)}
 ${color.arg("--package-manager")}   ${color.dim(`The package manager to use`)}
 ${color.arg("--show-install-output")}   ${color.dim(`Whether to show the output of the install process`)}
+${color.arg("--[no-]agent-skills")} ${color.dim(`Whether or not to include the React Router agent skill`)}
 ${color.arg("--[no-]git-init")}     ${color.dim(`Whether or not to initialize a Git repository`)}
 ${color.arg("--yes, -y")}           ${color.dim(`Skip all option prompts and run setup`)}
 ${color.arg("--react-router-version, -v")}     ${color.dim(`The version of React Router to use`)}

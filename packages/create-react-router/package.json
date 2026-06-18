@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "wireit",
+    "prepack": "node ./scripts/copy-agent-skills.mjs",
     "typecheck": "tsc"
   },
   "wireit": {
