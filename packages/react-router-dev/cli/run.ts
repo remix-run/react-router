@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import arg from "arg";
 import semver from "semver";
 import colors from "picocolors";

@@ -24,7 +24,6 @@ import {
   type Params,
   type ShouldRevalidateFunction,
   type RouteMatch,
-  type RouteObject,
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
