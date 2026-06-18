@@ -166,7 +166,7 @@ export function createRoutesStub(
 
 function processRoutes(
   routes: StubRouteObject[],
-  context: unknown,
+  context: RouterContextProvider,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   parentId?: string,
@@ -192,27 +192,16 @@ function processRoutes(
         ? withErrorBoundaryProps(route.ErrorBoundary)
         : undefined,
       action: route.action
-        ? (args: ActionFunctionArgs) =>
-            route.action!({
-              ...args,
-              context: context as Readonly<RouterContextProvider>,
-            })
+        ? (args: ActionFunctionArgs) => route.action!({ ...args, context })
         : undefined,
       loader: route.loader
-        ? (args: LoaderFunctionArgs) =>
-            route.loader!({
-              ...args,
-              context: context as Readonly<RouterContextProvider>,
-            })
+        ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
         : undefined,
       middleware: route.middleware
         ? route.middleware.map(
             (mw) =>
               (...args: Parameters<MiddlewareFunction>) =>
-                mw(
-                  { ...args[0], context: context as RouterContextProvider },
-                  args[1],
-                ),
+                mw({ ...args[0], context }, args[1]),
           )
         : undefined,
       handle: route.handle,

@@ -1986,7 +1986,7 @@ test.describe("Middleware", () => {
             "app/entry.server.tsx": js`
               import { PassThrough } from "node:stream";
 
-              import type { AppLoadContext, EntryContext } from "react-router";
+              import type { EntryContext } from "react-router";
               import { createReadableStreamFromReadable } from "@react-router/node";
               import { ServerRouter } from "react-router";
               import type { RenderToPipeableStreamOptions } from "react-dom/server";

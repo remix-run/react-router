@@ -377,7 +377,7 @@ test.describe("SPA Mode", () => {
                 import * as path from "node:path";
                 import { PassThrough } from "node:stream";
 
-                import type { AppLoadContext, EntryContext } from "react-router";
+                import type { EntryContext, RouterContextProvider } from "react-router";
                 import { createReadableStreamFromReadable } from "@react-router/node";
                 import { ServerRouter } from "react-router";
                 import { renderToPipeableStream } from "react-dom/server";
@@ -387,7 +387,7 @@ test.describe("SPA Mode", () => {
                   responseStatusCode: number,
                   responseHeaders: Headers,
                   remixContext: EntryContext,
-                  loadContext: AppLoadContext
+                  loadContext: RouterContextProvider
                 ) {
                   return handleBotRequest(
                     request,
