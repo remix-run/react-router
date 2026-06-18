@@ -1,5 +1,11 @@
 # `react-router`
 
+## v8.0.1
+
+### Patch Changes
+
+- Remove the obsolete `AppLoadContext` type export accidentally left over from v7 now that middleware is always enabled and server request context is provided through `RouterContextProvider`. ([#15207](https://github.com/remix-run/react-router/pull/15207))
+
 ## v8.0.0
 
 ### Major Changes
