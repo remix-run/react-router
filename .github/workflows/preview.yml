@@ -86,10 +86,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          pnpm run previews:branch preview/pr-${{ github.event.pull_request.number }}
+          node ./scripts/previews/branch.ts preview/pr-${{ github.event.pull_request.number }}
           git push --force --set-upstream origin preview/pr-${{ github.event.pull_request.number }}
           echo "pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
-          pnpm run previews:pr comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
+          node ./scripts/previews/pr.ts comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
 
       # Build and normal push for experimental releases to avoid unintended force
       # pushes over remote branches in case of a branch name collision
