@@ -11,7 +11,10 @@ export function hasDependency({
 }) {
   try {
     return Boolean(nodeRequire.resolve(name, { paths: [rootDirectory] }));
-  } catch {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     return false;
   }
 }

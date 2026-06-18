@@ -545,7 +545,6 @@ describe("shared server runtime", () => {
     });
   });
 
-  // eslint-disable-next-line jest/no-disabled-tests
   describe.skip("data requests", () => {
     test("data request that does not match loader surfaces 400 error for boundary", async () => {
       let build = mockServerBuild({

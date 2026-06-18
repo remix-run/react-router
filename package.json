@@ -86,6 +86,8 @@
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "jsdom": "^29.1.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "picocolors": "^1.1.1",
     "prettier": "^3.8.3",
     "prompts": "^2.4.2",

@@ -111,7 +111,7 @@ export default defineConfig([
     },
     settings: {
       react: {
-        version: "19.2.7",
+        version: "detect",
       },
     },
     rules: {
