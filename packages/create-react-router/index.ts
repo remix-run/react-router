@@ -509,7 +509,7 @@ async function doneStep(ctx: Context) {
   );
   await sleep(100);
   log(
-    `\n${prefix}Join the community at ${color.cyan(`https://discord.gg/reactrouter`)}\n`,
+    `\n${prefix}Join the community at ${color.cyan(`https://discord.gg/xwx7mMzVkA`)}\n`,
   );
   await sleep(200);
 }
