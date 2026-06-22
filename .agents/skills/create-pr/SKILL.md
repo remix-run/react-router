@@ -48,7 +48,7 @@ gh pr create --draft --base main --head <branch> --title "<title>" --body-file <
 
 Recommended PR body shape:
 
-```markdown
+````markdown
 This change ...
 
 - Optional extra detail when useful.
@@ -56,6 +56,7 @@ This change ...
 ```tsx
 // Optional feature usage example
 ```
+````
 
 ```tsx
 // Optional before/after example
@@ -64,7 +65,8 @@ This change ...
 **Testing**
 
 - ...
-```
+
+````
 
 - Do not use a `## Summary` heading. Start with one or two short sentences explaining what the change accomplishes.
 - Add bullets after the opening only when more detail is useful.
@@ -89,7 +91,7 @@ Apply labels with:
 
 ```sh
 gh pr edit <number-or-url> --add-label "<label>"
-```
+````
 
 If `gh pr edit --add-label` fails because the specified label is invalid or missing, run:
 
@@ -103,17 +105,17 @@ Then choose the correct label from the live list and update this skill in place 
 
 Add every applicable `pkg:*` label based on touched package paths:
 
-| Touched path | Label |
-| --- | --- |
-| `packages/react-router/` | `pkg:react-router` |
-| `packages/react-router-dev/` | `pkg:@react-router/dev` |
-| `packages/create-react-router/` | `pkg:create-react-router` |
-| `packages/react-router-architect/` | `pkg:@react-router/architect` |
-| `packages/react-router-cloudflare/` | `pkg:@react-router/cloudflare` |
-| `packages/react-router-node/` | `pkg:@react-router/node` |
-| `packages/react-router-serve/` | `pkg:@react-router/serve` |
-| `packages/react-router-express/` | `pkg:@react-router/express` |
-| `packages/react-router-fs-routes/` | `pkg:@react-router/fs-routes` |
+| Touched path                                         | Label                                           |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| `packages/react-router/`                             | `pkg:react-router`                              |
+| `packages/react-router-dev/`                         | `pkg:@react-router/dev`                         |
+| `packages/create-react-router/`                      | `pkg:create-react-router`                       |
+| `packages/react-router-architect/`                   | `pkg:@react-router/architect`                   |
+| `packages/react-router-cloudflare/`                  | `pkg:@react-router/cloudflare`                  |
+| `packages/react-router-node/`                        | `pkg:@react-router/node`                        |
+| `packages/react-router-serve/`                       | `pkg:@react-router/serve`                       |
+| `packages/react-router-express/`                     | `pkg:@react-router/express`                     |
+| `packages/react-router-fs-routes/`                   | `pkg:@react-router/fs-routes`                   |
 | `packages/react-router-remix-routes-option-adapter/` | `pkg:@react-router/remix-routes-option-adapter` |
 
 If a package path is unclear, inspect its `package.json` `name` and use `pkg:<name>` when that label exists. If a change touches generated artifacts or integration tests only, infer the package label from the runtime/tooling area being tested. For example, Vite plugin or prerender integration coverage usually maps to `pkg:@react-router/dev`.
@@ -122,25 +124,25 @@ If a package path is unclear, inspect its `package.json` `name` and use `pkg:<na
 
 Add applicable `feat:*` labels for the behavior area being changed. Common labels include:
 
-| Behavior area | Label |
-| --- | --- |
-| Core navigation, loaders/actions, fetchers, redirects, matching, and router state | `feat:router` |
-| Route config APIs and `routes.ts` | `feat:routes.ts` |
-| Vite plugin and build pipeline behavior | `feat:vite` |
-| SPA mode | `feat:spa-mode` |
-| Prerendering | `feat:prerender` |
-| Lazy route discovery | `feat:lazy-route-discovery` |
-| Hydration and hydration fallback behavior | `feat:hydration` |
-| View transition APIs | `feat:view-transitions` |
-| Middleware behavior | `feat:middleware` |
-| Split route module behavior | `feat:split-route-modules` |
-| Streaming behavior | `feat:streaming` |
-| CSS handling | `feat:css` |
-| Windows-specific fixes | `feat:windows` |
-| RSC Data or RSC Framework behavior | `feat:rsc` |
-| Path matching semantics | `feat:path-matching` |
-| Single fetch behavior | `feat:single-fetch` |
-| Types, typegen, and TypeScript behavior | `feat:typescript` |
+| Behavior area                                                                     | Label                       |
+| --------------------------------------------------------------------------------- | --------------------------- |
+| Core navigation, loaders/actions, fetchers, redirects, matching, and router state | `feat:router`               |
+| Route config APIs and `routes.ts`                                                 | `feat:routes.ts`            |
+| Vite plugin and build pipeline behavior                                           | `feat:vite`                 |
+| SPA mode                                                                          | `feat:spa-mode`             |
+| Prerendering                                                                      | `feat:prerender`            |
+| Lazy route discovery                                                              | `feat:lazy-route-discovery` |
+| Hydration and hydration fallback behavior                                         | `feat:hydration`            |
+| View transition APIs                                                              | `feat:view-transitions`     |
+| Middleware behavior                                                               | `feat:middleware`           |
+| Split route module behavior                                                       | `feat:split-route-modules`  |
+| Streaming behavior                                                                | `feat:streaming`            |
+| CSS handling                                                                      | `feat:css`                  |
+| Windows-specific fixes                                                            | `feat:windows`              |
+| RSC Data or RSC Framework behavior                                                | `feat:rsc`                  |
+| Path matching semantics                                                           | `feat:path-matching`        |
+| Single fetch behavior                                                             | `feat:single-fetch`         |
+| Types, typegen, and TypeScript behavior                                           | `feat:typescript`           |
 
 Multiple feature labels are fine when the diff truly spans multiple areas. Prefer the most specific label that exists.
 
