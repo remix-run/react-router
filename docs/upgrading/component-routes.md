@@ -9,7 +9,7 @@ If you are using `<RouterProvider>` please see [Framework Adoption from RouterPr
 
 If you are using `<Routes>` this is the right place.
 
-The React Router Vite plugin adds framework features to React Router. This guide will help you adopt the plugin in your app. If you run into any issues, please reach out for help on [Twitter](https://x.com/remix_run) or [Discord](https://rmx.as/discord).
+The React Router Vite plugin adds framework features to React Router. This guide will help you adopt the plugin in your app. If you run into any issues, please reach out for help on [Twitter](https://x.com/remix_run) or [Discord](https://remix.run/discord).
 
 ## Features
 
