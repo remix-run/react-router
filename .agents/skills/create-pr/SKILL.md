@@ -1,0 +1,143 @@
+---
+name: create-pr
+description: Create and package React Router pull requests. Use when the user asks to create, open, prepare, or finish a PR for this repository, including branch/commit/push handoff, draft PR creation, PR body writing, and applying GitHub labels such as pkg:*, feat:*, docs, github-actions, or dependencies.
+---
+
+# Create React Router PR
+
+Create the pull request handoff for completed React Router work. Default to a draft PR targeting `main` unless the user explicitly asks for a ready PR or a different base branch.
+
+## Preconditions
+
+- Inspect `git status --short` and `git branch --show-current`.
+- Do not include unrelated dirty files. If unrelated changes are present, leave them unstaged and mention them.
+- If the worktree is detached, create a branch from the current `HEAD` before committing. Use the branch name requested by the user, an existing repository convention, or `<author>/<semantic-name>` when no stronger convention is available.
+- If already on a suitable named branch, use it.
+- Confirm appropriate automated coverage exists or was added. If tests were skipped, failed, or left to CI, say that in the PR body.
+- If user-facing functionality is being updated, check that the appropriate package has a change file under `packages/<package>/.changes/`. This is not necessary for docs-only, GitHub Actions/workflow-only, or dependency-maintenance PRs unless the dependency change itself has user-facing impact.
+
+## Commit and Push
+
+1. Review the diff with `git diff --stat` and focused `git diff` as needed.
+2. Stage only the intended files.
+3. Commit with a concise imperative subject.
+4. Push the branch before creating the PR.
+
+## PR Creation
+
+Use `gh pr create` with:
+
+```sh
+gh pr create --draft --base main --head <branch> --title "<title>" --body "<body>"
+```
+
+- Omit `--draft` only when the user explicitly asks for a ready PR.
+- Change `--base` only when the user explicitly requests a different base branch.
+- Keep shell quoting simple. Prefer a body file if the body contains backticks, quotes, or multiple paragraphs.
+- Include issue/discussion links when known. Use `Closes #NNNN` for bug fixes the PR should close; use `Implements #NNNN` or a plain link for RFCs/discussions when closing semantics are not appropriate.
+- Include testing notes. Be explicit about skipped verification, failures, or checks intentionally left to CI.
+
+Recommended PR body shape:
+
+```markdown
+This change ...
+
+- Optional extra detail when useful.
+
+**Testing**
+
+- ...
+```
+
+- Do not use a `## Summary` heading. Start with one or two short sentences explaining what the change accomplishes.
+- Add bullets after the opening only when more detail is useful.
+- Add `**Testing**` with bullets below the description when testing notes are needed. Omit it only for trivial PRs where there is genuinely nothing useful to say.
+
+## Testing Notes
+
+Prefer automated testing notes over manual testing instructions:
+
+- If appropriate unit, integration, or E2E tests were added or updated, list those commands or say that CI will run the relevant coverage.
+- If no local verification was run because CI will cover it, say so plainly.
+- Do not add manual testing instructions by default.
+- Add manual testing instructions only when necessary, such as visual/UI behavior that needs human review, environment-specific behavior not covered by CI, release/publish dry-run steps, external service integration, or a reproduction that cannot be expressed reliably in automated tests.
+- When manual testing is necessary, keep the instructions minimal and directly tied to the uncovered risk.
+
+## Labels
+
+Apply labels after the PR exists. Always verify the current label names first:
+
+```sh
+gh label list --limit 200
+```
+
+Then apply labels with:
+
+```sh
+gh pr edit <number-or-url> --add-label "<label>"
+```
+
+Use real labels only. If the right label does not exist, do not invent one; mention the missing label.
+
+### Package Labels
+
+Add every applicable `pkg:*` label based on touched package paths:
+
+| Touched path | Label |
+| --- | --- |
+| `packages/react-router/` | `pkg:react-router` |
+| `packages/react-router-dev/` | `pkg:@react-router/dev` |
+| `packages/create-react-router/` | `pkg:create-react-router` |
+| `packages/react-router-architect/` | `pkg:@react-router/architect` |
+| `packages/react-router-cloudflare/` | `pkg:@react-router/cloudflare` |
+| `packages/react-router-node/` | `pkg:@react-router/node` |
+| `packages/react-router-serve/` | `pkg:@react-router/serve` |
+| `packages/react-router-express/` | `pkg:@react-router/express` |
+| `packages/react-router-fs-routes/` | `pkg:@react-router/fs-routes` |
+| `packages/react-router-remix-routes-option-adapter/` | `pkg:@react-router/remix-routes-option-adapter` |
+
+If a package path is unclear, inspect its `package.json` `name` and use `pkg:<name>` when that label exists. If a change touches generated artifacts or integration tests only, infer the package label from the runtime/tooling area being tested. For example, Vite plugin or prerender integration coverage usually maps to `pkg:@react-router/dev`.
+
+### Feature Labels
+
+Add applicable `feat:*` labels for the behavior area being changed. Common labels include:
+
+- `feat:router` for core navigation, loaders/actions, fetchers, redirects, matching, and router state.
+- `feat:routes.ts` for route config APIs and `routes.ts`.
+- `feat:vite` for Vite plugin and build pipeline behavior.
+- `feat:spa-mode` for SPA mode.
+- `feat:prerender` for prerendering.
+- `feat:lazy-route-discovery` for lazy route discovery.
+- `feat:hydration` for hydration and hydration fallback behavior.
+- `feat:view-transitions` for view transition APIs.
+- `feat:middleware` for middleware behavior.
+- `feat:split-route-modules` for split route module behavior.
+- `feat:streaming` for streaming behavior.
+- `feat:css` for CSS handling.
+- `feat:windows` for Windows-specific fixes.
+- `feat:rsc` for RSC Data or RSC Framework behavior.
+- `feat:path-matching` for path matching semantics.
+- `feat:single-fetch` for single fetch behavior.
+- `feat:typescript` for types, typegen, and TypeScript behavior.
+
+Multiple feature labels are fine when the diff truly spans multiple areas. Prefer the most specific label that exists.
+
+### Non-Package Labels
+
+Some PRs do not need package or feature labels:
+
+- Add `docs` for documentation-only changes.
+- Add `github-actions` for `.github/workflows/` or Actions infrastructure changes.
+- Add `dependencies` for dependency or lockfile-only maintenance.
+- Add version labels such as `v6`, `v7`, or `v8` only when the PR is intentionally scoped to that release line or the user asks for it.
+
+## Final Report
+
+Report:
+
+- Branch name.
+- Commit hash.
+- PR URL and whether it is draft or ready.
+- Base branch.
+- Labels applied.
+- Verification performed or skipped.
