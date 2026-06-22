@@ -271,7 +271,7 @@ async function findMergedPRs(
 
       if (!pr) return;
 
-      if (pr.title.includes(`Release ${tag.clean}`)) {
+      if (pr.title.includes(`Release v${tag.clean}`)) {
         debug(`skipping release PR ${pr.number}`);
         return;
       }
