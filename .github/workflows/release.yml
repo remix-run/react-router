@@ -5,7 +5,6 @@
 # Specific jobs only run on the proper trigger:
 #
 # - Change file driven stable releases (push to main/hotfix/v7 branches)
-# - v8 prereleases (from a workflow_dispatch trigger on the v8 branch)
 # - Experimental releases (from a workflow_dispatch trigger)
 
 name: Release
@@ -168,41 +167,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: pnpm run release-comments
 
-  prerelease:
-    name: Publish prerelease (v8)
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch' && github.event.inputs.branch == 'v8'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # enable generation of an ID token for publishing
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.inputs.branch }}
-          fetch-depth: 0 # needed for tags
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-          package-manager-cache: false
-
-      - name: Install deps
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
-      - name: Publish prerelease
-        run: pnpm prerelease:publish
-
   experimental-release:
     name: Experimental Release
-    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch' && github.event.inputs.branch != 'v8'
+    if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
