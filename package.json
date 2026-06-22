@@ -23,8 +23,6 @@
     "format:check": "prettier --ignore-path .prettierignore --check .",
     "lint": "eslint --cache .",
     "playground": "node ./scripts/playground.js",
-    "prerelease:version": "node ./scripts/prerelease.ts version",
-    "prerelease:publish": "node ./scripts/prerelease.ts publish",
     "release-comments": "node scripts/release-comments.ts",
     "test": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ./node_modules/jest/bin/jest.js",
     "test:inspect": "node --experimental-vm-modules --no-warnings=ExperimentalWarning --inspect-brk ./node_modules/jest/bin/jest.js",
