@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createRoutesFromElements.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.createRoutesFromElements.html)
 
 Create route objects from JSX elements instead of arrays of objects.
 

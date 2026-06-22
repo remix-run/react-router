@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.Form.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.Form.html)
 
 A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
 that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch),
