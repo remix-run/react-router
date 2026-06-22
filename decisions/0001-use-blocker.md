@@ -6,7 +6,7 @@ Status: accepted
 
 ## Context
 
-React Router v5 had a [`<Prompt>`](https://v5.reactrouter.com/core/api/Prompt) component that allowed app developers to indicate when navigation should be blocked (via the `when` prop), and specify a string message to display in a `window.confirm` UI that would let the user confirm the navigation. The _primary_ use case for this is preventing users from losing half-filled form info when navigating away.
+React Router v5 had a [`<Prompt>`](https://github.com/remix-run/react-router/blob/v5.3.4/packages/react-router/modules/Prompt.js) component that allowed app developers to indicate when navigation should be blocked (via the `when` prop), and specify a string message to display in a `window.confirm` UI that would let the user confirm the navigation. The _primary_ use case for this is preventing users from losing half-filled form info when navigating away.
 
 The React Router v6 beta initially had two hooks to replace this component (`useBlocker` and `usePrompt`) but they were [removed](https://github.com/remix-run/react-router/issues/8139#issuecomment-954425560) during the beta release process. The reasoning being:
 
