@@ -65,7 +65,7 @@ Prefer automated testing notes over manual testing instructions:
 
 ## Labels
 
-Apply labels after the PR exists. Rely on the stable labels listed in this skill for normal PRs. Run `gh label list --limit 200` only when a needed label is not listed here, when the correct label is unclear, or when GitHub rejects a label.
+Apply labels after the PR exists. Rely on the stable labels listed in this skill for normal PRs.
 
 Apply labels with:
 
@@ -73,7 +73,13 @@ Apply labels with:
 gh pr edit <number-or-url> --add-label "<label>"
 ```
 
-Use real labels only. If the right label does not exist, do not invent one; mention the missing label.
+If `gh pr edit --add-label` fails because the specified label is invalid or missing, run:
+
+```sh
+gh label list --limit 200
+```
+
+Then choose the correct label from the live list and update this skill in place so the stable label guidance stays current. Use real labels only. If the right label does not exist, do not invent one; mention the missing label.
 
 ### Package Labels
 
