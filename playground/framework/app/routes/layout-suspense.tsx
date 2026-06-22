@@ -12,12 +12,13 @@ export function loader() {
 }
 
 export function Layout({ children }: Route.LayoutProps) {
-  const promise = useRouteLoaderData("routes/layout-suspense");
+  const data = useRouteLoaderData<typeof loader>("routes/layout-suspense");
+
   return (
     <div>
       <p>Layout Header</p>
       <React.Suspense fallback={<p>Loading...</p>}>
-        <DataComponent promise={promise?.data} />
+        {data ? <DataComponent promise={data.data} /> : null}
         {children}
       </React.Suspense>
     </div>

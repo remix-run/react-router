@@ -19,6 +19,7 @@ test.beforeAll(async () => {
         import { type RouteConfig, route, index } from "@react-router/dev/routes";
         export default [
           index("routes/_index.tsx"),
+          route("lazy", "routes/lazy.tsx"),
           route("throws", "routes/throws.tsx"),
           route("hydrate", "routes/hydrate.tsx"),
           route("parent", "routes/parent.tsx", [
@@ -43,7 +44,51 @@ test.beforeAll(async () => {
           return (
             <>
               <p data-testid="component">index component</p>
+              <Link to="/lazy">go to lazy</Link>
               <Link to="/throws">go to throws</Link>
+            </>
+          );
+        }
+      `,
+
+      "app/routes/lazy.tsx": js`
+        import * as React from "react";
+        import { Link } from "react-router";
+
+        export function loader({ request }: { request: Request }) {
+          let url = new URL(request.url);
+          if (url.searchParams.get("error") === "1") {
+            throw new Error("boom");
+          }
+
+          return "lazy route";
+        }
+
+        export function Layout({ children }: { children: React.ReactNode }) {
+          React.useEffect(() => {
+            let appWindow = window as typeof window & {
+              __layoutMounts?: number;
+            };
+            appWindow.__layoutMounts = (appWindow.__layoutMounts || 0) + 1;
+          }, []);
+
+          return (
+            <div>
+              <p data-testid="lazy-layout">lazy layout</p>
+              {children}
+            </div>
+          );
+        }
+
+        export function ErrorBoundary() {
+          return <p data-testid="lazy-error">lazy error</p>;
+        }
+
+        export default function Lazy() {
+          return (
+            <>
+              <p data-testid="lazy-component">lazy route</p>
+              <Link to="/lazy?error=1">trigger error</Link>
             </>
           );
         }
@@ -177,6 +222,43 @@ test("renders the Layout around the ErrorBoundary on client-side navigation", as
   expect(await page.locator("[data-testid=error]").textContent()).toBe(
     "error boundary",
   );
+});
+
+test("keeps a lazy route Layout mounted when switching to the ErrorBoundary", async ({
+  page,
+}) => {
+  let app = new PlaywrightFixture(appFixture, page);
+  await app.goto("/");
+  await app.clickLink("/lazy");
+  await page.waitForSelector("[data-testid=lazy-component]");
+  expect(await page.locator("[data-testid=lazy-layout]").textContent()).toBe(
+    "lazy layout",
+  );
+  expect(
+    await page.evaluate(() => {
+      let appWindow = window as typeof window & {
+        __layoutMounts?: number;
+      };
+      return appWindow.__layoutMounts;
+    }),
+  ).toBe(1);
+
+  await app.clickLink("/lazy?error=1");
+  await page.waitForSelector("[data-testid=lazy-error]");
+  expect(await page.locator("[data-testid=lazy-layout]").textContent()).toBe(
+    "lazy layout",
+  );
+  expect(await page.locator("[data-testid=lazy-error]").textContent()).toBe(
+    "lazy error",
+  );
+  expect(
+    await page.evaluate(() => {
+      let appWindow = window as typeof window & {
+        __layoutMounts?: number;
+      };
+      return appWindow.__layoutMounts;
+    }),
+  ).toBe(1);
 });
 
 test("renders the Layout around the HydrateFallback", async ({ page }) => {
