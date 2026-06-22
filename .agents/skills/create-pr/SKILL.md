@@ -65,13 +65,9 @@ Prefer automated testing notes over manual testing instructions:
 
 ## Labels
 
-Apply labels after the PR exists. Always verify the current label names first:
+Apply labels after the PR exists. Rely on the stable labels listed in this skill for normal PRs. Run `gh label list --limit 200` only when a needed label is not listed here, when the correct label is unclear, or when GitHub rejects a label.
 
-```sh
-gh label list --limit 200
-```
-
-Then apply labels with:
+Apply labels with:
 
 ```sh
 gh pr edit <number-or-url> --add-label "<label>"
