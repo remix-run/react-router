@@ -1959,7 +1959,7 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [url-search-params]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
 [loader]: ../start/framework/route-module#loader
 [action]: ../start/framework/route-module#action
-[form-component]: https://api.reactrouter.com/v7/functions/react-router.Form
+[form-component]: https://api.reactrouter.com/v7/variables/react-router.Form.html
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
 [form-data]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [object-from-entries]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
