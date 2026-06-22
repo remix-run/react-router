@@ -9,12 +9,20 @@ Create the pull request handoff for completed React Router work. Default to a dr
 
 ## Preconditions
 
-- Inspect `git status --short` and `git branch --show-current`.
+- Inspect `git status --short --branch` and `git branch --show-current`.
 - Do not include unrelated dirty files. If unrelated changes are present, leave them unstaged and mention them.
 - If the worktree is detached, create a branch from the current `HEAD` before committing. Use the branch name requested by the user, an existing repository convention, or `<author>/<semantic-name>` when no stronger convention is available.
 - If already on a suitable named branch, use it.
 - Confirm appropriate automated coverage exists or was added. If tests were skipped, failed, or left to CI, say that in the PR body.
 - If user-facing functionality is being updated, check that the appropriate package has a change file under `packages/<package>/.changes/`. This is not necessary for docs-only, GitHub Actions/workflow-only, or dependency-maintenance PRs unless the dependency change itself has user-facing impact.
+
+## Context
+
+- Capture what changed, why it changed, and who it affects.
+- Find related issues, discussions, or PRs and include links when relevant.
+- Prefer `git diff --stat` plus focused `git diff` over broad repo archaeology when the change is small.
+- If the user supplies a report, issue, discussion, or related PR, treat that as the primary context source.
+- For new feature work, include a concise usage snippet. If the feature replaces or improves an older approach, include before/after examples when they help reviewers.
 
 ## Commit and Push
 
@@ -25,10 +33,10 @@ Create the pull request handoff for completed React Router work. Default to a dr
 
 ## PR Creation
 
-Use `gh pr create` with:
+Save the PR body to a temporary file, then use `gh pr create` with:
 
 ```sh
-gh pr create --draft --base main --head <branch> --title "<title>" --body "<body>"
+gh pr create --draft --base main --head <branch> --title "<title>" --body-file <file>
 ```
 
 - Omit `--draft` only when the user explicitly asks for a ready PR.
@@ -36,6 +44,7 @@ gh pr create --draft --base main --head <branch> --title "<title>" --body "<body
 - Keep shell quoting simple. Prefer a body file if the body contains backticks, quotes, or multiple paragraphs.
 - Include issue/discussion links when known. Use `Closes #NNNN` for bug fixes the PR should close; use `Implements #NNNN` or a plain link for RFCs/discussions when closing semantics are not appropriate.
 - Include testing notes. Be explicit about skipped verification, failures, or checks intentionally left to CI.
+- If `gh pr create` fails, leave the branch pushed when possible and give the user a ready-to-open compare URL plus the prepared title and body.
 
 Recommended PR body shape:
 
@@ -44,6 +53,14 @@ This change ...
 
 - Optional extra detail when useful.
 
+```tsx
+// Optional feature usage example
+```
+
+```tsx
+// Optional before/after example
+```
+
 **Testing**
 
 - ...
@@ -51,6 +68,7 @@ This change ...
 
 - Do not use a `## Summary` heading. Start with one or two short sentences explaining what the change accomplishes.
 - Add bullets after the opening only when more detail is useful.
+- Include usage examples for new features, and before/after examples for replacements or improvements, when they help reviewers understand the change.
 - Add `**Testing**` with bullets below the description when testing notes are needed. Omit it only for trivial PRs where there is genuinely nothing useful to say.
 
 ## Testing Notes
