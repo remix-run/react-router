@@ -1,4 +1,6 @@
 import * as path from "node:path";
+import { parse } from "@babel/parser";
+import _traverse from "@babel/traverse";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
@@ -6,7 +8,13 @@ import type { ResolvedReactRouterConfig } from "../config/config";
 import type { RouteManifest, RouteManifestEntry } from "../config/routes";
 import type { LoadCssContents } from "./plugin";
 import { resolveFileUrl } from "./resolve-file-url";
-import * as babel from "./babel";
+
+const traverse =
+  (
+    _traverse as unknown as {
+      default?: typeof import("@babel/traverse").default;
+    }
+  ).default ?? _traverse;
 
 // Style collection logic adapted from solid-start: https://github.com/solidjs/solid-start
 
@@ -255,8 +263,8 @@ export const getCssStringFromViteDevModuleCode = (
 ): string | undefined => {
   let cssContent = undefined;
 
-  const ast = babel.parse(code, { sourceType: "module" });
-  babel.traverse(ast, {
+  const ast = parse(code, { sourceType: "module" });
+  traverse(ast, {
     VariableDeclaration(path) {
       const declaration = path.node.declarations[0];
       if (

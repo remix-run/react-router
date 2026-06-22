@@ -1,14 +1,21 @@
-import type { GeneratorOptions, GeneratorResult } from "@babel/generator";
+import {
+  generate,
+  type GeneratorOptions,
+  type GeneratorResult,
+} from "@babel/generator";
+import type { types as Babel } from "@babel/core";
+import { parse } from "@babel/parser";
+import _traverse, { type NodePath } from "@babel/traverse";
+import * as t from "@babel/types";
 import invariant from "../invariant";
 import { type Cache, getOrSetFromCache } from "./cache";
-import {
-  type Babel,
-  type NodePath,
-  parse,
-  traverse,
-  generate,
-  t,
-} from "./babel";
+
+const traverse =
+  (
+    _traverse as unknown as {
+      default?: typeof import("@babel/traverse").default;
+    }
+  ).default ?? _traverse;
 
 type ExportDeclaration = Babel.ExportDeclaration;
 type Identifier = Babel.Identifier;

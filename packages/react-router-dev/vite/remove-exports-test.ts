@@ -1,4 +1,5 @@
-import { generate, parse } from "./babel";
+import { generate } from "@babel/generator";
+import { parse } from "@babel/parser";
 import { removeExports } from "./remove-exports";
 
 function transform(code: string, exportsToRemove: string[]) {

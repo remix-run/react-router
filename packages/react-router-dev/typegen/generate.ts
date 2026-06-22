@@ -1,8 +1,9 @@
 import ts from "dedent";
+import { generate } from "@babel/generator";
 import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
+import * as t from "@babel/types";
 
-import * as Babel from "../vite/babel";
 import type { Context } from "./context";
 import * as Params from "./params";
 import * as Route from "./route";
@@ -39,7 +40,6 @@ export function generateServerBuild(ctx: Context): VirtualFile {
   return { filename, content };
 }
 
-const { t } = Babel;
 export function generateRoutes(ctx: Context): Array<VirtualFile> {
   // precompute
   const fileToRoutes = new Map<string, Set<string>>();
@@ -95,11 +95,11 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
         }
       ` +
       "\n\n" +
-      Babel.generate(pagesType(allPages)).code +
+      generate(pagesType(allPages)).code +
       "\n\n" +
-      Babel.generate(routeFilesType({ fileToRoutes, routeToPages })).code +
+      generate(routeFilesType({ fileToRoutes, routeToPages })).code +
       "\n\n" +
-      Babel.generate(routeModulesType(ctx)).code,
+      generate(routeModulesType(ctx)).code,
   };
 
   // **/+types/*.ts
@@ -284,7 +284,7 @@ function getRouteAnnotations({
       }>
     ` +
     "\n\n" +
-    Babel.generate(matchesType).code +
+    generate(matchesType).code +
     "\n\n" +
     ts`
       type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;
