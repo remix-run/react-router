@@ -82,7 +82,7 @@ If this feature doesn't have a Proposal, please [open one](https://github.com/re
 
 If this PR already has a Proposal but it has not yet been accepted, let's continue the discussion in the Proposal until it gets accepted and then we can look to open a PR. Feel free to link to this PR or to a branch in a forked repo to show what a potential implementation might look like.
 
-If you have any questions, you can always reach out on [Discord](https://discord.gg/xwx7mMzVkA). Thanks again for providing feedback and helping us make React Router even better!
+If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
 `;
 
 let { positionals } = util.parseArgs({ allowPositionals: true });
