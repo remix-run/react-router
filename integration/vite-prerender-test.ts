@@ -295,6 +295,51 @@ test.describe(`Prerendering`, () => {
       expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
     });
 
+    test("Runs buildEnd after prerendering is complete", async () => {
+      let cwd = await createProject({
+        ...files,
+        "react-router.config.ts": js`
+          import fs from "node:fs";
+          import path from "node:path";
+
+          export default {
+            prerender: ["/about"],
+            async buildEnd({ reactRouterConfig }) {
+              let clientBuildDirectory = path.join(
+                reactRouterConfig.buildDirectory,
+                "client"
+              );
+
+              fs.writeFileSync(
+                "BUILD_END_META.json",
+                JSON.stringify({
+                  htmlExists: fs.existsSync(
+                    path.join(clientBuildDirectory, "about", "index.html")
+                  ),
+                  dataExists: fs.existsSync(
+                    path.join(clientBuildDirectory, "about.data")
+                  ),
+                })
+              );
+            },
+          };
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.stderr.toString()).toBeFalsy();
+      expect(result.status).toBe(0);
+
+      await expect(
+        fs.promises.readFile(path.join(cwd, "BUILD_END_META.json"), "utf8"),
+      ).resolves.toEqual(
+        JSON.stringify({
+          htmlExists: true,
+          dataExists: true,
+        }),
+      );
+    });
+
     test("Prerenders a static array of routes with server bundles", async () => {
       fixture = await createFixture({
         prerender: true,

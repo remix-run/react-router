@@ -1336,33 +1336,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               invariant(viteConfig);
               viteConfig.logger.info("Using Vite Environment API");
 
-              try {
-                let { reactRouterConfig } = ctx;
+              await cleanBuildDirectory(viteConfig, ctx);
 
-                await cleanBuildDirectory(viteConfig, ctx);
+              await builder.build(builder.environments.client);
 
-                await builder.build(builder.environments.client);
+              let serverEnvironments = getServerEnvironmentValues(
+                ctx,
+                builder.environments,
+              );
 
-                let serverEnvironments = getServerEnvironmentValues(
-                  ctx,
-                  builder.environments,
-                );
+              await Promise.all(serverEnvironments.map(builder.build));
 
-                await Promise.all(serverEnvironments.map(builder.build));
-
-                await cleanViteManifests(environments, ctx);
-
-                let { buildManifest } = ctx;
-                invariant(buildManifest, "Expected build manifest");
-
-                await reactRouterConfig.buildEnd?.({
-                  buildManifest,
-                  reactRouterConfig,
-                  viteConfig,
-                });
-              } finally {
-                await closePluginResources();
-              }
+              await cleanViteManifests(environments, ctx);
             },
           },
         };
@@ -2724,6 +2709,36 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     }),
+    {
+      name: "react-router-build-end",
+      sharedDuringBuild: true,
+      config: {
+        order: "post",
+        handler({ builder: { buildApp } = {} }) {
+          return {
+            builder: {
+              async buildApp(builder) {
+                try {
+                  await buildApp?.(builder);
+
+                  invariant(viteConfig);
+                  let { buildManifest, reactRouterConfig } = ctx;
+                  invariant(buildManifest, "Expected build manifest");
+
+                  await reactRouterConfig.buildEnd?.({
+                    buildManifest,
+                    reactRouterConfig,
+                    viteConfig,
+                  });
+                } finally {
+                  await closePluginResources();
+                }
+              },
+            },
+          };
+        },
+      },
+    },
     validatePluginOrder(),
     warnOnClientSourceMaps(),
   ];
