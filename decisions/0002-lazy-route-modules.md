@@ -243,6 +243,6 @@ ReactDOM.hydrateRoot(
 );
 ```
 
-[manually-code-split]: https://www.infoxicator.com/en/react-router-6-4-code-splitting
+[manually-code-split]: https://web.archive.org/web/2024/https://www.infoxicator.com/en/react-router-6-4-code-splitting
 [proposal]: https://github.com/remix-run/react-router/discussions/9826
 [poc]: https://github.com/remix-run/react-router/pull/9830
