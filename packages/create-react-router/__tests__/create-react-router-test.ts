@@ -108,6 +108,7 @@ describe("create-react-router CLI", () => {
      --[no-]install      Whether or not to install dependencies after creation
      --package-manager   The package manager to use
      --show-install-output   Whether to show the output of the install process
+     --[no-]agent-skills Whether or not to include the React Router agent skill
      --[no-]git-init     Whether or not to initialize a Git repository
      --yes, -y           Skip all option prompts and run setup
      --react-router-version, -v     The version of React Router to use
@@ -165,6 +166,10 @@ describe("create-react-router CLI", () => {
           question: /install dependencies/i,
           type: ["n"],
         },
+        {
+          question: /agent skill/i,
+          type: ["y"],
+        },
       ],
     });
 
@@ -185,6 +190,30 @@ describe("create-react-router CLI", () => {
     expect(status).toBe(0);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(
+      existsSync(path.join(projectDir, ".agents/skills/react-router/SKILL.md")),
+    ).toBeTruthy();
+  });
+
+  it("supports the --no-agent-skills flag", async () => {
+    let projectDir = getProjectDir("no-agent-skills");
+
+    let { status, stderr } = await execCreateReactRouter({
+      args: [
+        projectDir,
+        "--yes",
+        "--no-agent-skills",
+        "--no-git-init",
+        "--no-install",
+      ],
+    });
+
+    expect(stderr.trim()).toBeFalsy();
+    expect(status).toBe(0);
+    expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(
+      existsSync(path.join(projectDir, ".agents/skills/react-router/SKILL.md")),
+    ).toBeFalsy();
   });
 
   it("errors when project directory isn't provided when shell isn't interactive", async () => {
@@ -534,6 +563,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -568,6 +598,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -602,6 +633,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -635,6 +667,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -668,6 +701,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -701,6 +735,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -734,6 +769,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
@@ -767,6 +803,7 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
       "--package-manager",
       "pnpm",
     ]);
@@ -1177,6 +1214,17 @@ async function execCreateReactRouter({
   cwd?: string;
 }) {
   let cliPath = await ensureBuiltCli();
+  let controlsAgentSkills = args.some((arg) =>
+    ["--agent-skills", "--no-agent-skills", "--yes"].includes(arg),
+  );
+  let answersAgentSkillsPrompt = interactions.some(({ question }) =>
+    question.test("agent skill"),
+  );
+
+  if (interactive && !controlsAgentSkills && !answersAgentSkillsPrompt) {
+    args = [...args, "--no-agent-skills"];
+  }
+
   let proc = spawn(
     "node",
     [
@@ -1219,6 +1267,15 @@ async function ensureBuiltCli() {
         env: { ...process.env, NO_COLOR: "1" },
         stdio: "pipe",
       });
+      execFileSync(
+        pnpm,
+        ["run", "--filter", "create-react-router", "prepack"],
+        {
+          cwd: REPO_ROOT,
+          env: { ...process.env, NO_COLOR: "1" },
+          stdio: "pipe",
+        },
+      );
       return BUILT_CLI;
     });
   }
