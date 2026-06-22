@@ -104,23 +104,25 @@ If a package path is unclear, inspect its `package.json` `name` and use `pkg:<na
 
 Add applicable `feat:*` labels for the behavior area being changed. Common labels include:
 
-- `feat:router` for core navigation, loaders/actions, fetchers, redirects, matching, and router state.
-- `feat:routes.ts` for route config APIs and `routes.ts`.
-- `feat:vite` for Vite plugin and build pipeline behavior.
-- `feat:spa-mode` for SPA mode.
-- `feat:prerender` for prerendering.
-- `feat:lazy-route-discovery` for lazy route discovery.
-- `feat:hydration` for hydration and hydration fallback behavior.
-- `feat:view-transitions` for view transition APIs.
-- `feat:middleware` for middleware behavior.
-- `feat:split-route-modules` for split route module behavior.
-- `feat:streaming` for streaming behavior.
-- `feat:css` for CSS handling.
-- `feat:windows` for Windows-specific fixes.
-- `feat:rsc` for RSC Data or RSC Framework behavior.
-- `feat:path-matching` for path matching semantics.
-- `feat:single-fetch` for single fetch behavior.
-- `feat:typescript` for types, typegen, and TypeScript behavior.
+| Behavior area | Label |
+| --- | --- |
+| Core navigation, loaders/actions, fetchers, redirects, matching, and router state | `feat:router` |
+| Route config APIs and `routes.ts` | `feat:routes.ts` |
+| Vite plugin and build pipeline behavior | `feat:vite` |
+| SPA mode | `feat:spa-mode` |
+| Prerendering | `feat:prerender` |
+| Lazy route discovery | `feat:lazy-route-discovery` |
+| Hydration and hydration fallback behavior | `feat:hydration` |
+| View transition APIs | `feat:view-transitions` |
+| Middleware behavior | `feat:middleware` |
+| Split route module behavior | `feat:split-route-modules` |
+| Streaming behavior | `feat:streaming` |
+| CSS handling | `feat:css` |
+| Windows-specific fixes | `feat:windows` |
+| RSC Data or RSC Framework behavior | `feat:rsc` |
+| Path matching semantics | `feat:path-matching` |
+| Single fetch behavior | `feat:single-fetch` |
+| Types, typegen, and TypeScript behavior | `feat:typescript` |
 
 Multiple feature labels are fine when the diff truly spans multiple areas. Prefer the most specific label that exists.
 
