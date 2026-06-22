@@ -90,7 +90,6 @@ async function getContext(argv: string[]): Promise<Context> {
       "--package-manager": String,
       "--show-install-output": Boolean,
       "--agent-skills": Boolean,
-      "--with-agent-skills": "--agent-skills",
       "--no-agent-skills": Boolean,
       "--git-init": Boolean,
       "--no-git-init": Boolean,
@@ -321,7 +320,7 @@ async function agentSkillsQuestionStep(ctx: Context) {
     let { agentSkills = true } = await ctx.prompt({
       name: "agentSkills",
       type: "confirm",
-      label: title("agents"),
+      label: title("skill"),
       message: "Include the React Router agent skill?",
       hint: "recommended",
       initial: true,

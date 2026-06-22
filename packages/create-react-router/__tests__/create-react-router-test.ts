@@ -1215,12 +1215,7 @@ async function execCreateReactRouter({
 }) {
   let cliPath = await ensureBuiltCli();
   let controlsAgentSkills = args.some((arg) =>
-    [
-      "--agent-skills",
-      "--with-agent-skills",
-      "--no-agent-skills",
-      "--yes",
-    ].includes(arg),
+    ["--agent-skills", "--no-agent-skills", "--yes"].includes(arg),
   );
   let answersAgentSkillsPrompt = interactions.some(({ question }) =>
     question.test("agent skill"),
