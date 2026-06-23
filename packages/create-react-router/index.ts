@@ -110,26 +110,9 @@ async function getContext(argv: string[]): Promise<Context> {
     value: string | boolean | Array<string | boolean> | undefined,
   ) => (typeof value === "string" ? value : undefined);
 
-  let agentSkills = getBooleanArg(values["agent-skills"]);
-  let debug = getBooleanArg(values.debug) ?? false;
-  let git = getBooleanArg(values["git-init"]);
-  let help = getBooleanArg(values.help) ?? false;
-  let install = getBooleanArg(values.install);
-  let noAgentSkills = getBooleanArg(values["no-agent-skills"]);
-  let noGit = getBooleanArg(values["no-git-init"]);
-  let noInstall = getBooleanArg(values["no-install"]);
-  let noMotion = getBooleanArg(values["no-motion"]);
-  let overwrite = getBooleanArg(values.overwrite);
-  let pkgManager = getStringArg(values["package-manager"]);
   let selectedReactRouterVersion = getStringArg(
     values["react-router-version"],
   );
-  let showInstallOutput =
-    getBooleanArg(values["show-install-output"]) ?? false;
-  let template = getStringArg(values.template);
-  let token = getStringArg(values.token);
-  let versionRequested =
-    getBooleanArg(values.version) ?? getBooleanArg(values.V);
   let yes = getBooleanArg(values.yes);
   let cwd = positionals[0] as string;
   let interactive = isInteractive();
@@ -162,17 +145,23 @@ async function getContext(argv: string[]): Promise<Context> {
       `create-react-router--${Math.random().toString(36).substr(2, 8)}`,
     ),
     cwd,
-    overwrite,
+    overwrite: getBooleanArg(values.overwrite),
     interactive,
-    debug,
-    agentSkills: agentSkills ?? (noAgentSkills ? false : yes),
-    git: git ?? (noGit ? false : yes),
-    help,
-    install: install ?? (noInstall ? false : yes),
-    showInstallOutput,
-    noMotion,
+    debug: getBooleanArg(values.debug) ?? false,
+    agentSkills:
+      getBooleanArg(values["agent-skills"]) ??
+      (getBooleanArg(values["no-agent-skills"]) ? false : yes),
+    git:
+      getBooleanArg(values["git-init"]) ??
+      (getBooleanArg(values["no-git-init"]) ? false : yes),
+    help: getBooleanArg(values.help) ?? false,
+    install:
+      getBooleanArg(values.install) ??
+      (getBooleanArg(values["no-install"]) ? false : yes),
+    showInstallOutput: getBooleanArg(values["show-install-output"]) ?? false,
+    noMotion: getBooleanArg(values["no-motion"]),
     pkgManager: validatePackageManager(
-      pkgManager ??
+      getStringArg(values["package-manager"]) ??
         // npm, pnpm, Yarn, Bun and Deno (v2.0.5+) set the user agent environment variable that can be used
         // to determine which package manager ran the command.
         (process.env.npm_config_user_agent ?? "npm").split("/")[0],
@@ -180,9 +169,10 @@ async function getContext(argv: string[]): Promise<Context> {
     projectName,
     prompt,
     reactRouterVersion: selectedReactRouterVersion || pkgJson.version,
-    template,
-    token,
-    versionRequested,
+    template: getStringArg(values.template),
+    token: getStringArg(values.token),
+    versionRequested:
+      getBooleanArg(values.version) ?? getBooleanArg(values.V),
   };
 
   return context;
