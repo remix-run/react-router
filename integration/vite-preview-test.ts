@@ -13,9 +13,7 @@ const tsx = dedent;
 test.describe("Vite preview", () => {
   test("serves built app with vite preview", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
-      "react-router.config.ts": reactRouterConfig({
-        future: { v8_viteEnvironmentApi: true },
-      }),
+      "react-router.config.ts": reactRouterConfig(),
       "vite.config.ts": await viteConfig.basic({
         port,
         templateName: "vite-8-template",
@@ -96,9 +94,7 @@ test.describe("Vite preview", () => {
 
   test("handles navigation between routes", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
-      "react-router.config.ts": reactRouterConfig({
-        future: { v8_viteEnvironmentApi: true },
-      }),
+      "react-router.config.ts": reactRouterConfig(),
       "vite.config.ts": await viteConfig.basic({
         port,
         templateName: "vite-8-template",
@@ -172,9 +168,7 @@ test.describe("Vite preview", () => {
 
   test("handles loader data correctly", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
-      "react-router.config.ts": reactRouterConfig({
-        future: { v8_viteEnvironmentApi: true },
-      }),
+      "react-router.config.ts": reactRouterConfig(),
       "vite.config.ts": await viteConfig.basic({
         port,
         templateName: "vite-8-template",
@@ -249,9 +243,7 @@ test.describe("Vite preview", () => {
     page,
   }) => {
     const files: Files = async ({ port }) => ({
-      "react-router.config.ts": reactRouterConfig({
-        future: { v8_viteEnvironmentApi: true },
-      }),
+      "react-router.config.ts": reactRouterConfig(),
       "vite.config.ts": await viteConfig.basic({
         port,
         templateName: "vite-8-template",
@@ -325,7 +317,6 @@ test.describe("Vite preview", () => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig({
         ssr: false,
-        future: { v8_viteEnvironmentApi: true },
       }),
       "vite.config.ts": await viteConfig.basic({
         port,

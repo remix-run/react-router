@@ -1,6 +1,7 @@
 {
   "name": "@react-router/architect",
-  "version": "7.17.0",
+  "type": "module",
+  "version": "8.0.1",
   "description": "Architect server request handler for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -15,19 +16,9 @@
   "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "node": {
-        "types": "./dist/index.d.ts",
-        "module-sync": "./dist/index.mjs",
-        "default": "./dist/index.js"
-      },
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "module-sync": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -37,7 +28,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "sessions/**",
@@ -51,18 +42,19 @@
     }
   },
   "dependencies": {
-    "@architect/functions": "^7.0.0",
-    "@types/aws-lambda": "^8.10.82"
+    "@architect/functions": "^8.1.9",
+    "@types/aws-lambda": "^8.10.161"
   },
   "devDependencies": {
     "@react-router/node": "workspace:*",
-    "@types/lambda-tester": "^3.6.1",
-    "@types/node": "^20.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/lambda-tester": "^4.0.3",
+    "@types/node": "^22.19.19",
     "lambda-tester": "^4.0.1",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "workspace:*",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },
@@ -77,7 +69,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

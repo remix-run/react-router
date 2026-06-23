@@ -761,6 +761,33 @@ describe("useNavigate", () => {
           </h1>
         `);
       });
+
+      it("normalizes mixed leading separators", async () => {
+        for (let to of ["//foo", "\\\\foo", "/\\foo", "\\/foo"]) {
+          let renderer: TestRenderer.ReactTestRenderer;
+          TestRenderer.act(() => {
+            renderer = TestRenderer.create(
+              <MemoryRouter initialEntries={["/home"]}>
+                <Routes>
+                  <Route path="home" element={<UseNavigateButton to={to} />} />
+                  <Route path="foo" element={<p>foo</p>} />
+                </Routes>
+              </MemoryRouter>,
+            );
+          });
+
+          // @ts-expect-error
+          let button = renderer.root.findByType("button");
+          await TestRenderer.act(() => button.props.onClick());
+
+          // @ts-expect-error
+          expect(renderer.toJSON()).toMatchInlineSnapshot(`
+            <p>
+              foo
+            </p>
+          `);
+        }
+      });
     });
 
     describe("with a relative href (relative=route)", () => {

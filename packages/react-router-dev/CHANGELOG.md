@@ -1,5 +1,98 @@
 # `@react-router/dev`
 
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+  - [`@react-router/node@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.1)
+  - [`@react-router/serve@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Remove `@react-router/dev/vite/cloudflare` dev proxy export; use `@cloudflare/vite-plugin` instead ([#15077](https://github.com/remix-run/react-router/pull/15077))
+  - Drops support for `wrangler@3` as a peer dependency of `@react-router/dev`
+- Remove the `future.v8_trailingSlashAwareDataRequests` flag ([#15100](https://github.com/remix-run/react-router/pull/15100))
+  - Trailing slash-aware data request URLs are now the default behavior.
+- Remove `future.v8_passThroughRequests` flag - the raw incoming `request` is now always passed through to `loader`/`action`. ([#15079](https://github.com/remix-run/react-router/pull/15079))
+- Move `future.v8_splitRouteModules` to a top-level `splitRouteModules` config option and change the default behavior to `true` ([#15086](https://github.com/remix-run/react-router/pull/15086))
+  - Set `splitRouteModules: false` to keep route modules in a single chunk
+  - Set `splitRouteModules: "enforce"` to require all routes to be splittable
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+- Require Vite 7+ and make the Vite Environment API build path mandatory ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- Removed the `future.v8_viteEnvironmentApi` flag because the Vite Environment API is always enabled ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- Removed the `future.unstable_previewServerPrerendering` flag and make prerendering with the Vite Environment API the default. ([#15077](https://github.com/remix-run/react-router/pull/15077))
+
+### Minor Changes
+
+- Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `@babel/core` from `^7.27.7` to `^7.29.7`
+  - Bumped `@babel/generator` from `^7.27.5` to `^7.29.7`
+  - Bumped `@babel/parser` from `^7.27.7` to `^7.29.7`
+  - Bumped `@babel/plugin-syntax-jsx` from `^7.27.1` to `^7.29.7`
+  - Bumped `@babel/preset-typescript` from `^7.27.1` to `^7.29.7`
+  - Bumped `@babel/traverse` from `^7.27.7` to `^7.29.7`
+  - Bumped `@babel/types` from `^7.27.7` to `^7.29.7`
+  - Bumped `dedent` from `^1.5.3` to `^1.7.2`
+  - Bumped `jsesc` from `3.0.2` to `3.1.0`
+  - Bumped `lodash` from `^4.17.21` to `^4.18.1`
+  - Bumped `prettier` from `^3.6.2` to `^3.8.3`
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+  - Bumped `react-refresh` from `^0.14.0` to `^0.18.0`
+  - Bumped `semver` from `^7.3.7` to `^7.8.1`
+  - Bumped `tinyglobby` from `^0.2.14` to `^0.2.16`
+  - Bumped `valibot` from `^1.2.0` to `^1.4.1`
+- Replace `cookie` and `set-cookie-parser` with `cookie-es` ([#15109](https://github.com/remix-run/react-router/pull/15109))
+- Removed the `vite-node` dependency in favor of Vite's native module runner APIs ([#15104](https://github.com/remix-run/react-router/pull/15104))
+
+### Patch Changes
+
+- Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `@babel/core` from `^7.29.0` to `^7.29.7`
+  - Bumped `@babel/generator` from `^7.29.1` to `^7.29.7`
+  - Bumped `@babel/parser` from `^7.29.3` to `^7.29.7`
+  - Bumped `@babel/plugin-syntax-jsx` from `^7.28.6` to `^7.29.7`
+  - Bumped `@babel/preset-typescript` from `^7.28.5` to `^7.29.7`
+  - Bumped `@babel/traverse` from `^7.29.0` to `^7.29.7`
+  - Bumped `@babel/types` from `^7.29.0` to `^7.29.7`
+  - Bumped `babel-dead-code-elimination` from `^1.0.6` to `^1.0.12`
+  - Bumped `chokidar` from `^4.0.0` to `^5.0.0`
+  - Bumped `es-module-lexer` from `^1.3.1` to `^2.1.0`
+  - Bumped `exit-hook` from `2.2.1` to `5.1.0`
+  - Bumped `isbot` from `^5.1.11` to `^5.1.40`
+  - Bumped `p-map` from `^7.0.3` to `^7.0.4`
+  - Bumped `pathe` from `^1.1.2` to `^2.0.3`
+  - Bumped `pkg-types` from `^2.3.0` to `^2.3.1`
+  - Bumped `react-refresh` from `^0.14.0` to `^0.18.0`
+  - Bumped `semver` from `^7.8.0` to `^7.8.1`
+  - Bumped `tinyglobby` from `^0.2.14` to `^0.2.16`
+  - Bumped `valibot` from `^1.4.0` to `^1.4.1`
+- Fix Windows libuv assertion (`!(handle->flags & UV_HANDLE_CLOSING)` in `src/win/async.c`) during prerendering by using `node:http` instead of `fetch` for internal prerender requests against the Vite preview server ([#15077](https://github.com/remix-run/react-router/pull/15077))
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+  - [`@react-router/node@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.0)
+  - [`@react-router/serve@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Pass Vite `server.watch` config to child compiler in development mode. ([#15178](https://github.com/remix-run/react-router/pull/15178))
+
+- Ignore external Vite server environments in Framework Mode build hooks ([#14883](https://github.com/remix-run/react-router/pull/14883))
+
+  When `future.v8_viteEnvironmentApi` is enabled, React Router previously treated any non-client Vite environment as its own server build. This caused issues with integrations like Nitro, where plugins can register additional environments.
+
+  Framework Mode build hooks now ignore external server environments and only process the app's own server build.
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+  - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
+  - [`@react-router/serve@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

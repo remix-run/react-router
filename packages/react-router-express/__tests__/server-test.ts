@@ -1,31 +1,29 @@
 import { Readable } from "node:stream";
 import type { AddressInfo } from "node:net";
 import http from "node:http";
-import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import express from "express";
 import { createRequest, createResponse } from "node-mocks-http";
 import supertest from "supertest";
 
-import {
-  createRemixHeaders,
-  createRemixRequest,
-  createRequestHandler,
-} from "../server";
+let createRemixHeaders: typeof import("../server").createRemixHeaders;
+let createRemixRequest: typeof import("../server").createRemixRequest;
+let createRequestHandler: typeof import("../server").createRequestHandler;
 
 // We don't want to test that the remix server works here (that's what the
 // playwright tests do), we just want to test the express adapter
-jest.mock("react-router", () => {
-  let original = jest.requireActual("react-router");
-  return {
-    ...original,
-    createRequestHandler: jest.fn(),
-  };
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
+
+(jest as any).unstable_mockModule("react-router", () => ({
+  createRequestHandler: mockedCreateRequestHandler,
+}));
+
+beforeAll(async () => {
+  ({ createRemixHeaders, createRemixRequest, createRequestHandler } =
+    await import("../server"));
 });
-let mockedCreateRequestHandler =
-  createRemixRequestHandler as jest.MockedFunction<
-    typeof createRemixRequestHandler
-  >;
 
 function createApp() {
   let app = express();
@@ -305,6 +303,79 @@ describe("express createRemixRequest", () => {
       "max-age=300, s-maxage=3600",
     );
     expect(remixRequest.headers.get("host")).toBe("localhost:3000");
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("does not use x-forwarded-host port unless trust proxy is enabled", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("uses x-forwarded-host port when trust proxy is enabled", async () => {
+    let app = express();
+    app.set("trust proxy", true);
+    let expressRequest = createRequest({
+      app,
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "example.com",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
+  });
+
+  it("ignores invalid characters in host values", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost/invalid",
+      headers: {
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("falls back for invalid host values", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "/invalid",
+      headers: {
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
     expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
   });
 });

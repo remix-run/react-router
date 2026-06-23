@@ -330,8 +330,8 @@ export function parseAllChangeFiles(): ParsedChanges {
     });
   }
 
-  // Sort releases with custom ordering: react-router first, then react-router-dom,
-  // then @react-router/* packages sorted alphabetically, then others
+  // Sort releases with custom ordering: react-router first, then @react-router/*
+  // packages sorted alphabetically, then others
   releases.sort((a, b) => packageNameComparator(a.packageName, b.packageName));
 
   return { valid: true, releases };
@@ -340,9 +340,8 @@ export function parseAllChangeFiles(): ParsedChanges {
 function packageNameComparator(a: string, b: string) {
   const order = (name: string): [number, string] => {
     if (name === "react-router") return [0, name];
-    if (name === "react-router-dom") return [1, name];
-    if (name.startsWith("@react-router/")) return [2, name];
-    return [3, name];
+    if (name.startsWith("@react-router/")) return [1, name];
+    return [2, name];
   };
 
   const [orderA, nameA] = order(a);
@@ -400,7 +399,7 @@ function hasBreakingChangePrefix(content: string): boolean {
  * Formats a changelog entry from change file content
  */
 function formatChangelogEntry(change: ChangeFile): string {
-  let lines = change.content.trim().split("\n");
+  let lines = normalizeChangeContent(change.content).split("\n");
   let base = "https://github.com/remix-run/react-router";
   // prettier-ignore
   let link =
@@ -422,6 +421,26 @@ function formatChangelogEntry(change: ChangeFile): string {
   }
 
   return formatted.join("\n");
+}
+
+/**
+ * Collapses editor-formatted "summary + bullet list" content without changing
+ * multi-paragraph entries or entries with richer markdown like code blocks.
+ */
+function normalizeChangeContent(content: string): string {
+  let normalized = content.trim();
+  let lines = normalized.split("\n");
+
+  if (
+    lines.length >= 3 &&
+    lines[0].trim().length > 0 &&
+    lines[1].trim() === "" &&
+    lines.slice(2).every((line) => line.trimStart().startsWith("- "))
+  ) {
+    return [lines[0], ...lines.slice(2)].join("\n");
+  }
+
+  return normalized;
 }
 
 /**
@@ -471,7 +490,7 @@ function generateBumpTypeSection(
   }
 
   let includeBlankLine = changes.some((change) =>
-    change.content.trim().includes("\n\n"),
+    normalizeChangeContent(change.content).includes("\n\n"),
   );
 
   for (let change of changes) {
@@ -498,6 +517,8 @@ export function generateChangelogContent(
     headingLevel?: 2 | 3;
     /** Optional footer to append at the end */
     footerLines?: string[];
+    /** Optional "What's Changed" section to include before generated change sections */
+    whatsChanged?: string;
     /** Whether to skip sorting changes (for root changelog generation). Default: false */
     skipSort?: boolean;
   } = {},
@@ -526,6 +547,11 @@ export function generateChangelogContent(
   }
 
   let subheadingLevel = headingLevel + 1;
+
+  if (options.whatsChanged) {
+    lines.push(options.whatsChanged.trim());
+    lines.push("");
+  }
 
   // Generate sections in order: major, minor, patch (skipping empty sections)
   for (let bumpType of bumpTypes) {

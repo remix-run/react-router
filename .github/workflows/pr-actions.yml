@@ -1,4 +1,4 @@
-name: PR (Actions)
+name: PR Actions
 
 # Triggered when "PR (Check)" completes. Downloads the artifact produced by
 # the upstream workflow and applies the recorded actions (sticky comments,
@@ -7,12 +7,12 @@ name: PR (Actions)
 
 on:
   workflow_run:
-    workflows: ["PR (Check)"]
+    workflows: ["PR Checks"]
     types: [completed]
 
 jobs:
   actions:
-    name: PR (Actions)
+    name: Actions
     if: >
       github.event.workflow_run.conclusion == 'success' &&
       github.repository == 'remix-run/react-router'
@@ -24,29 +24,29 @@ jobs:
 
     steps:
       # Check's out the base (main) branch - not the PR branch
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v6
+      - name: Checkout repo
+        uses: actions/checkout@v7
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: pnpm
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 📥 Download result from upstream workflow
+      - name: Download result from upstream workflow
         uses: actions/download-artifact@v8
         with:
           name: pr-checks-result
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: 💬 Apply actions
+      - name: Apply actions
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/pr.ts actions pr-checks-result.json

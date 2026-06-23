@@ -41,17 +41,17 @@ jobs:
     steps:
       - name: Checkout (push)
         if: github.event_name == 'push'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout (pull_request)
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Checkout (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.baseBranch }}
 
@@ -61,7 +61,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: "package.json"
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install dependencies
@@ -76,7 +76,7 @@ jobs:
       - name: Build/push branch (push)
         if: github.event_name == 'push'
         run: |
-          pnpm run previews:branch preview/main
+          node ./scripts/previews/branch.ts preview/main
           git push --force --set-upstream origin preview/main
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
@@ -86,17 +86,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          pnpm run previews:branch preview/pr-${{ github.event.pull_request.number }}
+          node ./scripts/previews/branch.ts preview/pr-${{ github.event.pull_request.number }}
           git push --force --set-upstream origin preview/pr-${{ github.event.pull_request.number }}
           echo "pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
-          pnpm run previews:pr comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
+          node ./scripts/previews/pr.ts comment ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
 
       # Build and normal push for experimental releases to avoid unintended force
       # pushes over remote branches in case of a branch name collision
       - name: Build/push branch (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          pnpm run previews:branch ${{ inputs.installableBranch }}
+          node ./scripts/previews/branch.ts ${{ inputs.installableBranch }}
           git push --set-upstream origin ${{ inputs.installableBranch }}
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
@@ -106,4 +106,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          pnpm run previews:pr cleanup ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}
+          node ./scripts/previews/pr.ts cleanup ${{ github.event.pull_request.number }} preview/pr-${{ github.event.pull_request.number }}

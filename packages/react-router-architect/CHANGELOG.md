@@ -1,5 +1,41 @@
 # `@react-router/architect`
 
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+  - [`@react-router/node@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Bump `@architect/functions` to v8 ([#15106](https://github.com/remix-run/react-router/pull/15106))
+- Remove the `useRequestContextDomainName` option from `createRequestHandler` - this is now the default behavior ([#15188](https://github.com/remix-run/react-router/pull/15188))
+- Update minimum Node version to 22.22.0 ([#15143](https://github.com/remix-run/react-router/pull/15143))
+
+### Patch Changes
+
+- Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `@types/aws-lambda` from `^8.10.82` to `^8.10.161`
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+  - [`@react-router/node@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.0)
+
+## v7.18.0
+
+### Minor Changes
+
+- Add a `useRequestContextDomainName` option to `createRequestHandler` to derive request URL hosts from the API Gateway request context. ([#15185](https://github.com/remix-run/react-router/pull/15185))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+  - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

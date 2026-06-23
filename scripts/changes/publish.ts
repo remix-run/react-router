@@ -9,9 +9,10 @@
  * This script is designed for CI use. For previewing releases, use `pnpm changes:preview`.
  *
  * Usage:
- *   node scripts/publish.ts [--skip-ci-check] [--dry-run]
+ *   node scripts/publish.ts --branch=<branch> [--skip-ci-check] [--dry-run]
  *
  * Options:
+ *   --branch        Required. Branch this release is publishing from.
  *   --skip-ci-check  Bypass the CI environment check
  *   --dry-run        Show what would be published without actually publishing.
  *                    Queries npm to determine unpublished packages and previews
@@ -20,6 +21,7 @@
 import * as cp from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { parseArgs } from "node:util";
 
 import { tagExists } from "../utils/git.ts";
 import { createRelease } from "../utils/github.ts";
@@ -33,9 +35,32 @@ import { readJson, fileExists } from "../utils/fs.ts";
 
 let rootDir = getRootDir();
 
-let args = process.argv.slice(2);
-let skipCiCheck = args.includes("--skip-ci-check");
-let dryRun = args.includes("--dry-run");
+let { values } = parseArgs({
+  strict: true,
+  options: {
+    branch: {
+      type: "string",
+      required: true,
+    },
+    "skip-ci-check": {
+      type: "boolean",
+    },
+    "dry-run": {
+      type: "boolean",
+    },
+  },
+});
+
+let skipCiCheck = values["skip-ci-check"];
+let dryRun = values["dry-run"];
+let branch = values.branch;
+
+if (!branch) {
+  throw new Error("--branch is required");
+}
+
+let shouldTagGithubReleaseAsLatest = branch === "main";
+let shouldUseVersion7NpmTag = branch === "v7";
 
 interface PublishedPackage {
   packageName: string;
@@ -147,7 +172,11 @@ async function getUnpublishedPackages(): Promise<PublishedPackage[]> {
 }
 
 function getGithubReleaseBody(version: string) {
-  return `See the changelog for release notes: https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v${version.replace(/\./g, "")}`;
+  let href = `/blob/${branch}/CHANGELOG.md#v${version.replace(/\./g, "")}`;
+  return (
+    "See the changelog for release notes: " +
+    `https://github.com/remix-run/react-router${href}`
+  );
 }
 
 async function main() {
@@ -167,16 +196,26 @@ async function main() {
   // Publish packages to npm
   console.log("Publishing packages to npm...\n");
 
-  // Single-phase publish: everything as latest
-  let publishCommand =
-    'pnpm publish --recursive --filter "./packages/*" --access public --no-git-checks --report-summary';
+  let args = `--access public --no-git-checks --report-summary`;
+  let publishCommands = shouldUseVersion7NpmTag
+    ? // Two-phase publish:
+      //  - everything except `react-router-dom` as `version-7`
+      //  - `react-router-dom` as `latest` because it was dropped in v8
+      [
+        `pnpm publish --recursive --filter "./packages/*" --filter "!react-router-dom" --tag version-7 ${args}`,
+        `pnpm publish --recursive --filter react-router-dom ${args}`,
+      ]
+    : // Single-phase publish: everything as latest
+      [`pnpm publish --recursive --filter "./packages/*" ${args}`];
 
   // In dry run mode, query npm to determine what would be published
   // and preview the GitHub releases. This is designed to be run against
   // the contents of the "Release" PR / `pnpm changes:version` output.
   if (dryRun) {
     console.log("Would run:");
-    console.log(`  $ ${publishCommand}`);
+    for (let publishCommand of publishCommands) {
+      console.log(`  $ ${publishCommand}`);
+    }
     console.log();
 
     console.log("Checking npm for unpublished versions...\n");
@@ -223,8 +262,10 @@ async function main() {
   }
 
   // Publish to npm
-  logAndExec(publishCommand);
-  let published = readPublishSummary();
+  let published = publishCommands.flatMap((publishCommand) => {
+    logAndExec(publishCommand);
+    return readPublishSummary();
+  });
 
   if (published.length === 0) {
     console.log("\nNo packages were published.");
@@ -277,6 +318,7 @@ async function main() {
       pkg.packageName,
       pkg.version,
       getGithubReleaseBody(pkg.version),
+      { makeLatest: shouldTagGithubReleaseAsLatest },
     );
     if (result.status === "created") {
       console.log(`  ✓ ${pkg.packageName} v${pkg.version}`);

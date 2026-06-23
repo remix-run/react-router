@@ -1,5 +1,33 @@
 # `@react-router/node`
 
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Switch from `@mjackson/node-fetch-server` to `@remix-run/node-fetch-server` now that we can directly use ESM-only packages ([#14930](https://github.com/remix-run/react-router/pull/14930))
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+
+### Patch Changes
+
+- Bump dependencies ([#15106](https://github.com/remix-run/react-router/pull/15106))
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

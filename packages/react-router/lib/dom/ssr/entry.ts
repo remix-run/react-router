@@ -24,6 +24,7 @@ export interface FrameworkContextObject {
   ssr: boolean;
   isSpaMode: boolean;
   routeDiscovery: ServerBuild["routeDiscovery"];
+  nonce?: string;
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
@@ -48,11 +49,7 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export interface FutureConfig {
-  v8_passThroughRequests: boolean;
-  v8_trailingSlashAwareDataRequests: boolean;
-  v8_middleware: boolean;
-}
+export type FutureConfig = Record<string, never>;
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };
 

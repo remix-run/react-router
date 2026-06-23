@@ -4,7 +4,6 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RSCRouterContext,
@@ -26,7 +25,7 @@ import type {
   RevalidationState,
   NavigationStates,
 } from "./router/router";
-import { IDLE_BLOCKER } from "./router/router";
+import { hasInvalidProtocol, IDLE_BLOCKER } from "./router/router";
 import type {
   DataRouteMatch,
   ParamParseKey,
@@ -39,6 +38,7 @@ import type {
   UIMatch,
 } from "./router/utils";
 import {
+  ENABLE_DEV_WARNINGS,
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,
@@ -214,19 +214,6 @@ const navigateEffectWarning =
   `You should call navigate() in a React.useEffect(), not when ` +
   `your component is first rendered.`;
 
-// Mute warnings for calls to useNavigate in SSR environments
-function useIsomorphicLayoutEffect(
-  cb: Parameters<typeof React.useLayoutEffect>[0],
-) {
-  let isStatic = React.useContext(NavigationContext).static;
-  if (!isStatic) {
-    // We should be able to get rid of this once react 18.3 is released
-    // See: https://github.com/facebook/react/pull/26395
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useLayoutEffect(cb);
-  }
-}
-
 /**
  * Returns a function that lets you navigate programmatically in the browser in
  * response to user interactions or effects.
@@ -396,7 +383,7 @@ function useNavigateUnstable(): NavigateFunction {
   let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   let activeRef = React.useRef(false);
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 
@@ -1114,6 +1101,7 @@ export class RenderErrorBoundary extends React.Component<
 }
 
 const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
+
 function RSCErrorHandler({
   children,
   error,
@@ -1135,10 +1123,14 @@ function RSCErrorHandler({
       if (existingRedirect) throw existingRedirect;
 
       let parsed = parseToInfo(redirect.location, basename);
+      let target = parsed.absoluteURL || parsed.to;
+      if (hasInvalidProtocol(target)) {
+        throw new Error("Invalid redirect location");
+      }
 
       if (isBrowser && !errorRedirectHandledMap.get(error)) {
         if (parsed.isExternal || redirect.reloadDocument) {
-          window.location.href = parsed.absoluteURL || parsed.to;
+          window.location.href = target;
         } else {
           const redirectPromise: Promise<void> = Promise.resolve().then(() =>
             window.__reactRouterDataRouter!.navigate(parsed.to, {
@@ -1150,12 +1142,7 @@ function RSCErrorHandler({
         }
       }
 
-      return (
-        <meta
-          httpEquiv="refresh"
-          content={`0;url=${parsed.absoluteURL || parsed.to}`}
-        />
-      );
+      return <meta httpEquiv="refresh" content={`0;url=${target}`} />;
     }
   }
   return children;
@@ -1937,7 +1924,7 @@ function useNavigateStable(): NavigateFunction {
   let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
 
   let activeRef = React.useRef(false);
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 

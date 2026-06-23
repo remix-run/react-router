@@ -1,19 +1,13 @@
 {
+  "extends": "../tsconfig.base.json",
   "include": ["**/*.ts"],
   "exclude": ["helpers/*"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "skipLibCheck": true,
-
-    "moduleResolution": "Bundler",
+    "types": ["node"],
     "allowSyntheticDefaultImports": true,
-    "strict": true,
     "resolveJsonModule": true,
-
     "noEmit": true,
-
     "rootDir": "."
   }
 }

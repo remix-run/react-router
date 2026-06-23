@@ -1,5 +1,30 @@
 # `@react-router/remix-config-routes-adapter`
 
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Update minimum Node version to 22.22.0 ([#15143](https://github.com/remix-run/react-router/pull/15143))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

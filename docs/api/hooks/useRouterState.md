@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.unstable_useRouterState.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.unstable_useRouterState.html)
 
 A unified hook for reading router state: current (`active`) and in-flight
 (`pending`) locations, search params, params, matches, and navigation type.

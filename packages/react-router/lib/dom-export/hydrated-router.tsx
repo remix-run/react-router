@@ -17,11 +17,10 @@ import {
   UNSAFE_createBrowserHistory as createBrowserHistory,
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
-  UNSAFE_deserializeErrors as deserializeErrors,
+  UNSAFE_defaultMapRouteProperties as defaultMapRouteProperties,
   UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
-  UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
@@ -158,12 +157,6 @@ function createHydratedRouter({
       basename: window.__reactRouterContext?.basename,
       isSpaMode: ssrInfo.context.isSpaMode,
     });
-
-    if (hydrationData && hydrationData.errors) {
-      // TODO: De-dup this or remove entirely in v7 where single fetch is the
-      // only approach and we have already serialized or deserialized on the server
-      hydrationData.errors = deserializeErrors(hydrationData.errors);
-    }
   }
 
   // We cannot support history-state-driven masking with SSR, so if a hard
@@ -184,19 +177,14 @@ function createHydratedRouter({
     basename: ssrInfo.context.basename,
     getContext,
     hydrationData,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     instrumentations,
-    mapRouteProperties,
-    future: {
-      v8_passThroughRequests: ssrInfo.context.future.v8_passThroughRequests,
-    },
     dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
-      ssrInfo.context.basename,
-      ssrInfo.context.future.v8_trailingSlashAwareDataRequests,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       () => router,

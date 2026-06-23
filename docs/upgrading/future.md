@@ -1,280 +1,78 @@
 ---
-title: Future Flags
+title: Future Changes
 order: 1
 ---
 
-# Future Flags and Deprecations
+# Future Changes
 
-This guide walks you through the process of adopting future flags in your React Router app. By following this strategy, you will be able to upgrade to the next major version of React Router with minimal changes. To read more about future flags see [API Development Strategy][api-development-strategy].
+We try our best to keep major version upgrades simple and boring through the use of opt-in APIs and [Future Flags][api-development-strategy]. Future flags are used to gate breaking changes that don't otherwise have a good call-site opt-in strategy. By adopting all opt-in APIs and future flags, you should be able to upgrade to the next major version of React Router with minimal changes.
+
+We plan to ship new major versions roughly once a year as described in our [Open Governance Model][governance], so this guide will continue to track future changes you can adopt ahead of the next major release. v9 is currently estimated for mid-2027 when Node 22 reaches EOL.
 
 We highly recommend you make a commit after each step and ship it instead of doing everything all at once. Most flags can be adopted in any order, with exceptions noted below.
 
-## Update to latest v7.x
+<docs-info>This is an evolving document that will be updated throughout the duration of v8</docs-info>
 
-First update to the latest minor version of v7.x to have the latest future flags. You may see a number of deprecation warnings as you upgrade, which we'll cover below.
+## Minimum Versions
 
-👉 Update to latest v7
+[MODES: framework, data, declarative]
+
+<br/>
+<br/>
+
+React Router v9 will require the following minimum versions (as of now). You can prepare for the upgrade by updating them while still on v8:
+
+- `node@24+`
+
+## Update to latest v8.x
+
+Before adopting any future flags or call-site opt-in changes, you should update to the latest minor version of v8.x to make sure you have access to the latest flags. You may see a number of deprecation warnings as you upgrade, which we'll cover below.
+
+👉 Update to latest v8
 
 ```sh
-npm install react-router@7 @react-router/{dev,node,etc.}@7
+npm install react-router@8 @react-router/{dev,node,etc.}@8
 ```
 
-## `future.v8_middleware`
+## Future Flags
 
-[MODES: framework, data]
+_No future flags yet_
 
-<br/>
-<br/>
+## Other Planned Breaking Changes
 
-**Background**
-
-Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables common patterns like authentication, logging, error handling, and data preprocessing in a reusable way. Please see the [docs](../how-to/middleware) for more information.
-
-👉 **Enable the Flag**
-
-In Framework mode:
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_middleware: true,
-  },
-} satisfies Config;
-```
-
-In Data mode:
-
-```ts
-import { createBrowserRouter } from "react-router/dom";
-
-const router = createBrowserRouter(routes, {
-  future: {
-    v8_middleware: true,
-  },
-});
-```
-
-**Update your Code**
-
-If you're using the `context` parameter in `loader` and `action` functions, you may need to update your code:
-
-- In Framework mode, if you're using `react-router-serve`, you should not need to make any updates. Otherwise, this only applies if you have a custom server with a `getLoadContext` function. Please see the docs on the middleware [`getLoadContext` changes](../how-to/middleware#changes-to-getloadcontextapploadcontext) and the instructions to [migrate to the new API](../how-to/middleware#migration-from-apploadcontext).
-- In Data mode, add the `Future` module augmentation described in the [middleware docs](../how-to/middleware#1-typescript-augment-future-for-loaderaction-context) so `context` is typed correctly.
-
-## `future.v8_splitRouteModules`
-
-[MODES: framework]
-
-<br/>
-<br/>
-
-**Background**
-
-This feature enables splitting client-side route exports (`clientLoader`, `clientAction`, `clientMiddleware`, `HydrateFallback`) into separate chunks that can be loaded independently from the route component. This allows these exports to be fetched and executed while the component code is still downloading, improving performance for client-side data loading.
-
-This can be set to `true` for opt-in behavior, or `"enforce"` to require all routes to be splittable (which will cause build failures for routes that cannot be split due to shared code).
-
-👉 **Enable the Flag**
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_splitRouteModules: true,
-  },
-} satisfies Config;
-```
-
-**Update your Code**
-
-No code changes are required. This is an optimization feature that works automatically once enabled.
-
-## `future.v8_viteEnvironmentApi`
-
-[MODES: framework]
-
-<br/>
-<br/>
-
-**Background**
-
-This enables support for the experimental Vite Environment API, which provides a more flexible and powerful way to configure Vite environments. This is only available when using Vite 6+.
-
-👉 **Enable the Flag**
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_viteEnvironmentApi: true,
-  },
-} satisfies Config;
-```
-
-**Update your Code**
-
-Most users won't need to make any changes. However, if you have custom Vite configuration that previously relied on the `isSsrBuild` flag — such as a custom server build that sets `build.rollupOptions.input` — you'll need to move that configuration under the per-environment [Environment API][vite-environment] config instead.
-
-For example, a custom server build should move its SSR `rollupOptions` from the top-level `build` config into `environments.ssr.build`:
-
-```diff filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
-
--export default defineConfig(({ isSsrBuild }) => ({
--  build: {
--    rollupOptions: isSsrBuild
--      ? {
--          input: "./server/app.ts",
--        }
--      : undefined,
--  },
-+export default defineConfig({
-+  environments: {
-+    ssr: {
-+      build: {
-+        rollupOptions: {
-+          input: "./server/app.ts",
-+        },
-+      },
-+    },
-+  },
-   plugins: [reactRouter()],
--}));
-+});
-```
-
-See the [`node-custom-server` template][node-custom-server-template] for a complete example.
-
-## `future.v8_passThroughRequests`
-
-[MODES: framework]
-
-<br/>
-<br/>
-
-**Background**
-
-By default, React Router normalizes the `request.url` passed to your `loader`, `action`, and `middleware` functions by removing React Router's internal implementation details. Specifically, it removes `.data` suffixes and internal search parameters like `?index` and `?_routes`.
-
-This flag eliminates that normalization and passes the raw HTTP `request` instance to your handlers. This provides a few benefits:
-
-- Reduces server-side overhead by eliminating multiple `new Request()` calls on the critical path
-- Allows you to distinguish document from data requests in your handlers based on the presence of a `.data` suffix (useful for [observability] purposes)
-
-If you were previously relying on the normalization of `request.url`, you can switch to use the new sibling `url` parameter which contains a `URL` instance representing the normalized location.
-
-👉 **Enable the Flag**
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_passThroughRequests: true,
-  },
-} satisfies Config;
-```
-
-**Update your Code**
-
-If your code relies on inspecting the request URL, you should review it for any assumptions about the URL format:
-
-```tsx
-// ❌ Before: assuming no `.data` suffix in `request.url` pathname
-export async function loader({
-  request,
-}: Route.LoaderArgs) {
-  let url = new URL(request.url);
-  if (url.pathname === "/path") {
-    // This check might now behave differently because the request pathname will
-    // contain the `.data` suffix on data requests
-  }
-}
-
-// ✅ After: use `url` for normalized routing logic and `request.url`
-// for raw routing logic
-export async function loader({
-  request,
-  url,
-}: Route.LoaderArgs) {
-  if (url.pathname === "/path") {
-    // This will always have the `.data` suffix stripped
-  }
-
-  // And now you can distinguish between document versus data requests
-  let isDataRequest = new URL(
-    request.url,
-  ).pathname.endsWith(".data");
-}
-```
-
-## `future.v8_trailingSlashAwareDataRequests`
-
-[MODES: framework]
-
-<br/>
-<br/>
-
-**Background**
-
-React Router serves Framework mode data requests from `.data` URLs. Previously, data requests for routes with and without trailing slashes could map to the same `.data` URL because trailing slashes were not considered during URL generation. This flag preserves trailing slash semantics for data request URLs to avoid ambiguity when your app distinguishes between trailing-slash and non-trailing-slash URLs.
-
-Currently, your HTTP and `request` pathnames would be as follows for `/a/b/c` and `/a/b/c/`
-
-| URL `/a/b/c` | **HTTP pathname** | **`request` pathname`** |
-| ------------ | ----------------- | ----------------------- |
-| **Document** | `/a/b/c`          | `/a/b/c` ✅             |
-| **Data**     | `/a/b/c.data`     | `/a/b/c` ✅             |
-
-| URL `/a/b/c/` | **HTTP pathname** | **`request` pathname`** |
-| ------------- | ----------------- | ----------------------- |
-| **Document**  | `/a/b/c/`         | `/a/b/c/` ✅            |
-| **Data**      | `/a/b/c.data`     | `/a/b/c` ⚠️             |
-
-With this flag enabled, these pathnames will be made consistent though a new `_.data` format for client-side `.data` requests:
-
-| URL `/a/b/c` | **HTTP pathname** | **`request` pathname`** |
-| ------------ | ----------------- | ----------------------- |
-| **Document** | `/a/b/c`          | `/a/b/c` ✅             |
-| **Data**     | `/a/b/c.data`     | `/a/b/c` ✅             |
-
-| URL `/a/b/c/` | **HTTP pathname**  | **`request` pathname`** |
-| ------------- | ------------------ | ----------------------- |
-| **Document**  | `/a/b/c/`          | `/a/b/c/` ✅            |
-| **Data**      | `/a/b/c/_.data` ⬅️ | `/a/b/c/` ✅            |
-
-This flag also aligns the root data request to match this behavior by changing it from `/_root.data` to `/_.data`.
-
-👉 **Enable the Flag**
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_trailingSlashAwareDataRequests: true,
-  },
-} satisfies Config;
-```
-
-**Update your Code**
-
-If you have custom app, CDN, cache, or rewrite logic that matches `.data` request URLs, update it to handle the new trailing-slash-aware `/_.data` format.
+_No known planned breaking changes yet_
 
 ## Unstable Future Flags (Optional)
 
-We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may having breaking changes patch/minor releases - adopt with caution!
+We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
-_No current unstable flags to document_
+### `future.unstable_optimizeDeps`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+This flag lets React Router provide Vite's dependency optimizer with the client entry file and route module files. This can improve dependency optimization in development, but the behavior is still experimental.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_optimizeDeps: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required. If you run into dependency optimization issues after enabling this flag, remove the flag and restart the dev server.
 
 [api-development-strategy]: ../community/api-development-strategy
+[governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals
 [unstable]: ../community/api-development-strategy#unstable-flags
-[observability]: ../how-to/instrumentation
-[Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[vite-environment]: https://vite.dev/guide/api-environment
-[node-custom-server-template]: https://github.com/remix-run/react-router-templates/blob/7c617a435510bc3add3a5395c07bc65328b65e9e/node-custom-server/vite.config.ts

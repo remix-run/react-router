@@ -1,0 +1,42 @@
+name: Release Comments (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        required: true
+        description: Release version, e.g. 7.18.0
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  comment:
+    name: Comment on released issues/pull requests
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # enable commenting on released issues
+      pull-requests: write # enable commenting on released pull requests
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Comment on released issues and pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm run release-comments --release=${{ github.event.inputs.release }}

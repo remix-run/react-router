@@ -105,7 +105,7 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
-): [boolean, React.RefObject<T>, PrefetchHandlers] {
+): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
@@ -224,7 +224,8 @@ export interface LinksProps {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
   /**
@@ -265,8 +266,13 @@ export interface LinksProps {
  * tags
  */
 export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
-  let { isSpaMode, manifest, routeModules, criticalCss } =
-    useFrameworkContext();
+  let {
+    isSpaMode,
+    manifest,
+    routeModules,
+    criticalCss,
+    nonce: contextNonce,
+  } = useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -275,6 +281,10 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
     [matches, routeModules, manifest],
   );
+
+  if (nonce == null && contextNonce) {
+    nonce = contextNonce;
+  }
 
   return (
     <>
@@ -344,6 +354,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  */
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let rsc = useIsRSCRouterContext();
+  let { nonce: contextNonce } = useFrameworkContext();
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -352,6 +363,10 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
 
   if (!matches) {
     return null;
+  }
+
+  if (linkProps.nonce == null && contextNonce) {
+    linkProps = { ...linkProps, nonce: contextNonce };
   }
 
   if (rsc) {
@@ -397,8 +412,6 @@ function RSCPrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
 
   let dataHrefs = React.useMemo(() => {
     if (page === location.pathname + location.search + location.hash) {
@@ -406,12 +419,7 @@ function RSCPrefetchPageLinksImpl({
       // since it would always trigger a prefetch of the existing loaders
       return [];
     }
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.v8_trailingSlashAwareDataRequests,
-      "rsc",
-    );
+    let url = singleFetchUrl(page, "rsc");
 
     let hasSomeRoutesWithShouldRevalidate = false;
     let targetRoutes: string[] = [];
@@ -428,13 +436,7 @@ function RSCPrefetchPageLinksImpl({
     }
 
     return [url.pathname + url.search];
-  }, [
-    basename,
-    future.v8_trailingSlashAwareDataRequests,
-    page,
-    location,
-    nextMatches,
-  ]);
+  }, [page, location, nextMatches]);
 
   return (
     <>
@@ -453,8 +455,7 @@ function PrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future, manifest, routeModules } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
+  let { manifest, routeModules } = useFrameworkContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -517,12 +518,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.v8_trailingSlashAwareDataRequests,
-      "data",
-    );
+    let url = singleFetchUrl(page, "data");
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -538,8 +534,6 @@ function PrefetchPageLinksImpl({
 
     return [url.pathname + url.search];
   }, [
-    basename,
-    future.v8_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,
@@ -634,7 +628,6 @@ export function Meta(): React.JSX.Element {
 
     let match: MetaMatch = {
       id: routeId,
-      data,
       loaderData: data,
       meta: [],
       params: _match.params,
@@ -648,7 +641,6 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
               loaderData: data,
               params,
               location,
@@ -785,7 +777,8 @@ export type ScriptsProps = Omit<
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
 };
@@ -831,11 +824,20 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
+    nonce: contextNonce,
   } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
+
+  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
+  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
+  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
+  // internally without props (such as in the default `HydrateFallback`).
+  if (scriptProps.nonce == null && contextNonce) {
+    scriptProps = { ...scriptProps, nonce: contextNonce };
+  }
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts

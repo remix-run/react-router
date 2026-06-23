@@ -79,6 +79,7 @@ export type {
   InstrumentationHandlerResult,
 } from "./lib/router/instrumentation";
 export {
+  createStaticHandler,
   IDLE_NAVIGATION,
   IDLE_FETCHER,
   IDLE_BLOCKER,
@@ -209,7 +210,6 @@ export type {
   StaticRouterProviderProps,
 } from "./lib/dom/server";
 export {
-  createStaticHandler,
   createStaticRouter,
   StaticRouter,
   StaticRouterProvider,
@@ -277,8 +277,6 @@ export type {
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
 
-export type { AppLoadContext } from "./lib/server-runtime/data";
-
 export type {
   PageLinkDescriptor,
   HtmlLinkDescriptor,
@@ -295,10 +293,7 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
-export type {
-  Future,
-  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
-} from "./lib/types/future.ts";
+export type { Future } from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
@@ -364,7 +359,10 @@ export {
 export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
 
 /** @internal */
-export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+export {
+  defaultMapRouteProperties as UNSAFE_defaultMapRouteProperties,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
+} from "./lib/router/utils";
 
 /** @internal */
 export {
@@ -380,7 +378,6 @@ export {
 /** @internal */
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
-  mapRouteProperties as UNSAFE_mapRouteProperties,
   WithComponentProps as UNSAFE_WithComponentProps,
   withComponentProps as UNSAFE_withComponentProps,
   WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
@@ -394,9 +391,6 @@ export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/compo
 
 /** @internal */
 export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entry";
-
-/** @internal */
-export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
 
 /** @internal */
 export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";

@@ -18,7 +18,6 @@ import {
   SINGLE_FETCH_REDIRECT_STATUS,
   SingleFetchRedirectSymbol,
 } from "../dom/ssr/single-fetch";
-import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
@@ -39,14 +38,13 @@ export async function singleFetchAction(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
     try {
       throwIfPotentialCSRFAttack(
-        request.headers,
+        request,
         Array.isArray(build.allowedActionOrigins)
           ? build.allowedActionOrigins
           : [],
@@ -58,31 +56,19 @@ export async function singleFetchAction(
       return handleQueryError(new Error("Bad Request"), 400);
     }
 
-    let handlerRequest = build.future.v8_passThroughRequests
-      ? request
-      : new Request(handlerUrl, {
-          method: request.method,
-          body: request.body,
-          headers: request.headers,
-          signal: request.signal,
-          ...(request.body ? { duplex: "half" } : undefined),
-        });
-
-    let result = await staticHandler.query(handlerRequest, {
+    let result = await staticHandler.query(request, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       skipRevalidation: true,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (query) => {
-            try {
-              let innerResult = await query(handlerRequest);
-              return handleQueryResult(innerResult);
-            } catch (error) {
-              return handleQueryError(error);
-            }
-          }
-        : undefined,
-      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
+      generateMiddlewareResponse: async (query) => {
+        try {
+          let innerResult = await query(request);
+          return handleQueryResult(innerResult);
+        } catch (error) {
+          return handleQueryError(error);
+        }
+      },
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryResult(result);
@@ -146,36 +132,26 @@ export async function singleFetchLoaders(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
   let routesParam = new URL(request.url).searchParams.get("_routes");
   let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
   try {
-    let handlerRequest = build.future.v8_passThroughRequests
-      ? request
-      : new Request(handlerUrl, {
-          headers: request.headers,
-          signal: request.signal,
-        });
-
-    let result = await staticHandler.query(handlerRequest, {
+    let result = await staticHandler.query(request, {
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (query) => {
-            try {
-              let innerResult = await query(handlerRequest);
-              return handleQueryResult(innerResult);
-            } catch (error) {
-              return handleQueryError(error);
-            }
-          }
-        : undefined,
-      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
+      generateMiddlewareResponse: async (query) => {
+        try {
+          let innerResult = await query(request);
+          return handleQueryResult(innerResult);
+        } catch (error) {
+          return handleQueryError(error);
+        }
+      },
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryResult(result);
@@ -183,14 +159,12 @@ export async function singleFetchLoaders(
     return handleQueryError(error);
   }
 
-  // Handle the query() result - either inside stream() with middleware enabled
-  // or after query() without
+  // Handle the query() result from inside stream()
   function handleQueryResult(result: StaticHandlerContext | Response) {
     return isResponse(result) ? result : staticContextToResponse(result);
   }
 
-  // Handle any thrown errors from query() result - either inside stream() with
-  // middleware enabled or after query() without
+  // Handle any thrown errors from query() result from inside stream()
   function handleQueryError(error: unknown) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs

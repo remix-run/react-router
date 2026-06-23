@@ -1,5 +1,5 @@
 import * as assert from "node:assert";
-import * as ts from "typescript";
+import ts from "typescript";
 
 import {
   createClientRouteModuleForOptimizeDepsScan,

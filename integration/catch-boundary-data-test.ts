@@ -10,7 +10,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { type TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -61,7 +61,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
               export const loader = () => "${ROOT_DATA}";
 
               export default function Root() {
-                const data = useLoaderData();
+                const loaderData = useLoaderData();
 
                 return (
                   <html lang="en">
@@ -70,7 +70,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
                       <Links />
                     </head>
                     <body>
-                      <div id="root-data">{data}</div>
+                      <div id="root-data">{loaderData}</div>
                       <Outlet />
                       <Scripts />
                     </body>
@@ -80,14 +80,14 @@ test.describe("ErrorBoundary (thrown responses)", () => {
 
               export function ErrorBoundary() {
                 let matches = useMatches();
-                let { data } = matches.find(match => match.id === "root");
+                let { loaderData } = matches.find(match => match.id === "root");
 
                 return (
                   <html>
                     <head />
                     <body>
                       <div id="root-boundary">${ROOT_BOUNDARY_TEXT}</div>
-                      <div id="root-boundary-data">{data}</div>
+                      <div id="root-boundary-data">{loaderData}</div>
                       <Scripts />
                     </body>
                   </html>
@@ -127,12 +127,12 @@ test.describe("ErrorBoundary (thrown responses)", () => {
               }
               export function ErrorBoundary() {
                 let matches = useMatches();
-                let { data } = matches.find(match => match.id === "routes${HAS_BOUNDARY_LAYOUT_NESTED_LOADER_FILE}");
+                let { loaderData } = matches.find(match => match.id === "routes${HAS_BOUNDARY_LAYOUT_NESTED_LOADER_FILE}");
 
                 return (
                   <div>
                     <div id="layout-boundary">${LAYOUT_BOUNDARY_TEXT}</div>
-                    <div id="layout-boundary-data">{data}</div>
+                    <div id="layout-boundary-data">{loaderData}</div>
                   </div>
                 );
               }
@@ -153,10 +153,10 @@ test.describe("ErrorBoundary (thrown responses)", () => {
                 return "${LAYOUT_DATA}";
               }
               export default function Layout() {
-                let data = useLoaderData();
+                let loaderData = useLoaderData();
                 return (
                   <div>
-                    <div id="layout-data">{data}</div>
+                    <div id="layout-data">{loaderData}</div>
                     <Outlet/>
                   </div>
                 );

@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-Hydrates a server rendered [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html) in the browser.
+Hydrates a server rendered [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html) in the browser.
 
 ```tsx
 import { startTransition, StrictMode } from "react";
@@ -87,5 +87,5 @@ navigation or fetcher call.
 
 ### payload
 
-The decoded [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html) to hydrate.
+The decoded [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html) to hydrate.
 

@@ -1,11 +1,10 @@
 import { createRequire } from "node:module";
 import { fixupPluginRules } from "@eslint/compat";
 import { defineConfig } from "eslint/config";
+import globals from "globals";
 
 const require = createRequire(import.meta.url);
-const eslintRequire = createRequire(require.resolve("eslint/package.json"));
 
-const globals = eslintRequire("globals");
 const reactAppConfig = require("eslint-config-react-app");
 
 const flowtypePlugin = fixupPluginRules(require("eslint-plugin-flowtype"));
@@ -26,6 +25,9 @@ const reactAppTsOverride = reactAppConfig.overrides.find(
 
 if (!reactAppTsOverride) {
   throw new Error("Could not find the react-app TypeScript override.");
+}
+if (!jestPlugin.configs) {
+  throw new Error("Could not find the jest plugin configs.");
 }
 
 const jestRecommended = jestPlugin.configs["flat/recommended"];
@@ -74,9 +76,6 @@ export default defineConfig([
       ".react-router/**",
       "**/.react-router/**",
       "packages/**/dist/**",
-      "packages/react-router-dom/server.d.ts",
-      "packages/react-router-dom/server.js",
-      "packages/react-router-dom/server.mjs",
       "tutorial/dist/**",
       "public/**",
     ],
@@ -120,6 +119,12 @@ export default defineConfig([
       "import/first": "off",
       "react/jsx-uses-react": "warn",
       "react/jsx-uses-vars": "warn",
+    },
+  },
+  {
+    files: ["**/*.config.js", "**/jest.config*.js"],
+    rules: {
+      "import/no-anonymous-default-export": "off",
     },
   },
   {

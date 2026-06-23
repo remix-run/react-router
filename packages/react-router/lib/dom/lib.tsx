@@ -35,13 +35,16 @@ import type {
   UIMatch,
 } from "../router/utils";
 import {
+  defaultMapRouteProperties,
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   joinPaths,
   matchPath,
   parseToInfo,
   resolveTo,
   stripBasename,
 } from "../router/utils";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -70,11 +73,7 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import {
-  Router,
-  mapRouteProperties,
-  hydrationRouteProperties,
-} from "../components";
+import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
@@ -628,6 +627,10 @@ export interface DOMRouterOpts {
  * path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
  * and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
  *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+ *
  * @public
  * @category Data Routers
  * @mode data
@@ -654,7 +657,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -666,6 +669,10 @@ export function createBrowserRouter(
 /**
  * Create a new {@link DataRouter| data router} that manages the application
  * path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
+ *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
  *
  * @public
  * @category Data Routers
@@ -693,7 +700,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -721,7 +728,7 @@ function deserializeErrors(
   let serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // serializeErrors in react-router-dom/server.tsx :)
+    // serializeErrors in lib/dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
       serialized[key] = new ErrorResponseImpl(
         val.status,
@@ -731,7 +738,10 @@ function deserializeErrors(
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
-      if (val.__subType) {
+      if (
+        typeof val.__subType === "string" &&
+        SUPPORTED_ERROR_TYPES.includes(val.__subType)
+      ) {
         let ErrorConstructor = window[val.__subType];
         if (typeof ErrorConstructor === "function") {
           try {
@@ -825,7 +835,7 @@ export function BrowserRouter({
   useTransitions,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  let historyRef = React.useRef<BrowserHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
@@ -916,7 +926,7 @@ export function HashRouter({
   useTransitions,
   window,
 }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  let historyRef = React.useRef<HashHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }
@@ -1042,8 +1052,10 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 /**
  * @category Types
  */
-export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+export interface LinkProps extends Omit<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href"
+> {
   /**
    * Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
    *
@@ -1275,8 +1287,6 @@ export interface LinkProps
   mask?: To;
 }
 
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-
 /**
  * A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
  * wrapper to enable navigation with client-side routing.
@@ -1477,8 +1487,10 @@ export type NavLinkRenderProps = {
 /**
  * @category Types
  */
-export interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style" | "children"> {
+export interface NavLinkProps extends Omit<
+  LinkProps,
+  "className" | "style" | "children"
+> {
   /**
    *  Can be regular React children or a function that receives an object with the
    * `active` and `pending` states of the link.
@@ -1777,13 +1789,6 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   preventScrollReset?: boolean;
 
   /**
-   * A function to call when the form is submitted. If you call
-   * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
-   * then this form will not do anything.
-   */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
-
-  /**
    * Specify the default revalidation behavior after this submission
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
@@ -1911,7 +1916,6 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.fetcherKey} fetcherKey n/a
  * @param {FormProps.method} method n/a
  * @param {FormProps.navigate} navigate n/a
- * @param {FormProps.onSubmit} onSubmit n/a
  * @param {FormProps.preventScrollReset} preventScrollReset n/a
  * @param {FormProps.relative} relative n/a
  * @param {FormProps.reloadDocument} reloadDocument n/a
@@ -1949,7 +1953,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let isAbsolute =
       typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+    let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
       event.preventDefault();
@@ -1975,7 +1979,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         });
 
       if (useTransitions && navigate !== false) {
-        // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
         doSubmit();
@@ -2044,7 +2047,10 @@ export type ScrollRestorationProps = ScriptsProps & {
  * }
  * ```
  *
- * This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * This component renders an inline `<script>` to prevent scroll flashing. The
+ * `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * If not provided in Framework Mode, it will default to any
+ * {@link ServerRouter | `<ServerRouter nonce>`} prop.
  *
  * ```tsx
  * <ScrollRestoration nonce={cspNonce} />
@@ -2116,6 +2122,10 @@ export function ScrollRestoration({
       sessionStorage.removeItem(storageKey);
     }
   }).toString();
+
+  if (props.nonce == null && remixContext?.nonce) {
+    props.nonce = remixContext.nonce;
+  }
 
   return (
     <script
@@ -2255,7 +2265,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           });
 
         if (useTransitions) {
-          // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
           doNavigate();
@@ -2837,7 +2846,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   submit: FetcherSubmitFunction;
 };
 
-// TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
+// TODO: (v9) Change the useFetcher generic default from `any` to `unknown`
 
 /**
  * Useful for creating complex, dynamic user interfaces that require multiple,
@@ -3355,7 +3364,7 @@ export function useViewTransitionState(
 
   invariant(
     vtContext != null,
-    "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+    "`useViewTransitionState` must be used within `react-router/dom`'s `RouterProvider`.  " +
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 

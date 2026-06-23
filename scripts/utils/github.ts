@@ -52,6 +52,7 @@ export async function createRelease(
   packageName: string,
   version: string,
   body: string,
+  options: { makeLatest?: boolean } = {},
 ): Promise<CreateReleaseResult> {
   let tagName = getGitTag(packageName, version);
   let releaseName = `v${version}`;
@@ -71,6 +72,7 @@ export async function createRelease(
       tag_name: tagName,
       name: releaseName,
       body,
+      ...(options.makeLatest === false ? { make_latest: "false" } : {}),
     });
 
     return { status: "created", url: response.data.html_url };
@@ -235,6 +237,17 @@ export async function deletePrComment(commentId: number) {
   await request("DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}", {
     ...requestOptions(),
     comment_id: commentId,
+  });
+}
+
+/**
+ * Add labels to a PR (or issue)
+ */
+export async function addPrLabels(prNumber: number, labels: string[]) {
+  await request("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+    ...requestOptions(),
+    issue_number: prNumber,
+    labels,
   });
 }
 

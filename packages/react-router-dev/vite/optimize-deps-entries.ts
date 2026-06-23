@@ -15,16 +15,12 @@ export function getOptimizeDepsEntries({
   }
 
   const vite = getVite();
-  const viteMajorVersion = parseInt(vite.version.split(".")[0], 10);
 
+  // In Vite 7+, the `optimizeDeps.entries` option only accepts glob patterns.
   return [
     vite.normalizePath(entryClientFilePath),
     ...Object.values(reactRouterConfig.routes).map((route) =>
       resolveRelativeRouteFilePath(route, reactRouterConfig),
     ),
-  ].map((entry) =>
-    // In Vite 7, the `optimizeDeps.entries` option only accepts glob patterns.
-    // In prior versions, absolute file paths were treated differently.
-    viteMajorVersion >= 7 ? escapePathAsGlob(entry) : entry,
-  );
+  ].map((entry) => escapePathAsGlob(entry));
 }

@@ -4,16 +4,17 @@
 #
 # Specific jobs only run on the proper trigger:
 #
-# - Change file driven stable releases (push to main/hotfix branches)
+# - Change file driven stable releases (push to main/hotfix/v7 branches)
 # - Experimental releases (from a workflow_dispatch trigger)
 
-name: 🚢 Release/Publish
+name: Release
 
 on:
   push:
     branches:
       - "main"
       - "hotfix"
+      - "v7"
   workflow_dispatch:
     inputs:
       branch:
@@ -22,7 +23,10 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Don't cancel in-progress runs - once a release flow has started we want it
+  # to run all the way through so subsequent commits (like formatting) don't
+  # interrupt publishing/commenting
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -34,7 +38,7 @@ jobs:
       should_publish: ${{ steps.needs-publish.outputs.should_publish }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check for change files
         id: check
@@ -72,22 +76,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
+      issues: write # enable applying labels to the release PR
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
 
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed to run typescript scripts directly
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
       - name: Install dependencies
@@ -107,96 +112,98 @@ jobs:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v6
+      - name: Checkout repo
+        uses: actions/checkout@v7
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
         run: pnpm build
 
       - name: Publish to npm and create releases
-        run: pnpm changes:publish
+        run: pnpm changes:publish --branch=${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   comment:
-    name: 📝 Comment on released issues/pull requests
+    name: Comment on released issues/pull requests
     needs: publish
+    # Only comment on issues/PRs for latest releases from main.
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     permissions:
       issues: write # enable commenting on released issues
       pull-requests: write # enable commenting on released pull requests
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v6
+      - name: Checkout repo
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for node TS support
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 📝 Comment on released issues and pull requests
+      - name: Comment on released issues and pull requests
         env:
           GH_TOKEN: ${{ github.token }}
         run: pnpm run release-comments
 
   experimental-release:
-    name: 🧪 Experimental Release
+    name: Experimental Release
     if: github.repository == 'remix-run/react-router' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v6
+      - name: Checkout repo
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.branch }}
           # checkout using a custom token so that we can push later on
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24 # Needed for npm@11 for Trusted Publishing
+          node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: ⤴️ Update version
+      - name: Update version
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
           pnpm run experimental:version
           git push origin --tags
 
-      - name: 🏗 Build
+      - name: Build
         run: pnpm build
 
-      - name: 🚀 Publish
+      - name: Publish
         run: pnpm run experimental:publish

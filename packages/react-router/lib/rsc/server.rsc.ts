@@ -24,7 +24,6 @@ import {
   type Params,
   type ShouldRevalidateFunction,
   type RouteMatch,
-  type RouteObject,
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
@@ -39,6 +38,7 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
+import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -48,7 +48,7 @@ import {
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
-  // @ts-ignore There are no types before the tsup build when used internally, so
+  // @ts-ignore There are no types before the package build when used internally, so
   // we need to cast. If we add an alias for 'internal/react-server-client' to our
   // TSConfig, it breaks the Parcel build.
 } from "react-router/internal/react-server-client";
@@ -135,11 +135,11 @@ export const replace: typeof baseReplace = (...args) => {
 
 const cachedResolvePromise: <T>(
   resolve: T,
-) => Promise<PromiseSettledResult<Awaited<T>>> =
-  // @ts-expect-error - on 18 types, requires 19.
-  React.cache(async <T>(resolve: T) => {
+) => Promise<PromiseSettledResult<Awaited<T>>> = React.cache(
+  async <T>(resolve: T) => {
     return Promise.allSettled([resolve]).then((r) => r[0]);
-  });
+  },
+);
 
 export const Await: typeof AwaitType = (async ({
   children,
@@ -221,7 +221,6 @@ export type RSCRouteManifest = {
   handle?: any;
   hasAction: boolean;
   hasComponent: boolean;
-  hasErrorBoundary: boolean;
   hasLoader: boolean;
   hydrateFallbackElement?: React.ReactElement;
   id: string;
@@ -532,6 +531,14 @@ async function generateManifestResponse(
   temporaryReferences: unknown,
   routeDiscovery: RouteDiscovery | undefined,
 ) {
+  let url = new URL(request.url);
+  if (url.toString().length > URL_LIMIT) {
+    return new Response(null, {
+      statusText: "Bad Request",
+      status: 400,
+    });
+  }
+
   if (routeDiscovery?.mode === "initial") {
     let payload: RSCManifestPayload = {
       type: "manifest",
@@ -550,7 +557,6 @@ async function generateManifestResponse(
     );
   }
 
-  let url = new URL(request.url);
   let pathParam = url.searchParams.get("paths");
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
@@ -748,7 +754,7 @@ async function generateResourceResponse(
           return generateErrorResponse(error);
         }
       },
-      normalizePath: (r) => getNormalizedPath(r, basename, null),
+      normalizePath: (r) => getNormalizedPath(r),
     });
     return response;
   } catch (error) {
@@ -822,9 +828,6 @@ async function generateRenderResponse(
   // Create the handler here with exploded routes
   const staticHandler = createStaticHandler(routes, {
     basename,
-    mapRouteProperties: (r) => ({
-      hasErrorBoundary: (r as RouteObject).ErrorBoundary != null,
-    }),
   });
 
   let actionResult: Promise<unknown> | undefined;
@@ -841,7 +844,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : {}),
-      normalizePath: (r) => getNormalizedPath(r, basename, null),
+      normalizePath: (r) => getNormalizedPath(r),
       async generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
@@ -852,7 +855,7 @@ async function generateRenderResponse(
         let potentialCSRFAttackError: unknown | undefined;
         if (isMutationMethod(request.method)) {
           try {
-            throwIfPotentialCSRFAttack(request.headers, allowedActionOrigins);
+            throwIfPotentialCSRFAttack(request, allowedActionOrigins);
 
             ctx.runningAction = true;
             let result = await processServerAction(
@@ -1193,7 +1196,7 @@ async function getRenderPayload(
           ),
         )
       : getAdditionalRoutePatches(
-          [staticContext.location.pathname],
+          getPathsWithAncestors([staticContext.location.pathname]),
           routes,
           basename,
           staticContext.matches.map((m) => m.route.id),
@@ -1305,7 +1308,6 @@ async function getRSCRouteMatch({
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!Component,
-    hasErrorBoundary: !!ErrorBoundary,
     hasLoader: !!route.loader,
     hydrateFallbackElement,
     id: route.id,
@@ -1351,7 +1353,6 @@ async function getManifestRoute(
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!route.Component,
-    hasErrorBoundary: !!route.ErrorBoundary,
     errorElement,
     hasLoader: !!route.loader,
     id: route.id,
@@ -1428,33 +1429,18 @@ async function getAdditionalRoutePatches(
   let matchedPaths = new Set<string>();
 
   for (const pathname of pathnames) {
-    let segments = pathname.split("/").filter(Boolean);
-    let paths: string[] = ["/"];
-
-    // We've already matched to the last segment
-    segments.pop();
-
-    // Traverse each path for our parents and match in case they have pathless/index
-    // children we need to include in the initial manifest
-    while (segments.length > 0) {
-      paths.push(`/${segments.join("/")}`);
-      segments.pop();
+    if (matchedPaths.has(pathname)) {
+      continue;
     }
-
-    paths.forEach((path) => {
-      if (matchedPaths.has(path)) {
+    matchedPaths.add(pathname);
+    let matches = matchRoutes(routes, pathname, basename) || [];
+    matches.forEach((m, i) => {
+      if (patchRouteMatches.get(m.route.id)) {
         return;
       }
-      matchedPaths.add(path);
-      let matches = matchRoutes(routes, path, basename) || [];
-      matches.forEach((m, i) => {
-        if (patchRouteMatches.get(m.route.id)) {
-          return;
-        }
-        patchRouteMatches.set(m.route.id, {
-          ...m.route,
-          parentId: matches[i - 1]?.route.id,
-        });
+      patchRouteMatches.set(m.route.id, {
+        ...m.route,
+        parentId: matches[i - 1]?.route.id,
       });
     });
   }

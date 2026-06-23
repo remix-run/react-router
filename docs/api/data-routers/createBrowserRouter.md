@@ -20,11 +20,15 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createBrowserRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createBrowserRouter.html)
 
-Create a new [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) that manages the application
+Create a new [data router](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html) that manages the application
 path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
 and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
+
+Data Routers should not be held in React state. You should create your router
+once outside of the React tree and pass it to [`<RouterProvider>`](../data-routers/RouterProvider).
+You can use `patchRoutesOnNavigation` to add additional routes programmatically.
 
 ## Signature
 
@@ -108,7 +112,7 @@ function createBrowserRouter(routes, {
 When Server-Rendering and opting-out of automatic hydration, the
 `hydrationData` option allows you to pass in hydration data from your
 server-render. This will almost always be a subset of data from the
-[`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandler.html)'s
+[`StaticHandlerContext`](https://api.reactrouter.com/v8/interfaces/react-router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v8/interfaces/react-router.StaticHandler.html)'s
 `query` method:
 
 ```tsx
@@ -224,7 +228,7 @@ async function logExecution(label: string, impl: () => Promise<void>) {
 ### opts.patchRoutesOnNavigation
 
 Lazily define portions of the route tree on navigations.
-See [`PatchRoutesOnNavigationFunction`](https://api.reactrouter.com/v7/types/react-router.PatchRoutesOnNavigationFunction.html).
+See [`PatchRoutesOnNavigationFunction`](https://api.reactrouter.com/v8/types/react-router.PatchRoutesOnNavigationFunction.html).
 
 By default, React Router wants you to provide a full route tree up front via
 `createBrowserRouter(routes)`. This allows React Router to perform synchronous
@@ -526,5 +530,5 @@ override. Defaults to the global `window` instance.
 
 ## Returns
 
-An initialized [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [data router](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

@@ -13,15 +13,17 @@ This is by no means a comprehensive guide, but React Router provides features to
 
 ## `Content-Security-Policy`
 
-If you are implementing a [Content-Security-Policy (CSP)][csp] in your application, specifically one using the `unsafe-inline` directive, you will need to specify a [`nonce`][nonce] attribute on the inline `<script>` elements rendered in your HTML. This must be specified on any API that generates inline scripts, including:
+If you are implementing a [Content-Security-Policy (CSP)][csp] in your application, specifically one using the `unsafe-inline` directive, you will need to specify a [`nonce`][nonce] attribute on the inline `<script>` elements rendered in your HTML.
 
-- [`<Scripts nonce>`][scripts] (`root.tsx`)
-- [`<ScrollRestoration nonce>`][scrollrestoration] (`root.tsx`)
-- [`<ServerRouter nonce>`][serverrouter] (`entry.server.tsx`)
-- [`renderToPipeableStream(..., { nonce })`][renderToPipeableStream] (`entry.server.tsx`)
-- [`renderToReadableStream(..., { nonce })`][renderToReadableStream] (`entry.server.tsx`)
+Add a nonce to these two spots in [`entry.server.tsx`][entryserver]:
+
+- The [`<ServerRouter nonce>`][serverrouter] prop
+  - This will be proxied along through React Context and used for other Framework Mode components that output `nonce`-aware elements, including [`<Scripts>`][scripts], [`<ScrollRestoration>`][scrollrestoration]
+  - If those components specify their own `nonce` prop, it will override the `ServerRouter` value
+- The `nonce` options of [`renderToPipeableStream`][renderToPipeableStream]/[`renderToReadableStream`][renderToReadableStream]
 
 [csp]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP
+[entryserver]: ../api/framework-conventions/entry.server.tsx
 [nonce]: https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/nonce
 [renderToPipeableStream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [renderToReadableStream]: https://react.dev/reference/react-dom/server/renderToReadableStream

@@ -1,5 +1,6 @@
 import type * as Vite from "vite";
 import { mkdir, writeFile } from "node:fs/promises";
+import http from "node:http";
 import path from "node:path";
 
 export interface PrerenderFile {
@@ -275,8 +276,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
                       try {
                         const signal = AbortSignal.timeout(timeout);
                         const prerenderReq = new Request(url, request);
-                        const response = await fetch(prerenderReq, {
-                          redirect: "manual",
+                        const response = await nodeHttpFetch(prerenderReq, {
                           signal,
                         });
 
@@ -446,6 +446,101 @@ function defaultHandleError(request: Request, error: Error): void {
   throw new Error(
     `Prerender: Request failed for ${prerenderPath}: ${error.message}`,
   );
+}
+
+/**
+ * Issue prerender requests via `node:http` rather than the global `fetch`.
+ *
+ * Node's built-in `fetch` (undici) keeps a global dispatcher that pools
+ * keep-alive sockets. On Windows, exiting the build process with multiple
+ * pooled sockets to the Vite preview server still open triggers a libuv
+ * assertion (`!(handle->flags & UV_HANDLE_CLOSING)` in `src/win/async.c`)
+ * during teardown of the dispatcher's internal async handle. Closing or
+ * destroying the dispatcher does not clear the bad state.
+ *
+ * `node:http` without an explicit Agent closes each connection cleanly, so we
+ * use it here to avoid the assertion. Manual redirect handling is preserved.
+ */
+async function nodeHttpFetch(
+  request: Request,
+  { signal }: { signal: AbortSignal },
+): Promise<Response> {
+  const url = new URL(request.url);
+  const body =
+    request.method === "GET" || request.method === "HEAD"
+      ? undefined
+      : Buffer.from(await request.arrayBuffer());
+
+  const headers: Record<string, string> = {};
+  request.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  // Avoid keep-alive so the socket fully closes on response end.
+  headers["connection"] = "close";
+
+  return new Promise<Response>((resolve, reject) => {
+    const req = http.request(
+      {
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port || undefined,
+        path: url.pathname + url.search,
+        method: request.method,
+        headers,
+        agent: false,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => {
+          const responseBody = Buffer.concat(chunks);
+          const responseHeaders = new Headers();
+          for (const [key, value] of Object.entries(res.headers)) {
+            if (Array.isArray(value)) {
+              for (const v of value) responseHeaders.append(key, v);
+            } else if (typeof value === "string") {
+              responseHeaders.set(key, value);
+            }
+          }
+          // 1xx/204/304 must not have a body in the Response constructor.
+          const status = res.statusCode ?? 200;
+          const init: ResponseInit = {
+            status,
+            statusText: res.statusMessage ?? "",
+            headers: responseHeaders,
+          };
+          const hasBody = !(
+            status === 204 ||
+            status === 205 ||
+            status === 304 ||
+            (status >= 100 && status < 200)
+          );
+          resolve(new Response(hasBody ? responseBody : null, init));
+        });
+        res.on("error", reject);
+      },
+    );
+
+    req.on("error", reject);
+
+    const onAbort = () => {
+      req.destroy(
+        signal.reason instanceof Error
+          ? signal.reason
+          : new Error("The operation was aborted"),
+      );
+    };
+    if (signal.aborted) {
+      onAbort();
+    } else {
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+
+    if (body) {
+      req.write(body);
+    }
+    req.end();
+  });
 }
 
 async function startPreviewServer(

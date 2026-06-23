@@ -7,7 +7,17 @@
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
  */
-import { closePr, createPr, findOpenPr, updatePr } from "../utils/github.ts";
+import * as semver from "semver";
+
+import { readJson } from "../utils/fs.ts";
+import {
+  addPrLabels,
+  closePr,
+  createPr,
+  findOpenPr,
+  updatePr,
+} from "../utils/github.ts";
+import { getPackageFile } from "../utils/packages.ts";
 import { logAndExec } from "../utils/process.ts";
 import type { PackageRelease } from "./changes.ts";
 import {
@@ -20,11 +30,14 @@ let args = process.argv.slice(2);
 let preview = args.includes("--preview");
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
-if (!preview && !["main", "hotfix"].includes(baseBranch)) {
-  throw new Error("Error: script must be run from the main or hotfix branch");
+let releaseBranches = ["main", "hotfix", "v7"];
+if (!preview && !releaseBranches.includes(baseBranch)) {
+  throw new Error(
+    `Error: script must be run from one of these release branches: ${releaseBranches.join(", ")}`,
+  );
 }
 
-let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
+let prLabels = ["pkg:react-router"];
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
 let maxBodyLength = 60_000;
@@ -45,6 +58,11 @@ async function main() {
   }
 
   let { releases } = result;
+
+  let pkgJson = readJson(getPackageFile("react-router", "package.json"));
+  let majorVersion = semver.major(releases[0]?.nextVersion ?? pkgJson.version);
+  let prBranchPrefix = baseBranch === "hotfix" ? "hotfix" : "release";
+  let prBranch = `${prBranchPrefix}-v${majorVersion}-pr`;
 
   if (releases.length === 0) {
     console.log("No pending changes to release.");
@@ -135,6 +153,13 @@ async function main() {
       head: prBranch,
       base: baseBranch,
     });
+    try {
+      await addPrLabels(newPr.number, prLabels);
+    } catch (error) {
+      console.warn(
+        `⚠️ Unable to add labels (${prLabels.join(", ")}) to PR #${newPr.number}: ${getErrorMessage(error)}`,
+      );
+    }
     console.log(`\n✅ Created PR #${newPr.number}: ${newPr.html_url}`);
   }
 }
@@ -211,6 +236,10 @@ function generatePackageChangelog(release: PackageRelease): string {
     includePackageName: true,
     headingLevel: 2,
   });
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function truncateChangelogs(

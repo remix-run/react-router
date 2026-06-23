@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import dedent from "dedent";
+import getPort from "get-port";
 
 import { type Files, test, viteConfig } from "./helpers/vite.js";
 
@@ -9,8 +10,11 @@ const css = dedent;
 function defineFiles({
   reversePlugins = false,
 }: { reversePlugins?: boolean } = {}): Files {
-  const files: Files = async ({ port }) => ({
-    "vite.config.ts": tsx`
+  const files: Files = async ({ port }) => {
+    const inspectorPort = await getPort();
+
+    return {
+      "vite.config.ts": tsx`
     import { defineConfig } from "vite";
     import { cloudflare } from "@cloudflare/vite-plugin";
     import { reactRouter } from "@react-router/dev/vite";
@@ -18,33 +22,38 @@ function defineFiles({
     export default defineConfig({
       ${await viteConfig.server({ port })}
       plugins: [
-        cloudflare({ viteEnvironment: { name: "ssr" } }),
+        cloudflare({
+          inspectorPort: ${inspectorPort},
+          viteEnvironment: { name: "ssr" },
+        }),
         reactRouter(),
       ]${reversePlugins ? ".reverse()" : ""},
     });
   `,
-    "app/routes/env.tsx": tsx`
+      "app/routes/env.tsx": tsx`
     import type { Route } from "./+types/env";
+    import { cloudflareContext } from "../cloudflare";
     export function loader({ context }: Route.LoaderArgs) {
-      return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+      return { message: context.get(cloudflareContext).env.VALUE_FROM_CLOUDFLARE };
     }
     export default function EnvRoute({ loaderData }: Route.RouteComponentProps) {
       return <div data-loader-message>{loaderData.message}</div>;
     }
   `,
-    "app/routes/css-side-effect/route.tsx": tsx`
+      "app/routes/css-side-effect/route.tsx": tsx`
     import "./styles.css";
-    
+
     export default function CssSideEffectRoute() {
       return <div className="css-side-effect" data-css-side-effect>CSS Side Effect</div>;
     }
   `,
-    "app/routes/css-side-effect/styles.css": css`
-      .css-side-effect {
-        padding: 20px;
-      }
-    `,
-  });
+      "app/routes/css-side-effect/styles.css": css`
+        .css-side-effect {
+          padding: 20px;
+        }
+      `,
+    };
+  };
   return files;
 }
 

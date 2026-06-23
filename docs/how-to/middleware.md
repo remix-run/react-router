@@ -29,23 +29,7 @@ For example, on a `GET /parent/child` request, the middleware would run in the f
 
 ## Quick Start (Framework mode)
 
-### 1. Enable the middleware flag
-
-First, enable middleware in your [React Router config][rr-config]:
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: {
-    v8_middleware: true,
-  },
-} satisfies Config;
-```
-
-<docs-warning>By enabling the middleware feature, you change the type of the `context` parameter to your [`action`][framework-action]s and [`loader`][framework-loader]s. Please pay attention to the section on [`getLoadContext`][getloadcontext] below if you are actively using `context` today.</docs-warning>
-
-### 2. Create a context
+### 1. Create a context
 
 Middleware uses a `context` provider instance to provide data down the middleware chain.
 You can create type-safe context objects using [`createContext`][createContext]:
@@ -57,7 +41,7 @@ import type { User } from "~/types";
 export const userContext = createContext<User | null>(null);
 ```
 
-### 3. Export middleware from your routes
+### 2. Export middleware from your routes
 
 ```tsx filename=app/routes/dashboard.tsx
 import { redirect } from "react-router";
@@ -107,48 +91,24 @@ export default function Dashboard({
 }
 ```
 
-### 4. Update your `getLoadContext` function (if applicable)
+### 3. Add a `getLoadContext` function (if applicable)
 
-If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of [`RouterContextProvider`][RouterContextProvider], instead of a JavaScript object:
+If you're using a custom server, you can use a `getLoadContext` function to pass information to into the react router handlers:
 
-```diff
-+import {
-+  createContext,
-+  RouterContextProvider,
-+} from "react-router";
-import { createDb } from "./db";
-
-+const dbContext = createContext<Database>();
+```tsx
+import { RouterContextProvider } from "react-router";
+import { dbContext, createDb } from "./db";
 
 function getLoadContext(req, res) {
--  return { db: createDb() };
-+  const context = new RouterContextProvider();
-+  context.set(dbContext, createDb());
-+  return context;
+  const context = new RouterContextProvider();
+  context.set(dbContext, createDb());
+  return context;
 }
 ```
 
 ## Quick Start (Data Mode)
 
-### 1. TypeScript: augment `Future` for loader/action `context`
-
-In order to properly type your `context` param in your `loader`/`action`/`middleware` functions, you will need a small module augmentation to override the default context type of `any`:
-
-```ts
-// src/react-router.d.ts
-
-import "react-router";
-
-declare module "react-router" {
-  interface Future {
-    v8_middleware: true;
-  }
-}
-```
-
-Without this, `context` stays loosely typed even when middleware is enabled at runtime.
-
-### 2. Create a context
+### 1. Create a context
 
 Middleware uses a `context` provider to pass data through the middleware chain into loaders and actions. Create typed context with [`createContext`][createContext]:
 
@@ -159,7 +119,7 @@ import type { User } from "~/types";
 export const userContext = createContext<User | null>(null);
 ```
 
-### 3. Add `middleware` to route objects
+### 2. Add `middleware` to route objects
 
 Attach `middleware` arrays to your route objects:
 
@@ -225,7 +185,7 @@ export default function Dashboard() {
 }
 ```
 
-### 4. Add a `getContext` function (optional)
+### 3. Add a `getContext` function (optional)
 
 To seed every navigation or fetcher call with shared values, pass [`getContext`][getContext] when creating the router:
 
@@ -375,7 +335,7 @@ Client middleware is simpler because since we are already on the client and are 
 
 ### Context API
 
-The new context system provides type safety and prevents naming conflicts and allows you to provide data to nested middlewares and `action`/`loader` functions. In Framework Mode, this replaces the previous `AppLoadContext` API.
+The context system provides type safety, prevents naming conflicts, and allows you to provide data to nested middlewares and `action`/`loader` functions.
 
 ```ts
 // ✅ Type-safe
@@ -507,72 +467,6 @@ export const middleware: Route.MiddlewareFunction[] = [
 ```
 
 Which `ErrorBoundary` is rendered will differ based on whether your middleware threw _before_ or _after_ calling then `next()` function. If it throws _after_ then it will bubble up from the throwing route just like a normal loader error because we've already run the loaders and have the appropriate `loaderData` to render in the route components. However, if an error is thrown _before_ calling `next()`, then we haven't called any loaders yet and there is no `loaderData` available. When this happens, we must bubble up to the highest route with a `loader` and start looking for an `ErrorBoundary` there. We cannot render any route components at that level or below without any `loaderData`.
-
-## Changes to `getLoadContext`/`AppLoadContext`
-
-<docs-info>This only applies if you are using a custom server and a custom `getLoadContext` function</docs-info>
-
-Middleware introduces a breaking change to the `context` parameter generated by `getLoadContext` and passed to your `action`s and `loader`s. The current approach of a module-augmented `AppLoadContext` isn't really type-safe and instead just sort of tells TypeScript to "trust me".
-
-Middleware needs an equivalent `context` on the client for `clientMiddleware`, but we didn't want to duplicate this pattern from the server that we already weren't thrilled with, so we decided to introduce a new API where we could tackle type-safety.
-
-When opting into middleware, the `context` parameter changes to an instance of [`RouterContextProvider`][RouterContextProvider]:
-
-```ts
-let dbContext = createContext<Database>();
-let context = new RouterContextProvider();
-context.set(dbContext, getDb());
-//                     ^ type-safe
-let db = context.get(dbContext);
-//  ^ Database
-```
-
-If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of [`RouterContextProvider`][RouterContextProvider], instead of a plain JavaScript object:
-
-```diff
-+import {
-+  createContext,
-+  RouterContextProvider,
-+} from "react-router";
-import { createDb } from "./db";
-
-+const dbContext = createContext<Database>();
-
-function getLoadContext(req, res) {
--  return { db: createDb() };
-+  const context = new RouterContextProvider();
-+  context.set(dbContext, createDb());
-+  return context;
-}
-```
-
-### Migration from `AppLoadContext`
-
-If you're currently using `AppLoadContext`, you can migrate incrementally by using your existing module augmentation to augment [`RouterContextProvider`][RouterContextProvider] instead of `AppLoadContext`. Then, update your `getLoadContext` function to return an instance of [`RouterContextProvider`][RouterContextProvider]:
-
-```diff
-declare module "react-router" {
--  interface AppLoadContext {
-+  interface RouterContextProvider {
-    db: Database;
-    user: User;
-  }
-}
-
-function getLoadContext() {
-  const loadContext = {...};
--  return loadContext;
-+  let context = new RouterContextProvider();
-+  Object.assign(context, loadContext);
-+  return context;
-}
-```
-
-This allows you to leave your `action`s/`loader`s untouched during initial adoption of middleware, since they can still read values directly (i.e., `context.db`).
-
-<docs-warning>This approach is only intended to be used as a migration strategy when adopting middleware in React Router v7, allowing you to incrementally migrate to `context.set`/`context.get`. It is not safe to assume this approach will work in the next major version of React Router.</docs-warning>
-
-<docs-warning>The [`RouterContextProvider`][RouterContextProvider] class is also used for the client-side `context` parameter via `<HydratedRouter getContext>` and `<RouterProvider getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `getContext` on the client).</docs-warning>
 
 ## Common Patterns
 
@@ -734,25 +628,15 @@ export async function loader({
 }
 ```
 
-[future-flags]: ../upgrading/future
 [Response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [common-patterns]: #common-patterns
 [server-client]: #server-vs-client-middleware
-[rr-config]: ../api/framework-conventions/react-router.config.ts
-[create-browser-router]: ../api/data-routers/createBrowserRouter
-[create-hash-router]: ../api/data-routers/createHashRouter
-[create-memory-router]: ../api/data-routers/createMemoryRouter
-[create-static-handler]: ../api/data-routers/createStaticHandler
 [framework-action]: ../start/framework/route-module#action
 [framework-loader]: ../start/framework/route-module#loader
-[getloadcontext]: #changes-to-getloadcontextapploadcontext
 [datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext
-[RouterContextProvider]: ../api/utils/RouterContextProvider
 [getContext]: ../api/data-routers/createBrowserRouter#optsgetContext
-[window]: https://developer.mozilla.org/en-US/docs/Web/API/Window
-[document]: https://developer.mozilla.org/en-US/docs/Web/API/Document
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [data-action]: ../start/data/route-object#action
 [data-loader]: ../start/data/route-object#loader

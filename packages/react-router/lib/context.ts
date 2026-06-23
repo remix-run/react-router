@@ -55,7 +55,7 @@ export const ViewTransitionContext =
   });
 ViewTransitionContext.displayName = "ViewTransition";
 
-// TODO: (v7) Change the useFetcher data from `any` to `unknown`
+// TODO: (v9) Change the useFetcher data from `any` to `unknown`
 export type FetchersContextObject = Map<string, any>;
 
 export const FetchersContext = React.createContext<FetchersContextObject>(
@@ -147,7 +147,3 @@ RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-export const ENABLE_DEV_WARNINGS = __DEV__;

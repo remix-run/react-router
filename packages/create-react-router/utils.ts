@@ -85,8 +85,8 @@ export function isInteractive() {
   // Adapted from https://github.com/sindresorhus/is-interactive
   return Boolean(
     process.stdout.isTTY &&
-      process.env.TERM !== "dumb" &&
-      !("CI" in process.env),
+    process.env.TERM !== "dumb" &&
+    !("CI" in process.env),
   );
 }
 
