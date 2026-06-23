@@ -1552,6 +1552,7 @@ describe("instrumentation", () => {
       expect(args.request.method).toBe("GET");
       expect(args.request.url).toBe("http://localhost/a");
       expect(args.request.url).toBe("http://localhost/a");
+      expect(args.url.href).toBe("http://localhost/a");
       expect(args.request.headers.get).toBeDefined();
       expect(args.request.headers.set).not.toBeDefined();
       expect(args.params).toEqual({ slug: "a", extra: "extra" });
@@ -2081,6 +2082,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
+            url: expect.any(URL),
             context: {
               get: expect.any(Function),
             },
@@ -2100,6 +2102,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
+            url: expect.any(URL),
             context: {
               get: expect.any(Function),
             },
@@ -2157,6 +2160,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
+            url: expect.any(URL),
             context: { get: expect.any(Function) },
           },
         ],
@@ -2173,6 +2177,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
+            url: expect.any(URL),
             context: { get: expect.any(Function) },
           },
         ],
@@ -2230,6 +2235,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
+            url: expect.any(URL),
             context: { get: expect.any(Function) },
           },
         ],
@@ -2246,6 +2252,7 @@ describe("instrumentation", () => {
             },
             params: {},
             pattern: "/",
+            url: expect.any(URL),
             context: { get: expect.any(Function) },
           },
         ],
