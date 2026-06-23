@@ -4,9 +4,9 @@ import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import stripAnsi from "strip-ansi";
 import { execa } from "execa";
-import arg from "arg";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
 
@@ -76,55 +76,62 @@ async function createReactRouter(argv: string[]) {
 }
 
 async function getContext(argv: string[]): Promise<Context> {
-  let flags = arg(
-    {
-      "--debug": Boolean,
-      "--react-router-version": String,
-      "-v": "--react-router-version",
-      "--template": String,
-      "--token": String,
-      "--yes": Boolean,
-      "-y": "--yes",
-      "--install": Boolean,
-      "--no-install": Boolean,
-      "--package-manager": String,
-      "--show-install-output": Boolean,
-      "--agent-skills": Boolean,
-      "--no-agent-skills": Boolean,
-      "--git-init": Boolean,
-      "--no-git-init": Boolean,
-      "--help": Boolean,
-      "-h": "--help",
-      "--version": Boolean,
-      "--V": "--version",
-      "--no-color": Boolean,
-      "--no-motion": Boolean,
-      "--overwrite": Boolean,
+  let { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    // Preserve arg's permissive mode so unknown flags don't fail existing usage.
+    strict: false,
+    options: {
+      "agent-skills": { type: "boolean" },
+      debug: { type: "boolean" },
+      "git-init": { type: "boolean" },
+      help: { type: "boolean", short: "h" },
+      install: { type: "boolean" },
+      "no-agent-skills": { type: "boolean" },
+      "no-color": { type: "boolean" },
+      "no-git-init": { type: "boolean" },
+      "no-install": { type: "boolean" },
+      "no-motion": { type: "boolean" },
+      overwrite: { type: "boolean" },
+      "package-manager": { type: "string" },
+      "react-router-version": { type: "string", short: "v" },
+      "show-install-output": { type: "boolean" },
+      template: { type: "string" },
+      token: { type: "string" },
+      version: { type: "boolean", short: "V" },
+      yes: { type: "boolean", short: "y" },
     },
-    { argv, permissive: true },
+  });
+
+  let getBooleanArg = (
+    value: string | boolean | Array<string | boolean> | undefined,
+  ) => (typeof value === "boolean" ? value : undefined);
+  let getStringArg = (
+    value: string | boolean | Array<string | boolean> | undefined,
+  ) => (typeof value === "string" ? value : undefined);
+
+  let agentSkills = getBooleanArg(values["agent-skills"]);
+  let debug = getBooleanArg(values.debug) ?? false;
+  let git = getBooleanArg(values["git-init"]);
+  let help = getBooleanArg(values.help) ?? false;
+  let install = getBooleanArg(values.install);
+  let noAgentSkills = getBooleanArg(values["no-agent-skills"]);
+  let noGit = getBooleanArg(values["no-git-init"]);
+  let noInstall = getBooleanArg(values["no-install"]);
+  let noMotion = getBooleanArg(values["no-motion"]);
+  let overwrite = getBooleanArg(values.overwrite);
+  let pkgManager = getStringArg(values["package-manager"]);
+  let selectedReactRouterVersion = getStringArg(
+    values["react-router-version"],
   );
-
-  let {
-    "--debug": debug = false,
-    "--help": help = false,
-    "--react-router-version": selectedReactRouterVersion,
-    "--template": template,
-    "--token": token,
-    "--install": install,
-    "--no-install": noInstall,
-    "--package-manager": pkgManager,
-    "--show-install-output": showInstallOutput = false,
-    "--agent-skills": agentSkills,
-    "--no-agent-skills": noAgentSkills,
-    "--git-init": git,
-    "--no-git-init": noGit,
-    "--no-motion": noMotion,
-    "--yes": yes,
-    "--version": versionRequested,
-    "--overwrite": overwrite,
-  } = flags;
-
-  let cwd = flags["_"][0] as string;
+  let showInstallOutput =
+    getBooleanArg(values["show-install-output"]) ?? false;
+  let template = getStringArg(values.template);
+  let token = getStringArg(values.token);
+  let versionRequested =
+    getBooleanArg(values.version) ?? getBooleanArg(values.V);
+  let yes = getBooleanArg(values.yes);
+  let cwd = positionals[0] as string;
   let interactive = isInteractive();
   let projectName = cwd;
 

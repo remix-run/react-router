@@ -595,9 +595,6 @@ importers:
 
   packages/create-react-router:
     dependencies:
-      arg:
-        specifier: ^5.0.1
-        version: 5.0.2
       execa:
         specifier: 9.6.1
         version: 9.6.1

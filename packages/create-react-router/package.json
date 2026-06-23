@@ -39,7 +39,6 @@
     }
   },
   "dependencies": {
-    "arg": "^5.0.1",
     "execa": "9.6.1",
     "gunzip-maybe": "^1.4.2",
     "log-update": "^8.0.0",

@@ -148,6 +148,17 @@ describe("create-react-router CLI", () => {
     expect(!!semver.valid(stdout.trim())).toBe(true);
   });
 
+  it("supports short aliases", async () => {
+    let [{ stdout: helpOutput }, { stdout: versionOutput }] =
+      await Promise.all([
+        execCreateReactRouter({ args: ["-h"] }),
+        execCreateReactRouter({ args: ["-V"] }),
+      ]);
+
+    expect(helpOutput).toContain("Usage:");
+    expect(!!semver.valid(versionOutput.trim())).toBe(true);
+  });
+
   it("allows you to go through the prompts", async () => {
     let projectDir = getProjectDir("prompts");
 
@@ -193,6 +204,25 @@ describe("create-react-router CLI", () => {
     expect(
       existsSync(path.join(projectDir, ".agents/skills/react-router/SKILL.md")),
     ).toBeTruthy();
+  });
+
+  it("ignores unknown flags", async () => {
+    let projectDir = getProjectDir("unknown-flags");
+
+    let { status, stderr } = await execCreateReactRouter({
+      args: [
+        projectDir,
+        "--future-flag",
+        "--yes",
+        "--no-git-init",
+        "--no-install",
+      ],
+    });
+
+    expect(stderr.trim()).toBeFalsy();
+    expect(status).toBe(0);
+    expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("supports the --no-agent-skills flag", async () => {
