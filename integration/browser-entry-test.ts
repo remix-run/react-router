@@ -218,12 +218,7 @@ test("allows users to instrument the client side router via HydratedRouter", asy
                     router.instrument({
                       async navigate(impl, info) {
                         console.log("start navigate", JSON.stringify(Object.entries(info).sort()));
-                        let result = await impl();
-                        console.log("navigate meta", JSON.stringify({
-                          url: result.meta.url,
-                          pattern: result.meta.pattern,
-                          params: result.meta.params,
-                        }));
+                        await impl();
                         console.log("end navigate", JSON.stringify(Object.entries(info).sort()));
                       },
                       async fetch(impl, info) {
@@ -237,15 +232,15 @@ test("allows users to instrument the client side router via HydratedRouter", asy
                     route.instrument({
                       async loader(impl, info) {
                         let path = new URL(info.request.url).pathname;
-                        console.log("start loader", route.id, path, info.url.pathname);
+                        console.log("start loader", route.id, path);
                         await impl();
-                        console.log("end loader", route.id, path, info.url.pathname);
+                        console.log("end loader", route.id, path);
                       },
                       async action(impl, info) {
                         let path = new URL(info.request.url).pathname;
-                        console.log("start action", route.id, path, info.url.pathname);
+                        console.log("start action", route.id, path);
                         await impl();
-                        console.log("end action", route.id, path, info.url.pathname);
+                        console.log("end action", route.id, path);
                       }
                     })
                   }
@@ -301,11 +296,10 @@ test("allows users to instrument the client side router via HydratedRouter", asy
   expect(await app.getHtml()).toContain("hello world");
   expect(logs).toEqual([
     'start navigate [["currentUrl","/"],["to","/page"]]',
-    "start loader root /page /page",
-    "start loader routes/page /page /page",
-    "end loader root /page /page",
-    "end loader routes/page /page /page",
-    'navigate meta {"url":"/page","pattern":"page","params":{}}',
+    "start loader root /page",
+    "start loader routes/page /page",
+    "end loader root /page",
+    "end loader routes/page /page",
     'end navigate [["currentUrl","/"],["to","/page"]]',
   ]);
   logs.splice(0);
@@ -315,12 +309,12 @@ test("allows users to instrument the client side router via HydratedRouter", asy
   await expect(page.locator("[data-fetcher-data]")).toContainText("OK");
   expect(logs).toEqual([
     'start fetch [["body",{"key":"value"}],["currentUrl","/page"],["fetcherKey","a"],["formData",null],["formEncType","application/x-www-form-urlencoded"],["formMethod","post"],["href","/page"]]',
-    "start action routes/page /page /page",
-    "end action routes/page /page /page",
-    "start loader root /page /page",
-    "start loader routes/page /page /page",
-    "end loader root /page /page",
-    "end loader routes/page /page /page",
+    "start action routes/page /page",
+    "end action routes/page /page",
+    "start loader root /page",
+    "start loader routes/page /page",
+    "end loader root /page",
+    "end loader routes/page /page",
     'end fetch [["body",{"key":"value"}],["currentUrl","/page"],["fetcherKey","a"],["formData",null],["formEncType","application/x-www-form-urlencoded"],["formMethod","post"],["href","/page"]]',
   ]);
 
