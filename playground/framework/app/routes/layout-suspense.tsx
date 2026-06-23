@@ -37,7 +37,6 @@ export default function Component( _ : Route.ComponentProps) {
 }
 
 function DataComponent({ promise }: { promise: Promise<string> }) {
-  // @ts-expect-error – React types resolve to 18 via catalog
   let data = React.use(promise);
   return <p>Data: {data}</p>;
 }
