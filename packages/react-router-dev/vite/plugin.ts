@@ -59,6 +59,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
+import { disableViteEnvFileLoading } from "./env";
 import { removeExports } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
 import {
@@ -1455,7 +1456,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             hmr: false,
           },
           configFile: false,
-          envFile: false,
+          ...disableViteEnvFileLoading(vite),
           plugins: [
             childCompilerPlugins
               // Exclude this plugin from the child compiler to prevent an

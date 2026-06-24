@@ -1,5 +1,6 @@
 import type * as Vite from "vite";
 
+import { disableViteEnvFileLoading } from "./env";
 import { preloadVite, getVite } from "./vite";
 import { ssrExternals } from "./ssr-externals";
 
@@ -46,7 +47,7 @@ export async function createContext({
       postcss: {},
     },
     configFile: false,
-    envFile: false,
+    ...disableViteEnvFileLoading(vite),
     plugins: [],
     environments: {
       __config_loader: {
