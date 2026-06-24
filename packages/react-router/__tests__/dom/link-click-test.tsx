@@ -1,7 +1,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { act } from "@testing-library/react";
-import { MemoryRouter, Routes, Route, Link } from "../../index";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  Link,
+  UNSAFE_FrameworkContext as FrameworkContext,
+} from "../../index";
 
 function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {
   let event = new MouseEvent("click", {
@@ -357,6 +363,121 @@ describe("A <Link> click", () => {
       let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
       expect(h1?.textContent).toEqual("Home");
+    });
+  });
+
+  describe("when rerendering with a stable ref callback", () => {
+    it("does not re-invoke the ref callback", () => {
+      let ref = jest.fn();
+
+      function Home() {
+        let [count, setCount] = React.useState(0);
+
+        return (
+          <div>
+            <button onClick={() => setCount((value) => value + 1)}>Update</button>
+            <Link to="/home" ref={ref}>
+              Home {count}
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      let button = node.querySelector("button");
+      expect(anchor).not.toBeNull();
+      expect(button).not.toBeNull();
+      expect(ref).toHaveBeenCalledTimes(1);
+      expect(ref).toHaveBeenLastCalledWith(anchor);
+
+      act(() => {
+        button?.dispatchEvent(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      });
+
+      expect(ref).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not re-invoke the ref callback with prefetch='intent'", () => {
+      let ref = jest.fn();
+
+      function Home() {
+        return (
+          <div>
+            <Link to="/home" ref={ref} prefetch="intent">
+              Home
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <FrameworkContext.Provider
+            value={
+              {
+                future: {},
+                manifest: { routes: {}, entry: { imports: [], module: "" } },
+                routeModules: {},
+                ssr: false,
+                isSpaMode: true,
+                routeDiscovery: { mode: "lazy", manifestPath: "" },
+              } as any
+            }
+          >
+            <MemoryRouter initialEntries={["/home"]}>
+              <Routes>
+                <Route path="home" element={<Home />} />
+              </Routes>
+            </MemoryRouter>
+          </FrameworkContext.Provider>,
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
+      expect(ref).toHaveBeenCalledTimes(1);
+      expect(ref).toHaveBeenLastCalledWith(anchor);
+
+      // mouseenter triggers setMaybePrefetch(true) → re-render
+      act(() => {
+        anchor?.dispatchEvent(
+          new MouseEvent("mouseenter", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      });
+
+      // mouseleave triggers cancelIntent() → re-render
+      act(() => {
+        anchor?.dispatchEvent(
+          new MouseEvent("mouseleave", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      });
+
+      // ref should still have been called only once (on mount)
+      expect(ref).toHaveBeenCalledTimes(1);
     });
   });
 
