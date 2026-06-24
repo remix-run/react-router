@@ -171,8 +171,7 @@ async function getContext(argv: string[]): Promise<Context> {
     reactRouterVersion: selectedReactRouterVersion || pkgJson.version,
     template: getStringArg(values.template),
     token: getStringArg(values.token),
-    versionRequested:
-      getBooleanArg(values.version) ?? getBooleanArg(values.V),
+    versionRequested: getBooleanArg(values.version),
   };
 
   return context;
