@@ -1,4 +1,4 @@
-Return route metadata from server request and client navigation instrumentations
+Return route metadata from server request, client navigation, and client fetcher instrumentations
 
 - Adds result metadata after instrumented calls complete, including the URL,
   matched route pattern, and params.

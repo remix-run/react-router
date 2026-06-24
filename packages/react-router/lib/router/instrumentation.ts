@@ -1,16 +1,10 @@
 import type { RequestHandler } from "../server-runtime/server";
 import { createPath, invariant } from "./history";
 import type { Router } from "./router";
-import {
-  createContext,
-  DataWithResponseInit,
-  isRouteErrorResponse,
-  joinPaths,
-} from "./utils";
+import { createContext, RouterContextProvider } from "./utils";
 import type {
   ActionFunctionArgs,
   DataRouteObject,
-  DataRouteMatch,
   FormEncType,
   HTMLFormMethod,
   LazyRouteObject,
@@ -18,9 +12,7 @@ import type {
   LoaderFunctionArgs,
   MaybePromise,
   MiddlewareFunction,
-  Params,
   RouterContext,
-  RouterContextProvider,
 } from "./utils";
 
 // Public APIs
@@ -42,45 +34,29 @@ export type InstrumentRouterFunction = (router: InstrumentableRouter) => void;
 
 export type InstrumentRouteFunction = (route: InstrumentableRoute) => void;
 
+export type InstrumentationResultMeta = {
+  url: LoaderFunctionArgs["url"];
+  pattern: string;
+  params: LoaderFunctionArgs["params"];
+};
+
 export type InstrumentationHandlerResult =
   | { status: "success"; error: undefined }
   | { status: "error"; error: Error };
 
-export type InstrumentationHandlerResultWithMeta =
-  | {
-      status: "success";
-      error: undefined;
-      meta: InstrumentationResultMeta | undefined;
-    }
-  | {
-      status: "error";
-      error: Error;
-      meta: InstrumentationResultMeta | undefined;
-    };
-
-export type InstrumentationRequestHandlerResult =
-  | {
-      status: "success";
-      error: undefined;
-      statusCode: number | undefined;
-      meta: InstrumentationResultMeta | undefined;
-    }
-  | {
-      status: "error";
-      error: Error;
-      statusCode: number | undefined;
-      meta: InstrumentationResultMeta | undefined;
-    };
-
-export type InstrumentationResultMeta = {
-  url: string;
-  pattern: string;
-  params: Params;
+export type InstrumentationClientRouterResult = InstrumentationHandlerResult & {
+  meta: InstrumentationResultMeta | undefined;
 };
 
+export type InstrumentationServerHandlerResult =
+  InstrumentationHandlerResult & {
+    statusCode: number;
+    meta: InstrumentationResultMeta | undefined;
+  };
+
 // Shared
-type InstrumentFunction<T, TResult = InstrumentationHandlerResult> = (
-  handler: () => Promise<TResult>,
+type InstrumentFunction<T, TInnerResult = InstrumentationHandlerResult> = (
+  handler: () => Promise<TInnerResult>,
   info: T,
 ) => Promise<void>;
 
@@ -134,9 +110,12 @@ type InstrumentableRouter = {
 type RouterInstrumentations = {
   navigate?: InstrumentFunction<
     RouterNavigationInstrumentationInfo,
-    InstrumentationHandlerResultWithMeta
+    InstrumentationClientRouterResult
   >;
-  fetch?: InstrumentFunction<RouterFetchInstrumentationInfo>;
+  fetch?: InstrumentFunction<
+    RouterFetchInstrumentationInfo,
+    InstrumentationClientRouterResult
+  >;
 };
 
 type RouterNavigationInstrumentationInfo = Readonly<{
@@ -166,7 +145,7 @@ type InstrumentableRequestHandler = {
 type RequestHandlerInstrumentations = {
   request?: InstrumentFunction<
     RequestHandlerInstrumentationInfo,
-    InstrumentationRequestHandlerResult
+    InstrumentationServerHandlerResult
   >;
 };
 
@@ -176,14 +155,38 @@ type RequestHandlerInstrumentationInfo = Readonly<{
 }>;
 
 const UninstrumentedSymbol = Symbol("Uninstrumented");
-const InstrumentationResultMetaSymbol = Symbol("InstrumentationResultMeta");
-
-type InstrumentationResultMetaAccessor = {
-  [InstrumentationResultMetaSymbol]?: () => InstrumentationResultMeta;
-};
 
 export const instrumentationResultMetaContext =
   createContext<InstrumentationResultMeta>();
+
+export type InstrumentationMetaReceiver = (
+  meta: InstrumentationResultMeta | undefined,
+) => void;
+
+let instrumentationClientResultMetaReceivers = new WeakMap<
+  Router,
+  InstrumentationMetaReceiver
+>();
+
+export function setInstrumentationClientResultMetaReceiver(
+  router: Router,
+  receiver: InstrumentationMetaReceiver,
+): () => void {
+  instrumentationClientResultMetaReceivers.set(router, receiver);
+  return () => {
+    if (instrumentationClientResultMetaReceivers.get(router) === receiver) {
+      instrumentationClientResultMetaReceivers.delete(router);
+    }
+  };
+}
+
+export function consumeInstrumentationClientResultMetaReceiver(
+  router: Router,
+): InstrumentationMetaReceiver | undefined {
+  let receiver = instrumentationClientResultMetaReceivers.get(router);
+  instrumentationClientResultMetaReceivers.delete(router);
+  return receiver;
+}
 
 type InstrumentableFunction = (...args: never[]) => MaybePromise<unknown>;
 type InstrumentedFunction<T extends InstrumentableFunction> = T & {
@@ -195,13 +198,13 @@ export function getRouteInstrumentationUpdates(
   route: Readonly<DataRouteObject>,
 ) {
   let aggregated: {
-    lazy: InstrumentFunction<RouteLazyInstrumentationInfo>[];
-    "lazy.loader": InstrumentFunction<RouteLazyInstrumentationInfo>[];
-    "lazy.action": InstrumentFunction<RouteLazyInstrumentationInfo>[];
-    "lazy.middleware": InstrumentFunction<RouteLazyInstrumentationInfo>[];
-    middleware: InstrumentFunction<RouteHandlerInstrumentationInfo>[];
-    loader: InstrumentFunction<RouteHandlerInstrumentationInfo>[];
-    action: InstrumentFunction<RouteHandlerInstrumentationInfo>[];
+    lazy: NonNullable<RouteInstrumentations["lazy"]>[];
+    "lazy.loader": NonNullable<RouteInstrumentations["lazy.loader"]>[];
+    "lazy.action": NonNullable<RouteInstrumentations["lazy.action"]>[];
+    "lazy.middleware": NonNullable<RouteInstrumentations["lazy.middleware"]>[];
+    middleware: NonNullable<RouteInstrumentations["middleware"]>[];
+    loader: NonNullable<RouteInstrumentations["loader"]>[];
+    action: NonNullable<RouteInstrumentations["action"]>[];
   } = {
     lazy: [],
     "lazy.loader": [],
@@ -252,15 +255,16 @@ export function getRouteInstrumentationUpdates(
 
   // Instrument lazy functions
   if (typeof route.lazy === "function" && aggregated.lazy.length > 0) {
-    let instrumented = wrapImpl(
-      aggregated.lazy,
-      route.lazy,
-      () => undefined,
-      getInstrumentationHandlerResult,
-    );
-    if (instrumented) {
-      updates.lazy = instrumented;
-    }
+    let lazy = route.lazy;
+    updates.lazy = async (...args) => {
+      let result = await recurseRight(
+        aggregated.lazy,
+        undefined,
+        () => lazy(...args),
+        getInstrumentationInnerResult,
+      );
+      return throwOrReturnResult(result);
+    };
   }
 
   // Instrument the lazy object format
@@ -271,84 +275,101 @@ export function getRouteInstrumentationUpdates(
       typeof lazyObject.middleware === "function" &&
       aggregated["lazy.middleware"].length > 0
     ) {
-      let instrumented = wrapImpl(
-        aggregated["lazy.middleware"],
-        lazyObject.middleware,
-        () => undefined,
-        getInstrumentationHandlerResult,
-      );
-      if (instrumented) {
-        updates.lazy = Object.assign(updates.lazy || {}, {
-          middleware: instrumented,
-        });
-      }
+      let middleware = lazyObject.middleware;
+      updates.lazy = Object.assign(updates.lazy || {}, {
+        middleware: async (
+          ...args: Parameters<
+            NonNullable<LazyRouteObject<DataRouteObject>["middleware"]>
+          >
+        ) => {
+          let result = await recurseRight(
+            aggregated["lazy.middleware"],
+            undefined,
+            () => middleware(...args),
+            getInstrumentationInnerResult,
+          );
+          return throwOrReturnResult(result);
+        },
+      });
     }
 
     if (
       typeof lazyObject.loader === "function" &&
       aggregated["lazy.loader"].length > 0
     ) {
-      let instrumented = wrapImpl(
-        aggregated["lazy.loader"],
-        lazyObject.loader,
-        () => undefined,
-        getInstrumentationHandlerResult,
-      );
-      if (instrumented) {
-        updates.lazy = Object.assign(updates.lazy || {}, {
-          loader: instrumented,
-        });
-      }
+      let loader = lazyObject.loader;
+      updates.lazy = Object.assign(updates.lazy || {}, {
+        loader: async (
+          ...args: Parameters<
+            NonNullable<LazyRouteObject<DataRouteObject>["loader"]>
+          >
+        ) => {
+          let result = await recurseRight(
+            aggregated["lazy.loader"],
+            undefined,
+            () => loader(...args),
+            getInstrumentationInnerResult,
+          );
+          return throwOrReturnResult(result);
+        },
+      });
     }
 
     if (
       typeof lazyObject.action === "function" &&
       aggregated["lazy.action"].length > 0
     ) {
-      let instrumented = wrapImpl(
-        aggregated["lazy.action"],
-        lazyObject.action,
-        () => undefined,
-        getInstrumentationHandlerResult,
-      );
-      if (instrumented) {
-        updates.lazy = Object.assign(updates.lazy || {}, {
-          action: instrumented,
-        });
-      }
+      let action = lazyObject.action;
+      updates.lazy = Object.assign(updates.lazy || {}, {
+        action: async (
+          ...args: Parameters<
+            NonNullable<LazyRouteObject<DataRouteObject>["action"]>
+          >
+        ) => {
+          let result = await recurseRight(
+            aggregated["lazy.action"],
+            undefined,
+            () => action(...args),
+            getInstrumentationInnerResult,
+          );
+          return throwOrReturnResult(result);
+        },
+      });
     }
   }
 
   // Instrument loader/action functions
   if (typeof route.loader === "function" && aggregated.loader.length > 0) {
     let original = getUninstrumentedHandler(route.loader);
-    let instrumented = wrapImpl(
-      aggregated.loader,
-      original,
-      (args) => getHandlerInfo(args),
-      getInstrumentationHandlerResult,
-    );
-    if (instrumented) {
-      if (original.hydrate === true) {
-        (instrumented as LoaderFunction).hydrate = true;
-      }
-      setUninstrumentedHandler(instrumented, original);
-      updates.loader = instrumented;
+    let instrumented = async (...args: Parameters<typeof original>) => {
+      let result = await recurseRight(
+        aggregated.loader,
+        getHandlerInfo(args[0]),
+        () => original(...args),
+        getInstrumentationInnerResult,
+      );
+      return throwOrReturnResult(result);
+    };
+    if (original.hydrate === true) {
+      (instrumented as LoaderFunction).hydrate = true;
     }
+    setUninstrumentedHandler(instrumented, original);
+    updates.loader = instrumented;
   }
 
   if (typeof route.action === "function" && aggregated.action.length > 0) {
     let original = getUninstrumentedHandler(route.action);
-    let instrumented = wrapImpl(
-      aggregated.action,
-      original,
-      (args) => getHandlerInfo(args),
-      getInstrumentationHandlerResult,
-    );
-    if (instrumented) {
-      setUninstrumentedHandler(instrumented, original);
-      updates.action = instrumented;
-    }
+    let instrumented = async (...args: Parameters<typeof original>) => {
+      let result = await recurseRight(
+        aggregated.action,
+        getHandlerInfo(args[0]),
+        () => original(...args),
+        getInstrumentationInnerResult,
+      );
+      return throwOrReturnResult(result);
+    };
+    setUninstrumentedHandler(instrumented, original);
+    updates.action = instrumented;
   }
 
   // Instrument middleware functions
@@ -359,17 +380,17 @@ export function getRouteInstrumentationUpdates(
   ) {
     updates.middleware = route.middleware.map((middleware) => {
       let original = getUninstrumentedHandler(middleware);
-      let instrumented = wrapImpl(
-        aggregated.middleware,
-        original,
-        (args) => getHandlerInfo(args),
-        getInstrumentationHandlerResult,
-      );
-      if (instrumented) {
-        setUninstrumentedHandler(instrumented, original);
-        return instrumented;
-      }
-      return middleware;
+      let instrumented = async (...args: Parameters<typeof original>) => {
+        let result = await recurseRight(
+          aggregated.middleware,
+          getHandlerInfo(args[0]),
+          () => original(...args),
+          getInstrumentationInnerResult,
+        );
+        return throwOrReturnResult(result);
+      };
+      setUninstrumentedHandler(instrumented, original);
+      return instrumented;
     });
   }
 
@@ -381,11 +402,8 @@ export function instrumentClientSideRouter(
   fns: InstrumentRouterFunction[],
 ): Router {
   let aggregated: {
-    navigate: InstrumentFunction<
-      RouterNavigationInstrumentationInfo,
-      InstrumentationHandlerResultWithMeta
-    >[];
-    fetch: InstrumentFunction<RouterFetchInstrumentationInfo>[];
+    navigate: NonNullable<RouterInstrumentations["navigate"]>[];
+    fetch: NonNullable<RouterInstrumentations["fetch"]>[];
   } = {
     navigate: [],
     fetch: [],
@@ -406,55 +424,84 @@ export function instrumentClientSideRouter(
 
   if (aggregated.navigate.length > 0) {
     let navigate = getUninstrumentedHandler(router.navigate);
-    let instrumentedNavigate = wrapImpl(
-      aggregated.navigate,
-      navigate,
-      (to, opts) => {
-        let info: RouterNavigationInstrumentationInfo &
-          InstrumentationResultMetaAccessor = {
-          to:
-            typeof to === "number" || typeof to === "string"
-              ? to
-              : to
-                ? createPath(to)
-                : ".",
-          ...getRouterInfo(router, opts ?? {}),
-        };
-        Object.defineProperty(info, InstrumentationResultMetaSymbol, {
-          value: () =>
-            getInstrumentationResultMeta(
-              createPath(router.state.location),
-              router.state.matches,
-            ),
-        });
-        return info;
-      },
-      getInstrumentationHandlerResultWithMeta,
-    );
-    if (instrumentedNavigate) {
-      setUninstrumentedHandler(instrumentedNavigate, navigate);
-      router.navigate = instrumentedNavigate as Router["navigate"];
-    }
+    let instrumentedNavigate = async (
+      ...args: Parameters<typeof navigate>
+    ): Promise<Awaited<ReturnType<typeof navigate>>> => {
+      let [to, opts] = args;
+      let meta: InstrumentationResultMeta | undefined;
+      let info: RouterNavigationInstrumentationInfo = {
+        to:
+          typeof to === "number" || typeof to === "string"
+            ? to
+            : to
+              ? createPath(to)
+              : ".",
+        ...getRouterInfo(router, opts ?? {}),
+      };
+      let result = await recurseRight(
+        aggregated.navigate,
+        info,
+        async () => {
+          if (typeof to === "number") {
+            return await navigate(...args);
+          }
+          let cleanup = setInstrumentationClientResultMetaReceiver(
+            router,
+            (value) => {
+              meta = value;
+            },
+          );
+          try {
+            return await navigate(...args);
+          } finally {
+            cleanup();
+          }
+        },
+        (result): InstrumentationClientRouterResult => ({
+          ...getInstrumentationInnerResult(result),
+          meta,
+        }),
+      );
+      return throwOrReturnResult(result);
+    };
+    setUninstrumentedHandler(instrumentedNavigate, navigate);
+    router.navigate = instrumentedNavigate as Router["navigate"];
   }
 
   if (aggregated.fetch.length > 0) {
     let fetch = getUninstrumentedHandler(router.fetch);
-    let instrumentedFetch = wrapImpl(
-      aggregated.fetch,
-      fetch,
-      (key, _, href, opts) => {
-        return {
+    let instrumentedFetch = async (...args: Parameters<typeof fetch>) => {
+      let [key, _, href, opts] = args;
+      let meta: InstrumentationResultMeta | undefined;
+      let result = await recurseRight(
+        aggregated.fetch,
+        {
           href: href ?? ".",
           fetcherKey: key,
           ...getRouterInfo(router, opts ?? {}),
-        } satisfies RouterFetchInstrumentationInfo;
-      },
-      getInstrumentationHandlerResult,
-    );
-    if (instrumentedFetch) {
-      setUninstrumentedHandler(instrumentedFetch, fetch);
-      router.fetch = instrumentedFetch;
-    }
+        } satisfies RouterFetchInstrumentationInfo,
+        async () => {
+          let cleanup = setInstrumentationClientResultMetaReceiver(
+            router,
+            (value) => {
+              meta = value;
+            },
+          );
+          try {
+            return await fetch(...args);
+          } finally {
+            cleanup();
+          }
+        },
+        (result): InstrumentationClientRouterResult => ({
+          ...getInstrumentationInnerResult(result),
+          meta,
+        }),
+      );
+      return throwOrReturnResult(result);
+    };
+    setUninstrumentedHandler(instrumentedFetch, fetch);
+    router.fetch = instrumentedFetch;
   }
 
   return router;
@@ -467,7 +514,7 @@ export function instrumentHandler(
   let aggregated: {
     request: InstrumentFunction<
       RequestHandlerInstrumentationInfo,
-      InstrumentationRequestHandlerResult
+      InstrumentationServerHandlerResult
     >[];
   } = {
     request: [],
@@ -486,20 +533,36 @@ export function instrumentHandler(
   let instrumentedHandler = handler;
 
   if (aggregated.request.length > 0) {
-    let instrumented = wrapImpl(
-      aggregated.request,
-      handler,
-      (request, context) => {
-        return {
+    instrumentedHandler = async (...args) => {
+      let [request, context] = args;
+      let instrumentationContext = context ?? new RouterContextProvider();
+      let result = await recurseRight(
+        aggregated.request,
+        {
           request: getReadonlyRequest(request),
-          context: context != null ? getReadonlyContext(context) : context,
-        } satisfies RequestHandlerInstrumentationInfo;
-      },
-      getInstrumentationRequestHandlerResult,
-    );
-    if (instrumented) {
-      instrumentedHandler = instrumented;
-    }
+          context: getReadonlyContext(instrumentationContext),
+        } satisfies RequestHandlerInstrumentationInfo,
+        () => handler(request, instrumentationContext),
+        (result, info) => {
+          let meta: InstrumentationResultMeta | undefined;
+          try {
+            meta = info.context?.get(instrumentationResultMetaContext);
+          } catch {
+            // Not all instrumentation contexts have request/route metadata.
+          }
+          invariant(
+            result.value instanceof Response,
+            "Expected a Response from the request handler",
+          );
+          return {
+            ...getInstrumentationInnerResult(result),
+            statusCode: result.value.status,
+            meta,
+          };
+        },
+      );
+      return throwOrReturnResult(result);
+    };
   }
 
   return instrumentedHandler;
@@ -520,76 +583,46 @@ function setUninstrumentedHandler<TArgs extends unknown[], TResult>(
   ] = uninstrumentedHandler;
 }
 
-function wrapImpl<
-  TArgs extends unknown[],
-  TResult,
-  TInfo extends InstrumentationInfo,
-  THandlerResult extends InstrumentationHandlerResult,
->(
-  impls: InstrumentFunction<TInfo, THandlerResult>[],
-  handler: (...args: TArgs) => MaybePromise<TResult>,
-  getInfo: (...args: TArgs) => TInfo,
-  getHandlerResult: (
-    result: RecurseResult<TResult>,
-    info: TInfo,
-  ) => THandlerResult,
-) {
-  if (impls.length === 0) {
-    return null;
-  }
-  return async (...args: TArgs): Promise<TResult> => {
-    let result = await recurseRight(
-      impls,
-      getInfo(...args),
-      () => handler(...args),
-      impls.length - 1,
-      getHandlerResult,
-    );
-    if (result.type === "error") {
-      throw result.value;
-    }
-    return result.value;
-  };
-}
-
 type RecurseResult<TResult> =
   | { type: "success"; value: TResult }
   | { type: "error"; value: unknown };
 
+function throwOrReturnResult<TResult>(result: RecurseResult<TResult>): TResult {
+  if (result.type === "error") {
+    throw result.value;
+  }
+  return result.value;
+}
+
 async function recurseRight<
   TResult,
   TInfo extends InstrumentationInfo,
-  THandlerResult extends InstrumentationHandlerResult,
+  TInnerResult extends InstrumentationHandlerResult,
 >(
-  impls: InstrumentFunction<TInfo, THandlerResult>[],
+  impls: InstrumentFunction<TInfo, TInnerResult>[],
   info: TInfo,
   handler: () => MaybePromise<TResult>,
-  index: number,
-  getHandlerResult: (
-    result: RecurseResult<TResult>,
-    info: TInfo,
-  ) => THandlerResult,
-): Promise<RecurseState<TResult, THandlerResult>> {
+  getInnerResult: (result: RecurseResult<TResult>, info: TInfo) => TInnerResult,
+  state: RecurseState<TResult, TInnerResult> = {
+    result: null,
+    innerResult: null,
+  },
+  index = impls.length - 1,
+): Promise<RecurseResult<TResult>> {
   let impl = impls[index];
-  let result: RecurseState<TResult, THandlerResult> | undefined;
   if (!impl) {
-    let handlerResult: RecurseResult<TResult>;
     try {
       let value = await handler();
-      handlerResult = { type: "success", value };
+      state.result = { type: "success", value };
     } catch (e) {
-      handlerResult = { type: "error", value: e };
+      state.result = { type: "error", value: e };
     }
-    result = {
-      ...handlerResult,
-      handlerResult: getHandlerResult(handlerResult, info),
-    };
+    state.innerResult = getInnerResult(state.result, info);
   } else {
     // If they forget to call the handler, or if they throw before calling the
     // handler, we need to ensure the handlers still gets called
-    let handlerPromise: Promise<RecurseState<TResult, THandlerResult>> | undefined =
-      undefined;
-    let callHandler = async (): Promise<THandlerResult> => {
+    let handlerPromise: Promise<RecurseResult<TResult>> | undefined = undefined;
+    let callHandler = async (): Promise<TInnerResult> => {
       if (handlerPromise) {
         console.error("You cannot call instrumented handlers more than once");
       } else {
@@ -597,13 +630,14 @@ async function recurseRight<
           impls,
           info,
           handler,
+          getInnerResult,
+          state,
           index - 1,
-          getHandlerResult,
         );
       }
-      result = await handlerPromise;
-      invariant(result, "Expected a result");
-      return result.handlerResult;
+      await handlerPromise;
+      invariant(state.innerResult, "Expected an inner result");
+      return state.innerResult;
     };
 
     try {
@@ -620,87 +654,30 @@ async function recurseRight<
     await handlerPromise;
   }
 
-  if (result) {
-    return result;
+  if (state.result) {
+    return state.result;
   }
 
-  let resultWithoutInstrumentation: RecurseResult<TResult> = {
+  state.result = {
     type: "error",
     value: new Error("No result assigned in instrumentation chain."),
   };
-  return {
-    ...resultWithoutInstrumentation,
-    handlerResult: getHandlerResult(resultWithoutInstrumentation, info),
-  };
+  state.innerResult = getInnerResult(state.result, info);
+  return state.result;
 }
 
-type RecurseState<TResult, THandlerResult> = RecurseResult<TResult> & {
-  handlerResult: THandlerResult;
+type RecurseState<TResult, TInnerResult> = {
+  result: RecurseResult<TResult> | null;
+  innerResult: TInnerResult | null;
 };
 
-function getInstrumentationHandlerResult<TResult>(
+function getInstrumentationInnerResult<TResult>(
   result: RecurseResult<TResult>,
 ): InstrumentationHandlerResult {
   if (result.type === "error" && result.value instanceof Error) {
     return { status: "error", error: result.value };
   }
   return { status: "success", error: undefined };
-}
-
-function getInstrumentationHandlerResultWithMeta<
-  TResult,
-  TInfo extends InstrumentationInfo,
->(
-  result: RecurseResult<TResult>,
-  info: TInfo,
-): InstrumentationHandlerResultWithMeta {
-  return {
-    ...getInstrumentationHandlerResult(result),
-    meta: getInstrumentationMeta(info),
-  };
-}
-
-function getInstrumentationRequestHandlerResult<
-  TResult,
-  TInfo extends InstrumentationInfo,
->(
-  result: RecurseResult<TResult>,
-  info: TInfo,
-): InstrumentationRequestHandlerResult {
-  return {
-    ...getInstrumentationHandlerResult(result),
-    statusCode: getStatusCode(result.value),
-    meta: getInstrumentationMeta(info),
-  };
-}
-
-function getInstrumentationMeta<T extends InstrumentationInfo>(
-  info: T,
-): InstrumentationResultMeta | undefined {
-  if (info && typeof info === "object") {
-    if (hasInstrumentationResultMetaAccessor(info)) {
-      let readResultMeta = info[InstrumentationResultMetaSymbol];
-      if (readResultMeta) {
-        return readResultMeta();
-      }
-    }
-
-    if ("context" in info && info.context) {
-      try {
-        return info.context.get(instrumentationResultMetaContext);
-      } catch {
-        // Not all instrumentation contexts have request/route metadata.
-      }
-    }
-  }
-
-  return undefined;
-}
-
-function hasInstrumentationResultMetaAccessor(
-  value: object,
-): value is InstrumentationResultMetaAccessor {
-  return InstrumentationResultMetaSymbol in value;
 }
 
 function getHandlerInfo(
@@ -731,47 +708,6 @@ function getRouterInfo(
     ...("formData" in opts ? { formData: opts.formData } : {}),
     ...("body" in opts ? { body: opts.body } : {}),
   };
-}
-
-export function getInstrumentationResultMeta(
-  url: string,
-  matches: RouteLikeMatch[] | null | undefined,
-): InstrumentationResultMeta {
-  return {
-    url,
-    pattern: matches ? getPattern(matches) : "",
-    params: matches?.[0]?.params ? { ...matches[0].params } : {},
-  };
-}
-
-type RouteLikeMatch = Pick<DataRouteMatch, "params" | "pathname"> & {
-  pathnameBase?: string;
-  route: Pick<DataRouteMatch["route"], "id" | "path">;
-};
-
-function getPattern(matches: RouteLikeMatch[]) {
-  let parts = matches.map((m) => m.route.path).filter(isRoutePath);
-  return joinPaths(parts) || "/";
-}
-
-function isRoutePath(path: string | undefined): path is string {
-  return Boolean(path);
-}
-
-function getStatusCode(value: unknown): number | undefined {
-  if (typeof Response !== "undefined" && value instanceof Response) {
-    return value.status;
-  }
-
-  if (value instanceof DataWithResponseInit) {
-    return value.init?.status;
-  }
-
-  if (isRouteErrorResponse(value)) {
-    return value.status;
-  }
-
-  return undefined;
 }
 
 // Return a shallow readonly "clone" of the Request with the info they may

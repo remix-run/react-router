@@ -43,10 +43,10 @@ import type { EntryRoute } from "../dom/ssr/routes";
 import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import {
-  getInstrumentationResultMeta,
   instrumentationResultMetaContext,
   instrumentHandler,
 } from "../router/instrumentation";
+import { createDataFunctionUrl, getRoutePattern } from "../router/utils";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import { getNormalizedPath } from "./urls";
 
@@ -80,11 +80,9 @@ function derive(build: ServerBuild, mode?: string) {
         );
       }
     });
-  let instrumentations = build.entry.module.instrumentations;
-  let hasInstrumentations = instrumentations && instrumentations.length > 0;
-  let requestHandlerInstrumentations = instrumentations
+  let requestHandlerInstrumentations = build.entry.module.instrumentations
     ?.map((i) => i.handler)
-    .filter(isInstrumentationRequestHandlerFunction);
+    .filter(Boolean) as InstrumentRequestHandlerFunction[];
 
   let requestHandler: RequestHandler = async (request, initialContext) => {
     let params: RouteMatch<ServerRoute>["params"] = {};
@@ -114,14 +112,8 @@ function derive(build: ServerBuild, mode?: string) {
     loadContext = initialContext || new RouterContextProvider();
 
     let requestUrl = new URL(request.url);
-    if (hasInstrumentations) {
-      loadContext.set(
-        instrumentationResultMetaContext,
-        getInstrumentationResultMeta(request.url, null),
-      );
-    }
-
-    let normalizedPathname = getNormalizedPath(request).pathname;
+    let normalizedPath = getNormalizedPath(request);
+    let normalizedPathname = normalizedPath.pathname;
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -223,11 +215,12 @@ function derive(build: ServerBuild, mode?: string) {
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
-    if (hasInstrumentations) {
-      loadContext.set(
-        instrumentationResultMetaContext,
-        getInstrumentationResultMeta(request.url, matches),
-      );
+    if (requestHandlerInstrumentations?.length) {
+      loadContext.set(instrumentationResultMetaContext, {
+        url: createDataFunctionUrl(request, normalizedPath),
+        pattern: matches ? getRoutePattern(matches) : "",
+        params: matches?.[0]?.params ? { ...matches[0].params } : {},
+      });
     }
 
     let response: Response;
@@ -318,12 +311,10 @@ function derive(build: ServerBuild, mode?: string) {
   };
 
   if (requestHandlerInstrumentations?.length) {
-    let instrumentedHandler = instrumentHandler(
+    requestHandler = instrumentHandler(
       requestHandler,
       requestHandlerInstrumentations,
     );
-    requestHandler = (request, context) =>
-      instrumentedHandler(request, context || new RouterContextProvider());
   }
 
   return {
@@ -369,12 +360,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     return _requestHandler(request, initialContext);
   };
 };
-
-function isInstrumentationRequestHandlerFunction(
-  fn: InstrumentRequestHandlerFunction | undefined,
-): fn is InstrumentRequestHandlerFunction {
-  return Boolean(fn);
-}
 
 async function handleManifestRequest(
   build: ServerBuild,

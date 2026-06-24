@@ -10,11 +10,14 @@ import {
 } from "./history";
 import type {
   ClientInstrumentation,
+  InstrumentationMetaReceiver,
+  InstrumentationResultMeta,
   InstrumentRouteFunction,
   InstrumentRouterFunction,
   ServerInstrumentation,
 } from "./instrumentation";
 import {
+  consumeInstrumentationClientResultMetaReceiver,
   getRouteInstrumentationUpdates,
   instrumentClientSideRouter,
 } from "./instrumentation";
@@ -56,6 +59,7 @@ import {
   ResultType,
   convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
+  createDataFunctionUrl,
   getPathContributingMatches,
   getResolveToMatches,
   isAbsoluteUrl,
@@ -1279,6 +1283,17 @@ export function createRouter(init: RouterInit): Router {
   let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
     null;
 
+  function getInstrumentationNavigateMeta(
+    location: To,
+    matches: DataRouteMatch[] | null,
+  ): InstrumentationResultMeta {
+    return {
+      url: createDataFunctionUrl(init.history.createURL(location), location),
+      pattern: matches ? getRoutePattern(matches) : "",
+      params: matches?.[0]?.params ? { ...matches[0].params } : {},
+    };
+  }
+
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
@@ -1673,6 +1688,9 @@ export function createRouter(init: RouterInit): Router {
       return promise;
     }
 
+    let instrumentationNavigateMetaReceiver =
+      consumeInstrumentationClientResultMetaReceiver(router);
+
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -1791,6 +1809,7 @@ export function createRouter(init: RouterInit): Router {
       enableViewTransition: opts && opts.viewTransition,
       flushSync,
       callSiteDefaultShouldRevalidate: opts && opts.defaultShouldRevalidate,
+      instrumentationNavigateMetaReceiver,
     });
   }
 
@@ -1870,6 +1889,7 @@ export function createRouter(init: RouterInit): Router {
       enableViewTransition?: boolean;
       flushSync?: boolean;
       callSiteDefaultShouldRevalidate?: boolean;
+      instrumentationNavigateMetaReceiver?: InstrumentationMetaReceiver;
     },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1926,6 +1946,10 @@ export function createRouter(init: RouterInit): Router {
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
     }
+
+    opts?.instrumentationNavigateMetaReceiver?.(
+      getInstrumentationNavigateMeta(location, matches || null),
+    );
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
@@ -2591,6 +2615,8 @@ export function createRouter(init: RouterInit): Router {
     abortFetcher(key);
 
     let flushSync = (opts && opts.flushSync) === true;
+    let instrumentationResultMetaReceiver =
+      consumeInstrumentationClientResultMetaReceiver(router);
 
     let routesToUse = dataRoutes.activeRoutes;
     let normalizedPath = normalizeTo(
@@ -2615,6 +2641,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (!matches) {
+      instrumentationResultMetaReceiver?.(
+        getInstrumentationNavigateMeta(normalizedPath, null),
+      );
       setFetcherError(
         key,
         routeId,
@@ -2623,6 +2652,10 @@ export function createRouter(init: RouterInit): Router {
       );
       return;
     }
+
+    instrumentationResultMetaReceiver?.(
+      getInstrumentationNavigateMeta(normalizedPath, matches),
+    );
 
     let { path, submission, error } = normalizeNavigateOptions(
       true,
@@ -6944,34 +6977,6 @@ function createClientSideRequest(
   }
 
   return new Request(url, init);
-}
-
-// Create the normalized URL instance to pass to loaders/actions/middleware.
-// We strip the `?index` param because that is a React Router implementation detail.
-function createDataFunctionUrl(request: Request, path: To): URL {
-  let url = new URL(request.url);
-
-  let parsed = typeof path === "string" ? parsePath(path) : path;
-  url.pathname = parsed.pathname || "/";
-
-  if (parsed.search) {
-    let searchParams = new URLSearchParams(parsed.search);
-
-    // Strip naked index param, preserve any other index params with values
-    let indexValues = searchParams.getAll("index");
-    searchParams.delete("index");
-    for (let value of indexValues.filter(Boolean)) {
-      searchParams.append("index", value);
-    }
-    let search = searchParams.toString();
-    url.search = search ? `?${search}` : "";
-  } else {
-    url.search = "";
-  }
-
-  url.hash = parsed.hash || "";
-
-  return url;
 }
 
 function convertFormDataToSearchParams(formData: FormData): URLSearchParams {

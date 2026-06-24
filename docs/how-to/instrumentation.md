@@ -44,8 +44,10 @@ export const instrumentations = [
         async request(handleRequest, { request }) {
           let url = `${request.method} ${request.url}`;
           console.log(`Request start: ${url}`);
-          await handleRequest();
-          console.log(`Request end: ${url}`);
+          let result = await handleRequest();
+          console.log(
+            `Request end: ${url} (${result.statusCode})`,
+          );
         },
       });
     },
@@ -94,8 +96,10 @@ const instrumentations = [
         async navigate(callNavigate, { currentUrl, to }) {
           let nav = `${currentUrl} → ${to}`;
           console.log(`Navigation start: ${nav}`);
-          await callNavigate();
-          console.log(`Navigation end: ${nav}`);
+          let result = await callNavigate();
+          console.log(
+            `Navigation end: ${nav} (${result.meta?.pattern})`,
+          );
         },
         // Instrument fetcher calls
         async fetch(
@@ -104,8 +108,10 @@ const instrumentations = [
         ) {
           let fetch = `${fetcherKey} → ${href}`;
           console.log(`Fetcher start: ${fetch}`);
-          await callFetch();
-          console.log(`Fetcher end: ${fetch}`);
+          let result = await callFetch();
+          console.log(
+            `Fetcher end: ${fetch} (${result.meta?.pattern})`,
+          );
         },
       });
     },
@@ -162,8 +168,10 @@ const instrumentations = [
         async navigate(callNavigate, { currentUrl, to }) {
           let nav = `${currentUrl} → ${to}`;
           console.log(`Navigation start: ${nav}`);
-          await callNavigate();
-          console.log(`Navigation end: ${nav}`);
+          let result = await callNavigate();
+          console.log(
+            `Navigation end: ${nav} (${result.meta?.pattern})`,
+          );
         },
         // Instrument fetcher calls
         async fetch(
@@ -172,8 +180,10 @@ const instrumentations = [
         ) {
           let fetch = `${fetcherKey} → ${href}`;
           console.log(`Fetcher start: ${fetch}`);
-          await callFetch();
-          console.log(`Fetcher end: ${fetch}`);
+          let result = await callFetch();
+          console.log(
+            `Fetcher end: ${fetch} (${result.meta?.pattern})`,
+          );
         },
       });
     },
@@ -227,7 +237,9 @@ export const instrumentations = [
       handler.instrument({
         async request(handleRequest, { request, context }) {
           // Runs around ALL requests to your app
-          await handleRequest();
+          let result = await handleRequest();
+          let statusCode = result.statusCode;
+          let routePattern = result.meta?.pattern;
         },
       });
     },
@@ -248,14 +260,16 @@ export const instrumentations = [
       router.instrument({
         async navigate(callNavigate, { to, currentUrl }) {
           // Runs around navigation operations
-          await callNavigate();
+          let result = await callNavigate();
+          let routePattern = result.meta?.pattern;
         },
         async fetch(
           callFetch,
           { href, currentUrl, fetcherKey },
         ) {
           // Runs around fetcher operations
-          await callFetch();
+          let result = await callFetch();
+          let routePattern = result.meta?.pattern;
         },
       });
     },
@@ -327,7 +341,7 @@ This ensures that instrumentation is safe to add to production applications and 
 
 To ensure that instrumentation code doesn't impact the runtime application, errors are caught internally and prevented from propagating outward. This design choice shows up in 2 aspects.
 
-First, if a "handler" function (loader, action, request handler, navigation, etc.) throws an error, that error will not bubble out of the `callHandler` function invoked from your instrumentation. Instead, the `callHandler` function returns a discriminated union result of type `{ type: "success", error: undefined } | { type: "error", error: unknown }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
+First, if a "handler" function (loader, action, request handler, navigation, etc.) throws an error, that error will not bubble out of the `callHandler` function invoked from your instrumentation. Instead, the `callHandler` function returns a discriminated union result of type `{ status: "success", error: undefined } | { status: "error", error: Error }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
 
 ```tsx
 export const instrumentations = [
@@ -348,6 +362,66 @@ export const instrumentations = [
   },
 ];
 ```
+
+### Result Metadata
+
+Some instrumented calls return additional information that is only available after React Router starts processing the request, navigation, or fetcher call.
+
+Server request handler instrumentation receives the final HTTP status code and route metadata for requests that match app routes:
+
+```tsx
+export const instrumentations = [
+  {
+    handler(handler) {
+      handler.instrument({
+        async request(handleRequest) {
+          let result = await handleRequest();
+
+          let statusCode = result.statusCode;
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+      });
+    },
+  },
+];
+```
+
+Client navigation and fetcher instrumentation receive route metadata for URL-based navigations and fetcher calls:
+
+```tsx
+const instrumentations = [
+  {
+    router(router) {
+      router.instrument({
+        async navigate(callNavigate) {
+          let result = await callNavigate();
+
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+        async fetch(callFetch) {
+          let result = await callFetch();
+
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+      });
+    },
+  },
+];
+```
+
+The `meta` object has the same route-related values passed to loaders and actions:
+
+- `url`: The normalized `URL` for the matched route request
+- `pattern`: The matched route pattern, such as `/projects/:id`
+- `params`: The matched route params
+
+For client navigations that redirect, `meta` describes the original navigation target. Numeric POP navigations like `navigate(-1)` do not expose route metadata and return `meta: undefined`.
 
 Second, if your instrumentation function throws an error, React Router will gracefully swallow that so that it does not bubble outward and impact other instrumentations or application behavior. In both of these examples, the handlers and all other instrumentation functions will still run:
 

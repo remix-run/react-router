@@ -304,7 +304,9 @@ test("allows users to instrument the client side router via HydratedRouter", asy
     "start loader routes/page /page",
     "end loader root /page",
     "end loader routes/page /page",
-    'end navigate [["currentUrl","/"],["to","/page"]] {"url":"/page","pattern":"page","params":{}}',
+    expect.stringMatching(
+      /^end navigate \[\["currentUrl","\/"\],\["to","\/page"\]\] \{"url":"http:\/\/localhost:\d+\/page","pattern":"page","params":\{\}\}$/,
+    ),
   ]);
   logs.splice(0);
 
