@@ -149,11 +149,12 @@ describe("create-react-router CLI", () => {
   });
 
   it("supports short aliases", async () => {
-    let [{ stdout: helpOutput }, { stdout: versionOutput }] =
-      await Promise.all([
+    let [{ stdout: helpOutput }, { stdout: versionOutput }] = await Promise.all(
+      [
         execCreateReactRouter({ args: ["-h"] }),
         execCreateReactRouter({ args: ["-V"] }),
-      ]);
+      ],
+    );
 
     expect(helpOutput).toContain("Usage:");
     expect(!!semver.valid(versionOutput.trim())).toBe(true);

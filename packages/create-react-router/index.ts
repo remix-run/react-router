@@ -110,9 +110,7 @@ async function getContext(argv: string[]): Promise<Context> {
     value: string | boolean | Array<string | boolean> | undefined,
   ) => (typeof value === "string" ? value : undefined);
 
-  let selectedReactRouterVersion = getStringArg(
-    values["react-router-version"],
-  );
+  let selectedReactRouterVersion = getStringArg(values["react-router-version"]);
   let yes = getBooleanArg(values.yes);
   let cwd = positionals[0] as string;
   let interactive = isInteractive();
