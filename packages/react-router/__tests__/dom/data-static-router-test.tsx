@@ -12,6 +12,7 @@ import {
   useLoaderData,
   useLocation,
   useMatches,
+  useParams,
   createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
@@ -23,6 +24,39 @@ beforeEach(() => {
 });
 
 describe("A <StaticRouterProvider>", () => {
+  it("handles encoded backslashes in splat params", async () => {
+    let params!: ReturnType<typeof useParams>;
+
+    function ParamsChecker() {
+      params = useParams();
+      return <h1>Splat Route</h1>;
+    }
+
+    let routes = [
+      {
+        path: "*",
+        element: <ParamsChecker />,
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/%5C", {
+        signal: new AbortController().signal,
+      }),
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <StaticRouterProvider
+        router={createStaticRouter(routes, context)}
+        context={context}
+      />,
+    );
+
+    expect(html).toMatch("<h1>Splat Route</h1>");
+    expect(params).toEqual({ "*": "\\" });
+  });
+
   it("renders an initialized router", async () => {
     let hooksData1: {
       location: ReturnType<typeof useLocation>;

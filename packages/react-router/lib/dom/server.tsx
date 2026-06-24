@@ -461,6 +461,9 @@ function encodeLocation(to: To): Path {
   // pre-encode them since they might be part of a matching splat param from
   // an ancestor route
   href = href.replace(/ $/, "%20");
+  // Backslashes can come from decoded splat params and need to be encoded
+  // before passing them through the URL constructor.
+  href = href.replace(/^[^?#]*/, (path) => path.replace(/\\/g, "%5C"));
   let encoded = ABSOLUTE_URL_REGEX.test(href)
     ? new URL(href)
     : new URL(href, "http://localhost");
