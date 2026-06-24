@@ -725,6 +725,22 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     await typegenWatcher?.close();
   };
 
+  let isEnvironmentApiBuild = () =>
+    viteConfig?.command === "build" &&
+    ctx?.reactRouterConfig.future.v8_viteEnvironmentApi;
+
+  let runReactRouterConfigBuildEnd = async () => {
+    invariant(viteConfig);
+    let { buildManifest, reactRouterConfig } = ctx;
+    invariant(buildManifest, "Expected build manifest");
+
+    await reactRouterConfig.buildEnd?.({
+      buildManifest,
+      reactRouterConfig,
+      viteConfig,
+    });
+  };
+
   /** Mutates `ctx` as a side effect */
   let updatePluginContext = async (): Promise<void> => {
     let reactRouterConfig: ResolvedReactRouterConfig;
@@ -2050,10 +2066,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         },
       },
       async buildEnd() {
-        if (
-          viteConfig?.command === "build" &&
-          ctx.reactRouterConfig.future.v8_viteEnvironmentApi
-        ) {
+        if (isEnvironmentApiBuild()) {
           return;
         }
 
@@ -2890,8 +2903,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     }),
+    // In v7, prerendering only runs in a separate plugin when the Vite
+    // Environment API is enabled. Defer the user config `buildEnd` hook to
+    // this post-builder wrapper so that it runs after that plugin finalizes
+    // prerendered files; legacy builds keep their existing lifecycle.
     {
-      name: "react-router-build-end",
+      name: "react-router-environment-api-build-end",
       sharedDuringBuild: true,
       config: {
         order: "post",
@@ -2902,21 +2919,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 try {
                   await buildApp?.(builder);
 
-                  if (!ctx.reactRouterConfig.future.v8_viteEnvironmentApi) {
+                  if (!isEnvironmentApiBuild()) {
                     return;
                   }
 
-                  invariant(viteConfig);
-                  let { buildManifest, reactRouterConfig } = ctx;
-                  invariant(buildManifest, "Expected build manifest");
-
-                  await reactRouterConfig.buildEnd?.({
-                    buildManifest,
-                    reactRouterConfig,
-                    viteConfig,
-                  });
+                  await runReactRouterConfigBuildEnd();
                 } finally {
-                  if (ctx?.reactRouterConfig.future.v8_viteEnvironmentApi) {
+                  if (isEnvironmentApiBuild()) {
                     await closePluginResources();
                   }
                 }
