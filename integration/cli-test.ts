@@ -1,6 +1,15 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
 import dedent from "dedent";
@@ -8,11 +17,43 @@ import semver from "semver";
 
 import { createProject } from "./helpers/vite";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDirectory = path.resolve(__dirname, "..");
 const nodeBin = process.argv[0];
 const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterPackageBin = path.join(
+  rootDirectory,
+  "packages/react-router-dev/bin.cjs",
+);
 
 const run = (command: string[], options: Parameters<typeof spawnSync>[2]) =>
   spawnSync(nodeBin, [reactRouterBin, ...command], options);
+
+const getBinNodeEnv = (command: string[]) => {
+  let cwd = mkdtempSync(path.join(tmpdir(), "react-router-bin-"));
+  let env = { ...process.env };
+  delete env.NODE_ENV;
+
+  try {
+    mkdirSync(path.join(cwd, "dist/cli"), { recursive: true });
+    copyFileSync(reactRouterPackageBin, path.join(cwd, "bin.cjs"));
+    writeFileSync(
+      path.join(cwd, "dist/cli/index.js"),
+      "console.log(process.env.NODE_ENV);",
+    );
+
+    let { stdout, stderr, status } = spawnSync(
+      nodeBin,
+      ["bin.cjs", ...command],
+      { cwd, env },
+    );
+    expect(stderr.toString()).toBe("");
+    expect(status).toBe(0);
+    return stdout.toString().trim();
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+};
 
 const helpText = dedent`
   react-router
@@ -107,6 +148,17 @@ test.describe("cli", () => {
     expect(semver.valid(stdout.toString().trim())).not.toBeNull();
     expect(stderr.toString()).toBe("");
     expect(status).toBe(0);
+  });
+
+  test("bin sets NODE_ENV based on the positional command", async () => {
+    expect(getBinNodeEnv(["dev", "--host", "127.0.0.1"])).toBe("development");
+    expect(getBinNodeEnv(["--host", "127.0.0.1", "dev"])).toBe("development");
+    expect(getBinNodeEnv(["build", "--mode", "development"])).toBe(
+      "production",
+    );
+    expect(getBinNodeEnv(["--mode", "development", "build"])).toBe(
+      "production",
+    );
   });
 
   test("routes", async () => {

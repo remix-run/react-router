@@ -1,12 +1,11 @@
 import process from "node:process";
+import { spawn, type StdioOptions } from "node:child_process";
 import { existsSync } from "node:fs";
 import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseArgs } from "node:util";
-import stripAnsi from "strip-ansi";
-import { execa } from "execa";
+import { parseArgs, stripVTControlCharacters } from "node:util";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
 
@@ -534,9 +533,9 @@ async function gitInitStep(ctx: Context) {
       let options = { cwd: ctx.cwd, stdio: "ignore" } as const;
       let commitMsg = "Initial commit from create-react-router";
       try {
-        await execa("git", ["init"], options);
-        await execa("git", ["add", "."], options);
-        await execa("git", ["commit", "-m", commitMsg], options);
+        await runCommand("git", ["init"], options);
+        await runCommand("git", ["add", "."], options);
+        await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
@@ -560,7 +559,7 @@ async function doneStep(ctx: Context) {
       `\n${prefix}Enter your project directory using`,
       color.cyan(`cd .${path.sep}${projectDir}`),
     ];
-    let len = enter[0].length + stripAnsi(enter[1]).length;
+    let len = enter[0].length + stripVTControlCharacters(enter[1]).length;
     log(enter.join(len > max ? "\n" + prefix : " "));
   }
   log(
@@ -592,7 +591,7 @@ async function installDependencies({
   showInstallOutput: boolean;
 }) {
   try {
-    await execa(pkgManager, ["install"], {
+    await runCommand(pkgManager, ["install"], {
       cwd,
       stdio: showInstallOutput ? "inherit" : "ignore",
     });
@@ -600,6 +599,30 @@ async function installDependencies({
     error("Oh no!", "Failed to install dependencies.");
     throw err;
   }
+}
+
+function runCommand(
+  command: string,
+  args: string[],
+  options: { cwd: string; stdio: StdioOptions },
+) {
+  return new Promise<void>((resolve, reject) => {
+    let child = spawn(command, args, options);
+    child.on("error", reject);
+    child.on("exit", (code, signal) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(
+          new Error(
+            signal
+              ? `${command} exited with signal ${signal}`
+              : `${command} exited with code ${code}`,
+          ),
+        );
+      }
+    });
+  });
 }
 
 async function updatePackageJSON(ctx: Context) {

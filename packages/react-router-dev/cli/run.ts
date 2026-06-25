@@ -1,4 +1,4 @@
-import arg from "arg";
+import { parseArgs } from "node:util";
 import semver from "semver";
 import colors from "picocolors";
 
@@ -78,6 +78,26 @@ ${colors.blueBright("react-router")}
    $ react-router typegen --watch
 `;
 
+type ParsedValue = string | boolean | Array<string | boolean> | undefined;
+
+function getBooleanArg(value: ParsedValue) {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function getBooleanStringArg(value: ParsedValue) {
+  return typeof value === "boolean" || typeof value === "string"
+    ? value
+    : undefined;
+}
+
+function getNumberArg(value: ParsedValue) {
+  return typeof value === "string" ? Number(value) : undefined;
+}
+
+function getStringArg(value: ParsedValue) {
+  return typeof value === "string" ? value : undefined;
+}
+
 /**
  * Programmatic interface for running the react-router CLI with the given command line
  * arguments.
@@ -106,54 +126,66 @@ export async function run(
     return !nextArg || nextArg.startsWith("-");
   };
 
-  let args = arg(
-    {
-      "--force": Boolean,
-      "--help": Boolean,
-      "-h": "--help",
-      "--json": Boolean,
-      "--token": String,
-      "--typescript": Boolean,
-      "--no-typescript": Boolean,
-      "--version": Boolean,
-      "-v": "--version",
-      "--port": Number,
-      "-p": "--port",
-      "--config": String,
-      "-c": "--config",
-      "--assetsInlineLimit": Number,
-      "--clearScreen": Boolean,
-      "--cors": Boolean,
-      "--emptyOutDir": Boolean,
-      "--host": isBooleanFlag("--host") ? Boolean : String,
-      "--logLevel": String,
-      "-l": "--logLevel",
-      "--minify": String,
-      "--mode": String,
-      "-m": "--mode",
-      "--open": isBooleanFlag("--open") ? Boolean : String,
-      "--strictPort": Boolean,
-      "--profile": Boolean,
-      "--sourcemapClient": isBooleanFlag("--sourcemapClient")
-        ? Boolean
-        : String,
-      "--sourcemapServer": isBooleanFlag("--sourcemapServer")
-        ? Boolean
-        : String,
-      "--watch": Boolean,
+  let { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      assetsInlineLimit: { type: "string" },
+      clearScreen: { type: "boolean" },
+      config: { type: "string", short: "c" },
+      cors: { type: "boolean" },
+      emptyOutDir: { type: "boolean" },
+      force: { type: "boolean" },
+      help: { type: "boolean", short: "h" },
+      host: { type: isBooleanFlag("--host") ? "boolean" : "string" },
+      json: { type: "boolean" },
+      logLevel: { type: "string", short: "l" },
+      minify: { type: "string" },
+      mode: { type: "string", short: "m" },
+      "no-typescript": { type: "boolean" },
+      open: { type: isBooleanFlag("--open") ? "boolean" : "string" },
+      port: { type: "string", short: "p" },
+      profile: { type: "boolean" },
+      sourcemapClient: {
+        type: isBooleanFlag("--sourcemapClient") ? "boolean" : "string",
+      },
+      sourcemapServer: {
+        type: isBooleanFlag("--sourcemapServer") ? "boolean" : "string",
+      },
+      strictPort: { type: "boolean" },
+      token: { type: "string" },
+      typescript: { type: "boolean" },
+      version: { type: "boolean", short: "v" },
+      watch: { type: "boolean" },
     },
-    {
-      argv,
-    },
-  );
+  });
 
-  let input = args._;
+  let input = positionals;
 
-  let flags: any = Object.entries(args).reduce((acc, [key, value]) => {
-    key = key.replace(/^--/, "");
-    acc[key] = value;
-    return acc;
-  }, {} as any);
+  let flags: any = {
+    assetsInlineLimit: getNumberArg(values.assetsInlineLimit),
+    clearScreen: getBooleanArg(values.clearScreen),
+    config: getStringArg(values.config),
+    cors: getBooleanArg(values.cors),
+    emptyOutDir: getBooleanArg(values.emptyOutDir),
+    force: getBooleanArg(values.force),
+    help: getBooleanArg(values.help),
+    host: getBooleanStringArg(values.host),
+    json: getBooleanArg(values.json),
+    logLevel: getStringArg(values.logLevel),
+    minify: getStringArg(values.minify),
+    mode: getStringArg(values.mode),
+    open: getBooleanStringArg(values.open),
+    port: getNumberArg(values.port),
+    profile: getBooleanArg(values.profile),
+    sourcemapClient: getBooleanStringArg(values.sourcemapClient),
+    sourcemapServer: getBooleanStringArg(values.sourcemapServer),
+    strictPort: getBooleanArg(values.strictPort),
+    token: getStringArg(values.token),
+    typescript: getBooleanArg(values.typescript),
+    version: getBooleanArg(values.version),
+    watch: getBooleanArg(values.watch),
+  };
 
   if (flags.help) {
     console.log(helpText);
@@ -165,7 +197,7 @@ export async function run(
   }
 
   flags.interactive = flags.interactive ?? isMain;
-  if (args["--no-typescript"]) {
+  if (values["no-typescript"]) {
     flags.typescript = false;
   }
 

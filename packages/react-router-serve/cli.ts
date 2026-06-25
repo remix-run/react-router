@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
@@ -11,7 +12,6 @@ import express from "express";
 import type { RequestHandler as ExpressRequestHandler } from "express";
 import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
-import getPort from "get-port";
 
 process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
@@ -69,6 +69,51 @@ function parseNumber(raw?: string) {
   return maybe;
 }
 
+async function getAvailablePort(
+  preferredPort: number,
+  host?: string,
+): Promise<number> {
+  let preferredAvailablePort = await checkPort(preferredPort, host);
+  let availablePort = preferredAvailablePort ?? (await checkPort(0, host));
+
+  if (availablePort === undefined) {
+    throw new Error("No available port found");
+  }
+
+  return availablePort;
+}
+
+function checkPort(port: number, host?: string): Promise<number | undefined> {
+  return new Promise((resolve, reject) => {
+    let server = net.createServer();
+    let listenOptions = host ? { port, host } : { port };
+
+    server.unref();
+
+    server.once("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE" || error.code === "EACCES") {
+        resolve(undefined);
+      } else {
+        reject(error);
+      }
+    });
+
+    server.listen(listenOptions, () => {
+      let address = server.address();
+      let availablePort =
+        typeof address === "object" && address ? address.port : port;
+
+      server.close((error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(availablePort);
+        }
+      });
+    });
+  });
+}
+
 function getExpressPath(publicPath: string) {
   // Vite allows `base` to be an absolute URL, but Express route paths must be
   // pathnames. Strip any origin before mounting static asset middleware.
@@ -84,7 +129,9 @@ function getExpressPath(publicPath: string) {
 }
 
 async function run() {
-  let port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
+  let port =
+    parseNumber(process.env.PORT) ??
+    (await getAvailablePort(3000, process.env.HOST));
 
   let buildPathArg = process.argv[2];
 

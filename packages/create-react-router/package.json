@@ -39,14 +39,12 @@
     }
   },
   "dependencies": {
-    "execa": "9.6.1",
     "gunzip-maybe": "^1.4.2",
     "log-update": "^8.0.0",
     "picocolors": "^1.1.1",
     "semver": "^7.8.1",
     "sisteransi": "^1.0.5",
     "sort-package-json": "^3.6.1",
-    "strip-ansi": "^7.2.0",
     "tar-fs": "^3.1.2"
   },
   "devDependencies": {
