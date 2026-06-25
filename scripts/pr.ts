@@ -54,8 +54,6 @@ type CheckContext = {
 type Check = (ctx: CheckContext) => Promise<Action[]>;
 
 const CHANGE_FILE_MARKER = "<!-- change-file-check -->";
-const CHANGE_FILE_REGEX =
-  /^packages\/[^/]+\/\.changes\/(major|minor|patch|unstable)\.[^/]+\.md$/;
 
 type ChangeFileSummary = {
   type: string;
@@ -154,10 +152,12 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
   }
 
   let files = await getPrFiles(ctx.prNumber);
+  let regex =
+    /^packages\/[^/]+\/\.changes\/(major|minor|patch|unstable)\.[^/]+\.md$/;
   let summaries: ChangeFileSummary[] = files
-    .filter((f) => CHANGE_FILE_REGEX.test(f.filename))
+    .filter((f) => regex.test(f.filename))
     .map((f) => {
-      let type = f.filename.match(CHANGE_FILE_REGEX)?.[1] ?? "unknown";
+      let type = f.filename.match(regex)?.[1] ?? "unknown";
       let firstLine =
         fs.readFileSync(f.filename, "utf8").split(/\r?\n/, 1)[0].trim() ??
         "_No first line found._";
