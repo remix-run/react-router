@@ -8,12 +8,8 @@ const tsx = dedent;
 const css = dedent;
 
 function defineFiles({
-  conditionalExportsRoute = false,
   reversePlugins = false,
-}: {
-  conditionalExportsRoute?: boolean;
-  reversePlugins?: boolean;
-} = {}): Files {
+}: { reversePlugins?: boolean } = {}): Files {
   const files: Files = async ({ port }) => {
     const inspectorPort = await getPort();
 
@@ -56,42 +52,6 @@ function defineFiles({
           padding: 20px;
         }
       `,
-      ...(conditionalExportsRoute
-        ? {
-            "app/routes/conditional-export.tsx": tsx`
-              import { runtime } from "conditional-runtime";
-
-              export function loader() {
-                return { runtime };
-              }
-
-              export default function ConditionalExportsRoute({
-                loaderData,
-              }: {
-                loaderData: { runtime: string };
-              }) {
-                return <div data-runtime>{loaderData.runtime}</div>;
-              }
-            `,
-            "node_modules/conditional-runtime/package.json": JSON.stringify({
-              name: "conditional-runtime",
-              type: "module",
-              exports: {
-                ".": {
-                  node: "./node.js",
-                  default: "./worker.js",
-                },
-              },
-            }),
-            "node_modules/conditional-runtime/node.js": tsx`
-              import "node:http";
-              export const runtime = "node";
-            `,
-            "node_modules/conditional-runtime/worker.js": tsx`
-              export const runtime = "worker";
-            `,
-          }
-        : {}),
     };
   };
   return files;
@@ -134,7 +94,42 @@ test.describe("vite-plugin-cloudflare", () => {
   });
 
   test("does not force node export conditions", async ({ dev, page }) => {
-    const files = defineFiles({ conditionalExportsRoute: true });
+    const baseFiles = defineFiles();
+    const files: Files = async (args) => ({
+      ...(await baseFiles(args)),
+      "app/routes/conditional-export.tsx": tsx`
+        import { runtime } from "conditional-runtime";
+
+        export function loader() {
+          return { runtime };
+        }
+
+        export default function ConditionalExportsRoute({
+          loaderData,
+        }: {
+          loaderData: { runtime: string };
+        }) {
+          return <div data-runtime>{loaderData.runtime}</div>;
+        }
+      `,
+      "node_modules/conditional-runtime/package.json": JSON.stringify({
+        name: "conditional-runtime",
+        type: "module",
+        exports: {
+          ".": {
+            node: "./node.js",
+            default: "./worker.js",
+          },
+        },
+      }),
+      "node_modules/conditional-runtime/node.js": tsx`
+        import "node:http";
+        export const runtime = "node";
+      `,
+      "node_modules/conditional-runtime/worker.js": tsx`
+        export const runtime = "worker";
+      `,
+    });
     const { port } = await dev(files, "vite-plugin-cloudflare-template");
 
     await page.goto(`http://localhost:${port}/conditional-export`, {
