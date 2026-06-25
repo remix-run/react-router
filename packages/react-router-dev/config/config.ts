@@ -1064,7 +1064,7 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = deps["@react-router/node"]
+    entryServerFile = hasNodeDependency(deps)
       ? `entry.server.node.tsx`
       : `entry.server.web.tsx`;
   }
@@ -1122,6 +1122,14 @@ function omitRoutes(
 }
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
+
+export function hasNodeDependency(deps: Record<string, string>) {
+  return (
+    deps["@react-router/node"] ||
+    deps["@react-router/express"] ||
+    deps["@react-router/serve"]
+  );
+}
 
 function isEntryFile(entryBasename: string, filename: string) {
   return entryExts.some((ext) => filename === `${entryBasename}${ext}`);

@@ -10,7 +10,7 @@ import "react-router";
 
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
-import { loadConfig } from "../config/config";
+import { hasNodeDependency, loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
 import { transpile as convertFileToJS } from "./useJavascript";
@@ -171,10 +171,6 @@ export async function generateEntry(
     await copyFile(defaultEntry, outputFile);
   } else {
     let pkgJson = await readPackageJSON(rootDirectory);
-    let isNode =
-      pkgJson.dependencies?.["@react-router/node"] ||
-      pkgJson.dependencies?.["@react-router/express"] ||
-      pkgJson.dependencies?.["@react-router/serve"];
 
     let defaultEntryClient = path.resolve(
       defaultsDirectory,
@@ -183,7 +179,9 @@ export async function generateEntry(
 
     let defaultEntryServer = path.resolve(
       defaultsDirectory,
-      isNode ? `entry.server.node.tsx` : `entry.server.web.tsx`,
+      hasNodeDependency(pkgJson.dependencies ?? {})
+        ? `entry.server.node.tsx`
+        : `entry.server.web.tsx`,
     );
 
     let isServerEntry = entry === "entry.server";
