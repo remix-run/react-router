@@ -62,16 +62,11 @@ type ChangeFileSummary = {
   firstLine: string;
 };
 
-function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength - 3) + "...";
-}
-
 function getChangeFileFoundComment(summaries: ChangeFileSummary[]) {
   let rows = summaries
     .map(
       (summary) =>
-        `| \`${summary.type}\` | ${truncate(summary.firstLine, 50).replaceAll("|", "\\|")} |`,
+        `| \`${summary.type}\` | ${summary.firstLine.replaceAll("|", "\\|")} |`,
     )
     .join("\n");
 
