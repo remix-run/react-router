@@ -60,19 +60,11 @@ type ChangeFileSummary = {
   firstLine: string;
 };
 
-function getChangeFileFoundComment(summaries: ChangeFileSummary[]) {
-  return `${CHANGE_FILE_MARKER}
+const CHANGE_FILE_FOUND_COMMENT = `${CHANGE_FILE_MARKER}
 ### ✅ Change File Found
 
 One or more [change files](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files) found.
-
-| Type | Change |
-| --- | --- |
-${summaries
-  .map((s) => `| \`${s.type}\` | ${s.firstLine.replaceAll("|", "\\|")} |`)
-  .join("\n")}
 `;
-}
 
 const CHANGE_FILE_MISSING_COMMENT = `${CHANGE_FILE_MARKER}
 ### ⚠️ No Change File Found
@@ -169,13 +161,25 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
     });
   let found = summaries.length > 0;
   console.log(`changeFileCheck: found=${found}`);
+
+  let body = CHANGE_FILE_MISSING_COMMENT;
+
+  if (summaries.length > 0) {
+    body = [
+      CHANGE_FILE_FOUND_COMMENT,
+      "| Type | Change |",
+      "| --- | --- |",
+      ...summaries
+        .map((s) => `| \`${s.type}\` | ${s.firstLine.replaceAll("|", "\\|")} |`)
+        .join("\n"),
+    ].join("\n");
+  }
+
   return [
     {
       type: "upsert-sticky-comment",
       marker: CHANGE_FILE_MARKER,
-      body: found
-        ? getChangeFileFoundComment(summaries)
-        : CHANGE_FILE_MISSING_COMMENT,
+      body,
     },
   ];
 }
