@@ -82,7 +82,6 @@ import {
   resolveEntryFiles,
   configRouteToBranchRoute,
   type PrerenderPaths,
-  hasNodeDependency,
 } from "../config/config";
 import { getOptimizeDepsEntries } from "./optimize-deps-entries";
 import { decorateComponentExportsWithProps } from "./with-props";
@@ -3563,8 +3562,6 @@ export async function getEnvironmentOptionsResolvers(
     let maybeDevelopmentConditions =
       viteCommand === "build" ? [] : ["development"];
 
-    let isNode = hasNodeDependency(pkgJson.dependencies || {});
-
     // Default conditions are overridden by any custom conditions. If we wish
     // to retain the default conditions, we need to manually merge them using
     // the provided default conditions arrays exported from Vite.
@@ -3573,6 +3570,13 @@ export async function getEnvironmentOptionsResolvers(
 
     // Vite added this in 7.1, so we need to be defensive since our minimum version is 7.0
     let defaultExternalConditions = vite.defaultExternalConditions ?? ["node"];
+
+    // If we couldn't find the package.json, we assume node for backwards compatibility
+    let isNode =
+      !pkgJson.dependencies ||
+      pkgJson.dependencies["@react-router/node"] ||
+      pkgJson.dependencies["@react-router/express"] ||
+      pkgJson.dependencies["@react-router/serve"];
 
     if (!isNode) {
       maybeDefaultServerConditions = maybeDefaultServerConditions.filter(
