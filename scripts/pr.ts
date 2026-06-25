@@ -169,9 +169,9 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
       CHANGE_FILE_FOUND_COMMENT,
       "| Type | Change |",
       "| --- | --- |",
-      ...summaries
-        .map((s) => `| \`${s.type}\` | ${s.firstLine.replaceAll("|", "\\|")} |`)
-        .join("\n"),
+      ...summaries.map(
+        (s) => `| \`${s.type}\` | ${s.firstLine.replaceAll("|", "\\|")} |`,
+      ),
     ].join("\n");
   }
 
