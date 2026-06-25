@@ -1121,8 +1121,6 @@ function omitRoutes(
   };
 }
 
-const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
-
 export function hasNodeDependency(deps: Record<string, string>) {
   return (
     deps["@react-router/node"] ||
@@ -1130,6 +1128,8 @@ export function hasNodeDependency(deps: Record<string, string>) {
     deps["@react-router/serve"]
   );
 }
+
+const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
 
 function isEntryFile(entryBasename: string, filename: string) {
   return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
