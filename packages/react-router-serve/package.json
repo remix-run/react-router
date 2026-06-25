@@ -43,7 +43,6 @@
     "@remix-run/node-fetch-server": "^0.13.3",
     "compression": "^1.8.1",
     "express": "^5.2.1",
-    "get-port": "7.2.0",
     "morgan": "^1.10.1",
     "source-map-support": "^0.5.21"
   },

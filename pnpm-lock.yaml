@@ -595,9 +595,6 @@ importers:
 
   packages/create-react-router:
     dependencies:
-      execa:
-        specifier: 9.6.1
-        version: 9.6.1
       gunzip-maybe:
         specifier: ^1.4.2
         version: 1.4.2
@@ -616,9 +613,6 @@ importers:
       sort-package-json:
         specifier: ^3.6.1
         version: 3.6.1
-      strip-ansi:
-        specifier: ^7.2.0
-        version: 7.2.0
       tar-fs:
         specifier: ^3.1.2
         version: 3.1.2
@@ -790,9 +784,6 @@ importers:
       '@remix-run/node-fetch-server':
         specifier: ^0.13.3
         version: 0.13.3
-      arg:
-        specifier: ^5.0.1
-        version: 5.0.2
       babel-dead-code-elimination:
         specifier: ^1.0.12
         version: 1.0.12
@@ -1028,9 +1019,6 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      get-port:
-        specifier: 7.2.0
-        version: 7.2.0
       morgan:
         specifier: ^1.10.1
         version: 1.10.1
@@ -5016,9 +5004,6 @@ packages:
   are-docs-informative@0.0.2:
     resolution: {integrity: sha512-ixiS0nLNNG5jNQzgZJNoUpBKdo9yTYZMGJ+QgT2jmjR7G7+QHRCc4v6LQ3NgE7EBJq+o0ams3waJwkrlBom8Ig==}
     engines: {node: '>=14'}
-
-  arg@5.0.2:
-    resolution: {integrity: sha512-PYjyFOLKQ9y57JvQ6QLo8dAgNqswh8M1RMJYdQduT6xbWSgK36P/Z/v+p888pM69jMMfS8Xd8F6I1kQ/I9HUGg==}
 
   argparse@1.0.10:
     resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
@@ -12541,8 +12526,6 @@ snapshots:
   app-root-path@3.1.0: {}
 
   are-docs-informative@0.0.2: {}
-
-  arg@5.0.2: {}
 
   argparse@1.0.10:
     dependencies:

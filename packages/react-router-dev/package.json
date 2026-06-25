@@ -75,7 +75,6 @@
     "@babel/types": "^7.29.7",
     "@react-router/node": "workspace:*",
     "@remix-run/node-fetch-server": "^0.13.3",
-    "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.12",
     "chokidar": "^5.0.0",
     "dedent": "^1.7.2",
