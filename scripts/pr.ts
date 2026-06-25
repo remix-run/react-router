@@ -54,11 +54,36 @@ type CheckContext = {
 type Check = (ctx: CheckContext) => Promise<Action[]>;
 
 const CHANGE_FILE_MARKER = "<!-- change-file-check -->";
+const CHANGE_FILE_REGEX =
+  /^packages\/[^/]+\/\.changes\/(major|minor|patch|unstable)\.[^/]+\.md$/;
 
-const CHANGE_FILE_FOUND_COMMENT = `${CHANGE_FILE_MARKER}
+type ChangeFileSummary = {
+  type: string;
+  firstLine: string;
+};
+
+function truncate(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength - 3) + "...";
+}
+
+function getChangeFileFoundComment(summaries: ChangeFileSummary[]) {
+  let rows = summaries
+    .map(
+      (summary) =>
+        `| \`${summary.type}\` | ${truncate(summary.firstLine, 50).replaceAll("|", "\\|")} |`,
+    )
+    .join("\n");
+
+  return `${CHANGE_FILE_MARKER}
 ### ✅ Change File Found
 
-A [change file](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files) file exists in this PR. Thanks!`;
+One or more [change files](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files) found.
+
+| Type | Change |
+| --- | --- |
+${rows}`;
+}
 
 const CHANGE_FILE_MISSING_COMMENT = `${CHANGE_FILE_MARKER}
 ### ⚠️ No Change File Found
@@ -138,14 +163,28 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
   }
 
   let files = await getPrFiles(ctx.prNumber);
-  let regex = /^packages\/[^/]+\/\.changes\/[^/]+\.md$/;
-  let found = files.some((f) => regex.test(f.filename));
+  let summaries: ChangeFileSummary[] = files
+    .filter((f) => CHANGE_FILE_REGEX.test(f.filename))
+    .map((f) => {
+      let type = f.filename.match(CHANGE_FILE_REGEX)?.[1] ?? "unknown";
+      let firstLine =
+        fs.readFileSync(f.filename, "utf8").split(/\r?\n/, 1)[0].trim() ??
+        "_No first line found._";
+
+      return {
+        type,
+        firstLine,
+      };
+    });
+  let found = summaries.length > 0;
   console.log(`changeFileCheck: found=${found}`);
   return [
     {
       type: "upsert-sticky-comment",
       marker: CHANGE_FILE_MARKER,
-      body: found ? CHANGE_FILE_FOUND_COMMENT : CHANGE_FILE_MISSING_COMMENT,
+      body: found
+        ? getChangeFileFoundComment(summaries)
+        : CHANGE_FILE_MISSING_COMMENT,
     },
   ];
 }
