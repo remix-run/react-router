@@ -463,7 +463,7 @@ No code changes are required. If you run into dependency optimization issues aft
 
 This flag switches prerendering to use Vite's preview-server request flow instead of the current build-time prerendering path so that it works in non-Node environments such as `workerd`. Enabling this flag also enables `future.v8_viteEnvironmentApi`, so you should review the `future.v8_viteEnvironmentApi` guidance above before adopting it.
 
-<docs-info>This ends up only changing the underlying prerender implementation but is not expected to cause any breaking changes. Because it is not expected to break, you do not _have_ to adopt this flag prior to v8 and therefore it wasn't ever converted to a `v8_` flag.</docs-info>
+<docs-info>You do not have to adopt this flag ahead of your upgrade to v8 since it only changes the underlying prerender implementation. There is at least one known bug fixed in v8 where your `react-router.config.ts`  `buildEnd` hook would run prior to prerendered files being written to disk.</docs-info>
 
 👉 **Enable the Flag**
 
