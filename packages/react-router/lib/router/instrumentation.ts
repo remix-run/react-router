@@ -34,20 +34,35 @@ export type InstrumentRouterFunction = (router: InstrumentableRouter) => void;
 
 export type InstrumentRouteFunction = (route: InstrumentableRoute) => void;
 
+/**
+ * Route metadata available after React Router has matched an instrumented
+ * request, navigation, or fetcher call.
+ */
 export type InstrumentationResultMeta = {
   url: LoaderFunctionArgs["url"];
   pattern: string;
   params: LoaderFunctionArgs["params"];
 };
 
+/**
+ * Result returned by route-level instrumented handler calls, such as
+ * instrumented loaders, actions, middleware, and lazy route functions.
+ */
 export type InstrumentationHandlerResult =
   | { status: "success"; error: undefined }
   | { status: "error"; error: Error };
 
+/**
+ * Result returned by client-side router instrumented navigation and fetcher
+ * calls.
+ */
 export type InstrumentationClientRouterResult = InstrumentationHandlerResult & {
   meta: InstrumentationResultMeta | undefined;
 };
 
+/**
+ * Result returned by server request handler instrumentation.
+ */
 export type InstrumentationServerHandlerResult =
   InstrumentationHandlerResult & {
     statusCode: number;
