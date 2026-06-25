@@ -2,16 +2,9 @@ import {
   findReferencedIdentifiers,
   deadCodeElimination,
 } from "babel-dead-code-elimination";
-import type { types as Babel } from "@babel/core";
-import type { ParseResult } from "@babel/parser";
-import _traverse, { type NodePath } from "@babel/traverse";
 
-const traverse =
-  (
-    _traverse as unknown as {
-      default?: typeof import("@babel/traverse").default;
-    }
-  ).default ?? _traverse;
+import type { Babel, NodePath, ParseResult } from "./babel";
+import { traverse } from "./babel";
 
 export const removeExports = (
   ast: ParseResult<Babel.File>,

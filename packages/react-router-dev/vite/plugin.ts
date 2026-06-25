@@ -16,8 +16,6 @@ import { createRequire } from "node:module";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as babel from "@babel/core";
-import { generate } from "@babel/generator";
-import { parse } from "@babel/parser";
 import { sendResponse } from "@remix-run/node-fetch-server";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
@@ -49,6 +47,7 @@ import type {
 } from "../manifest";
 import invariant from "../invariant";
 import type { Cache } from "./cache";
+import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest } from "./node-adapter";
 import {

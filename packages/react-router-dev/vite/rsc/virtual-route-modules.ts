@@ -2,10 +2,9 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
-import { generate } from "@babel/generator";
-import { parse } from "@babel/parser";
 import type * as Vite from "vite";
 
+import * as babel from "../babel";
 import type { Cache } from "../cache";
 import { removeExports } from "../remove-exports";
 import {
@@ -206,11 +205,11 @@ ${result}`;
   }
 
   function createServerRouteModule(code: string) {
-    const ast = parse(code, {
+    const ast = babel.parse(code, {
       sourceType: "module",
     });
     removeExports(ast, CLIENT_ROUTE_EXPORTS);
-    return generate(ast);
+    return babel.generate(ast);
   }
 
   async function createClientRouteModuleChunk(
@@ -223,7 +222,7 @@ ${result}`;
   ) {
     let routeChunks = detectRouteChunks(cache, id, code, isRootRouteModule);
 
-    const ast = parse(code, {
+    const ast = babel.parse(code, {
       sourceType: "module",
     });
     const { staticExports } = await parseRouteExports(code);
@@ -239,7 +238,7 @@ ${result}`;
       removeExports(ast, Array.from(toRemove));
     }
 
-    const generated = generate(ast);
+    const generated = babel.generate(ast);
 
     let result = '"use client";\n' + generated.code;
 
@@ -367,11 +366,11 @@ ${result}`;
 }
 
 export function createClientRouteModuleForOptimizeDepsScan(code: string) {
-  const ast = parse(code, {
+  const ast = babel.parse(code, {
     sourceType: "module",
   });
   removeExports(ast, SERVER_ROUTE_EXPORTS);
-  return generate(ast);
+  return babel.generate(ast);
 }
 
 function createId(

@@ -1,1 +1,1 @@
-Fixed `react-router typegen` crashes under the Bun runtime by importing Babel helpers directly.
+Fixed `react-router typegen` crashes under the Bun runtime when Babel default imports are already unwrapped.
