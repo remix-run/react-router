@@ -1,9 +1,4 @@
-import type {
-  AppLoadContext,
-  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  ServerBuild,
-  RouterContextProvider,
-} from "react-router";
+import type { ServerBuild, RouterContextProvider } from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { readableStreamToString } from "@react-router/node";
 import type {
@@ -26,9 +21,7 @@ type MaybePromise<T> = T | Promise<T>;
  */
 export type GetLoadContextFunction = (
   event: APIGatewayProxyEventV2,
-) => MiddlewareEnabled extends true
-  ? MaybePromise<RouterContextProvider>
-  : MaybePromise<AppLoadContext>;
+) => MaybePromise<RouterContextProvider>;
 
 export type RequestHandler = APIGatewayProxyHandlerV2;
 
@@ -60,7 +53,12 @@ export function createRequestHandler({
 export function createReactRouterRequest(
   event: APIGatewayProxyEventV2,
 ): Request {
-  let host = event.headers["x-forwarded-host"] || event.headers.host;
+  let rawHost = event.requestContext.domainName || event.headers.host || "";
+  let [hostname, portStr] = rawHost.split(":");
+  hostname = hostname.split(/[\\/?#@]/)[0] || "localhost";
+  let hostPort = Number.parseInt(portStr ?? "", 10);
+  let port = Number.isSafeInteger(hostPort) ? hostPort : undefined;
+  let host = `${hostname}${port ? `:${port}` : ""}`;
   let search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
   let scheme = process.env.ARC_SANDBOX ? "http" : "https";
   let url = new URL(`${scheme}://${host}${event.rawPath}${search}`);

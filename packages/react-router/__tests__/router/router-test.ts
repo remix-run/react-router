@@ -1,10 +1,8 @@
+import type React from "react";
 import type { HydrationState } from "../../lib/router/router";
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, IDLE_NAVIGATION } from "../../lib/router/router";
-import type {
-  AgnosticDataRouteObject,
-  AgnosticRouteObject,
-} from "../../lib/router/utils";
+import type { DataRouteObject, RouteObject } from "../../lib/router/utils";
 import { data, ErrorResponseImpl, redirect } from "../../lib/router/utils";
 
 import { urlMatch } from "./utils/custom-matchers";
@@ -42,7 +40,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {
@@ -184,7 +182,7 @@ describe("a router", () => {
     });
 
     it("throws if it finds index routes with children", async () => {
-      let routes: AgnosticRouteObject[] = [
+      let routes: RouteObject[] = [
         // @ts-expect-error
         {
           index: true,
@@ -277,7 +275,7 @@ describe("a router", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             loader: () => ++count,
           },
         ],
@@ -345,7 +343,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            hasErrorBoundary: true,
+            errorElement: expect.any(Object),
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
@@ -421,7 +419,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            hasErrorBoundary: true,
+            errorElement: expect.any(Object),
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
@@ -1478,7 +1476,7 @@ describe("a router", () => {
         routes: [
           {
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             loader: () => {},
           },
         ],
@@ -1751,7 +1749,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks"),
         context: {},
       });
 
@@ -1761,7 +1760,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks/:id",
+        pattern: "/tasks/:id",
+        url: new URL("http://localhost/tasks/1"),
         context: {},
       });
 
@@ -1771,7 +1771,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
 
@@ -1783,7 +1784,8 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks?foo=bar#hash"),
         context: {},
       });
 
@@ -2209,7 +2211,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: "/tasks",
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks"),
         context: {},
       });
 
@@ -2254,7 +2257,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
+        pattern: "/tasks",
+        url: new URL("http://localhost/tasks?foo=bar"),
         context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
@@ -2288,7 +2292,8 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        unstable_pattern: expect.any(String),
+        pattern: expect.any(String),
+        url: expect.any(URL),
         context: {},
       });
 
@@ -2488,7 +2493,7 @@ describe("a router", () => {
     });
   });
 
-  describe("router.enhanceRoutes", () => {
+  describe("router._internalSetRoutes", () => {
     // Detect any failures inside the router navigate code
     afterEach(() => cleanup());
 
@@ -2506,7 +2511,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2514,14 +2519,12 @@ describe("a router", () => {
               id: "index",
               loader: true,
               action: true,
-              hasErrorBoundary: false,
             },
             {
               path: "/foo",
               id: "foo",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2562,7 +2565,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2570,7 +2573,6 @@ describe("a router", () => {
               id: "noLoader",
               loader: true,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2615,7 +2617,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2623,14 +2625,12 @@ describe("a router", () => {
               id: "index",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
             {
               path: "/foo",
               id: "foo",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2676,7 +2676,7 @@ describe("a router", () => {
         {
           path: "",
           id: "root",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: true,
           children: [
             {
@@ -2684,14 +2684,12 @@ describe("a router", () => {
               id: "index",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
             {
               path: "/foo",
               id: "foo",
               loader: false,
               action: true,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2729,24 +2727,22 @@ describe("a router", () => {
     it("should retain existing routes until revalidation completes on loader removal (fetch)", async () => {
       let rootDfd = createDeferred();
       let fooDfd = createDeferred();
-      let ogRoutes: AgnosticDataRouteObject[] = [
+      let ogRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
-          hasErrorBoundary: true,
+          errorElement: {} as React.ReactElement,
           loader: () => rootDfd.promise,
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
             {
               path: "foo",
               id: "foo",
               loader: () => fooDfd.promise,
               children: undefined,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2770,23 +2766,21 @@ describe("a router", () => {
       expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
-      let newRoutes: AgnosticDataRouteObject[] = [
+      let newRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
           loader: () => rootDfd2.promise,
-          hasErrorBoundary: true,
+          errorElement: expect.any(Object),
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
             {
               path: "foo",
               id: "foo",
               children: undefined,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2839,24 +2833,22 @@ describe("a router", () => {
     it("should retain existing routes until revalidation completes on route removal (fetch)", async () => {
       let rootDfd = createDeferred();
       let fooDfd = createDeferred();
-      let ogRoutes: AgnosticDataRouteObject[] = [
+      let ogRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
-          hasErrorBoundary: true,
+          errorElement: {} as React.ReactElement,
           loader: () => rootDfd.promise,
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
             {
               path: "foo",
               id: "foo",
               loader: () => fooDfd.promise,
               children: undefined,
-              hasErrorBoundary: false,
             },
           ],
         },
@@ -2879,17 +2871,16 @@ describe("a router", () => {
       expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
-      let newRoutes: AgnosticDataRouteObject[] = [
+      let newRoutes: DataRouteObject[] = [
         {
           path: "/",
           id: "root",
           loader: () => rootDfd2.promise,
-          hasErrorBoundary: true,
+          errorElement: expect.any(Object),
           children: [
             {
               index: true,
               id: "index",
-              hasErrorBoundary: false,
             },
           ],
         },

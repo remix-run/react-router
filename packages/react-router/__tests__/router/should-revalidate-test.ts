@@ -700,21 +700,21 @@ describe("shouldRevalidate", () => {
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
-      {
-        "actionResult": "FETCH",
-        "actionStatus": undefined,
-        "currentParams": {},
-        "currentUrl": "http://localhost/",
-        "defaultShouldRevalidate": true,
-        "formAction": "/fetch",
-        "formData": FormData {},
-        "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "POST",
-        "json": undefined,
-        "nextParams": {},
-        "nextUrl": "http://localhost/",
-        "text": undefined,
-      }
+     {
+       "actionResult": "FETCH",
+       "actionStatus": undefined,
+       "currentParams": {},
+       "currentUrl": "http://localhost/",
+       "defaultShouldRevalidate": true,
+       "formAction": "/fetch",
+       "formData": FormData {},
+       "formEncType": "application/x-www-form-urlencoded",
+       "formMethod": "POST",
+       "json": undefined,
+       "nextParams": {},
+       "nextUrl": "http://localhost/",
+       "text": undefined,
+     }
     `);
     expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
@@ -763,21 +763,21 @@ describe("shouldRevalidate", () => {
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
-      {
-        "actionResult": undefined,
-        "actionStatus": undefined,
-        "currentParams": {},
-        "currentUrl": "http://localhost/",
-        "defaultShouldRevalidate": true,
-        "formAction": "/fetch",
-        "formData": FormData {},
-        "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "POST",
-        "json": undefined,
-        "nextParams": {},
-        "nextUrl": "http://localhost/",
-        "text": undefined,
-      }
+     {
+       "actionResult": undefined,
+       "actionStatus": undefined,
+       "currentParams": {},
+       "currentUrl": "http://localhost/",
+       "defaultShouldRevalidate": true,
+       "formAction": "/fetch",
+       "formData": FormData {},
+       "formEncType": "application/x-www-form-urlencoded",
+       "formMethod": "POST",
+       "json": undefined,
+       "nextParams": {},
+       "nextUrl": "http://localhost/",
+       "text": undefined,
+     }
     `);
 
     router.dispose();
@@ -1059,7 +1059,7 @@ describe("shouldRevalidate", () => {
             {
               id: "index",
               index: true,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               action: () => responses[++count],
             },
           ],
@@ -1124,7 +1124,7 @@ describe("shouldRevalidate", () => {
             {
               id: "index",
               index: true,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               action: () => {
                 throw responses[++count];
               },
@@ -1179,7 +1179,7 @@ describe("shouldRevalidate", () => {
         {
           id: "root",
           path: "/",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: () => "NOPE",
           children: [
             {
@@ -1251,7 +1251,7 @@ describe("shouldRevalidate", () => {
       });
 
       let A = await t.navigate("/?foo=bar", {
-        unstable_defaultShouldRevalidate: false,
+        defaultShouldRevalidate: false,
       });
 
       A.loaders.index.resolve("SHOULD NOT BE CALLED");
@@ -1290,7 +1290,7 @@ describe("shouldRevalidate", () => {
       });
 
       let A = await t.navigate("/?foo=bar", {
-        unstable_defaultShouldRevalidate: false,
+        defaultShouldRevalidate: false,
       });
 
       A.loaders.index.resolve("SHOULD NOT BE CALLED");
@@ -1345,7 +1345,7 @@ describe("shouldRevalidate", () => {
         {
           formMethod: "post",
           formData: createFormData({}),
-          unstable_defaultShouldRevalidate: false,
+          defaultShouldRevalidate: false,
         },
         ["fetch"],
       );
@@ -1418,7 +1418,7 @@ describe("shouldRevalidate", () => {
         {
           formMethod: "post",
           formData: createFormData({}),
-          unstable_defaultShouldRevalidate: false,
+          defaultShouldRevalidate: false,
         },
         ["fetch"],
       );
@@ -1483,7 +1483,7 @@ describe("shouldRevalidate", () => {
       let B = await t.fetch("/fetch", actionKey, "index", {
         formMethod: "post",
         formData: createFormData({}),
-        unstable_defaultShouldRevalidate: false,
+        defaultShouldRevalidate: false,
       });
       t.shimHelper(B.loaders, "fetch", "loader", "fetch");
 
@@ -1552,7 +1552,7 @@ describe("shouldRevalidate", () => {
       let B = await t.fetch("/fetch", actionKey, "index", {
         formMethod: "post",
         formData: createFormData({}),
-        unstable_defaultShouldRevalidate: false,
+        defaultShouldRevalidate: false,
       });
       t.shimHelper(B.loaders, "fetch", "loader", "fetch");
 
@@ -1623,7 +1623,7 @@ describe("shouldRevalidate", () => {
       let B = await t.fetch("/fetch", actionKey, "index", {
         formMethod: "post",
         formData: createFormData({}),
-        unstable_defaultShouldRevalidate: false,
+        defaultShouldRevalidate: false,
       });
       t.shimHelper(B.loaders, "fetch", "loader", "fetch");
 

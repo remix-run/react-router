@@ -75,7 +75,7 @@ import { type ClientOnErrorFunction } from "react-router";
 
 const onError: ClientOnErrorFunction = (
   error,
-  { location, params, unstable_pattern, errorInfo },
+  { location, params, pattern, errorInfo },
 ) => {
   myReportError(error, location, errorInfo);
 
@@ -104,11 +104,15 @@ See also:
 This function is called whenever React Router catches an error in your application on the client.
 
 ```tsx
-import { type ClientOnErrorFunction } from "react-router";
+import {
+  createBrowserRouter,
+  type ClientOnErrorFunction,
+} from "react-router";
+import { RouterProvider } from "react-router/dom";
 
 const onError: ClientOnErrorFunction = (
   error,
-  { location, params, unstable_pattern, errorInfo },
+  { location, params, pattern, errorInfo },
 ) => {
   myReportError(error, location, errorInfo);
 
@@ -116,8 +120,12 @@ const onError: ClientOnErrorFunction = (
   console.error(error, errorInfo);
 };
 
+const router = createBrowserRouter(routes);
+
 function App() {
-  return <RouterProvider onError={onError} />;
+  return (
+    <RouterProvider router={router} onError={onError} />
+  );
 }
 ```
 

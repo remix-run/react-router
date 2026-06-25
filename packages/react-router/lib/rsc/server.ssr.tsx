@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RSCRouterContext, type DataRouteObject } from "../context";
+import { RSCRouterContext } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
@@ -9,30 +9,20 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
-import { isRouteErrorResponse } from "../router/utils";
+import { isRouteErrorResponse, type DataRouteObject } from "../router/utils";
+import { hasInvalidProtocol } from "../router/router";
 import {
   decodeRedirectErrorDigest,
   decodeRouteErrorResponseDigest,
 } from "../errors";
 import { escapeHtml } from "../dom/ssr/markup";
 
+const defaultManifestPath = "/__manifest";
+
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
   formState: Promise<any>;
 };
-
-// Safe version of React.use() that will not cause compilation errors against
-// React 18 and will result in a runtime error if used (you can't use RSC against
-// React 18).
-const REACT_USE = "use";
-const useImpl = (React as any)[REACT_USE];
-
-function useSafe<T>(promise: Promise<T> | React.Context<T>): T {
-  if (useImpl) {
-    return useImpl(promise);
-  }
-  throw new Error("React Router v7 requires React 19+ for RSC features.");
-}
 
 export type SSRCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
@@ -200,6 +190,10 @@ export async function routeRSCServerRequest({
       serverResponse.status === SINGLE_FETCH_REDIRECT_STATUS &&
       payload.type === "redirect"
     ) {
+      if (hasInvalidProtocol(payload.location)) {
+        throw new Error("Invalid redirect location");
+      }
+
       const headers = new Headers(serverResponse.headers);
       headers.delete("Content-Encoding");
       headers.delete("Content-Length");
@@ -253,6 +247,10 @@ export async function routeRSCServerRequest({
     headers.set("Content-Type", "text/html; charset=utf-8");
 
     if (renderRedirect) {
+      if (hasInvalidProtocol(renderRedirect.location)) {
+        throw new Error("Invalid redirect location");
+      }
+
       headers.set("Location", renderRedirect.location);
       return new Response(html, {
         status: renderRedirect.status,
@@ -263,6 +261,10 @@ export async function routeRSCServerRequest({
     const redirectTransform = new TransformStream({
       flush(controller) {
         if (renderRedirect) {
+          if (hasInvalidProtocol(renderRedirect.location)) {
+            return;
+          }
+
           controller.enqueue(
             new TextEncoder().encode(
               `<meta http-equiv="refresh" content="0;url=${escapeHtml(renderRedirect.location)}"/>`,
@@ -292,12 +294,16 @@ export async function routeRSCServerRequest({
       statusText,
       headers,
     });
-  } catch (reason) {
-    if (reason instanceof Response) {
-      return reason;
+  } catch (error) {
+    if (error instanceof Response) {
+      return error;
     }
 
     if (renderRedirect) {
+      if (hasInvalidProtocol(renderRedirect.location)) {
+        throw new Error("Invalid redirect location");
+      }
+
       return new Response(`Redirect: ${renderRedirect.location}`, {
         status: renderRedirect.status,
         headers: {
@@ -307,9 +313,9 @@ export async function routeRSCServerRequest({
     }
 
     try {
-      reason = renderError ?? reason;
-      let [status, statusText] = isRouteErrorResponse(reason)
-        ? [reason.status, reason.statusText]
+      let normalizedError = renderError ?? error;
+      let [status, statusText] = isRouteErrorResponse(normalizedError)
+        ? [normalizedError.status, normalizedError.statusText]
         : [500, ""];
 
       let retryRedirect: { status: number; location: string } | undefined;
@@ -325,7 +331,7 @@ export async function routeRSCServerRequest({
               status,
               errors: deepestRenderedBoundaryId
                 ? {
-                    [deepestRenderedBoundaryId]: reason,
+                    [deepestRenderedBoundaryId]: normalizedError,
                   }
                 : {},
             }),
@@ -386,6 +392,10 @@ export async function routeRSCServerRequest({
       headers.set("Content-Type", "text/html; charset=utf-8");
 
       if (retryRedirect) {
+        if (hasInvalidProtocol(retryRedirect.location)) {
+          throw new Error("Invalid redirect location");
+        }
+
         headers.set("Location", retryRedirect.location);
         return new Response(html, {
           status: retryRedirect.status,
@@ -396,6 +406,10 @@ export async function routeRSCServerRequest({
       const retryRedirectTransform = new TransformStream({
         flush(controller) {
           if (retryRedirect) {
+            if (hasInvalidProtocol(retryRedirect.location)) {
+              return;
+            }
+
             controller.enqueue(
               new TextEncoder().encode(
                 `<meta http-equiv="refresh" content="0;url=${escapeHtml(retryRedirect.location)}"/>`,
@@ -425,11 +439,14 @@ export async function routeRSCServerRequest({
         statusText,
         headers,
       });
-    } catch {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      error2
+    ) {
       // Throw the original error below
     }
 
-    throw reason;
+    throw error;
   }
 }
 
@@ -486,10 +503,13 @@ export interface RSCStaticRouterProps {
  */
 export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   const decoded = getPayload();
-  // Can be replaced with React.use when v18 compatibility is no longer required.
-  const payload = useSafe(decoded);
+  const payload = React.use(decoded);
 
   if (payload.type === "redirect") {
+    if (hasInvalidProtocol(payload.location)) {
+      throw new Error("Invalid redirect location");
+    }
+
     throw new Response(null, {
       status: payload.status,
       headers: {
@@ -542,7 +562,6 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
         handle: match.handle,
-        hasErrorBoundary: match.hasErrorBoundary,
         loader: match.hasLoader || !!match.clientLoader,
         index: match.index,
         path: match.path,
@@ -559,7 +578,6 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         element: match.element,
         errorElement: match.errorElement,
         handle: match.handle,
-        hasErrorBoundary: !!match.errorElement,
         hydrateFallbackElement: match.hydrateFallbackElement,
         index: match.index,
         loader: match.hasLoader || !!match.clientLoader,
@@ -575,13 +593,7 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   );
 
   const frameworkContext: FrameworkContextObject = {
-    future: {
-      // These flags have no runtime impact so can always be false.  If we add
-      // flags that drive runtime behavior they'll need to be proxied through.
-      v8_middleware: false,
-      unstable_subResourceIntegrity: false,
-      unstable_trailingSlashAwareDataRequests: true, // always on for RSC
-    },
+    future: {},
     isSpaMode: false,
     ssr: true,
     criticalCss: "",
@@ -594,7 +606,14 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
         imports: [],
       },
     },
-    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+    routeDiscovery:
+      payload.routeDiscovery.mode === "initial"
+        ? { mode: "initial", manifestPath: defaultManifestPath }
+        : {
+            mode: "lazy",
+            manifestPath:
+              payload.routeDiscovery.manifestPath || defaultManifestPath,
+          },
     routeModules: createRSCRouteModules(payload),
   };
 

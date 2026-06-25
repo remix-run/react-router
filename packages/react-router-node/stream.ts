@@ -7,39 +7,169 @@ export async function writeReadableStreamToWritable(
 ) {
   let reader = stream.getReader();
   let flushable = writable as { flush?: Function };
+  let writableError = monitorWritableError(writable);
 
   try {
     while (true) {
-      let { done, value } = await reader.read();
+      writableError.throwIfClosed();
+
+      let { done, value } = await writableError.race(reader.read());
 
       if (done) {
         writable.end();
         break;
       }
 
-      writable.write(value);
+      writableError.throwIfClosed();
+
+      let canContinueWriting = writable.write(value);
       if (typeof flushable.flush === "function") {
         flushable.flush();
       }
+
+      if (!canContinueWriting) {
+        await waitForDrain(writable, writableError);
+      }
     }
   } catch (error: unknown) {
+    try {
+      reader.cancel(error).catch(() => {});
+    } catch {
+      // Ignore cancellation errors so we preserve the original write failure.
+    }
     writable.destroy(error as Error);
     throw error;
+  } finally {
+    writableError.cleanup();
+    try {
+      reader.releaseLock();
+    } catch {
+      // Ignore release errors so we preserve the original write failure.
+    }
   }
+}
+
+interface WritableErrorMonitor {
+  cleanup(): void;
+  race<T>(promise: Promise<T>): Promise<T>;
+  throwIfClosed(): void;
+}
+
+function monitorWritableError(writable: Writable): WritableErrorMonitor {
+  let settled = false;
+  let writableError: Error | undefined;
+  let rejectWritableError!: (error: Error) => void;
+  let writableErrorPromise = new Promise<never>((_, reject) => {
+    rejectWritableError = reject;
+  });
+  writableErrorPromise.catch(() => {});
+
+  function cleanup() {
+    writable.off("error", onError);
+    writable.off("close", onClose);
+  }
+
+  function reject(error: Error) {
+    if (settled) {
+      return;
+    }
+
+    settled = true;
+    writableError = error;
+    cleanup();
+    rejectWritableError(error);
+  }
+
+  function onError(error: Error) {
+    reject(error);
+  }
+
+  function onClose() {
+    reject(new Error("Writable closed before stream finished"));
+  }
+
+  writable.once("error", onError);
+  writable.once("close", onClose);
+
+  return {
+    cleanup,
+    race<T>(promise: Promise<T>) {
+      return Promise.race([promise, writableErrorPromise]);
+    },
+    throwIfClosed() {
+      if (writableError) {
+        throw writableError;
+      }
+
+      if (writable.destroyed || writable.writableEnded) {
+        throw new Error("Cannot write to a destroyed or ended writable stream");
+      }
+    },
+  };
+}
+
+function waitForDrain(
+  writable: Writable,
+  writableError: WritableErrorMonitor,
+): Promise<void> {
+  let cleanup = () => {};
+  let drainPromise = new Promise<void>((resolve) => {
+    function onDrain() {
+      cleanup();
+      resolve();
+    }
+
+    cleanup = function cleanup() {
+      writable.off("drain", onDrain);
+    };
+
+    writable.once("drain", onDrain);
+  });
+
+  return writableError.race(drainPromise).finally(cleanup);
 }
 
 export async function writeAsyncIterableToWritable(
   iterable: AsyncIterable<Uint8Array>,
   writable: Writable,
 ) {
+  let writableError = monitorWritableError(writable);
+  let iterator = iterable[Symbol.asyncIterator]();
+  let completed = false;
+
   try {
-    for await (let chunk of iterable) {
-      writable.write(chunk);
+    while (true) {
+      writableError.throwIfClosed();
+
+      let { done, value: chunk } = await writableError.race(iterator.next());
+
+      if (done) {
+        completed = true;
+        break;
+      }
+
+      writableError.throwIfClosed();
+
+      let canContinueWriting = writable.write(chunk);
+
+      if (!canContinueWriting) {
+        await waitForDrain(writable, writableError);
+      }
     }
+
     writable.end();
   } catch (error: any) {
+    if (!completed) {
+      try {
+        Promise.resolve(iterator.return?.()).catch(() => {});
+      } catch {
+        // Ignore return errors so we preserve the original write failure.
+      }
+    }
     writable.destroy(error);
     throw error;
+  } finally {
+    writableError.cleanup();
   }
 }
 
@@ -132,14 +262,20 @@ class StreamPump {
   enqueue(chunk: Uint8Array | string) {
     if (this.controller) {
       try {
-        let bytes = chunk instanceof Uint8Array ? chunk : Buffer.from(chunk);
+        let bytes: Uint8Array<ArrayBuffer> =
+          typeof chunk === "string"
+            ? Buffer.from(chunk)
+            : new Uint8Array(chunk);
 
         let available = (this.controller.desiredSize || 0) - bytes.byteLength;
         this.controller.enqueue(bytes);
         if (available <= 0) {
           this.pause();
         }
-      } catch (error: any) {
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {
         this.controller.error(
           new Error(
             "Could not create Buffer, chunk must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object",

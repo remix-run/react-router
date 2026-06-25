@@ -13,7 +13,7 @@ order: 3
 This file is optional
 </docs-info>
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html)
 
 React Router framework configuration file that lets you customize aspects of your React Router application like server-side rendering, directory locations, and build settings.
 
@@ -132,9 +132,7 @@ export default {
 
 ### `prerender`
 
-An array of URLs to prerender to HTML files at build time. Can also be a function returning an array to dynamically generate URLs.
-
-See [Pre-Rendering][pre-rendering] for more information.
+An array of URLs to prerender to HTML files at build time - see [Pre-Rendering][pre-rendering] for more information.
 
 ```tsx filename=react-router.config.ts
 export default {
@@ -146,6 +144,12 @@ export default {
     const paths = await getStaticPaths();
     return ["/", ...paths];
   },
+
+  // Or an object if you wish to enable concurrency
+  prerender: {
+    paths: ["/", "/about", "/contact"],
+    concurrency: 4,
+  }
 } satisfies Config;
 ```
 

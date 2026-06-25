@@ -1,6 +1,6 @@
-import type { DataRouteObject } from "../../context";
 import type { Path } from "../../router/history";
 import type { Router as DataRouter, HydrationState } from "../../router/router";
+import type { DataRouteObject } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
 import type { ClientLoaderFunction } from "./routeModules";
 import { shouldHydrateRouteLoader } from "./routes";

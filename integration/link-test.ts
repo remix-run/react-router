@@ -11,7 +11,7 @@ import { type TemplateName } from "./helpers/vite.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -104,9 +104,9 @@ test.describe("route module link export", () => {
 
               export function links() {
                 return [
-                  { rel: "stylesheet", href: resetHref },
-                  { rel: "stylesheet", href: stylesHref },
-                  { rel: "stylesheet", href: "/resources/theme-css" },
+                  { rel: "stylesheet", href: resetHref, presidence: "medium" },
+                  { rel: "stylesheet", href: stylesHref, presidence: "medium" },
+                  { rel: "stylesheet", href: "/resources/theme-css", presidence: "medium" },
                   { rel: "shortcut icon", href: favicon },
                 ];
               }
@@ -247,11 +247,12 @@ test.describe("route module link export", () => {
               }
               export function links()  {
                 return [
-                  { rel: "stylesheet", href: redTextHref },
+                  { rel: "stylesheet", href: redTextHref, presidence: "medium" },
                   {
                     rel: "stylesheet",
                     href: blueTextHref,
                     media: "(prefers-color-scheme: beef)",
+                    presidence: "medium"
                   },
                   { page: "/gists/mjackson" },
                   {
@@ -320,7 +321,7 @@ test.describe("route module link export", () => {
               import { data, Link, Outlet, useLoaderData, useNavigation } from "react-router";
               import stylesHref from "~/gists.css?url";
               export function links() {
-                return [{ rel: "stylesheet", href: stylesHref }];
+                return [{ rel: "stylesheet", href: stylesHref, presidence: "medium" }];
               }
               export async function loader() {
                 return data({

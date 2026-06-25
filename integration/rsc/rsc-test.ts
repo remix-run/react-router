@@ -545,7 +545,12 @@ implementations.forEach((implementation) => {
                       id: "render-route-error-response",
                       path: "render-route-error-response/:id?",
                       lazy: () => import("./routes/render-route-error-response/home"),
-                    }
+                    },
+                    {
+                      id: "get-request",
+                      path: "/get-request",
+                      lazy: () => import("./routes/get-request/get-request"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -572,6 +577,7 @@ implementations.forEach((implementation) => {
                     </head>
                     <body>
                       {children}
+                      {Array(1000).fill(null).map((_, i)=><p key={i}>YOOOOOOOOOO   {i}</p>)}
                       <ScrollRestoration />
                     </body>
                   </html>
@@ -1484,11 +1490,16 @@ implementations.forEach((implementation) => {
                   throw redirect("https://example.com/")
                 }
 
+                if (id === "unsupported-protocol") {
+                  throw redirect("about:blank")
+                }
+
                 return (
                   <>
                     <h1>{id || "home"}</h1>
                     <Link to="/render-redirect/redirect">Redirect</Link>
                     <Link to="/render-redirect/external">External</Link>
+                    <Link to="/render-redirect/unsupported-protocol">Unsupported</Link>
                   </>
                 )
               }
@@ -1516,11 +1527,16 @@ implementations.forEach((implementation) => {
                   throw redirect("https://example.com/")
                 }
 
+                if (id === "unsupported-protocol") {
+                  throw redirect("about:blank")
+                }
+
                 return (
                   <>
                     <h1>{id || "home"}</h1>
                     <Link to="/render-redirect/lazy/redirect">Redirect</Link>
                     <Link to="/render-redirect/external">External</Link>
+                    <Link to="/render-redirect/lazy/unsupported-protocol">Unsupported</Link>
                   </>
                 );
               }
@@ -1547,6 +1563,17 @@ implementations.forEach((implementation) => {
                   return <p>{error.status} {error.statusText} {error.data?.message || "no"}</p>;
                 }
                 return <p>Oh no D:</p>;
+              }
+            `,
+
+            "src/routes/get-request/get-request.tsx": js`
+              import { unstable_getRequest as getRequest } from "react-router";
+
+              export function action() { return null; }
+
+              export default function GetRequest() {
+                const request = getRequest();
+                return <p>{request.method}</p>;
               }
             `,
           },
@@ -1850,6 +1877,18 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("Example Domain")).toBeAttached();
         });
 
+        test("Handles unsupported protocol redirect Responses from render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("Unsupported").click();
+          await page.waitForTimeout(500);
+          await expect(page).toHaveURL(
+            `http://localhost:${port}/render-redirect/unsupported-protocol`,
+          );
+        });
+
         test("Suppport throwing redirect Response from suspended render", async ({
           page,
         }) => {
@@ -1877,6 +1916,18 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("Example Domain")).toBeAttached();
         });
 
+        test("Handles unsupported protocol redirect Responses from suspended render", async ({
+          page,
+        }) => {
+          await page.goto(`http://localhost:${port}/render-redirect/lazy`);
+          await expect(page.getByText("home")).toBeAttached();
+          await page.getByText("Unsupported").click();
+          await page.waitForTimeout(500);
+          await expect(page).toHaveURL(
+            `http://localhost:${port}/render-redirect/lazy/unsupported-protocol`,
+          );
+        });
+
         test("Support throwing Responses", async ({ page }) => {
           await page.goto(
             `http://localhost:${port}/render-route-error-response`,
@@ -1891,6 +1942,20 @@ implementations.forEach((implementation) => {
             `http://localhost:${port}/render-route-error-response/Test`,
           );
           await expect(page.getByText("400 Oh no! Test")).toBeAttached();
+        });
+
+        test("Supports getRequest in server components", async ({ page }) => {
+          await page.goto(`http://localhost:${port}/get-request`);
+          await expect(page.getByText("GET")).toBeAttached();
+
+          const response = await page.request.fetch(
+            `http://localhost:${port}/get-request`,
+            {
+              method: "POST",
+            },
+          );
+          const body = await response.text();
+          expect(body).toContain("<p>POST</p>");
         });
       });
 

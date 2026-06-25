@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Links.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.Links.html)
 
 Renders all the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
 tags created by the route module's [`links`](../../start/framework/route-module#links)
@@ -54,7 +54,8 @@ function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
 attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-element
+element. If not provided in Framework Mode, it will default to any
+``<ServerRouter nonce>`` prop.
 
 ### crossOrigin
 

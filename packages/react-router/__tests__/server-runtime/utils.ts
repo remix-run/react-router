@@ -15,7 +15,7 @@ import type {
   LoaderFunction,
   MiddlewareFunction,
 } from "../../lib/router/utils";
-import type { unstable_ServerInstrumentation } from "../../lib/router/instrumentation";
+import type { ServerInstrumentation } from "../../lib/router/instrumentation";
 
 export function mockServerBuild(
   routes: Record<
@@ -36,19 +36,18 @@ export function mockServerBuild(
     future?: Partial<FutureConfig>;
     handleError?: HandleErrorFunction;
     handleDocumentRequest?: HandleDocumentRequestFunction;
-    unstable_instrumentations?: unstable_ServerInstrumentation[];
+    instrumentations?: ServerInstrumentation[];
+    routeDiscovery?: ServerBuild["routeDiscovery"];
   } = {},
 ): ServerBuild {
   return {
     ssr: true,
     future: {
-      v8_middleware: false,
-      unstable_subResourceIntegrity: false,
       ...opts.future,
     },
     prerender: [],
     isSpaMode: false,
-    routeDiscovery: {
+    routeDiscovery: opts.routeDiscovery || {
       mode: "lazy",
       manifestPath: "/__manifest",
     },
@@ -98,7 +97,7 @@ export function mockServerBuild(
           ),
         handleDataRequest: jest.fn(async (response) => response),
         handleError: opts.handleError,
-        unstable_instrumentations: opts.unstable_instrumentations,
+        instrumentations: opts.instrumentations,
       },
     },
     routes: Object.entries(routes).reduce<ServerRouteManifest>(

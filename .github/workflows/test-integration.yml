@@ -1,0 +1,166 @@
+name: Integration Test
+
+# Incrementally comprehensive based on the type of change:
+#
+# | Type | Description                        | Test Runs                                           |
+# |------|------------------------------------|-----------------------------------------------------|
+# | base | Non-docs and draft PRs             | Chromium (Node 24).                                 |
+# | dev  | @react-router/dev or v8 branch PRs | + Firefox/Webkit/Edge (Node 24), Chromium (Node 22) |
+# | full | Commits on `main`                  | + Firefox/Webkit (Node 22)                          |
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/**"
+      - "integration/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "build.utils.ts"
+      - "build.utils.d.ts"
+      - "!**/*.md"
+  pull_request:
+    paths:
+      - "packages/**"
+      - "integration/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "build.utils.ts"
+      - "build.utils.d.ts"
+      - "!**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    name: "Check Changed Files"
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    outputs:
+      type: ${{ steps.suites.outputs.type }}
+    steps:
+      # Need to checkout the repo so we can use the `gh` CLI
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Select integration suites
+        id: suites
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # If `gh pr diff` exits with a non-zero code, it might be because the PR
+        # has >300 files, or it could be for any number of unknown reasons.  If
+        # that happens take the conservative route and run the larger `dev` suite.
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Selected integration suite: full (push to main)"
+            echo "type=full" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.pull_request.head.ref }}" = "v8" ]; then
+            echo "Selected integration suite: dev (v8 PR)"
+            echo "type=dev" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "Selected integration suite: base (draft PR)"
+            echo "type=base" >> "$GITHUB_OUTPUT"
+          else
+            set +e
+            OUTPUT=$(gh pr diff "${{ github.event.pull_request.number }}" --name-only)
+            CODE=$?
+            set -e
+
+            if [ $CODE != 0 ]; then
+              echo "Selected integration suite: dev (failed to fetch PR diff - gh cli exited with $CODE)"
+              echo "type=dev" >> "$GITHUB_OUTPUT"
+            elif echo "$OUTPUT" | grep -q '^packages/react-router-dev/'; then
+              echo "Selected integration suite: dev (changes to packages/react-router-dev/)"
+              echo "type=dev" >> "$GITHUB_OUTPUT"
+            else
+              echo "Selected integration suite: base (no packages/react-router-dev/ changes detected)"
+              echo "type=base" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+  # base only runs Node 24/Chromium
+  integration-chromium:
+    name: "Chromium (24)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "24"
+      browser: "chromium"
+
+  # dev/full add Node 22/Chromium
+  integration-chromium-node-22:
+    name: "Chromium (22)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router' && contains(fromJSON('["dev", "full"]'), needs.changes.outputs.type)
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "22.22"
+      browser: "chromium"
+
+  # dev/full add Node 24/Firefox
+  integration-firefox:
+    name: "Firefox (24)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router' && contains(fromJSON('["dev", "full"]'), needs.changes.outputs.type)
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "24"
+      browser: "firefox"
+
+  # dev/full add Node 24/Edge
+  integration-msedge:
+    name: "Edge (24)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router' && contains(fromJSON('["dev", "full"]'), needs.changes.outputs.type)
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "windows-latest"
+      node_version: "24"
+      browser: "msedge"
+      timeout: 60
+
+  # dev/full add Node 24/WebKit
+  integration-webkit:
+    name: "WebKit (24)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router' && contains(fromJSON('["dev", "full"]'), needs.changes.outputs.type)
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "macos-latest"
+      node_version: "24"
+      browser: "webkit"
+
+  # full adds Node 22/Firefox
+  integration-firefox-node-22:
+    name: "Firefox (22)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router' && needs.changes.outputs.type == 'full'
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "22.22"
+      browser: "firefox"
+
+  # full adds Node 22/WebKit
+  integration-webkit-node-22:
+    name: "WebKit (22)"
+    needs: changes
+    if: github.repository == 'remix-run/react-router' && needs.changes.outputs.type == 'full'
+    uses: ./.github/workflows/test-integration-run.yml
+    with:
+      os: "macos-latest"
+      node_version: "22.22"
+      browser: "webkit"

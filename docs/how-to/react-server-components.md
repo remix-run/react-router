@@ -34,8 +34,8 @@ The quickest way to get started is with one of our templates.
 
 These templates come with React Router RSC APIs already configured, offering you out of the box features such as:
 
-- Server Component Routes
 - Server Side Rendering (SSR)
+- Server Components
 - Client Components (via [`"use client"`][use-client-docs] directive)
 - Server Functions (via [`"use server"`][use-server-docs] directive)
 
@@ -77,7 +77,7 @@ export default defineConfig({
 
 ### Build Output
 
-The RSC Framework Mode server build file (`build/server/index.js`) now exports a `default` request handler function (`(request: Request) => Promise<Response>`) for document/data requests.
+The RSC Framework Mode server build file (`build/server/index.js`) exports a `default` request handler function (`(request: Request) => Promise<Response>`) for document/data requests.
 
 If needed, you can convert this into a [standard Node.js request listener][node-request-listener] for use with Node's built-in `http.createServer` function (or anything that supports it, e.g. [Express][express]) by using the `createRequestListener` function from [@remix-run/node-fetch-server][node-fetch-server].
 
@@ -104,7 +104,7 @@ app.listen(3000);
 
 ### React Elements From Loaders/Actions
 
-In RSC Framework Mode, loaders and actions can now return React elements along with other data. These elements will only ever be rendered on the server.
+In RSC Framework Mode, loaders and actions can return React elements along with other data. These elements will only ever be rendered on the server.
 
 ```tsx
 import type { Route } from "./+types/route";
@@ -132,6 +132,8 @@ If you need to use client-only features (e.g. [Hooks][hooks], event handlers) wi
 
 ```tsx filename=src/routes/counter/counter.tsx
 "use client";
+
+import { useState } from "react";
 
 export function Counter() {
   const [count, setCount] = useState(0);
@@ -171,9 +173,20 @@ export default function Route({
 }
 ```
 
-### Server Component Routes
+### Route Server Components
 
-If a route exports a `ServerComponent` instead of the typical `default` component export, this component along with other route components (`ErrorBoundary`, `HydrateFallback`, `Layout`) will be server components rather than the usual client components.
+If a route exports a `ServerComponent` instead of the typical `default` component export, the route renders on the server instead of the client. A route module cannot export both `default` and `ServerComponent`.
+
+You can still export client-only annotations like `clientLoader` and `clientAction` alongside a `ServerComponent`. The other route module component exports follow the same client/server split: `ErrorBoundary`, `Layout`, and `HydrateFallback` are client components, while `ServerErrorBoundary`, `ServerLayout`, and `ServerHydrateFallback` render on the server.
+
+The following route module components have their own mutually exclusive server component counterparts:
+
+| Server Component Export | Client Component  |
+| ----------------------- | ----------------- |
+| `ServerComponent`       | `default`         |
+| `ServerErrorBoundary`   | `ErrorBoundary`   |
+| `ServerLayout`          | `Layout`          |
+| `ServerHydrateFallback` | `HydrateFallback` |
 
 ```tsx
 import type { Route } from "./+types/route";
@@ -188,7 +201,7 @@ export async function loader() {
 
 export function ServerComponent({
   loaderData,
-}: Route.ComponentProps) {
+}: Route.ServerComponentProps) {
   return (
     <>
       <h1>Server Component Route</h1>
@@ -203,6 +216,8 @@ If you need to use client-only features (e.g. [Hooks][hooks], event handlers) wi
 
 ```tsx filename=src/routes/counter/counter.tsx
 "use client";
+
+import { useState } from "react";
 
 export function Counter() {
   const [count, setCount] = useState(0);
@@ -277,6 +292,8 @@ The plugin will automatically detect custom entry files in your `app` directory:
 - `app/entry.client.tsx` - Custom client entry
 
 If these files are not found, React Router will use the default entries provided by the framework.
+
+If you want to inspect the generated defaults before overriding them, you can also use `react-router reveal entry.client`, `react-router reveal entry.rsc`, and `react-router reveal entry.ssr`.
 
 #### Basic Override Pattern
 
@@ -362,16 +379,13 @@ When copying default entries, make sure to maintain the required exports:
 
 ### Unsupported Config Options
 
-For the initial unstable release, the following options from `react-router.config.ts` are not yet supported in RSC Framework Mode:
+The following options from `react-router.config.ts` are not currently supported in RSC Framework Mode:
 
 - `buildEnd`
-- `prerender`
 - `presets`
-- `routeDiscovery`
 - `serverBundles`
-- `ssr: false` (SPA Mode)
-- `future.v8_splitRouteModules`
-- `future.unstable_subResourceIntegrity`
+- `splitRouteModules`
+- `subResourceIntegrity`
 
 ## RSC Data Mode
 
@@ -394,11 +408,13 @@ matchRSCServerRequest({
 });
 ```
 
-While you can define components inline, we recommend using the `lazy()` option and defining [Route Modules][route-module] for both startup performance and code organization
+While you can define components inline, we recommend using the `lazy()` option and defining [Route Modules][route-module] for both startup performance and code organization.
 
 <docs-info>
 
-The [Route Module API][route-module] up until now has been a [Framework Mode][framework-mode] only feature. However, the `lazy` field of the RSC route config expects the same exports as the Route Module exports, unifying the APIs even further.
+The `lazy` field of the RSC route config expects the same exports as the [Route Module API][route-module], which keeps the route-module shape consistent across [Framework Mode][framework-mode] and RSC Data Mode.
+
+That includes exports like `loader`, `action`, `meta`, `links`, `headers`, `ErrorBoundary`, `HydrateFallback`, and the client annotations.
 
 </docs-info>
 
@@ -533,6 +549,10 @@ export function clientAction() {}
 export function clientLoader() {}
 
 export function shouldRevalidate() {}
+
+export default function ClientRoot() {
+  return <p>Client route</p>;
+}
 ```
 
 We can then re-export these from our lazy loaded route module:
@@ -542,7 +562,7 @@ export {
   clientAction,
   clientLoader,
   shouldRevalidate,
-} from "./route.client";
+} from "./client";
 
 export default function Root() {
   // ...
@@ -557,7 +577,7 @@ export {
   clientAction,
   clientLoader,
   shouldRevalidate,
-} from "./route.client";
+} from "./client";
 
 export default function Root() {
   // Adding a Server Component at the root is required by bundlers
@@ -712,8 +732,12 @@ export async function generateHTML(
     // Provide the React Server touchpoints.
     createFromReadableStream,
     // Render the router to HTML.
-    async renderHTML(getPayload) {
-      const payload = getPayload();
+    async renderHTML(getPayload, options) {
+      const payload = await getPayload();
+      const formState =
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
 
       const bootstrapScriptContent =
         await import.meta.viteRsc.loadBootstrapScriptContent(
@@ -723,8 +747,10 @@ export async function generateHTML(
       return await renderHTMLToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
+          ...options,
           bootstrapScriptContent,
-          formState: payload.formState,
+          formState,
+          signal: request.signal,
         },
       );
     },
@@ -762,9 +788,9 @@ function fetchServer(request: Request) {
     // The app routes.
     routes: routes(),
     // Encode the match with the React Server implementation.
-    generateResponse(match) {
+    generateResponse(match, options) {
       return new Response(
-        renderToReadableStream(match.payload),
+        renderToReadableStream(match.payload, options),
         {
           status: match.statusCode,
           headers: match.headers,
@@ -802,8 +828,8 @@ import {
   unstable_createCallServer as createCallServer,
   unstable_getRSCStream as getRSCStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
-  type unstable_RSCPayload as RSCServerPayload,
-} from "react-router";
+  type unstable_RSCPayload as RSCPayload,
+} from "react-router/dom";
 
 // Create and set the callServer function to support post-hydration server actions.
 setServerCallback(
@@ -815,31 +841,31 @@ setServerCallback(
 );
 
 // Get and decode the initial server payload.
-createFromReadableStream<RSCServerPayload>(
-  getRSCStream(),
-).then((payload) => {
-  startTransition(async () => {
-    const formState =
-      payload.type === "render"
-        ? await payload.formState
-        : undefined;
+createFromReadableStream<RSCPayload>(getRSCStream()).then(
+  (payload) => {
+    startTransition(async () => {
+      const formState =
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
 
-    hydrateRoot(
-      document,
-      <StrictMode>
-        <RSCHydratedRouter
-          createFromReadableStream={
-            createFromReadableStream
-          }
-          payload={payload}
-        />
-      </StrictMode>,
-      {
-        formState,
-      },
-    );
-  });
-});
+      hydrateRoot(
+        document,
+        <StrictMode>
+          <RSCHydratedRouter
+            createFromReadableStream={
+              createFromReadableStream
+            }
+            payload={payload}
+          />
+        </StrictMode>,
+        {
+          formState,
+        },
+      );
+    });
+  },
+);
 ```
 
 [picking-a-mode]: ../start/modes

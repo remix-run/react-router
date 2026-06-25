@@ -38,8 +38,6 @@ type MetaMatch<T extends MatchInfo> = Pretty<{
   params: Record<string, string | undefined>;
   pathname: string;
   meta: MetaDescriptor[];
-  /** @deprecated Use `MetaMatch.loaderData` instead */
-  data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
   handle?: unknown;
   error?: unknown;
@@ -62,21 +60,13 @@ type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
   /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
   params: T["params"];
-  /**
-   * The return value for this route's server loader function
-   *
-   * @deprecated Use `Route.MetaArgs.loaderData` instead
-   */
-  data:
-    | T["loaderData"]
-    | (HasErrorBoundary<T> extends true ? undefined : never);
   /** The return value for this route's server loader function */
   loaderData:
     | T["loaderData"]
     | (HasErrorBoundary<T> extends true ? undefined : never);
   /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
   error?: unknown;
-  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
+  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react-router.UIMatch.html route matches}, including parent route matches. */
   matches: MetaMatches<T["matches"]>;
 };
 type MetaDescriptors = MetaDescriptor[];
@@ -120,21 +110,12 @@ type CreateClientActionArgs<T extends RouteInfo> = ClientDataFunctionArgs<
   serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
 };
 
-type IsServerFirstRoute<
-  T extends RouteInfo,
-  RSCEnabled extends boolean,
-> = RSCEnabled extends true
-  ? T["module"] extends { ServerComponent: Func }
-    ? true
-    : false
-  : false;
-
 type CreateHydrateFallbackProps<
   T extends RouteInfo,
   RSCEnabled extends boolean,
 > = {
   params: T["params"];
-} & (IsServerFirstRoute<T, RSCEnabled> extends true
+} & (RSCEnabled extends true
   ? {
       /** The data returned from the `loader` */
       loaderData?: ServerDataFrom<T["module"]["loader"]>;
@@ -152,8 +133,6 @@ type Match<T extends MatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
-  /** @deprecated Use `Match.loaderData` instead */
-  data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
   handle: unknown;
 }>;
@@ -180,9 +159,9 @@ type CreateComponentProps<T extends RouteInfo, RSCEnabled extends boolean> = {
    * }
    **/
   params: T["params"];
-  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
+  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react-router.UIMatch.html route matches}, including parent route matches. */
   matches: Matches<T["matches"]>;
-} & (IsServerFirstRoute<T, RSCEnabled> extends true
+} & (RSCEnabled extends true
   ? {
       /** The data returned from the `loader` */
       loaderData: ServerDataFrom<T["module"]["loader"]>;
@@ -216,7 +195,7 @@ type CreateErrorBoundaryProps<
    **/
   params: T["params"];
   error: unknown;
-} & (IsServerFirstRoute<T, RSCEnabled> extends true
+} & (RSCEnabled extends true
   ? {
       /** The data returned from the `loader` */
       loaderData?: ServerDataFrom<T["module"]["loader"]>;
@@ -230,10 +209,7 @@ type CreateErrorBoundaryProps<
       actionData?: T["actionData"];
     });
 
-export type GetAnnotations<
-  Info extends RouteInfo,
-  RSCEnabled extends boolean,
-> = {
+export type GetAnnotations<Info extends RouteInfo> = {
   // links
   LinkDescriptors: LinkDescriptor[];
   LinksFunction: () => LinkDescriptor[];
@@ -266,13 +242,21 @@ export type GetAnnotations<
   ClientActionArgs: CreateClientActionArgs<Info>;
 
   // HydrateFallback
-  HydrateFallbackProps: CreateHydrateFallbackProps<Info, RSCEnabled>;
+  HydrateFallbackProps: CreateHydrateFallbackProps<Info, false>;
+
+  ServerHydrateFallbackProps: CreateHydrateFallbackProps<Info, true>;
 
   // default (Component)
-  ComponentProps: CreateComponentProps<Info, RSCEnabled>;
+  ComponentProps: CreateComponentProps<Info, false>;
+
+  // ServerComponent
+  ServerComponentProps: CreateComponentProps<Info, true>;
 
   // ErrorBoundary
-  ErrorBoundaryProps: CreateErrorBoundaryProps<Info, RSCEnabled>;
+  ErrorBoundaryProps: CreateErrorBoundaryProps<Info, false>;
+
+  // ServerErrorBoundary
+  ServerErrorBoundaryProps: CreateErrorBoundaryProps<Info, true>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -331,36 +315,6 @@ type __tests = [
         matches: [];
       }>["loaderData"],
       undefined
-    >
-  >,
-  // Test that MetaArgs.data (deprecated) also follows the same pattern
-  Expect<
-    Equal<
-      CreateMetaArgs<{
-        module: {
-          loader: () => { test: string };
-        };
-        loaderData: { test: string };
-        params: unknown;
-        actionData: unknown;
-        matches: [];
-      }>["data"],
-      { test: string }
-    >
-  >,
-  Expect<
-    Equal<
-      CreateMetaArgs<{
-        module: {
-          loader: () => { test: string };
-          ErrorBoundary: Func;
-        };
-        loaderData: { test: string };
-        params: unknown;
-        actionData: unknown;
-        matches: [];
-      }>["data"],
-      { test: string } | undefined
     >
   >,
 ];

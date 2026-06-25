@@ -1,16 +1,7 @@
-import type { AppLoadContext, EntryContext } from "react-router";
+import type { EntryContext, RouterContextProvider } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import * as ReactDOMServer from "react-dom/server";
-
-// ReactDOMServer.renderToReadableStream is not available in Node.js until React 19.2.0+
-if (typeof ReactDOMServer.renderToReadableStream !== "function") {
-  throw new Error(
-    `ReactDOMServer.renderToReadableStream() is not available. ` +
-      `React Router uses this API when @react-router/node is not installed. ` +
-      `Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
-  );
-}
 
 export const streamTimeout = 5_000;
 
@@ -19,9 +10,7 @@ export default async function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  loadContext: AppLoadContext,
-  // If you have middleware enabled:
-  // loadContext: RouterContextProvider
+  _loadContext: RouterContextProvider,
 ) {
   // https://httpwg.org/specs/rfc9110.html#HEAD
   if (request.method.toUpperCase() === "HEAD") {

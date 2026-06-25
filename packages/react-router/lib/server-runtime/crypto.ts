@@ -28,7 +28,10 @@ export const unsign = async (
     let valid = await crypto.subtle.verify("HMAC", key, signature, data);
 
     return valid ? value : false;
-  } catch (error: unknown) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // atob will throw a DOMException with name === 'InvalidCharacterError'
     // if the signature contains a non-base64 character, which should just
     // be treated as an invalid signature.
@@ -48,8 +51,8 @@ const createKey = async (
     usages,
   );
 
-function byteStringToUint8Array(byteString: string): Uint8Array {
-  let array = new Uint8Array(byteString.length);
+function byteStringToUint8Array(byteString: string): Uint8Array<ArrayBuffer> {
+  let array: Uint8Array<ArrayBuffer> = new Uint8Array(byteString.length);
 
   for (let i = 0; i < byteString.length; i++) {
     array[i] = byteString.charCodeAt(i);

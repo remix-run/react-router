@@ -13,9 +13,9 @@ describe("meta", () => {
       {
         id: "root",
         path: "/",
-        meta: ({ data }) => [
-          { name: "description", content: data.description },
-          { title: data.title },
+        meta: ({ loaderData }) => [
+          { name: "description", content: loaderData.description },
+          { title: loaderData.title },
         ],
         Component() {
           return (
@@ -279,6 +279,48 @@ describe("meta", () => {
     );
   });
 
+  it("{ 'script:ld+json': [...] } adds a <script type='application/ld+json' /> with an array of objects", () => {
+    let jsonLd = [
+      {
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        name: "Acme Inc.",
+        url: "https://acme.example.com",
+      },
+      {
+        "@context": "http://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://acme.example.com",
+          },
+        ],
+      },
+    ];
+
+    let RoutesStub = createRoutesStub([
+      {
+        path: "/",
+        meta: () => [
+          {
+            "script:ld+json": jsonLd,
+          },
+        ],
+        Component: Meta,
+      },
+    ]);
+
+    let { container } = render(<RoutesStub />);
+
+    let scriptTagContents =
+      container.querySelector('script[type="application/ld+json"]')
+        ?.innerHTML || "{}";
+    expect(JSON.parse(scriptTagContents)).toEqual(jsonLd);
+  });
+
   it("{ tagName: 'link' } adds a <link />", () => {
     let RoutesStub = createRoutesStub([
       {
@@ -314,7 +356,7 @@ describe("meta", () => {
     let RoutesStub = createRoutesStub([
       {
         path: "/",
-        meta: ({ data }) => data?.meta,
+        meta: ({ loaderData }) => loaderData.meta,
         loader: () => ({
           meta: [
             {

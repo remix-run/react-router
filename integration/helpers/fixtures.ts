@@ -55,7 +55,7 @@ export const test = base.extend<{
     buffer: { stdout: string; stderr: string };
   };
 }>({
-  template: ["vite-6-template", { option: true }],
+  template: ["vite-7-template", { option: true }],
   files: [{}, { option: true }],
   page: async ({ page }, use) => {
     page.errors = [];

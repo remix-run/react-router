@@ -112,9 +112,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData1.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -124,9 +121,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -152,9 +146,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData2.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -164,9 +155,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -271,9 +259,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData1.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -283,9 +268,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -311,9 +293,6 @@ describe("A <StaticRouterProvider>", () => {
     // @ts-expect-error
     expect(hooksData2.matches).toEqual([
       {
-        data: {
-          key1: "value1",
-        },
         loaderData: {
           key1: "value1",
         },
@@ -323,9 +302,6 @@ describe("A <StaticRouterProvider>", () => {
         pathname: "/the",
       },
       {
-        data: {
-          key2: "value2",
-        },
         loaderData: {
           key2: "value2",
         },
@@ -1019,11 +995,11 @@ describe("A <StaticRouterProvider>", () => {
     let frameworkAgnosticRoutes = [
       {
         path: "the",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         children: [
           {
             path: "path",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
           },
         ],
       },
@@ -1056,84 +1032,79 @@ describe("A <StaticRouterProvider>", () => {
     let router = createStaticRouter(frameworkAwareRoutes, context);
 
     expect(router.routes).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": undefined,
-              "element": <h2>
-                Hi again!
-              </h2>,
-              "errorElement": <h2>
-                Error again!
-              </h2>,
-              "hasErrorBoundary": true,
-              "id": "0-0",
-              "path": "path",
-            },
-          ],
-          "element": <h1>
-            Hi!
-          </h1>,
-          "errorElement": <h1>
-            Error!
-          </h1>,
-          "hasErrorBoundary": true,
-          "id": "0",
-          "path": "the",
-        },
-      ]
+     [
+       {
+         "children": [
+           {
+             "children": undefined,
+             "element": <h2>
+               Hi again!
+             </h2>,
+             "errorElement": <h2>
+               Error again!
+             </h2>,
+             "id": "0-0",
+             "path": "path",
+           },
+         ],
+         "element": <h1>
+           Hi!
+         </h1>,
+         "errorElement": <h1>
+           Error!
+         </h1>,
+         "id": "0",
+         "path": "the",
+       },
+     ]
     `);
     expect(router.state.matches).toMatchInlineSnapshot(`
-      [
-        {
-          "params": {},
-          "pathname": "/the",
-          "pathnameBase": "/the",
-          "route": {
-            "children": [
-              {
-                "children": undefined,
-                "element": <h2>
-                  Hi again!
-                </h2>,
-                "errorElement": <h2>
-                  Error again!
-                </h2>,
-                "hasErrorBoundary": true,
-                "id": "0-0",
-                "path": "path",
-              },
-            ],
-            "element": <h1>
-              Hi!
-            </h1>,
-            "errorElement": <h1>
-              Error!
-            </h1>,
-            "hasErrorBoundary": true,
-            "id": "0",
-            "path": "the",
-          },
-        },
-        {
-          "params": {},
-          "pathname": "/the/path",
-          "pathnameBase": "/the/path",
-          "route": {
-            "children": undefined,
-            "element": <h2>
-              Hi again!
-            </h2>,
-            "errorElement": <h2>
-              Error again!
-            </h2>,
-            "hasErrorBoundary": true,
-            "id": "0-0",
-            "path": "path",
-          },
-        },
-      ]
+     [
+       {
+         "params": {},
+         "pathname": "/the",
+         "pathnameBase": "/the",
+         "route": {
+           "children": [
+             {
+               "children": undefined,
+               "element": <h2>
+                 Hi again!
+               </h2>,
+               "errorElement": <h2>
+                 Error again!
+               </h2>,
+               "id": "0-0",
+               "path": "path",
+             },
+           ],
+           "element": <h1>
+             Hi!
+           </h1>,
+           "errorElement": <h1>
+             Error!
+           </h1>,
+           "id": "0",
+           "path": "the",
+         },
+       },
+       {
+         "params": {},
+         "pathname": "/the/path",
+         "pathnameBase": "/the/path",
+         "route": {
+           "children": undefined,
+           "element": <h2>
+             Hi again!
+           </h2>,
+           "errorElement": <h2>
+             Error again!
+           </h2>,
+           "id": "0-0",
+           "path": "path",
+         },
+       },
+     ]
     `);
   });
 
@@ -1141,11 +1112,11 @@ describe("A <StaticRouterProvider>", () => {
     let frameworkAgnosticRoutes = [
       {
         path: "the",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         children: [
           {
             path: "path",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
           },
         ],
       },
@@ -1173,84 +1144,79 @@ describe("A <StaticRouterProvider>", () => {
       },
     ];
 
-    // This should add route ids + hasErrorBoundary, and also update the
-    // context.matches to include the full framework-aware routes
+    // This should add route ids and also update the context.matches to include
+    // the full framework-aware routes
     let router = createStaticRouter(frameworkAwareRoutes, context);
 
     expect(router.routes).toMatchInlineSnapshot(`
-      [
-        {
-          "ErrorBoundary": undefined,
-          "children": [
-            {
-              "ErrorBoundary": undefined,
-              "children": undefined,
-              "element": <h2>
-                Hi again!
-              </h2>,
-              "errorElement": <ErrorBoundary />,
-              "hasErrorBoundary": true,
-              "id": "0-0",
-              "path": "path",
-            },
-          ],
-          "element": <h1>
-            Hi!
-          </h1>,
-          "errorElement": <ErrorBoundary />,
-          "hasErrorBoundary": true,
-          "id": "0",
-          "path": "the",
-        },
-      ]
+     [
+       {
+         "ErrorBoundary": undefined,
+         "children": [
+           {
+             "ErrorBoundary": undefined,
+             "children": undefined,
+             "element": <h2>
+               Hi again!
+             </h2>,
+             "errorElement": <ErrorBoundary />,
+             "id": "0-0",
+             "path": "path",
+           },
+         ],
+         "element": <h1>
+           Hi!
+         </h1>,
+         "errorElement": <ErrorBoundary />,
+         "id": "0",
+         "path": "the",
+       },
+     ]
     `);
     expect(router.state.matches).toMatchInlineSnapshot(`
-      [
-        {
-          "params": {},
-          "pathname": "/the",
-          "pathnameBase": "/the",
-          "route": {
-            "ErrorBoundary": undefined,
-            "children": [
-              {
-                "ErrorBoundary": undefined,
-                "children": undefined,
-                "element": <h2>
-                  Hi again!
-                </h2>,
-                "errorElement": <ErrorBoundary />,
-                "hasErrorBoundary": true,
-                "id": "0-0",
-                "path": "path",
-              },
-            ],
-            "element": <h1>
-              Hi!
-            </h1>,
-            "errorElement": <ErrorBoundary />,
-            "hasErrorBoundary": true,
-            "id": "0",
-            "path": "the",
-          },
-        },
-        {
-          "params": {},
-          "pathname": "/the/path",
-          "pathnameBase": "/the/path",
-          "route": {
-            "ErrorBoundary": undefined,
-            "children": undefined,
-            "element": <h2>
-              Hi again!
-            </h2>,
-            "errorElement": <ErrorBoundary />,
-            "hasErrorBoundary": true,
-            "id": "0-0",
-            "path": "path",
-          },
-        },
-      ]
+     [
+       {
+         "params": {},
+         "pathname": "/the",
+         "pathnameBase": "/the",
+         "route": {
+           "ErrorBoundary": undefined,
+           "children": [
+             {
+               "ErrorBoundary": undefined,
+               "children": undefined,
+               "element": <h2>
+                 Hi again!
+               </h2>,
+               "errorElement": <ErrorBoundary />,
+               "id": "0-0",
+               "path": "path",
+             },
+           ],
+           "element": <h1>
+             Hi!
+           </h1>,
+           "errorElement": <ErrorBoundary />,
+           "id": "0",
+           "path": "the",
+         },
+       },
+       {
+         "params": {},
+         "pathname": "/the/path",
+         "pathnameBase": "/the/path",
+         "route": {
+           "ErrorBoundary": undefined,
+           "children": undefined,
+           "element": <h2>
+             Hi again!
+           </h2>,
+           "errorElement": <ErrorBoundary />,
+           "id": "0-0",
+           "path": "path",
+         },
+       },
+     ]
     `);
   });
 

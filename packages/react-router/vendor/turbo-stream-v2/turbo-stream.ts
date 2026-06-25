@@ -1,3 +1,4 @@
+import { SUPPORTED_ERROR_TYPES } from "../../lib/router/utils";
 import { flatten } from "./flatten";
 import { unflatten } from "./unflatten";
 import {
@@ -13,6 +14,7 @@ import {
 } from "./utils";
 
 export type { DecodePlugin, EncodePlugin };
+export { SUPPORTED_ERROR_TYPES };
 
 export async function decode(
   readable: ReadableStream<Uint8Array>,
@@ -68,7 +70,10 @@ async function decodeInitial(
   let line: unknown;
   try {
     line = JSON.parse(read.value);
-  } catch (reason) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    reason
+  ) {
     throw new SyntaxError();
   }
 
@@ -98,7 +103,10 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (reason) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          reason
+        ) {
           throw new SyntaxError();
         }
 
@@ -118,7 +126,10 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (reason) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          reason
+        ) {
           throw new SyntaxError();
         }
         const value = unflatten.call(this, jsonLine);
@@ -135,12 +146,13 @@ async function decodeDeferred(
 export function encode(
   input: unknown,
   options?: {
+    onComplete?: () => void;
     plugins?: EncodePlugin[];
     postPlugins?: EncodePlugin[];
     signal?: AbortSignal;
   },
 ) {
-  const { plugins, postPlugins, signal } = options ?? {};
+  const { onComplete, plugins, postPlugins, signal } = options ?? {};
 
   const encoder: ThisEncode = {
     deferred: {},
@@ -155,7 +167,7 @@ export function encode(
   let lastSentIndex = 0;
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const id = flatten.call(encoder, input);
+      const id = await flatten.call(encoder, input);
       if (Array.isArray(id)) {
         throw new Error("This should never happen");
       }
@@ -169,6 +181,8 @@ export function encode(
       }
 
       const seenPromises = new WeakSet<Promise<unknown>>();
+      // Serialize flatten calls to prevent race conditions when yielding
+      let processingChain: Promise<void> = Promise.resolve();
       if (Object.keys(encoder.deferred).length) {
         let raceDone!: () => void;
         const racePromise = new Promise<never>((resolve, reject) => {
@@ -198,68 +212,74 @@ export function encode(
               ])
                 .then(
                   (resolved) => {
-                    const id = flatten.call(encoder, resolved);
-                    if (Array.isArray(id)) {
-                      controller.enqueue(
-                        textEncoder.encode(
-                          `${TYPE_PROMISE}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
-                        ),
-                      );
-                      encoder.index++;
-                      lastSentIndex++;
-                    } else if (id < 0) {
-                      controller.enqueue(
-                        textEncoder.encode(
-                          `${TYPE_PROMISE}${deferredId}:${id}\n`,
-                        ),
-                      );
-                    } else {
-                      const values = encoder.stringified
-                        .slice(lastSentIndex + 1)
-                        .join(",");
-                      controller.enqueue(
-                        textEncoder.encode(
-                          `${TYPE_PROMISE}${deferredId}:[${values}]\n`,
-                        ),
-                      );
-                      lastSentIndex = encoder.stringified.length - 1;
-                    }
+                    processingChain = processingChain.then(async () => {
+                      const id = await flatten.call(encoder, resolved);
+                      if (Array.isArray(id)) {
+                        controller.enqueue(
+                          textEncoder.encode(
+                            `${TYPE_PROMISE}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
+                          ),
+                        );
+                        encoder.index++;
+                        lastSentIndex++;
+                      } else if (id < 0) {
+                        controller.enqueue(
+                          textEncoder.encode(
+                            `${TYPE_PROMISE}${deferredId}:${id}\n`,
+                          ),
+                        );
+                      } else {
+                        const values = encoder.stringified
+                          .slice(lastSentIndex + 1)
+                          .join(",");
+                        controller.enqueue(
+                          textEncoder.encode(
+                            `${TYPE_PROMISE}${deferredId}:[${values}]\n`,
+                          ),
+                        );
+                        lastSentIndex = encoder.stringified.length - 1;
+                      }
+                    });
+                    return processingChain;
                   },
                   (reason) => {
-                    if (
-                      !reason ||
-                      typeof reason !== "object" ||
-                      !(reason instanceof Error)
-                    ) {
-                      reason = new Error("An unknown error occurred");
-                    }
+                    processingChain = processingChain.then(async () => {
+                      if (
+                        !reason ||
+                        typeof reason !== "object" ||
+                        !(reason instanceof Error)
+                      ) {
+                        reason = new Error("An unknown error occurred");
+                      }
 
-                    const id = flatten.call(encoder, reason);
-                    if (Array.isArray(id)) {
-                      controller.enqueue(
-                        textEncoder.encode(
-                          `${TYPE_ERROR}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
-                        ),
-                      );
-                      encoder.index++;
-                      lastSentIndex++;
-                    } else if (id < 0) {
-                      controller.enqueue(
-                        textEncoder.encode(
-                          `${TYPE_ERROR}${deferredId}:${id}\n`,
-                        ),
-                      );
-                    } else {
-                      const values = encoder.stringified
-                        .slice(lastSentIndex + 1)
-                        .join(",");
-                      controller.enqueue(
-                        textEncoder.encode(
-                          `${TYPE_ERROR}${deferredId}:[${values}]\n`,
-                        ),
-                      );
-                      lastSentIndex = encoder.stringified.length - 1;
-                    }
+                      const id = await flatten.call(encoder, reason);
+                      if (Array.isArray(id)) {
+                        controller.enqueue(
+                          textEncoder.encode(
+                            `${TYPE_ERROR}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
+                          ),
+                        );
+                        encoder.index++;
+                        lastSentIndex++;
+                      } else if (id < 0) {
+                        controller.enqueue(
+                          textEncoder.encode(
+                            `${TYPE_ERROR}${deferredId}:${id}\n`,
+                          ),
+                        );
+                      } else {
+                        const values = encoder.stringified
+                          .slice(lastSentIndex + 1)
+                          .join(",");
+                        controller.enqueue(
+                          textEncoder.encode(
+                            `${TYPE_ERROR}${deferredId}:[${values}]\n`,
+                          ),
+                        );
+                        lastSentIndex = encoder.stringified.length - 1;
+                      }
+                    });
+                    return processingChain;
                   },
                 )
                 .finally(() => {
@@ -273,8 +293,11 @@ export function encode(
         raceDone();
       }
       await Promise.all(Object.values(encoder.deferred));
+      await processingChain;
 
       controller.close();
+
+      onComplete?.();
     },
   });
 

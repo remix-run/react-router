@@ -1,16 +1,9 @@
 import * as React from "react";
-import type {
-  DataRouteMatch,
-  NavigateOptions,
-  RouteContextObject,
-  RouteMatch,
-  RouteObject,
-} from "./context";
+import type { NavigateOptions, RouteContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RSCRouterContext,
@@ -30,17 +23,22 @@ import type {
   RelativeRoutingType,
   Router as DataRouter,
   RevalidationState,
-  Navigation,
+  NavigationStates,
 } from "./router/router";
-import { IDLE_BLOCKER } from "./router/router";
+import { hasInvalidProtocol, IDLE_BLOCKER } from "./router/router";
 import type {
+  DataRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
   PathPattern,
+  RouteManifest,
+  RouteMatch,
+  RouteObject,
   UIMatch,
 } from "./router/utils";
 import {
+  ENABLE_DEV_WARNINGS,
   convertRouteMatchToUiMatch,
   decodePath,
   getResolveToMatches,
@@ -187,10 +185,9 @@ export function useNavigationType(): NavigationType {
  * @param pattern The pattern to match against the current {@link Location}
  * @returns The path match object if the pattern matches, `null` otherwise
  */
-export function useMatch<
-  ParamKey extends ParamParseKey<Path>,
-  Path extends string,
->(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
+export function useMatch<Path extends string>(
+  pattern: PathPattern<Path> | Path,
+): PathMatch<ParamParseKey<Path>> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -200,7 +197,7 @@ export function useMatch<
 
   let { pathname } = useLocation();
   return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
+    () => matchPath<Path>(pattern, decodePath(pathname)),
     [pathname, pattern],
   );
 }
@@ -216,19 +213,6 @@ export interface NavigateFunction {
 const navigateEffectWarning =
   `You should call navigate() in a React.useEffect(), not when ` +
   `your component is first rendered.`;
-
-// Mute warnings for calls to useNavigate in SSR environments
-function useIsomorphicLayoutEffect(
-  cb: Parameters<typeof React.useLayoutEffect>[0],
-) {
-  let isStatic = React.useContext(NavigationContext).static;
-  if (!isStatic) {
-    // We should be able to get rid of this once react 18.3 is released
-    // See: https://github.com/facebook/react/pull/26395
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useLayoutEffect(cb);
-  }
-}
 
 /**
  * Returns a function that lets you navigate programmatically in the browser in
@@ -300,7 +284,7 @@ function useIsomorphicLayoutEffect(
  *
  * Be cautious with `navigate(number)`. If your application can load up to a
  * route that has a button that tries to navigate forward/back, there may not be
- * a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * a [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry to go back or forward to, or it can go somewhere you don't expect
  * (like a different domain).
  *
@@ -399,7 +383,7 @@ function useNavigateUnstable(): NavigateFunction {
   let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   let activeRef = React.useRef(false);
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 
@@ -670,7 +654,7 @@ export function useParams<
 > {
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];
-  return routeMatch ? (routeMatch.params as any) : {};
+  return (routeMatch?.params ?? {}) as any;
 }
 
 /**
@@ -763,9 +747,13 @@ export function useRoutes(
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
-  dataRouterState?: DataRouter["state"],
-  onError?: ClientOnErrorFunction,
-  future?: DataRouter["future"],
+  dataRouterOpts?: {
+    manifest: RouteManifest;
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -861,7 +849,16 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+  let matches =
+    dataRouterOpts && dataRouterOpts.state.matches.length
+      ? // If we're in a data router, use the matches we've already identified but ensure
+        // we have the latest route instances from the manifest in case elements have changed
+        dataRouterOpts.state.matches.map((m) =>
+          Object.assign(m, {
+            route: dataRouterOpts.manifest[m.route.id] || m.route,
+          }),
+        )
+      : matchRoutes(routes, { pathname: remainingPathname });
 
   if (ENABLE_DEV_WARNINGS) {
     warning(
@@ -888,12 +885,15 @@ export function useRoutesImpl(
           pathname: joinPaths([
             parentPathnameBase,
             // Re-encode pathnames that were decoded inside matchRoutes.
-            // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+            // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
             // `new URL()` internally and we need to prevent it from treating
             // them as separators
             navigator.encodeLocation
               ? navigator.encodeLocation(
-                  match.pathname.replace(/\?/g, "%3F").replace(/#/g, "%23"),
+                  match.pathname
+                    .replace(/%/g, "%25")
+                    .replace(/\?/g, "%3F")
+                    .replace(/#/g, "%23"),
                 ).pathname
               : match.pathname,
           ]),
@@ -903,12 +903,13 @@ export function useRoutesImpl(
               : joinPaths([
                   parentPathnameBase,
                   // Re-encode pathnames that were decoded inside matchRoutes
-                  // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
+                  // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
                   // `new URL()` internally and we need to prevent it from treating
                   // them as separators
                   navigator.encodeLocation
                     ? navigator.encodeLocation(
                         match.pathnameBase
+                          .replace(/%/g, "%25")
                           .replace(/\?/g, "%3F")
                           .replace(/#/g, "%23"),
                       ).pathname
@@ -917,9 +918,7 @@ export function useRoutesImpl(
         }),
       ),
     parentMatches,
-    dataRouterState,
-    onError,
-    future,
+    dataRouterOpts,
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -935,6 +934,7 @@ export function useRoutesImpl(
             hash: "",
             state: null,
             key: "default",
+            mask: undefined,
             ...location,
           },
           navigationType: NavigationType.Pop,
@@ -1105,6 +1105,7 @@ export class RenderErrorBoundary extends React.Component<
 }
 
 const errorRedirectHandledMap = new WeakMap<any, Promise<void>>();
+
 function RSCErrorHandler({
   children,
   error,
@@ -1126,10 +1127,14 @@ function RSCErrorHandler({
       if (existingRedirect) throw existingRedirect;
 
       let parsed = parseToInfo(redirect.location, basename);
+      let target = parsed.absoluteURL || parsed.to;
+      if (hasInvalidProtocol(target)) {
+        throw new Error("Invalid redirect location");
+      }
 
       if (isBrowser && !errorRedirectHandledMap.get(error)) {
         if (parsed.isExternal || redirect.reloadDocument) {
-          window.location.href = parsed.absoluteURL || parsed.to;
+          window.location.href = target;
         } else {
           const redirectPromise: Promise<void> = Promise.resolve().then(() =>
             window.__reactRouterDataRouter!.navigate(parsed.to, {
@@ -1141,12 +1146,7 @@ function RSCErrorHandler({
         }
       }
 
-      return (
-        <meta
-          httpEquiv="refresh"
-          content={`0;url=${parsed.absoluteURL || parsed.to}`}
-        />
-      );
+      return <meta httpEquiv="refresh" content={`0;url=${target}`} />;
     }
   }
   return children;
@@ -1182,10 +1182,15 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState: DataRouter["state"] | null = null,
-  onErrorHandler: ClientOnErrorFunction | null = null,
-  future: DataRouter["future"] | null = null,
+  dataRouterOpts?: {
+    state: DataRouter["state"];
+    isStatic: boolean;
+    onError: ClientOnErrorFunction | undefined;
+    future: DataRouter["future"];
+  },
 ): React.ReactElement | null {
+  let dataRouterState = dataRouterOpts?.state;
+
   if (matches == null) {
     if (!dataRouterState) {
       return null;
@@ -1236,7 +1241,8 @@ export function _renderMatches(
   // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (dataRouterState) {
+  if (dataRouterOpts && dataRouterState) {
+    renderFallback = dataRouterState.renderFallback;
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
@@ -1252,9 +1258,11 @@ export function _renderMatches(
           (!errors || errors[match.route.id] === undefined);
         if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
-          // lazy, or has a loader that hasn't run yet).  Flag that we need to
-          // render a fallback and render up until the appropriate fallback
-          renderFallback = true;
+          // lazy, or has a loader that hasn't run yet) - render up until the
+          // appropriate fallback
+          if (dataRouterOpts.isStatic) {
+            renderFallback = true;
+          }
           if (fallbackIndex >= 0) {
             renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
           } else {
@@ -1266,13 +1274,14 @@ export function _renderMatches(
     }
   }
 
+  let onErrorHandler = dataRouterOpts?.onError;
   let onError =
     dataRouterState && onErrorHandler
       ? (error: unknown, errorInfo?: React.ErrorInfo) => {
           onErrorHandler(error, {
             location: dataRouterState.location,
             params: dataRouterState.matches?.[0]?.params ?? {},
-            unstable_pattern: getRoutePattern(dataRouterState.matches),
+            pattern: getRoutePattern(dataRouterState.matches),
             errorInfo,
           });
         }
@@ -1380,6 +1389,7 @@ enum DataRouterStateHook {
   UseNavigateStable = "useNavigate",
   UseRouteId = "useRouteId",
   UseRoute = "useRoute",
+  UseRouterState = "unstable_useRouterState",
 }
 
 function getDataRouterConsoleError(
@@ -1427,6 +1437,16 @@ export function useRouteId() {
   return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
+// Omit the fields from each navigation state individually to preserve the discriminated union
+type UseNavigationResult =
+  UseNavigationResultStates[keyof UseNavigationResultStates];
+
+type UseNavigationResultStates = {
+  Idle: Omit<NavigationStates["Idle"], "matches" | "historyAction">;
+  Loading: Omit<NavigationStates["Loading"], "matches" | "historyAction">;
+  Submitting: Omit<NavigationStates["Submitting"], "matches" | "historyAction">;
+};
+
 /**
  * Returns the current {@link Navigation}, defaulting to an "idle" navigation
  * when no navigation is in progress. You can use this to render pending UI
@@ -1449,9 +1469,12 @@ export function useRouteId() {
  * @mode data
  * @returns The current {@link Navigation} object
  */
-export function useNavigation(): Navigation {
+export function useNavigation(): UseNavigationResult {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
-  return state.navigation;
+  return React.useMemo<UseNavigationResult>(() => {
+    let { matches, historyAction, ...rest } = state.navigation;
+    return rest;
+  }, [state.navigation]);
 }
 
 /**
@@ -1904,7 +1927,7 @@ function useNavigateStable(): NavigateFunction {
   let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
 
   let activeRef = React.useRef(false);
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 
@@ -1979,4 +2002,165 @@ export function useRoute<Args extends UseRouteArgs>(
     loaderData: state.loaderData[id],
     actionData: state.actionData?.[id],
   } as UseRouteResult<Args>;
+}
+
+/**
+ * A single route match returned from {@link unstable_useRouterState}. Mirrors
+ * {@link UIMatch} minus the data-related fields (`data`, `loaderData`).
+ */
+type unstable_RouterStateMatch<Handle = unknown> = Omit<
+  UIMatch<unknown, Handle>,
+  "data" | "loaderData"
+>;
+
+/**
+ * The shape of the `active` variant returned from
+ * {@link unstable_useRouterState}.
+ */
+export type unstable_RouterStateActiveVariant = {
+  location: Location;
+  searchParams: URLSearchParams;
+  params: Params;
+  matches: unstable_RouterStateMatch[];
+  type: NavigationType;
+};
+
+/**
+ * The shape of the `pending` variant returned from
+ * {@link unstable_useRouterState}. Extends
+ * {@link unstable_RouterStateActiveVariant} with the navigation `state` and
+ * submission fields mirroring {@link useNavigation} — submission fields are
+ * populated when the in-flight navigation was triggered by a form submission,
+ * otherwise `undefined`.
+ */
+export type unstable_RouterStatePendingVariant =
+  unstable_RouterStatePendingVariants[keyof unstable_RouterStatePendingVariants];
+
+type unstable_RouterStatePendingVariants = {
+  Loading: unstable_RouterStateActiveVariant &
+    Omit<NavigationStates["Loading"], "matches" | "historyAction">;
+  Submitting: unstable_RouterStateActiveVariant &
+    Omit<NavigationStates["Submitting"], "matches" | "historyAction">;
+};
+
+/**
+ * The return shape of {@link unstable_useRouterState}.
+ *
+ * `active` reflects the currently-committed location. `pending` reflects the
+ * in-flight navigation (if any).
+ */
+export type unstable_RouterState = {
+  active: unstable_RouterStateActiveVariant;
+  pending: unstable_RouterStatePendingVariant | null;
+};
+
+function toRouterStateMatch(match: DataRouteMatch): unstable_RouterStateMatch {
+  return {
+    id: match.route.id,
+    pathname: match.pathname,
+    params: match.params,
+    handle: match.route.handle,
+  };
+}
+
+/**
+ * A unified hook for reading router state: current (`active`) and in-flight
+ * (`pending`) locations, search params, params, matches, and navigation type.
+ *
+ * This hook consolidates the information you used to get from {@link useLocation},
+ * {@link useSearchParams}, {@link useParams}, {@link useMatches}, {@link useNavigation},
+ * and {@link useNavigationType} into a single hook.
+ *
+ *
+ * @example
+ * import { unstable_useRouterState as useRouterState } from "react-router";
+ *
+ * let { active, pending } = unstable_useRouterState();
+ *
+ * // Active is always populated with the current location
+ * active.location; // replaces `useLocation()`
+ * active.searchParams; // replaces `useSearchParams()[0]`
+ * active.params; // replaces `useParams()`
+ * active.matches; // replaces `useMatches()`
+ * active.type; // replaces `useNavigationType()`
+ *
+ * // Pending is only populated during a navigation
+ * pending.location; // replaces `useNavigation().location`
+ * pending.searchParams; // equivalent to `new URLSearchParams(useNavigation().search)`
+ * pending.params; // Not directly accessible today
+ * pending.matches; // Not directly accessible today
+ * pending.type; // Not directly accessible today
+ * pending.state; // replaces `useNavigation().state`
+ * pending.formMethod; // replaces useNavigation().formMethod
+ * pending.formAction; // replaces useNavigation().formAction
+ * pending.formEncType; // replaces useNavigation().formEncType
+ * pending.formData; // replaces useNavigation().formData
+ * pending.json; // replaces useNavigation().json
+ * pending.text; // replaces useNavigation().text
+ *
+ * @name unstable_useRouterState
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The current router state with `active` and `pending` variants
+ */
+export function useRouterState(): unstable_RouterState {
+  let {
+    location,
+    historyAction: type,
+    matches,
+    navigation,
+  } = useDataRouterState(DataRouterStateHook.UseRouterState);
+
+  let active = React.useMemo<unstable_RouterStateActiveVariant>(
+    () => ({
+      type,
+      location,
+      searchParams: new URLSearchParams(location.search),
+      params: matches[matches.length - 1]?.params ?? {},
+      matches: matches.map((m) => toRouterStateMatch(m)),
+    }),
+    [location, matches, type],
+  );
+
+  let pending = React.useMemo<unstable_RouterStatePendingVariant | null>(() => {
+    if (navigation.state === "idle") return null;
+    let shared = {
+      type: navigation.historyAction,
+      location: navigation.location,
+      searchParams: new URLSearchParams(navigation.location.search),
+      params: navigation.matches[navigation.matches.length - 1]?.params ?? {},
+      matches: navigation.matches.map((m) => toRouterStateMatch(m)),
+    };
+
+    // Do submissions fields independently to keep TS happy with the
+    // `NavigationStates` discriminated union
+    return navigation.state === "loading"
+      ? {
+          ...shared,
+          state: "loading",
+          formMethod: navigation.formMethod,
+          formAction: navigation.formAction,
+          formEncType: navigation.formEncType,
+          formData: navigation.formData,
+          json: navigation.json,
+          text: navigation.text,
+        }
+      : {
+          ...shared,
+          state: "submitting",
+          formMethod: navigation.formMethod,
+          formAction: navigation.formAction,
+          formEncType: navigation.formEncType,
+          formData: navigation.formData,
+          json: navigation.json,
+          text: navigation.text,
+        };
+  }, [navigation]);
+
+  return React.useMemo<unstable_RouterState>(
+    () => ({ active, pending }),
+    [active, pending],
+  );
 }

@@ -20,10 +20,12 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.RouterProvider.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.RouterProvider.html)
 
-Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html). This component should
-typically be at the top of an app's element tree.
+Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html). This component should
+typically be at the top of an app's element tree. The router prop should
+be a single router instance created outside of the React tree. Avoid
+creating new routers during React renders/re-renders.
 
 ```tsx
 import { createBrowserRouter } from "react-router";
@@ -49,7 +51,7 @@ function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
   onError,
-  unstable_useTransitions,
+  useTransitions,
 }: RouterProviderProps): React.ReactElement
 ```
 
@@ -77,8 +79,8 @@ The `errorInfo` parameter is passed along from
 and is only present for render errors.
 
 ```tsx
-<RouterProvider onError=(error, info) => {
-  let { location, params, unstable_pattern, errorInfo } = info;
+<RouterProvider onError={(error, info) => {
+  let { location, params, pattern, errorInfo } = info;
   console.error(error, location, errorInfo);
   reportToErrorService(error, location, errorInfo);
 }} />
@@ -86,9 +88,11 @@ and is only present for render errors.
 
 ### router
 
-The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) instance to use for navigation and data fetching.
+The [`DataRouter`](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html) instance to use for navigation and data fetching. The
+router prop should be a single router instance created outside of the React
+tree. Avoid creating new routers during React renders/re-renders.
 
-### unstable_useTransitions
+### useTransitions
 
 Control whether router state updates are internally wrapped in
 [`React.startTransition`](https://react.dev/reference/react/startTransition).
@@ -105,5 +109,5 @@ Control whether router state updates are internally wrapped in
 - When set to `false`, the router will not leverage `React.startTransition` or
   `React.useOptimistic` on any navigations or state changes.
 
-For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+For more information, please see the [docs](../../explanation/react-transitions).
 

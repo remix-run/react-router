@@ -1,6 +1,15 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
 import dedent from "dedent";
@@ -8,11 +17,43 @@ import semver from "semver";
 
 import { createProject } from "./helpers/vite";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDirectory = path.resolve(__dirname, "..");
 const nodeBin = process.argv[0];
 const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterPackageBin = path.join(
+  rootDirectory,
+  "packages/react-router-dev/bin.cjs",
+);
 
 const run = (command: string[], options: Parameters<typeof spawnSync>[2]) =>
   spawnSync(nodeBin, [reactRouterBin, ...command], options);
+
+const getBinNodeEnv = (command: string[]) => {
+  let cwd = mkdtempSync(path.join(tmpdir(), "react-router-bin-"));
+  let env = { ...process.env };
+  delete env.NODE_ENV;
+
+  try {
+    mkdirSync(path.join(cwd, "dist/cli"), { recursive: true });
+    copyFileSync(reactRouterPackageBin, path.join(cwd, "bin.cjs"));
+    writeFileSync(
+      path.join(cwd, "dist/cli/index.js"),
+      "console.log(process.env.NODE_ENV);",
+    );
+
+    let { stdout, stderr, status } = spawnSync(
+      nodeBin,
+      ["bin.cjs", ...command],
+      { cwd, env },
+    );
+    expect(stderr.toString()).toBe("");
+    expect(status).toBe(0);
+    return stdout.toString().trim();
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+};
 
 const helpText = dedent`
   react-router
@@ -109,10 +150,31 @@ test.describe("cli", () => {
     expect(status).toBe(0);
   });
 
+  test("bin sets NODE_ENV based on the positional command", async () => {
+    expect(getBinNodeEnv(["dev", "--host", "127.0.0.1"])).toBe("development");
+    expect(getBinNodeEnv(["--host", "127.0.0.1", "dev"])).toBe("development");
+    expect(getBinNodeEnv(["build", "--mode", "development"])).toBe(
+      "production",
+    );
+    expect(getBinNodeEnv(["--mode", "development", "build"])).toBe(
+      "production",
+    );
+  });
+
   test("routes", async () => {
     const cwd = await createProject();
     let { stdout, stderr, status } = run(["routes"], { cwd });
-    expect(stdout.toString().trim()).toBe(dedent`
+
+    // Filter out future flag warnings for the format:
+    // ⚠️  Future Flag Warning: [Something] is changing in React Router v8.
+    //     You can use the `future.v8_[whatever]` flag to opt in early.
+    //     -> https://reactrouter.com/upgrading/future-flags#v8_[whatever]
+    let filteredStdOut = stdout.toString().split("\n");
+    while (filteredStdOut[0]?.includes("Future Flag Warning:")) {
+      filteredStdOut.splice(0, 3);
+    }
+
+    expect(filteredStdOut.join("\n").trim()).toBe(dedent`
       <Routes>
         <Route file="root.tsx">
           <Route index file="routes/_index.tsx" />
@@ -135,6 +197,23 @@ test.describe("cli", () => {
       run(["reveal"], { cwd });
 
       expect(existsSync(entryServerFile)).toBeTruthy();
+      expect(existsSync(entryClientFile)).toBeTruthy();
+    });
+
+    test("rsc generates entry.{ssr,rsc,client}.tsx in the app directory", async () => {
+      const cwd = await createProject({}, "rsc-vite-framework");
+      let entrySSRFile = path.join(cwd, "app", "entry.ssr.tsx");
+      let entryRSCFile = path.join(cwd, "app", "entry.rsc.tsx");
+      let entryClientFile = path.join(cwd, "app", "entry.client.tsx");
+
+      expect(existsSync(entrySSRFile)).toBeFalsy();
+      expect(existsSync(entryRSCFile)).toBeFalsy();
+      expect(existsSync(entryClientFile)).toBeFalsy();
+
+      run(["reveal"], { cwd });
+
+      expect(existsSync(entrySSRFile)).toBeTruthy();
+      expect(existsSync(entryRSCFile)).toBeTruthy();
       expect(existsSync(entryClientFile)).toBeTruthy();
     });
 

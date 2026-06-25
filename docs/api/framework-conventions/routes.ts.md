@@ -13,7 +13,7 @@ order: 2
 This file is required
 </docs-info>
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/_react_router_dev.routes.RouteConfigEntry.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/_react-router_dev.routes.RouteConfigEntry.html)
 
 Configuration file that maps URL patterns to route modules in your application.
 
@@ -59,9 +59,9 @@ export default flatRoutes() satisfies RouteConfig;
 ### Route Helpers
 
 [routing]: ../../start/framework/routing
-[route]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.route.html
-[index]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.index.html
-[layout]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.layout.html
-[prefix]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.prefix.html
-[relative]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.relative.html
+[route]: https://api.reactrouter.com/v7/functions/_react-router_dev.routes.route.html
+[index]: https://api.reactrouter.com/v7/functions/_react-router_dev.routes.index.html
+[layout]: https://api.reactrouter.com/v7/functions/_react-router_dev.routes.layout.html
+[prefix]: https://api.reactrouter.com/v7/functions/_react-router_dev.routes.prefix.html
+[relative]: https://api.reactrouter.com/v7/functions/_react-router_dev.routes.relative.html
 [file-route-conventions]: ../../how-to/file-route-conventions

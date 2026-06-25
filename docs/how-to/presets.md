@@ -98,6 +98,6 @@ export default {
 } satisfies Config;
 ```
 
-[react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
-[preset-type]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Preset.html
+[react-router-config]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html
+[preset-type]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Preset.html
 [server-bundles]: ./server-bundles

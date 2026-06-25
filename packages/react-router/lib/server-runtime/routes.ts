@@ -1,5 +1,5 @@
 import type {
-  AgnosticDataRouteObject,
+  DataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
@@ -7,7 +7,6 @@ import type {
 } from "../router/utils";
 import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
-import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
 import type {
   SingleFetchResult,
@@ -44,38 +43,18 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   return routes;
 }
 
-// Create a map of routes by parentId to use recursively instead of
-// repeatedly filtering the manifest.
-export function createRoutes(
-  manifest: ServerRouteManifest,
-  parentId: string = "",
-  routesByParentId: Record<
-    string,
-    Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest),
-): ServerRoute[] {
-  return (routesByParentId[parentId] || []).map((route) => ({
-    ...route,
-    children: createRoutes(manifest, route.id, routesByParentId),
-  }));
-}
-
 // Convert the Remix ServerManifest into DataRouteObject's for use with
 // createStaticHandler
 export function createStaticHandlerDataRoutes(
   manifest: ServerRouteManifest,
-  future: FutureConfig,
   parentId: string = "",
   routesByParentId: Record<
     string,
     Omit<ServerRoute, "children">[]
   > = groupRoutesByParentId(manifest),
-): AgnosticDataRouteObject[] {
+): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
-      // Always include root due to default boundaries
-      hasErrorBoundary:
-        route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
       middleware: route.module.middleware as unknown as
@@ -139,6 +118,11 @@ export function createStaticHandlerDataRoutes(
         ? (args: RRActionFunctionArgs) =>
             callRouteHandler(route.module.action!, args)
         : undefined,
+      // Always include root due to default boundaries
+      ErrorBoundary:
+        route.id === "root" || route.module.ErrorBoundary != null
+          ? () => null
+          : undefined,
       handle: route.module.handle,
     };
 
@@ -151,7 +135,6 @@ export function createStaticHandlerDataRoutes(
           caseSensitive: route.caseSensitive,
           children: createStaticHandlerDataRoutes(
             manifest,
-            future,
             route.id,
             routesByParentId,
           ),

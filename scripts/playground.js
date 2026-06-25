@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-let { existsSync, readdirSync } = require("node:fs");
-let { cp } = require("node:fs/promises");
-let path = require("node:path");
-let prompts = require("prompts");
-let chalk = require("chalk");
+import { existsSync, readdirSync } from "node:fs";
+import { cp } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import prompts from "prompts";
+import pc from "picocolors";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 copyPlayground();
 
@@ -40,8 +43,8 @@ async function copyPlayground() {
   console.log(
     [
       "",
-      chalk.green`Created local copy of "${templateName}"`,
-      chalk.green`To start playground, run:`,
+      pc.green(`Created local copy of "${templateName}"`),
+      pc.green(`To start playground, run:`),
       "",
       `cd ${relativeDestDir}`,
       "pnpm dev",

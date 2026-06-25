@@ -4,6 +4,7 @@ import type { StaticHandlerContext } from "../../lib/router/router";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
 import {
   ErrorResponseImpl,
+  RouterContextProvider,
   data,
   redirect,
   type ActionFunction,
@@ -43,7 +44,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -87,7 +88,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -135,7 +136,7 @@ describe("instrumentation", () => {
             index: "INDEX",
           },
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -176,7 +177,7 @@ describe("instrumentation", () => {
             action: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -219,7 +220,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -263,7 +264,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -311,7 +312,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -363,7 +364,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -422,7 +423,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -487,7 +488,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -551,7 +552,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -613,7 +614,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -682,7 +683,7 @@ describe("instrumentation", () => {
             action: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -763,7 +764,7 @@ describe("instrumentation", () => {
             lazy: () => lazyDfd.promise,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -838,7 +839,7 @@ describe("instrumentation", () => {
             },
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -931,7 +932,7 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1009,7 +1010,7 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1090,7 +1091,7 @@ describe("instrumentation", () => {
             ]);
           }
         },
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1169,7 +1170,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1228,7 +1229,7 @@ describe("instrumentation", () => {
             path: "/target",
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1295,7 +1296,7 @@ describe("instrumentation", () => {
             path: "/target",
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1365,7 +1366,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1408,7 +1409,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1451,7 +1452,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1488,7 +1489,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1530,7 +1531,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1551,10 +1552,11 @@ describe("instrumentation", () => {
       expect(args.request.method).toBe("GET");
       expect(args.request.url).toBe("http://localhost/a");
       expect(args.request.url).toBe("http://localhost/a");
+      expect(args.url.href).toBe("http://localhost/a");
       expect(args.request.headers.get).toBeDefined();
       expect(args.request.headers.set).not.toBeDefined();
       expect(args.params).toEqual({ slug: "a", extra: "extra" });
-      expect(args.unstable_pattern).toBe("/:slug");
+      expect(args.pattern).toBe("/:slug");
       expect(args.context.get).toBeDefined();
       expect(args.context.set).not.toBeDefined();
       expect(t.router.state.matches[0].params).toEqual({ slug: "a" });
@@ -1573,7 +1575,7 @@ describe("instrumentation", () => {
             loader: true,
           },
         ],
-        unstable_instrumentations: [
+        instrumentations: [
           {
             route(route) {
               route.instrument({
@@ -1624,14 +1626,14 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               router(router) {
                 router.instrument({
                   async navigate(navigate, info) {
                     spy("start", info);
-                    await navigate();
-                    spy("end", info);
+                    let result = await navigate();
+                    spy("end", info, result.meta);
                   },
                 });
               },
@@ -1643,12 +1645,171 @@ describe("instrumentation", () => {
       await router.navigate("/page");
       expect(spy.mock.calls).toEqual([
         ["start", { currentUrl: "/", to: "/page" }],
-        ["end", { currentUrl: "/", to: "/page" }],
+        [
+          "end",
+          { currentUrl: "/", to: "/page" },
+          {
+            url: expect.any(URL),
+            pattern: "/page",
+            params: {},
+          },
+        ],
       ]);
+      expect(spy.mock.calls[1][2].url.href).toBe("http://localhost/page");
       expect(router.state).toMatchObject({
         navigation: { state: "idle" },
         location: { pathname: "/page" },
         loaderData: { page: "PAGE" },
+      });
+    });
+
+    it("returns the original navigation target metadata for redirected navigations", async () => {
+      let spy = jest.fn();
+      let router = createMemoryRouter(
+        [
+          {
+            index: true,
+          },
+          {
+            id: "redirect",
+            path: "/redirect",
+            loader: () => redirect("/page"),
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader: () => "PAGE",
+          },
+        ],
+        {
+          instrumentations: [
+            {
+              router(router) {
+                router.instrument({
+                  async navigate(navigate, info) {
+                    let result = await navigate();
+                    spy(info, result.meta);
+                  },
+                });
+              },
+            },
+          ],
+        },
+      );
+
+      await router.navigate("/redirect");
+      expect(spy.mock.calls).toEqual([
+        [
+          { currentUrl: "/", to: "/redirect" },
+          {
+            url: expect.any(URL),
+            pattern: "/redirect",
+            params: {},
+          },
+        ],
+      ]);
+      expect(spy.mock.calls[0][1].url.href).toBe("http://localhost/redirect");
+      expect(router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/page" },
+        loaderData: { page: "PAGE" },
+      });
+    });
+
+    it("keeps navigation metadata scoped to overlapping instrumentation calls", async () => {
+      let spy = jest.fn();
+      let firstContinue = createDeferred<void>();
+      let router = createMemoryRouter(
+        [
+          {
+            index: true,
+          },
+          {
+            id: "first",
+            path: "/first",
+            loader: () => "FIRST",
+          },
+          {
+            id: "second",
+            path: "/second",
+            loader: () => "SECOND",
+          },
+        ],
+        {
+          instrumentations: [
+            {
+              router(router) {
+                router.instrument({
+                  async navigate(navigate, info) {
+                    if (info.to === "/first") {
+                      await firstContinue.promise;
+                    }
+                    let result = await navigate();
+                    spy(info.to, result.meta?.pattern);
+                  },
+                });
+              },
+            },
+          ],
+        },
+      );
+
+      let firstNavigation = router.navigate("/first");
+      await tick();
+      await router.navigate("/second");
+
+      firstContinue.resolve();
+      await firstNavigation;
+
+      expect(spy.mock.calls).toEqual([
+        ["/second", "/second"],
+        ["/first", "/first"],
+      ]);
+    });
+
+    it("returns undefined navigation metadata for numeric POP navigations", async () => {
+      let spy = jest.fn();
+      let router = createMemoryRouter(
+        [
+          {
+            index: true,
+          },
+          {
+            id: "first",
+            path: "/first",
+            loader: () => "FIRST",
+          },
+          {
+            id: "second",
+            path: "/second",
+            loader: () => "SECOND",
+          },
+        ],
+        {
+          initialEntries: ["/", "/first", "/second"],
+          initialIndex: 2,
+          instrumentations: [
+            {
+              router(router) {
+                router.instrument({
+                  async navigate(navigate, info) {
+                    let result = await navigate();
+                    spy(info.to, result.meta);
+                  },
+                });
+              },
+            },
+          ],
+        },
+      );
+
+      await router.navigate(-1);
+
+      expect(spy.mock.calls).toEqual([[-1, undefined]]);
+      expect(router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/first" },
+        loaderData: { first: "FIRST" },
       });
     });
 
@@ -1666,14 +1827,14 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               router(router) {
                 router.instrument({
                   async fetch(fetch, info) {
                     spy("start", info);
-                    await fetch();
-                    spy("end", info);
+                    let result = await fetch();
+                    spy("end", info, result.meta);
                   },
                 });
               },
@@ -1689,8 +1850,17 @@ describe("instrumentation", () => {
       await router.fetch("key", "0", "/page");
       expect(spy.mock.calls).toEqual([
         ["start", { href: "/page", currentUrl: "/", fetcherKey: "key" }],
-        ["end", { href: "/page", currentUrl: "/", fetcherKey: "key" }],
+        [
+          "end",
+          { href: "/page", currentUrl: "/", fetcherKey: "key" },
+          {
+            url: expect.any(URL),
+            pattern: "/page",
+            params: {},
+          },
+        ],
       ]);
+      expect(spy.mock.calls[1][2].url.href).toBe("http://localhost/page");
       expect(router.state).toMatchObject({
         navigation: { state: "idle" },
         location: { pathname: "/" },
@@ -1719,7 +1889,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1766,7 +1936,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1811,7 +1981,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1879,7 +2049,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1922,7 +2092,7 @@ describe("instrumentation", () => {
           },
         ],
         {
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -1958,6 +2128,7 @@ describe("instrumentation", () => {
 
   describe("request handler", () => {
     it("allows instrumentation of the request handler", async () => {
+      let context = new RouterContextProvider();
       let spy = jest.fn();
       let build = mockServerBuild(
         {
@@ -1974,7 +2145,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               handler(handler) {
                 handler.instrument({
@@ -1990,7 +2161,7 @@ describe("instrumentation", () => {
         },
       );
       let handler = createRequestHandler(build);
-      let response = await handler(new Request("http://localhost/"), {});
+      let response = await handler(new Request("http://localhost/"), context);
 
       expect(await response.text()).toBe("GET http://localhost/ COMPONENT");
       expect(spy.mock.calls).toEqual([
@@ -2004,7 +2175,7 @@ describe("instrumentation", () => {
                 get: expect.any(Function),
               },
             },
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
         ["loader"],
@@ -2018,7 +2189,7 @@ describe("instrumentation", () => {
                 get: expect.any(Function),
               },
             },
-            context: {},
+            context: { get: expect.any(Function) },
           },
         ],
       ]);
@@ -2044,13 +2215,10 @@ describe("instrumentation", () => {
           },
         },
         {
-          future: {
-            v8_middleware: true,
-          },
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -2081,7 +2249,8 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
+            url: expect.any(URL),
             context: {
               get: expect.any(Function),
             },
@@ -2100,7 +2269,8 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
+            pattern: "/",
+            url: expect.any(URL),
             context: {
               get: expect.any(Function),
             },
@@ -2126,7 +2296,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -2157,8 +2327,9 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
-            context: {},
+            pattern: "/",
+            url: expect.any(URL),
+            context: { get: expect.any(Function) },
           },
         ],
         ["loader"],
@@ -2173,8 +2344,9 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
-            context: {},
+            pattern: "/",
+            url: expect.any(URL),
+            context: { get: expect.any(Function) },
           },
         ],
       ]);
@@ -2197,7 +2369,7 @@ describe("instrumentation", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method} ${request.url} COMPONENT`);
           },
-          unstable_instrumentations: [
+          instrumentations: [
             {
               route(route) {
                 route.instrument({
@@ -2230,8 +2402,9 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
-            context: {},
+            pattern: "/",
+            url: expect.any(URL),
+            context: { get: expect.any(Function) },
           },
         ],
         ["action"],
@@ -2246,8 +2419,9 @@ describe("instrumentation", () => {
               },
             },
             params: {},
-            unstable_pattern: "/",
-            context: {},
+            pattern: "/",
+            url: expect.any(URL),
+            context: { get: expect.any(Function) },
           },
         ],
       ]);

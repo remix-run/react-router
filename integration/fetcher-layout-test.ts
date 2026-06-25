@@ -189,11 +189,10 @@ test("fetcher calls layout route action when at index route", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action");
   await app.clickElement("#layout-fetcher");
-  await page.waitForSelector("#layout-fetcher-data");
-  let dataElement = await app.getElement("#layout-fetcher-data");
-  expect(dataElement.text()).toBe("layout action data");
-  dataElement = await app.getElement("#child-data");
-  expect(dataElement.text()).toBe("index data");
+  await expect(page.locator("#layout-fetcher-data")).toHaveText(
+    "layout action data",
+  );
+  await expect(page.locator("#child-data")).toHaveText("index data");
 });
 
 test("fetcher calls layout route loader when at index route", async ({
@@ -202,9 +201,9 @@ test("fetcher calls layout route loader when at index route", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader");
   await app.clickElement("#layout-fetcher");
-  await page.waitForSelector("#layout-fetcher-data");
-  let dataElement = await app.getElement("#layout-fetcher-data");
-  expect(dataElement.text()).toBe("layout loader data");
+  await expect(page.locator("#layout-fetcher-data")).toHaveText(
+    "layout loader data",
+  );
 });
 
 test("fetcher calls index route action when at index route", async ({
@@ -213,11 +212,10 @@ test("fetcher calls index route action when at index route", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action");
   await app.clickElement("#index-fetcher");
-  await page.waitForSelector("#index-fetcher-data");
-  let dataElement = await app.getElement("#index-fetcher-data");
-  expect(dataElement.text()).toBe("index action data");
-  dataElement = await app.getElement("#child-data");
-  expect(dataElement.text()).toBe("index data");
+  await expect(page.locator("#index-fetcher-data")).toHaveText(
+    "index action data",
+  );
+  await expect(page.locator("#child-data")).toHaveText("index data");
 });
 
 test("fetcher calls index route loader when at index route", async ({
@@ -226,9 +224,7 @@ test("fetcher calls index route loader when at index route", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader");
   await app.clickElement("#index-fetcher");
-  await page.waitForSelector("#index-fetcher-data");
-  let dataElement = await app.getElement("#index-fetcher-data");
-  expect(dataElement.text()).toBe("index data");
+  await expect(page.locator("#index-fetcher-data")).toHaveText("index data");
 });
 
 test("fetcher calls layout route action when at parameterized route", async ({
@@ -237,11 +233,10 @@ test("fetcher calls layout route action when at parameterized route", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action/foo");
   await app.clickElement("#layout-fetcher");
-  await page.waitForSelector("#layout-fetcher-data");
-  let dataElement = await app.getElement("#layout-fetcher-data");
-  expect(dataElement.text()).toBe("layout action data");
-  dataElement = await app.getElement("#child-data");
-  expect(dataElement.text()).toBe("foo");
+  await expect(page.locator("#layout-fetcher-data")).toHaveText(
+    "layout action data",
+  );
+  await expect(page.locator("#child-data")).toHaveText("foo");
 });
 
 test("fetcher calls layout route loader when at parameterized route", async ({
@@ -250,27 +245,24 @@ test("fetcher calls layout route loader when at parameterized route", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader/foo");
   await app.clickElement("#layout-fetcher");
-  await page.waitForSelector("#layout-fetcher-data");
-  let dataElement = await app.getElement("#layout-fetcher-data");
-  expect(dataElement.text()).toBe("layout loader data");
+  await expect(page.locator("#layout-fetcher-data")).toHaveText(
+    "layout loader data",
+  );
 });
 
-test("fetcher calls parameterized route route action", async ({ page }) => {
+test("fetcher calls parameterized route action", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action/foo");
   await app.clickElement("#param-fetcher");
-  await page.waitForSelector("#param-fetcher-data");
-  let dataElement = await app.getElement("#param-fetcher-data");
-  expect(dataElement.text()).toBe("param action data");
-  dataElement = await app.getElement("#child-data");
-  expect(dataElement.text()).toBe("foo");
+  await expect(page.locator("#param-fetcher-data")).toHaveText(
+    "param action data",
+  );
+  await expect(page.locator("#child-data")).toHaveText("foo");
 });
 
-test("fetcher calls parameterized route route loader", async ({ page }) => {
+test("fetcher calls parameterized route loader", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader/foo");
   await app.clickElement("#param-fetcher");
-  await page.waitForSelector("#param-fetcher-data");
-  let dataElement = await app.getElement("#param-fetcher-data");
-  expect(dataElement.text()).toBe("foo");
+  await expect(page.locator("#param-fetcher-data")).toHaveText("foo");
 });

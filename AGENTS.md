@@ -32,7 +32,6 @@
 - **Key packages**:
   - `react-router`: Core (all modes) - `lib/components.tsx`, `lib/hooks.tsx`, `lib/router/`, `lib/dom/`, `lib/rsc/`
   - `@react-router/dev`: Framework tooling - `vite/plugin.ts` (Framework), `vite/rsc/plugin.ts` (RSC Framework), `typegen/`
-  - `react-router-dom`: Re-exports `react-router` (v6→v7 compat)
   - `@react-router/node`, `@react-router/cloudflare`, `@react-router/express`: Server adapters
   - `@react-router/serve`: Minimal server for Framework Mode
   - `@react-router/fs-routes`: File-system routing (`flatRoutes()`)
@@ -122,18 +121,13 @@ export default [
 
 Test both states (on/off) for future flags. Don't break existing behavior without a flag.
 
-## Changesets
+## Change Files
 
-When making changes that affect users, create a changeset at `.changeset/<unique-meaningful-name>.md`. If iterating on a change that hasn't shipped yet, update the existing changeset file instead of creating a new one.
+When making changes that affect users, create a change file at `packages/<package>/.changes/<type>.<unique-meaningful-name>.md`. `<type>` should be either `patch`, `minor`, `major` or `unstable` to indicate the type of API change being made. If iterating on a change that hasn't shipped yet, update the existing change file instead of creating a new one.
 
 Format:
 
 ```markdown
----
-"react-router": patch
-"@react-router/dev": minor
----
-
 Brief description of the change
 
 - Additional details if needed
@@ -141,10 +135,9 @@ Brief description of the change
 
 ## Branching
 
-- **`main`**: Latest stable release
-- **`dev`**: Active development (branch from here for code changes)
+- **`main`**: Active Development
 - **`v6`**: v6.x maintenance
-- Branch from `main` for docs-only changes
+- Branch from `main` for code and docs changes
 
 ## Key Files
 

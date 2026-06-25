@@ -1,0 +1,20 @@
+# Prettier ignore patterns.
+/fixtures/
+node_modules/
+pnpm-lock.yaml
+/docs/api
+examples/**/dist/
+worker-configuration.d.ts
+/playground/
+/playground-local/
+integration/helpers/**/dist/
+integration/helpers/**/build/
+playwright-report/
+test-results/
+build.utils.d.ts
+.wrangler/
+.tmp/
+.react-router/
+packages/**/dist/
+tutorial/dist/
+public/

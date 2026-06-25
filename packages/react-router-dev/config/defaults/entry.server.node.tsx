@@ -1,6 +1,6 @@
 import { PassThrough } from "node:stream";
 
-import type { AppLoadContext, EntryContext } from "react-router";
+import type { EntryContext, RouterContextProvider } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
@@ -10,9 +10,10 @@ import * as ReactDOMServer from "react-dom/server";
 // ReactDOMServer.renderToPipeableStream is only available in Node.js
 if (typeof ReactDOMServer.renderToPipeableStream !== "function") {
   throw new Error(
-    `Running the Node.js server entry on a non-Node runtime. ` +
-      `React Router uses this when @react-router/node is listed in your dependencies. ` +
-      `Remove it, or provide a custom entry.server.tsx/jsx file in your app directory.`,
+    "Detected the Node.js server entry on a non-Node runtime. " +
+      "React Router uses this when a node dependency (@react-router/{node,express,serve}) " +
+      "is listed in your dependencies. Remove it, or provide a custom `entry.server.tsx` " +
+      "file in your app directory.",
   );
 }
 
@@ -23,9 +24,7 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  loadContext: AppLoadContext,
-  // If you have middleware enabled:
-  // loadContext: RouterContextProvider
+  _loadContext: RouterContextProvider,
 ) {
   // https://httpwg.org/specs/rfc9110.html#HEAD
   if (request.method.toUpperCase() === "HEAD") {
@@ -59,7 +58,7 @@ export default function handleRequest(
         [readyOption]() {
           shellRendered = true;
           const body = new PassThrough({
-            final(callback) {
+            final(callback: () => void) {
               // Clear the timeout to prevent retaining the closure and memory leak
               clearTimeout(timeoutId);
               timeoutId = undefined;

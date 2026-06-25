@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.generatePath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.generatePath.html)
 
 Returns a path with params interpolated.
 
@@ -35,9 +35,7 @@ generatePath("/users/:id", { id: "123" }); // "/users/123"
 ```tsx
 function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } =  as any,
+  params: GeneratePathParams<Path> =  as any,
 ): string {}
 ```
 

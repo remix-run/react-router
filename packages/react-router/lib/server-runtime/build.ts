@@ -10,9 +10,7 @@ import type {
   FutureConfig,
 } from "../dom/ssr/entry";
 import type { ServerRouteManifest } from "./routes";
-import type { AppLoadContext } from "./data";
-import type { MiddlewareEnabled } from "../types/future";
-import type { unstable_ServerInstrumentation } from "../router/instrumentation";
+import type { ServerInstrumentation } from "../router/instrumentation";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -51,9 +49,7 @@ export interface HandleDocumentRequestFunction {
     responseStatusCode: number,
     responseHeaders: Headers,
     context: EntryContext,
-    loadContext: MiddlewareEnabled extends true
-      ? RouterContextProvider
-      : AppLoadContext,
+    loadContext: RouterContextProvider,
   ): Promise<Response> | Response;
 }
 
@@ -87,6 +83,6 @@ export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
-  unstable_instrumentations?: unstable_ServerInstrumentation[];
+  instrumentations?: ServerInstrumentation[];
   streamTimeout?: number;
 }

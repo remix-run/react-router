@@ -24,33 +24,31 @@ import type {
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
+  DataRouteObject,
   DataStrategyFunction,
+  IndexRouteObject,
   LazyRouteFunction,
+  NonIndexRouteObject,
   Params,
+  PatchRoutesOnNavigationFunction,
+  RouteManifest,
+  RouteMatch,
+  RouteObject,
   TrackedPromise,
 } from "./router/utils";
 import {
+  defaultMapRouteProperties,
   getResolveToMatches,
   getRoutePattern,
   resolveTo,
   stripBasename,
 } from "./router/utils";
 
-import type {
-  DataRouteObject,
-  IndexRouteObject,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  RouteMatch,
-  RouteObject,
-  ViewTransitionContextObject,
-} from "./context";
+import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  ENABLE_DEV_WARNINGS,
   FetchersContext,
   LocationContext,
   NavigationContext,
@@ -75,95 +73,8 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
-import type { unstable_ClientInstrumentation } from "./router/instrumentation";
-
-/**
- * Webpack can fail to compile against react versions without this export -
- * it complains that `useOptimistic` doesn't exist in `React`.
- *
- * Using the string constant directly at runtime fixes the webpack build issue
- * but can result in terser stripping the actual call at minification time.
- *
- * Grabbing an exported reference once up front resolves that issue.
- *
- * See https://github.com/remix-run/react-router/issues/10579
- */
-const USE_OPTIMISTIC = "useOptimistic";
-// @ts-expect-error Needs React 19 types but we develop against 18
-const useOptimisticImpl = React[USE_OPTIMISTIC];
-const stableUseOptimisticSetter = () => undefined;
-
-function useOptimisticSafe<T>(
-  val: T,
-): [T, React.Dispatch<React.SetStateAction<T>>] {
-  if (useOptimisticImpl) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useOptimisticImpl(val);
-  } else {
-    return [val, stableUseOptimisticSetter];
-  }
-}
-
-export function mapRouteProperties(route: RouteObject) {
-  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this -- please and thank you!
-    hasErrorBoundary:
-      route.hasErrorBoundary ||
-      route.ErrorBoundary != null ||
-      route.errorElement != null,
-  };
-
-  if (route.Component) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.element) {
-        warning(
-          false,
-          "You should not include both `Component` and `element` on your route - " +
-            "`Component` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      element: React.createElement(route.Component),
-      Component: undefined,
-    });
-  }
-
-  if (route.HydrateFallback) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.hydrateFallbackElement) {
-        warning(
-          false,
-          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
-            "`HydrateFallback` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      hydrateFallbackElement: React.createElement(route.HydrateFallback),
-      HydrateFallback: undefined,
-    });
-  }
-
-  if (route.ErrorBoundary) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.errorElement) {
-        warning(
-          false,
-          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-            "`ErrorBoundary` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      errorElement: React.createElement(route.ErrorBoundary),
-      ErrorBoundary: undefined,
-    });
-  }
-
-  return updates;
-}
+import type { ClientInstrumentation } from "./router/instrumentation";
+import { useOptimistic } from "react";
 
 export const hydrationRouteProperties: (keyof RouteObject)[] = [
   "HydrateFallback",
@@ -213,7 +124,7 @@ export interface MemoryRouterOpts {
    *
    * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   unstable_instrumentations: [logging]
+   *   instrumentations: [logging]
    * });
    *
    *
@@ -251,7 +162,7 @@ export interface MemoryRouterOpts {
    * }
    * ```
    */
-  unstable_instrumentations?: unstable_ClientInstrumentation[];
+  instrumentations?: ClientInstrumentation[];
   /**
    * Override the default data strategy of running loaders in parallel -
    * see the [docs](../../how-to/data-strategy) for more information.
@@ -292,6 +203,10 @@ export interface MemoryRouterOpts {
  * in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * stack. Useful for non-browser environments without a DOM API.
  *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+ *
  * @public
  * @category Data Routers
  * @mode data
@@ -304,7 +219,7 @@ export interface MemoryRouterOpts {
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
- * @param {MemoryRouterOpts.unstable_instrumentations} opts.unstable_instrumentations n/a
+ * @param {MemoryRouterOpts.instrumentations} opts.instrumentations n/a
  * @param {MemoryRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @returns An initialized {@link DataRouter} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
@@ -322,11 +237,11 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
-    mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
-    unstable_instrumentations: opts?.unstable_instrumentations,
+    instrumentations: opts?.instrumentations,
   }).initialize();
 }
 
@@ -365,7 +280,7 @@ export interface ClientOnErrorFunction {
     info: {
       location: Location;
       params: Params;
-      unstable_pattern: string;
+      pattern: string;
       errorInfo?: React.ErrorInfo;
     },
   ): void;
@@ -376,7 +291,9 @@ export interface ClientOnErrorFunction {
  */
 export interface RouterProviderProps {
   /**
-   * The {@link DataRouter} instance to use for navigation and data fetching.
+   * The {@link DataRouter} instance to use for navigation and data fetching. The
+   * router prop should be a single router instance created outside of the React
+   * tree. Avoid creating new routers during React renders/re-renders.
    */
   router: DataRouter;
   /**
@@ -388,7 +305,8 @@ export interface RouterProviderProps {
    * - If you are rendering in a non-DOM environment, you can import
    *   `RouterProvider` from `react-router` and ignore this prop
    */
-  flushSync?: (fn: () => unknown) => undefined;
+  flushSync?: <R>(fn: () => R) => R;
+
   /**
    * An error handler function that will be called for any middleware, loader, action,
    * or render errors that are encountered in your application.  This is useful for
@@ -400,8 +318,8 @@ export interface RouterProviderProps {
    * and is only present for render errors.
    *
    * ```tsx
-   * <RouterProvider onError=(error, info) => {
-   *   let { location, params, unstable_pattern, errorInfo } = info;
+   * <RouterProvider onError={(error, info) => {
+   *   let { location, params, pattern, errorInfo } = info;
    *   console.error(error, location, errorInfo);
    *   reportToErrorService(error, location, errorInfo);
    * }} />
@@ -424,14 +342,16 @@ export interface RouterProviderProps {
    * - When set to `false`, the router will not leverage `React.startTransition` or
    *   `React.useOptimistic` on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
 }
 
 /**
  * Render the UI for the given {@link DataRouter}. This component should
- * typically be at the top of an app's element tree.
+ * typically be at the top of an app's element tree. The router prop should
+ * be a single router instance created outside of the React tree. Avoid
+ * creating new routers during React renders/re-renders.
  *
  * ```tsx
  * import { createBrowserRouter } from "react-router";
@@ -458,20 +378,20 @@ export interface RouterProviderProps {
  * @param {RouterProviderProps.flushSync} props.flushSync n/a
  * @param {RouterProviderProps.onError} props.onError n/a
  * @param {RouterProviderProps.router} props.router n/a
- * @param {RouterProviderProps.unstable_useTransitions} props.unstable_useTransitions n/a
+ * @param {RouterProviderProps.useTransitions} props.useTransitions n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
   onError,
-  unstable_useTransitions,
+  useTransitions,
 }: RouterProviderProps): React.ReactElement {
   let unstable_rsc = useIsRSCRouterContext();
-  unstable_useTransitions = unstable_rsc || unstable_useTransitions;
+  useTransitions = unstable_rsc || useTransitions;
 
   let [_state, setStateImpl] = React.useState(router.state);
-  let [state, setOptimisticState] = useOptimisticSafe(_state);
+  let [state, setOptimisticState] = useOptimistic(_state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -496,7 +416,7 @@ export function RouterProvider({
           onError(error, {
             location: newState.location,
             params: newState.matches[0]?.params ?? {},
-            unstable_pattern: getRoutePattern(newState.matches),
+            pattern: getRoutePattern(newState.matches),
           }),
         );
       }
@@ -535,11 +455,11 @@ export function RouterProvider({
       if (!viewTransitionOpts || !isViewTransitionAvailable) {
         if (reactDomFlushSyncImpl && flushSync) {
           reactDomFlushSyncImpl(() => setStateImpl(newState));
-        } else if (unstable_useTransitions === false) {
+        } else if (useTransitions === false) {
           setStateImpl(newState);
         } else {
           React.startTransition(() => {
-            if (unstable_useTransitions === true) {
+            if (useTransitions === true) {
               setOptimisticState((s) => getOptimisticRouterState(s, newState));
             }
             setStateImpl(newState);
@@ -611,14 +531,17 @@ export function RouterProvider({
       reactDomFlushSyncImpl,
       transition,
       renderDfd,
-      unstable_useTransitions,
+      useTransitions,
       setOptimisticState,
       onError,
     ],
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>).
+  // If the router finished initializing (and emitted errors) before this
+  // subscriber was attached, `subscribe()` replays that notification so
+  // `onError` still fires for initial data load errors.
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
   // When we start a view transition, create a Deferred we can use for the
@@ -637,11 +560,11 @@ export function RouterProvider({
       let newState = pendingState;
       let renderPromise = renderDfd.promise;
       let transition = router.window.document.startViewTransition(async () => {
-        if (unstable_useTransitions === false) {
+        if (useTransitions === false) {
           setStateImpl(newState);
         } else {
           React.startTransition(() => {
-            if (unstable_useTransitions === true) {
+            if (useTransitions === true) {
               setOptimisticState((s) => getOptimisticRouterState(s, newState));
             }
             setStateImpl(newState);
@@ -661,7 +584,7 @@ export function RouterProvider({
     pendingState,
     renderDfd,
     router.window,
-    unstable_useTransitions,
+    useTransitions,
     setOptimisticState,
   ]);
 
@@ -741,12 +664,14 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
-                unstable_useTransitions={unstable_useTransitions}
+                useTransitions={useTransitions}
               >
                 <MemoizedDataRoutes
                   routes={router.routes}
+                  manifest={router.manifest}
                   future={router.future}
                   state={state}
+                  isStatic={false}
                   onError={onError}
                 />
               </Router>
@@ -789,18 +714,28 @@ function getOptimisticRouterState(
 // Memoize to avoid re-renders when updating `ViewTransitionContext`
 const MemoizedDataRoutes = React.memo(DataRoutes);
 
-function DataRoutes({
+export function DataRoutes({
   routes,
+  manifest,
   future,
   state,
+  isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
+  manifest: RouteManifest;
   future: DataRouter["future"];
   state: RouterState;
-  onError: ClientOnErrorFunction | undefined;
+  isStatic: boolean;
+  onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, onError, future);
+  return useRoutesImpl(routes, undefined, {
+    manifest,
+    state,
+    isStatic,
+    onError,
+    future,
+  });
 }
 
 /**
@@ -835,9 +770,9 @@ export interface MemoryRouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
 }
 
 /**
@@ -851,7 +786,7 @@ export interface MemoryRouterProps {
  * @param {MemoryRouterProps.children} props.children n/a
  * @param {MemoryRouterProps.initialEntries} props.initialEntries n/a
  * @param {MemoryRouterProps.initialIndex} props.initialIndex n/a
- * @param {MemoryRouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
+ * @param {MemoryRouterProps.useTransitions} props.useTransitions n/a
  * @returns A declarative in-memory {@link Router | `<Router>`} for client-side
  * routing.
  */
@@ -860,9 +795,9 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
-  unstable_useTransitions,
+  useTransitions,
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
+  let historyRef = React.useRef<MemoryHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({
       initialEntries,
@@ -878,13 +813,13 @@ export function MemoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      if (unstable_useTransitions === false) {
+      if (useTransitions === false) {
         setStateImpl(newState);
       } else {
         React.startTransition(() => setStateImpl(newState));
       }
     },
-    [unstable_useTransitions],
+    [useTransitions],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -896,7 +831,7 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      unstable_useTransitions={unstable_useTransitions}
+      useTransitions={useTransitions}
     />
   );
 }
@@ -1069,7 +1004,6 @@ export interface PathRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
@@ -1162,7 +1096,6 @@ export interface IndexRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
@@ -1212,6 +1145,9 @@ export interface IndexRouteProps {
   ErrorBoundary?: React.ComponentType | null;
 }
 
+/**
+ * @category Types
+ */
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
@@ -1322,9 +1258,9 @@ export interface RouterProps {
    * - When set to `false`, the router will not leverage `React.startTransition`
    *   on any navigations or state changes.
    *
-   * For more information, please see the [docs](https://reactrouter.com/explanation/react-transitions).
+   * For more information, please see the [docs](../../explanation/react-transitions).
    */
-  unstable_useTransitions?: boolean;
+  useTransitions?: boolean;
 }
 
 /**
@@ -1344,7 +1280,7 @@ export interface RouterProps {
  * @param {RouterProps.navigationType} props.navigationType n/a
  * @param {RouterProps.navigator} props.navigator n/a
  * @param {RouterProps.static} props.static n/a
- * @param {RouterProps.unstable_useTransitions} props.unstable_useTransitions n/a
+ * @param {RouterProps.useTransitions} props.useTransitions n/a
  * @returns React element for the rendered router or `null` if the location does
  * not match the {@link props.basename}
  */
@@ -1355,7 +1291,7 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-  unstable_useTransitions,
+  useTransitions,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -1371,10 +1307,10 @@ export function Router({
       basename,
       navigator,
       static: staticProp,
-      unstable_useTransitions,
+      useTransitions,
       future: {},
     }),
-    [basename, navigator, staticProp, unstable_useTransitions],
+    [basename, navigator, staticProp, useTransitions],
   );
 
   if (typeof locationProp === "string") {
@@ -1387,6 +1323,7 @@ export function Router({
     hash = "",
     state = null,
     key = "default",
+    mask,
   } = locationProp;
 
   let locationContext = React.useMemo(() => {
@@ -1403,10 +1340,11 @@ export function Router({
         hash,
         state,
         key,
+        mask,
       },
       navigationType,
     };
-  }, [basename, pathname, search, hash, state, key, navigationType]);
+  }, [basename, pathname, search, hash, state, key, navigationType, mask]);
 
   warning(
     locationContext != null,
@@ -1646,7 +1584,7 @@ export function Await<Resolve>({
         dataRouterContext.onError(error, {
           location: dataRouterStateContext.location,
           params: dataRouterStateContext.matches[0]?.params || {},
-          unstable_pattern: getRoutePattern(dataRouterStateContext.matches),
+          pattern: getRoutePattern(dataRouterStateContext.matches),
           errorInfo,
         });
       }
@@ -1815,7 +1753,11 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, treePath),
+        createRoutesFromChildren(
+          (element as unknown as React.ReactElement<React.FragmentProps>).props
+            .children,
+          treePath,
+        ),
       );
       return;
     }
@@ -1827,39 +1769,34 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`,
     );
 
+    let props = (element as unknown as React.ReactElement<RouteProps>).props;
+
     invariant(
-      !element.props.index || !element.props.children,
+      !props.index || !props.children,
       "An index route cannot have child routes.",
     );
 
     let route: RouteObject = {
-      id: element.props.id || treePath.join("-"),
-      caseSensitive: element.props.caseSensitive,
-      element: element.props.element,
-      Component: element.props.Component,
-      index: element.props.index,
-      path: element.props.path,
-      middleware: element.props.middleware,
-      loader: element.props.loader,
-      action: element.props.action,
-      hydrateFallbackElement: element.props.hydrateFallbackElement,
-      HydrateFallback: element.props.HydrateFallback,
-      errorElement: element.props.errorElement,
-      ErrorBoundary: element.props.ErrorBoundary,
-      hasErrorBoundary:
-        element.props.hasErrorBoundary === true ||
-        element.props.ErrorBoundary != null ||
-        element.props.errorElement != null,
-      shouldRevalidate: element.props.shouldRevalidate,
-      handle: element.props.handle,
-      lazy: element.props.lazy,
+      id: props.id || treePath.join("-"),
+      caseSensitive: props.caseSensitive,
+      element: props.element,
+      Component: props.Component,
+      index: props.index,
+      path: props.path,
+      middleware: props.middleware,
+      loader: props.loader,
+      action: props.action,
+      hydrateFallbackElement: props.hydrateFallbackElement,
+      HydrateFallback: props.HydrateFallback,
+      errorElement: props.errorElement,
+      ErrorBoundary: props.ErrorBoundary,
+      shouldRevalidate: props.shouldRevalidate,
+      handle: props.handle,
+      lazy: props.lazy,
     };
 
-    if (element.props.children) {
-      route.children = createRoutesFromChildren(
-        element.props.children,
-        treePath,
-      );
+    if (props.children) {
+      route.children = createRoutesFromChildren(props.children, treePath);
     }
 
     routes.push(route);
@@ -1922,7 +1859,7 @@ function useRouteComponentProps() {
 }
 
 export type RouteComponentProps = ReturnType<typeof useRouteComponentProps>;
-export type RouteComponentType = React.ComponentType<RouteComponentProps>;
+type RouteComponentType = React.ComponentType<RouteComponentProps>;
 
 export function WithComponentProps({
   children,
@@ -1949,7 +1886,7 @@ function useHydrateFallbackProps() {
 }
 
 export type HydrateFallbackProps = ReturnType<typeof useHydrateFallbackProps>;
-export type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
+type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
 
 export function WithHydrateFallbackProps({
   children,
@@ -1977,7 +1914,7 @@ function useErrorBoundaryProps() {
 }
 
 export type ErrorBoundaryProps = ReturnType<typeof useErrorBoundaryProps>;
-export type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
+type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
 
 export function WithErrorBoundaryProps({
   children,

@@ -336,6 +336,74 @@ function testDomRouter(
         `);
       });
 
+      it("renders ancestor HydrateFallback during hydration middleware-only execution", async () => {
+        let middlewareDfd = createDeferred();
+        let router = createTestRouter([
+          {
+            path: "/",
+            Component: Outlet,
+            HydrateFallback: () => "Loading root...",
+            children: [
+              {
+                index: true,
+                middleware: [() => middlewareDfd.promise],
+                Component: () => "Hello World!",
+              },
+            ],
+          },
+        ]);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading root...
+          </div>"
+        `);
+
+        middlewareDfd.resolve();
+        await waitFor(() => screen.getByText("Hello World!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Hello World!
+          </div>"
+        `);
+      });
+
+      it("renders self HydrateFallback during hydration middleware-only execution", async () => {
+        let middlewareDfd = createDeferred();
+        let router = createTestRouter([
+          {
+            path: "/",
+            Component: Outlet,
+            children: [
+              {
+                index: true,
+                HydrateFallback: () => "Loading index...",
+                middleware: [() => middlewareDfd.promise],
+                Component: () => "Hello World!",
+              },
+            ],
+          },
+        ]);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Loading index...
+          </div>"
+        `);
+
+        middlewareDfd.resolve();
+        await waitFor(() => screen.getByText("Hello World!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            Hello World!
+          </div>"
+        `);
+      });
+
       it("does not render hydrateFallback if no data fetch or lazy loading is required", async () => {
         let fooDefer = createDeferred();
         let router = createTestRouter(
@@ -492,6 +560,48 @@ function testDomRouter(
             </pre>
           </div>"
         `);
+      });
+
+      it("handles race conditions if router initialization completes prior to the layout effect router.subscribe() call", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        // Kick off some async data load _before_ any react stuff
+        let suspensePromise = sleep(100).then(() => "DATA");
+
+        // Create a router that will initialize shortly after the suspense boundary resolves
+        let router = createTestRouter([
+          {
+            path: "/",
+            // Only fails when this is around 200ms - passes if you bump it to ~500ms
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        expect(router.state.initialized).toBe(false);
+
+        // Render a component that will suspend until `suspensePromise` resolves, then
+        // renders RouterProvider which sets up listeners for the router state
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        // Needs to be wrapped in `act()` for suspense to work properly
+        // https://github.com/testing-library/react-testing-library/issues/1375
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Data:LOADER"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
       });
     });
 
@@ -2587,7 +2697,7 @@ function testDomRouter(
     });
 
     describe("call-site revalidation opt-out", () => {
-      it("accepts unstable_defaultShouldRevalidate on <Link> navigations", async () => {
+      it("accepts defaultShouldRevalidate on <Link> navigations", async () => {
         let loaderDefer = createDeferred();
 
         let router = createTestRouter(
@@ -2605,7 +2715,7 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              <Link to="/?foo=bar" unstable_defaultShouldRevalidate={false}>
+              <Link to="/?foo=bar" defaultShouldRevalidate={false}>
                 Change Search Params
               </Link>
               <div id="output">
@@ -2651,7 +2761,7 @@ function testDomRouter(
       `);
       });
 
-      it("accepts unstable_defaultShouldRevalidate on setSearchParams navigations", async () => {
+      it("accepts defaultShouldRevalidate on setSearchParams navigations", async () => {
         let loaderDefer = createDeferred();
 
         let router = createTestRouter(
@@ -2673,7 +2783,7 @@ function testDomRouter(
               <button
                 onClick={() =>
                   setSearchParams(new URLSearchParams([["foo", "bar"]]), {
-                    unstable_defaultShouldRevalidate: false,
+                    defaultShouldRevalidate: false,
                   })
                 }
               >
@@ -2722,7 +2832,7 @@ function testDomRouter(
       `);
       });
 
-      it("accepts unstable_defaultShouldRevalidate on <Form method=post> navigations", async () => {
+      it("accepts defaultShouldRevalidate on <Form method=post> navigations", async () => {
         let loaderDefer = createDeferred();
         let actionDefer = createDeferred();
 
@@ -2748,7 +2858,7 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              <Form method="post" unstable_defaultShouldRevalidate={false}>
+              <Form method="post" defaultShouldRevalidate={false}>
                 <input name="test" value="value" />
                 <button type="submit">Submit Form</button>
               </Form>
@@ -2795,7 +2905,7 @@ function testDomRouter(
       `);
       });
 
-      it("accepts unstable_defaultShouldRevalidate on fetcher.submit", async () => {
+      it("accepts defaultShouldRevalidate on fetcher.submit", async () => {
         let loaderDefer = createDeferred();
         let actionDefer = createDeferred();
 
@@ -2827,7 +2937,7 @@ function testDomRouter(
                     {
                       method: "post",
                       action: "/",
-                      unstable_defaultShouldRevalidate: false,
+                      defaultShouldRevalidate: false,
                     },
                   )
                 }
@@ -3463,6 +3573,48 @@ function testDomRouter(
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar",
           );
+        });
+
+        it("preserves encoded hash (%23) in form action and submission for param routes", async () => {
+          let actionPathname: string | null = null;
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                children: [
+                  {
+                    path: ":slug",
+                    action: ({ request }) => {
+                      actionPathname = new URL(request.url).pathname;
+                      return "slug action";
+                    },
+                    Component: () => {
+                      let actionData = useActionData();
+                      return (
+                        <>
+                          <Form method="post">
+                            <button type="submit">Submit</button>
+                          </Form>
+                          {actionData && <p>{String(actionData)}</p>}
+                        </>
+                      );
+                    },
+                  },
+                ],
+              },
+            ],
+            { window: getWindow("/%23routeWithHashTag") },
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/%23routeWithHashTag",
+          );
+
+          fireEvent.click(screen.getByText("Submit"));
+          await waitFor(() => screen.getByText("slug action"));
+
+          expect(actionPathname).toBe("/%23routeWithHashTag");
         });
       });
 
@@ -5628,6 +5780,109 @@ function testDomRouter(
           `);
       });
 
+      it("useFetchers returns stable array reference when fetchers are unchanged", async () => {
+        let fetchDfd = createDeferred();
+        let fetchersArrays: (Fetcher & { key: string })[][] = [];
+        let setCountRef = {
+          current: null as React.Dispatch<React.SetStateAction<number>> | null,
+        };
+
+        function Parent() {
+          let fetchers = useFetchers();
+          let fetcher = useFetcher();
+          let [, setCount] = React.useState(0);
+          setCountRef.current = setCount;
+          fetchersArrays.push(fetchers);
+          return <button onClick={() => fetcher.load("/fetch")}>load</button>;
+        }
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Parent,
+              children: [{ path: "/fetch", loader: () => fetchDfd.promise }],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        render(<RouterProvider router={router} />);
+
+        // Wait for initial mount
+        await waitFor(() => screen.getByText("load"));
+        expect(fetchersArrays.at(-1)).toEqual([]);
+
+        // Trigger a fetch — fetchers array should have a loading fetcher
+        fireEvent.click(screen.getByText("load"));
+        await waitFor(() =>
+          expect(fetchersArrays.at(-1)).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ state: "loading" }),
+            ]),
+          ),
+        );
+        let arrayWhileLoading = fetchersArrays.at(-1)!;
+
+        // Unrelated state update re-renders the component — array ref should be stable
+        act(() => setCountRef.current!((c) => c + 1));
+        expect(fetchersArrays.at(-1)).toBe(arrayWhileLoading);
+
+        // Resolve the fetch — fetchers go idle and are removed from useFetchers
+        fetchDfd.resolve("DATA");
+        await waitFor(() => expect(fetchersArrays.at(-1)).toEqual([]));
+
+        // The final empty array is a new reference (fetchers changed)
+        expect(fetchersArrays.at(-1)).not.toBe(arrayWhileLoading);
+      });
+
+      it("useFetchers updates when a fetcher transitions state", async () => {
+        let fetchDfd = createDeferred();
+        let states: string[] = [];
+
+        function Parent() {
+          let fetchers = useFetchers();
+          let fetcher = useFetcher();
+          states.push(fetchers.map((f) => f.state).join(",") || "empty");
+          return <button onClick={() => fetcher.load("/fetch")}>load</button>;
+        }
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Parent,
+              children: [{ path: "/fetch", loader: () => fetchDfd.promise }],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          },
+        );
+        render(<RouterProvider router={router} />);
+
+        // Wait for initial mount
+        await waitFor(() => screen.getByText("load"));
+        expect(states.at(-1)).toBe("empty");
+
+        // Fetch starts — useFetchers should see "loading"
+        fireEvent.click(screen.getByText("load"));
+        await waitFor(() => expect(states).toContain("loading"));
+
+        // Fetch completes — useFetchers should go back to empty (idle fetchers excluded)
+        fetchDfd.resolve("DATA");
+        await waitFor(() => expect(states.at(-1)).toBe("empty"));
+
+        // States should have progressed: …empty → loading → empty
+        expect(states).toContain("loading");
+        let loadingIdx = states.lastIndexOf("loading");
+        let lastEmptyIdx = states.lastIndexOf("empty");
+        expect(lastEmptyIdx).toBeGreaterThan(loadingIdx);
+      });
+
       it("handles revalidating fetchers", async () => {
         let count = 0;
         let fetchCount = 0;
@@ -6391,10 +6646,10 @@ function testDomRouter(
           expect(container.querySelector("pre")?.innerHTML).toBe("");
           fireEvent.click(screen.getByText("Load fetchers"));
           await waitFor(() =>
-            // React `useId()` results in something such as `_r_2k_` or `_r_u_`
-            // depending on `DataBrowserRouter`/`DataHashRouter`
+            // React `useId()` results in something such as `_r_2k_`, `_r_u_`,
+            // or `_r_11_` depending on React version and component tree depth
             expect(container.querySelector("pre")?.innerHTML).toMatch(
-              /^_r_[0-9]?[a-z]_,my-key$/,
+              /^_r_[0-9a-z]+_,my-key$/,
             ),
           );
         });
@@ -7846,6 +8101,56 @@ function testDomRouter(
             </pre>
           </div>"
         `);
+      });
+
+      it("does not deserialize custom Error subclass instances from the window", () => {
+        try {
+          (window as any).CustomError = class CustomError extends Error {};
+          window.__staticRouterHydrationData = {
+            loaderData: {},
+            actionData: null,
+            errors: {
+              "0": {
+                message: "custom error message",
+                __type: "Error",
+                __subType: "CustomError",
+              },
+            },
+          };
+          let router = createTestRouter([
+            {
+              path: "/",
+              Component: () => <h1>Nope</h1>,
+              ErrorBoundary: () => <Boundary />,
+            },
+          ]);
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Boundary() {
+            let error = useRouteError() as Error;
+            return error instanceof Error ? (
+              <>
+                <pre>{error.constructor.name}</pre>
+                <pre>{error.toString()}</pre>
+              </>
+            ) : (
+              <p>No :(</p>
+            );
+          }
+
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <pre>
+                Error
+              </pre>
+              <pre>
+                Error: custom error message
+              </pre>
+            </div>"
+          `);
+        } finally {
+          delete (window as any).CustomError;
+        }
       });
 
       it("renders hydration errors on leaf elements", async () => {

@@ -715,7 +715,9 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#parent")).toMatch(`Parent`);
     expect(await app.getHtml("#child2")).toMatch(`Child 2`);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?paths=%2Fparent%2Fchild2&version=/),
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Fparent%2C%2Fparent%2Fchild2&version=/,
+      ),
     ]);
   });
 
@@ -1065,7 +1067,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#splat");
     expect(await app.getHtml("#splat")).toMatch("Splat: b/c");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?paths=%2Fb%2Fc&version=/),
+      expect.stringMatching(/\/__manifest\?paths=%2Fb%2C%2Fb%2Fc&version=/),
     ]);
   });
 
@@ -1137,7 +1139,9 @@ test.describe("Fog of War", () => {
     await app.clickLink("/not/a/path");
     await page.waitForSelector("#error");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?paths=%2Fnot%2Fa%2Fpath&version=/),
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Fnot%2C%2Fnot%2Fa%2C%2Fnot%2Fa%2Fpath&version=/,
+      ),
     ]);
     manifestRequests = [];
 
@@ -1449,10 +1453,179 @@ test.describe("Fog of War", () => {
     // Wait for eager discovery to kick off
     await new Promise((r) => setTimeout(r, 500));
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/custom-manifest\?paths=%2Fa%2Fb&version=/),
+      expect.stringMatching(
+        /\/custom-manifest\?paths=%2Fa%2C%2Fa%2Fb&version=/,
+      ),
     ]);
 
     expect(wrongManifestRequests).toEqual([]);
+  });
+
+  test("manifest version mismatch reload should preserve query parameters and hash", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/routes/_index.tsx": js`
+          import { Link, useLocation } from "react-router";
+
+          export default function Index() {
+            const location = useLocation();
+            return (
+              <div>
+                <h1>Home</h1>
+                <p data-location>Location: {location.pathname + location.search + location.hash}</p>
+                <Link to="/other?token=abc123&ref=campaign#section1">Go to Other</Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/other.tsx": js`
+          import { useLocation } from "react-router";
+
+          export default function Other() {
+            const location = useLocation();
+            return (
+              <div>
+                <h1>Other Page</h1>
+                <p data-location2>Location: {location.pathname + location.search + location.hash}</p>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+
+    // Trigger mismatch + hard reload when trying to patch the /other route
+    await page.route(/\/__manifest/, async (route) => {
+      if (route.request().url().includes(encodeURIComponent("/other"))) {
+        await route.fulfill({
+          status: 204,
+          headers: {
+            "X-Remix-Reload-Document": "true",
+          },
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    // Start on home page
+    await app.goto("/");
+    await page.waitForSelector("h1");
+    await expect(page.locator("[data-location]")).toHaveText("Location: /");
+
+    // Click link to /other with query params and hash
+    // This should trigger manifest fetch -> version mismatch -> hard reload
+    await app.clickLink("/other?token=abc123&ref=campaign#section1");
+
+    // Wait for the page to reload and render
+    await page.waitForSelector("[data-location2]", { timeout: 5000 });
+
+    // Query parameters and hash should be preserved after reload
+    await expect(page.locator("[data-location2]")).toHaveText(
+      "Location: /other?token=abc123&ref=campaign#section1",
+    );
+
+    // Also verify the URL in the browser
+    const currentUrl = page.url();
+    expect(currentUrl).toContain("token=abc123");
+    expect(currentUrl).toContain("ref=campaign");
+    expect(currentUrl).toContain("#section1");
+  });
+
+  test("Preserves meta tags on hash links in splat routes", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/routes.ts": js`
+          import { type RouteConfig, index, route } from "@react-router/dev/routes";
+          export default [
+            index("routes/_index.tsx"),
+            route("*", "routes/catchall.tsx"),
+          ] satisfies RouteConfig;
+        `,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+          export function meta() {
+            return [{ title: "Home" }];
+          }
+          export default function Index() {
+            return (
+              <div>
+                <h1>Home</h1>
+                <Link to="/catchall" data-testid="go-catchall">
+                  Go to catchall
+                </Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/catchall.tsx": js`
+          import { Link } from "react-router";
+          export function meta() {
+            return [{ title: "Catchall" }];
+          }
+          export default function Catchall() {
+            return (
+              <div>
+                <h1 data-testid="catchall-heading">Catchall route</h1>
+                <Link to="#hash" data-testid="hash-link">Hash link</Link>
+              </div>
+            );
+          }
+        `,
+      },
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    // / => /catch-all => /catch-all#hash
+    await app.goto("/");
+    expect(await page.title()).toBe("Home");
+    await page.waitForSelector("[data-testid='go-catchall']");
+    await page.click("[data-testid='go-catchall']");
+    await page.waitForSelector("[data-testid='catchall-heading']");
+    expect(await page.title()).toBe("Catchall");
+
+    await page.click("[data-testid='hash-link']");
+    // Hash navigation doesn't trigger a load event; waitForFunction polls the DOM directly
+    await page.waitForFunction(() => window.location.hash === "#hash");
+    expect(await page.title()).toBe("Catchall");
+
+    // /catch-all => /catch-all#hash
+    await app.goto("/catchall");
+    await page.waitForSelector("[data-testid='catchall-heading']");
+    expect(await page.title()).toBe("Catchall");
+
+    await page.click("[data-testid='hash-link']");
+    // Hash navigation doesn't trigger a load event; waitForFunction polls the DOM directly
+    await page.waitForFunction(() => window.location.hash === "#hash");
+    expect(await page.title()).toBe("Catchall");
+
+    appFixture.close();
   });
 
   test.describe("routeDiscovery=initial", () => {

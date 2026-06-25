@@ -12,7 +12,7 @@ Deno has three ways to manage dependencies:
 2. [deps.ts](https://deno.land/manual/examples/manage_dependencies)
 3. [Import maps](https://deno.land/manual/linking_to_external_code/import_maps)
 
-Additionally, NPM packages can be accessed as Deno modules via [Deno-friendly CDNs](https://deno.land/manual/node/cdns#deno-friendly-cdns) like https://esm.sh.
+Additionally, NPM packages can be accessed as Deno modules via [Deno-friendly CDNs](https://docs.deno.com/runtime/manual/node/) like https://esm.sh. (The original deno.land/manual/node/cdns#deno-friendly-cdns anchor was retired when deno.land was deprecated in favor of docs.deno.com.)
 
 Remix has some requirements around dependencies:
 
@@ -84,7 +84,7 @@ Remix will not yet support import maps.
 
 ### VS Code type hints
 
-Users may configure an import map for the [Deno extension for VS Code](denoland.vscode-deno) to enable type hints for NPM-managed dependencies within their Deno editor:
+Users may configure an import map for the [Deno extension for VS Code](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) to enable type hints for NPM-managed dependencies within their Deno editor:
 
 `.vscode/resolve_npm_imports_in_deno.json`
 

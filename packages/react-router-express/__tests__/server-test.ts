@@ -1,29 +1,29 @@
 import { Readable } from "node:stream";
-import { createRequestHandler as createRemixRequestHandler } from "react-router";
+import type { AddressInfo } from "node:net";
+import http from "node:http";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import express from "express";
 import { createRequest, createResponse } from "node-mocks-http";
 import supertest from "supertest";
 
-import {
-  createRemixHeaders,
-  createRemixRequest,
-  createRequestHandler,
-} from "../server";
+let createRemixHeaders: typeof import("../server").createRemixHeaders;
+let createRemixRequest: typeof import("../server").createRemixRequest;
+let createRequestHandler: typeof import("../server").createRequestHandler;
 
 // We don't want to test that the remix server works here (that's what the
 // playwright tests do), we just want to test the express adapter
-jest.mock("react-router", () => {
-  let original = jest.requireActual("react-router");
-  return {
-    ...original,
-    createRequestHandler: jest.fn(),
-  };
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
+
+(jest as any).unstable_mockModule("react-router", () => ({
+  createRequestHandler: mockedCreateRequestHandler,
+}));
+
+beforeAll(async () => {
+  ({ createRemixHeaders, createRemixRequest, createRequestHandler } =
+    await import("../server"));
 });
-let mockedCreateRequestHandler =
-  createRemixRequestHandler as jest.MockedFunction<
-    typeof createRemixRequestHandler
-  >;
 
 function createApp() {
   let app = express();
@@ -150,6 +150,70 @@ describe("express createRequestHandler", () => {
         "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax",
       ]);
     });
+
+    it("ignores response writes after the client disconnects", async () => {
+      let server: http.Server | undefined;
+      let errors: unknown[] = [];
+      let closeServerTimeout: ReturnType<typeof setTimeout> | undefined;
+      let handlerStarted!: () => void;
+      let handlerStartedPromise = new Promise<void>((resolve) => {
+        handlerStarted = resolve;
+      });
+
+      mockedCreateRequestHandler.mockImplementation(() => async (req) => {
+        handlerStarted();
+
+        await new Promise<void>((resolve) => {
+          req.signal.addEventListener("abort", () => resolve(), {
+            once: true,
+          });
+        });
+
+        let readable = Readable.from("hello world");
+        let stream = createReadableStreamFromReadable(readable);
+        closeServerTimeout = setTimeout(() => server?.close(), 25);
+        return new Response(stream, { status: 200 });
+      });
+
+      let app = createApp();
+      app.use(
+        (
+          error: unknown,
+          _req: express.Request,
+          _res: express.Response,
+          _next: express.NextFunction,
+        ) => {
+          errors.push(error);
+          server?.close();
+        },
+      );
+
+      await new Promise<void>((resolve) => {
+        server = app.listen(0, "127.0.0.1", () => resolve());
+      });
+
+      let { port } = server.address() as AddressInfo;
+      let request = http.get({
+        host: "127.0.0.1",
+        port,
+        path: "/",
+      });
+
+      request.on("error", () => {});
+      await handlerStartedPromise;
+      request.destroy();
+
+      await new Promise<void>((resolve, reject) => {
+        server!.on("close", () => resolve());
+        setTimeout(
+          () => reject(new Error("Timed out waiting for server to close")),
+          1000,
+        );
+      });
+
+      clearTimeout(closeServerTimeout);
+      expect(errors).toEqual([]);
+    });
   });
 });
 
@@ -239,6 +303,79 @@ describe("express createRemixRequest", () => {
       "max-age=300, s-maxage=3600",
     );
     expect(remixRequest.headers.get("host")).toBe("localhost:3000");
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("does not use x-forwarded-host port unless trust proxy is enabled", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("uses x-forwarded-host port when trust proxy is enabled", async () => {
+    let app = express();
+    app.set("trust proxy", true);
+    let expressRequest = createRequest({
+      app,
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "example.com",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
+  });
+
+  it("ignores invalid characters in host values", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost/invalid",
+      headers: {
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("falls back for invalid host values", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "/invalid",
+      headers: {
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
     expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
   });
 });

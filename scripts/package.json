@@ -1,0 +1,21 @@
+{
+  "name": "react-router-scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@octokit/request": "^10.0.10",
+    "react-router": "workspace:^",
+    "semver": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.19",
+    "@types/prompts": "^2.4.9",
+    "@types/semver": "^7.7.1"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

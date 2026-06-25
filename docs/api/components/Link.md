@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Link.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.Link.html)
 
 A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
 wrapper to enable navigation with client-side routing.
@@ -185,7 +185,7 @@ This state is inaccessible on the server as it is implemented on top of
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
+Can be a string or a partial [`Path`](https://api.reactrouter.com/v8/interfaces/react-router.Path.html):
 
 ```tsx
 <Link to="/some/path" />
@@ -214,14 +214,14 @@ for this navigation.
 
 To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
 
-### unstable_defaultShouldRevalidate
+### defaultShouldRevalidate
 
 [modes: framework, data, declarative]
 
 Specify the default revalidation behavior for the navigation.
 
 ```tsx
-<Link to="/some/path" unstable_defaultShouldRevalidate={false} />
+<Link to="/some/path" defaultShouldRevalidate={false} />
 ```
 
 If no `shouldRevalidate` functions are present on the active routes, then this
@@ -231,4 +231,54 @@ useful when updating search params and you don't want to trigger a revalidation.
 
 By default (when not specified), loaders will revalidate according to the routers
 standard revalidation behavior.
+
+### mask
+
+[modes: framework, data]
+
+Masked path for this navigation, when you want to navigate the router to
+one location but display a separate location in the URL bar.
+
+This is useful for contextual navigations such as opening an image in a modal
+on top of a gallery while keeping the underlying gallery active. If a user
+shares the masked URL, or opens the link in a new tab, they will only load
+the masked location without the underlying contextual location.
+
+This feature relies on `history.state` and is thus only intended for SPA uses
+and SSR renders will not respect the masking.
+
+```tsx
+// routes/gallery.tsx
+export function clientLoader({ request }: Route.LoaderArgs) {
+  let sp = new URL(request.url).searchParams;
+  return {
+    images: getImages(),
+    modalImage: sp.has("image") ? getImage(sp.get("image")!) : null,
+  };
+}
+
+export default function Gallery({ loaderData }: Route.ComponentProps) {
+  return (
+    <>
+      <GalleryGrid>
+       {loaderData.images.map((image) => (
+         <Link
+           key={image.id}
+           to={`/gallery?image=${image.id}`}
+           mask={`/images/${image.id}`}
+         >
+           <img src={image.url} alt={image.alt} />
+         </Link>
+       ))}
+      </GalleryGrid>
+
+      {data.modalImage ? (
+        <dialog open>
+          <img src={data.modalImage.url} alt={data.modalImage.alt} />
+        </dialog>
+      ) : null}
+    </>
+  );
+}
+```
 

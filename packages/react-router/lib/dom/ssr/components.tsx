@@ -6,7 +6,7 @@ import type {
 import * as React from "react";
 
 import type { RouterState } from "../../router/router";
-import type { AgnosticDataRouteMatch } from "../../router/utils";
+import type { DataRouteMatch } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
@@ -105,7 +105,7 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
-): [boolean, React.RefObject<T>, PrefetchHandlers] {
+): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
@@ -224,7 +224,8 @@ export interface LinksProps {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
   /**
@@ -265,8 +266,13 @@ export interface LinksProps {
  * tags
  */
 export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
-  let { isSpaMode, manifest, routeModules, criticalCss } =
-    useFrameworkContext();
+  let {
+    isSpaMode,
+    manifest,
+    routeModules,
+    criticalCss,
+    nonce: contextNonce,
+  } = useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -275,6 +281,10 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
     [matches, routeModules, manifest],
   );
+
+  if (nonce == null && contextNonce) {
+    nonce = contextNonce;
+  }
 
   return (
     <>
@@ -343,6 +353,8 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  * tags
  */
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
+  let rsc = useIsRSCRouterContext();
+  let { nonce: contextNonce } = useFrameworkContext();
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -353,10 +365,20 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
     return null;
   }
 
+  if (linkProps.nonce == null && contextNonce) {
+    linkProps = { ...linkProps, nonce: contextNonce };
+  }
+
+  if (rsc) {
+    return (
+      <RSCPrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />
+    );
+  }
+
   return <PrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />;
 }
 
-function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
+function useKeyedPrefetchLinks(matches: DataRouteMatch[]) {
   let { manifest, routeModules } = useFrameworkContext();
 
   let [keyedPrefetchLinks, setKeyedPrefetchLinks] = React.useState<
@@ -382,16 +404,58 @@ function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
   return keyedPrefetchLinks;
 }
 
+function RSCPrefetchPageLinksImpl({
+  page,
+  matches: nextMatches,
+  ...linkProps
+}: PageLinkDescriptor & {
+  matches: DataRouteMatch[];
+}) {
+  let location = useLocation();
+
+  let dataHrefs = React.useMemo(() => {
+    if (page === location.pathname + location.search + location.hash) {
+      // Because we opt-into revalidation, don't compute this for the current page
+      // since it would always trigger a prefetch of the existing loaders
+      return [];
+    }
+    let url = singleFetchUrl(page, "rsc");
+
+    let hasSomeRoutesWithShouldRevalidate = false;
+    let targetRoutes: string[] = [];
+    for (let match of nextMatches) {
+      if (typeof match.route.shouldRevalidate === "function") {
+        hasSomeRoutesWithShouldRevalidate = true;
+      } else {
+        targetRoutes.push(match.route.id);
+      }
+    }
+
+    if (hasSomeRoutesWithShouldRevalidate && targetRoutes.length > 0) {
+      url.searchParams.set("_routes", targetRoutes.join(","));
+    }
+
+    return [url.pathname + url.search];
+  }, [page, location, nextMatches]);
+
+  return (
+    <>
+      {dataHrefs.map((href) => (
+        <link key={href} rel="prefetch" as="fetch" href={href} {...linkProps} />
+      ))}
+    </>
+  );
+}
+
 function PrefetchPageLinksImpl({
   page,
   matches: nextMatches,
   ...linkProps
 }: PageLinkDescriptor & {
-  matches: AgnosticDataRouteMatch[];
+  matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future, manifest, routeModules } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
+  let { manifest, routeModules } = useFrameworkContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -454,12 +518,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.unstable_trailingSlashAwareDataRequests,
-      "data",
-    );
+    let url = singleFetchUrl(page, "data");
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -475,8 +534,6 @@ function PrefetchPageLinksImpl({
 
     return [url.pathname + url.search];
   }, [
-    basename,
-    future.unstable_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,
@@ -571,7 +628,6 @@ export function Meta(): React.JSX.Element {
 
     let match: MetaMatch = {
       id: routeId,
-      data,
       loaderData: data,
       meta: [],
       params: _match.params,
@@ -585,7 +641,6 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
               loaderData: data,
               params,
               location,
@@ -609,7 +664,7 @@ export function Meta(): React.JSX.Element {
           _match.route.path +
           " returns an invalid value. All route meta functions must " +
           "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
+          "\n\nTo reference the meta function API, see https://reactrouter.com/start/framework/route-module#meta",
       );
     }
 
@@ -663,7 +718,10 @@ export function Meta(): React.JSX.Element {
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
-          } catch (err) {
+          } catch (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            e
+          ) {
             return null;
           }
         }
@@ -719,7 +777,8 @@ export type ScriptsProps = Omit<
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
 };
@@ -765,11 +824,20 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
+    nonce: contextNonce,
   } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
+
+  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
+  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
+  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
+  // internally without props (such as in the default `HydrateFallback`).
+  if (scriptProps.nonce == null && contextNonce) {
+    scriptProps = { ...scriptProps, nonce: contextNonce };
+  }
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
@@ -912,13 +980,16 @@ import(${JSON.stringify(manifest.entry.module)});`;
   let preloads =
     isHydrated || isRSCRouterContext
       ? []
-      : dedupe(
-          manifest.entry.imports.concat(
-            getModuleLinkHrefs(matches, manifest, {
-              includeHydrateFallback: true,
-            }),
+      : [
+          // Dedupe through a Set
+          ...new Set(
+            manifest.entry.imports.concat(
+              getModuleLinkHrefs(matches, manifest, {
+                includeHydrateFallback: true,
+              }),
+            ),
           ),
-        );
+        ];
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
@@ -948,6 +1019,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={manifest.url}
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[manifest.url]}
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
         />
       ) : null}
@@ -956,6 +1028,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         href={manifest.entry.module}
         crossOrigin={scriptProps.crossOrigin}
         integrity={sri[manifest.entry.module]}
+        nonce={scriptProps.nonce}
         suppressHydrationWarning
       />
       {preloads.map((path) => (
@@ -965,16 +1038,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={path}
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[path]}
+          nonce={scriptProps.nonce}
           suppressHydrationWarning
         />
       ))}
       {initialScripts}
     </>
   );
-}
-
-function dedupe(array: any[]) {
-  return [...new Set(array)];
 }
 
 export function mergeRefs<T = any>(

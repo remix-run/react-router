@@ -28,12 +28,12 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.unstable_matchRSCServerRequest.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.unstable_matchRSCServerRequest.html)
 
 Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 and returns an [RSC](https://react.dev/reference/rsc/server-components)
 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-encoding an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
+encoding an [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html) for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
 enabled client router.
 
 ```tsx
@@ -75,6 +75,7 @@ async function matchRSCServerRequest({
   basename,
   decodeReply,
   requestContext,
+  routeDiscovery,
   loadServerAction,
   decodeAction,
   decodeFormState,
@@ -94,6 +95,7 @@ async function matchRSCServerRequest({
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
+  routeDiscovery?: RouteDiscovery;
   generateResponse: (
     match: RSCMatch,
     {
@@ -139,7 +141,7 @@ implementation for invocation by the router.
 ### opts.generateResponse
 
 A function responsible for using your `renderToReadableStream` to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html).
+encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html).
 
 ### opts.loadServerAction
 
@@ -158,9 +160,13 @@ The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) to mat
 An instance of [`RouterContextProvider`](../utils/RouterContextProvider) that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
 [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
 
+### opts.routeDiscovery
+
+The route discovery configuration, used to determine how the router should discover new routes during navigations.
+
 ### opts.routes
 
-Your [route definitions](https://api.reactrouter.com/v7/types/react_router.unstable_RSCRouteConfigEntry.html).
+Your [route definitions](https://api.reactrouter.com/v8/types/react-router.unstable_RSCRouteConfigEntry.html).
 
 ## Returns
 

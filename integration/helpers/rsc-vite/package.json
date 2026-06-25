@@ -10,23 +10,23 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@vitejs/plugin-rsc": "catalog:",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.13.1",
-    "@types/react": "catalog:react-canary",
-    "@types/react-dom": "catalog:react-canary",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^4.5.2",
+    "@vitejs/plugin-rsc": "catalog:",
     "typescript": "catalog:",
-    "vite": "^6.3.0"
+    "vite": "^7.0.0"
   },
   "dependencies": {
-    "@mjackson/node-fetch-server": "0.6.1",
+    "@remix-run/node-fetch-server": "^0.13.3",
     "compression": "^1.8.1",
-    "cross-env": "^7.0.3",
-    "express": "^4.21.2",
-    "react": "catalog:react-canary",
-    "react-dom": "catalog:react-canary",
+    "cross-env": "^10.1.0",
+    "express": "^4.22.2",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*",
-    "react-server-dom-webpack": "catalog:react-canary"
+    "react-server-dom-webpack": "catalog:"
   }
 }

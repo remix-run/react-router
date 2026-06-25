@@ -1,6 +1,7 @@
 {
   "name": "@react-router/fs-routes",
-  "version": "7.13.0",
+  "type": "module",
+  "version": "8.0.1",
   "description": "File system routing conventions for React Router, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -26,7 +27,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
         "../../pnpm-workspace.yaml",
         "*.ts",
@@ -39,17 +40,18 @@
     }
   },
   "dependencies": {
-    "minimatch": "^9.0.0"
+    "minimatch": "^10.2.5"
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "tsup": "catalog:",
+    "@types/node": "^22.19.19",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "wireit": "catalog:"
   },
   "peerDependencies": {
     "@react-router/dev": "workspace:^",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
@@ -57,7 +59,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

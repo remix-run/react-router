@@ -1,25 +1,12 @@
-let { default: babelJest } = require("babel-jest");
+import babelJest from "babel-jest";
 
-/**
- * Replace `import.meta` with `undefined`
- *
- * Needed to support server-side CJS in Jest
- * when `import.meta.hot` is used for HMR.
- */
-let metaPlugin = ({ types: t }) => ({
-  visitor: {
-    MetaProperty: (path) => {
-      path.replaceWith(t.identifier("undefined"));
-    },
-  },
-});
-
-module.exports = babelJest.createTransformer({
+export default babelJest.createTransformer({
   babelrc: false,
+  configFile: false,
   presets: [
-    ["@babel/preset-env", { loose: true }],
+    ["@babel/preset-env", { targets: { node: "current" }, modules: false }],
     "@babel/preset-react",
     "@babel/preset-typescript",
   ],
-  plugins: ["babel-plugin-dev-expression", metaPlugin],
+  plugins: ["babel-plugin-dev-expression"],
 });

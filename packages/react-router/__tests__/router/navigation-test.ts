@@ -13,7 +13,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {
@@ -154,7 +154,7 @@ describe("navigations", () => {
               {
                 id: "foo",
                 path: "foo",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 loader: true,
               },
             ],
@@ -185,7 +185,7 @@ describe("navigations", () => {
           {
             id: "root",
             path: "/",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "foo",
@@ -596,7 +596,7 @@ describe("navigations", () => {
                 {
                   path: "/child",
                   id: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   loader: true,
                 },
               ],
@@ -621,7 +621,7 @@ describe("navigations", () => {
                 {
                   path: "/child",
                   id: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   loader: true,
                 },
               ],
@@ -656,7 +656,7 @@ describe("navigations", () => {
             {
               path: "/",
               id: "parent",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               children: [
                 {
                   path: "/child",
@@ -690,7 +690,7 @@ describe("navigations", () => {
                     {
                       path: "/child",
                       id: "child",
-                      hasErrorBoundary: true,
+                      ErrorBoundary: () => null,
                       loader: true,
                     },
                   ],
@@ -724,7 +724,7 @@ describe("navigations", () => {
                 path: "/b",
                 id: "b",
                 loader: true,
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 children: [
                   {
                     path: "/b/c",

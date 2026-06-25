@@ -23,7 +23,10 @@ export interface ServerRouterProps {
   url: string | URL;
   /**
    * An optional `nonce` for [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)
-   * compliance, used to allow inline scripts to run safely.
+   * compliance. This is applied to inline scripts rendered by React Router and
+   * used as the default for nonce-aware components such as {@link Links | `<Links>`},
+   * {@link Scripts | `<Scripts>`}, and {@link ScrollRestoration | `<ScrollRestoration>`}
+   * when they do not provide their own `nonce`.
    */
   nonce?: string;
 }
@@ -90,7 +93,9 @@ export function ServerRouter({
     }
   }
 
-  let router = createStaticRouter(routes, context.staticHandlerContext);
+  let router = createStaticRouter(routes, context.staticHandlerContext, {
+    branches: context.branches,
+  });
 
   return (
     <>
@@ -104,6 +109,7 @@ export function ServerRouter({
           ssr: context.ssr,
           isSpaMode: context.isSpaMode,
           routeDiscovery: context.routeDiscovery,
+          nonce,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,
         }}
