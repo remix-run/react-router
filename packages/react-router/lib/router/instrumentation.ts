@@ -54,6 +54,10 @@ export type InstrumentationServerHandlerResult =
     meta: InstrumentationResultMeta | undefined;
   };
 
+export type InstrumentationMetaReceiver = (
+  meta: InstrumentationResultMeta | undefined,
+) => void;
+
 // Shared
 type InstrumentFunction<T, TInnerResult = InstrumentationHandlerResult> = (
   handler: () => Promise<TInnerResult>,
@@ -156,42 +160,22 @@ type RequestHandlerInstrumentationInfo = Readonly<{
 
 const UninstrumentedSymbol = Symbol("Uninstrumented");
 
-export const instrumentationResultMetaContext =
-  createContext<InstrumentationResultMeta>();
-
-export type InstrumentationMetaReceiver = (
-  meta: InstrumentationResultMeta | undefined,
-) => void;
-
-let instrumentationClientResultMetaReceivers = new WeakMap<
-  Router,
-  InstrumentationMetaReceiver
->();
-
-export function setInstrumentationClientResultMetaReceiver(
-  router: Router,
-  receiver: InstrumentationMetaReceiver,
-): () => void {
-  instrumentationClientResultMetaReceivers.set(router, receiver);
-  return () => {
-    if (instrumentationClientResultMetaReceivers.get(router) === receiver) {
-      instrumentationClientResultMetaReceivers.delete(router);
-    }
-  };
-}
-
-export function consumeInstrumentationClientResultMetaReceiver(
-  router: Router,
-): InstrumentationMetaReceiver | undefined {
-  let receiver = instrumentationClientResultMetaReceivers.get(router);
-  instrumentationClientResultMetaReceivers.delete(router);
-  return receiver;
-}
-
 type InstrumentableFunction = (...args: never[]) => MaybePromise<unknown>;
 type InstrumentedFunction<T extends InstrumentableFunction> = T & {
   [UninstrumentedSymbol]?: T;
 };
+
+export const instrumentationResultMetaContext =
+  createContext<InstrumentationResultMeta>();
+
+// Client router instrumentations need route metadata captured inside the router
+// after matching, but exposing this on public router state/options would make it
+// part of the API. Keep a private, one-shot receiver keyed by router instance so
+// navigate/fetch instrumentation can receive the metadata without leaking it.
+let instrumentationClientResultMetaReceivers = new WeakMap<
+  Router,
+  InstrumentationMetaReceiver
+>();
 
 export function getRouteInstrumentationUpdates(
   fns: InstrumentRouteFunction[],
@@ -581,6 +565,26 @@ function setUninstrumentedHandler<TArgs extends unknown[], TResult>(
   (handler as InstrumentedFunction<(...args: TArgs) => MaybePromise<TResult>>)[
     UninstrumentedSymbol
   ] = uninstrumentedHandler;
+}
+
+export function setInstrumentationClientResultMetaReceiver(
+  router: Router,
+  receiver: InstrumentationMetaReceiver,
+): () => void {
+  instrumentationClientResultMetaReceivers.set(router, receiver);
+  return () => {
+    if (instrumentationClientResultMetaReceivers.get(router) === receiver) {
+      instrumentationClientResultMetaReceivers.delete(router);
+    }
+  };
+}
+
+export function consumeInstrumentationClientResultMetaReceiver(
+  router: Router,
+): InstrumentationMetaReceiver | undefined {
+  let receiver = instrumentationClientResultMetaReceivers.get(router);
+  instrumentationClientResultMetaReceivers.delete(router);
+  return receiver;
 }
 
 type RecurseResult<TResult> =

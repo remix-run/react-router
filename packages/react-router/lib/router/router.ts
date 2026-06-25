@@ -1283,17 +1283,6 @@ export function createRouter(init: RouterInit): Router {
   let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
     null;
 
-  function getInstrumentationNavigateMeta(
-    location: To,
-    matches: DataRouteMatch[] | null,
-  ): InstrumentationResultMeta {
-    return {
-      url: createDataFunctionUrl(init.history.createURL(location), location),
-      pattern: matches ? getRoutePattern(matches) : "",
-      params: matches?.[0]?.params ? { ...matches[0].params } : {},
-    };
-  }
-
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
@@ -1688,6 +1677,8 @@ export function createRouter(init: RouterInit): Router {
       return promise;
     }
 
+    // Consume this immediately before any async work kicks off so it doesn't stick
+    // around for subsequent interrupting navigations
     let instrumentationNavigateMetaReceiver =
       consumeInstrumentationClientResultMetaReceiver(router);
 
@@ -1947,9 +1938,14 @@ export function createRouter(init: RouterInit): Router {
       matches = fogOfWar.matches;
     }
 
-    opts?.instrumentationNavigateMetaReceiver?.(
-      getInstrumentationNavigateMeta(location, matches || null),
-    );
+    if (opts?.instrumentationNavigateMetaReceiver) {
+      let meta = getInstrumentationNavigateMeta(
+        init.history,
+        location,
+        matches,
+      );
+      opts.instrumentationNavigateMetaReceiver(meta);
+    }
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
@@ -2615,6 +2611,9 @@ export function createRouter(init: RouterInit): Router {
     abortFetcher(key);
 
     let flushSync = (opts && opts.flushSync) === true;
+
+    // Consume this immediately before any async work kicks off so it doesn't stick
+    // around for subsequent interrupting calls
     let instrumentationResultMetaReceiver =
       consumeInstrumentationClientResultMetaReceiver(router);
 
@@ -2640,10 +2639,16 @@ export function createRouter(init: RouterInit): Router {
       matches = fogOfWar.matches;
     }
 
-    if (!matches) {
-      instrumentationResultMetaReceiver?.(
-        getInstrumentationNavigateMeta(normalizedPath, null),
+    if (instrumentationResultMetaReceiver) {
+      let meta = getInstrumentationNavigateMeta(
+        init.history,
+        normalizedPath,
+        matches,
       );
+      instrumentationResultMetaReceiver(meta);
+    }
+
+    if (!matches) {
       setFetcherError(
         key,
         routeId,
@@ -2652,10 +2657,6 @@ export function createRouter(init: RouterInit): Router {
       );
       return;
     }
-
-    instrumentationResultMetaReceiver?.(
-      getInstrumentationNavigateMeta(normalizedPath, matches),
-    );
 
     let { path, submission, error } = normalizeNavigateOptions(
       true,
@@ -7466,6 +7467,18 @@ function getTargetMatch(matches: DataRouteMatch[], location: Path | string) {
   // pathless layout routes)
   let pathMatches = getPathContributingMatches(matches);
   return pathMatches[pathMatches.length - 1];
+}
+
+function getInstrumentationNavigateMeta(
+  history: History,
+  location: To,
+  matches: DataRouteMatch[] | null,
+): InstrumentationResultMeta {
+  return {
+    url: createDataFunctionUrl(history.createURL(location), location),
+    pattern: matches ? getRoutePattern(matches) : "",
+    params: matches?.[0]?.params ? { ...matches[0].params } : {},
+  };
 }
 
 function getSubmissionFromNavigation(
