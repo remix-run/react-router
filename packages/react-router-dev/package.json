@@ -5,10 +5,7 @@
   "keywords": [
     "react",
     "router",
-    "route",
-    "routing",
-    "history",
-    "link",
+    "react-router",
     "vite",
     "vite-plugin"
   ],
