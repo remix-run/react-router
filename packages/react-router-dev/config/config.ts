@@ -1125,6 +1125,14 @@ function omitRoutes(
   };
 }
 
+export function hasNodeDependency(deps: Record<string, string>) {
+  return (
+    deps["@react-router/node"] ||
+    deps["@react-router/express"] ||
+    deps["@react-router/serve"]
+  );
+}
+
 const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
 
 function isEntryFile(entryBasename: string, filename: string) {
