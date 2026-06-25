@@ -1,7 +1,7 @@
 import type { EntryContext, RouterContextProvider } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
-import * as ReactDOMServer from "react-dom/server";
+import { renderToReadableStream } from "react-dom/server";
 
 export const streamTimeout = 5_000;
 
@@ -23,7 +23,7 @@ export default async function handleRequest(
   let shellRendered = false;
   let userAgent = request.headers.get("user-agent");
 
-  const body = await ReactDOMServer.renderToReadableStream(
+  const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
     {
       signal: AbortSignal.timeout(streamTimeout + 1000),
