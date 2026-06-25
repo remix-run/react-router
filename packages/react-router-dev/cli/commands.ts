@@ -3,14 +3,13 @@ import { readFile, writeFile, copyFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import * as path from "node:path";
 import exitHook from "exit-hook";
-import { readPackageJSON } from "pkg-types";
 import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
 
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
-import { hasNodeDependency, loadConfig } from "../config/config";
+import { loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
 import { transpile as convertFileToJS } from "./useJavascript";
@@ -170,8 +169,6 @@ export async function generateEntry(
 
     await copyFile(defaultEntry, outputFile);
   } else {
-    let pkgJson = await readPackageJSON(rootDirectory);
-
     let defaultEntryClient = path.resolve(
       defaultsDirectory,
       "entry.client.tsx",
@@ -179,9 +176,7 @@ export async function generateEntry(
 
     let defaultEntryServer = path.resolve(
       defaultsDirectory,
-      hasNodeDependency(pkgJson.dependencies ?? {})
-        ? `entry.server.node.tsx`
-        : `entry.server.web.tsx`,
+      `entry.server.tsx`,
     );
 
     let isServerEntry = entry === "entry.server";

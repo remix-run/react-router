@@ -1064,9 +1064,7 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = hasNodeDependency(deps)
-      ? `entry.server.node.tsx`
-      : `entry.server.web.tsx`;
+    entryServerFile = `entry.server.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
@@ -1119,14 +1117,6 @@ function omitRoutes(
     ...config,
     routes: {},
   };
-}
-
-export function hasNodeDependency(deps: Record<string, string>) {
-  return (
-    deps["@react-router/node"] ||
-    deps["@react-router/express"] ||
-    deps["@react-router/serve"]
-  );
 }
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
