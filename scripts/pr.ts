@@ -159,8 +159,8 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
         firstLine,
       };
     });
-  let found = summaries.length > 0;
-  console.log(`changeFileCheck: found=${found}`);
+
+  console.log(`changeFileCheck: found ${summaries.length} change files`);
 
   let body = CHANGE_FILE_MISSING_COMMENT;
 
