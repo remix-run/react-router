@@ -289,7 +289,7 @@ What's next?
 
 [templates]: ../start/framework/deploying#templates
 [spa]: ../how-to/spa
-[inspect]: https://nodejs.org/en/docs/guides/debugging-getting-started/
+[inspect]: https://nodejs.org/en/learn/getting-started/debugging
 [vite-config]: https://vite.dev/config
 [routing]: ../start/framework/routing
 [http-localhost-3000]: http://localhost:3000
