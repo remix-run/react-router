@@ -55,10 +55,16 @@ type Check = (ctx: CheckContext) => Promise<Action[]>;
 
 const CHANGE_FILE_MARKER = "<!-- change-file-check -->";
 
+type ChangeFileSummary = {
+  type: string;
+  firstLine: string;
+};
+
 const CHANGE_FILE_FOUND_COMMENT = `${CHANGE_FILE_MARKER}
 ### ✅ Change File Found
 
-A [change file](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files) file exists in this PR. Thanks!`;
+One or more [change files](https://github.com/remix-run/react-router/blob/main/docs/community/contributing.md#change-files) found.
+`;
 
 const CHANGE_FILE_MISSING_COMMENT = `${CHANGE_FILE_MARKER}
 ### ⚠️ No Change File Found
@@ -138,14 +144,42 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
   }
 
   let files = await getPrFiles(ctx.prNumber);
-  let regex = /^packages\/[^/]+\/\.changes\/[^/]+\.md$/;
-  let found = files.some((f) => regex.test(f.filename));
-  console.log(`changeFileCheck: found=${found}`);
+  let regex =
+    /^packages\/[^/]+\/\.changes\/(major|minor|patch|unstable)\.[^/]+\.md$/;
+  let summaries: ChangeFileSummary[] = files
+    .filter((f) => regex.test(f.filename))
+    .map((f) => {
+      let type = f.filename.match(regex)?.[1] ?? "unknown";
+      let firstLine =
+        fs.readFileSync(f.filename, "utf8").split(/\r?\n/, 1)[0].trim() ??
+        "_No first line found._";
+
+      return {
+        type,
+        firstLine,
+      };
+    });
+
+  console.log(`changeFileCheck: found ${summaries.length} change files`);
+
+  let body = CHANGE_FILE_MISSING_COMMENT;
+
+  if (summaries.length > 0) {
+    body = [
+      CHANGE_FILE_FOUND_COMMENT,
+      "| Type | Change |",
+      "| --- | --- |",
+      ...summaries
+        .map((s) => `| \`${s.type}\` | ${s.firstLine.replaceAll("|", "\\|")} |`)
+        .join("\n"),
+    ].join("\n");
+  }
+
   return [
     {
       type: "upsert-sticky-comment",
       marker: CHANGE_FILE_MARKER,
-      body: found ? CHANGE_FILE_FOUND_COMMENT : CHANGE_FILE_MISSING_COMMENT,
+      body,
     },
   ];
 }
