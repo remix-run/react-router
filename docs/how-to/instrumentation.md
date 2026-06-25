@@ -364,73 +364,6 @@ export const instrumentations = [
 ];
 ```
 
-### Result Metadata
-
-Some instrumented calls return additional information that is only available after React Router starts processing the request, navigation, or fetcher call.
-
-Route-level instrumentations such as `loader`, `action`, `middleware`, and
-`lazy` return only the base `InstrumentationHandlerResult` shape with `status`
-and `error` because route metadata is already available on the `info`
-parameter. Server request handler instrumentation returns
-`InstrumentationServerHandlerResult`, and client navigation/fetcher
-instrumentation returns `InstrumentationClientRouterResult`.
-
-Server request handler instrumentation receives the final HTTP status code and route metadata for requests that match app routes:
-
-```tsx
-export const instrumentations = [
-  {
-    handler(handler) {
-      handler.instrument({
-        async request(handleRequest) {
-          let result = await handleRequest();
-
-          let statusCode = result.statusCode;
-          let routeUrl = result.meta?.url;
-          let routePattern = result.meta?.pattern;
-          let routeParams = result.meta?.params;
-        },
-      });
-    },
-  },
-];
-```
-
-Client navigation and fetcher instrumentation receive route metadata for URL-based navigations and fetcher calls:
-
-```tsx
-const instrumentations = [
-  {
-    router(router) {
-      router.instrument({
-        async navigate(callNavigate) {
-          let result = await callNavigate();
-
-          let routeUrl = result.meta?.url;
-          let routePattern = result.meta?.pattern;
-          let routeParams = result.meta?.params;
-        },
-        async fetch(callFetch) {
-          let result = await callFetch();
-
-          let routeUrl = result.meta?.url;
-          let routePattern = result.meta?.pattern;
-          let routeParams = result.meta?.params;
-        },
-      });
-    },
-  },
-];
-```
-
-The `meta` object has the same route-related values passed to loaders and actions:
-
-- `url`: The normalized `URL` for the matched route request
-- `pattern`: The matched route pattern, such as `/projects/:id`
-- `params`: The matched route params
-
-`meta` may be `undefined` when React Router does not have route metadata for the instrumented call, such as server manifest requests or numeric POP navigations like `navigate(-1)`. For client navigations that redirect, `meta` describes the original navigation target instead of the final redirected location.
-
 Second, if your instrumentation function throws an error, React Router will gracefully swallow that so that it does not bubble outward and impact other instrumentations or application behavior. In both of these examples, the handlers and all other instrumentation functions will still run:
 
 ```tsx
@@ -449,6 +382,64 @@ export const instrumentations = [
         async action(callAction) {
           await callAction();
           somethingThatThrows();
+        },
+      });
+    },
+  },
+];
+```
+
+### Result Metadata
+
+Some instrumented calls return additional information that is only available after React Router starts processing the request, navigation, or fetcher call.
+
+- Route-level instrumentations (`loader`/`action`/`middleware`) don't include `meta` because metadata is available on the `info` parameter
+- Client navigation/fetcher and Server request handler instrumentations return a meta field
+  - `meta` contains the same values passed to loaders and actions
+    - `url`: The normalized `URL` for the matched route request
+    - `pattern`: The matched route pattern, such as `/projects/:id`
+    - `params`: The matched route params
+  - `meta` may be `undefined` when React Router does not have route metadata for the instrumented call, such as server manifest requests or numeric POP navigations like `navigate(-1)`
+  - For client navigations that redirect, `meta` describes the original navigation target instead of the final redirected location.
+- Server request handler instrumentations also return the `statusCode` of the response
+
+```tsx
+// entry.server.tsx
+export const instrumentations = [
+  {
+    handler(handler) {
+      handler.instrument({
+        async request(handleRequest) {
+          let result = await handleRequest();
+
+          let statusCode = result.statusCode;
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+      });
+    },
+  },
+];
+
+// entry.client.tsx
+const instrumentations = [
+  {
+    router(router) {
+      router.instrument({
+        async navigate(callNavigate) {
+          let result = await callNavigate();
+
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+        async fetch(callFetch) {
+          let result = await callFetch();
+
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
         },
       });
     },
@@ -623,7 +614,9 @@ const windowPerf: ClientInstrumentation = {
           `start:${label}`,
           `end:${label}`,
         );
-        console.log(`navigation pattern: ${result.meta?.pattern}`);
+        console.log(
+          `navigation pattern: ${result.meta?.pattern}`,
+        );
       },
       async fetch(fn, { href }) {
         let label = `fetcher:${href}`;
@@ -635,7 +628,9 @@ const windowPerf: ClientInstrumentation = {
           `start:${label}`,
           `end:${label}`,
         );
-        console.log(`fetcher pattern: ${result.meta?.pattern}`);
+        console.log(
+          `fetcher pattern: ${result.meta?.pattern}`,
+        );
       },
     });
   },
