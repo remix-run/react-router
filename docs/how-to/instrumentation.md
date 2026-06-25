@@ -512,9 +512,13 @@ const logging: ServerInstrumentation = {
   handler({ instrument }) {
     instrument({
       async request(fn, { request }) {
-        let result = await log(`request ${request.url}`, fn);
+        let label = `request ${request.url}`;
+        let start = Date.now();
+        console.log(`-> ${label}`);
+        let result = await fn();
+        let pattern = result.meta?.pattern ?? "";
         console.log(
-          `  ${result.statusCode} ${result.meta?.pattern ?? ""}`,
+          `<- ${label} (${Date.now() - start}ms ${result.statusCode} ${pattern})`,
         );
       },
     });
@@ -528,15 +532,14 @@ const logging: ServerInstrumentation = {
   },
 };
 
-async function log<T extends InstrumentationHandlerResult>(
+async function log(
   label: string,
-  cb: () => Promise<T>,
-): Promise<T> {
+  cb: () => Promise<InstrumentationHandlerResult>,
+) {
   let start = Date.now();
   console.log(`-> ${label}`);
-  let result = await cb();
+  await cb();
   console.log(`<- ${label} (${Date.now() - start}ms)`);
-  return result;
 }
 
 export const instrumentations = [logging];
@@ -611,14 +614,27 @@ const windowPerf: ClientInstrumentation = {
   router({ instrument }) {
     instrument({
       async navigate(fn, { to, currentUrl }) {
-        let result = await measure(
-          `navigation:${currentUrl}->${to}`,
-          fn,
+        let label = `navigation:${currentUrl}->${to}`;
+        performance.mark(`start:${label}`);
+        let result = await fn();
+        performance.mark(`end:${label}`);
+        performance.measure(
+          label,
+          `start:${label}`,
+          `end:${label}`,
         );
         console.log(`navigation pattern: ${result.meta?.pattern}`);
       },
       async fetch(fn, { href }) {
-        let result = await measure(`fetcher:${href}`, fn);
+        let label = `fetcher:${href}`;
+        performance.mark(`start:${label}`);
+        let result = await fn();
+        performance.mark(`end:${label}`);
+        performance.measure(
+          label,
+          `start:${label}`,
+          `end:${label}`,
+        );
         console.log(`fetcher pattern: ${result.meta?.pattern}`);
       },
     });
@@ -632,19 +648,18 @@ const windowPerf: ClientInstrumentation = {
   },
 };
 
-async function measure<T extends InstrumentationHandlerResult>(
+async function measure(
   label: string,
-  cb: () => Promise<T>,
-): Promise<T> {
+  cb: () => Promise<InstrumentationHandlerResult>,
+) {
   performance.mark(`start:${label}`);
-  let result = await cb();
+  await cb();
   performance.mark(`end:${label}`);
   performance.measure(
     label,
     `start:${label}`,
     `end:${label}`,
   );
-  return result;
 }
 
 <HydratedRouter instrumentations={[windowPerf]} />;
