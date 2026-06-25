@@ -1455,7 +1455,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             hmr: false,
           },
           configFile: false,
-          envFile: false,
+          envDir: false,
           plugins: [
             childCompilerPlugins
               // Exclude this plugin from the child compiler to prevent an
