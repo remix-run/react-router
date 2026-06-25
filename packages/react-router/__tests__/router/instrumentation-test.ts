@@ -1708,9 +1708,7 @@ describe("instrumentation", () => {
           },
         ],
       ]);
-      expect(spy.mock.calls[0][1].url.href).toBe(
-        "http://localhost/redirect",
-      );
+      expect(spy.mock.calls[0][1].url.href).toBe("http://localhost/redirect");
       expect(router.state).toMatchObject({
         navigation: { state: "idle" },
         location: { pathname: "/page" },
