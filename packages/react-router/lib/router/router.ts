@@ -10,11 +10,14 @@ import {
 } from "./history";
 import type {
   ClientInstrumentation,
+  InstrumentationMetaReceiver,
+  InstrumentationResultMeta,
   InstrumentRouteFunction,
   InstrumentRouterFunction,
   ServerInstrumentation,
 } from "./instrumentation";
 import {
+  consumeInstrumentationClientResultMetaReceiver,
   getRouteInstrumentationUpdates,
   instrumentClientSideRouter,
 } from "./instrumentation";
@@ -56,6 +59,7 @@ import {
   ResultType,
   convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
+  createDataFunctionUrl,
   getPathContributingMatches,
   getResolveToMatches,
   isAbsoluteUrl,
@@ -1673,6 +1677,11 @@ export function createRouter(init: RouterInit): Router {
       return promise;
     }
 
+    // Consume this immediately before any async work kicks off so it doesn't stick
+    // around for subsequent interrupting navigations
+    let instrumentationNavigateMetaReceiver =
+      consumeInstrumentationClientResultMetaReceiver(router);
+
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -1791,6 +1800,7 @@ export function createRouter(init: RouterInit): Router {
       enableViewTransition: opts && opts.viewTransition,
       flushSync,
       callSiteDefaultShouldRevalidate: opts && opts.defaultShouldRevalidate,
+      instrumentationNavigateMetaReceiver,
     });
   }
 
@@ -1870,6 +1880,7 @@ export function createRouter(init: RouterInit): Router {
       enableViewTransition?: boolean;
       flushSync?: boolean;
       callSiteDefaultShouldRevalidate?: boolean;
+      instrumentationNavigateMetaReceiver?: InstrumentationMetaReceiver;
     },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1925,6 +1936,15 @@ export function createRouter(init: RouterInit): Router {
     let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
+    }
+
+    if (opts?.instrumentationNavigateMetaReceiver) {
+      let meta = getInstrumentationNavigateMeta(
+        init.history,
+        location,
+        matches,
+      );
+      opts.instrumentationNavigateMetaReceiver(meta);
     }
 
     // Short circuit with a 404 on the root error boundary if we match nothing
@@ -2592,6 +2612,11 @@ export function createRouter(init: RouterInit): Router {
 
     let flushSync = (opts && opts.flushSync) === true;
 
+    // Consume this immediately before any async work kicks off so it doesn't stick
+    // around for subsequent interrupting calls
+    let instrumentationResultMetaReceiver =
+      consumeInstrumentationClientResultMetaReceiver(router);
+
     let routesToUse = dataRoutes.activeRoutes;
     let normalizedPath = normalizeTo(
       state.location,
@@ -2612,6 +2637,15 @@ export function createRouter(init: RouterInit): Router {
     let fogOfWar = checkFogOfWar(matches, routesToUse, normalizedPath);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
+    }
+
+    if (instrumentationResultMetaReceiver) {
+      let meta = getInstrumentationNavigateMeta(
+        init.history,
+        normalizedPath,
+        matches,
+      );
+      instrumentationResultMetaReceiver(meta);
     }
 
     if (!matches) {
@@ -6946,34 +6980,6 @@ function createClientSideRequest(
   return new Request(url, init);
 }
 
-// Create the normalized URL instance to pass to loaders/actions/middleware.
-// We strip the `?index` param because that is a React Router implementation detail.
-function createDataFunctionUrl(request: Request, path: To): URL {
-  let url = new URL(request.url);
-
-  let parsed = typeof path === "string" ? parsePath(path) : path;
-  url.pathname = parsed.pathname || "/";
-
-  if (parsed.search) {
-    let searchParams = new URLSearchParams(parsed.search);
-
-    // Strip naked index param, preserve any other index params with values
-    let indexValues = searchParams.getAll("index");
-    searchParams.delete("index");
-    for (let value of indexValues.filter(Boolean)) {
-      searchParams.append("index", value);
-    }
-    let search = searchParams.toString();
-    url.search = search ? `?${search}` : "";
-  } else {
-    url.search = "";
-  }
-
-  url.hash = parsed.hash || "";
-
-  return url;
-}
-
 function convertFormDataToSearchParams(formData: FormData): URLSearchParams {
   let searchParams = new URLSearchParams();
 
@@ -7461,6 +7467,18 @@ function getTargetMatch(matches: DataRouteMatch[], location: Path | string) {
   // pathless layout routes)
   let pathMatches = getPathContributingMatches(matches);
   return pathMatches[pathMatches.length - 1];
+}
+
+function getInstrumentationNavigateMeta(
+  history: History,
+  location: To,
+  matches: DataRouteMatch[] | null,
+): InstrumentationResultMeta {
+  return {
+    url: createDataFunctionUrl(history.createURL(location), location),
+    pattern: matches ? getRoutePattern(matches) : "",
+    params: matches?.[0]?.params ? { ...matches[0].params } : {},
+  };
 }
 
 function getSubmissionFromNavigation(

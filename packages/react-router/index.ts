@@ -77,6 +77,8 @@ export type {
   InstrumentRouterFunction,
   InstrumentRouteFunction,
   InstrumentationHandlerResult,
+  InstrumentationClientRouterResult,
+  InstrumentationServerHandlerResult,
 } from "./lib/router/instrumentation";
 export {
   createStaticHandler,

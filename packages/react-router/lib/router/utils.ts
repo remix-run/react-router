@@ -2276,9 +2276,46 @@ by the star-slash in the `getRoutePattern` regex and messes up the parsed commen
 for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 */
 
-export function getRoutePattern(matches: RouteMatch[]) {
+// Accept the narrow shape we read so this can be used with server-runtime
+// matches, which do not include the full RouteMatch fields like pathnameBase.
+export function getRoutePattern(matches: { route: { path?: string } }[]) {
   let parts = matches.map((m) => m.route.path).filter(Boolean) as string[];
   return joinPaths(parts) || "/";
+}
+
+// Create the normalized URL instance to pass to loaders/actions/middleware.
+// We strip the `?index` param because that is a React Router implementation detail.
+export function createDataFunctionUrl(
+  request: Request | URL | string,
+  path: To,
+): URL {
+  let url = new URL(
+    typeof request === "string" || request instanceof URL
+      ? request
+      : request.url,
+  );
+
+  let parsed = typeof path === "string" ? parsePath(path) : path;
+  url.pathname = parsed.pathname || "/";
+
+  if (parsed.search) {
+    let searchParams = new URLSearchParams(parsed.search);
+
+    // Strip naked index param, preserve any other index params with values
+    let indexValues = searchParams.getAll("index");
+    searchParams.delete("index");
+    for (let value of indexValues.filter(Boolean)) {
+      searchParams.append("index", value);
+    }
+    let search = searchParams.toString();
+    url.search = search ? `?${search}` : "";
+  } else {
+    url.search = "";
+  }
+
+  url.hash = parsed.hash || "";
+
+  return url;
 }
 
 export const isBrowser =

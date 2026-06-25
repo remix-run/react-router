@@ -42,7 +42,11 @@ import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
-import { instrumentHandler } from "../router/instrumentation";
+import {
+  instrumentationResultMetaContext,
+  instrumentHandler,
+} from "../router/instrumentation";
+import { createDataFunctionUrl, getRoutePattern } from "../router/utils";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import { getNormalizedPath } from "./urls";
 
@@ -76,6 +80,9 @@ function derive(build: ServerBuild, mode?: string) {
         );
       }
     });
+  let requestHandlerInstrumentations = build.entry.module.instrumentations
+    ?.map((i) => i.handler)
+    .filter(Boolean) as InstrumentRequestHandlerFunction[];
 
   let requestHandler: RequestHandler = async (request, initialContext) => {
     let params: RouteMatch<ServerRoute>["params"] = {};
@@ -105,7 +112,8 @@ function derive(build: ServerBuild, mode?: string) {
     loadContext = initialContext || new RouterContextProvider();
 
     let requestUrl = new URL(request.url);
-    let normalizedPathname = getNormalizedPath(request).pathname;
+    let normalizedPath = getNormalizedPath(request);
+    let normalizedPathname = normalizedPath.pathname;
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -207,6 +215,13 @@ function derive(build: ServerBuild, mode?: string) {
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
+    if (requestHandlerInstrumentations?.length) {
+      loadContext.set(instrumentationResultMetaContext, {
+        url: createDataFunctionUrl(request, normalizedPath),
+        pattern: matches ? getRoutePattern(matches) : "",
+        params: matches?.[0]?.params ? { ...matches[0].params } : {},
+      });
+    }
 
     let response: Response;
     if (requestUrl.pathname.endsWith(".data")) {
@@ -295,12 +310,10 @@ function derive(build: ServerBuild, mode?: string) {
     return response;
   };
 
-  if (build.entry.module.instrumentations) {
+  if (requestHandlerInstrumentations?.length) {
     requestHandler = instrumentHandler(
       requestHandler,
-      build.entry.module.instrumentations
-        .map((i) => i.handler)
-        .filter(Boolean) as InstrumentRequestHandlerFunction[],
+      requestHandlerInstrumentations,
     );
   }
 

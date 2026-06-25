@@ -44,8 +44,11 @@ export const instrumentations = [
         async request(handleRequest, { request }) {
           let url = `${request.method} ${request.url}`;
           console.log(`Request start: ${url}`);
-          await handleRequest();
-          console.log(`Request end: ${url}`);
+          let result = await handleRequest();
+          let pattern = result.meta?.pattern ?? "unknown";
+          console.log(
+            `Request end: ${url} (${result.statusCode} ${pattern})`,
+          );
         },
       });
     },
@@ -92,20 +95,24 @@ const instrumentations = [
       router.instrument({
         // Instrument navigations
         async navigate(callNavigate, { currentUrl, to }) {
-          let nav = `${currentUrl} → ${to}`;
+          let nav = `${currentUrl} -> ${to}`;
           console.log(`Navigation start: ${nav}`);
-          await callNavigate();
-          console.log(`Navigation end: ${nav}`);
+          let result = await callNavigate();
+          console.log(
+            `Navigation end: ${nav} (${result.meta?.pattern})`,
+          );
         },
         // Instrument fetcher calls
         async fetch(
           callFetch,
           { href, currentUrl, fetcherKey },
         ) {
-          let fetch = `${fetcherKey} → ${href}`;
+          let fetch = `${fetcherKey} -> ${href}`;
           console.log(`Fetcher start: ${fetch}`);
-          await callFetch();
-          console.log(`Fetcher end: ${fetch}`);
+          let result = await callFetch();
+          console.log(
+            `Fetcher end: ${fetch} (${result.meta?.pattern})`,
+          );
         },
       });
     },
@@ -160,20 +167,24 @@ const instrumentations = [
       router.instrument({
         // Instrument navigations
         async navigate(callNavigate, { currentUrl, to }) {
-          let nav = `${currentUrl} → ${to}`;
+          let nav = `${currentUrl} -> ${to}`;
           console.log(`Navigation start: ${nav}`);
-          await callNavigate();
-          console.log(`Navigation end: ${nav}`);
+          let result = await callNavigate();
+          console.log(
+            `Navigation end: ${nav} (${result.meta?.pattern})`,
+          );
         },
         // Instrument fetcher calls
         async fetch(
           callFetch,
           { href, currentUrl, fetcherKey },
         ) {
-          let fetch = `${fetcherKey} → ${href}`;
+          let fetch = `${fetcherKey} -> ${href}`;
           console.log(`Fetcher start: ${fetch}`);
-          await callFetch();
-          console.log(`Fetcher end: ${fetch}`);
+          let result = await callFetch();
+          console.log(
+            `Fetcher end: ${fetch} (${result.meta?.pattern})`,
+          );
         },
       });
     },
@@ -227,7 +238,9 @@ export const instrumentations = [
       handler.instrument({
         async request(handleRequest, { request, context }) {
           // Runs around ALL requests to your app
-          await handleRequest();
+          let result = await handleRequest();
+          let statusCode = result.statusCode;
+          let routePattern = result.meta?.pattern;
         },
       });
     },
@@ -248,14 +261,16 @@ export const instrumentations = [
       router.instrument({
         async navigate(callNavigate, { to, currentUrl }) {
           // Runs around navigation operations
-          await callNavigate();
+          let result = await callNavigate();
+          let routePattern = result.meta?.pattern;
         },
         async fetch(
           callFetch,
           { href, currentUrl, fetcherKey },
         ) {
           // Runs around fetcher operations
-          await callFetch();
+          let result = await callFetch();
+          let routePattern = result.meta?.pattern;
         },
       });
     },
@@ -327,7 +342,7 @@ This ensures that instrumentation is safe to add to production applications and 
 
 To ensure that instrumentation code doesn't impact the runtime application, errors are caught internally and prevented from propagating outward. This design choice shows up in 2 aspects.
 
-First, if a "handler" function (loader, action, request handler, navigation, etc.) throws an error, that error will not bubble out of the `callHandler` function invoked from your instrumentation. Instead, the `callHandler` function returns a discriminated union result of type `{ type: "success", error: undefined } | { type: "error", error: unknown }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
+First, if a "handler" function (loader, action, request handler, navigation, etc.) throws an error, that error will not bubble out of the `callHandler` function invoked from your instrumentation. Instead, the `callHandler` function returns a discriminated union result of type `{ status: "success", error: undefined } | { status: "error", error: Error }`. This ensures your entire instrumentation function runs without needing any try/catch/finally logic to handle application errors.
 
 ```tsx
 export const instrumentations = [
@@ -367,6 +382,64 @@ export const instrumentations = [
         async action(callAction) {
           await callAction();
           somethingThatThrows();
+        },
+      });
+    },
+  },
+];
+```
+
+### Result Metadata
+
+Some instrumented calls return additional information that is only available after React Router starts processing the request, navigation, or fetcher call.
+
+- Route-level instrumentations (`loader`/`action`/`middleware`) don't include `meta` because metadata is available on the `info` parameter
+- Client navigation/fetcher and Server request handler instrumentations return a meta field
+  - `meta` contains the same values passed to loaders and actions
+    - `url`: The normalized `URL` for the matched route request
+    - `pattern`: The matched route pattern, such as `/projects/:id`
+    - `params`: The matched route params
+  - `meta` may be `undefined` when React Router does not have route metadata for the instrumented call, such as server manifest requests or numeric POP navigations like `navigate(-1)`
+  - For client navigations that redirect, `meta` describes the original navigation target instead of the final redirected location.
+- Server request handler instrumentations also return the `statusCode` of the response
+
+```tsx
+// entry.server.tsx
+export const instrumentations = [
+  {
+    handler(handler) {
+      handler.instrument({
+        async request(handleRequest) {
+          let result = await handleRequest();
+
+          let statusCode = result.statusCode;
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+      });
+    },
+  },
+];
+
+// entry.client.tsx
+const instrumentations = [
+  {
+    router(router) {
+      router.instrument({
+        async navigate(callNavigate) {
+          let result = await callNavigate();
+
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+        },
+        async fetch(callFetch) {
+          let result = await callFetch();
+
+          let routeUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
         },
       });
     },
@@ -429,8 +502,16 @@ export const instrumentations = [
 const logging: ServerInstrumentation = {
   handler({ instrument }) {
     instrument({
-      request: (fn, { request }) =>
-        log(`request ${request.url}`, fn),
+      async request(fn, { request }) {
+        let label = `request ${request.url}`;
+        let start = Date.now();
+        console.log(`-> ${label}`);
+        let result = await fn();
+        let pattern = result.meta?.pattern ?? "";
+        console.log(
+          `<- ${label} (${Date.now() - start}ms ${result.statusCode} ${pattern})`,
+        );
+      },
     });
   },
   route({ instrument, id }) {
@@ -447,9 +528,9 @@ async function log(
   cb: () => Promise<InstrumentationHandlerResult>,
 ) {
   let start = Date.now();
-  console.log(`➡️ ${label}`);
+  console.log(`-> ${label}`);
   await cb();
-  console.log(`⬅️ ${label} (${Date.now() - start}ms)`);
+  console.log(`<- ${label} (${Date.now() - start}ms)`);
 }
 
 export const instrumentations = [logging];
@@ -523,10 +604,34 @@ export const instrumentations = [otel];
 const windowPerf: ClientInstrumentation = {
   router({ instrument }) {
     instrument({
-      navigate: (fn, { to, currentUrl }) =>
-        measure(`navigation:${currentUrl}->${to}`, fn),
-      fetch: (fn, { href }) =>
-        measure(`fetcher:${href}`, fn),
+      async navigate(fn, { to, currentUrl }) {
+        let label = `navigation:${currentUrl}->${to}`;
+        performance.mark(`start:${label}`);
+        let result = await fn();
+        performance.mark(`end:${label}`);
+        performance.measure(
+          label,
+          `start:${label}`,
+          `end:${label}`,
+        );
+        console.log(
+          `navigation pattern: ${result.meta?.pattern}`,
+        );
+      },
+      async fetch(fn, { href }) {
+        let label = `fetcher:${href}`;
+        performance.mark(`start:${label}`);
+        let result = await fn();
+        performance.mark(`end:${label}`);
+        performance.measure(
+          label,
+          `start:${label}`,
+          `end:${label}`,
+        );
+        console.log(
+          `fetcher pattern: ${result.meta?.pattern}`,
+        );
+      },
     });
   },
   route({ instrument, id }) {
