@@ -63,13 +63,6 @@ type ChangeFileSummary = {
 };
 
 function getChangeFileFoundComment(summaries: ChangeFileSummary[]) {
-  let rows = summaries
-    .map(
-      (summary) =>
-        `| \`${summary.type}\` | ${summary.firstLine.replaceAll("|", "\\|")} |`,
-    )
-    .join("\n");
-
   return `${CHANGE_FILE_MARKER}
 ### ✅ Change File Found
 
@@ -77,7 +70,10 @@ One or more [change files](https://github.com/remix-run/react-router/blob/main/d
 
 | Type | Change |
 | --- | --- |
-${rows}`;
+${summaries
+  .map((s) => `| \`${s.type}\` | ${s.firstLine.replaceAll("|", "\\|")} |`)
+  .join("\n")}
+`;
 }
 
 const CHANGE_FILE_MISSING_COMMENT = `${CHANGE_FILE_MARKER}
