@@ -10,7 +10,7 @@ import {
   RouteContext,
   RouteErrorContext,
 } from "./context";
-import type { Location, Path, To } from "./router/history";
+import type { History, Location, Path, To } from "./router/history";
 import {
   Action as NavigationType,
   invariant,
@@ -887,14 +887,14 @@ export function useRoutesImpl(
             // Re-encode pathnames that were decoded inside matchRoutes.
             // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
             // `new URL()` internally and we need to prevent it from treating
-            // them as separators
+            // them as separators. Also pre-encode `\` and other chars that
+            // `new URL` rejects (see issue #15140: a splat that decodes to
+            // `\` — e.g. the URL `/%5C` — throws "Invalid URL" when fed to
+            // `new URL("http://localhost/\\")`). Wrap the encodeLocation
+            // call in a try/catch so a single bad input doesn't crash the
+            // route render.
             navigator.encodeLocation
-              ? navigator.encodeLocation(
-                  match.pathname
-                    .replace(/%/g, "%25")
-                    .replace(/\?/g, "%3F")
-                    .replace(/#/g, "%23"),
-                ).pathname
+              ? safeEncodePathname(navigator.encodeLocation, match.pathname)
               : match.pathname,
           ]),
           pathnameBase:
@@ -905,14 +905,13 @@ export function useRoutesImpl(
                   // Re-encode pathnames that were decoded inside matchRoutes
                   // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
                   // `new URL()` internally and we need to prevent it from treating
-                  // them as separators
+                  // them as separators. Same fallback as above for backslash
+                  // and other `new URL`-rejecting chars.
                   navigator.encodeLocation
-                    ? navigator.encodeLocation(
-                        match.pathnameBase
-                          .replace(/%/g, "%25")
-                          .replace(/\?/g, "%3F")
-                          .replace(/#/g, "%23"),
-                      ).pathname
+                    ? safeEncodePathname(
+                        navigator.encodeLocation,
+                        match.pathnameBase,
+                      )
                     : match.pathnameBase,
                 ]),
         }),
@@ -1918,6 +1917,36 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   return blockerKey && state.blockers.has(blockerKey)
     ? state.blockers.get(blockerKey)!
     : IDLE_BLOCKER;
+}
+
+// Run `navigator.encodeLocation` on a pathname with a try/catch fallback.
+// `encodeLocation` constructs a `new URL(...)` under the hood and throws
+// TypeError("Invalid URL") when the pathname contains characters the URL
+// parser rejects — notably a backslash that came from decoding a splat
+// segment like `/%5C`. Pre-encode the characters `new URL` would treat
+// as separators or reject outright so common inputs don't escape into the
+// URL constructor. See issue #15140.
+function safeEncodePathname(
+  encodeLocation: NonNullable<History["encodeLocation"]>,
+  pathname: string,
+): string {
+  // Pre-encode: percent (re-encoded so it survives a second pass), `?` and
+  // `#` (URL delimiters that would terminate the path), and `\` (which the
+  // URL constructor rejects outright).
+  let preEncoded = pathname
+    .replace(/%/g, "%25")
+    .replace(/\?/g, "%3F")
+    .replace(/#/g, "%23")
+    .replace(/\\/g, "%5C");
+  try {
+    return encodeLocation(preEncoded).pathname;
+  } catch {
+    // URL constructor rejected the path. Return the pre-encoded string
+    // without running it back through `new URL` so the renderer doesn't
+    // crash on a malformed path. The router will still match the original
+    // decoded path against routes.
+    return preEncoded;
+  }
 }
 
 // Stable version of useNavigate that is used when we are in the context of
