@@ -205,7 +205,7 @@ test.describe("loader in an app", async () => {
       );
     });
 
-    test("should let loader throw to it's own boundary without a default export", async ({
+    test("should let loader throw to its own boundary without a default export", async ({
       page,
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
