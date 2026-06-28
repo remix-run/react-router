@@ -799,6 +799,15 @@ export function createBrowserURLImpl(
   // an ancestor route
   href = href.replace(/ $/, "%20");
 
+  // For local paths (i.e. not absolute redirect URLs), a bare backslash is part
+  // of the pathname but `new URL()` rejects it as an invalid character. This
+  // happens when navigating relative to a route that matched an encoded
+  // backslash (e.g. `/%5C` decodes to `/\` in the active matches), so pre-encode
+  // it back to `%5C` to keep the URL valid.
+  if (!isAbsolute) {
+    href = href.replace(/\\/g, "%5C");
+  }
+
   // If this isn't a usage for absolute URLs (currently only for redirects),
   // then we need to avoid the URL constructor treating a leading double slash
   // as a protocol-less URL. By prepending the base, it forces the double slash

@@ -986,6 +986,37 @@ describe("NavLink using a data router", () => {
     expect(anchor.getAttribute("href")).toBe("/%5C");
   });
 
+  it("can navigate via a relative link on a route matching an encoded backslash (#15140)", async () => {
+    // Clicking the relative link runs the navigate path, which resolves `.`
+    // against the active matches (whose pathnames are decoded, so `/%5C`
+    // becomes `/\`) and hands the result to `history.encodeLocation`. That uses
+    // `new URL()` and would throw `ERR_INVALID_URL` on the bare backslash, so
+    // the backslash needs to be re-encoded before the navigation lands.
+    let router = createBrowserRouter(
+      createRoutesFromElements(
+        <Route
+          path="*"
+          element={
+            <>
+              <NavLink to=".">Self</NavLink>
+              <Outlet />
+            </>
+          }
+        />,
+      ),
+      {
+        window: getWindow("/%5C"),
+      },
+    );
+
+    render(<RouterProvider router={router} />);
+
+    fireEvent.click(screen.getByText("Self"));
+
+    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+    expect(router.state.location.pathname).toBe("/%5C");
+  });
+
   it("applies the default 'active'/'pending' classNames when a basename is used", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
