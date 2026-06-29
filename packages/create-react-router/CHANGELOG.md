@@ -1,5 +1,18 @@
 # `create-react-router`
 
+## v8.1.0
+
+### Minor Changes
+
+- Add a default-on CLI option to include the official React Router agent skill in generated projects ([#15213](https://github.com/remix-run/react-router/pull/15213))
+  - New projects include `.agents/skills/react-router` by default when running with `--yes` or in non-interactive shells
+  - Interactive runs prompt to include the skill, defaulting to yes
+  - Use `--no-agent-skills` to skip copying the skill
+
+### Patch Changes
+
+- Use Node's built-in utilities for CLI argument parsing, ANSI-stripping, and child process execution to remove the `arg`, `strip-ansi`, and `execa` dependencies ([#15231](https://github.com/remix-run/react-router/pull/15231))
+
 ## v8.0.1
 
 ### Patch Changes

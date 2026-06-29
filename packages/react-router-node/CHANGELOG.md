@@ -1,5 +1,12 @@
 # `@react-router/node`
 
+## v8.1.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.1.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.1.0)
+
 ## v8.0.1
 
 ### Patch Changes

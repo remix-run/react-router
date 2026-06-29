@@ -16,6 +16,9 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.1.0](#v810)
+    - [Agent Skills Installation via `create-react-router`](#agent-skills-installation-via-create-react-router)
+    - [Observability Metadata](#observability-metadata)
   - [v8.0.1](#v801)
   - [v8.0.0](#v800)
     - [Baseline Support](#baseline-support)
@@ -103,6 +106,70 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.1.0
+
+Date: 2026-06-29
+
+### What's Changed
+
+#### Agent Skills Installation via `create-react-router`
+
+`create-react-router` can now setup the React Router [Agent Skill](https://github.com/remix-run/react-router/tree/main/.agents/skills/react-router) in your new project. Interactive shells will issue a prompt on whether to include the skills, and they will be included by default with when running with `--yes` or in non-interactive shells. You can skip the skill addition with the `--no-agent-skills` CLI flag.
+
+#### Observability Metadata
+
+The Instrumentation APIs `info` parameter usually corresponds roughly to the inputs to the thing being instrumented (`handler`, `loader`, etc.). For route level instrumentations such as loaders, this contains useful information like the `pattern` (i.e., `/blog/:slug`) that allows you to report information that is easily aggregated by pattern, instead of having to manually deduce one from the request url.
+
+However, for outer layers such as the `handler` or a router `navigate` call - we can't provide a `pattern` because we haven't yet done any route matching, so it wasn't easy to report at those levels based on a generic route pattern.
+
+The internal instrumentation results now contain relevant metadata in `result.meta` for these outer instrumentation layers. For server `handler` instrumentations, we also expose the `statusCode` of the outgoing HTTP response:
+
+```ts
+export const instrumentations = [
+  {
+    handler(handler) {
+      handler.instrument({
+        async request(handleRequest) {
+          let result = await handleRequest();
+
+          // Available to server `handler`, and router `navigate`/`fetch` instrumentations
+          let normalizedUrl = result.meta?.url;
+          let routePattern = result.meta?.pattern;
+          let routeParams = result.meta?.params;
+
+          // Available to server `handler` only
+          let statusCode = result.statusCode;
+        },
+      });
+    },
+  },
+];
+```
+
+Please see the [docs](https://reactrouter.com/how-to/instrumentation#result-metadata) for more information.
+
+### Minor Changes
+
+- `react-router` - Return route metadata from server request, client navigation, and client fetcher instrumentations ([#15235](https://github.com/remix-run/react-router/pull/15235))
+  - Adds result metadata after instrumented calls complete, including the URL, matched route pattern, and params
+  - Adds known HTTP status codes to server request handler instrumentation results
+- `create-react-router` - Add a default-on CLI option to include the official React Router agent skill in generated projects ([#15213](https://github.com/remix-run/react-router/pull/15213))
+  - New projects include `.agents/skills/react-router` by default when running with `--yes` or in non-interactive shells
+  - Interactive runs prompt to include the skill, defaulting to yes
+  - Use `--no-agent-skills` to skip copying the skill
+
+### Patch Changes
+
+- `@react-router/dev` - Fix a regression with the new prerendering plugin where the `react-router.config.ts` `buildEnd` hook would run before prerendering was completed ([#15211](https://github.com/remix-run/react-router/pull/15211))
+- `@react-router/dev` - Fixed `react-router typegen` crashes under the Bun runtime when Babel default imports are already unwrapped ([#15214](https://github.com/remix-run/react-router/pull/15214))
+- `@react-router/dev` - Replace the deprecated `envFile:false` Vite config with `envDir:false` to eliminate a deprecation warning when using vite@8.1.0+ ([#15230](https://github.com/remix-run/react-router/pull/15230))
+- `@react-router/dev` - Only add the `"node"` Vite server condition for Framework mode apps that declare a Node server adapter dependency ([#15242](https://github.com/remix-run/react-router/pull/15242))
+  - This prevents non-Node SSR runtimes from resolving Node-specific package exports by default
+- `@react-router/serve` - Use Node's built-in networking APIs to find an available port and remove the `get-port` dependency ([#15239](https://github.com/remix-run/react-router/pull/15239))
+- `create-react-router` - Use Node's built-in utilities for CLI argument parsing, ANSI-stripping, and child process execution to remove the `arg`, `strip-ansi`, and `execa` dependencies ([#15231](https://github.com/remix-run/react-router/pull/15231))
+
+**Full Changelog**: [`v8.0.1...v8.1.0`](https://github.com/remix-run/react-router/compare/react-router@8.0.1...react-router@8.1.0)
 
 ## v8.0.1
 

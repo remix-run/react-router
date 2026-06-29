@@ -1,5 +1,15 @@
 # `@react-router/serve`
 
+## v8.1.0
+
+### Patch Changes
+
+- Use Node's built-in networking APIs to find an available port and remove the `get-port` dependency ([#15239](https://github.com/remix-run/react-router/pull/15239))
+- Updated dependencies:
+  - [`react-router@8.1.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.1.0)
+  - [`@react-router/express@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.1.0)
+  - [`@react-router/node@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.1.0)
+
 ## v8.0.1
 
 ### Patch Changes
