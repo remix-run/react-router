@@ -147,7 +147,7 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
   let regex =
     /^packages\/[^/]+\/\.changes\/(major|minor|patch|unstable)\.[^/]+\.md$/;
   let summaries: ChangeFileSummary[] = files
-    .filter((f) => regex.test(f.filename))
+    .filter((f) => f.status !== "removed" && regex.test(f.filename))
     .map((f) => {
       let type = f.filename.match(regex)?.[1] ?? "unknown";
       let firstLine =
