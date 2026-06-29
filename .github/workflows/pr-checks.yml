@@ -23,6 +23,8 @@ jobs:
 
     steps:
       - name: Check changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
         id: changed-files
         run: |
           changed_files="$(gh pr diff "${{ github.event.pull_request.number }}" --repo "$GITHUB_REPOSITORY" --name-only)"
