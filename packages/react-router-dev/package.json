@@ -1,7 +1,7 @@
 {
   "name": "@react-router/dev",
   "type": "module",
-  "version": "8.0.1",
+  "version": "8.1.0",
   "description": "Dev tools and CLI for React Router",
   "keywords": [
     "react",

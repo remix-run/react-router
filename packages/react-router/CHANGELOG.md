@@ -1,5 +1,13 @@
 # `react-router`
 
+## v8.1.0
+
+### Minor Changes
+
+- Return route metadata from server request, client navigation, and client fetcher instrumentations ([#15235](https://github.com/remix-run/react-router/pull/15235))
+  - Adds result metadata after instrumented calls complete, including the URL, matched route pattern, and params
+  - Adds known HTTP status codes to server request handler instrumentation results
+
 ## v8.0.1
 
 ### Patch Changes
