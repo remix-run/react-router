@@ -144,6 +144,9 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
   }
 
   let files = await getPrFiles(ctx.prNumber);
+  let touchesPackageFiles = files.some((f) =>
+    f.filename.startsWith("packages/"),
+  );
   let regex =
     /^packages\/[^/]+\/\.changes\/(major|minor|patch|unstable)\.[^/]+\.md$/;
   let summaries: ChangeFileSummary[] = files
@@ -161,6 +164,11 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
     });
 
   console.log(`changeFileCheck: found ${summaries.length} change files`);
+
+  if (summaries.length === 0 && !touchesPackageFiles) {
+    console.log("changeFileCheck: no package files changed");
+    return [];
+  }
 
   let body = CHANGE_FILE_MISSING_COMMENT;
 
