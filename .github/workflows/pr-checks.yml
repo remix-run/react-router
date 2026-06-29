@@ -22,22 +22,56 @@ jobs:
       pull-requests: read
 
     steps:
+      - name: Check changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        id: changed-files
+        run: |
+          changed_files="$(gh pr diff "${{ github.event.pull_request.number }}" --repo "$GITHUB_REPOSITORY" --name-only)"
+
+          touches_scripts="false"
+          touches_packages="false"
+
+          while IFS= read -r file; do
+            case "$file" in
+              scripts/*) touches_scripts="true" ;;
+              packages/*) touches_packages="true" ;;
+            esac
+          done <<< "$changed_files"
+
+          if [ "$touches_scripts" = "true" ] && [ "$touches_packages" = "true" ]; then
+            echo "PR checks cannot safely run when a PR changes both scripts/ and packages/."
+            echo "Please split automation changes and package changes into separate PRs."
+            exit 1
+          elif [ "$touches_scripts" = "true" ]; then
+            echo "PR touches scripts/ without touching packages/; skipping community helper checks."
+            echo '{"prNumber":${{ github.event.pull_request.number }},"actions":[]}' > pr-checks-result.json
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=run" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout repo
+        if: steps.changed-files.outputs.mode == 'run'
         uses: actions/checkout@v7
 
       - name: Setup pnpm
+        if: steps.changed-files.outputs.mode == 'run'
         uses: pnpm/action-setup@v6
 
       - name: Setup node
+        if: steps.changed-files.outputs.mode == 'run'
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install deps
+        if: steps.changed-files.outputs.mode == 'run'
         run: pnpm install --frozen-lockfile
 
       - name: Run checks
+        if: steps.changed-files.outputs.mode == 'run'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
