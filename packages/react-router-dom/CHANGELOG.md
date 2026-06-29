@@ -1,5 +1,13 @@
 # react-router-dom
 
+## v7.18.1
+
+### Patch Changes
+
+- Fix incorrect `package.json` `main` field for CommonJS builds ([#15238](https://github.com/remix-run/react-router/pull/15238))
+- Updated dependencies:
+  - [`react-router@7.18.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.1)
+
 ## v7.18.0
 
 ### Patch Changes

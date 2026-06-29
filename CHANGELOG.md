@@ -13,7 +13,9 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.1](#v7181)
   - [v7.18.0](#v7180)
+    - [CSRF Check Logic Fix](#csrf-check-logic-fix)
   - [v7.17.0](#v7170)
   - [v7.16.0](#v7160)
     - [Stabilized `future.v8_trailingSlashAwareDataRequests`](#stabilized-futurev8_trailingslashawaredatarequests)
@@ -177,6 +179,16 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.1
+
+Date: 2026-06-29
+
+### Patch Changes
+
+- `react-router-dom` - Fix incorrect `package.json` `main` field for CommonJS builds ([#15238](https://github.com/remix-run/react-router/pull/15238))
+
+**Full Changelog**: [`v7.18.0...v7.18.1`](https://github.com/remix-run/react-router/compare/react-router@7.18.0...react-router@7.18.1)
 
 ## v7.18.0
 
