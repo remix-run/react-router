@@ -93,6 +93,53 @@ test.describe("vite-plugin-cloudflare", () => {
     );
   });
 
+  test("does not force node export conditions", async ({ dev, page }) => {
+    const baseFiles = defineFiles();
+    const files: Files = async (args) => ({
+      ...(await baseFiles(args)),
+      "app/routes/conditional-export.tsx": tsx`
+        import { runtime } from "conditional-runtime";
+
+        export function loader() {
+          return { runtime };
+        }
+
+        export default function ConditionalExportsRoute({
+          loaderData,
+        }: {
+          loaderData: { runtime: string };
+        }) {
+          return <div data-runtime>{loaderData.runtime}</div>;
+        }
+      `,
+      "node_modules/conditional-runtime/package.json": JSON.stringify({
+        name: "conditional-runtime",
+        type: "module",
+        exports: {
+          ".": {
+            node: "./node.js",
+            default: "./worker.js",
+          },
+        },
+      }),
+      "node_modules/conditional-runtime/node.js": tsx`
+        import "node:http";
+        export const runtime = "node";
+      `,
+      "node_modules/conditional-runtime/worker.js": tsx`
+        export const runtime = "worker";
+      `,
+    });
+    const { port } = await dev(files, "vite-plugin-cloudflare-template");
+
+    await page.goto(`http://localhost:${port}/conditional-export`, {
+      waitUntil: "networkidle",
+    });
+
+    expect(page.errors).toEqual([]);
+    await expect(page.locator("[data-runtime]")).toHaveText("worker");
+  });
+
   test.describe("without JavaScript", () => {
     test.use({ javaScriptEnabled: false });
 
