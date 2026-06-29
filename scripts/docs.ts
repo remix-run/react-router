@@ -99,7 +99,6 @@ const isComponentApi = (c: SimplifiedComment) =>
 // Read a filename from standard input using the node parseArgs utility
 
 const { values: args } = util.parseArgs({
-  args: process.argv.slice(2),
   options: {
     path: {
       type: "string",
@@ -122,7 +121,6 @@ const { values: args } = util.parseArgs({
       short: "h",
     },
   },
-  allowPositionals: true,
 });
 
 if (args.help) {

@@ -21,6 +21,7 @@ import * as cp from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import {
   GITHUB_REPO_URL,
   packageNameToDirectoryName,
@@ -31,8 +32,14 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const changesetsDir = path.join(repoRoot, ".changeset");
 const packagesDir = path.join(repoRoot, "packages");
 
-const args = process.argv.slice(2);
-const dryRun = args.includes("--dry-run");
+const { values } = parseArgs({
+  options: {
+    "dry-run": {
+      type: "boolean",
+    },
+  },
+});
+const dryRun = values["dry-run"] === true;
 
 const validBumps = new Set(["major", "minor", "patch"]);
 

@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import { colorize, colors } from "./utils/color.ts";
 import { logAndExec } from "./utils/process.ts";
 
@@ -11,9 +12,16 @@ const packageDirNames = fs
   .readdirSync("packages")
   .filter((name) => fs.statSync(`packages/${name}`).isDirectory());
 
-const command = process.argv[2];
-const args = process.argv.slice(3);
-const dryRun = args.includes("--dry-run");
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: {
+    "dry-run": {
+      type: "boolean",
+    },
+  },
+});
+const command = positionals[0];
+const dryRun = values["dry-run"] === true;
 
 if (command === "version") {
   await bumpVersion();

@@ -7,6 +7,8 @@
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
  */
+import { parseArgs } from "node:util";
+
 import * as semver from "semver";
 
 import { readJson } from "../utils/fs.ts";
@@ -26,8 +28,14 @@ import {
   parseAllChangeFiles,
 } from "./changes.ts";
 
-let args = process.argv.slice(2);
-let preview = args.includes("--preview");
+let { values } = parseArgs({
+  options: {
+    preview: {
+      type: "boolean",
+    },
+  },
+});
+let preview = values.preview === true;
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
 let releaseBranches = ["main", "hotfix", "v7"];
