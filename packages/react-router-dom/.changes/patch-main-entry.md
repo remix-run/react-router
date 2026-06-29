@@ -1,1 +1,1 @@
-Fix `react-router-dom` package metadata so the CommonJS `main` field points to the packaged `dist/index.js` file.
+Fix incorrect `package.json` `main` field for CommonJS builds
