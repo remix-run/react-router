@@ -49,7 +49,7 @@ npm install @react-router/node
 
 **👉 Swap out the React plugin for React Router.**
 
-```diff filename=vite.config.ts
+```tsx diff filename=vite.config.ts
 -import react from '@vitejs/plugin-react'
 +import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
