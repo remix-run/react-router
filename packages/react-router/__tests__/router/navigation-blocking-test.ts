@@ -175,6 +175,19 @@ describe("navigation blocking", () => {
         expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
     });
+
+    describe("revalidation while blocked", () => {
+      let fn = () => true;
+      it("preserves a 'blocked' blocker through a revalidation", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about");
+        expect(router.getBlocker("KEY", fn).state).toBe("blocked");
+
+        // a revalidation is not a navigation, so it must not clear the blocker
+        await router.revalidate();
+        expect(router.getBlocker("KEY", fn).state).toBe("blocked");
+      });
+    });
   });
 
   describe("on history replace", () => {
