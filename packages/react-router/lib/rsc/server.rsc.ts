@@ -297,7 +297,7 @@ export type DecodeActionFunction = (
 export type DecodeFormStateFunction = (
   result: unknown,
   formData: FormData,
-) => ReactFormState;
+) => Promise<ReactFormState | undefined>;
 
 export type DecodeReplyFunction = (
   reply: FormData | string,
@@ -712,7 +712,7 @@ async function processServerAction(
         if (isRedirectResponse(result)) {
           result = prependBasenameToRedirectResponse(result, basename);
         }
-        formState = decodeFormState?.(result, formData);
+        formState = await decodeFormState?.(result, formData);
       } catch (error) {
         if (isRedirectResponse(error)) {
           return prependBasenameToRedirectResponse(error, basename);
