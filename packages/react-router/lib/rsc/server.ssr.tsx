@@ -19,10 +19,12 @@ import { escapeHtml } from "../dom/ssr/markup";
 
 const defaultManifestPath = "/__manifest";
 
-type DecodedPayload = Promise<RSCPayload> & {
-  _deepestRenderedBoundaryId?: string | null;
-  formState: Promise<any>;
-};
+type DecodedPayload = Promise<
+  RSCPayload & {
+    _deepestRenderedBoundaryId?: string | null;
+    formState: Promise<any>;
+  }
+>;
 
 export type SSRCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
@@ -541,10 +543,10 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
 
   const context = {
     get _deepestRenderedBoundaryId() {
-      return decoded._deepestRenderedBoundaryId ?? null;
+      return payload._deepestRenderedBoundaryId ?? null;
     },
     set _deepestRenderedBoundaryId(boundaryId: string | null) {
-      decoded._deepestRenderedBoundaryId = boundaryId;
+      payload._deepestRenderedBoundaryId = boundaryId;
     },
     actionData: payload.actionData,
     actionHeaders: {},
