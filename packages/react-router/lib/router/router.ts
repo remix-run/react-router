@@ -50,6 +50,7 @@ import type {
   ActionFunction,
   MiddlewareFunction,
   MiddlewareNextFunction,
+  MiddlewareReturnFunction,
   PatchRoutesOnNavigationFunction,
   RouteBranch,
   MapRoutePropertiesFunction,
@@ -824,6 +825,10 @@ type PendingActionResult =
   | [string, SuccessResult | ErrorResult]
   | [string, SuccessResult | ErrorResult, string];
 
+type ClientMiddlewareLeaveCallbackHandler = {
+  onCallback(routeId: string, callback: MiddlewareReturnFunction): void;
+};
+
 interface HandleActionResult extends ShortCircuitable {
   /**
    * Route matches which may have been updated from fog of war discovery
@@ -1054,6 +1059,10 @@ export function createRouter(init: RouterInit): Router {
     basename = `/${basename}`;
   }
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
+  let activeClientMiddlewareLeaveCallbacks = new Map<
+    string,
+    MiddlewareReturnFunction[]
+  >();
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -1936,6 +1945,10 @@ export function createRouter(init: RouterInit): Router {
     let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
+    }
+
+    if (!opts?.initialHydration) {
+      await runClientMiddlewareLeaveCallbacks(matches);
     }
 
     if (opts?.instrumentationNavigateMetaReceiver) {
@@ -3358,6 +3371,8 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
+    let pendingLeaveCallbacks =
+      fetcherKey == null ? new Map<string, MiddlewareReturnFunction[]>() : null;
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
@@ -3367,6 +3382,18 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         scopedContext,
         false,
+        pendingLeaveCallbacks
+          ? {
+              onCallback(routeId, callback) {
+                let callbacks = pendingLeaveCallbacks.get(routeId);
+                if (callbacks) {
+                  callbacks.push(callback);
+                } else {
+                  pendingLeaveCallbacks.set(routeId, [callback]);
+                }
+              },
+            }
+          : undefined,
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -3384,6 +3411,10 @@ export function createRouter(init: RouterInit): Router {
 
     if (request.signal.aborted) {
       return dataResults;
+    }
+
+    if (pendingLeaveCallbacks) {
+      updateClientMiddlewareLeaveCallbacks(pendingLeaveCallbacks);
     }
 
     // Stub errors where needed if they skipped returning data for routes
@@ -3432,6 +3463,43 @@ export function createRouter(init: RouterInit): Router {
     }
 
     return dataResults;
+  }
+
+  function updateClientMiddlewareLeaveCallbacks(
+    callbacksByRouteId: Map<string, MiddlewareReturnFunction[]>,
+  ) {
+    callbacksByRouteId.forEach((callbacks, routeId) => {
+      activeClientMiddlewareLeaveCallbacks.set(routeId, callbacks);
+    });
+  }
+
+  async function runClientMiddlewareLeaveCallbacks(
+    nextMatches: DataRouteMatch[] | null,
+  ) {
+    if (
+      !state.initialized ||
+      activeClientMiddlewareLeaveCallbacks.size === 0
+    ) {
+      return;
+    }
+
+    let nextRouteIds = new Set(nextMatches?.map((m) => m.route.id) || []);
+    let callbacksToRun: MiddlewareReturnFunction[] = [];
+
+    for (let match of [...state.matches].reverse()) {
+      let routeId = match.route.id;
+      let callbacks = activeClientMiddlewareLeaveCallbacks.get(routeId);
+      if (!nextRouteIds.has(routeId)) {
+        activeClientMiddlewareLeaveCallbacks.delete(routeId);
+        if (callbacks) {
+          callbacksToRun.push(...callbacks);
+        }
+      }
+    }
+
+    for (let callback of callbacksToRun) {
+      await callback();
+    }
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -6147,7 +6215,17 @@ async function defaultDataStrategyWithMiddleware(
     return defaultDataStrategy(args);
   }
 
-  return runClientMiddlewarePipeline(args, () => defaultDataStrategy(args));
+  let clientMiddlewareLeaveCallbackHandler = (
+    args as DataStrategyFunctionArgs<RouterContextProvider> & {
+      __clientMiddlewareLeaveCallbackHandler?: ClientMiddlewareLeaveCallbackHandler;
+    }
+  ).__clientMiddlewareLeaveCallbackHandler;
+
+  return runClientMiddlewarePipeline(
+    args,
+    () => defaultDataStrategy(args),
+    clientMiddlewareLeaveCallbackHandler,
+  );
 }
 
 function runServerMiddlewarePipeline(
@@ -6188,6 +6266,7 @@ function runClientMiddlewarePipeline(
     "fetcherKey" | "runClientMiddleware"
   >,
   handler: () => Promise<Record<string, DataStrategyResult>>,
+  clientMiddlewareLeaveCallbackHandler?: ClientMiddlewareLeaveCallbackHandler,
 ): Promise<Record<string, DataStrategyResult>> {
   return runMiddlewarePipeline(
     args,
@@ -6201,6 +6280,7 @@ function runClientMiddlewarePipeline(
     },
     isDataStrategyResults,
     errorHandler,
+    clientMiddlewareLeaveCallbackHandler,
   );
 
   // Handle error bubbling on the client
@@ -6279,6 +6359,7 @@ async function runMiddlewarePipeline<Result>(
     routeId: string,
     nextResult: { value: Result } | undefined,
   ) => Promise<Result>,
+  clientMiddlewareLeaveCallbackHandler?: ClientMiddlewareLeaveCallbackHandler,
 ): Promise<Result> {
   let { matches, ...dataFnArgs } = args;
   let tuples = matches.flatMap((m) =>
@@ -6292,6 +6373,7 @@ async function runMiddlewarePipeline<Result>(
     processResult,
     isResult,
     errorHandler,
+    clientMiddlewareLeaveCallbackHandler,
   );
   return result;
 }
@@ -6309,6 +6391,7 @@ async function callRouteMiddleware<Result>(
     routeId: string,
     pendingResult: { value: Result } | undefined,
   ) => Promise<Result>,
+  clientMiddlewareLeaveCallbackHandler?: ClientMiddlewareLeaveCallbackHandler,
   idx = 0,
 ): Promise<Result> {
   let { request } = args;
@@ -6341,6 +6424,7 @@ async function callRouteMiddleware<Result>(
         processResult,
         isResult,
         errorHandler,
+        clientMiddlewareLeaveCallbackHandler,
         idx + 1,
       );
 
@@ -6354,9 +6438,25 @@ async function callRouteMiddleware<Result>(
 
   try {
     let value = await middleware(args, next);
-    let result = value != null ? processResult(value) : undefined;
+    let returnCallback =
+      typeof value === "function"
+        ? (value as MiddlewareReturnFunction)
+        : undefined;
+    let result =
+      value != null && returnCallback == null
+        ? processResult(value as Result)
+        : undefined;
 
-    if (isResult(result)) {
+    if (returnCallback) {
+      if (!nextResult) {
+        nextResult = { value: await next() };
+      }
+      clientMiddlewareLeaveCallbackHandler?.onCallback(
+        routeId,
+        returnCallback,
+      );
+      return nextResult.value;
+    } else if (isResult(result)) {
       // Use short circuit values of the proper type without having called next()
       return result;
     } else if (nextResult) {
@@ -6547,6 +6647,7 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   scopedContext: unknown,
   isStaticHandler: boolean,
+  clientMiddlewareLeaveCallbackHandler?: ClientMiddlewareLeaveCallbackHandler,
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all middleware is loaded before we start executing routes
   if (matches.some((m) => m._lazyPromises?.middleware)) {
@@ -6579,24 +6680,34 @@ async function callDataStrategyImpl(
     : (cb: DataStrategyFunction<RouterContextProvider>) => {
         let typedDataStrategyArgs =
           dataStrategyArgs as DataStrategyFunctionArgs<RouterContextProvider>;
-        return runClientMiddlewarePipeline(typedDataStrategyArgs, () => {
-          return cb({
-            ...typedDataStrategyArgs,
-            fetcherKey,
-            runClientMiddleware: () => {
-              throw new Error(
-                "Cannot call `runClientMiddleware()` from within an " +
-                  "`runClientMiddleware` handler",
-              );
-            },
-          });
-        });
+        return runClientMiddlewarePipeline(
+          typedDataStrategyArgs,
+          () => {
+            return cb({
+              ...typedDataStrategyArgs,
+              fetcherKey,
+              runClientMiddleware: () => {
+                throw new Error(
+                  "Cannot call `runClientMiddleware()` from within an " +
+                    "`runClientMiddleware` handler",
+                );
+              },
+            });
+          },
+          clientMiddlewareLeaveCallbackHandler,
+        );
       };
 
   let results = await dataStrategyImpl({
     ...dataStrategyArgs,
     fetcherKey,
     runClientMiddleware,
+    ...(clientMiddlewareLeaveCallbackHandler
+      ? {
+          __clientMiddlewareLeaveCallbackHandler:
+            clientMiddlewareLeaveCallbackHandler,
+        }
+      : {}),
   });
 
   // Wait for all routes to load here but swallow the error since we want

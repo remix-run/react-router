@@ -421,6 +421,21 @@ const middleware = async ({ context }, next) => {
 };
 ```
 
+Client middleware can also return a function that React Router will call when
+the route or layout that registered it is left during a later navigation:
+
+```ts
+const clientMiddleware = async ({ context }) => {
+  // Code here runs when entering or revalidating this route
+  console.log("Enter");
+
+  return async () => {
+    // Code here runs when leaving this route
+    console.log("Leave");
+  };
+};
+```
+
 <docs-warning>You can only call `next()` once per middleware. Calling it multiple times will throw an error</docs-warning>
 
 ### Skipping `next()`

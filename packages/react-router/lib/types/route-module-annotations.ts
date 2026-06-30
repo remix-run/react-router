@@ -4,6 +4,7 @@ import type { LinkDescriptor } from "../router/links";
 import type {
   DataStrategyResult,
   MiddlewareNextFunction,
+  MiddlewareReturnFunction,
 } from "../router/utils";
 
 import type {
@@ -86,7 +87,9 @@ type CreateServerMiddlewareFunction<T extends RouteInfo> = (
 type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T["params"]>,
   next: MiddlewareNextFunction<Record<string, DataStrategyResult>>,
-) => MaybePromise<Record<string, DataStrategyResult> | void>;
+) => MaybePromise<
+  Record<string, DataStrategyResult> | MiddlewareReturnFunction | void
+>;
 
 type CreateServerLoaderArgs<T extends RouteInfo> = ServerDataFunctionArgs<
   T["params"]

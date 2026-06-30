@@ -84,6 +84,16 @@ async function loggingMiddleware({ request }, next) {
   console.log(`Navigation completed in ${duration}ms`);
 }
 
+// You can also return a callback that runs when this route is left
+// during a later navigation.
+async function leaveLoggingMiddleware({ request }) {
+  let url = new URL(request.url);
+  console.log(`Entering route from: ${url.pathname}${url.search}`);
+  return async () => {
+    console.log(`Leaving route from: ${url.pathname}${url.search}`);
+  };
+}
+
 const userContext = createContext<User>();
 
 async function authMiddleware ({ context }) {

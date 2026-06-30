@@ -300,6 +300,116 @@ describe("context/middleware", () => {
         ]);
       });
 
+      it("runs returned middleware callbacks when leaving routes", async () => {
+        let context = new RouterContextProvider();
+        context.set(orderContext, []);
+        router = createRouter({
+          history: createMemoryHistory(),
+          getContext: () => context,
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              middleware: [
+                async ({ context }) => {
+                  context.get(orderContext).push("parent middleware - enter");
+                  await tick();
+                  return async () => {
+                    await tick();
+                    context.get(orderContext).push("parent middleware - leave");
+                  };
+                },
+              ],
+              loader({ context }) {
+                context.get(orderContext).push("parent loader");
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  middleware: [
+                    async ({ context }) => {
+                      context.get(orderContext).push("child middleware - enter");
+                      await tick();
+                      return async () => {
+                        await tick();
+                        context.get(orderContext).push(
+                          "child middleware - leave",
+                        );
+                      };
+                    },
+                  ],
+                  loader({ context }) {
+                    context.get(orderContext).push("child loader");
+                  },
+                },
+                {
+                  id: "sibling",
+                  path: "sibling",
+                  middleware: [
+                    async ({ context }) => {
+                      context
+                        .get(orderContext)
+                        .push("sibling middleware - enter");
+                      await tick();
+                      return async () => {
+                        await tick();
+                        context
+                          .get(orderContext)
+                          .push("sibling middleware - leave");
+                      };
+                    },
+                  ],
+                  loader({ context }) {
+                    context.get(orderContext).push("sibling loader");
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(context.get(orderContext)).toEqual([
+          "parent middleware - enter",
+          "child middleware - enter",
+          "parent loader",
+          "child loader",
+        ]);
+
+        await router.navigate("/parent/sibling");
+
+        expect(context.get(orderContext)).toEqual([
+          "parent middleware - enter",
+          "child middleware - enter",
+          "parent loader",
+          "child loader",
+          "child middleware - leave",
+          "parent middleware - enter",
+          "sibling middleware - enter",
+          "sibling loader",
+        ]);
+
+        await router.navigate("/");
+
+        expect(context.get(orderContext)).toEqual([
+          "parent middleware - enter",
+          "child middleware - enter",
+          "parent loader",
+          "child loader",
+          "child middleware - leave",
+          "parent middleware - enter",
+          "sibling middleware - enter",
+          "sibling loader",
+          "sibling middleware - leave",
+          "parent middleware - leave",
+        ]);
+      });
+
       it("runs middleware on initialization even if no loaders exist", async () => {
         let snapshot;
         router = createRouter({

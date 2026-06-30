@@ -158,6 +158,24 @@ async function loggingMiddleware(
 export const clientMiddleware = [loggingMiddleware];
 ```
 
+Client middleware can also return a callback, which will run when this route or
+layout is left during a later navigation:
+
+```tsx filename=root.tsx
+async function leaveLoggingMiddleware({ request }) {
+  console.log(
+    `${new Date().toISOString()} Enter ${request.method} ${request.url}`,
+  );
+  return async () => {
+    console.log(
+      `${new Date().toISOString()} Leave ${request.method} ${request.url}`,
+    );
+  };
+}
+
+export const clientMiddleware = [leaveLoggingMiddleware];
+```
+
 See also:
 
 - [Middleware][middleware]

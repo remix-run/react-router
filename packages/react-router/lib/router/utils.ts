@@ -322,6 +322,14 @@ export interface MiddlewareNextFunction<Result = unknown> {
 }
 
 /**
+ * Client-side route middleware return function to complete work when the route
+ * is left during a later navigation.
+ */
+export interface MiddlewareReturnFunction {
+  (): MaybePromise<void>;
+}
+
+/**
  * Route middleware function signature.  Receives the same "data" arguments as a
  * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
  * a `next` function as the second parameter which will call downstream handlers
@@ -330,7 +338,7 @@ export interface MiddlewareNextFunction<Result = unknown> {
 export type MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<Readonly<RouterContextProvider>>,
   next: MiddlewareNextFunction<Result>,
-) => MaybePromise<Result | void>;
+) => MaybePromise<Result | MiddlewareReturnFunction | void>;
 
 /**
  * Arguments passed to loader functions
