@@ -166,7 +166,7 @@ With `shouldCallHandler`, you are in charge of which handlers should be called s
 
 Here's an example change from the prior API to the new API. Note that we pre-filter the `matchesToLoad` before calling `resolve()`:
 
-```diff
+```tsx diff
 let results = {};
 +let matchesToLoad = matches.filter(m => m.shouldCallHandler());
 await Promise.all(() =>

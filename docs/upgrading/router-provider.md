@@ -85,7 +85,7 @@ Instead of importing your route modules directly, lazy load and convert them to 
 
 Not only does your route definition now conform to the Route Module API, but you also get the benefits of code-splitting your routes.
 
-```diff filename=src/main.tsx
+```tsx diff filename=src/main.tsx
 let router = createBrowserRouter([
   // ... other routes
   {
@@ -120,7 +120,7 @@ npm install @react-router/node
 
 **👉 Swap out the React plugin for React Router**
 
-```diff filename=vite.config.ts
+```tsx diff filename=vite.config.ts
 -import react from '@vitejs/plugin-react'
 +import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
@@ -247,7 +247,7 @@ export default function App() {
 
 You would move everything above the `RouterProvider` into `root.tsx`.
 
-```diff filename=src/root.tsx
+```tsx diff filename=src/root.tsx
 +import "./index.css";
 
 // ... other imports and Layout
@@ -326,7 +326,7 @@ touch src/routes.ts src/catchall.tsx
 
 Move your route definitions to `routes.ts`. Note that the schemas don't match exactly, so you will get type errors; we'll fix this next.
 
-```diff filename=src/routes.ts
+```tsx diff filename=src/routes.ts
 +import type { RouteConfig } from "@react-router/dev/routes";
 
 -const router = createBrowserRouter([
@@ -362,7 +362,7 @@ Move your route definitions to `routes.ts`. Note that the schemas don't match ex
 
 **👉 Replace the `lazy` loader with a `file` loader**
 
-```diff filename=src/routes.ts
+```tsx diff filename=src/routes.ts
 export default [
   {
     path: "/",
