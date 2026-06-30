@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-nodejs-modules
 import { AsyncLocalStorage } from "node:async_hooks";
 import * as React from "react";
+import type { ReactFormState } from "react-dom/client";
 
 import type {
   ClientActionFunction,
@@ -253,7 +254,7 @@ export type RSCRenderPayload = {
   // for SPA navigations the manifest call will handle these patches.
   patches?: Promise<RSCRouteManifest[]>;
   nonce?: string;
-  formState?: unknown;
+  formState?: ReactFormState;
 };
 
 export type RSCManifestPayload = {
@@ -296,7 +297,7 @@ export type DecodeActionFunction = (
 export type DecodeFormStateFunction = (
   result: unknown,
   formData: FormData,
-) => unknown;
+) => Promise<ReactFormState | undefined>;
 
 export type DecodeReplyFunction = (
   reply: FormData | string,
@@ -638,7 +639,7 @@ async function processServerAction(
       skipRevalidation: boolean;
       revalidationRequest: Request;
       actionResult?: Promise<unknown>;
-      formState?: unknown;
+      formState?: ReactFormState;
     }
   | Response
   | undefined
@@ -711,7 +712,7 @@ async function processServerAction(
         if (isRedirectResponse(result)) {
           result = prependBasenameToRedirectResponse(result, basename);
         }
-        formState = decodeFormState?.(result, formData);
+        formState = await decodeFormState?.(result, formData);
       } catch (error) {
         if (isRedirectResponse(error)) {
           return prependBasenameToRedirectResponse(error, basename);
@@ -850,7 +851,7 @@ async function generateRenderResponse(
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the
         // POST `request` to `query` and process our action there.
-        let formState: unknown;
+        let formState: ReactFormState | undefined;
         let skipRevalidation = false;
         let potentialCSRFAttackError: unknown | undefined;
         if (isMutationMethod(request.method)) {
@@ -1039,7 +1040,7 @@ async function generateStaticContextResponse(
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
-  formState: unknown | undefined,
+  formState: ReactFormState | undefined,
   staticContext: StaticHandlerContext,
   temporaryReferences: unknown,
   skipRevalidation: boolean,
