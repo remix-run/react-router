@@ -783,40 +783,35 @@ export type ScriptsProps = Omit<
   nonce?: string | undefined;
 };
 
+export type FrameworkScriptDescriptor = Omit<
+  React.ScriptHTMLAttributes<HTMLScriptElement>,
+  "children"
+> & {
+  key: string;
+  "rr-importmap"?: "";
+};
+
+export type FrameworkLinkDescriptor =
+  React.LinkHTMLAttributes<HTMLLinkElement> & {
+    key: string;
+  };
+
+export interface FrameworkScriptsDescriptor {
+  scripts: FrameworkScriptDescriptor[];
+  links: FrameworkLinkDescriptor[];
+}
+
 /**
- * Renders the client runtime of your app. It should be rendered inside the
- * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body)
- *  of the document.
- *
- * If server rendering, you can omit `<Scripts/>` and the app will work as a
- * traditional web app without JavaScript, relying solely on HTML and browser
- * behaviors.
- *
- * @example
- * import { Scripts } from "react-router";
- *
- * export default function Root() {
- *   return (
- *     <html>
- *       <head />
- *       <body>
- *         <Scripts />
- *       </body>
- *     </html>
- *   );
- * }
+ * Returns the framework-managed script and link descriptors needed to hydrate
+ * the client runtime of your app.
  *
  * @public
- * @category Components
+ * @category Hooks
  * @mode framework
- * @param scriptProps Additional props to spread onto the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
- * tags, such as [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/crossOrigin),
- * [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce),
- * etc.
- * @returns A collection of React elements for [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
- * tags
+ * @returns Framework-owned descriptors for [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * and [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link) tags.
  */
-export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
+export function useFrameworkScripts(): FrameworkScriptsDescriptor {
   let {
     manifest,
     serverHandoffString,
@@ -830,14 +825,6 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   let { matches: routerMatches } = useDataRouterStateContext();
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
-
-  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
-  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
-  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
-  // internally without props (such as in the default `HydrateFallback`).
-  if (scriptProps.nonce == null && contextNonce) {
-    scriptProps = { ...scriptProps, nonce: contextNonce };
-  }
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
@@ -853,7 +840,7 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
 
   let initialScripts = React.useMemo(() => {
     if (isRSCRouterContext) {
-      return null;
+      return [] satisfies FrameworkScriptDescriptor[];
     }
 
     let streamScript =
@@ -954,23 +941,23 @@ ${matches
 
 import(${JSON.stringify(manifest.entry.module)});`;
 
-    return (
-      <>
-        <script
-          {...scriptProps}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: contextScript }}
-          type={undefined}
-        />
-        <script
-          {...scriptProps}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: routeModulesScript }}
-          type="module"
-          async
-        />
-      </>
-    );
+    return [
+      {
+        key: "framework-context",
+        nonce: contextNonce,
+        suppressHydrationWarning: true,
+        dangerouslySetInnerHTML: { __html: contextScript },
+        type: undefined,
+      },
+      {
+        key: "framework-route-modules",
+        nonce: contextNonce,
+        suppressHydrationWarning: true,
+        dangerouslySetInnerHTML: { __html: routeModulesScript },
+        type: "module",
+        async: true,
+      },
+    ] satisfies FrameworkScriptDescriptor[];
     // disabled deps array because we are purposefully only rendering this once
     // for hydration, after that we want to just continue rendering the initial
     // scripts as they were when the page first loaded
@@ -998,51 +985,120 @@ import(${JSON.stringify(manifest.entry.module)});`;
     "The <Scripts /> element is a no-op when using RSC and can be safely removed.",
   );
 
-  return isHydrated || isRSCRouterContext ? null : (
+  if (isHydrated || isRSCRouterContext) {
+    return { scripts: [], links: [] };
+  }
+
+  let scripts: FrameworkScriptDescriptor[] = [
+    ...(typeof manifest.sri === "object"
+      ? [
+          {
+            key: "framework-importmap",
+            nonce: contextNonce,
+            "rr-importmap": "",
+            type: "importmap",
+            suppressHydrationWarning: true,
+            dangerouslySetInnerHTML: {
+              __html: JSON.stringify({
+                integrity: sri,
+              }),
+            },
+          } satisfies FrameworkScriptDescriptor,
+        ]
+      : []),
+    ...initialScripts,
+  ];
+
+  let links: FrameworkLinkDescriptor[] = [
+    ...(!enableFogOfWar
+      ? [
+          {
+            key: "framework-manifest",
+            rel: "modulepreload",
+            href: manifest.url,
+            integrity: sri[manifest.url],
+            nonce: contextNonce,
+            suppressHydrationWarning: true,
+          } satisfies FrameworkLinkDescriptor,
+        ]
+      : []),
+    {
+      key: "framework-entry-module",
+      rel: "modulepreload",
+      href: manifest.entry.module,
+      integrity: sri[manifest.entry.module],
+      nonce: contextNonce,
+      suppressHydrationWarning: true,
+    },
+    ...preloads.map(
+      (path): FrameworkLinkDescriptor => ({
+        key: path,
+        rel: "modulepreload",
+        href: path,
+        integrity: sri[path],
+        nonce: contextNonce,
+        suppressHydrationWarning: true,
+      }),
+    ),
+  ];
+
+  return { scripts, links };
+}
+
+/**
+ * Renders the client runtime of your app. It should be rendered inside the
+ * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body)
+ *  of the document.
+ *
+ * If server rendering, you can omit `<Scripts/>` and the app will work as a
+ * traditional web app without JavaScript, relying solely on HTML and browser
+ * behaviors.
+ *
+ * @example
+ * import { Scripts } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head />
+ *       <body>
+ *         <Scripts />
+ *       </body>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @param scriptProps Additional props to spread onto the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags, such as [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/crossOrigin),
+ * [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce),
+ * etc.
+ * @returns A collection of React elements for [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags
+ */
+export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
+  let { scripts, links } = useFrameworkScripts();
+
+  return scripts.length === 0 && links.length === 0 ? null : (
     <>
-      {typeof manifest.sri === "object" ? (
-        <script
-          {...scriptProps}
-          rr-importmap=""
-          type="importmap"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              integrity: sri,
-            }),
-          }}
-        />
-      ) : null}
-      {!enableFogOfWar ? (
+      {links.map(({ key, ...link }) => (
         <link
-          rel="modulepreload"
-          href={manifest.url}
+          key={key}
+          {...link}
           crossOrigin={scriptProps.crossOrigin}
-          integrity={sri[manifest.url]}
-          nonce={scriptProps.nonce}
-          suppressHydrationWarning
-        />
-      ) : null}
-      <link
-        rel="modulepreload"
-        href={manifest.entry.module}
-        crossOrigin={scriptProps.crossOrigin}
-        integrity={sri[manifest.entry.module]}
-        nonce={scriptProps.nonce}
-        suppressHydrationWarning
-      />
-      {preloads.map((path) => (
-        <link
-          key={path}
-          rel="modulepreload"
-          href={path}
-          crossOrigin={scriptProps.crossOrigin}
-          integrity={sri[path]}
-          nonce={scriptProps.nonce}
-          suppressHydrationWarning
+          nonce={scriptProps.nonce ?? link.nonce}
         />
       ))}
-      {initialScripts}
+      {scripts.map(({ key, ...script }) => (
+        <script
+          key={key}
+          {...scriptProps}
+          {...script}
+          nonce={scriptProps.nonce ?? script.nonce}
+        />
+      ))}
     </>
   );
 }

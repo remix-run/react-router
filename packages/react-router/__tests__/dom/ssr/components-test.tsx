@@ -1,6 +1,7 @@
 import { createStaticHandler } from "react-router";
 import { act, fireEvent, render } from "@testing-library/react";
 import * as React from "react";
+import { renderToStaticMarkup } from "react-dom/server.edge";
 
 import {
   createMemoryRouter,
@@ -14,6 +15,7 @@ import {
 import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import {
   FrameworkContext,
+  useFrameworkScripts,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
 import { DataRouterStateContext } from "../../../lib/context";
@@ -482,6 +484,87 @@ describe("<Links />", () => {
 });
 
 describe("<Scripts />", () => {
+  function CustomScripts() {
+    let { scripts, links } = useFrameworkScripts();
+
+    return (
+      <>
+        {links.map(({ key, ...link }) => (
+          <link key={key} {...link} data-custom-link="" />
+        ))}
+        {scripts.map(({ key, ...script }) => (
+          <script key={key} {...script} data-custom-script="" />
+        ))}
+      </>
+    );
+  }
+
+  it("exposes framework scripts and links for custom rendering", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/"),
+    );
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: ["preload-a.js", "preload-b.js"],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
+      routeModules: {
+        root: {
+          default: () => (
+            <>
+              <h1>Root</h1>
+              <CustomScripts />
+            </>
+          ),
+        },
+      },
+    });
+
+    let markup = renderToStaticMarkup(
+      <ServerRouter
+        context={context}
+        url="http://localhost/"
+        nonce="test-nonce"
+      />,
+    );
+    let document = new DOMParser().parseFromString(markup, "text/html");
+
+    let modulePreloads = document.querySelectorAll('link[rel="modulepreload"]');
+    expect(modulePreloads.length).toBeGreaterThan(0);
+    modulePreloads.forEach((link) => {
+      expect(link.hasAttribute("data-custom-link")).toBe(true);
+      expect(link.getAttribute("nonce")).toBe("test-nonce");
+    });
+
+    let scripts = document.querySelectorAll("script");
+    expect(scripts.length).toBeGreaterThan(0);
+    scripts.forEach((script) => {
+      expect(script.hasAttribute("data-custom-script")).toBe(true);
+      expect(script.getAttribute("nonce")).toBe("test-nonce");
+    });
+  });
+
   it("propagates nonce to modulepreload links", async () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
       new Request("http://localhost/"),

@@ -221,8 +221,12 @@ export {
   Links,
   Scripts,
   PrefetchPageLinks,
+  useFrameworkScripts,
 } from "./lib/dom/ssr/components";
 export type {
+  FrameworkLinkDescriptor,
+  FrameworkScriptDescriptor,
+  FrameworkScriptsDescriptor,
   LinksProps,
   ScriptsProps,
   PrefetchBehavior,
