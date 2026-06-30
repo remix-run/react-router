@@ -38,7 +38,7 @@ export function href<Path extends keyof Args>(
             `Path '${path}' requires param '${param}' but it was not provided`,
           );
         }
-        return value === undefined ? "" : "/" + value;
+        return value === undefined ? "" : "/" + encodeURIComponent(value);
       },
     );
 
