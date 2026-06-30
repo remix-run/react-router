@@ -1,5 +1,6 @@
 Change the default `entry.server.tsx` to use React's `renderToReadableStream` which is now available in React Router v8's Node 22 baseline
 
+- Framework mode apps no longer require a custom `entry.server.tsx` file to run in non-Node runtimes (i.e., Cloudflare)
 - This should not have any functional changes for your app
   - You may see a small performance boost because of the reduced conversions between node streams and web streams
   - You may eliminate initial fallback flickers for promises resolved prior to render
