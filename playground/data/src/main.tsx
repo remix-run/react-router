@@ -4,14 +4,13 @@ import {
   Link,
   Outlet,
   createBrowserRouter,
-  unstable_convertRoutePathsToPatterns,
   useLoaderData,
   useParams,
 } from "react-router";
 import { RouterProvider } from "react-router/dom";
 
 const router = createBrowserRouter(
-  unstable_convertRoutePathsToPatterns([
+  [
     {
       id: "root",
       path: "/",
@@ -48,13 +47,65 @@ const router = createBrowserRouter(
         },
       ],
     },
-  ]),
+  ],
   {
     future: {
-      unstable_routePatternMatching: "native",
+      unstable_routePatternMatching: "compat",
     },
   },
 );
+
+/*
+Compat mode with existing React Router path syntax:
+
+createBrowserRouter(
+  [
+    {
+      path: "/",
+      children: [
+        { path: "projects/:projectId?", Component: ProjectsLayout },
+        { path: "archive/:year?/:month?", Component: Archive },
+        { path: "files/*", Component: Files },
+      ],
+    },
+  ],
+  { future: { unstable_routePatternMatching: "compat" } },
+);
+
+Native mode with converted React Router path syntax:
+
+import { unstable_convertRoutePathsToPatterns } from "react-router";
+
+createBrowserRouter(
+  unstable_convertRoutePathsToPatterns([
+    {
+      path: "/",
+      children: [
+        { path: "projects/:projectId?", Component: ProjectsLayout },
+        { path: "archive/:year?/:month?", Component: Archive },
+        { path: "files/*", Component: Files },
+      ],
+    },
+  ]),
+  { future: { unstable_routePatternMatching: "native" } },
+);
+
+Native mode with raw route-pattern syntax:
+
+createBrowserRouter(
+  [
+    {
+      path: "/",
+      children: [
+        { path: "projects(/:projectId)", Component: ProjectsLayout },
+        { path: "archive(/:year(/:month))", Component: Archive },
+        { path: "files/*splat", Component: Files },
+      ],
+    },
+  ],
+  { future: { unstable_routePatternMatching: "native" } },
+);
+*/
 
 function Root() {
   return (
