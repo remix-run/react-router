@@ -1,5 +1,7 @@
 import { createBrowserRouter, createHashRouter } from "../../lib/dom/lib";
+import { createStaticRouter } from "../../lib/dom/server";
 import { createMemoryRouter } from "../../lib/components";
+import { createStaticHandler } from "../../lib/router/router";
 import getWindow from "../utils/getWindow";
 
 describe("unstable route-pattern matching", () => {
@@ -53,6 +55,37 @@ describe("unstable route-pattern matching", () => {
 
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["user"]);
     expect(router.state.matches[0].params).toEqual({ id: "mj" });
+  });
+
+  it("matches createStaticRouter routes", async () => {
+    let routes = [
+      {
+        path: "/",
+        id: "root",
+        children: [
+          { index: true, id: "index" },
+          { path: "files/*", id: "files" },
+        ],
+      },
+    ];
+    let { query, dataRoutes } = createStaticHandler(routes, { future });
+    let context = await query(new Request("http://localhost/files/a/b"));
+
+    if (context instanceof Response) {
+      throw context;
+    }
+
+    let router = createStaticRouter(dataRoutes, context, { future });
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "files",
+    ]);
+    expect(router.state.matches[1].params).toEqual({ "*": "a/b" });
+
+    let matches = router.matchRoutes("/files/c/d");
+    expect(matches?.map((m) => m.route.id)).toEqual(["root", "files"]);
+    expect(matches?.[1].params).toEqual({ "*": "c/d" });
   });
 
   it("converts optional segments to route-pattern optionals", () => {

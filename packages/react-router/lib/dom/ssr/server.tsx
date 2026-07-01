@@ -95,6 +95,7 @@ export function ServerRouter({
 
   let router = createStaticRouter(routes, context.staticHandlerContext, {
     branches: context.branches,
+    future: context.future,
   });
 
   return (

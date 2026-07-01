@@ -972,6 +972,12 @@ const legacyDataRouteMatcher: DataRouteMatcher = {
   },
 };
 
+export function createDataRouteMatcher(future: FutureConfig): DataRouteMatcher {
+  return future.unstable_routePatternMatching
+    ? createRoutePatternDataRouteMatcher<DataRouteObject>()
+    : legacyDataRouteMatcher;
+}
+
 /**
  * Encapsulates the stable and in-flight route trees together with their
  * pre-computed branch caches so the structures always stay in sync.
@@ -1086,9 +1092,7 @@ export function createRouter(init: RouterInit): Router {
     ...init.future,
   };
 
-  let dataRouteMatcher = future.unstable_routePatternMatching
-    ? createRoutePatternDataRouteMatcher<DataRouteObject>()
-    : legacyDataRouteMatcher;
+  let dataRouteMatcher = createDataRouteMatcher(future);
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};
@@ -4150,11 +4154,10 @@ export function createStaticHandler(
   let mapRouteProperties: MapRoutePropertiesFunction = _mapRouteProperties
     ? _mapRouteProperties
     : () => ({});
-  // Currently unused in the static handler, but available for additional flags in the future
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
     ...opts?.future,
   };
+  let dataRouteMatcher = createDataRouteMatcher(future);
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
@@ -4180,9 +4183,8 @@ export function createStaticHandler(
     undefined,
     manifest,
   );
-  // Pre-compute flattened/ranked route branches when the flag is enabled.
-  // Skipped in development mode because routes can be added dynamically (HMR).
-  let routeBranches = flattenAndRankRoutes(dataRoutes);
+  // Pre-compute route branches using the configured matching strategy.
+  let routeBranches = dataRouteMatcher.flatten(dataRoutes);
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -4230,12 +4232,12 @@ export function createStaticHandler(
       null,
       "default",
     );
-    let matches = matchRoutesImpl(
+    let matches = dataRouteMatcher.match(
       dataRoutes,
+      routeBranches,
       location,
       basename,
       false,
-      routeBranches,
     );
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
@@ -4516,12 +4518,12 @@ export function createStaticHandler(
       null,
       "default",
     );
-    let matches = matchRoutesImpl(
+    let matches = dataRouteMatcher.match(
       dataRoutes,
+      routeBranches,
       location,
       basename,
       false,
-      routeBranches,
     );
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();

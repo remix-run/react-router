@@ -13,7 +13,12 @@ import type {
   RevalidationState,
   StaticHandlerContext,
 } from "../router/router";
-import { IDLE_BLOCKER, IDLE_FETCHER, IDLE_NAVIGATION } from "../router/router";
+import {
+  createDataRouteMatcher,
+  IDLE_BLOCKER,
+  IDLE_FETCHER,
+  IDLE_NAVIGATION,
+} from "../router/router";
 import type {
   DataRouteObject,
   RouteBranch,
@@ -23,7 +28,6 @@ import type {
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
-  matchRoutesImpl,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
 import { DataRoutes, Router } from "../components";
@@ -347,6 +351,13 @@ export function createStaticRouter(
     undefined,
     manifest,
   );
+  let future: FutureConfig = {
+    ...opts.future,
+  };
+  let dataRouteMatcher = createDataRouteMatcher(future);
+  let branches = future.unstable_routePatternMatching
+    ? dataRouteMatcher.flatten(dataRoutes)
+    : (opts.branches ?? dataRouteMatcher.flatten(dataRoutes));
 
   // Because our context matches may be from a set of routes passed to
   // createStaticHandler(), we update them here with our newly created/enhanced
@@ -367,9 +378,7 @@ export function createStaticRouter(
       return context.basename;
     },
     get future() {
-      return {
-        ...opts?.future,
-      };
+      return future;
     },
     get state() {
       return {
@@ -393,16 +402,16 @@ export function createStaticRouter(
       return dataRoutes;
     },
     matchRoutes(locationArg) {
-      return matchRoutesImpl(
+      return dataRouteMatcher.match(
         dataRoutes,
+        branches,
         locationArg,
         context.basename || "/",
         false,
-        opts.branches,
       );
     },
     get branches() {
-      return opts.branches;
+      return branches;
     },
     get manifest() {
       return manifest;
