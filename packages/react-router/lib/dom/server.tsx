@@ -23,6 +23,7 @@ import type {
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
+  matchRoutesImpl,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
 import { DataRoutes, Router } from "../components";
@@ -390,6 +391,15 @@ export function createStaticRouter(
     },
     get routes() {
       return dataRoutes;
+    },
+    matchRoutes(locationArg) {
+      return matchRoutesImpl(
+        dataRoutes,
+        locationArg,
+        context.basename || "/",
+        false,
+        opts.branches,
+      );
     },
     get branches() {
       return opts.branches;

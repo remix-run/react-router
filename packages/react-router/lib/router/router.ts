@@ -121,6 +121,12 @@ export interface Router {
   get routes(): DataRouteObject[];
 
   /**
+   * Match routes against a location using the router's configured route
+   * matching implementation.
+   */
+  matchRoutes(locationArg: Partial<Location> | string): DataRouteMatch[] | null;
+
+  /**
    * @private
    * PRIVATE - DO NOT USE
    *
@@ -937,6 +943,32 @@ const ResetLoaderDataSymbol = Symbol("ResetLoaderData");
 //#region createRouter
 ////////////////////////////////////////////////////////////////////////////////
 
+type DataRouteMatcher = {
+  flatten(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[];
+  match(
+    routes: DataRouteObject[],
+    branches: RouteBranch<DataRouteObject>[],
+    locationArg: Partial<Location> | string,
+    basename: string,
+    allowPartial: boolean,
+  ): DataRouteMatch[] | null;
+};
+
+const legacyDataRouteMatcher: DataRouteMatcher = {
+  flatten(routes) {
+    return flattenAndRankRoutes(routes);
+  },
+  match(routes, branches, locationArg, basename, allowPartial) {
+    return matchRoutesImpl(
+      routes,
+      locationArg,
+      basename,
+      allowPartial,
+      branches,
+    );
+  },
+};
+
 /**
  * Encapsulates the stable and in-flight route trees together with their
  * pre-computed branch caches so the structures always stay in sync.
@@ -946,10 +978,15 @@ class DataRoutes {
   #branches: RouteBranch<DataRouteObject>[];
   #hmrRoutes: DataRouteObject[] | undefined;
   #hmrBranches: RouteBranch<DataRouteObject>[] | undefined;
+  #flattenRoutesImpl: DataRouteMatcher["flatten"];
 
-  constructor(routes: DataRouteObject[]) {
+  constructor(
+    routes: DataRouteObject[],
+    flattenRoutes: DataRouteMatcher["flatten"],
+  ) {
     this.#routes = routes;
-    this.#branches = flattenAndRankRoutes(routes);
+    this.#flattenRoutesImpl = flattenRoutes;
+    this.#branches = this.#flattenRoutes(routes);
   }
 
   /** The stable route tree */
@@ -974,13 +1011,13 @@ class DataRoutes {
   /** Replace the stable route tree and recompute its branches */
   setRoutes(routes: DataRouteObject[]): void {
     this.#routes = routes;
-    this.#branches = flattenAndRankRoutes(routes);
+    this.#branches = this.#flattenRoutes(routes);
   }
 
   /** Set a new in-flight route tree and recompute its branches */
   setHmrRoutes(routes: DataRouteObject[]): void {
     this.#hmrRoutes = routes;
-    this.#hmrBranches = flattenAndRankRoutes(routes);
+    this.#hmrBranches = this.#flattenRoutes(routes);
   }
 
   /** Commit in-flight routes/branches to the stable slot and clear in-flight */
@@ -991,6 +1028,10 @@ class DataRoutes {
       this.#hmrRoutes = undefined;
       this.#hmrBranches = undefined;
     }
+  }
+
+  #flattenRoutes(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[] {
+    return this.#flattenRoutesImpl(routes);
   }
 }
 
@@ -1037,6 +1078,13 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
+  // Config driven behavior flags
+  let future: FutureConfig = {
+    ...init.future,
+  };
+
+  let dataRouteMatcher = legacyDataRouteMatcher;
+
   // Routes keyed by ID
   let manifest: RouteManifest = {};
   // Route tree, in-flight variant, and their pre-computed ranked branch caches.
@@ -1048,17 +1096,24 @@ export function createRouter(init: RouterInit): Router {
       undefined,
       manifest,
     ),
+    dataRouteMatcher.flatten,
   );
   let basename = init.basename || "/";
   if (!basename.startsWith("/")) {
     basename = `/${basename}`;
   }
+  let matchDataRoutes = (
+    locationArg: Partial<Location> | string,
+    allowPartial: boolean,
+  ) =>
+    dataRouteMatcher.match(
+      dataRoutes.activeRoutes,
+      dataRoutes.branches,
+      locationArg,
+      basename,
+      allowPartial,
+    );
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
-
-  // Config driven behavior flags
-  let future: FutureConfig = {
-    ...init.future,
-  };
 
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
@@ -1083,13 +1138,7 @@ export function createRouter(init: RouterInit): Router {
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
 
-  let initialMatches = matchRoutesImpl(
-    dataRoutes.activeRoutes,
-    init.history.location,
-    basename,
-    false,
-    dataRoutes.branches,
-  );
+  let initialMatches = matchDataRoutes(init.history.location, false);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
   let initialized: boolean;
@@ -1116,7 +1165,6 @@ export function createRouter(init: RouterInit): Router {
     if (initialMatches && !init.hydrationData) {
       let fogOfWar = checkFogOfWar(
         initialMatches,
-        dataRoutes.activeRoutes,
         init.history.location.pathname,
       );
       if (fogOfWar.active) {
@@ -1132,11 +1180,7 @@ export function createRouter(init: RouterInit): Router {
       // If partial hydration and fog of war is enabled, we will be running
       // `patchRoutesOnNavigation` during hydration so include any partial matches as
       // the initial matches so we can properly render `HydrateFallback`'s
-      let fogOfWar = checkFogOfWar(
-        null,
-        dataRoutes.activeRoutes,
-        init.history.location.pathname,
-      );
+      let fogOfWar = checkFogOfWar(null, init.history.location.pathname);
       if (fogOfWar.active && fogOfWar.matches) {
         initialMatchesIsFOW = true;
         initialMatches = fogOfWar.matches;
@@ -1900,7 +1944,6 @@ export function createRouter(init: RouterInit): Router {
 
     pendingViewTransitionEnabled = (opts && opts.enableViewTransition) === true;
 
-    let routesToUse = dataRoutes.activeRoutes;
     let matches =
       opts?.initialHydration &&
       state.matches &&
@@ -1908,13 +1951,7 @@ export function createRouter(init: RouterInit): Router {
       !initialMatchesIsFOW
         ? // `matchRoutes()` has already been called if we're in here via `router.initialize()`
           state.matches
-        : matchRoutesImpl(
-            routesToUse,
-            location,
-            basename,
-            false,
-            dataRoutes.branches,
-          );
+        : matchDataRoutes(location, false);
     let flushSync = (opts && opts.flushSync) === true;
 
     // Short circuit if it's only a hash change and not a revalidation or
@@ -1934,7 +1971,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
+    let fogOfWar = checkFogOfWar(matches, location.pathname);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
     }
@@ -2392,7 +2429,6 @@ export function createRouter(init: RouterInit): Router {
       }
     }
 
-    let routesToUse = dataRoutes.activeRoutes;
     let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
       request,
       scopedContext,
@@ -2410,10 +2446,8 @@ export function createRouter(init: RouterInit): Router {
       fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
-      routesToUse,
-      basename,
       init.patchRoutesOnNavigation != null,
-      dataRoutes.branches,
+      (locationArg) => matchDataRoutes(locationArg, false),
       pendingActionResult,
       callSiteDefaultShouldRevalidate,
     );
@@ -2627,15 +2661,9 @@ export function createRouter(init: RouterInit): Router {
       routeId,
       opts?.relative,
     );
-    let matches = matchRoutesImpl(
-      routesToUse,
-      normalizedPath,
-      basename,
-      false,
-      dataRoutes.branches,
-    );
+    let matches = matchDataRoutes(normalizedPath, false);
 
-    let fogOfWar = checkFogOfWar(matches, routesToUse, normalizedPath);
+    let fogOfWar = checkFogOfWar(matches, normalizedPath);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
     }
@@ -2863,16 +2891,9 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       abortController.signal,
     );
-    let routesToUse = dataRoutes.activeRoutes;
     let matches =
       state.navigation.state !== "idle"
-        ? matchRoutesImpl(
-            routesToUse,
-            state.navigation.location,
-            basename,
-            false,
-            dataRoutes.branches,
-          )
+        ? matchDataRoutes(state.navigation.location, false)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -2897,10 +2918,8 @@ export function createRouter(init: RouterInit): Router {
       fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
-      routesToUse,
-      basename,
       init.patchRoutesOnNavigation != null,
-      dataRoutes.branches,
+      (locationArg) => matchDataRoutes(locationArg, false),
       [match.route.id, actionResult],
       callSiteDefaultShouldRevalidate,
     );
@@ -3781,19 +3800,11 @@ export function createRouter(init: RouterInit): Router {
 
   function checkFogOfWar(
     matches: DataRouteMatch[] | null,
-    routesToUse: DataRouteObject[],
     pathname: string,
   ): { active: boolean; matches: DataRouteMatch[] | null } {
     if (init.patchRoutesOnNavigation) {
-      let activeBranches = dataRoutes.branches;
       if (!matches) {
-        let fogMatches = matchRoutesImpl<DataRouteObject>(
-          routesToUse,
-          pathname,
-          basename,
-          true,
-          activeBranches,
-        );
+        let fogMatches = matchDataRoutes(pathname, true);
 
         return { active: true, matches: fogMatches || [] };
       } else {
@@ -3801,13 +3812,7 @@ export function createRouter(init: RouterInit): Router {
           // If we matched a dynamic param or a splat, it might only be because
           // we haven't yet discovered other routes that would match with a
           // higher score.  Call patchRoutesOnNavigation just to be sure
-          let partialMatches = matchRoutesImpl<DataRouteObject>(
-            routesToUse,
-            pathname,
-            basename,
-            true,
-            activeBranches,
-          );
+          let partialMatches = matchDataRoutes(pathname, true);
           return { active: true, matches: partialMatches };
         }
       }
@@ -3870,14 +3875,7 @@ export function createRouter(init: RouterInit): Router {
         return { type: "aborted" };
       }
 
-      let activeBranches = dataRoutes.branches;
-      let newMatches = matchRoutesImpl(
-        dataRoutes.activeRoutes,
-        pathname,
-        basename,
-        false,
-        activeBranches,
-      );
+      let newMatches = matchDataRoutes(pathname, false);
       let newPartialMatches: DataRouteMatch[] | null = null;
 
       if (newMatches) {
@@ -3886,13 +3884,7 @@ export function createRouter(init: RouterInit): Router {
           return { type: "success", matches: newMatches };
         } else {
           // Dynamic match - confirm this is the best match.
-          newPartialMatches = matchRoutesImpl(
-            dataRoutes.activeRoutes,
-            pathname,
-            basename,
-            true,
-            activeBranches,
-          );
+          newPartialMatches = matchDataRoutes(pathname, true);
 
           // If we matched deeper into the same branch of `partialMatches` we were already
           // checking, we want to make another pass through `patchRoutesOnNavigation()`
@@ -3913,13 +3905,7 @@ export function createRouter(init: RouterInit): Router {
 
       // Perform partial matching if we didn't already do it above
       if (!newPartialMatches) {
-        newPartialMatches = matchRoutesImpl<DataRouteObject>(
-          dataRoutes.activeRoutes,
-          pathname,
-          basename,
-          true,
-          activeBranches,
-        );
+        newPartialMatches = matchDataRoutes(pathname, true);
       }
 
       // Avoid loops if the second pass results in the same partial matches
@@ -3988,6 +3974,9 @@ export function createRouter(init: RouterInit): Router {
     },
     get routes() {
       return dataRoutes.stableRoutes;
+    },
+    matchRoutes(locationArg) {
+      return matchDataRoutes(locationArg, false);
     },
     get branches() {
       return dataRoutes.branches;
@@ -5345,10 +5334,10 @@ function getMatchesToLoad(
   fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
-  routesToUse: DataRouteObject[],
-  basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
-  branches: RouteBranch<DataRouteObject>[] | undefined,
+  matchRoutes: (
+    locationArg: Partial<Location> | string,
+  ) => DataRouteMatch[] | null,
   pendingActionResult?: PendingActionResult,
   callSiteDefaultShouldRevalidate?: boolean,
 ): {
@@ -5506,13 +5495,7 @@ function getMatchesToLoad(
     let fetcher = state.fetchers.get(key);
     let isMidInitialLoad =
       fetcher && fetcher.state !== "idle" && fetcher.data === undefined;
-    let fetcherMatches = matchRoutesImpl(
-      routesToUse,
-      f.path,
-      basename ?? "/",
-      false,
-      branches,
-    );
+    let fetcherMatches = matchRoutes(f.path);
 
     // If the fetcher path no longer matches, push it in with null matches so
     // we can trigger a 404 in callLoadersAndMaybeResolveData.  Note this is
