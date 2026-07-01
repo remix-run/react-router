@@ -574,7 +574,7 @@ async function doneStep(ctx: Context) {
   await sleep(200);
 }
 
-const validPackageManagers = ["npm", "yarn", "pnpm", "bun", "deno"] as const;
+const validPackageManagers = ["npm", "yarn", "pnpm", "bun", "deno", "nub"] as const;
 type PackageManager = (typeof validPackageManagers)[number];
 
 function validatePackageManager(pkgManager: string): PackageManager {
