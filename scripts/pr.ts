@@ -5,21 +5,25 @@
  * See https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
  *
  *   check    Inspects the PR via the GitHub API and writes a list of
- *            "actions" to pr-checks-result.json. Safe to run with a
+ *            "actions" to the given result file. Safe to run with a
  *            read-only token (Workflow A: 🔍 Check PR).
  *
- *   actions  Reads pr-checks-result.json and applies each action. Runs
+ *   actions  Reads the given result file and applies each action. Runs
  *            in Workflow B (PR (Actions)) under `workflow_run` with
  *            write permissions but never executes any PR code.
  *
  * Usage:
- *   node scripts/pr.ts check
+ *   node scripts/pr.ts check <result-file>
  *   node scripts/pr.ts actions <result-file>
  *
  * Environment (check):
  *   GITHUB_TOKEN  - Required (read-only PR scope is enough).
  *   PR_NUMBER     - Required. github.event.pull_request.number
  *   PR_BASE       - Required. github.event.pull_request.base.ref
+ *   PR_AUTHOR     - Required. github.event.pull_request.user.login
+ *   PR_HEAD_OWNER - Required. github.event.pull_request.head.repo.owner.login
+ *   PR_HEAD_REPO  - Required. github.event.pull_request.head.repo.name
+ *   PR_HEAD_REF   - Required. github.event.pull_request.head.ref
  *   EVENT_ACTION  - Required. github.event.action (opened|synchronize|reopened|labeled)
  *   LABEL_NAME    - Optional. github.event.label.name (set when EVENT_ACTION=labeled)
  *
@@ -30,6 +34,7 @@ import * as fs from "node:fs";
 import * as util from "node:util";
 
 import {
+  addPrLabels,
   closePr,
   createPrComment,
   getPrComments,
@@ -41,19 +46,31 @@ import {
 type Action =
   | { type: "upsert-sticky-comment"; marker: string; body: string }
   | { type: "create-comment"; body: string }
+  | { type: "add-label"; label: string }
   | { type: "remove-label"; label: string }
   | { type: "close-pr" };
 
 type CheckContext = {
   prNumber: number;
   baseBranch: string;
+  author: string;
+  headOwner: string;
+  headRepo: string;
+  headRef: string;
   eventAction: string;
   labelName: string;
 };
 
-type Check = (ctx: CheckContext) => Promise<Action[]>;
+type CheckResult = {
+  actions: Action[];
+  failureMessage?: string;
+};
+
+type Check = (ctx: CheckContext) => Promise<CheckResult>;
 
 const CHANGE_FILE_MARKER = "<!-- change-file-check -->";
+const CLA_MARKER = "<!-- cla-check -->";
+const CLA_SIGNED_LABEL = "CLA Signed";
 
 type ChangeFileSummary = {
   type: string;
@@ -91,14 +108,40 @@ If this PR already has a Proposal but it has not yet been accepted, let's contin
 If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
 `;
 
+const CLA_SIGNED_COMMENT = `${CLA_MARKER}
+### ✅ CLA Signed
+
+Thanks for signing the [Contributor License Agreement](https://github.com/remix-run/react-router/blob/main/CLA.md).`;
+
+function getClaMissingComment(ctx: CheckContext) {
+  return `${CLA_MARKER}
+### ⚠️ CLA Signature Required
+
+Hi @${ctx.author}, thanks for contributing to React Router!
+
+Before we consider your pull request, we ask that you sign our **Contributor License Agreement** (CLA). We require this only once.
+
+You may [review the CLA](https://github.com/remix-run/react-router/blob/main/CLA.md) and sign it by [adding your GitHub username to contributors.yml](https://github.com/${ctx.headOwner}/${ctx.headRepo}/edit/${ctx.headRef}/contributors.yml).
+
+Once the CLA is signed, the \`${CLA_SIGNED_LABEL}\` label will be added to the pull request and the CI check will pass.
+
+Thanks!
+
+\\- The Remix team
+`;
+}
+
 let { positionals } = util.parseArgs({ allowPositionals: true });
-let [mode, arg] = positionals;
+let [mode, filename] = positionals;
+
+if (!filename) {
+  usage();
+}
 
 if (mode === "check") {
   await runChecks();
 } else if (mode === "actions") {
-  if (!arg) usage();
-  await runActions(arg);
+  await runActions();
 } else {
   usage();
 }
@@ -112,11 +155,15 @@ async function runChecks() {
     process.exit(1);
   }
 
-  let checks: Check[] = [changeFileCheck, featurePrCheck];
+  let checks: Check[] = [claCheck, changeFileCheck, featurePrCheck];
 
   let ctx: CheckContext = {
     prNumber,
     baseBranch: requireEnv("PR_BASE"),
+    author: requireEnv("PR_AUTHOR"),
+    headOwner: requireEnv("PR_HEAD_OWNER"),
+    headRepo: requireEnv("PR_HEAD_REPO"),
+    headRef: requireEnv("PR_HEAD_REF"),
     eventAction: requireEnv("EVENT_ACTION"),
     labelName: process.env.LABEL_NAME ?? "",
   };
@@ -126,21 +173,88 @@ async function runChecks() {
     prNumber,
     actions: [],
   };
+  let failures = "";
 
   for (let check of checks) {
-    result.actions.push(...(await check(ctx)));
+    let checkResult = await check(ctx);
+    result.actions.push(...checkResult.actions);
+    failures += checkResult.failureMessage
+      ? ` - ${checkResult.failureMessage}\n`
+      : "";
   }
 
-  // Matches pr-checks.yml/pr-actions.yml workflow artifact name
-  let filename = "pr-checks-result.json";
   console.log(`Writing ${filename}:`, JSON.stringify(result));
   fs.writeFileSync(filename, JSON.stringify(result));
+
+  if (failures.length > 0) {
+    console.error(`Failures:\n${failures}`);
+    process.exit(1);
+  }
 }
 
-async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
-  if (ctx.baseBranch !== "main") return [];
+async function claCheck(ctx: CheckContext): Promise<CheckResult> {
   if (!["opened", "synchronize", "reopened"].includes(ctx.eventAction)) {
-    return [];
+    return { actions: [] };
+  }
+
+  let author = ctx.author.toLowerCase();
+  if (author === "dependabot[bot]") {
+    console.log(`claCheck: ignoring ${ctx.author}`);
+    return { actions: [] };
+  }
+
+  let contributors = fs
+    .readFileSync("contributors.yml", "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s*-\s*(.+?)\s*$/)?.[1]?.toLowerCase())
+    .filter((contributor): contributor is string => Boolean(contributor));
+  let signedCla = contributors.includes(author);
+  console.log(`claCheck: ${ctx.author} signed CLA: ${signedCla}`);
+
+  // Dry runs to start so we can monitor the flow alongside the bot
+  let DRY_RUN = true;
+  if (DRY_RUN) {
+    if (signedCla) {
+      console.log(
+        `claCheck: dry run; would add '${CLA_SIGNED_LABEL}' label and comment that the CLA is signed`,
+      );
+    } else {
+      console.log(
+        `claCheck: dry run; would request CLA signature and fail PR checks`,
+      );
+    }
+    return { actions: [] };
+  }
+
+  if (signedCla) {
+    return {
+      actions: [
+        { type: "add-label", label: CLA_SIGNED_LABEL },
+        {
+          type: "upsert-sticky-comment",
+          marker: CLA_MARKER,
+          body: CLA_SIGNED_COMMENT,
+        },
+      ],
+    };
+  }
+
+  return {
+    actions: [
+      {
+        type: "upsert-sticky-comment",
+        marker: CLA_MARKER,
+        body: getClaMissingComment(ctx),
+      },
+    ],
+    failureMessage: `CLA check failed: ${ctx.author} is not listed in contributors.yml`,
+  };
+}
+
+async function changeFileCheck(ctx: CheckContext): Promise<CheckResult> {
+  if (ctx.baseBranch !== "main") return { actions: [] };
+  if (!["opened", "synchronize", "reopened"].includes(ctx.eventAction)) {
+    return { actions: [] };
   }
 
   let files = await getPrFiles(ctx.prNumber);
@@ -167,7 +281,7 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
 
   if (summaries.length === 0 && !touchesPackageFiles) {
     console.log("changeFileCheck: no package files changed");
-    return [];
+    return { actions: [] };
   }
 
   let body = CHANGE_FILE_MISSING_COMMENT;
@@ -183,33 +297,43 @@ async function changeFileCheck(ctx: CheckContext): Promise<Action[]> {
     ].join("\n");
   }
 
-  return [
-    {
-      type: "upsert-sticky-comment",
-      marker: CHANGE_FILE_MARKER,
-      body,
-    },
-  ];
+  return {
+    actions: [
+      {
+        type: "upsert-sticky-comment",
+        marker: CHANGE_FILE_MARKER,
+        body,
+      },
+    ],
+  };
 }
 
-async function featurePrCheck(ctx: CheckContext): Promise<Action[]> {
-  if (ctx.eventAction !== "labeled") return [];
-  if (ctx.labelName !== "feature-request") return [];
+async function featurePrCheck(ctx: CheckContext): Promise<CheckResult> {
+  if (ctx.eventAction !== "labeled") return { actions: [] };
+  if (ctx.labelName !== "feature-request") return { actions: [] };
 
   console.log(`featurePrCheck: closing PR ${ctx.prNumber}`);
-  return [
-    { type: "create-comment", body: CLOSE_FEATURE_PR_COMMENT },
-    { type: "remove-label", label: ctx.labelName },
-    { type: "close-pr" },
-  ];
+  return {
+    actions: [
+      { type: "create-comment", body: CLOSE_FEATURE_PR_COMMENT },
+      { type: "remove-label", label: ctx.labelName },
+      { type: "close-pr" },
+    ],
+  };
 }
 
 // ---------- Action dispatch ----------
 
-async function runActions(resultPath: string) {
-  let { prNumber, actions } = JSON.parse(
-    fs.readFileSync(resultPath, "utf8"),
-  ) as { prNumber: number; actions: Action[] };
+async function runActions() {
+  if (!fs.existsSync(filename)) {
+    console.log(`No result file found at ${filename}; skipping actions`);
+    return;
+  }
+
+  let { prNumber, actions } = JSON.parse(fs.readFileSync(filename, "utf8")) as {
+    prNumber: number;
+    actions: Action[];
+  };
 
   if (actions.length === 0) {
     console.log("No actions to apply");
@@ -241,6 +365,11 @@ async function runActions(resultPath: string) {
         await createPrComment(prNumber, action.body);
         break;
       }
+      case "add-label": {
+        console.log(`Adding label '${action.label}'`);
+        await addPrLabels(prNumber, [action.label]);
+        break;
+      }
       case "remove-label": {
         console.log(`Removing label '${action.label}'`);
         await removePrLabel(prNumber, action.label);
@@ -260,7 +389,7 @@ async function runActions(resultPath: string) {
 function usage(): never {
   console.error(
     "Usage:\n" +
-      "  node scripts/pr.ts check\n" +
+      "  node scripts/pr.ts check <result-file>\n" +
       "  node scripts/pr.ts actions <result-file>",
   );
   process.exit(1);
