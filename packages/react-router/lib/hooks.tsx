@@ -1531,15 +1531,15 @@ export function useRevalidator(): {
 /**
  * Returns the active route matches, useful for accessing `loaderData` for
  * parent/child routes or the route `handle` property.
- * 
- * This hook is most useful for creating abstractions in parent layouts to get access 
- * to their child routes' data and metadata. It only works with a data router (like `createBrowserRouter`), 
+ *
+ * This hook is most useful for creating abstractions in parent layouts to get access
+ * to their child routes' data and metadata. It only works with a data router (like `createBrowserRouter`),
  * since they know the full route tree up front.
- * 
- * A common use case is adding dynamic breadcrumbs to a parent layout. By pairing the `handle` route 
- * configuration with `useMatches`, you can attach arbitrary metadata to a route and access it anywhere 
+ *
+ * A common use case is adding dynamic breadcrumbs to a parent layout. By pairing the `handle` route
+ * configuration with `useMatches`, you can attach arbitrary metadata to a route and access it anywhere
  * in the active component tree.
- * 
+ *
  * @example
  * ```tsx
  * // 1. Define breadcrumb logic in the route handle
@@ -1548,23 +1548,23 @@ export function useRevalidator(): {
  * >
  *   <Route * element="{<Thread" path="conversation/:id"/>}
  *     loader={loadThread}
- *     handle={{ 
+ *     handle={{
  *       // We make this one a function so we can pass loader data
  *       // to create dynamic breadcrumb text
- *       crumb: (data) => <span>{data.threadName}</span> 
- *     }} 
+ *       crumb: (data) => <span>{data.threadName}</span>
+ *     }}
  *   />
  * </Route>
- * 
+ *
  * // 2. Render the breadcrumbs in a parent layout
  * function Breadcrumbs() {
  *   let matches = useMatches();
  *   let crumbs = matches
  *     // First filter out matches that don't have a crumb defined
- *     .filter((match) => Boolean(match.handle?.crumb))
+ *     .filter((match) => typeof match.handle?.crumb === "function")
  *     // Map them into elements, passing the loaderData to each one
  *     .map((match) => match.handle.crumb(match.loaderData));
- * 
+ *
  *   return (
  *     <ol>
  *       {crumbs.map((crumb, index) => (
@@ -1574,7 +1574,7 @@ export function useRevalidator(): {
  *   );
  * }
  * ```
- * 
+ *
  * @see https://reactrouter.com/how-to/using-handle
  *
  * @public
