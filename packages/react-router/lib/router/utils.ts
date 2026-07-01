@@ -1706,7 +1706,7 @@ export function compilePath(
           return "/([^\\/]+)";
         },
       ) // Dynamic segment
-      .replace(/\/([\w-]+)\?(\/|$)/g, "(/$1)?$2"); // Optional static segment
+      .replace(/\/([\w-]+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
