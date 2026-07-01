@@ -1530,7 +1530,8 @@ export function useRevalidator(): {
 
 /**
  * Returns the active route matches, useful for accessing `loaderData` for
- * parent/child routes or the route `handle` property.
+ * parent/child routes or the route [`handle`](../../start/framework/route-module#handle)
+ * property
  *
  * Pairing the route `handle` with `useMatches` gets very powerful since you can put
  * whatever you want on a route handle and have access to `useMatches` anywhere.
