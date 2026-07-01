@@ -1107,17 +1107,6 @@ export function createRouter(init: RouterInit): Router {
   if (!basename.startsWith("/")) {
     basename = `/${basename}`;
   }
-  let matchDataRoutes = (
-    locationArg: Partial<Location> | string,
-    allowPartial: boolean,
-  ) =>
-    dataRouteMatcher.match(
-      dataRoutes.activeRoutes,
-      dataRoutes.branches,
-      locationArg,
-      basename,
-      allowPartial,
-    );
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
 
   // Cleanup function for history
@@ -1143,7 +1132,13 @@ export function createRouter(init: RouterInit): Router {
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
 
-  let initialMatches = matchDataRoutes(init.history.location, false);
+  let initialMatches = dataRouteMatcher.match(
+    dataRoutes.activeRoutes,
+    dataRoutes.branches,
+    init.history.location,
+    basename,
+    false,
+  );
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
   let initialized: boolean;
@@ -1956,7 +1951,13 @@ export function createRouter(init: RouterInit): Router {
       !initialMatchesIsFOW
         ? // `matchRoutes()` has already been called if we're in here via `router.initialize()`
           state.matches
-        : matchDataRoutes(location, false);
+        : dataRouteMatcher.match(
+            dataRoutes.activeRoutes,
+            dataRoutes.branches,
+            location,
+            basename,
+            false,
+          );
     let flushSync = (opts && opts.flushSync) === true;
 
     // Short circuit if it's only a hash change and not a revalidation or
@@ -2452,7 +2453,14 @@ export function createRouter(init: RouterInit): Router {
       fetchLoadMatches,
       fetchRedirectIds,
       init.patchRoutesOnNavigation != null,
-      (locationArg) => matchDataRoutes(locationArg, false),
+      (locationArg) =>
+        dataRouteMatcher.match(
+          dataRoutes.activeRoutes,
+          dataRoutes.branches,
+          locationArg,
+          basename,
+          false,
+        ),
       pendingActionResult,
       callSiteDefaultShouldRevalidate,
     );
@@ -2666,7 +2674,13 @@ export function createRouter(init: RouterInit): Router {
       routeId,
       opts?.relative,
     );
-    let matches = matchDataRoutes(normalizedPath, false);
+    let matches = dataRouteMatcher.match(
+      dataRoutes.activeRoutes,
+      dataRoutes.branches,
+      normalizedPath,
+      basename,
+      false,
+    );
 
     let fogOfWar = checkFogOfWar(matches, normalizedPath);
     if (fogOfWar.active && fogOfWar.matches) {
@@ -2898,7 +2912,13 @@ export function createRouter(init: RouterInit): Router {
     );
     let matches =
       state.navigation.state !== "idle"
-        ? matchDataRoutes(state.navigation.location, false)
+        ? dataRouteMatcher.match(
+            dataRoutes.activeRoutes,
+            dataRoutes.branches,
+            state.navigation.location,
+            basename,
+            false,
+          )
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -2924,7 +2944,14 @@ export function createRouter(init: RouterInit): Router {
       fetchLoadMatches,
       fetchRedirectIds,
       init.patchRoutesOnNavigation != null,
-      (locationArg) => matchDataRoutes(locationArg, false),
+      (locationArg) =>
+        dataRouteMatcher.match(
+          dataRoutes.activeRoutes,
+          dataRoutes.branches,
+          locationArg,
+          basename,
+          false,
+        ),
       [match.route.id, actionResult],
       callSiteDefaultShouldRevalidate,
     );
@@ -3809,7 +3836,13 @@ export function createRouter(init: RouterInit): Router {
   ): { active: boolean; matches: DataRouteMatch[] | null } {
     if (init.patchRoutesOnNavigation) {
       if (!matches) {
-        let fogMatches = matchDataRoutes(pathname, true);
+        let fogMatches = dataRouteMatcher.match(
+          dataRoutes.activeRoutes,
+          dataRoutes.branches,
+          pathname,
+          basename,
+          true,
+        );
 
         return { active: true, matches: fogMatches || [] };
       } else {
@@ -3817,7 +3850,13 @@ export function createRouter(init: RouterInit): Router {
           // If we matched a dynamic param or a splat, it might only be because
           // we haven't yet discovered other routes that would match with a
           // higher score.  Call patchRoutesOnNavigation just to be sure
-          let partialMatches = matchDataRoutes(pathname, true);
+          let partialMatches = dataRouteMatcher.match(
+            dataRoutes.activeRoutes,
+            dataRoutes.branches,
+            pathname,
+            basename,
+            true,
+          );
           return { active: true, matches: partialMatches };
         }
       }
@@ -3880,7 +3919,13 @@ export function createRouter(init: RouterInit): Router {
         return { type: "aborted" };
       }
 
-      let newMatches = matchDataRoutes(pathname, false);
+      let newMatches = dataRouteMatcher.match(
+        dataRoutes.activeRoutes,
+        dataRoutes.branches,
+        pathname,
+        basename,
+        false,
+      );
       let newPartialMatches: DataRouteMatch[] | null = null;
 
       if (newMatches) {
@@ -3889,7 +3934,13 @@ export function createRouter(init: RouterInit): Router {
           return { type: "success", matches: newMatches };
         } else {
           // Dynamic match - confirm this is the best match.
-          newPartialMatches = matchDataRoutes(pathname, true);
+          newPartialMatches = dataRouteMatcher.match(
+            dataRoutes.activeRoutes,
+            dataRoutes.branches,
+            pathname,
+            basename,
+            true,
+          );
 
           // If we matched deeper into the same branch of `partialMatches` we were already
           // checking, we want to make another pass through `patchRoutesOnNavigation()`
@@ -3910,7 +3961,13 @@ export function createRouter(init: RouterInit): Router {
 
       // Perform partial matching if we didn't already do it above
       if (!newPartialMatches) {
-        newPartialMatches = matchDataRoutes(pathname, true);
+        newPartialMatches = dataRouteMatcher.match(
+          dataRoutes.activeRoutes,
+          dataRoutes.branches,
+          pathname,
+          basename,
+          true,
+        );
       }
 
       // Avoid loops if the second pass results in the same partial matches
@@ -3981,7 +4038,13 @@ export function createRouter(init: RouterInit): Router {
       return dataRoutes.stableRoutes;
     },
     matchRoutes(locationArg) {
-      return matchDataRoutes(locationArg, false);
+      return dataRouteMatcher.match(
+        dataRoutes.activeRoutes,
+        dataRoutes.branches,
+        locationArg,
+        basename,
+        false,
+      );
     },
     get branches() {
       return dataRoutes.branches;
