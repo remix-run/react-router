@@ -216,6 +216,8 @@ async function runActions(resultPath: string) {
     return;
   }
 
+  console.log(actions);
+
   for (let action of actions) {
     switch (action.type) {
       case "upsert-sticky-comment": {
@@ -232,22 +234,22 @@ async function runActions(resultPath: string) {
           console.log("Creating sticky comment");
           await createPrComment(prNumber, action.body);
         }
-        return;
+        break;
       }
       case "create-comment": {
         console.log("Creating comment");
         await createPrComment(prNumber, action.body);
-        return;
+        break;
       }
       case "remove-label": {
         console.log(`Removing label '${action.label}'`);
         await removePrLabel(prNumber, action.label);
-        return;
+        break;
       }
       case "close-pr": {
         console.log(`Closing PR ${prNumber}`);
         await closePr(prNumber);
-        return;
+        break;
       }
     }
   }
