@@ -74,11 +74,7 @@ function flattenRoutesWithRoutePatterns<
   for (let branch of branches) {
     let routePattern = convertReactRouterPathToRoutePattern(branch.path);
     if (!hasIndexChild(branch)) {
-      matcher.add(routePattern, branch);
-      let alternateRoutePattern = getTrailingSlashAlias(routePattern);
-      if (alternateRoutePattern) {
-        matcher.add(alternateRoutePattern, branch);
-      }
+      matcher.add(addOptionalTrailingSlash(routePattern), branch);
     }
 
     if (!branch.routesMeta[branch.routesMeta.length - 1].route.index) {
@@ -98,14 +94,10 @@ function flattenRoutesWithRoutePatterns<
   return routePatternBranches;
 }
 
-function getTrailingSlashAlias(routePattern: string): string | null {
-  if (routePattern === "/") {
-    return null;
-  }
-
-  return routePattern.endsWith("/")
-    ? routePattern.replace(/\/+$/, "") || "/"
-    : `${routePattern}/`;
+function addOptionalTrailingSlash(routePattern: string): string {
+  return routePattern === "/"
+    ? routePattern
+    : `${routePattern.replace(/\/+$/, "")}(/)`;
 }
 
 function hasIndexChild<RouteObjectType extends RouteObject = RouteObject>(
