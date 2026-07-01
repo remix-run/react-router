@@ -183,7 +183,19 @@ async function runChecks() {
       : "";
   }
 
-  console.log(`Writing ${filename}:`, JSON.stringify(result));
+  console.log(`Checks result:`);
+  console.log(
+    JSON.stringify(
+      result,
+      (_, value) =>
+        typeof value === "string" && value.length > 60
+          ? value.substring(0, 60) + "..."
+          : value,
+      2,
+    ),
+  );
+
+  console.log(`Writing ${filename}`);
   fs.writeFileSync(filename, JSON.stringify(result));
 
   if (failures.length > 0) {
