@@ -1532,50 +1532,28 @@ export function useRevalidator(): {
  * Returns the active route matches, useful for accessing `loaderData` for
  * parent/child routes or the route `handle` property.
  *
- * This hook is most useful for creating abstractions in parent layouts to get access
- * to their child routes' data and metadata. It only works with a data router (like `createBrowserRouter`),
- * since they know the full route tree up front.
+ * Pairing the route `handle` with `useMatches` gets very powerful since you can put
+ * whatever you want on a route handle and have access to `useMatches` anywhere.
+ * Please see the [handle](../../how-to/using-handle) documentation for an example
+ * of breadcrumbs via `useMatches`/`handle`.
  *
- * A common use case is adding dynamic breadcrumbs to a parent layout. By pairing the `handle` route
- * configuration with `useMatches`, you can attach arbitrary metadata to a route and access it anywhere
- * in the active component tree.
- *
- * @example
  * ```tsx
- * // 1. Define breadcrumb logic in the route handle
- * <Route * element="{<Messages" path="messages"/>}
- *   handle={{ crumb: () => <Link to="/messages">Messages</Link> }}
- * >
- *   <Route * element="{<Thread" path="conversation/:id"/>}
- *     loader={loadThread}
- *     handle={{
- *       // We make this one a function so we can pass loader data
- *       // to create dynamic breadcrumb text
- *       crumb: (data) => <span>{data.threadName}</span>
- *     }}
- *   />
- * </Route>
+ * import { useMatches } from "react-router";
  *
- * // 2. Render the breadcrumbs in a parent layout
- * function Breadcrumbs() {
- *   let matches = useMatches();
- *   let crumbs = matches
- *     // First filter out matches that don't have a crumb defined
- *     .filter((match) => typeof match.handle?.crumb === "function")
- *     // Map them into elements, passing the loaderData to each one
- *     .map((match) => match.handle.crumb(match.loaderData));
- *
- *   return (
- *     <ol>
- *       {crumbs.map((crumb, index) => (
- *         <li key={index}>{crumb}</li>
- *       ))}
- *     </ol>
- *   );
+ * function SomeComponent() {
+ *   const matches = useMatches();
+ *   // matches[i].id          // route id
+ *   // matches[i].pathname    // the portion of the URL the route matched
+ *   // matches[i].params      // the parsed params from the URL
+ *   // matches[i].loaderData  // the data from the loader
+ *   // matches[i].handle      // the route handle with any app specific data
  * }
  * ```
  *
- * @see https://reactrouter.com/how-to/using-handle
+ * <docs-info>useMatches only works with a data router like `createBrowserRouter`,
+ * since they know the full route tree up front and can provide all of the current
+ * matches. Additionally, `useMatches` will not match down into any descendant route
+ * trees since the router isn't aware of the descendant routes.</docs-info>
  *
  * @public
  * @category Hooks
@@ -1592,7 +1570,6 @@ export function useMatches(): UIMatch[] {
     [matches, loaderData],
   );
 }
- 
 
 /**
  * Returns the data from the closest route
