@@ -37,6 +37,44 @@ describe("unstable route-pattern matching", () => {
     expect(matches?.[1].params).toEqual({ "*": "c/d" });
   });
 
+  it("matches index routes for exact parent paths", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          id: "root",
+          children: [
+            {
+              path: "dashboard",
+              id: "dashboard",
+              children: [
+                { index: true, id: "dashboard-index" },
+                { path: "settings", id: "dashboard-settings" },
+              ],
+            },
+          ],
+        },
+      ],
+      {
+        future,
+        initialEntries: ["/dashboard"],
+      },
+    );
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "dashboard",
+      "dashboard-index",
+    ]);
+
+    let matches = router.matchRoutes("/dashboard");
+    expect(matches?.map((m) => m.route.id)).toEqual([
+      "root",
+      "dashboard",
+      "dashboard-index",
+    ]);
+  });
+
   it("matches createBrowserRouter routes", () => {
     let router = createBrowserRouter([{ path: "/users/:id", id: "user" }], {
       future,
