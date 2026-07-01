@@ -73,7 +73,13 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
-import { preloadVite, getVite, defineCompilerOptions } from "./vite";
+import {
+  preloadVite,
+  getVite,
+  defineCompilerOptions,
+  getUserBuildInput,
+  getUserBuildOutput,
+} from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
@@ -3610,7 +3616,7 @@ export async function getEnvironmentOptionsResolvers(
         copyPublicDir: false, // The client only uses assets in the public directory
         rollupOptions: {
           input:
-            viteUserConfig.environments?.ssr?.build?.rollupOptions?.input ??
+            getUserBuildInput(viteUserConfig.environments?.ssr?.build) ??
             virtual.serverBuild.id,
           output: {
             entryFileNames: serverBuildFile,
@@ -3653,8 +3659,9 @@ export async function getEnvironmentOptionsResolvers(
                 },
               ),
             ],
-            output: viteUserConfig?.environments?.client?.build?.rollupOptions
-              ?.output ?? {
+            output: getUserBuildOutput(
+              viteUserConfig?.environments?.client?.build,
+            ) ?? {
               entryFileNames: ({ moduleIds }) => {
                 let routeChunkModuleId = moduleIds.find(isRouteChunkModuleId);
                 let routeChunkName = routeChunkModuleId

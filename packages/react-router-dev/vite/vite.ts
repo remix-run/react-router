@@ -73,3 +73,31 @@ export function defineOptimizeDepsCompilerOptions(options: {
     ? { rolldownOptions: options.rolldown }
     : { esbuildOptions: options.esbuild };
 }
+
+/**
+ * Read the user-supplied build entry input from either `rollupOptions` (Vite ≤7)
+ * or `rolldownOptions` (Vite ≥8). The two options are mutually exclusive in
+ * practice — this helper lets callers stay agnostic of the Vite major version.
+ */
+export function getUserBuildInput(
+  buildOpts: import("vite").BuildEnvironmentOptions | undefined,
+): import("rollup").InputOption | undefined {
+  return (
+    buildOpts?.rollupOptions?.input ??
+    // In Vite v8+, rolldownOptions replaces rollupOptions.
+    (buildOpts as Record<string, any> | undefined)?.rolldownOptions?.input
+  );
+}
+
+/**
+ * Read the user-supplied build output options from either `rollupOptions`
+ * (Vite ≤7) or `rolldownOptions` (Vite ≥8).
+ */
+export function getUserBuildOutput(
+  buildOpts: import("vite").BuildEnvironmentOptions | undefined,
+): import("rollup").OutputOptions | import("rollup").OutputOptions[] | undefined {
+  return (
+    buildOpts?.rollupOptions?.output ??
+    (buildOpts as Record<string, any> | undefined)?.rolldownOptions?.output
+  );
+}
