@@ -86,6 +86,7 @@ export {
   IDLE_FETCHER,
   IDLE_BLOCKER,
 } from "./lib/router/router";
+export { unstable_convertRoutePathsToPatterns } from "./lib/router/route-pattern";
 export {
   data,
   generatePath,

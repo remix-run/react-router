@@ -4,13 +4,14 @@ import {
   Link,
   Outlet,
   createBrowserRouter,
+  unstable_convertRoutePathsToPatterns,
   useLoaderData,
   useParams,
 } from "react-router";
 import { RouterProvider } from "react-router/dom";
 
 const router = createBrowserRouter(
-  [
+  unstable_convertRoutePathsToPatterns([
     {
       id: "root",
       path: "/",
@@ -47,10 +48,10 @@ const router = createBrowserRouter(
         },
       ],
     },
-  ],
+  ]),
   {
     future: {
-      unstable_routePatternMatching: true,
+      unstable_routePatternMatching: "native",
     },
   },
 );

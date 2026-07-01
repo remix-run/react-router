@@ -30,9 +30,11 @@ type RoutePatternRouteBranches<
   routePatternPartialMatcher?: RoutePatternBranchMatcher<RouteObjectType>;
 };
 
+type RoutePatternMatchingMode = "compat" | "native";
+
 export function createRoutePatternDataRouteMatcher<
   RouteObjectType extends RouteObject = RouteObject,
->(): {
+>(mode: RoutePatternMatchingMode): {
   flatten(routes: RouteObjectType[]): RouteBranch<RouteObjectType>[];
   match(
     routes: RouteObjectType[],
@@ -44,7 +46,7 @@ export function createRoutePatternDataRouteMatcher<
 } {
   return {
     flatten(routes) {
-      return flattenRoutesWithRoutePatterns(routes);
+      return flattenRoutesWithRoutePatterns(routes, mode);
     },
     match(_routes, branches, locationArg, basename, allowPartial) {
       let location =
@@ -64,15 +66,51 @@ export function createRoutePatternDataRouteMatcher<
   };
 }
 
+export function unstable_convertRoutePathsToPatterns<
+  RouteObjectType extends RouteObject = RouteObject,
+>(routes: RouteObjectType[]): RouteObjectType[] {
+  return routes.map((route) => {
+    let path =
+      route.path == null
+        ? route.path
+        : convertReactRouterRoutePathToRoutePattern(route.path);
+    let children =
+      "children" in route && route.children
+        ? unstable_convertRoutePathsToPatterns(route.children)
+        : undefined;
+
+    return {
+      ...route,
+      path,
+      ...(children ? { children } : {}),
+    };
+  }) as RouteObjectType[];
+}
+
+function convertReactRouterRoutePathToRoutePattern(path: string): string {
+  if (path === "") {
+    return path;
+  }
+
+  let routePattern = convertReactRouterPathToRoutePattern(path);
+  return path.startsWith("/") ? routePattern : routePattern.replace(/^\//, "");
+}
+
 function flattenRoutesWithRoutePatterns<
   RouteObjectType extends RouteObject = RouteObject,
->(routes: RouteObjectType[]): RouteBranch<RouteObjectType>[] {
+>(
+  routes: RouteObjectType[],
+  mode: RoutePatternMatchingMode,
+): RouteBranch<RouteObjectType>[] {
   let branches = flattenRoutesWithoutOptionalExploding(routes);
   let matcher = createMultiMatcher<RouteBranch<RouteObjectType>>();
   let partialMatcher = createMultiMatcher<RouteBranch<RouteObjectType>>();
 
   for (let branch of branches) {
-    let routePattern = convertReactRouterPathToRoutePattern(branch.path);
+    let routePattern =
+      mode === "compat"
+        ? convertReactRouterPathToRoutePattern(branch.path)
+        : branch.path;
     if (!hasIndexChild(branch)) {
       matcher.add(addOptionalTrailingSlash(routePattern), branch);
     }
@@ -312,7 +350,7 @@ function convertRoutePatternMatchToRouteMatches<
       .filter(Boolean);
 
     for (let segment of routeSegments) {
-      if (segment === "*") {
+      if (segment.startsWith("*")) {
         splatBaseSegments = consumedSegments;
         consumedSegments = pathSegments.length;
         break;
