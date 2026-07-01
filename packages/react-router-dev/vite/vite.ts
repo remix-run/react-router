@@ -1,6 +1,11 @@
 import { createRequire } from "node:module";
 import path from "pathe";
-import type { DepOptimizationConfig, ESBuildOptions } from "vite";
+import type {
+  DepOptimizationConfig,
+  ESBuildOptions,
+  EnvironmentOptions,
+  BuildEnvironmentOptions,
+} from "vite";
 
 import invariant from "../invariant";
 import { isReactRouterRepo } from "../config/is-react-router-repo";
@@ -75,29 +80,20 @@ export function defineOptimizeDepsCompilerOptions(options: {
 }
 
 /**
- * Read the user-supplied build entry input from either `rollupOptions` (Vite ≤7)
- * or `rolldownOptions` (Vite ≥8). The two options are mutually exclusive in
- * practice — this helper lets callers stay agnostic of the Vite major version.
+ * Read the user-supplied build options from either `rollupOptions` (Vite ≤7)
+ * or `rolldownOptions` (Vite ≥8)
  */
-export function getUserBuildInput(
-  buildOpts: import("vite").BuildEnvironmentOptions | undefined,
-): import("rollup").InputOption | undefined {
-  return (
-    buildOpts?.rollupOptions?.input ??
-    // In Vite v8+, rolldownOptions replaces rollupOptions.
-    (buildOpts as Record<string, any> | undefined)?.rolldownOptions?.input
-  );
-}
-
-/**
- * Read the user-supplied build output options from either `rollupOptions`
- * (Vite ≤7) or `rolldownOptions` (Vite ≥8).
- */
-export function getUserBuildOutput(
-  buildOpts: import("vite").BuildEnvironmentOptions | undefined,
-): import("rollup").OutputOptions | import("rollup").OutputOptions[] | undefined {
-  return (
-    buildOpts?.rollupOptions?.output ??
-    (buildOpts as Record<string, any> | undefined)?.rolldownOptions?.output
-  );
+export function getUserBuildRollupOptions(
+  environment: EnvironmentOptions | undefined,
+): BuildEnvironmentOptions["rollupOptions"] | undefined {
+  if (environment?.build) {
+    if ("rollupOptions" in environment.build) {
+      return environment.build.rollupOptions;
+    }
+    if ("rolldownOptions" in environment.build) {
+      return environment.build
+        .rolldownOptions as BuildEnvironmentOptions["rollupOptions"];
+    }
+  }
+  return undefined;
 }
