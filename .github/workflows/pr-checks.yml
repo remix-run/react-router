@@ -34,7 +34,8 @@ jobs:
 
           while IFS= read -r file; do
             case "$file" in
-              scripts/*) touches_scripts="true" ;;
+              scripts/pr.ts) touches_scripts="true" ;;
+              scripts/utils/*) touches_scripts="true" ;;
               packages/*) touches_packages="true" ;;
             esac
           done <<< "$changed_files"
