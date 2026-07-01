@@ -24,6 +24,7 @@
  *   PR_HEAD_OWNER - Required. github.event.pull_request.head.repo.owner.login
  *   PR_HEAD_REPO  - Required. github.event.pull_request.head.repo.name
  *   PR_HEAD_REF   - Required. github.event.pull_request.head.ref
+ *   CLA_DRY_RUN   - Optional. Set to "true" to log CLA results without actions/failures.
  *   EVENT_ACTION  - Required. github.event.action (opened|synchronize|reopened|labeled)
  *   LABEL_NAME    - Optional. github.event.label.name (set when EVENT_ACTION=labeled)
  *
@@ -212,6 +213,19 @@ async function claCheck(ctx: CheckContext): Promise<CheckResult> {
     .filter((contributor): contributor is string => Boolean(contributor));
   let signedCla = contributors.includes(author);
   console.log(`claCheck: ${ctx.author} signed CLA: ${signedCla}`);
+
+  if (process.env.CLA_DRY_RUN === "true") {
+    if (signedCla) {
+      console.log(
+        `claCheck: dry run; would add '${CLA_SIGNED_LABEL}' label and update existing CLA comment`,
+      );
+    } else {
+      console.log(
+        `claCheck: dry run; would request CLA signature and fail PR checks`,
+      );
+    }
+    return { actions: [] };
+  }
 
   if (signedCla) {
     return {
