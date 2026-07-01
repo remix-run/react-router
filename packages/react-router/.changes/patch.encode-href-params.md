@@ -1,1 +1,3 @@
-Fix `href()` to URL-encode param values, matching `generatePath()`. Previously a param containing `/`, `#`, or `?` would leak into the path as literal characters, and `matchPath(pattern, href(pattern, params))` could fail to match the route it was just generated for.
+Fix `href()` to properly stringify and URL-encode param values, matching `generatePath()`
+
+- splat params preserve encode each segment individually

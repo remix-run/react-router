@@ -57,6 +57,12 @@ describe("href", () => {
     );
   });
 
+  it("encodes splat param values while preserving segments", () => {
+    expect(href("/:param/*", { param: "a?b/c#d", "*": "e?f/g#h" })).toBe(
+      "/a%3Fb%2Fc%23d/e%3Ff/g%23h",
+    );
+  });
+
   it("round-trips through matchPath for param values with special characters", () => {
     let pattern = "/products/:id";
     for (let id of ["shoes/2026-summer", "abc#frag", "abc?x=1", "a b"]) {
@@ -66,5 +72,9 @@ describe("href", () => {
       expect(match).not.toBeNull();
       expect(decodeURIComponent(match!.params.id!)).toBe(id);
     }
+  });
+
+  it("coerces values to strings", () => {
+    expect(href("/:a/:b", { a: 1, b: true })).toBe("/1/true");
   });
 });
