@@ -1145,7 +1145,7 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
@@ -1399,7 +1399,7 @@ function compareIndexes(a: number[], b: number[]): number {
       0;
 }
 
-function matchRouteBranch<
+export function matchRouteBranch<
   ParamKey extends string = string,
   RouteObjectType extends RouteObject = RouteObject,
 >(
@@ -1584,7 +1584,7 @@ export interface PathMatch<ParamKey extends string = string> {
   pattern: PathPattern;
 }
 
-type Mutable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 

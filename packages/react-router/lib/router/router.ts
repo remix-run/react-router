@@ -79,6 +79,7 @@ import {
   normalizeProtocolRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
+import { createRoutePatternDataRouteMatcher } from "./route-pattern";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -440,7 +441,9 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_routePatternMatching?: boolean;
+}
 
 /**
  * Initialization options for createRouter
@@ -1083,7 +1086,9 @@ export function createRouter(init: RouterInit): Router {
     ...init.future,
   };
 
-  let dataRouteMatcher = legacyDataRouteMatcher;
+  let dataRouteMatcher = future.unstable_routePatternMatching
+    ? createRoutePatternDataRouteMatcher<DataRouteObject>()
+    : legacyDataRouteMatcher;
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};

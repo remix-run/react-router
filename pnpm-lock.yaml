@@ -650,6 +650,9 @@ importers:
 
   packages/react-router:
     dependencies:
+      '@remix-run/route-pattern':
+        specifier: ^0.22.1
+        version: 0.22.1
       cookie-es:
         specifier: ^3.1.1
         version: 3.1.1
@@ -3799,6 +3802,9 @@ packages:
 
   '@remix-run/node-fetch-server@0.13.3':
     resolution: {integrity: sha512-UfjOXed/DQteaM5VyTfqTeGpHwyL2J5aoRGY6cydip4tt1ehNNeSwuXCC7AEGE0RWBs/7bgKxYkL/B/+UDe4AA==}
+
+  '@remix-run/route-pattern@0.22.1':
+    resolution: {integrity: sha512-czdGJWh09Lapvcqt7Vb09KlrU2PhRJ8xQaI+AItTuD9aDJ5MAgxnS38lnys6Ll+6RJEqPiaUqTwIQhVLwFvv+w==}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     resolution: {integrity: sha512-SJ+/g+xNnOh6NqYxD0V3uVN4W3VfnrGsC9/hoglicgTNfABFG9JjISvkkU0dNY84MNHLWyOgxP9v9Y9pX4S7+A==}
@@ -11292,6 +11298,8 @@ snapshots:
       quansync: 1.0.0
 
   '@remix-run/node-fetch-server@0.13.3': {}
+
+  '@remix-run/route-pattern@0.22.1': {}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     optional: true
