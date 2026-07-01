@@ -45,6 +45,7 @@ import {
 
 type Action =
   | { type: "upsert-sticky-comment"; marker: string; body: string }
+  | { type: "update-sticky-comment"; marker: string; body: string }
   | { type: "create-comment"; body: string }
   | { type: "add-label"; label: string }
   | { type: "remove-label"; label: string }
@@ -107,6 +108,11 @@ If this PR already has a Proposal but it has not yet been accepted, let's contin
 
 If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
 `;
+
+const CLA_SIGNED_COMMENT = `${CLA_MARKER}
+### ✅ CLA Signed
+
+Thanks for signing the [Contributor License Agreement](https://github.com/remix-run/react-router/blob/main/CLA.md).`;
 
 function getClaMissingComment(ctx: CheckContext) {
   return `${CLA_MARKER}
@@ -209,7 +215,14 @@ async function claCheck(ctx: CheckContext): Promise<CheckResult> {
 
   if (signedCla) {
     return {
-      actions: [{ type: "add-label", label: CLA_SIGNED_LABEL }],
+      actions: [
+        { type: "add-label", label: CLA_SIGNED_LABEL },
+        {
+          type: "update-sticky-comment",
+          marker: CLA_MARKER,
+          body: CLA_SIGNED_COMMENT,
+        },
+      ],
     };
   }
 
@@ -331,6 +344,21 @@ async function runActions() {
         } else {
           console.log("Creating sticky comment");
           await createPrComment(prNumber, action.body);
+        }
+        break;
+      }
+      case "update-sticky-comment": {
+        let comments = await getPrComments(prNumber);
+        let existing = comments.find(
+          (c) =>
+            c.user?.login === "github-actions[bot]" &&
+            c.body?.includes(action.marker),
+        );
+        if (existing) {
+          console.log(`Updating sticky comment #${existing.id}`);
+          await updatePrComment(existing.id, action.body);
+        } else {
+          console.log("No sticky comment found to update");
         }
         break;
       }
