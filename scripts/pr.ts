@@ -24,7 +24,6 @@
  *   PR_HEAD_OWNER - Required. github.event.pull_request.head.repo.owner.login
  *   PR_HEAD_REPO  - Required. github.event.pull_request.head.repo.name
  *   PR_HEAD_REF   - Required. github.event.pull_request.head.ref
- *   CLA_DRY_RUN   - Optional. Set to "true" to log CLA results without actions/failures.
  *   EVENT_ACTION  - Required. github.event.action (opened|synchronize|reopened|labeled)
  *   LABEL_NAME    - Optional. github.event.label.name (set when EVENT_ACTION=labeled)
  *
@@ -46,7 +45,6 @@ import {
 
 type Action =
   | { type: "upsert-sticky-comment"; marker: string; body: string }
-  | { type: "update-sticky-comment"; marker: string; body: string }
   | { type: "create-comment"; body: string }
   | { type: "add-label"; label: string }
   | { type: "remove-label"; label: string }
@@ -138,7 +136,6 @@ let [mode, filename] = positionals;
 
 if (!filename) {
   usage();
-  process.exit(1);
 }
 
 if (mode === "check") {
@@ -214,10 +211,12 @@ async function claCheck(ctx: CheckContext): Promise<CheckResult> {
   let signedCla = contributors.includes(author);
   console.log(`claCheck: ${ctx.author} signed CLA: ${signedCla}`);
 
-  if (process.env.CLA_DRY_RUN === "true") {
+  // Dry runs to start so we can monitor the flow alongside the bot
+  let DRY_RUN = true;
+  if (DRY_RUN) {
     if (signedCla) {
       console.log(
-        `claCheck: dry run; would add '${CLA_SIGNED_LABEL}' label and update existing CLA comment`,
+        `claCheck: dry run; would add '${CLA_SIGNED_LABEL}' label and comment that the CLA is signed`,
       );
     } else {
       console.log(
@@ -232,7 +231,7 @@ async function claCheck(ctx: CheckContext): Promise<CheckResult> {
       actions: [
         { type: "add-label", label: CLA_SIGNED_LABEL },
         {
-          type: "update-sticky-comment",
+          type: "upsert-sticky-comment",
           marker: CLA_MARKER,
           body: CLA_SIGNED_COMMENT,
         },
@@ -358,21 +357,6 @@ async function runActions() {
         } else {
           console.log("Creating sticky comment");
           await createPrComment(prNumber, action.body);
-        }
-        break;
-      }
-      case "update-sticky-comment": {
-        let comments = await getPrComments(prNumber);
-        let existing = comments.find(
-          (c) =>
-            c.user?.login === "github-actions[bot]" &&
-            c.body?.includes(action.marker),
-        );
-        if (existing) {
-          console.log(`Updating sticky comment #${existing.id}`);
-          await updatePrComment(existing.id, action.body);
-        } else {
-          console.log("No sticky comment found to update");
         }
         break;
       }
