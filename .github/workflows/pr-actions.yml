@@ -14,7 +14,7 @@ jobs:
   actions:
     name: Actions
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
+      contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion) &&
       github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     permissions:
@@ -40,6 +40,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download result from upstream workflow
+        continue-on-error: true
         uses: actions/download-artifact@v8
         with:
           name: pr-checks-result
