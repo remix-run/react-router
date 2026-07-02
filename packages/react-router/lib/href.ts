@@ -12,6 +12,10 @@ type ToArgs<Params extends Record<string, string | undefined>> =
   // otherwise, require `params` arg
   [Params];
 
+function stringify(p: any) {
+  return p == null ? "" : typeof p === "string" ? p : String(p);
+}
+
 /**
   Returns a resolved URL path for the specified route.
 
@@ -38,16 +42,18 @@ export function href<Path extends keyof Args>(
             `Path '${path}' requires param '${param}' but it was not provided`,
           );
         }
-        return value === undefined ? "" : "/" + value;
+        return value == null ? "" : "/" + encodeURIComponent(stringify(value));
       },
     );
 
   if (path.endsWith("*")) {
     // treat trailing splat the same way as compilePath, and force it to be as if it were `/*`.
-    // `react-router typegen` will not generate the params for a malformed splat, causing a type error, but we can still do the correct thing here.
+    // `react-router typegen` will not generate the params for a malformed splat,
+    // causing a type error, but we can still do the correct thing here.
     const value = params?.["*"];
     if (value !== undefined) {
-      result += "/" + value;
+      result +=
+        "/" + stringify(value).split("/").map(encodeURIComponent).join("/");
     }
   }
 
