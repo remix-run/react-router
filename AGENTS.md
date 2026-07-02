@@ -136,6 +136,7 @@ Brief description of the change
 ## Branching
 
 - **`main`**: Active Development
+- **`v7`**: v7.x maintenance
 - **`v6`**: v6.x maintenance
 - Branch from `main` for code and docs changes
 
