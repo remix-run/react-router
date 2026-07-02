@@ -58,11 +58,7 @@ interface WritableErrorMonitor {
 function monitorWritableError(writable: Writable): WritableErrorMonitor {
   let settled = false;
   let writableError: Error | undefined;
-  let rejectWritableError!: (error: Error) => void;
-  let writableErrorPromise = new Promise<never>((_, reject) => {
-    rejectWritableError = reject;
-  });
-  writableErrorPromise.catch(() => {});
+  let rejectPendingRace: ((error: Error) => void) | undefined;
 
   function cleanup() {
     writable.off("error", onError);
@@ -77,7 +73,8 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
     settled = true;
     writableError = error;
     cleanup();
-    rejectWritableError(error);
+    rejectPendingRace?.(error);
+    rejectPendingRace = undefined;
   }
 
   function onError(error: Error) {
@@ -94,7 +91,18 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   return {
     cleanup,
     race<T>(promise: Promise<T>) {
-      return Promise.race([promise, writableErrorPromise]);
+      if (writableError) {
+        return Promise.reject(writableError);
+      }
+
+      return new Promise<T>((resolve, reject) => {
+        rejectPendingRace = reject;
+        void promise.then(resolve, reject).finally(() => {
+          if (rejectPendingRace === reject) {
+            rejectPendingRace = undefined;
+          }
+        });
+      });
     },
     throwIfClosed() {
       if (writableError) {
