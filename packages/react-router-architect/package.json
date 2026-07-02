@@ -1,7 +1,7 @@
 {
   "name": "@react-router/architect",
   "type": "module",
-  "version": "8.1.0",
+  "version": "8.2.0",
   "description": "Architect server request handler for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"

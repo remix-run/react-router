@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.2.0](#v820)
   - [v8.1.0](#v810)
     - [Agent Skills Installation via `create-react-router`](#agent-skills-installation-via-create-react-router)
     - [Observability Metadata](#observability-metadata)
@@ -106,6 +107,42 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.2.0
+
+Date: 2026-07-02
+
+### Minor Changes
+
+- `@react-router/dev` - Detect nub as a supported package manager when installing framework dependencies ([#15276](https://github.com/remix-run/react-router/pull/15276))
+- `@react-router/dev` - Change the default `entry.server.tsx` to use React's `renderToReadableStream` which is now available in React Router v8's Node 22 baseline ([#14759](https://github.com/remix-run/react-router/pull/14759))
+  - Framework mode apps no longer require a custom `entry.server.tsx` file to run in non-Node runtimes (i.e., Cloudflare)
+  - This should not have any functional changes for your app
+    - You may see a small performance boost because of the reduced conversions between node streams and web streams
+    - You may eliminate initial fallback flickers for promises resolved prior to render
+      - Our testing showed that `renderToPipeableStream` would render the fallback and stream an immediate chunk with the resolved value
+      - `renderToReadableStream` skips the fallback and renders the resolved value in the critical HTML
+  - If you have your own `entry.server.tsx` using `renderToReadableStream`, you may be able to remove it from your app if the logic matches the [default implementation](https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/defaults/entry.server.tsx)
+  - If you wish to continue using `renderToPipeableStream`, you can add your own `entry.server.tsx` file based on the previous [node implementation](https://github.com/remix-run/react-router/blob/react-router%408.0.0/packages/react-router-dev/config/defaults/entry.server.node.tsx)
+  - You can also remove `@react-router/node` from your dependencies if you also have `@react-router/serve` or `@react-router/express`, since we no longer need the dependency to determine server entry compatibility across runtimes
+- `create-react-router` - Detect nub as a supported package manager when creating new projects ([#15276](https://github.com/remix-run/react-router/pull/15276))
+
+### Patch Changes
+
+- `react-router` - Fix `href()` to properly stringify and URL-encode param values, matching `generatePath()` ([#15277](https://github.com/remix-run/react-router/pull/15277))
+  - splat params preserve path separators while encoding each segment individually
+- `react-router` - Fix incorrect dynamic param extraction when optional static segments are present ([#15200](https://github.com/remix-run/react-router/pull/15200))
+  - When a route path contains optional static segments (e.g. `/school?/user/:id`), the internal regex's incorrectly shifted parameter indices resulting in incorrect parameter extraction
+  - Consecutive optional static segments (e.g. `/one?/two?`) were only partially handled
+- `react-router` - Preserve navigation blocker state through a revalidation ([#15246](https://github.com/remix-run/react-router/pull/15246))
+- `react-router` - Fix route ranking/scoring bug with dynamic parameters containing static extension suffixes (i.e., `/:name.xml`) ([#15273](https://github.com/remix-run/react-router/pull/15273))
+  - These were not being detected as dynamic param segments and instead got incorrectly scored higher as a static segment
+  - This meant they could potentially tie truly static routes like `/sitemap.xml` and outrank them based on definition order
+  - These are now correctly identified as dynamic parameter segments and scored correctly
+- `react-router` - Update to use ReactFormState types instead of unknown. ([#15263](https://github.com/remix-run/react-router/pull/15263))
+- `@react-router/dev` - Properly detect user `rolldownOptions` config in Vite 8+ ([#15278](https://github.com/remix-run/react-router/pull/15278))
+
+**Full Changelog**: [`v8.1.0...v8.2.0`](https://github.com/remix-run/react-router/compare/react-router@8.1.0...react-router@8.2.0)
 
 ## v8.1.0
 
