@@ -92,6 +92,30 @@ describe("writeReadableStreamToWritable", () => {
       "Writable failed",
     );
   });
+
+  it("does not race each read against a long-lived writable promise", async () => {
+    let raceSpy = jest.spyOn(Promise, "race");
+    let writable = new Writable({
+      write(_chunk, _encoding, callback) {
+        callback();
+      },
+    });
+    let readable = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(1));
+        controller.enqueue(new Uint8Array(1));
+        controller.close();
+      },
+    });
+
+    try {
+      await writeReadableStreamToWritable(readable, writable);
+
+      expect(raceSpy).not.toHaveBeenCalled();
+    } finally {
+      raceSpy.mockRestore();
+    }
+  });
 });
 
 describe("writeAsyncIterableToWritable", () => {
