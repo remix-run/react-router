@@ -1,5 +1,29 @@
 # `@react-router/dev`
 
+## v8.2.0
+
+### Minor Changes
+
+- Detect nub as a supported package manager when installing framework dependencies ([#15276](https://github.com/remix-run/react-router/pull/15276))
+- Change the default `entry.server.tsx` to use React's `renderToReadableStream` which is now available in React Router v8's Node 22 baseline ([#14759](https://github.com/remix-run/react-router/pull/14759))
+  - Framework mode apps no longer require a custom `entry.server.tsx` file to run in non-Node runtimes (i.e., Cloudflare)
+  - This should not have any functional changes for your app
+    - You may see a small performance boost because of the reduced conversions between node streams and web streams
+    - You may eliminate initial fallback flickers for promises resolved prior to render
+      - Our testing showed that `renderToPipeableStream` would render the fallback and stream an immediate chunk with the resolved value
+      - `renderToReadableStream` skips the fallback and renders the resolved value in the critical HTML
+  - If you have your own `entry.server.tsx` using `renderToReadableStream`, you may be able to remove it from your app if the logic matches the [default implementation](https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/defaults/entry.server.tsx)
+  - If you wish to continue using `renderToPipeableStream`, you can add your own `entry.server.tsx` file based on the previous [node implementation](https://github.com/remix-run/react-router/blob/react-router%408.0.0/packages/react-router-dev/config/defaults/entry.server.node.tsx)
+  - You can also remove `@react-router/node` from your dependencies if you also have `@react-router/serve` or `@react-router/express`, since we no longer need the dependency to determine server entry compatibility across runtimes
+
+### Patch Changes
+
+- Properly detect user `rolldownOptions` config in Vite 8+ ([#15278](https://github.com/remix-run/react-router/pull/15278))
+- Updated dependencies:
+  - [`react-router@8.2.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.2.0)
+  - [`@react-router/node@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.2.0)
+  - [`@react-router/serve@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.2.0)
+
 ## v8.1.0
 
 ### Patch Changes
