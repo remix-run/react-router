@@ -818,6 +818,39 @@ describe("create-react-router CLI", () => {
     process.env.npm_config_user_agent = originalUserAgent;
   });
 
+  it("recognizes when nub was used to run the command", async () => {
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent =
+      "nub/0.1.0 npm/? node/v24.0.0 linux x64";
+
+    let projectDir = getProjectDir("nub-create-from-user-agent");
+
+    mockSpawnSuccess();
+
+    // Suppress terminal output
+    let stdoutMock = jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+
+    await createReactRouter([
+      projectDir,
+      "--template",
+      path.join(__dirname, "fixtures", "blank"),
+      "--no-git-init",
+      "--yes",
+      "--no-agent-skills",
+    ]);
+
+    stdoutMock.mockReset();
+
+    expect(mockedSpawn).toHaveBeenCalledWith(
+      "nub",
+      expect.arrayContaining(["install"]),
+      expect.anything(),
+    );
+    process.env.npm_config_user_agent = originalUserAgent;
+  });
+
   it("supports specifying the package manager, regardless of user agent", async () => {
     let originalUserAgent = process.env.npm_config_user_agent;
     process.env.npm_config_user_agent =
