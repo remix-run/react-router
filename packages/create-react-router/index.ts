@@ -158,10 +158,7 @@ async function getContext(argv: string[]): Promise<Context> {
     showInstallOutput: getBooleanArg(values["show-install-output"]) ?? false,
     noMotion: getBooleanArg(values["no-motion"]),
     pkgManager: validatePackageManager(
-      getStringArg(values["package-manager"]) ??
-        // npm, pnpm, Yarn, Bun and Deno (v2.0.5+) set the user agent environment variable that can be used
-        // to determine which package manager ran the command.
-        (process.env.npm_config_user_agent ?? "npm").split("/")[0],
+      getStringArg(values["package-manager"]) ?? detectPackageManager() ?? "npm",
     ),
     projectName,
     prompt,
@@ -574,11 +571,34 @@ async function doneStep(ctx: Context) {
   await sleep(200);
 }
 
-const validPackageManagers = ["npm", "yarn", "pnpm", "bun", "deno"] as const;
+const validPackageManagers = ["npm", "yarn", "pnpm", "bun", "deno", "nub"] as const;
 type PackageManager = (typeof validPackageManagers)[number];
 
 function validatePackageManager(pkgManager: string): PackageManager {
   return validPackageManagers.find((name) => pkgManager === name) ?? "npm";
+}
+
+/**
+ * Determine which package manager the user prefers.
+ *
+ * npm, pnpm, Yarn, Bun, Deno, and nub set the user agent environment variable
+ * that can be used to determine which package manager ran the command.
+ */
+function detectPackageManager(): PackageManager | undefined {
+  let { npm_config_user_agent } = process.env;
+  if (!npm_config_user_agent) return undefined;
+  try {
+    let pkgManager = npm_config_user_agent.split("/")[0];
+    if (pkgManager === "npm") return "npm";
+    if (pkgManager === "pnpm") return "pnpm";
+    if (pkgManager === "yarn") return "yarn";
+    if (pkgManager === "bun") return "bun";
+    if (pkgManager === "deno") return "deno";
+    if (pkgManager === "nub") return "nub";
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function installDependencies({
