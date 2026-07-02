@@ -1352,6 +1352,8 @@ function rankRouteBranches(branches: RouteBranch[]): void {
 }
 
 const paramRe = /^:[\w-]+$/;
+const partialParamRe = /^:[\w-]+/;
+const partialDynamicSegmentValue = 3.5;
 const dynamicSegmentValue = 3;
 const indexRouteValue = 2;
 const emptySegmentValue = 1;
@@ -1374,12 +1376,13 @@ function computeScore(path: string, index: boolean | undefined): number {
     .filter((s) => !isSplat(s))
     .reduce(
       (score, segment) =>
-        score +
-        (paramRe.test(segment)
-          ? dynamicSegmentValue
-          : segment === ""
-            ? emptySegmentValue
-            : staticSegmentValue),
+        // prettier-ignore
+        score + (
+          paramRe.test(segment) ? dynamicSegmentValue :
+          partialParamRe.test(segment) ? partialDynamicSegmentValue :
+          segment === "" ? emptySegmentValue :
+          staticSegmentValue
+        ),
       initialScore,
     );
 }
