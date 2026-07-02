@@ -24,8 +24,7 @@
  *   PR_HEAD_OWNER - Required. github.event.pull_request.head.repo.owner.login
  *   PR_HEAD_REPO  - Required. github.event.pull_request.head.repo.name
  *   PR_HEAD_REF   - Required. github.event.pull_request.head.ref
- *   EVENT_ACTION  - Required. github.event.action (opened|synchronize|reopened|labeled)
- *   LABEL_NAME    - Optional. github.event.label.name (set when EVENT_ACTION=labeled)
+ *   LABEL_NAME    - Optional. github.event.label.name (set when github.event.action == "labeled")
  *
  * Environment (actions):
  *   GITHUB_TOKEN  - Required (issues:write + pull-requests:write).
@@ -57,7 +56,6 @@ type CheckContext = {
   headOwner: string;
   headRepo: string;
   headRef: string;
-  eventAction: string;
   labelName: string;
 };
 
@@ -164,7 +162,6 @@ async function runChecks() {
     headOwner: requireEnv("PR_HEAD_OWNER"),
     headRepo: requireEnv("PR_HEAD_REPO"),
     headRef: requireEnv("PR_HEAD_REF"),
-    eventAction: requireEnv("EVENT_ACTION"),
     labelName: process.env.LABEL_NAME ?? "",
   };
   console.log("ctx:", ctx);
@@ -205,10 +202,6 @@ async function runChecks() {
 }
 
 async function claCheck(ctx: CheckContext): Promise<CheckResult> {
-  if (!["opened", "synchronize", "reopened"].includes(ctx.eventAction)) {
-    return { actions: [] };
-  }
-
   let author = ctx.author.toLowerCase();
   if (author === "dependabot[bot]") {
     console.log(`claCheck: ignoring ${ctx.author}`);
@@ -250,9 +243,6 @@ async function claCheck(ctx: CheckContext): Promise<CheckResult> {
 
 async function changeFileCheck(ctx: CheckContext): Promise<CheckResult> {
   if (ctx.baseBranch !== "main") return { actions: [] };
-  if (!["opened", "synchronize", "reopened"].includes(ctx.eventAction)) {
-    return { actions: [] };
-  }
 
   let files = await getPrFiles(ctx.prNumber);
   let touchesPackageFiles = files.some((f) =>
@@ -306,17 +296,18 @@ async function changeFileCheck(ctx: CheckContext): Promise<CheckResult> {
 }
 
 async function featurePrCheck(ctx: CheckContext): Promise<CheckResult> {
-  if (ctx.eventAction !== "labeled") return { actions: [] };
-  if (ctx.labelName !== "feature-request") return { actions: [] };
+  if (ctx.labelName === "feature-request") {
+    console.log(`featurePrCheck: closing PR ${ctx.prNumber}`);
+    return {
+      actions: [
+        { type: "create-comment", body: CLOSE_FEATURE_PR_COMMENT },
+        { type: "remove-label", label: ctx.labelName },
+        { type: "close-pr" },
+      ],
+    };
+  }
 
-  console.log(`featurePrCheck: closing PR ${ctx.prNumber}`);
-  return {
-    actions: [
-      { type: "create-comment", body: CLOSE_FEATURE_PR_COMMENT },
-      { type: "remove-label", label: ctx.labelName },
-      { type: "close-pr" },
-    ],
-  };
+  return { actions: [] };
 }
 
 // ---------- Action dispatch ----------

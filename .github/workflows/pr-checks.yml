@@ -10,7 +10,7 @@ on:
     types: [opened, synchronize, reopened, labeled]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action }}-${{ github.event.label.name }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -85,7 +85,6 @@ jobs:
           PR_HEAD_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.name }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          EVENT_ACTION: ${{ github.event.action }}
           LABEL_NAME: ${{ github.event.label.name }}
         run: node scripts/pr.ts check pr-checks-result.json
 
