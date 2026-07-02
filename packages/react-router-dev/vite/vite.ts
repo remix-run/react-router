@@ -1,6 +1,11 @@
 import { createRequire } from "node:module";
 import path from "pathe";
-import type { DepOptimizationConfig, ESBuildOptions } from "vite";
+import type {
+  DepOptimizationConfig,
+  ESBuildOptions,
+  EnvironmentOptions,
+  BuildEnvironmentOptions,
+} from "vite";
 
 import invariant from "../invariant";
 import { isReactRouterRepo } from "../config/is-react-router-repo";
@@ -72,4 +77,23 @@ export function defineOptimizeDepsCompilerOptions(options: {
   return parseInt(vite.version.split(".")[0], 10) >= 8
     ? { rolldownOptions: options.rolldown }
     : { esbuildOptions: options.esbuild };
+}
+
+/**
+ * Read the user-supplied build options from either `rollupOptions` (Vite <=7)
+ * or `rolldownOptions` (Vite >=8).
+ */
+export function getUserBuildRollupOptions(
+  environment: EnvironmentOptions | undefined,
+): BuildEnvironmentOptions["rollupOptions"] | undefined {
+  if (environment?.build) {
+    if ("rollupOptions" in environment.build) {
+      return environment.build.rollupOptions;
+    }
+    if ("rolldownOptions" in environment.build) {
+      return environment.build
+        .rolldownOptions as BuildEnvironmentOptions["rollupOptions"];
+    }
+  }
+  return undefined;
 }
