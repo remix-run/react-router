@@ -1351,7 +1351,7 @@ function rankRouteBranches(branches: RouteBranch[]): void {
   );
 }
 
-const paramRe = /^:[\w-]+$/;
+const paramRe = /^:[\w-]+/;
 const dynamicSegmentValue = 3;
 const indexRouteValue = 2;
 const emptySegmentValue = 1;
