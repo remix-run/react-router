@@ -30,11 +30,9 @@ type RoutePatternRouteBranches<
   routePatternPartialMatcher?: RoutePatternBranchMatcher<RouteObjectType>;
 };
 
-type RoutePatternMatchingMode = "compat" | "native";
-
 export function createRoutePatternDataRouteMatcher<
   RouteObjectType extends RouteObject = RouteObject,
->(mode: RoutePatternMatchingMode): {
+>(): {
   flatten(routes: RouteObjectType[]): RouteBranch<RouteObjectType>[];
   match(
     routes: RouteObjectType[],
@@ -46,7 +44,7 @@ export function createRoutePatternDataRouteMatcher<
 } {
   return {
     flatten(routes) {
-      return flattenRoutesWithRoutePatterns(routes, mode);
+      return flattenRoutesWithRoutePatterns(routes);
     },
     match(_routes, branches, locationArg, basename, allowPartial) {
       let location =
@@ -98,19 +96,13 @@ function convertReactRouterRoutePathToRoutePattern(path: string): string {
 
 function flattenRoutesWithRoutePatterns<
   RouteObjectType extends RouteObject = RouteObject,
->(
-  routes: RouteObjectType[],
-  mode: RoutePatternMatchingMode,
-): RouteBranch<RouteObjectType>[] {
+>(routes: RouteObjectType[]): RouteBranch<RouteObjectType>[] {
   let branches = flattenRoutesWithoutOptionalExploding(routes);
   let matcher = createMultiMatcher<RouteBranch<RouteObjectType>>();
   let partialMatcher = createMultiMatcher<RouteBranch<RouteObjectType>>();
 
   for (let branch of branches) {
-    let routePattern =
-      mode === "compat"
-        ? convertReactRouterPathToRoutePattern(branch.path)
-        : branch.path;
+    let routePattern = branch.path;
     if (!hasIndexChild(branch)) {
       matcher.add(addOptionalTrailingSlash(routePattern), branch);
     }

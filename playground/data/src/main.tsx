@@ -4,13 +4,14 @@ import {
   Link,
   Outlet,
   createBrowserRouter,
+  unstable_convertRoutePathsToPatterns,
   useLoaderData,
   useParams,
 } from "react-router";
 import { RouterProvider } from "react-router/dom";
 
 const router = createBrowserRouter(
-  [
+  unstable_convertRoutePathsToPatterns([
     {
       id: "root",
       path: "/",
@@ -47,32 +48,16 @@ const router = createBrowserRouter(
         },
       ],
     },
-  ],
+  ]),
   {
     future: {
-      unstable_routePatternMatching: "compat",
+      unstable_routePatternMatching: true,
     },
   },
 );
 
 /*
-Compat mode with existing React Router path syntax:
-
-createBrowserRouter(
-  [
-    {
-      path: "/",
-      children: [
-        { path: "projects/:projectId?", Component: ProjectsLayout },
-        { path: "archive/:year?/:month?", Component: Archive },
-        { path: "files/*", Component: Files },
-      ],
-    },
-  ],
-  { future: { unstable_routePatternMatching: "compat" } },
-);
-
-Native mode with converted React Router path syntax:
+Route-pattern matching with converted React Router path syntax:
 
 import { unstable_convertRoutePathsToPatterns } from "react-router";
 
@@ -87,10 +72,10 @@ createBrowserRouter(
       ],
     },
   ]),
-  { future: { unstable_routePatternMatching: "native" } },
+  { future: { unstable_routePatternMatching: true } },
 );
 
-Native mode with raw route-pattern syntax:
+Route-pattern matching with raw route-pattern syntax:
 
 createBrowserRouter(
   [
@@ -103,7 +88,7 @@ createBrowserRouter(
       ],
     },
   ],
-  { future: { unstable_routePatternMatching: "native" } },
+  { future: { unstable_routePatternMatching: true } },
 );
 */
 

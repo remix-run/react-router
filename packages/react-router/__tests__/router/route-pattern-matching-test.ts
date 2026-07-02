@@ -6,10 +6,9 @@ import { createStaticHandler } from "../../lib/router/router";
 import getWindow from "../utils/getWindow";
 
 describe("unstable route-pattern matching", () => {
-  let compatFuture = { unstable_routePatternMatching: "compat" } as const;
-  let nativeFuture = { unstable_routePatternMatching: "native" } as const;
+  let routePatternFuture = { unstable_routePatternMatching: true } as const;
 
-  it("matches createMemoryRouter routes in compat mode", () => {
+  it("matches createMemoryRouter route-pattern routes", () => {
     let router = createMemoryRouter(
       [
         {
@@ -18,12 +17,12 @@ describe("unstable route-pattern matching", () => {
           children: [
             { index: true, id: "index" },
             { path: "users/:id", id: "user" },
-            { path: "files/*", id: "files" },
+            { path: "files/*splat", id: "files" },
           ],
         },
       ],
       {
-        future: compatFuture,
+        future: routePatternFuture,
         initialEntries: ["/files/a/b"],
       },
     );
@@ -32,11 +31,11 @@ describe("unstable route-pattern matching", () => {
       "root",
       "files",
     ]);
-    expect(router.state.matches[1].params).toEqual({ "*": "a/b" });
+    expect(router.state.matches[1].params).toEqual({ splat: "a/b" });
 
     let matches = router.matchRoutes("/files/c/d");
     expect(matches?.map((m) => m.route.id)).toEqual(["root", "files"]);
-    expect(matches?.[1].params).toEqual({ "*": "c/d" });
+    expect(matches?.[1].params).toEqual({ splat: "c/d" });
   });
 
   it("matches index routes for exact parent paths", () => {
@@ -58,7 +57,7 @@ describe("unstable route-pattern matching", () => {
         },
       ],
       {
-        future: compatFuture,
+        future: routePatternFuture,
         initialEntries: ["/dashboard"],
       },
     );
@@ -79,7 +78,7 @@ describe("unstable route-pattern matching", () => {
 
   it("matches createBrowserRouter routes", () => {
     let router = createBrowserRouter([{ path: "/users/:id", id: "user" }], {
-      future: compatFuture,
+      future: routePatternFuture,
       window: getWindow("/users/mj"),
     });
 
@@ -89,7 +88,7 @@ describe("unstable route-pattern matching", () => {
 
   it("matches createHashRouter routes", () => {
     let router = createHashRouter([{ path: "/users/:id", id: "user" }], {
-      future: compatFuture,
+      future: routePatternFuture,
       window: getWindow("/users/mj", true),
     });
 
@@ -104,12 +103,12 @@ describe("unstable route-pattern matching", () => {
         id: "root",
         children: [
           { index: true, id: "index" },
-          { path: "files/*", id: "files" },
+          { path: "files/*splat", id: "files" },
         ],
       },
     ];
     let { query, dataRoutes } = createStaticHandler(routes, {
-      future: compatFuture,
+      future: routePatternFuture,
     });
     let context = await query(new Request("http://localhost/files/a/b"));
 
@@ -118,30 +117,30 @@ describe("unstable route-pattern matching", () => {
     }
 
     let router = createStaticRouter(dataRoutes, context, {
-      future: compatFuture,
+      future: routePatternFuture,
     });
 
     expect(router.state.matches.map((m) => m.route.id)).toEqual([
       "root",
       "files",
     ]);
-    expect(router.state.matches[1].params).toEqual({ "*": "a/b" });
+    expect(router.state.matches[1].params).toEqual({ splat: "a/b" });
 
     let matches = router.matchRoutes("/files/c/d");
     expect(matches?.map((m) => m.route.id)).toEqual(["root", "files"]);
-    expect(matches?.[1].params).toEqual({ "*": "c/d" });
+    expect(matches?.[1].params).toEqual({ splat: "c/d" });
   });
 
-  it("converts optional segments to route-pattern optionals", () => {
+  it("matches optional route-pattern segments without exploding routes", () => {
     let router = createMemoryRouter(
       [
         {
-          path: "/archive/:year?/:month?",
+          path: "/archive(/:year(/:month))",
           id: "archive",
         },
       ],
       {
-        future: compatFuture,
+        future: routePatternFuture,
         initialEntries: ["/archive/2024"],
       },
     );
@@ -150,66 +149,7 @@ describe("unstable route-pattern matching", () => {
     expect(router.state.matches[0].params).toEqual({ year: "2024" });
   });
 
-  it("matches nested optional segments without exploding routes", () => {
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/one/:two?",
-          id: "one",
-          children: [
-            {
-              path: "three",
-              id: "three",
-            },
-          ],
-        },
-      ],
-      {
-        future: compatFuture,
-        initialEntries: ["/one/three"],
-      },
-    );
-
-    expect(router.state.matches.map((m) => m.route.id)).toEqual([
-      "one",
-      "three",
-    ]);
-    expect(router.state.matches[0].params).toEqual({});
-  });
-
-  it("matches route-pattern syntax directly in native mode", () => {
-    let router = createMemoryRouter(
-      [
-        {
-          path: "/",
-          id: "root",
-          children: [
-            { path: "archive(/:year(/:month))", id: "archive" },
-            { path: "files/*splat", id: "files" },
-          ],
-        },
-      ],
-      {
-        future: nativeFuture,
-        initialEntries: ["/archive/2024/06"],
-      },
-    );
-
-    expect(router.state.matches.map((m) => m.route.id)).toEqual([
-      "root",
-      "archive",
-    ]);
-    expect(router.state.matches[1].params).toEqual({
-      year: "2024",
-      month: "06",
-    });
-
-    let matches = router.matchRoutes("/files/a/b");
-    expect(matches?.map((m) => m.route.id)).toEqual(["root", "files"]);
-    expect(matches?.[1].params).toEqual({ splat: "a/b" });
-  });
-
-  it("converts route paths to route-pattern syntax for native mode", () => {
+  it("matches converted React Router route paths", () => {
     let routes = unstable_convertRoutePathsToPatterns([
       {
         path: "/",
@@ -225,7 +165,7 @@ describe("unstable route-pattern matching", () => {
     expect(routes[0].children?.[1].path).toBe("files/*__rr_splat");
 
     let router = createMemoryRouter(routes, {
-      future: nativeFuture,
+      future: routePatternFuture,
       initialEntries: ["/archive/2024/06"],
     });
 
@@ -243,10 +183,39 @@ describe("unstable route-pattern matching", () => {
     expect(matches?.[1].params).toEqual({ "*": "a/b" });
   });
 
+  it("matches nested converted React Router route paths", () => {
+    let routes = unstable_convertRoutePathsToPatterns([
+      {
+        path: "/one/:two?",
+        id: "one",
+        children: [
+          {
+            path: "three",
+            id: "three",
+          },
+        ],
+      },
+    ]);
+
+    expect(routes[0].path).toBe("/one(/:two)");
+    expect(routes[0].children?.[0].path).toBe("three");
+
+    let router = createMemoryRouter(routes, {
+      future: routePatternFuture,
+      initialEntries: ["/one/three"],
+    });
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "one",
+      "three",
+    ]);
+    expect(router.state.matches[0].params).toEqual({});
+  });
+
   it("throws for caseSensitive routes", () => {
     expect(() =>
       createMemoryRouter([{ path: "/users", caseSensitive: true }], {
-        future: compatFuture,
+        future: routePatternFuture,
       }),
     ).toThrow(
       "`caseSensitive` routes are not supported with " +

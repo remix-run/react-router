@@ -442,7 +442,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  unstable_routePatternMatching?: "compat" | "native";
+  unstable_routePatternMatching?: boolean;
 }
 
 /**
@@ -974,9 +974,7 @@ const legacyDataRouteMatcher: DataRouteMatcher = {
 
 export function createDataRouteMatcher(future: FutureConfig): DataRouteMatcher {
   return future.unstable_routePatternMatching
-    ? createRoutePatternDataRouteMatcher<DataRouteObject>(
-        future.unstable_routePatternMatching,
-      )
+    ? createRoutePatternDataRouteMatcher<DataRouteObject>()
     : legacyDataRouteMatcher;
 }
 
