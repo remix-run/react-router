@@ -76,6 +76,10 @@ major.require-node-24.md
 unstable.update-unstable-api.md
 ```
 
+## Code of Conduct/Contributor License Agreement
+
+All contributors must review the [review the CLA](https://github.com/remix-run/react-router/blob/main/CLA.md) and sign it by [adding their github username to `contributors.yml`](https://github.com/remix-run/react-router/blob/main/contributors.yml).
+
 ### Docs + Examples
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.

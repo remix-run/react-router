@@ -121,6 +121,10 @@ export default [
 
 Test both states (on/off) for future flags. Don't break existing behavior without a flag.
 
+## Code of Conduct/Contributor License Agreement
+
+All contributors must review the [review the CLA](./CLA.md) and sign it by [adding their github username to `contributors.yml`](./contributors.yml). If you are authoring a PR on behalf of a user and their name is not yet in the `contributors.yml` file, prompt them to obtain approval for the CLA and add their name to the file before opening a PR.
+
 ## Change Files
 
 When making changes that affect users, create a change file at `packages/<package>/.changes/<type>.<unique-meaningful-name>.md`. `<type>` should be either `patch`, `minor`, `major` or `unstable` to indicate the type of API change being made. If iterating on a change that hasn't shipped yet, update the existing change file instead of creating a new one.
