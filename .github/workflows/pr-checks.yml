@@ -16,7 +16,12 @@ concurrency:
 jobs:
   check:
     name: Checks
-    if: github.repository == 'remix-run/react-router'
+    if: >
+      github.repository == 'remix-run/react-router' &&
+      (
+        github.event.action != 'labeled' ||
+        github.event.label.name == 'feature-request'
+      )
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
