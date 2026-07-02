@@ -22,6 +22,73 @@ export const decorateComponentExportsWithProps = (
     return uid;
   }
 
+  /**
+   * Rewrite any re-exports for named components (`default Component`, `HydrateFallback`, `ErrorBoundary`)
+   * into `export const <name> = <expr>` form in preparation for adding props HOCs in the next traversal.
+   *
+   * Case 1: `export { name, ... }` or `export { value as name, ... }`
+   * -> Rename `name` to `uid` where `uid` is a new unique identifier
+   * -> Insert `export const name = uid`
+   *
+   * Case 2: `export { name1, value as name 2, ... } from "source"`
+   * -> Insert `import { name as uid }` where `uid` is a new unique identifier
+   * -> Insert `export const name = uid`
+   */
+  traverse(ast, {
+    ExportNamedDeclaration(path) {
+      if (path.node.declaration) return;
+      const { source } = path.node;
+
+      const exports: Array<{
+        specifier: NodePath;
+        local: Babel.Identifier;
+        uid: Babel.Identifier;
+        exported: Babel.Identifier;
+      }> = [];
+      for (const specifier of path.get("specifiers")) {
+        if (specifier.isExportSpecifier()) {
+          const { local, exported } = specifier.node;
+          const { name } = local;
+          if (!t.isIdentifier(exported)) continue;
+          const uid = path.scope.generateUidIdentifier(`_${name}`);
+          if (exported.name === "default" || isNamedComponentExport(name)) {
+            exports.push({ specifier, local, uid, exported });
+          }
+        }
+      }
+      if (exports.length === 0) return;
+
+      if (source != null) {
+        // `import { local as uid } from "source"`
+        path.insertAfter([
+          t.importDeclaration(
+            exports.map(({ local, uid }) => t.importSpecifier(uid, local)),
+            source,
+          ),
+        ]);
+      } else {
+        const scope = path.scope.getProgramParent();
+        exports.forEach(({ local, uid }) => scope.rename(local.name, uid.name));
+      }
+
+      // `export const exported = uid`
+      path.insertAfter(
+        exports.map(({ uid, exported }) => {
+          if (exported.name === "default") {
+            return t.exportDefaultDeclaration(uid);
+          }
+          return t.exportNamedDeclaration(
+            t.variableDeclaration("const", [
+              t.variableDeclarator(exported, uid),
+            ]),
+          );
+        }),
+      );
+
+      exports.forEach(({ specifier }) => specifier.remove());
+    },
+  });
+
   traverse(ast, {
     ExportDeclaration(path) {
       if (path.isExportDefaultDeclaration()) {
