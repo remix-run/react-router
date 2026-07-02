@@ -257,6 +257,9 @@ export type GetAnnotations<Info extends RouteInfo> = {
 
   // ServerErrorBoundary
   ServerErrorBoundaryProps: CreateErrorBoundaryProps<Info, true>;
+
+  // Layout
+  LayoutProps: { children: React.ReactElement };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
