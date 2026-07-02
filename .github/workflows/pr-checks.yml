@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check:
-    name: Checks
+    name: PR Checks
     if: >
       github.repository == 'remix-run/react-router' &&
       (

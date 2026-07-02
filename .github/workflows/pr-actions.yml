@@ -12,7 +12,7 @@ on:
 
 jobs:
   actions:
-    name: Actions
+    name: PR Actions
     if: >
       contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion) &&
       github.repository == 'remix-run/react-router'
