@@ -2,6 +2,7 @@
 // YAY PROJECT REFERENCES!
 /// <reference lib="DOM.Iterable" />
 
+import type { TLSSocket } from "node:tls";
 import type * as express from "express";
 import type { ServerBuild, RouterContextProvider } from "react-router";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
@@ -89,9 +90,10 @@ export function createRemixRequest(
   req: express.Request,
   res: express.Response,
 ): Request {
+  let trustProxyEnabled = req.app?.enabled("trust proxy");
   // req.hostname doesn't include port information so grab that from
   // `X-Forwarded-Host` or `Host`
-  let [, hostnamePortStr] = req.app?.enabled("trust proxy")
+  let [, hostnamePortStr] = trustProxyEnabled
     ? (req.get("X-Forwarded-Host")?.split(":") ?? [])
     : [];
   let [, hostPortStr] = req.get("host")?.split(":") ?? [];
@@ -105,8 +107,16 @@ export function createRemixRequest(
   // Use req.hostname here as it respects the "trust proxy" setting
   let hostname = req.hostname.split(/[\\/?#@]/)[0] || "localhost";
   let resolvedHost = `${hostname}${port ? `:${port}` : ""}`;
+
+  // req.protocol might not have the correct protocol when using behind a proxy
+  // so we grab from `X-Forwarded-Proto` or encrypted for sockets.
+  let protocol =
+    (trustProxyEnabled && req.get("X-Forwarded-Proto")?.split(",")[0].trim()) ||
+    ((req.socket as TLSSocket).encrypted && "https") ||
+    req.protocol ||
+    "http";
   // Use `req.originalUrl` so Remix is aware of the full path
-  let url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
+  let url = new URL(`${protocol}://${resolvedHost}${req.originalUrl}`);
 
   // Abort action/loaders once we can no longer write a response
   let controller: AbortController | null = new AbortController();

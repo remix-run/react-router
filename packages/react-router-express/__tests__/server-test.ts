@@ -345,6 +345,46 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
   });
 
+  it("does not use x-forwarded-proto unless trust proxy is enabled", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-proto": "https",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
+
+  it("uses x-forwarded-proto when trust proxy is enabled", async () => {
+    let app = express();
+    app.set("trust proxy", true);
+    let expressRequest = createRequest({
+      app,
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "example.com",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com:8443",
+        "x-forwarded-proto": "https, http",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("https://example.com:8443/foo/bar");
+  });
+
   it("ignores invalid characters in host values", async () => {
     let expressRequest = createRequest({
       url: "/foo/bar",
