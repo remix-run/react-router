@@ -223,21 +223,6 @@ async function claCheck(ctx: CheckContext): Promise<CheckResult> {
   let signedCla = contributors.includes(author);
   console.log(`claCheck: ${ctx.author} signed CLA: ${signedCla}`);
 
-  // Dry runs to start so we can monitor the flow alongside the bot
-  let DRY_RUN = true;
-  if (DRY_RUN) {
-    if (signedCla) {
-      console.log(
-        `claCheck: dry run; would add '${CLA_SIGNED_LABEL}' label and comment that the CLA is signed`,
-      );
-    } else {
-      console.log(
-        `claCheck: dry run; would request CLA signature and fail PR checks`,
-      );
-    }
-    return { actions: [] };
-  }
-
   if (signedCla) {
     return {
       actions: [
