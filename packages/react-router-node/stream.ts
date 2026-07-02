@@ -58,15 +58,12 @@ interface WritableErrorMonitor {
 function monitorWritableError(writable: Writable): WritableErrorMonitor {
   let settled = false;
   let writableError: Error | undefined;
-  let rejectWritableError!: (error: Error) => void;
-  let writableErrorPromise = new Promise<never>((_, reject) => {
-    rejectWritableError = reject;
-  });
-  writableErrorPromise.catch(() => {});
+  let waiters = new Set<(error: Error) => void>();
 
   function cleanup() {
     writable.off("error", onError);
     writable.off("close", onClose);
+    waiters.clear();
   }
 
   function reject(error: Error) {
@@ -76,8 +73,13 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
 
     settled = true;
     writableError = error;
+    let pendingWaiters = Array.from(waiters);
+    waiters.clear();
     cleanup();
-    rejectWritableError(error);
+
+    for (let waiter of pendingWaiters) {
+      waiter(error);
+    }
   }
 
   function onError(error: Error) {
@@ -94,7 +96,29 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   return {
     cleanup,
     race<T>(promise: Promise<T>) {
-      return Promise.race([promise, writableErrorPromise]);
+      if (writableError) {
+        return Promise.reject(writableError);
+      }
+
+      return new Promise<T>((resolve, reject) => {
+        function onWritableError(error: Error) {
+          waiters.delete(onWritableError);
+          reject(error);
+        }
+
+        waiters.add(onWritableError);
+
+        promise.then(
+          (value) => {
+            waiters.delete(onWritableError);
+            resolve(value);
+          },
+          (error) => {
+            waiters.delete(onWritableError);
+            reject(error);
+          },
+        );
+      });
     },
     throwIfClosed() {
       if (writableError) {
