@@ -73,7 +73,12 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
-import { preloadVite, getVite, defineCompilerOptions } from "./vite";
+import {
+  preloadVite,
+  getVite,
+  defineCompilerOptions,
+  getUserBuildRollupOptions,
+} from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
@@ -3609,8 +3614,9 @@ export async function getEnvironmentOptionsResolvers(
         ssrEmitAssets: true,
         copyPublicDir: false, // The client only uses assets in the public directory
         rollupOptions: {
+          // prettier-ignore
           input:
-            viteUserConfig.environments?.ssr?.build?.rollupOptions?.input ??
+            getUserBuildRollupOptions(viteUserConfig.environments?.ssr)?.input ??
             virtual.serverBuild.id,
           output: {
             entryFileNames: serverBuildFile,
@@ -3653,29 +3659,31 @@ export async function getEnvironmentOptionsResolvers(
                 },
               ),
             ],
-            output: viteUserConfig?.environments?.client?.build?.rollupOptions
-              ?.output ?? {
-              entryFileNames: ({ moduleIds }) => {
-                let routeChunkModuleId = moduleIds.find(isRouteChunkModuleId);
-                let routeChunkName = routeChunkModuleId
-                  ? getRouteChunkNameFromModuleId(routeChunkModuleId)?.replace(
-                      "unstable_",
-                      "",
-                    )
-                  : null;
-                let routeChunkSuffix = routeChunkName
-                  ? `-${kebabCase(routeChunkName)}`
-                  : "";
-                let assetsDir =
-                  viteUserConfig?.environments?.client?.build?.assetsDir ??
-                  viteUserConfig?.build?.assetsDir ??
-                  "assets";
-                return path.posix.join(
-                  assetsDir,
-                  `[name]${routeChunkSuffix}-[hash].js`,
-                );
+            // prettier-ignore
+            output:
+              getUserBuildRollupOptions(viteUserConfig?.environments?.client)?.output ??
+              {
+                entryFileNames: ({ moduleIds }) => {
+                  let routeChunkModuleId = moduleIds.find(isRouteChunkModuleId);
+                  let routeChunkName = routeChunkModuleId
+                    ? getRouteChunkNameFromModuleId(routeChunkModuleId)?.replace(
+                        "unstable_",
+                        "",
+                      )
+                    : null;
+                  let routeChunkSuffix = routeChunkName
+                    ? `-${kebabCase(routeChunkName)}`
+                    : "";
+                  let assetsDir =
+                    viteUserConfig?.environments?.client?.build?.assetsDir ??
+                    viteUserConfig?.build?.assetsDir ??
+                    "assets";
+                  return path.posix.join(
+                    assetsDir,
+                    `[name]${routeChunkSuffix}-[hash].js`,
+                  );
+                },
               },
-            },
           },
           outDir: getClientBuildDirectory(ctx.reactRouterConfig),
         },
