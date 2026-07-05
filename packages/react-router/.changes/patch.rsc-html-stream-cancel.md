@@ -1,0 +1,1 @@
+Fix server crash (`TypeError: Invalid state: Unable to enqueue`) when a request is aborted while the RSC HTML stream has a pending flush — `injectRSCPayload` now handles cancellation of its readable side, clears the pending flush, and cancels the underlying RSC payload stream
