@@ -259,12 +259,16 @@ const navigateEffectWarning =
  * All properties are optional.
  *
  * ```tsx
- * navigate({
- *   pathname: "/some/route",
- *   search: "?search=param",
- *   hash: "#hash",
- *   state: { some: "state" },
- * });
+ * navigate(
+ *   {
+ *     pathname: "/some/route",
+ *     search: "?search=param",
+ *     hash: "#hash",
+ *   },
+ *   {
+ *     state: { some: "state" },
+ *   },
+ * );
  * ```
  *
  * If you use `state`, that will be available on the {@link Location} object on
