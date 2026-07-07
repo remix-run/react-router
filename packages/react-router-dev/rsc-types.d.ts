@@ -15,6 +15,14 @@ declare module "virtual:react-router/unstable_rsc/ssr" {
   export default ssr;
 }
 
+declare module "virtual:react-router/unstable_rsc/future" {
+  const future: {
+    unstable_optimizeDeps: boolean;
+    unstable_traverseCache: boolean;
+  };
+  export default future;
+}
+
 declare module "virtual:react-router/unstable_rsc/react-router-serve-config" {
   const unstable_reactRouterServeConfig: {
     publicPath: string;

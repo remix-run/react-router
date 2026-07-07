@@ -22,7 +22,6 @@ import type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  RouterContextProvider,
 } from "../router/utils";
 import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
 import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
@@ -31,11 +30,11 @@ import type {
   FetchAndDecodeFunction,
 } from "../dom/ssr/single-fetch";
 import {
+  createSingleFetchRequestInit,
   getSingleFetchDataStrategyImpl,
   singleFetchUrl,
   stripIndexParam,
 } from "../dom/ssr/single-fetch";
-import { createRequestInit } from "../dom/ssr/data";
 import { getHydrationData } from "../dom/ssr/hydration";
 import {
   noActionDefinedError,
@@ -339,6 +338,7 @@ function createRouterFromPayload({
       );
     },
     // FIXME: Pass `build.ssr` into this function
+    future: payload.future,
     dataStrategy: getRSCSingleFetchDataStrategy(
       () => globalVar.__reactRouterDataRouter,
       true,
@@ -470,7 +470,11 @@ export function getRSCSingleFetchDataStrategy(
       };
     },
     // pass map into fetchAndDecode so it can add payloads
-    getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
+    getFetchAndDecodeViaRSC(
+      createFromReadableStream,
+      fetchImplementation,
+      () => getRouter().future.unstable_traverseCache === true,
+    ),
     ssr,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
@@ -526,6 +530,7 @@ export function getRSCSingleFetchDataStrategy(
 function getFetchAndDecodeViaRSC(
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  getUnstableTraverseCache: () => boolean,
 ): FetchAndDecodeFunction {
   return async (args: DataStrategyFunctionArgs, targetRoutes?: string[]) => {
     let { request, context } = args;
@@ -538,7 +543,10 @@ function getFetchAndDecodeViaRSC(
     }
 
     let res = await fetchImplementation(
-      new Request(url, await createRequestInit(request)),
+      new Request(
+        url,
+        await createSingleFetchRequestInit(args, getUnstableTraverseCache()),
+      ),
     );
 
     // If this error'd without hitting the running server, then bubble a normal
@@ -811,7 +819,7 @@ export function RSCHydratedRouter({
   }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
 
   const frameworkContext: FrameworkContextObject = {
-    future: {},
+    future: payload.future || {},
     isSpaMode: false,
     ssr: true,
     criticalCss: "",

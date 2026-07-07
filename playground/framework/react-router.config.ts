@@ -4,5 +4,6 @@ export default {
   subResourceIntegrity: true,
   future: {
     unstable_optimizeDeps: true,
+    unstable_traverseCache: true,
   },
 } satisfies Config;

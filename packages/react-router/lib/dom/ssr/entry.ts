@@ -49,7 +49,9 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export type FutureConfig = Record<string, never>;
+export type FutureConfig = {
+  unstable_traverseCache?: boolean;
+};
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };
 

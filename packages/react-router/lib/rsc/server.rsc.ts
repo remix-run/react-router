@@ -3,6 +3,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import * as React from "react";
 import type { ReactFormState } from "react-dom/client";
 
+import type { FutureConfig } from "../dom/ssr/entry";
 import type {
   ClientActionFunction,
   ClientLoaderFunction,
@@ -247,6 +248,7 @@ export type RSCRenderPayload = {
   loaderData: Record<string, any>;
   location: Location;
   routeDiscovery: RouteDiscovery;
+  future?: FutureConfig;
   matches: RSCRouteMatch[];
   // Additional routes we should patch into the router for subsequent navigations.
   // Mostly a collection of pathless/index routes that may be needed for complete
@@ -372,6 +374,7 @@ export type RouteDiscovery =
  * @param opts.generateResponse A function responsible for using your
  * `renderToReadableStream` to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  * encoding the {@link unstable_RSCPayload}.
+ * @param opts.future Future flags to enable for the router.
  * @param opts.loadServerAction Your `react-server-dom-xyz/server`'s
  * `loadServerAction` function, used to load a server action by ID.
  * @param opts.onError An optional error handler that will be called with any
@@ -400,6 +403,7 @@ export async function matchRSCServerRequest({
   onError,
   request,
   routes,
+  future,
   generateResponse,
 }: {
   allowedActionOrigins?: string[];
@@ -414,6 +418,7 @@ export async function matchRSCServerRequest({
   request: Request;
   routes: RSCRouteConfigEntry[];
   routeDiscovery?: RouteDiscovery;
+  future?: FutureConfig;
   generateResponse: (
     match: RSCMatch,
     {
@@ -511,6 +516,7 @@ export async function matchRSCServerRequest({
     temporaryReferences,
     allowedActionOrigins,
     routeDiscovery,
+    future,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -814,6 +820,7 @@ async function generateRenderResponse(
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  future: FutureConfig | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -948,6 +955,7 @@ async function generateRenderResponse(
           skipRevalidation,
           ctx.redirect?.headers,
           routeDiscovery,
+          future,
         );
       },
     }),
@@ -1046,6 +1054,7 @@ async function generateStaticContextResponse(
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  future: FutureConfig | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1100,6 +1109,7 @@ async function generateStaticContextResponse(
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
     location: staticContext.location,
+    future,
     formState,
   };
 

@@ -176,6 +176,7 @@ function createHydratedRouter({
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
     getContext,
+    future: ssrInfo.context.future,
     hydrationData,
     mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
