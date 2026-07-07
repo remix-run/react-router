@@ -1,5 +1,3 @@
-Add a future flag to opt Node Framework mode apps into the `renderToReadableStream` default server entry
+Add a new [`future.unstable_enableNodeReadableStream`](https://reactrouter.com/upgrading/future#futureunstable_enablenodereadablestream) flag to opt Node Framework mode apps into using `renderToReadableStream` instead of `renderToPipeableStream`
 
-- Apps can enable `future.unstable_enableNodeReadableStream` to use the `renderToReadableStream` default server entry when a Node runtime is detected
-- See the [`future.unstable_enableNodeReadableStream` docs](https://reactrouter.com/upgrading/future#futureunstable_enablenodereadablestream) for more details
-- This will become the default in v9
+- This flag has no effect if you have your own `entry.server.tsx`
