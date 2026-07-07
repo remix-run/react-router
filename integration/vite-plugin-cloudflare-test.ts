@@ -2,7 +2,13 @@ import { expect } from "@playwright/test";
 import dedent from "dedent";
 import getPort from "get-port";
 
-import { type Files, test, viteConfig } from "./helpers/vite.js";
+import {
+  build,
+  createProject,
+  type Files,
+  test,
+  viteConfig,
+} from "./helpers/vite.js";
 
 const tsx = dedent;
 const css = dedent;
@@ -176,5 +182,17 @@ test.describe("vite-plugin-cloudflare", () => {
       "padding",
       "20px",
     );
+  });
+
+  test("builds project with default server entry", async () => {
+    const files = defineFiles();
+    const cwd = await createProject(
+      await files({ port: 0 }),
+      "vite-plugin-cloudflare-template",
+    );
+
+    const buildResult = build({ cwd });
+
+    expect(buildResult.status).toBe(0);
   });
 });

@@ -84,6 +84,7 @@ import {
   type BuildManifest,
   type ConfigLoader,
   createConfigLoader,
+  hasNodeDependency,
   resolveEntryFiles,
   configRouteToBranchRoute,
   type PrerenderPaths,
@@ -3577,11 +3578,7 @@ export async function getEnvironmentOptionsResolvers(
     let defaultExternalConditions = vite.defaultExternalConditions ?? ["node"];
 
     // If we couldn't find the package.json, we assume node for backwards compatibility
-    let isNode =
-      !pkgJson.dependencies ||
-      pkgJson.dependencies["@react-router/node"] ||
-      pkgJson.dependencies["@react-router/express"] ||
-      pkgJson.dependencies["@react-router/serve"];
+    let isNode = hasNodeDependency(pkgJson.dependencies);
 
     if (!isNode) {
       maybeDefaultServerConditions = maybeDefaultServerConditions.filter(
