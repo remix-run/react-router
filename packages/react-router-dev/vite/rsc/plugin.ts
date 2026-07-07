@@ -554,6 +554,19 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     {
+      name: "react-router/rsc/virtual-future",
+      resolveId(id) {
+        if (id === virtual.future.id) {
+          return virtual.future.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.future.resolvedId) {
+          return `export default ${JSON.stringify(config.future)};`;
+        }
+      },
+    },
+    {
       name: "react-router/rsc/virtual-route-discovery",
       resolveId(id) {
         if (id === virtual.routeDiscovery.id) {
@@ -784,6 +797,7 @@ const virtual = {
   routeDiscovery: create("unstable_rsc/route-discovery"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   basename: create("unstable_rsc/basename"),
+  future: create("unstable_rsc/future"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
 };
 

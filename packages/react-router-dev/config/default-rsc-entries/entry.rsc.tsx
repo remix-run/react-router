@@ -15,6 +15,7 @@ import {
 import routes from "virtual:react-router/unstable_rsc/routes";
 import routeDiscovery from "virtual:react-router/unstable_rsc/route-discovery";
 import basename from "virtual:react-router/unstable_rsc/basename";
+import future from "virtual:react-router/unstable_rsc/future";
 import unstable_reactRouterServeConfig from "virtual:react-router/unstable_rsc/react-router-serve-config";
 
 export { unstable_reactRouterServeConfig };
@@ -38,6 +39,8 @@ export function fetchServer(
     routes,
     // The route discovery configuration.
     routeDiscovery,
+    // Future flags from react-router.config.ts.
+    future,
     // Encode the match with the React Server implementation.
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {

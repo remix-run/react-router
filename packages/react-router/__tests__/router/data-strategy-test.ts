@@ -1,3 +1,5 @@
+import { createSingleFetchRequestInit } from "../../lib/dom/ssr/single-fetch";
+import { Action as NavigationType } from "../../lib/router/history";
 import type {
   DataStrategyFunction,
   DataStrategyMatch,
@@ -52,6 +54,151 @@ describe("router dataStrategy", () => {
       {},
     );
   }
+
+  it("passes navigationType to dataStrategy for push and replace navigations", async () => {
+    let dataStrategy = mockDataStrategy(({ matches }) =>
+      Promise.all(matches.map((m) => m.resolve())).then((results) =>
+        keyedResults(matches, results),
+      ),
+    );
+    let t = setup({
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          loader: true,
+        },
+        {
+          id: "replace",
+          path: "/replace",
+          loader: true,
+        },
+      ],
+      dataStrategy,
+    });
+
+    let A = await t.navigate("/parent");
+    await A.loaders.parent.resolve("PARENT");
+    expect(dataStrategy.mock.calls[0][0].navigationType).toBe(
+      NavigationType.Push,
+    );
+
+    let B = await t.navigate("/replace", { replace: true });
+    await B.loaders.replace.resolve("REPLACE");
+    expect(dataStrategy.mock.calls[1][0].navigationType).toBe(
+      NavigationType.Replace,
+    );
+  });
+
+  it("passes POP navigationType to dataStrategy for back and forward navigations", async () => {
+    let dataStrategy = mockDataStrategy(({ matches }) =>
+      Promise.all(matches.map((m) => m.resolve())).then((results) =>
+        keyedResults(matches, results),
+      ),
+    );
+    let t = setup({
+      initialEntries: ["/a"],
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "/a",
+          loader: true,
+        },
+        {
+          id: "b",
+          path: "/b",
+          loader: true,
+        },
+      ],
+      hydrationData: {
+        loaderData: { a: "A" },
+      },
+      dataStrategy,
+    });
+
+    let A = await t.navigate("/b");
+    await A.loaders.b.resolve("B");
+    expect(dataStrategy.mock.calls[0][0].navigationType).toBe(
+      NavigationType.Push,
+    );
+
+    let B = await t.navigate(-1);
+    await B.loaders.a.resolve("A");
+    expect(dataStrategy.mock.calls[1][0].navigationType).toBe(
+      NavigationType.Pop,
+    );
+
+    let C = await t.navigate(1);
+    await C.loaders.b.resolve("B");
+    expect(dataStrategy.mock.calls[2][0].navigationType).toBe(
+      NavigationType.Pop,
+    );
+  });
+
+  it("gates single fetch cache behavior behind unstable_traverseCache", async () => {
+    let args = {
+      request: new Request("http://localhost/"),
+      fetcherKey: null,
+      navigationType: NavigationType.Pop,
+    } as Parameters<typeof createSingleFetchRequestInit>[0];
+
+    await expect(createSingleFetchRequestInit(args)).resolves.toEqual({
+      signal: args.request.signal,
+    });
+    await expect(createSingleFetchRequestInit(args, true)).resolves.toEqual({
+      signal: args.request.signal,
+      cache: "force-cache",
+    });
+    await expect(
+      createSingleFetchRequestInit(
+        { ...args, navigationType: NavigationType.Push },
+        true,
+      ),
+    ).resolves.toEqual({
+      signal: args.request.signal,
+      cache: "default",
+    });
+    await expect(
+      createSingleFetchRequestInit({ ...args, fetcherKey: "key" }, true),
+    ).resolves.toEqual({
+      signal: args.request.signal,
+      cache: "default",
+    });
+  });
+
+  it("does not pass navigationType to dataStrategy for fetchers", async () => {
+    let dataStrategy = mockDataStrategy(({ matches }) =>
+      Promise.all(matches.map((m) => m.resolve())).then((results) =>
+        keyedResults(matches, results),
+      ),
+    );
+    let t = setup({
+      routes: [
+        {
+          id: "root",
+          path: "/",
+        },
+        {
+          id: "fetch",
+          path: "/fetch",
+          loader: true,
+        },
+      ],
+      dataStrategy,
+    });
+
+    let A = await t.fetch("/fetch", "key", "root");
+    await A.loaders.fetch.resolve("FETCH");
+
+    expect(dataStrategy.mock.calls[0][0].fetcherKey).toBe("key");
+    expect(dataStrategy.mock.calls[0][0].navigationType).toBeUndefined();
+  });
 
   describe("loaders", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {

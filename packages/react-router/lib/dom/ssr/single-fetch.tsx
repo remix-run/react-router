@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
+import { Action as NavigationType } from "../../router/history";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
@@ -188,7 +189,12 @@ export function getTurboStreamSingleFetchDataStrategy(
         hasClientLoader: manifestRoute.hasClientLoader,
       };
     },
-    fetchAndDecodeViaTurboStream,
+    (args, targetRoutes) =>
+      fetchAndDecodeViaTurboStream(
+        args,
+        targetRoutes,
+        getRouter().future.unstable_traverseCache === true,
+      ),
     ssr,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
@@ -583,6 +589,7 @@ export function singleFetchUrl(
 async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
   targetRoutes?: string[],
+  unstableTraverseCache = false,
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
   let url = singleFetchUrl(request.url, "data");
@@ -593,7 +600,10 @@ async function fetchAndDecodeViaTurboStream(
     }
   }
 
-  let res = await fetch(url, await createRequestInit(request));
+  let res = await fetch(
+    url,
+    await createSingleFetchRequestInit(args, unstableTraverseCache),
+  );
 
   // If this error'd without hitting the running server, then bubble a normal
   // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
@@ -669,6 +679,20 @@ async function fetchAndDecodeViaTurboStream(
     // bit restrictive.
     throw new Error("Unable to decode turbo-stream response");
   }
+}
+
+export async function createSingleFetchRequestInit(
+  args: DataStrategyFunctionArgs,
+  unstableTraverseCache = false,
+): Promise<RequestInit> {
+  let init = await createRequestInit(args.request);
+  if (unstableTraverseCache) {
+    init.cache =
+      args.fetcherKey == null && args.navigationType === NavigationType.Pop
+        ? "force-cache"
+        : "default";
+  }
+  return init;
 }
 
 // Note: If you change this function please change the corresponding

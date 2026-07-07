@@ -434,7 +434,9 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_traverseCache?: boolean;
+}
 
 /**
  * Initialization options for createRouter
@@ -2215,6 +2217,7 @@ export function createRouter(init: RouterInit): Router {
         dsMatches,
         scopedContext,
         null,
+        historyAction,
       );
       result = results[actionMatch.route.id];
 
@@ -2494,6 +2497,7 @@ export function createRouter(init: RouterInit): Router {
         request,
         location,
         scopedContext,
+        initialHydration ? undefined : historyAction,
       );
 
     if (request.signal.aborted) {
@@ -3356,6 +3360,7 @@ export function createRouter(init: RouterInit): Router {
     matches: DataStrategyMatch[],
     scopedContext: RouterContextProvider,
     fetcherKey: string | null,
+    navigationType?: NavigationType,
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
@@ -3368,6 +3373,7 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         scopedContext,
         false,
+        navigationType,
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -3441,6 +3447,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     scopedContext: RouterContextProvider,
+    navigationType?: NavigationType,
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
@@ -3449,6 +3456,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       scopedContext,
       null,
+      navigationType,
     );
 
     let fetcherResultsPromise = Promise.all(
@@ -6548,6 +6556,7 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   scopedContext: unknown,
   isStaticHandler: boolean,
+  navigationType?: NavigationType,
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all middleware is loaded before we start executing routes
   if (matches.some((m) => m._lazyPromises?.middleware)) {
@@ -6567,6 +6576,7 @@ async function callDataStrategyImpl(
     params: matches[0].params,
     context: scopedContext,
     matches,
+    navigationType,
   };
   let runClientMiddleware = isStaticHandler
     ? () => {

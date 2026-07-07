@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { Equal, Expect } from "../types/utils";
-import type { Location, Path, To } from "./history";
+import type { Action as NavigationType, Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 import {
   ABSOLUTE_URL_REGEX,
@@ -529,6 +529,11 @@ export interface DataStrategyFunctionArgs<
    * for navigational executions
    */
   fetcherKey: string | null;
+  /**
+   * The type of navigation we are calling `dataStrategy` for. This is `undefined`
+   * for fetcher executions and non-navigational executions.
+   */
+  navigationType?: NavigationType;
 }
 
 /**

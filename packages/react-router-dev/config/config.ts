@@ -90,6 +90,7 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
+  unstable_traverseCache: boolean | "force";
 }
 
 type SplitRouteModulesOption = boolean | "enforce";
@@ -438,8 +439,10 @@ async function resolveConfig({
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
+  mode,
 }: {
   root: string;
+  mode: string;
   viteRunnerContext: ViteRunner.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
@@ -737,9 +740,20 @@ async function resolveConfig({
     }
   }
 
-  let future: FutureConfig = {
+  const userTraverseCache = userAndPresetConfigs.future?.unstable_traverseCache;
+
+  let future: {
+    unstable_optimizeDeps: boolean;
+    unstable_traverseCache: boolean;
+  } = {
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
+    unstable_traverseCache:
+      userTraverseCache === true
+        ? mode !== "development"
+        : userTraverseCache === "force"
+          ? true
+          : false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
@@ -832,12 +846,14 @@ export async function createConfigLoader({
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
+      mode,
     });
 
   let appDirectory: string;
 
   let initialConfigResult = await resolveConfig({
     root,
+    mode,
     viteRunnerContext,
     reactRouterConfigFile,
     skipRoutes,
