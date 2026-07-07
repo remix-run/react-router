@@ -179,7 +179,8 @@ export async function generateEntry(
 
     let defaultEntryServer = path.resolve(
       defaultsDirectory,
-      hasNodeDependency(pkgJson.dependencies)
+      hasNodeDependency(pkgJson.dependencies) &&
+        !configResult.value.future.unstable_enableNodeReadableStream
         ? `entry.server.node.tsx`
         : `entry.server.web.tsx`,
     );

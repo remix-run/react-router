@@ -2,4 +2,5 @@ Add a web streams default server entry for non-Node Framework mode apps
 
 - Apps using `@react-router/node`, `@react-router/express`, or `@react-router/serve` continue to use the `renderToPipeableStream` default server entry
 - Apps without those Node server adapter dependencies use a `renderToReadableStream` default server entry
+- Node apps can opt into the `renderToReadableStream` default server entry with `future.unstable_enableNodeReadableStream`; this will become the default in v9
 - Non-Node apps with their own `entry.server.tsx` may be able to remove it in favor of the default if it is not doing anything custom

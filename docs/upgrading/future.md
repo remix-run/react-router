@@ -46,6 +46,35 @@ _No known planned breaking changes yet_
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
+### `future.unstable_enableNodeReadableStream`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+This flag lets Node runtime apps without a custom `entry.server.tsx` opt into the default server entry that uses `renderToReadableStream`. Node apps continue to use the `renderToPipeableStream` default server entry without this flag.
+
+The `renderToReadableStream` default server entry will become the default for Node runtime apps in v9.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_enableNodeReadableStream: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required if your app is already using the default server entry. If your app has a custom `entry.server.tsx`, this flag will not change your runtime behavior unless you remove the custom entry or update it yourself.
+
 ### `future.unstable_optimizeDeps`
 
 [MODES: framework]

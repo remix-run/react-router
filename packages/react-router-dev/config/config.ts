@@ -94,6 +94,7 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_enableNodeReadableStream: boolean;
   unstable_optimizeDeps: boolean;
 }
 
@@ -743,6 +744,8 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
+    unstable_enableNodeReadableStream:
+      userAndPresetConfigs.future?.unstable_enableNodeReadableStream ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
   };
@@ -1069,9 +1072,11 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = hasNodeDependency(deps)
-      ? `entry.server.node.tsx`
-      : `entry.server.web.tsx`;
+    entryServerFile =
+      hasNodeDependency(deps) &&
+      !reactRouterConfig.future.unstable_enableNodeReadableStream
+        ? `entry.server.node.tsx`
+        : `entry.server.web.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
@@ -1135,8 +1140,8 @@ export function hasNodeDependency(deps: PackageJson["dependencies"]) {
     !deps ||
     Boolean(
       deps["@react-router/node"] ||
-        deps["@react-router/express"] ||
-        deps["@react-router/serve"],
+      deps["@react-router/express"] ||
+      deps["@react-router/serve"],
     )
   );
 }
