@@ -55,9 +55,13 @@ We document some [unstable] flags here as a reference for folks contributing to 
 
 **Background**
 
-This flag lets Node runtime apps without a custom `entry.server.tsx` opt into the default server entry that uses `renderToReadableStream`. Node apps continue to use the `renderToPipeableStream` default server entry without this flag.
+Now that the Web Streams API is [stable](https://nodejs.org/docs/latest-v22.x/api/webstreams.html) in Node 22+, it's viable for React Router to use React's [`renderToReadableStream`](https://react.dev/reference/react-dom/server/renderToReadableStream) in the server entry.
 
-The `renderToReadableStream` default server entry will become the default for Node runtime apps in v9.
+When no `entry.server.tsx` file is present, React Router defaults to [`renderToPipeableStream`](https://react.dev/reference/react-dom/server/renderToPipeableStream) when a Node runtime is detected, and `renderToReadableStream` otherwise.
+
+With this flag enabled, React Router will default to `renderToReadableStream` on all runtimes, including Node. You can continue to use `renderToPipeableStream` via a custom `entry.server.tsx` file if needed.
+
+<docs-info>Enabling this flag might even provide slight performance gains because we are already using Web Streams internally, so this flag removes some unnecessary transforms between Web and Node streams.</docs-info>
 
 👉 **Enable the Flag**
 
@@ -73,7 +77,7 @@ export default {
 
 **Update your Code**
 
-No code changes are required if your app is already using the default server entry. If your app has a custom `entry.server.tsx`, this flag will not change your runtime behavior unless you remove the custom entry or update it yourself.
+No code changes are required. If your app has a custom `entry.server.tsx`, this flag will not change your runtime behavior.
 
 ### `future.unstable_optimizeDeps`
 
