@@ -1051,9 +1051,9 @@ export async function resolveEntryFiles({
 
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
-    let deps = pkgJson.dependencies;
+    let deps = pkgJson.dependencies ?? {};
 
-    if (!deps?.["isbot"]) {
+    if (!deps["isbot"]) {
       console.log(
         "adding `isbot@5` to your package.json, you should commit this change",
       );
