@@ -145,9 +145,11 @@ _Note that you generally want to avoid logging when the request was aborted, sin
 
 **Streaming Rendering Errors**
 
-When you are streaming your HTML responses via [`renderToReadableStream`][rendertoreadablestream], your own `handleError` implementation will only handle errors encountered during the initial shell render. If you encounter a rendering error during subsequent streamed rendering you will need to handle these errors manually since the React Router server has already sent the Response by that point. You can handle these errors in the `onError` callback function.
+When you are streaming your HTML responses via [`renderToPipeableStream`][rendertopipeablestream] or [`renderToReadableStream`][rendertoreadablestream], your own `handleError` implementation will only handle errors encountered during the initial shell render. If you encounter a rendering error during subsequent streamed rendering you will need to handle these errors manually since the React Router server has already sent the Response by that point.
 
-For an example, please refer to the default [`entry.server.tsx`][streaming-entry-server].
+For `renderToPipeableStream`, you can handle these errors in the `onError` callback function. You will need to toggle a boolean in `onShellReady` so you know if the error was a shell rendering error (and can be ignored) or an async
+
+For an example, please refer to the default [`entry.server.tsx`][node-streaming-entry-server] for Node.
 
 **Thrown Responses**
 
@@ -158,5 +160,5 @@ Note that this does not handle thrown `Response` instances from your `loader`/`a
 [streaming]: ../../how-to/suspense
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
-[streaming-entry-server]: https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/defaults/entry.server.tsx
+[node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/defaults/entry.server.node.tsx
 [templates-repo]: https://github.com/remix-run/react-router-templates

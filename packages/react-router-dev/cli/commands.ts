@@ -3,6 +3,7 @@ import { readFile, writeFile, copyFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import * as path from "node:path";
 import exitHook from "exit-hook";
+import { readPackageJSON } from "pkg-types";
 import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
@@ -169,6 +170,14 @@ export async function generateEntry(
 
     await copyFile(defaultEntry, outputFile);
   } else {
+    let pkgJson = await readPackageJSON(rootDirectory);
+    let deps = pkgJson.dependencies ?? {};
+
+    if (!deps["@react-router/node"]) {
+      console.error(colors.red(`No default server entry detected.`));
+      return;
+    }
+
     let defaultEntryClient = path.resolve(
       defaultsDirectory,
       "entry.client.tsx",
@@ -176,7 +185,7 @@ export async function generateEntry(
 
     let defaultEntryServer = path.resolve(
       defaultsDirectory,
-      `entry.server.tsx`,
+      `entry.server.node.tsx`,
     );
 
     let isServerEntry = entry === "entry.server";

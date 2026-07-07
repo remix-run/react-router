@@ -623,9 +623,12 @@ test.describe("route module link export", () => {
           // Scripts:
           // RR:    window.__reactRouterContext
           // RR:    window.__reactRouterManifest/window.__reactRouterRouteModules
+          // React: requestAnimationFrame(function(){$RT=performance.now()});
           // RR:    window.__reactRouterContext.streamController.enqueue()
+          // React: $RC=function(b,c,e){...
           // RR:    window.__reactRouterContext.streamController.close();
-          expect(scripts.length).toEqual(4);
+          // React: $RC("B:1","S:1")
+          expect(scripts.length).toEqual(7);
 
           expect(await scripts[0].innerText()).toContain(
             "__reactRouterContext",

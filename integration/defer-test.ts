@@ -35,7 +35,7 @@ function counterHtml(id: string, val: number) {
   return `<p id="count-${id}">${val}</p>`;
 }
 
-const deferredHTMLStartString = '<script id="_R_">';
+const deferredHTMLStartString = "<template id=";
 
 async function getHtmlSections(
   fixture: Fixture,
@@ -46,14 +46,7 @@ async function getHtmlSections(
   let html = await response.text();
   let deferredIndex = html.indexOf(deferredHTMLStartString);
 
-  // If nothing is deferred then we never get the streaming JS code
-  if (deferredIndex === -1) {
-    return {
-      status: response.status,
-      criticalHTML: html,
-      deferredHTML: "",
-    };
-  }
+  expect(deferredIndex).toBeGreaterThan(-1);
 
   return {
     status: response.status,
@@ -98,7 +91,7 @@ test.describe("non-aborted", () => {
           }
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, useLoaderData, useLocation } from "react-router";
+          import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
 
@@ -112,7 +105,6 @@ test.describe("non-aborted", () => {
 
           export default function Root() {
             let { id } = useLoaderData();
-            let location = useLocation();
             return (
               <html lang="en">
                 <head>
@@ -122,13 +114,13 @@ test.describe("non-aborted", () => {
                   <Links />
                 </head>
                 <body>
-                  <main id={id}>
+                  <div id={id}>
                     <p>{id}</p>
                     <Counter id={id} />
                     <Outlet />
                     <Interactive />
-                  </main>
-                  {location.pathname.startsWith("/deferred-noscript-") ? null : <Scripts />}
+                  </div>
+                  <Scripts />
                   {/* Send arbitrary data so safari renders the initial shell before
                       the document finishes downloading. */}
                   {Array(1000).fill(null).map((_, i)=><p key={i}>YOOOOOOOOOO   {i}</p>)}
@@ -579,10 +571,11 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(INDEX_ID, 0));
-    expect(deferredHTML).toBe("");
+    expect(deferredHTML.replace("</body></html>", "")).not.toBe("");
+    expect(deferredHTML).not.toContain('<p id="count-');
   });
 
-  test("resolved promises render in initial payload (noscript)", async () => {
+  test("resolved promises do not render in initial payload", async () => {
     let { status, criticalHTML, deferredHTML } = await getHtmlSections(
       fixture,
       "/deferred-noscript-resolved",
@@ -591,14 +584,12 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-    expect(criticalHTML).not.toContain(FALLBACK_ID);
-    expect(deferredHTML).not.toContain(FALLBACK_ID);
+    expect(criticalHTML).not.toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
+    expect(deferredHTML).toContain(FALLBACK_ID);
+    expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
   });
 
-  test("unresolved promises render in subsequent payload (noscript)", async ({
-    page,
-  }) => {
+  test("slow promises render in subsequent payload", async () => {
     let { status, criticalHTML, deferredHTML } = await getHtmlSections(
       fixture,
       "/deferred-noscript-unresolved",
@@ -607,23 +598,9 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(criticalHTML).not.toContain(RESOLVED_DEFERRED_ID);
+    expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-
-    // Hydrates out-of-order streamed content, but does not become interactive
-    // because we didn't include Scripts
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-noscript-unresolved", true);
-    await page.waitForSelector(`main #${RESOLVED_DEFERRED_ID}`);
-    await page.waitForSelector(
-      `main #count-${RESOLVED_DEFERRED_ID}:has-text("0")`,
-    );
-    await page.locator(`main #increment-${RESOLVED_DEFERRED_ID}`).click();
-    await new Promise((r) => setTimeout(r, 100));
-    expect(
-      await page.locator(`main #count-${RESOLVED_DEFERRED_ID}`).innerText(),
-    ).toBe("0");
   });
 
   test("resolved promises render in initial payload", async () => {
@@ -635,12 +612,11 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-    expect(criticalHTML).not.toContain(FALLBACK_ID);
-    expect(deferredHTML).not.toContain(FALLBACK_ID);
+    expect(deferredHTML).toContain(FALLBACK_ID);
+    expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
   });
 
-  test("unresolved promises render in subsequent payload", async ({ page }) => {
+  test("slow to resolve promises render in subsequent payload", async () => {
     let { status, criticalHTML, deferredHTML } = await getHtmlSections(
       fixture,
       "/deferred-script-unresolved",
@@ -649,22 +625,9 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(criticalHTML).not.toContain(RESOLVED_DEFERRED_ID);
+    expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
-
-    // Hydrates out-of-order streamed content and becomes interactive
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/deferred-script-unresolved", true);
-    await page.waitForSelector(`main #${RESOLVED_DEFERRED_ID}`);
-    await page.waitForSelector(
-      `main #count-${RESOLVED_DEFERRED_ID}:has-text("0")`,
-    );
-    await page.locator(`main #increment-${RESOLVED_DEFERRED_ID}`).click();
-    await new Promise((r) => setTimeout(r, 100));
-    expect(
-      await page.locator(`main #count-${RESOLVED_DEFERRED_ID}`).innerText(),
-    ).toBe("1");
   });
 
   test("rejected promises render in initial payload", async () => {
@@ -676,9 +639,8 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(counterHtml(ERROR_ID, 0));
-    expect(criticalHTML).not.toContain(FALLBACK_ID);
-    expect(deferredHTML).not.toContain(FALLBACK_ID);
+    expect(deferredHTML).toContain(FALLBACK_ID);
+    expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
   });
 
   test("slow to reject promises render in subsequent payload", async () => {
@@ -690,8 +652,8 @@ test.describe("non-aborted", () => {
     expect(status).toBe(200);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(criticalHTML).not.toContain(ERROR_ID);
+    expect(deferredHTML).toContain(`<div id="${FALLBACK_ID}">`);
     expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
   });
 
