@@ -169,6 +169,7 @@
   },
   "files": [
     "dist/",
+    "development-condition-enabled/",
     "module-sync-enabled/",
     "bin.cjs",
     "rsc-types.d.ts",
