@@ -74,6 +74,7 @@
         "../../pnpm-workspace.yaml",
         "cli/**",
         "config/**",
+        "development-condition-enabled/**",
         "module-sync-enabled/**",
         "typegen/**",
         "vite/**",

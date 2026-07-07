@@ -23,7 +23,20 @@ export function restartWithMergedOptions(nodeOptions: string): void {
     stdio: "inherit",
   });
 
+  const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
+  let signalHandlers = signals.map((sig) => {
+    let handler = () => {
+      child.kill(sig);
+    };
+    process.on(sig, handler);
+    return [sig, handler] as const;
+  });
+
   child.on("exit", (code, signal) => {
+    for (let [sig, handler] of signalHandlers) {
+      process.off(sig, handler);
+    }
+
     if (signal) {
       process.kill(process.pid, signal);
     } else {
@@ -35,11 +48,4 @@ export function restartWithMergedOptions(nodeOptions: string): void {
     console.error("[restart] Failed to spawn child process:", err);
     process.exit(1);
   });
-
-  const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
-  for (const sig of signals) {
-    process.on(sig, () => {
-      child.kill(sig);
-    });
-  }
 }
