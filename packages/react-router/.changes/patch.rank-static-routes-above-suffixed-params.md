@@ -1,4 +1,4 @@
-Fix route ranking/scoring bug with dynamic parameters containing static extension suffixes (i.e., `/:name.xml`)
+Fix route ranking for dynamic parameters with static extension suffixes
 
 - These were not being detected as dynamic param segments and instead got incorrectly scored higher as a static segment
 - This meant they could potentially tie truly static routes like `/sitemap.xml` and outrank them based on definition order

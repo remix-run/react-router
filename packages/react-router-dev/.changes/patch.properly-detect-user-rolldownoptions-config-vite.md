@@ -1,1 +1,1 @@
-Properly detect user `rolldownOptions` config in Vite 8+
+Detect user `rolldownOptions` config in Vite 8+

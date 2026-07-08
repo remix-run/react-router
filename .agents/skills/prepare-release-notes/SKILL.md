@@ -20,7 +20,8 @@ find packages -path '*/.changes/*.md' -not -name README.md -not -name .gitkeep -
 
 3. Normalize each change file:
    - Remove `feat:`, `feat(...)`, `fix:`, and `fix(...)` semantic-commit prefixes from prose
-   - Use present or imperative tense: prefer `Add`, `Fix`, `Remove`, `Support`, `Stabilize`, `Preserve`, `Update`, `Avoid`, `Prevent`, `Throw`, `Warn`, `Expose`
+   - Use present or imperative tense for the first line and top-level release bullets: prefer `Add`, `Fix`, `Remove`, `Support`, `Stabilize`, `Preserve`, `Update`, `Avoid`, `Prevent`, `Throw`, `Warn`, `Expose`
+   - Nested detail bullets can stay explanatory when they expand on the parent bullet; do not rewrite them solely to force present or imperative tense
    - Remove terminal sentence periods from bullet items because release generation appends PR/commit links after the first bullet line
    - Remove terminal sentence periods from nested bullet items too, unless the punctuation is part of code, a URL, an abbreviation, a version number, or another token where removing it would be wrong
    - If one bullet contains multiple sentences, split it into a shorter parent bullet plus nested bullet items

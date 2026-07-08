@@ -1,1 +1,1 @@
-Update to use ReactFormState types instead of unknown.
+Use ReactFormState types instead of unknown
