@@ -1,5 +1,9 @@
 import type { Path } from "../../router/history";
-import type { Router as DataRouter, HydrationState } from "../../router/router";
+import type {
+  FutureConfig,
+  Router as DataRouter,
+  HydrationState,
+} from "../../router/router";
 import { createDataRouteMatcher } from "../../router/router";
 import type { DataRouteObject } from "../../router/utils";
 import type { ClientLoaderFunction } from "./routeModules";
@@ -11,6 +15,7 @@ export function getHydrationData({
   getRouteInfo,
   location,
   basename,
+  future,
   isSpaMode,
 }: {
   state: {
@@ -26,6 +31,7 @@ export function getHydrationData({
   };
   location: Path;
   basename: string | undefined;
+  future: FutureConfig;
   isSpaMode: boolean;
 }): HydrationState {
   // Create a shallow clone of `loaderData` we can mutate for partial hydration.
@@ -38,7 +44,7 @@ export function getHydrationData({
     ...state,
     loaderData: { ...state.loaderData },
   };
-  let dataRouteMatcher = createDataRouteMatcher(basename || "/");
+  let dataRouteMatcher = createDataRouteMatcher(future, basename || "/");
   dataRouteMatcher.update(routes);
 
   let initialMatches = dataRouteMatcher.match(location);

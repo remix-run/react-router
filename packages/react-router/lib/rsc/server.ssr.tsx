@@ -582,7 +582,7 @@ export function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps) {
     }
     return [route];
   }, [] as DataRouteObject[]);
-  const dataRouteMatcher = createDataRouteMatcher(payload.basename || "/");
+  const dataRouteMatcher = createDataRouteMatcher({}, payload.basename || "/");
   dataRouteMatcher.update(routes);
 
   const context: StaticHandlerContext = {
