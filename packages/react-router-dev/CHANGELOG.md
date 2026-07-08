@@ -1,5 +1,30 @@
 # `@react-router/dev`
 
+## v8.2.0
+
+### Minor Changes
+
+- Add a Web Streams default server entry for non-Node Framework mode apps ([#15290](https://github.com/remix-run/react-router/pull/15290))
+  - Apps using `@react-router/node`, `@react-router/express`, or `@react-router/serve` continue to use the `renderToPipeableStream` default server entry
+  - Apps without those Node server adapter dependencies use a `renderToReadableStream` default server entry
+  - Non-Node apps with their own `entry.server.tsx` may be able to remove it in favor of the default if it is not doing anything custom
+- Detect `nub` as a supported package manager when installing framework dependencies ([#15276](https://github.com/remix-run/react-router/pull/15276))
+
+### Patch Changes
+
+- Detect user `rolldownOptions` config in Vite 8+ ([#15278](https://github.com/remix-run/react-router/pull/15278))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add the [`future.unstable_enableNodeReadableStream`](https://reactrouter.com/upgrading/future#futureunstable_enablenodereadablestream) flag to opt Node Framework mode apps into using `renderToReadableStream` instead of `renderToPipeableStream` ([#15290](https://github.com/remix-run/react-router/pull/15290))
+  - This flag has no effect if you have your own `entry.server.tsx`
+- Updated dependencies:
+  - [`react-router@8.2.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.2.0)
+  - [`@react-router/node@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.2.0)
+  - [`@react-router/serve@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.2.0)
+
 ## v8.1.0
 
 ### Patch Changes
