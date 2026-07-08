@@ -46,6 +46,39 @@ _No known planned breaking changes yet_
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
+### `future.unstable_enableNodeReadableStream`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+Now that the Web Streams API is [stable](https://nodejs.org/docs/latest-v22.x/api/webstreams.html) in Node 22+, it's viable for React Router to use React's [`renderToReadableStream`](https://react.dev/reference/react-dom/server/renderToReadableStream) in the server entry.
+
+When no `entry.server.tsx` file is present, React Router defaults to [`renderToPipeableStream`](https://react.dev/reference/react-dom/server/renderToPipeableStream) when a Node runtime is detected, and `renderToReadableStream` otherwise.
+
+With this flag enabled, React Router will default to `renderToReadableStream` on all runtimes, including Node. You can continue to use `renderToPipeableStream` via a custom `entry.server.tsx` file if needed.
+
+<docs-info>Enabling this flag might even provide slight performance gains because we are already using Web Streams internally, so this flag removes some unnecessary transforms between Web and Node streams.</docs-info>
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_enableNodeReadableStream: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required. If your app has a custom `entry.server.tsx`, this flag will not change your runtime behavior.
+
 ### `future.unstable_optimizeDeps`
 
 [MODES: framework]

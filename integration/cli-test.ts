@@ -4,6 +4,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -15,7 +16,7 @@ import { expect, test } from "@playwright/test";
 import dedent from "dedent";
 import semver from "semver";
 
-import { createProject } from "./helpers/vite";
+import { build, createProject, reactRouterConfig } from "./helpers/vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDirectory = path.resolve(__dirname, "..");
@@ -198,6 +199,51 @@ test.describe("cli", () => {
 
       expect(existsSync(entryServerFile)).toBeTruthy();
       expect(existsSync(entryClientFile)).toBeTruthy();
+      expect(readFileSync(entryServerFile, "utf-8")).toContain(
+        "renderToPipeableStream",
+      );
+    });
+
+    test("generates a web server entry for non-Node projects", async () => {
+      const cwd = await createProject();
+      let packageJsonPath = path.join(cwd, "package.json");
+      let pkg = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+      delete pkg.dependencies["@react-router/express"];
+      delete pkg.dependencies["@react-router/node"];
+      delete pkg.dependencies["@react-router/serve"];
+      writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2));
+
+      let entryServerFile = path.join(cwd, "app", "entry.server.tsx");
+
+      expect(existsSync(entryServerFile)).toBeFalsy();
+
+      run(["reveal", "entry.server"], { cwd });
+
+      expect(existsSync(entryServerFile)).toBeTruthy();
+      expect(readFileSync(entryServerFile, "utf-8")).toContain(
+        "renderToReadableStream",
+      );
+    });
+
+    test("generates a web server entry for Node projects with the readable stream future flag", async () => {
+      const cwd = await createProject({
+        "react-router.config.ts": reactRouterConfig({
+          future: {
+            unstable_enableNodeReadableStream: true,
+          },
+        }),
+      });
+
+      let entryServerFile = path.join(cwd, "app", "entry.server.tsx");
+
+      expect(existsSync(entryServerFile)).toBeFalsy();
+
+      run(["reveal", "entry.server"], { cwd });
+
+      expect(existsSync(entryServerFile)).toBeTruthy();
+      expect(readFileSync(entryServerFile, "utf-8")).toContain(
+        "renderToReadableStream",
+      );
     });
 
     test("rsc generates entry.{ssr,rsc,client}.tsx in the app directory", async () => {
@@ -249,5 +295,19 @@ test.describe("cli", () => {
       expect(existsSync(entryServerFile)).toBeTruthy();
       expect(existsSync(entryClientFile)).toBeTruthy();
     });
+  });
+
+  test("builds a Node project with the readable stream future flag and default server entry", async () => {
+    const cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        future: {
+          unstable_enableNodeReadableStream: true,
+        },
+      }),
+    });
+
+    const buildResult = build({ cwd });
+
+    expect(buildResult.status).toBe(0);
   });
 });

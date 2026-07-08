@@ -246,6 +246,7 @@ test.describe("Vite / presets", async () => {
 
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
+        unstable_enableNodeReadableStream: false,
         unstable_optimizeDeps: true,
       });
       expect(buildEndArgsMeta.splitRouteModules).toBe(true);

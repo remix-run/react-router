@@ -10,7 +10,7 @@ import "react-router";
 
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
-import { loadConfig } from "../config/config";
+import { hasNodeDependency, loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
 import { transpile as convertFileToJS } from "./useJavascript";
@@ -171,12 +171,6 @@ export async function generateEntry(
     await copyFile(defaultEntry, outputFile);
   } else {
     let pkgJson = await readPackageJSON(rootDirectory);
-    let deps = pkgJson.dependencies ?? {};
-
-    if (!deps["@react-router/node"]) {
-      console.error(colors.red(`No default server entry detected.`));
-      return;
-    }
 
     let defaultEntryClient = path.resolve(
       defaultsDirectory,
@@ -185,7 +179,10 @@ export async function generateEntry(
 
     let defaultEntryServer = path.resolve(
       defaultsDirectory,
-      `entry.server.node.tsx`,
+      hasNodeDependency(pkgJson.dependencies) &&
+        !configResult.value.future.unstable_enableNodeReadableStream
+        ? `entry.server.node.tsx`
+        : `entry.server.web.tsx`,
     );
 
     let isServerEntry = entry === "entry.server";

@@ -8,7 +8,12 @@ import chokidar, {
   type FSWatcher,
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
-import { readPackageJSON, sortPackage, updatePackage } from "pkg-types";
+import {
+  readPackageJSON,
+  sortPackage,
+  updatePackage,
+  type PackageJson,
+} from "pkg-types";
 import colors from "picocolors";
 import pick from "lodash/pick.js";
 import omit from "lodash/omit.js";
@@ -89,6 +94,7 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_enableNodeReadableStream: boolean;
   unstable_optimizeDeps: boolean;
 }
 
@@ -738,6 +744,8 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
+    unstable_enableNodeReadableStream:
+      userAndPresetConfigs.future?.unstable_enableNodeReadableStream ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
   };
@@ -1045,12 +1053,6 @@ export async function resolveEntryFiles({
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
 
-    if (!deps["@react-router/node"]) {
-      throw new Error(
-        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
-      );
-    }
-
     if (!deps["isbot"]) {
       console.log(
         "adding `isbot@5` to your package.json, you should commit this change",
@@ -1070,7 +1072,11 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = `entry.server.node.tsx`;
+    entryServerFile =
+      hasNodeDependency(deps) &&
+      !reactRouterConfig.future.unstable_enableNodeReadableStream
+        ? `entry.server.node.tsx`
+        : `entry.server.web.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
@@ -1126,6 +1132,19 @@ function omitRoutes(
 }
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
+
+export function hasNodeDependency(deps: PackageJson["dependencies"]) {
+  // Match the server condition check in the Vite plugin: missing dependencies
+  // imply Node for backwards compatibility.
+  return (
+    !deps ||
+    Boolean(
+      deps["@react-router/node"] ||
+      deps["@react-router/express"] ||
+      deps["@react-router/serve"],
+    )
+  );
+}
 
 function isEntryFile(entryBasename: string, filename: string) {
   return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
