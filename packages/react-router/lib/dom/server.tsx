@@ -352,7 +352,10 @@ export function createStaticRouter(
   let future: FutureConfig = {
     ...opts?.future,
   };
-  let dataRouteMatcher = createDataRouteMatcher(context.basename || "/");
+  let dataRouteMatcher = createDataRouteMatcher(
+    future,
+    context.basename || "/",
+  );
   dataRouteMatcher.update(dataRoutes);
 
   // Because our context matches may be from a set of routes passed to

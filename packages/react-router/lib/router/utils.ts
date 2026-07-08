@@ -1145,7 +1145,7 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
@@ -1587,7 +1587,7 @@ export interface PathMatch<ParamKey extends string = string> {
   pattern: PathPattern;
 }
 
-type Mutable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
