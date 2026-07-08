@@ -78,13 +78,7 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutesImpl<DataRouteObject>(
-      router.routes,
-      path,
-      router.basename || "/",
-      false,
-      router.branches,
-    );
+    let matches = router.match(path);
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }
