@@ -42,6 +42,19 @@ describe("href", () => {
     expect(href("/a/:b.zip", { b: "hello" })).toBe("/a/hello.zip");
   });
 
+  it("strips optional markers from static segments", () => {
+    expect(href("/users/:userId/edit?", { userId: "5" })).toBe("/users/5/edit");
+    expect(href("/shop?/products/:id", { id: "5" })).toBe("/shop/products/5");
+    expect(href("/one?/two?/:three?", { three: "3" })).toBe("/one/two/3");
+    expect(href("/one?/two?/:three?", {})).toBe("/one/two");
+  });
+
+  it("round-trips optional static segments through matchPath", () => {
+    let pattern = "/shop?/products/:id";
+    let result = href(pattern, { id: "5" });
+    expect(matchPath(pattern, result)).not.toBeNull();
+  });
+
   it("encodes param values that contain a /", () => {
     expect(href("/products/:id", { id: "shoes/2026-summer" })).toBe(
       "/products/shoes%2F2026-summer",

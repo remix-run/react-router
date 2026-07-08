@@ -44,7 +44,8 @@ export function href<Path extends keyof Args>(
         }
         return value == null ? "" : "/" + encodeURIComponent(stringify(value));
       },
-    );
+    )
+    .replace(/\/([\w-]+)\?(?=\/|$)/g, "/$1"); // Optional static segment
 
   if (path.endsWith("*")) {
     // treat trailing splat the same way as compilePath, and force it to be as if it were `/*`.
