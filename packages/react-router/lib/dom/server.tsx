@@ -424,7 +424,10 @@ export function createStaticRouter(
       } else {
         // Contexts not created by createStaticHandler() need their own matcher.
         if (!dataRouteMatcher) {
-          dataRouteMatcher = createDataRouteMatcher(context.basename || "/");
+          dataRouteMatcher = createDataRouteMatcher(
+            future,
+            context.basename || "/",
+          );
           dataRouteMatcher.update(dataRoutes);
         }
         routeMatches = dataRouteMatcher.match(locationArg);
