@@ -331,7 +331,7 @@ export function setup({
     window: testWindow,
     ...routerInit,
   });
-  let dataRouteMatcher = createDataRouteMatcher("/");
+  let dataRouteMatcher = createDataRouteMatcher({}, "/");
   dataRouteMatcher.update(currentRouter.routes);
 
   let fetcherData = getFetcherData(currentRouter);

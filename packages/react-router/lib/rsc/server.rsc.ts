@@ -220,7 +220,7 @@ function createRSCDataRouteMatcher(
   routes: RSCRouteConfigEntry[],
   basename: string | undefined,
 ): RSCDataRouteMatcher {
-  let dataRouteMatcher = createDataRouteMatcher(basename ?? "/");
+  let dataRouteMatcher = createDataRouteMatcher({}, basename ?? "/");
   dataRouteMatcher.update(routes as unknown as DataRouteObject[]);
   return dataRouteMatcher;
 }

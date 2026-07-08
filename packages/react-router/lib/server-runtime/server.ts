@@ -185,7 +185,10 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
-    let dataRouteMatcher = createDataRouteMatcher(build.basename ?? "/");
+    let dataRouteMatcher = createDataRouteMatcher(
+      build.future,
+      build.basename ?? "/",
+    );
     dataRouteMatcher.update(staticHandler.dataRoutes);
 
     if (
