@@ -85,7 +85,7 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
       matches.push(...this.#state.partialMatcher.matchAll(url));
     }
 
-    for (let match of matches) {
+    for (let match of prioritizeValidatedMatches(matches)) {
       let routeMatches = convertRoutePatternMatchToRouteMatches(
         match,
         pathname,
@@ -307,6 +307,29 @@ function validateRouteMatchParams<
       );
     }
   });
+}
+
+function prioritizeValidatedMatches<
+  RouteObjectType extends RouteObject = RouteObject,
+>(
+  matches: Match<string, RouteBranch<RouteObjectType>>[],
+): Match<string, RouteBranch<RouteObjectType>>[] {
+  let validatedMatches: Match<string, RouteBranch<RouteObjectType>>[] = [];
+  let unvalidatedMatches: Match<string, RouteBranch<RouteObjectType>>[] = [];
+
+  for (let match of matches) {
+    if (
+      match.data.routesMeta.some(
+        (meta) => typeof meta.route.unstable_validateParams === "function",
+      )
+    ) {
+      validatedMatches.push(match);
+    } else {
+      unvalidatedMatches.push(match);
+    }
+  }
+
+  return validatedMatches.concat(unvalidatedMatches);
 }
 
 function convertRoutePatternMatchToRouteMatches<
