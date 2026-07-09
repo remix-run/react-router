@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## v8.2.0
+
+### Minor Changes
+
+- Detect `nub` as a supported package manager when creating new projects ([#15276](https://github.com/remix-run/react-router/pull/15276))
+
 ## v8.1.0
 
 ### Minor Changes

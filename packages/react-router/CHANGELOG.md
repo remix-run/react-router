@@ -1,5 +1,21 @@
 # `react-router`
 
+## v8.2.0
+
+### Patch Changes
+
+- Fix `href()` to properly stringify and URL-encode param values, matching `generatePath()` ([#15277](https://github.com/remix-run/react-router/pull/15277))
+  - splat params preserve path separators while encoding each segment individually
+- Fix dynamic param extraction for routes with optional static segments ([#15200](https://github.com/remix-run/react-router/pull/15200))
+  - When a route path contains optional static segments (e.g. `/school?/user/:id`), the internal regex's incorrectly shifted parameter indices resulting in incorrect parameter extraction
+  - Consecutive optional static segments (e.g. `/one?/two?`) were only partially handled
+- Preserve navigation blocker state through a revalidation ([#15246](https://github.com/remix-run/react-router/pull/15246))
+- Fix route ranking for dynamic parameters with static extension suffixes ([#15273](https://github.com/remix-run/react-router/pull/15273))
+  - These were not being detected as dynamic param segments and instead got incorrectly scored higher as a static segment
+  - This meant they could potentially tie truly static routes like `/sitemap.xml` and outrank them based on definition order
+  - These are now correctly identified as dynamic parameter segments and scored correctly
+- Use ReactFormState types instead of unknown ([#15263](https://github.com/remix-run/react-router/pull/15263))
+
 ## v8.1.0
 
 ### Minor Changes

@@ -16,6 +16,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.2.0](#v820)
+    - [Web Streams Default Server Entry](#web-streams-default-server-entry)
   - [v8.1.0](#v810)
     - [Agent Skills Installation via `create-react-router`](#agent-skills-installation-via-create-react-router)
     - [Observability Metadata](#observability-metadata)
@@ -106,6 +108,65 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.2.0
+
+Date: 2026-07-08
+
+### What's Changed
+
+#### Web Streams Default Server Entry
+
+Non-Node runtime Framework Mode apps no longer need a custom `entry.server.tsx` file using React's `renderToReadableStream` API. Apps with `@react-router/{node,express,serve}` dependencies will continue to default to `renderToPipeableStream`, while non-Node apps default to `renderToReadableStream`.
+
+Because Web Streams are stable in Node 22+, Node apps can also opt-into the Web Streams default entry with the new `future.unstable_enableNodeReadableStream` flag:
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_enableNodeReadableStream: true,
+  },
+} satisfies Config;
+```
+
+This flag has no effect if you have a custom `entry.server.tsx` keep using their custom entry file. It only applies to the default entry used if one doesn't exist.
+
+Node apps opting-into the Web Streams API _might_ even see a small performance boost because React Router already uses Web Streams internally, so this avoids additional conversions between Web/Node streams. If you see perf changes one way or another upon adopting this flag, please let us know!
+
+### Minor Changes
+
+- `@react-router/dev` - Add a Web Streams default server entry for non-Node Framework mode apps ([#15290](https://github.com/remix-run/react-router/pull/15290))
+  - Apps using `@react-router/node`, `@react-router/express`, or `@react-router/serve` continue to use the `renderToPipeableStream` default server entry
+  - Apps without those Node server adapter dependencies use a `renderToReadableStream` default server entry
+  - Non-Node apps with their own `entry.server.tsx` may be able to remove it in favor of the default if it is not doing anything custom
+- `@react-router/dev` - Detect `nub` as a supported package manager when installing framework dependencies ([#15276](https://github.com/remix-run/react-router/pull/15276))
+- `create-react-router` - Detect `nub` as a supported package manager when creating new projects ([#15276](https://github.com/remix-run/react-router/pull/15276))
+
+### Patch Changes
+
+- `react-router` - Fix `href()` to properly stringify and URL-encode param values, matching `generatePath()` ([#15277](https://github.com/remix-run/react-router/pull/15277))
+  - splat params preserve path separators while encoding each segment individually
+- `react-router` - Fix dynamic param extraction for routes with optional static segments ([#15200](https://github.com/remix-run/react-router/pull/15200))
+  - When a route path contains optional static segments (e.g. `/school?/user/:id`), the internal regex's incorrectly shifted parameter indices resulting in incorrect parameter extraction
+  - Consecutive optional static segments (e.g. `/one?/two?`) were only partially handled
+- `react-router` - Preserve navigation blocker state through a revalidation ([#15246](https://github.com/remix-run/react-router/pull/15246))
+- `react-router` - Fix route ranking for dynamic parameters with static extension suffixes ([#15273](https://github.com/remix-run/react-router/pull/15273))
+  - These were not being detected as dynamic param segments and instead got incorrectly scored higher as a static segment
+  - This meant they could potentially tie truly static routes like `/sitemap.xml` and outrank them based on definition order
+  - These are now correctly identified as dynamic parameter segments and scored correctly
+- `react-router` - Use ReactFormState types instead of unknown ([#15263](https://github.com/remix-run/react-router/pull/15263))
+- `@react-router/dev` - Detect user `rolldownOptions` config in Vite 8+ ([#15278](https://github.com/remix-run/react-router/pull/15278))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `@react-router/dev` - Add the [`future.unstable_enableNodeReadableStream`](https://reactrouter.com/upgrading/future#futureunstable_enablenodereadablestream) flag to opt Node Framework mode apps into using `renderToReadableStream` instead of `renderToPipeableStream` ([#15290](https://github.com/remix-run/react-router/pull/15290))
+  - This flag has no effect if you have your own `entry.server.tsx`
+
+**Full Changelog**: [`v8.1.0...v8.2.0`](https://github.com/remix-run/react-router/compare/react-router@8.1.0...react-router@8.2.0)
 
 ## v8.1.0
 
