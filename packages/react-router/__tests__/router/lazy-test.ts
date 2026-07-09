@@ -188,6 +188,7 @@ describe("lazily loaded route modules", () => {
                 id: async () => "lazy",
                 index: async () => true,
                 children: async () => [],
+                unstable_validateParams: async () => () => true,
               };
             },
           },
@@ -218,6 +219,7 @@ describe("lazily loaded route modules", () => {
           "Route property index is not a supported property to be returned from a lazy route function. This property will be ignored.",
           "Route property lazy is not a supported property to be returned from a lazy route function. This property will be ignored.",
           "Route property path is not a supported property to be returned from a lazy route function. This property will be ignored.",
+          "Route property unstable_validateParams is not a supported property to be returned from a lazy route function. This property will be ignored.",
         ]
       `);
       consoleWarn.mockReset();
@@ -241,6 +243,7 @@ describe("lazily loaded route modules", () => {
               id: async () => "lazy",
               index: async () => true,
               children: async () => [],
+              unstable_validateParams: async () => () => true,
             },
           },
         ],
@@ -272,6 +275,7 @@ describe("lazily loaded route modules", () => {
           "Route property index is not a supported lazy route property. This property will be ignored.",
           "Route property lazy is not a supported lazy route property. This property will be ignored.",
           "Route property path is not a supported lazy route property. This property will be ignored.",
+          "Route property unstable_validateParams is not a supported lazy route property. This property will be ignored.",
         ]
       `);
       consoleWarn.mockReset();

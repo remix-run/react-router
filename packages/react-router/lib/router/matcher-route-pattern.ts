@@ -79,13 +79,25 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
       "Route pattern routes must be initialized before matching.",
     );
 
-    let match =
-      this.#state.matcher.match(url) ??
-      (allowPartial ? this.#state.partialMatcher.match(url) : undefined);
+    let matches = this.#state.matcher.matchAll(url);
 
-    return match
-      ? convertRoutePatternMatchToRouteMatches(match, pathname, allowPartial)
-      : null;
+    if (allowPartial) {
+      matches.push(...this.#state.partialMatcher.matchAll(url));
+    }
+
+    for (let match of matches) {
+      let routeMatches = convertRoutePatternMatchToRouteMatches(
+        match,
+        pathname,
+        allowPartial,
+      );
+
+      if (routeMatches && validateRouteMatchParams(routeMatches)) {
+        return routeMatches;
+      }
+    }
+
+    return null;
   }
 }
 
@@ -276,6 +288,25 @@ function convertRouteSegment(segment: string): string {
 
 function escapeRoutePatternLiteral(value: string): string {
   return value.replace(/[\\():*]/g, "\\$&");
+}
+
+function validateRouteMatchParams<
+  RouteObjectType extends RouteObject = RouteObject,
+>(matches: RouteMatch<string, RouteObjectType>[]): boolean {
+  return matches.every(({ route, params }) => {
+    try {
+      return (
+        typeof route.unstable_validateParams !== "function" ||
+        route.unstable_validateParams(params) === true
+      );
+    } catch (e) {
+      warning(
+        false,
+        `Route "${route.id || route.path}" failed param validation with the following error:\n` +
+          (e instanceof Error ? e.message : String(e)),
+      );
+    }
+  });
 }
 
 function convertRoutePatternMatchToRouteMatches<
