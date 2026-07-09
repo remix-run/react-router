@@ -39,6 +39,23 @@ export async function acquire(lockPath: string): Promise<() => void> {
       };
     } catch (err: any) {
       if (err.code === "EEXIST") {
+        // If a previous process crashed and left a stale lock behind, attempt to break it.
+        try {
+          let pid = Number(await fsp.readFile(lockPath, "utf8"));
+          if (Number.isFinite(pid) && pid > 0) {
+            try {
+              process.kill(pid, 0);
+            } catch (e: any) {
+              if (e?.code === "ESRCH") {
+                release(lockPath);
+                continue;
+              }
+            }
+          }
+        } catch {
+          // ignore read/parse errors and fall back to waiting
+        }
+
         await sleep(delay);
         delay = Math.min(delay * 2, BACKOFF_MAX_MS);
         continue;
