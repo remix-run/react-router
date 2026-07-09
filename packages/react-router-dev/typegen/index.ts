@@ -11,6 +11,7 @@ import {
   generateRoutes,
   generateServerBuild,
 } from "./generate";
+import { withTypegenLock } from "./lock";
 
 const { green, red } = pc;
 
@@ -35,8 +36,12 @@ export async function run(
   { mode, rsc }: { mode: string; rsc: boolean },
 ) {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
-  await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
-  await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+  const dotReactRouterDir = Path.dirname(typesDirectory(ctx));
+
+  await withTypegenLock(dotReactRouterDir, async () => {
+    await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
+    await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+  });
 }
 
 export type Watcher = {
@@ -48,9 +53,13 @@ export async function watch(
   { mode, logger, rsc }: { mode: string; logger?: Logger; rsc: boolean },
 ): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
-  await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
-  await write(generateServerBuild(ctx), ...generateRoutes(ctx));
-  logger?.info(green("generated types"), { timestamp: true, clear: true });
+  const dotReactRouterDir = Path.dirname(typesDirectory(ctx));
+
+  await withTypegenLock(dotReactRouterDir, async () => {
+    await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
+    await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+    logger?.info(green("generated types"), { timestamp: true, clear: true });
+  });
 
   ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
     if (!result.ok) {
@@ -60,11 +69,13 @@ export async function watch(
     ctx.config = result.value;
 
     if (routeConfigChanged) {
-      await clearRouteModuleAnnotations(ctx);
-      await write(...generateRoutes(ctx));
-      logger?.info(green("regenerated types"), {
-        timestamp: true,
-        clear: true,
+      await withTypegenLock(dotReactRouterDir, async () => {
+        await clearRouteModuleAnnotations(ctx);
+        await write(...generateRoutes(ctx));
+        logger?.info(green("regenerated types"), {
+          timestamp: true,
+          clear: true,
+        });
       });
     }
   });
