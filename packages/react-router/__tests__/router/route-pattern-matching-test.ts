@@ -268,6 +268,40 @@ describe("unstable route-pattern matching", () => {
     expect(matches?.[0].params).toEqual({ drink: "wines" });
   });
 
+  it("prefers validated matches over unvalidated matches", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/:drink",
+          id: "drink",
+          unstable_validateParams: ({ drink }) =>
+            /^(wines|whiskeys|sakes|beers)$/.test(drink!),
+        },
+        {
+          path: "/:other",
+          id: "other",
+        },
+        {
+          path: "/:food",
+          id: "food",
+          unstable_validateParams: ({ food }) =>
+            /^(meats|veggies|cheeses|sweets)$/.test(food!),
+        },
+      ],
+      {
+        future: routePatternFuture,
+        initialEntries: ["/meats"],
+      },
+    );
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["food"]);
+    expect(router.state.matches[0].params).toEqual({ food: "meats" });
+
+    let matches = router.match("/other");
+    expect(matches?.map((m) => m.route.id)).toEqual(["other"]);
+    expect(matches?.[0].params).toEqual({ other: "other" });
+  });
+
   it("runs unstable_validateParams for all routes in the matched branch", () => {
     let calls: string[] = [];
     let router = createMemoryRouter(
