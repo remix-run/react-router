@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import fsp from "node:fs/promises";
+import path from "node:path";
 import exitHook from "exit-hook";
 
 const BACKOFF_MIN_MS = 50;
@@ -14,6 +15,8 @@ function release(lockPath: string): void {
 }
 
 export async function acquire(lockPath: string): Promise<() => void> {
+  await fsp.mkdir(path.dirname(lockPath), { recursive: true });
+
   let delay = BACKOFF_MIN_MS;
 
   while (true) {
