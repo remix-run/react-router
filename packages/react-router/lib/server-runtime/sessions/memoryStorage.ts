@@ -15,11 +15,10 @@ interface MemorySessionStorageOptions {
 }
 
 /**
- * Creates and returns a simple in-memory SessionStorage object, mostly useful
- * for testing and as a reference implementation.
+ * Creates and returns a simple in-memory SessionStorage object.
  *
- * Note: This storage does not scale beyond a single process, so it is not
- * suitable for most production scenarios.
+ * Intended for local development and testing. It does not scale beyond a single
+ * process, and all session data is lost when the server process stops/restarts.
  */
 export function createMemorySessionStorage<
   Data = SessionData,
@@ -36,7 +35,7 @@ export function createMemorySessionStorage<
   return createSessionStorage({
     cookie,
     async createData(data, expires) {
-      let id = Math.random().toString(36).substring(2, 10);
+      let id = crypto.randomUUID();
       map.set(id, { data, expires });
       return id;
     },
