@@ -1318,117 +1318,120 @@ export interface LinkProps extends Omit<
  * @param {LinkProps.defaultShouldRevalidate} props.defaultShouldRevalidate n/a
  * @param {LinkProps.mask} props.mask [modes: framework, data] n/a
  */
-export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  function LinkWithRef(
-    {
-      onClick,
-      discover = "render",
-      prefetch = "none",
-      relative,
-      reloadDocument,
-      replace,
-      mask,
-      state,
-      target,
-      to,
-      preventScrollReset,
-      viewTransition,
-      defaultShouldRevalidate,
-      ...rest
-    },
-    forwardedRef,
-  ) {
-    let { basename, navigator, useTransitions } =
-      React.useContext(NavigationContext);
-    let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
-
-    let parsed = parseToInfo(to, basename);
-    to = parsed.to;
-
-    // Rendered into <a href> for relative URLs
-    let href = useHref(to, { relative });
-    let location = useLocation();
-
-    let maskedHref: string | null = null;
-
-    if (mask) {
-      // Inlined version of the `useHref` logic operating off the masked location
-      // instead of the current location
-      let resolved = resolveTo(
+export const Link = /* @__PURE__ */ (() => {
+  const component = React.forwardRef<HTMLAnchorElement, LinkProps>(
+    function LinkWithRef(
+      {
+        onClick,
+        discover = "render",
+        prefetch = "none",
+        relative,
+        reloadDocument,
+        replace,
         mask,
-        [],
-        location.mask ? location.mask.pathname : "/",
-        true,
+        state,
+        target,
+        to,
+        preventScrollReset,
+        viewTransition,
+        defaultShouldRevalidate,
+        ...rest
+      },
+      forwardedRef,
+    ) {
+      let { basename, navigator, useTransitions } =
+        React.useContext(NavigationContext);
+      let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
+
+      let parsed = parseToInfo(to, basename);
+      to = parsed.to;
+
+      // Rendered into <a href> for relative URLs
+      let href = useHref(to, { relative });
+      let location = useLocation();
+
+      let maskedHref: string | null = null;
+
+      if (mask) {
+        // Inlined version of the `useHref` logic operating off the masked location
+        // instead of the current location
+        let resolved = resolveTo(
+          mask,
+          [],
+          location.mask ? location.mask.pathname : "/",
+          true,
+        );
+
+        // If we're operating within a basename, prepend it to the pathname prior
+        // to creating the href.  If this is a root navigation, then just use the raw
+        // basename which allows the basename to have full control over the presence
+        // of a trailing slash on root links
+        if (basename !== "/") {
+          resolved.pathname =
+            resolved.pathname === "/"
+              ? basename
+              : joinPaths([basename, resolved.pathname]);
+        }
+
+        maskedHref = navigator.createHref(resolved);
+      }
+
+      let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
+        prefetch,
+        rest,
       );
 
-      // If we're operating within a basename, prepend it to the pathname prior
-      // to creating the href.  If this is a root navigation, then just use the raw
-      // basename which allows the basename to have full control over the presence
-      // of a trailing slash on root links
-      if (basename !== "/") {
-        resolved.pathname =
-          resolved.pathname === "/"
-            ? basename
-            : joinPaths([basename, resolved.pathname]);
+      let internalOnClick = useLinkClickHandler(to, {
+        replace,
+        mask,
+        state,
+        target,
+        preventScrollReset,
+        relative,
+        viewTransition,
+        defaultShouldRevalidate,
+        useTransitions,
+      });
+      function handleClick(
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+      ) {
+        if (onClick) onClick(event);
+        if (!event.defaultPrevented) {
+          internalOnClick(event);
+        }
       }
 
-      maskedHref = navigator.createHref(resolved);
-    }
+      let isSpaLink = !(parsed.isExternal || reloadDocument);
+      let link = (
+        // eslint-disable-next-line jsx-a11y/anchor-has-content
+        <a
+          {...rest}
+          {...prefetchHandlers}
+          href={
+            (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
+          }
+          onClick={isSpaLink ? handleClick : onClick}
+          ref={mergeRefs(forwardedRef, prefetchRef)}
+          target={target}
+          data-discover={
+            !isAbsolute && discover === "render" ? "true" : undefined
+          }
+        />
+      );
 
-    let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
-      prefetch,
-      rest,
-    );
-
-    let internalOnClick = useLinkClickHandler(to, {
-      replace,
-      mask,
-      state,
-      target,
-      preventScrollReset,
-      relative,
-      viewTransition,
-      defaultShouldRevalidate,
-      useTransitions,
-    });
-    function handleClick(
-      event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    ) {
-      if (onClick) onClick(event);
-      if (!event.defaultPrevented) {
-        internalOnClick(event);
-      }
-    }
-
-    let isSpaLink = !(parsed.isExternal || reloadDocument);
-    let link = (
-      // eslint-disable-next-line jsx-a11y/anchor-has-content
-      <a
-        {...rest}
-        {...prefetchHandlers}
-        href={
-          (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
-        }
-        onClick={isSpaLink ? handleClick : onClick}
-        ref={mergeRefs(forwardedRef, prefetchRef)}
-        target={target}
-        data-discover={
-          !isAbsolute && discover === "render" ? "true" : undefined
-        }
-      />
-    );
-
-    return shouldPrefetch && !isAbsolute ? (
-      <>
-        {link}
-        <PrefetchPageLinks page={href} />
-      </>
-    ) : (
-      link
-    );
-  },
-);
-Link.displayName = "Link";
+      return shouldPrefetch && !isAbsolute ? (
+        <>
+          {link}
+          <PrefetchPageLinks page={href} />
+        </>
+      ) : (
+        link
+      );
+    },
+  );
+  component.displayName = "Link";
+  return component;
+})();
 
 /**
  * The object passed to {@link NavLink} `children`, `className`, and `style` prop
@@ -1622,122 +1625,125 @@ export interface NavLinkProps extends Omit<
  * @param {NavLinkProps.to} props.to n/a
  * @param {NavLinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
  */
-export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
-  function NavLinkWithRef(
-    {
-      "aria-current": ariaCurrentProp = "page",
-      caseSensitive = false,
-      className: classNameProp = "",
-      end = false,
-      style: styleProp,
-      to,
-      viewTransition,
-      children,
-      ...rest
-    },
-    ref,
-  ) {
-    let path = useResolvedPath(to, { relative: rest.relative });
-    let location = useLocation();
-    let routerState = React.useContext(DataRouterStateContext);
-    let { navigator, basename } = React.useContext(NavigationContext);
-    let isTransitioning =
-      routerState != null &&
-      // Conditional usage is OK here because the usage of a data router is static
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useViewTransitionState(path) &&
-      viewTransition === true;
+export const NavLink = /* @__PURE__ */ (() => {
+  const component = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
+    function NavLinkWithRef(
+      {
+        "aria-current": ariaCurrentProp = "page",
+        caseSensitive = false,
+        className: classNameProp = "",
+        end = false,
+        style: styleProp,
+        to,
+        viewTransition,
+        children,
+        ...rest
+      },
+      ref,
+    ) {
+      let path = useResolvedPath(to, { relative: rest.relative });
+      let location = useLocation();
+      let routerState = React.useContext(DataRouterStateContext);
+      let { navigator, basename } = React.useContext(NavigationContext);
+      let isTransitioning =
+        routerState != null &&
+        // Conditional usage is OK here because the usage of a data router is static
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useViewTransitionState(path) &&
+        viewTransition === true;
 
-    let toPathname = navigator.encodeLocation
-      ? navigator.encodeLocation(path).pathname
-      : path.pathname;
-    let locationPathname = location.pathname;
-    let nextLocationPathname =
-      routerState && routerState.navigation && routerState.navigation.location
-        ? routerState.navigation.location.pathname
-        : null;
+      let toPathname = navigator.encodeLocation
+        ? navigator.encodeLocation(path).pathname
+        : path.pathname;
+      let locationPathname = location.pathname;
+      let nextLocationPathname =
+        routerState && routerState.navigation && routerState.navigation.location
+          ? routerState.navigation.location.pathname
+          : null;
 
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      nextLocationPathname = nextLocationPathname
-        ? nextLocationPathname.toLowerCase()
-        : null;
-      toPathname = toPathname.toLowerCase();
-    }
+      if (!caseSensitive) {
+        locationPathname = locationPathname.toLowerCase();
+        nextLocationPathname = nextLocationPathname
+          ? nextLocationPathname.toLowerCase()
+          : null;
+        toPathname = toPathname.toLowerCase();
+      }
 
-    if (nextLocationPathname && basename) {
-      nextLocationPathname =
-        stripBasename(nextLocationPathname, basename) || nextLocationPathname;
-    }
+      if (nextLocationPathname && basename) {
+        nextLocationPathname =
+          stripBasename(nextLocationPathname, basename) || nextLocationPathname;
+      }
 
-    // If the `to` has a trailing slash, look at that exact spot.  Otherwise,
-    // we're looking for a slash _after_ what's in `to`.  For example:
-    //
-    // <NavLink to="/users"> and <NavLink to="/users/">
-    // both want to look for a / at index 6 to match URL `/users/matt`
-    const endSlashPosition =
-      toPathname !== "/" && toPathname.endsWith("/")
-        ? toPathname.length - 1
-        : toPathname.length;
-    let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(endSlashPosition) === "/");
-
-    let isPending =
-      nextLocationPathname != null &&
-      (nextLocationPathname === toPathname ||
+      // If the `to` has a trailing slash, look at that exact spot.  Otherwise,
+      // we're looking for a slash _after_ what's in `to`.  For example:
+      //
+      // <NavLink to="/users"> and <NavLink to="/users/">
+      // both want to look for a / at index 6 to match URL `/users/matt`
+      const endSlashPosition =
+        toPathname !== "/" && toPathname.endsWith("/")
+          ? toPathname.length - 1
+          : toPathname.length;
+      let isActive =
+        locationPathname === toPathname ||
         (!end &&
-          nextLocationPathname.startsWith(toPathname) &&
-          nextLocationPathname.charAt(toPathname.length) === "/"));
+          locationPathname.startsWith(toPathname) &&
+          locationPathname.charAt(endSlashPosition) === "/");
 
-    let renderProps = {
-      isActive,
-      isPending,
-      isTransitioning,
-    };
+      let isPending =
+        nextLocationPathname != null &&
+        (nextLocationPathname === toPathname ||
+          (!end &&
+            nextLocationPathname.startsWith(toPathname) &&
+            nextLocationPathname.charAt(toPathname.length) === "/"));
 
-    let ariaCurrent = isActive ? ariaCurrentProp : undefined;
+      let renderProps = {
+        isActive,
+        isPending,
+        isTransitioning,
+      };
 
-    let className: string | undefined;
-    if (typeof classNameProp === "function") {
-      className = classNameProp(renderProps);
-    } else {
-      // If the className prop is not a function, we use a default `active`
-      // class for <NavLink />s that are active. In v5 `active` was the default
-      // value for `activeClassName`, but we are removing that API and can still
-      // use the old default behavior for a cleaner upgrade path and keep the
-      // simple styling rules working as they currently do.
-      className = [
-        classNameProp,
-        isActive ? "active" : null,
-        isPending ? "pending" : null,
-        isTransitioning ? "transitioning" : null,
-      ]
-        .filter(Boolean)
-        .join(" ");
-    }
+      let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
-    let style =
-      typeof styleProp === "function" ? styleProp(renderProps) : styleProp;
+      let className: string | undefined;
+      if (typeof classNameProp === "function") {
+        className = classNameProp(renderProps);
+      } else {
+        // If the className prop is not a function, we use a default `active`
+        // class for <NavLink />s that are active. In v5 `active` was the default
+        // value for `activeClassName`, but we are removing that API and can still
+        // use the old default behavior for a cleaner upgrade path and keep the
+        // simple styling rules working as they currently do.
+        className = [
+          classNameProp,
+          isActive ? "active" : null,
+          isPending ? "pending" : null,
+          isTransitioning ? "transitioning" : null,
+        ]
+          .filter(Boolean)
+          .join(" ");
+      }
 
-    return (
-      <Link
-        {...rest}
-        aria-current={ariaCurrent}
-        className={className}
-        ref={ref}
-        style={style}
-        to={to}
-        viewTransition={viewTransition}
-      >
-        {typeof children === "function" ? children(renderProps) : children}
-      </Link>
-    );
-  },
-);
-NavLink.displayName = "NavLink";
+      let style =
+        typeof styleProp === "function" ? styleProp(renderProps) : styleProp;
+
+      return (
+        <Link
+          {...rest}
+          aria-current={ariaCurrent}
+          className={className}
+          ref={ref}
+          style={style}
+          to={to}
+          viewTransition={viewTransition}
+        >
+          {typeof children === "function" ? children(renderProps) : children}
+        </Link>
+      );
+    },
+  );
+  component.displayName = "NavLink";
+  return component;
+})();
 
 /**
  * Form props shared by navigations and fetchers
@@ -1925,81 +1931,87 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.defaultShouldRevalidate} defaultShouldRevalidate n/a
  * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
-export const Form = React.forwardRef<HTMLFormElement, FormProps>(
-  (
-    {
-      discover = "render",
-      fetcherKey,
-      navigate,
-      reloadDocument,
-      replace,
-      state,
-      method = defaultMethod,
-      action,
-      onSubmit,
-      relative,
-      preventScrollReset,
-      viewTransition,
-      defaultShouldRevalidate,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    let { useTransitions } = React.useContext(NavigationContext);
-    let submit = useSubmit();
-    let formAction = useFormAction(action, { relative });
-    let formMethod: HTMLFormMethod =
-      method.toLowerCase() === "get" ? "get" : "post";
-    let isAbsolute =
-      typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
+export const Form = /* @__PURE__ */ (() => {
+  const component = React.forwardRef<HTMLFormElement, FormProps>(
+    (
+      {
+        discover = "render",
+        fetcherKey,
+        navigate,
+        reloadDocument,
+        replace,
+        state,
+        method = defaultMethod,
+        action,
+        onSubmit,
+        relative,
+        preventScrollReset,
+        viewTransition,
+        defaultShouldRevalidate,
+        ...props
+      },
+      forwardedRef,
+    ) => {
+      let { useTransitions } = React.useContext(NavigationContext);
+      let submit = useSubmit();
+      let formAction = useFormAction(action, { relative });
+      let formMethod: HTMLFormMethod =
+        method.toLowerCase() === "get" ? "get" : "post";
+      let isAbsolute =
+        typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (event) => {
-      onSubmit && onSubmit(event);
-      if (event.defaultPrevented) return;
-      event.preventDefault();
+      let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (
+        event,
+      ) => {
+        onSubmit && onSubmit(event);
+        if (event.defaultPrevented) return;
+        event.preventDefault();
 
-      let submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
-        .submitter as HTMLFormSubmitter | null;
+        let submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
+          .submitter as HTMLFormSubmitter | null;
 
-      let submitMethod =
-        (submitter?.getAttribute("formmethod") as HTMLFormMethod | undefined) ||
-        method;
+        let submitMethod =
+          (submitter?.getAttribute("formmethod") as
+            | HTMLFormMethod
+            | undefined) || method;
 
-      let doSubmit = () =>
-        submit(submitter || event.currentTarget, {
-          fetcherKey,
-          method: submitMethod,
-          navigate,
-          replace,
-          state,
-          relative,
-          preventScrollReset,
-          viewTransition,
-          defaultShouldRevalidate,
-        });
+        let doSubmit = () =>
+          submit(submitter || event.currentTarget, {
+            fetcherKey,
+            method: submitMethod,
+            navigate,
+            replace,
+            state,
+            relative,
+            preventScrollReset,
+            viewTransition,
+            defaultShouldRevalidate,
+          });
 
-      if (useTransitions && navigate !== false) {
-        React.startTransition(() => doSubmit());
-      } else {
-        doSubmit();
-      }
-    };
-
-    return (
-      <form
-        ref={forwardedRef}
-        method={formMethod}
-        action={formAction}
-        onSubmit={reloadDocument ? onSubmit : submitHandler}
-        {...props}
-        data-discover={
-          !isAbsolute && discover === "render" ? "true" : undefined
+        if (useTransitions && navigate !== false) {
+          React.startTransition(() => doSubmit());
+        } else {
+          doSubmit();
         }
-      />
-    );
-  },
-);
-Form.displayName = "Form";
+      };
+
+      return (
+        <form
+          ref={forwardedRef}
+          method={formMethod}
+          action={formAction}
+          onSubmit={reloadDocument ? onSubmit : submitHandler}
+          {...props}
+          data-discover={
+            !isAbsolute && discover === "render" ? "true" : undefined
+          }
+        />
+      );
+    },
+  );
+  component.displayName = "Form";
+  return component;
+})();
 
 export type ScrollRestorationProps = ScriptsProps & {
   /**
