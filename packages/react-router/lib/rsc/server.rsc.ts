@@ -857,7 +857,17 @@ async function generateRenderResponse(
         if (isMutationMethod(request.method)) {
           try {
             throwIfPotentialCSRFAttack(request, allowedActionOrigins);
+          } catch (error) {
+            onError?.(error);
+            potentialCSRFAttackError = error;
+            request = new Request(request.url, {
+              method: "GET",
+              headers: request.headers,
+              signal: request.signal,
+            });
+          }
 
+          if (!potentialCSRFAttackError) {
             ctx.runningAction = true;
             let result = await processServerAction(
               request,
@@ -900,8 +910,6 @@ async function generateRenderResponse(
                 undefined,
               );
             }
-          } catch (error) {
-            potentialCSRFAttackError = error;
           }
         }
 
