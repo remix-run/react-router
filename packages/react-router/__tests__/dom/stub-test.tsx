@@ -97,7 +97,12 @@ test("middleware works with loader", async () => {
         let data = useLoaderData();
         return <pre data-testid="data">Message: {data.message}</pre>;
       },
-      middleware: [({ context }) => context.set(stringContext, "hello")],
+      middleware: [
+        {
+          id: "context",
+          middleware: ({ context }) => context.set(stringContext, "hello"),
+        },
+      ],
       loader({ context }) {
         return { message: context.get(stringContext) };
       },

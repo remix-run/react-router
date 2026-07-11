@@ -1,7 +1,11 @@
 import type { RequestHandler } from "../server-runtime/server";
 import { createPath, invariant } from "./history";
 import type { Router } from "./router";
-import { createContext, RouterContextProvider } from "./utils";
+import {
+  createContext,
+  normalizeMiddleware,
+  RouterContextProvider,
+} from "./utils";
 import type {
   ActionFunctionArgs,
   DataRouteObject,
@@ -11,6 +15,7 @@ import type {
   LoaderFunction,
   LoaderFunctionArgs,
   MaybePromise,
+  MiddlewareId,
   MiddlewareFunction,
   RouterContext,
 } from "./utils";
@@ -107,7 +112,7 @@ type RouteInstrumentations = {
   "lazy.loader"?: InstrumentFunction<RouteLazyInstrumentationInfo>;
   "lazy.action"?: InstrumentFunction<RouteLazyInstrumentationInfo>;
   "lazy.middleware"?: InstrumentFunction<RouteLazyInstrumentationInfo>;
-  middleware?: InstrumentFunction<RouteHandlerInstrumentationInfo>;
+  middleware?: InstrumentFunction<RouteMiddlewareInstrumentationInfo>;
   loader?: InstrumentFunction<RouteHandlerInstrumentationInfo>;
   action?: InstrumentFunction<RouteHandlerInstrumentationInfo>;
 };
@@ -118,6 +123,13 @@ type RouteHandlerInstrumentationInfo = Readonly<
   Omit<LoaderFunctionArgs, "request" | "context"> & {
     request: ReadonlyRequest;
     context: ReadonlyContext;
+  }
+>;
+
+type RouteMiddlewareInstrumentationInfo = Readonly<
+  RouteHandlerInstrumentationInfo & {
+    /** The ID supplied for this middleware, or its route-local array index. */
+    id: MiddlewareId;
   }
 >;
 
@@ -377,19 +389,22 @@ export function getRouteInstrumentationUpdates(
     route.middleware.length > 0 &&
     aggregated.middleware.length > 0
   ) {
-    updates.middleware = route.middleware.map((middleware) => {
-      let original = getUninstrumentedHandler(middleware);
+    updates.middleware = route.middleware.map((middleware, index) => {
+      let definition = normalizeMiddleware(middleware, index);
+      let original = getUninstrumentedHandler(definition.middleware);
       let instrumented = async (...args: Parameters<typeof original>) => {
         let result = await recurseRight(
           aggregated.middleware,
-          getHandlerInfo(args[0]),
+          { ...getHandlerInfo(args[0]), id: definition.id },
           () => original(...args),
           getInstrumentationInnerResult,
         );
         return throwOrReturnResult(result);
       };
       setUninstrumentedHandler(instrumented, original);
-      return instrumented;
+      return typeof middleware === "function"
+        ? instrumented
+        : { ...middleware, middleware: instrumented };
     });
   }
 

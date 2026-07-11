@@ -72,6 +72,7 @@ import {
   stripBasename,
   RouterContextProvider,
   getRoutePattern,
+  normalizeMiddleware,
   removeDoubleSlashes,
   flattenAndRankRoutes,
 } from "./utils";
@@ -6283,7 +6284,12 @@ async function runMiddlewarePipeline<Result>(
 ): Promise<Result> {
   let { matches, ...dataFnArgs } = args;
   let tuples = matches.flatMap((m) =>
-    m.route.middleware ? m.route.middleware.map((fn) => [m.route.id, fn]) : [],
+    m.route.middleware
+      ? m.route.middleware.map((definition, index) => [
+          m.route.id,
+          normalizeMiddleware(definition, index).middleware,
+        ])
+      : [],
   ) as [string, MiddlewareFunction<Result>][];
 
   let result = await callRouteMiddleware(

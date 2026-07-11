@@ -60,6 +60,46 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
+  test("middleware definitions", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("products/:id", "routes/product.tsx")
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/product.tsx": tsx`
+        import type { Route } from "./+types/product"
+
+        export const middleware: Route.MiddlewareDefinition[] = [
+          {
+            id: "auth",
+            async middleware({ params }, next) {
+              params.id
+              return next()
+            },
+          },
+        ]
+
+        export const clientMiddleware: Route.ClientMiddlewareDefinition[] = [
+          {
+            id: 0,
+            async middleware({ params }, next) {
+              params.id
+              return next()
+            },
+          },
+        ]
+
+        export default function Component() {
+          return null
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
   test("repeated params", async ({ edit, $ }) => {
     await edit({
       "app/routes.ts": tsx`

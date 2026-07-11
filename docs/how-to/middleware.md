@@ -106,6 +106,36 @@ function getLoadContext(req, res) {
 }
 ```
 
+## Middleware IDs
+
+[MODES: framework, data]
+
+Middleware instrumentation can identify each middleware with an explicit ID:
+
+```tsx
+const middleware = [
+  loggingMiddleware,
+  { id: "auth", middleware: authMiddleware },
+];
+```
+
+Middleware functions remain supported. A function entry receives its
+route-local array index as its instrumentation ID, while an object entry uses
+its `string` or `number` `id`. Because indexes change when middleware is
+reordered, use explicit IDs for stable telemetry. IDs are not required to be
+unique.
+
+Access the ID from the middleware instrumentation callback:
+
+```tsx
+route.instrument({
+  async middleware(callMiddleware, { id }) {
+    console.log(`Running middleware ${id}`);
+    await callMiddleware();
+  },
+});
+```
+
 ## Quick Start (Data Mode)
 
 ### 1. Create a context

@@ -313,9 +313,10 @@ const instrumentations = [
         },
         async middleware(
           callMiddleware,
-          { params, request, context, pattern },
+          { id, params, request, context, pattern },
         ) {
-          // Runs around middleware execution
+          // Runs around middleware execution. `id` is explicitly supplied by
+          // the middleware definition, or its index in the route's array.
           await callMiddleware();
         },
         async lazy(callLazy) {
@@ -327,6 +328,10 @@ const instrumentations = [
   },
 ];
 ```
+
+For middleware instrumentation, define an explicit middleware ID with
+`{ id, middleware }`; function entries use their route-local array index. See
+[Middleware IDs](./middleware#middleware-ids) for the full definition syntax.
 
 ### Read-only Design
 

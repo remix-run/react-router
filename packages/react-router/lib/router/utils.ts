@@ -333,6 +333,52 @@ export type MiddlewareFunction<Result = unknown> = (
 ) => MaybePromise<Result | void>;
 
 /**
+ * An identifier for a route middleware.  When a middleware is provided as a
+ * function, its index in the route's middleware array is used instead.
+ */
+export type MiddlewareId = string | number;
+
+/**
+ * A route middleware definition.  Middleware can be provided directly as a
+ * function, or with an ID for use by instrumentation.
+ */
+export type MiddlewareDefinition<Result = unknown> =
+  | MiddlewareFunction<Result>
+  | {
+      id: MiddlewareId;
+      middleware: MiddlewareFunction<Result>;
+    };
+
+type NormalizedMiddleware<Result = unknown> = {
+  id: MiddlewareId;
+  middleware: MiddlewareFunction<Result>;
+};
+
+/**
+ * Resolves a middleware definition to its middleware function and
+ * instrumentation ID.
+ *
+ * @param definition The middleware definition to normalize.
+ * @param index The middleware's index in its route's middleware array.
+ * @returns The normalized middleware function and ID.
+ *
+ * @internal
+ */
+export function normalizeMiddleware<Result>(
+  definition: MiddlewareDefinition<Result>,
+  index: number,
+): NormalizedMiddleware<Result> {
+  if (typeof definition === "function") {
+    return { id: index, middleware: definition };
+  }
+
+  return {
+    id: definition.id ?? index,
+    middleware: definition.middleware,
+  };
+}
+
+/**
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<
@@ -665,7 +711,7 @@ export type BaseRouteObject = {
    * The route middleware.
    * See [`middleware`](../../start/data/route-object#middleware).
    */
-  middleware?: MiddlewareFunction[];
+  middleware?: MiddlewareDefinition[];
   /**
    * The route loader.
    * See [`loader`](../../start/data/route-object#loader).

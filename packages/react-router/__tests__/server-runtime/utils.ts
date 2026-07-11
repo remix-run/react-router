@@ -13,7 +13,7 @@ import type { EntryRoute } from "../../lib/dom/ssr/routes";
 import type {
   ActionFunction,
   LoaderFunction,
-  MiddlewareFunction,
+  MiddlewareDefinition,
 } from "../../lib/router/utils";
 import type { ServerInstrumentation } from "../../lib/router/instrumentation";
 
@@ -29,7 +29,7 @@ export function mockServerBuild(
       action?: ActionFunction;
       headers?: HeadersFunction;
       loader?: LoaderFunction;
-      middleware?: MiddlewareFunction<Response>[];
+      middleware?: MiddlewareDefinition<Response>[];
     }
   >,
   opts: {

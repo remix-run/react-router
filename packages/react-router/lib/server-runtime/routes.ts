@@ -3,7 +3,7 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
-  MiddlewareFunction,
+  MiddlewareDefinition,
 } from "../router/utils";
 import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
@@ -58,7 +58,7 @@ export function createStaticHandlerDataRoutes(
       id: route.id,
       path: route.path,
       middleware: route.module.middleware as unknown as
-        | MiddlewareFunction[]
+        | MiddlewareDefinition[]
         | undefined,
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix

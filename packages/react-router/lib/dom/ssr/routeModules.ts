@@ -5,7 +5,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
-  MiddlewareFunction,
+  MiddlewareDefinition,
   Params,
   ShouldRevalidateFunction,
   DataRouteMatch,
@@ -26,7 +26,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  clientMiddleware?: MiddlewareFunction<Record<string, DataStrategyResult>>[];
+  clientMiddleware?: MiddlewareDefinition<Record<string, DataStrategyResult>>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -44,7 +44,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
-  middleware?: MiddlewareFunction<Response>[];
+  middleware?: MiddlewareDefinition<Response>[];
 }
 
 /**

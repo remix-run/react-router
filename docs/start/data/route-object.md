@@ -58,6 +58,9 @@ function MyRouteComponent() {
 
 Route [middleware][middleware] runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
 
+Middleware entries can use an explicit ID for instrumentation. See
+[Middleware IDs][middleware-ids].
+
 ```tsx
 createBrowserRouter([
   {
@@ -265,4 +268,5 @@ Next: [Data Loading](./data-loading)
 
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react-router.LoaderFunctionArgs
 [middleware]: ../../how-to/middleware
+[middleware-ids]: ../../how-to/middleware#middleware-ids
 [use-matches]: ../../api/hooks/useMatches

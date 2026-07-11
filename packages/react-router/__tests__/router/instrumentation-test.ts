@@ -9,6 +9,7 @@ import {
   redirect,
   type ActionFunction,
   type LoaderFunction,
+  type MiddlewareDefinition,
   type MiddlewareFunction,
   type MiddlewareNextFunction,
 } from "../../lib/router/utils";
@@ -73,6 +74,108 @@ describe("instrumentation", () => {
         location: { pathname: "/page" },
         loaderData: { page: "PAGE" },
       });
+    });
+
+    it("passes explicit and fallback middleware IDs to instrumentation", async () => {
+      let spy = jest.fn();
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "page",
+            path: "/page",
+            middleware: [
+              async (_: unknown, next: MiddlewareNextFunction) => next(),
+              {
+                id: "auth",
+                middleware: async (_: unknown, next: MiddlewareNextFunction) =>
+                  next(),
+              },
+              {
+                id: 42,
+                middleware: async (_: unknown, next: MiddlewareNextFunction) =>
+                  next(),
+              },
+            ],
+            loader: true,
+          },
+        ],
+        instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async middleware(middleware, { id }) {
+                  spy("start", id);
+                  await middleware();
+                  spy("end", id);
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy.mock.calls).toEqual([
+        ["start", 0],
+        ["start", "auth"],
+        ["start", 42],
+      ]);
+
+      await A.loaders.page.resolve("PAGE");
+      expect(spy.mock.calls).toEqual([
+        ["start", 0],
+        ["start", "auth"],
+        ["start", 42],
+        ["end", 42],
+        ["end", "auth"],
+        ["end", 0],
+      ]);
+    });
+
+    it("uses fallback middleware IDs relative to each route", async () => {
+      let spy = jest.fn();
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            middleware: [
+              async (_: unknown, next: MiddlewareNextFunction) => next(),
+            ],
+            children: [
+              {
+                id: "page",
+                path: "page",
+                middleware: [
+                  async (_: unknown, next: MiddlewareNextFunction) => next(),
+                ],
+                loader: true,
+              },
+            ],
+          },
+        ],
+        instrumentations: [
+          {
+            route(route) {
+              route.instrument({
+                async middleware(middleware, { id }) {
+                  spy(route.id, id);
+                  await middleware();
+                },
+              });
+            },
+          },
+        ],
+      });
+
+      let A = await t.navigate("/page");
+      expect(spy).toHaveBeenCalledWith("root", 0);
+      expect(spy).toHaveBeenCalledWith("page", 0);
+      expect(spy.mock.calls.every(([, id]) => id === 0)).toBe(true);
+      await A.loaders.page.resolve("PAGE");
     });
 
     it("allows instrumentation of loaders", async () => {
@@ -472,7 +575,7 @@ describe("instrumentation", () => {
 
     it("allows instrumentation of lazy object middleware", async () => {
       let spy = jest.fn();
-      let middlewareDfd = createDeferred<MiddlewareFunction[]>();
+      let middlewareDfd = createDeferred<MiddlewareDefinition[]>();
       let loaderDfd = createDeferred<LoaderFunction>();
       let t = setup({
         routes: [
@@ -497,6 +600,11 @@ describe("instrumentation", () => {
                   await middleware();
                   spy("end");
                 },
+                middleware: async (middleware, { id }) => {
+                  spy("instrument middleware start", id);
+                  await middleware();
+                  spy("instrument middleware end", id);
+                },
               });
             },
           },
@@ -507,16 +615,20 @@ describe("instrumentation", () => {
       expect(spy.mock.calls).toEqual([["start"]]);
 
       await middlewareDfd.resolve([
-        async (_: unknown, next: MiddlewareNextFunction) => {
-          spy("middleware start");
-          await next();
-          spy("middleware end");
+        {
+          id: "lazy",
+          middleware: async (_: unknown, next: MiddlewareNextFunction) => {
+            spy("middleware start");
+            await next();
+            spy("middleware end");
+          },
         },
       ]);
       await tick();
       expect(spy.mock.calls).toEqual([
         ["start"],
         ["end"],
+        ["instrument middleware start", "lazy"],
         ["middleware start"],
       ]);
 
@@ -525,8 +637,10 @@ describe("instrumentation", () => {
       expect(spy.mock.calls).toEqual([
         ["start"],
         ["end"],
+        ["instrument middleware start", "lazy"],
         ["middleware start"],
         ["middleware end"],
+        ["instrument middleware end", "lazy"],
       ]);
       expect(t.router.state).toMatchObject({
         navigation: { state: "idle" },
@@ -907,6 +1021,7 @@ describe("instrumentation", () => {
 
     it("allows instrumentation of everything for a statically defined route via patchRoutesOnNavigation", async () => {
       let spy = jest.fn();
+      let middlewareIds: Array<string | number> = [];
       let middlewareDfd = createDeferred<MiddlewareFunction[]>();
       let t = setup({
         routes: [
@@ -921,9 +1036,15 @@ describe("instrumentation", () => {
                 id: "page",
                 path: "/page",
                 middleware: [
-                  async (_: unknown, next: MiddlewareNextFunction) => {
-                    await middlewareDfd.promise;
-                    return next();
+                  {
+                    id: "patched",
+                    middleware: async (
+                      _: unknown,
+                      next: MiddlewareNextFunction,
+                    ) => {
+                      await middlewareDfd.promise;
+                      return next();
+                    },
                   },
                 ],
                 loader: () => "PAGE",
@@ -936,7 +1057,8 @@ describe("instrumentation", () => {
           {
             route(route) {
               route.instrument({
-                middleware: async (impl) => {
+                middleware: async (impl, { id }) => {
+                  middlewareIds.push(id);
                   spy("start middleware");
                   await impl();
                   spy("end middleware");
@@ -984,6 +1106,7 @@ describe("instrumentation", () => {
         actionData: { page: "ACTION" },
         loaderData: { page: "PAGE" },
       });
+      expect(middlewareIds).toEqual(["patched", "patched"]);
     });
 
     it("allows instrumentation of everything for a lazy function route via patchRoutesOnNavigation", async () => {
@@ -1067,7 +1190,8 @@ describe("instrumentation", () => {
 
     it("allows instrumentation of everything for a lazy object route via patchRoutesOnNavigation", async () => {
       let spy = jest.fn();
-      let middlewareDfd = createDeferred<MiddlewareFunction[]>();
+      let middlewareIds: Array<string | number> = [];
+      let middlewareDfd = createDeferred<MiddlewareDefinition[]>();
       let actionDfd = createDeferred<ActionFunction>();
       let loaderDfd = createDeferred<LoaderFunction>();
       let t = setup({
@@ -1095,7 +1219,8 @@ describe("instrumentation", () => {
           {
             route(route) {
               route.instrument({
-                middleware: async (impl) => {
+                middleware: async (impl, { id }) => {
+                  middlewareIds.push(id);
                   spy("start middleware");
                   await impl();
                   spy("end middleware");
@@ -1123,7 +1248,10 @@ describe("instrumentation", () => {
       expect(spy.mock.calls).toEqual([]);
 
       await middlewareDfd.resolve([
-        (_: unknown, next: MiddlewareNextFunction) => next(),
+        {
+          id: "patched-lazy",
+          middleware: (_: unknown, next: MiddlewareNextFunction) => next(),
+        },
       ]);
       await tick();
       expect(spy.mock.calls).toEqual([["start middleware"]]);
@@ -1155,6 +1283,7 @@ describe("instrumentation", () => {
         actionData: { page: "ACTION" },
         loaderData: { page: "PAGE" },
       });
+      expect(middlewareIds).toEqual(["patched-lazy", "patched-lazy"]);
     });
 
     it("returns handler-thrown errors out to instrumentation implementations", async () => {
@@ -2202,9 +2331,15 @@ describe("instrumentation", () => {
           root: {
             path: "/",
             middleware: [
-              (_: unknown, next: MiddlewareNextFunction<Response>) => {
-                spy("middleware");
-                return next();
+              {
+                id: "server",
+                middleware: (
+                  _: unknown,
+                  next: MiddlewareNextFunction<Response>,
+                ) => {
+                  spy("middleware");
+                  return next();
+                },
               },
             ],
             loader: () => {
@@ -2254,6 +2389,7 @@ describe("instrumentation", () => {
             context: {
               get: expect.any(Function),
             },
+            id: "server",
           },
         ],
         ["middleware"],
@@ -2274,6 +2410,7 @@ describe("instrumentation", () => {
             context: {
               get: expect.any(Function),
             },
+            id: "server",
           },
         ],
       ]);

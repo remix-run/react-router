@@ -305,9 +305,11 @@ function getRouteAnnotations({
 
         // middleware
         export type MiddlewareFunction = Annotations["MiddlewareFunction"];
+        export type MiddlewareDefinition = Annotations["MiddlewareDefinition"];
 
         // clientMiddleware
         export type ClientMiddlewareFunction = Annotations["ClientMiddlewareFunction"];
+        export type ClientMiddlewareDefinition = Annotations["ClientMiddlewareDefinition"];
 
         // loader
         export type LoaderArgs = Annotations["LoaderArgs"];

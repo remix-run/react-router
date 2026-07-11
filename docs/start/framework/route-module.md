@@ -84,6 +84,9 @@ Route [middleware][middleware] runs sequentially on the server before and after 
 data requests. This gives you a singular place to do things like logging,
 authentication, and post-processing of responses. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
 
+Middleware entries can use an explicit ID for instrumentation. See
+[Middleware IDs][middleware-ids].
+
 Here's an example middleware to log requests on the server:
 
 ```tsx filename=root.tsx
@@ -508,6 +511,7 @@ Next: [Rendering Strategies](./rendering)
 
 [middleware-params]: https://api.reactrouter.com/v7/types/react-router.MiddlewareFunction.html
 [middleware]: ../../how-to/middleware
+[middleware-ids]: ../../how-to/middleware#middleware-ids
 [when-middleware-runs]: ../../how-to/middleware#when-middleware-runs
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react-router.LoaderFunctionArgs
 [client-loader-params]: https://api.reactrouter.com/v7/types/react-router.ClientLoaderFunctionArgs

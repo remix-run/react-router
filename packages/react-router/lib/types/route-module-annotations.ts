@@ -3,6 +3,7 @@ import type { Location } from "../router/history";
 import type { LinkDescriptor } from "../router/links";
 import type {
   DataStrategyResult,
+  MiddlewareId,
   MiddlewareNextFunction,
 } from "../router/utils";
 
@@ -87,6 +88,19 @@ type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T["params"]>,
   next: MiddlewareNextFunction<Record<string, DataStrategyResult>>,
 ) => MaybePromise<Record<string, DataStrategyResult> | void>;
+
+type CreateMiddlewareDefinition<Middleware> =
+  | Middleware
+  | {
+      id: MiddlewareId;
+      middleware: Middleware;
+    };
+
+type CreateServerMiddlewareDefinition<T extends RouteInfo> =
+  CreateMiddlewareDefinition<CreateServerMiddlewareFunction<T>>;
+
+type CreateClientMiddlewareDefinition<T extends RouteInfo> =
+  CreateMiddlewareDefinition<CreateClientMiddlewareFunction<T>>;
 
 type CreateServerLoaderArgs<T extends RouteInfo> = ServerDataFunctionArgs<
   T["params"]
@@ -225,9 +239,11 @@ export type GetAnnotations<Info extends RouteInfo> = {
 
   // middleware
   MiddlewareFunction: CreateServerMiddlewareFunction<Info>;
+  MiddlewareDefinition: CreateServerMiddlewareDefinition<Info>;
 
   // clientMiddleware
   ClientMiddlewareFunction: CreateClientMiddlewareFunction<Info>;
+  ClientMiddlewareDefinition: CreateClientMiddlewareDefinition<Info>;
 
   // loader
   LoaderArgs: CreateServerLoaderArgs<Info>;

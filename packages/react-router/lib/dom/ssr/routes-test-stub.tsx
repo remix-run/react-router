@@ -14,6 +14,7 @@ import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
 import {
   convertRoutesToDataRoutes,
+  normalizeMiddleware,
   RouterContextProvider,
 } from "../../router/utils";
 import type {
@@ -198,11 +199,14 @@ function processRoutes(
         ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
         : undefined,
       middleware: route.middleware
-        ? route.middleware.map(
-            (mw) =>
-              (...args: Parameters<MiddlewareFunction>) =>
-                mw({ ...args[0], context }, args[1]),
-          )
+        ? route.middleware.map((definition, index) => {
+            let { id, middleware } = normalizeMiddleware(definition, index);
+            let wrapped = (...args: Parameters<MiddlewareFunction>) =>
+              middleware({ ...args[0], context }, args[1]);
+            return typeof definition === "function"
+              ? wrapped
+              : { id, middleware: wrapped };
+          })
         : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,
