@@ -1282,4 +1282,26 @@ test.describe("SPA Mode", () => {
       "app/routes/about.tsx",
     ]);
   });
+
+  test("removes the server build directory from the build output", async () => {
+    let cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        ssr: false,
+      }),
+      "app/routes/_index.tsx": String.raw`
+        export default function Component() {
+          return "index";
+        }
+      `,
+    });
+    let result = build({ cwd });
+    expect(result.status).toBe(0);
+    expect(result.stdout.toString("utf8")).toMatch(
+      /Removing the server build in .* due to ssr:false/,
+    );
+    expect(fs.existsSync(path.join(cwd, "build", "server"))).toBe(false);
+    expect(fs.existsSync(path.join(cwd, "build", "client", "index.html"))).toBe(
+      true,
+    );
+  });
 });
