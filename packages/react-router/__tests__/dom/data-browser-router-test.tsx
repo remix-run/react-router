@@ -603,6 +603,56 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Data:LOADER"));
         expect(screen.queryByText("Suspense Fallback")).toBeNull();
       });
+
+      it("handles the same race condition when an external subscriber was attached before RouterProvider mounted", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        // Kick off some async data load _before_ any react stuff
+        let suspensePromise = sleep(100).then(() => "DATA");
+
+        // Create a router that will initialize shortly after the suspense boundary resolves
+        let router = createTestRouter([
+          {
+            path: "/",
+            // Only fails when this is around 200ms - passes if you bump it to ~500ms
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+
+        // An external subscriber attached at router creation time, the way
+        // Sentry's `wrapCreateBrowserRouterV7` instrumentation does.
+        // `bufferedInitialStateUpdate` is only armed when the router updates
+        // with zero subscribers, so RouterProvider's later subscribe() gets
+        // no replay and misses the initialization update.
+        let unsubscribe = router.subscribe(() => {});
+        expect(router.state.initialized).toBe(false);
+
+        // Render a component that will suspend until `suspensePromise` resolves, then
+        // renders RouterProvider which sets up listeners for the router state
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        // Needs to be wrapped in `act()` for suspense to work properly
+        // https://github.com/testing-library/react-testing-library/issues/1375
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Data:LOADER"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
+        unsubscribe();
+      });
     });
 
     describe("navigations", () => {
