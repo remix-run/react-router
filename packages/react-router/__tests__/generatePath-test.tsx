@@ -141,6 +141,28 @@ describe("generatePath", () => {
     });
   });
 
+  describe("param encoding", () => {
+    it("encodes characters that would change the URL structure", () => {
+      expect(generatePath("/courses/:id", { id: "a b?c#d%e" })).toBe(
+        "/courses/a%20b%3Fc%23d%25e",
+      );
+      expect(generatePath("/courses/:id", { id: "café…" })).toBe(
+        "/courses/caf%C3%A9%E2%80%A6",
+      );
+    });
+
+    it("preserves characters RFC 3986 allows literally in a path segment", () => {
+      // pchar sub-delims plus ":" and "@" — see RFC 3986 §3.3
+      expect(generatePath("/courses/:id", { id: "$&+,;=:@" })).toBe(
+        "/courses/$&+,;=:@",
+      );
+      // e.g. a semver build suffix survives untouched
+      expect(generatePath("/releases/:version", { version: "1.0.0+1" })).toBe(
+        "/releases/1.0.0+1",
+      );
+    });
+  });
+
   it("throws only on missing named parameters, but not missing splat params", () => {
     expect(() => generatePath(":foo")).toThrow();
     expect(() => generatePath("/:foo")).toThrow();
