@@ -915,11 +915,7 @@ async function generateRenderResponse(
 
         let staticContext = await query(
           request,
-          skipRevalidation || !!potentialCSRFAttackError
-            ? {
-                filterMatchesToLoad: () => false,
-              }
-            : undefined,
+          skipRevalidation ? { filterMatchesToLoad: () => false } : undefined,
         );
 
         if (isResponse(staticContext)) {
