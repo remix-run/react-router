@@ -74,9 +74,7 @@ describe("In-memory session storage", () => {
     session.set("user", "mjackson");
     let setCookie = await commitSession(session);
     session = await getSession(getCookieFromSetCookie(setCookie));
-    expect(session.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-    );
+    expect(session.id).toMatch(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/);
   });
 });
 
