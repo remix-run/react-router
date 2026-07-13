@@ -278,7 +278,7 @@ The `expires` argument to `createData` and `updateData` is the same `Date` at wh
 There are also several other session utilities available if you need them:
 
 - [`isSession`][is-session]
-- [`createMemorySessionStorage`][create-memory-session-storage]
+- [`createMemorySessionStorage`][create-memory-session-storage] (local dev and testing)
 - [`createSession`][create-session] (custom storage)
 - [`createFileSessionStorage`][create-file-session-storage] (node)
 - [`createWorkersKVSessionStorage`][create-workers-kv-session-storage] (Cloudflare Workers)
