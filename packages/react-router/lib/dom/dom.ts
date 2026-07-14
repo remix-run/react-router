@@ -59,6 +59,13 @@ export type URLSearchParamsInit =
  * but don't want to use an array initializer.
  *
  * @example
+ * // Instead of:
+ * let searchParams = new URLSearchParams([
+ *   ["sort", "name"],
+ *   ["sort", "price"],
+ * ]);
+ *
+ * // You can do:
  * let searchParams = createSearchParams({
  *   sort: ["name", "price"],
  * });

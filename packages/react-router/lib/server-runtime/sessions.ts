@@ -90,9 +90,7 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
  *
- * @public
  * @category Utils
- * @docsHidden
  * @param initialData The initial data for the session.
  * @param id The identifier for the session. Defaults to an empty string for a
  * new session.
@@ -275,9 +273,7 @@ export interface SessionIdStorageStrategy<
  * Note: This is a low-level API that should only be used if none of the
  * existing session storage options meet your requirements.
  *
- * @public
  * @category Utils
- * @docsHidden
  * @param strategy The strategy used to store session identifiers and data.
  * @returns A {@link SessionStorage} object that persists session data using the
  * provided strategy.

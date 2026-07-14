@@ -56,7 +56,6 @@ type Category = GetArrayElementType<typeof CATEGORIES>;
 type SimplifiedComment = {
   category: Category;
   name: string;
-  hidden: boolean;
   unstable: boolean;
   codeLink: string;
   modes: Mode[];
@@ -424,7 +423,6 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   // Title with frontmatter
   markdown += `---\n`;
   markdown += `title: ${comment.name.replace(/^unstable_/, "")}\n`;
-  markdown += comment.hidden ? "hidden: true\n" : "";
   markdown += comment.unstable ? "unstable: true\n" : "";
   markdown += `---\n\n`;
 
@@ -585,7 +583,6 @@ async function simplifyComment(
   filepath: string,
 ): Promise<SimplifiedComment> {
   let name = getApiName(comment);
-  let hidden = comment.tags.some((t) => t.type === "docsHidden");
   let unstable = name.startsWith("unstable_");
 
   let codeLink = `https://github.com/remix-run/react-router/blob/main/${filepath}`;
@@ -669,7 +666,6 @@ async function simplifyComment(
   let simplifiedComment: SimplifiedComment = {
     category,
     name,
-    hidden,
     codeLink,
     modes,
     summary,
