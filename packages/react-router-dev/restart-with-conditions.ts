@@ -6,6 +6,11 @@ import process from "node:process";
  * existing NODE_OPTIONS. SIGINT/SIGTERM are always forwarded to the child.
  */
 export function restartWithMergedOptions(nodeOptions: string): void {
+  if (process.env.REACT_ROUTER_DEV_RESTARTED === "true") {
+    throw new Error(
+      "restartWithMergedOptions() was called, but the process has already been restarted. This is likely a bug in @react-router/dev."
+    );
+  }
   const mergedOptions = [process.env.NODE_OPTIONS, nodeOptions]
     .filter(Boolean)
     .join(" ")
@@ -19,6 +24,7 @@ export function restartWithMergedOptions(nodeOptions: string): void {
     env: {
       ...process.env,
       NODE_OPTIONS: mergedOptions,
+      REACT_ROUTER_DEV_RESTARTED: "true",
     },
     stdio: "inherit",
   });
