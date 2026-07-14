@@ -47,8 +47,8 @@ generatePath("/releases/:v", { v: "1.0.0+1" }); // "/releases/1.0.0+1"
 ```tsx
 function generatePath<Path extends string>(
   originalPath: Path,
-  params: GeneratePathParams<Path> =  as any,
-): string {}
+  params: GeneratePathParams<Path> = {} as any,
+): string
 ```
 
 ## Params

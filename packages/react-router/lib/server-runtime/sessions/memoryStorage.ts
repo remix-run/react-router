@@ -19,6 +19,13 @@ interface MemorySessionStorageOptions {
  *
  * Intended for local development and testing. It does not scale beyond a single
  * process, and all session data is lost when the server process stops/restarts.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param options Options for creating the in-memory session storage.
+ * @returns A {@link SessionStorage} object that stores session data in memory.
  */
 export function createMemorySessionStorage<
   Data = SessionData,

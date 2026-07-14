@@ -510,8 +510,8 @@ If you ever find yourself entangled in managing and synchronizing state for netw
 [redux]: https://redux.js.org/
 [tanstack_query]: https://tanstack.com/query/latest
 [apollo]: https://www.apollographql.com/
-[use_navigation]: https://api.reactrouter.com/v7/functions/react-router.useNavigation
-[use_fetcher]: https://api.reactrouter.com/v7/functions/react-router.useFetcher
+[use_navigation]: https://api.reactrouter.com/v8/functions/react-router.useNavigation
+[use_fetcher]: https://api.reactrouter.com/v8/functions/react-router.useFetcher
 [loader_data]: ../start/framework/data-loading
 [action_data]: ../start/framework/actions
 [cookies]: ./sessions-and-cookies#cookies
