@@ -1481,12 +1481,71 @@ function matchRouteBranch<
 }
 
 /**
+ * Characters that `encodeURIComponent` escapes but that are valid literally in
+ * a URL path segment. Per RFC 3986 §3.3, a path segment is made of `pchar`:
+ *
+ * ```
+ * pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
+ * sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+ * ```
+ *
+ * `encodeURIComponent` targets query-string values, where `$ & + , ; = : @`
+ * are delimiters and must be escaped — but in a path segment they carry no
+ * special meaning, and browsers keep them literal in `location.pathname`.
+ * (`! ' ( ) *` and the unreserved set are already left alone by
+ * `encodeURIComponent`, so they need no restoring.)
+ */
+const PATH_PARAM_OVERESCAPED: Record<string, string> = {
+  "%24": "$",
+  "%26": "&",
+  "%2B": "+",
+  "%2C": ",",
+  "%3A": ":",
+  "%3B": ";",
+  "%3D": "=",
+  "%40": "@",
+};
+
+/**
+ * Encodes a param value for interpolation into a single URL path segment.
+ *
+ * Escapes characters that would break the path (`/ ? # %`, whitespace,
+ * non-ASCII, …) while leaving characters that RFC 3986 permits literally in a
+ * path segment untouched. Escaping those would needlessly rewrite URLs — e.g.
+ *  a semver build param `1.0.0+1` would become `1.0.0%2B1` even though browsers
+ * display and match the `+` literally in `location.pathname`.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3))
+ *
+ * @param value The param value to encode.
+ * @returns The encoded value, safe for use as a single path segment.
+ */
+export function encodePathParam(value: string): string {
+  return encodeURIComponent(value).replace(
+    /%(?:24|26|2B|2C|3A|3B|3D|40)/g,
+    (match) => PATH_PARAM_OVERESCAPED[match],
+  );
+}
+
+/**
  * Returns a path with params interpolated.
+ *
+ * Param values are percent-encoded for use in a path segment: characters that
+ * would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
+ * are escaped, while characters that RFC 3986 allows literally in a path
+ * segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
+ * encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
+ * delimiters and must be escaped. Splat (`*`) values are encoded per segment,
+ * preserving `/` separators.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
  *
  * @example
  * import { generatePath } from "react-router";
  *
  * generatePath("/users/:id", { id: "123" }); // "/users/123"
+ * generatePath("/files/:name", { name: "a b" }); // "/files/a%20b"
+ * generatePath("/releases/:v", { v: "1.0.0+1" }); // "/releases/1.0.0+1"
  *
  * @public
  * @category Utils
@@ -1532,7 +1591,7 @@ export function generatePath<Path extends string>(
         const [, key, optional, suffix] = keyMatch;
         let param = params[key as keyof typeof params];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
-        return encodeURIComponent(stringify(param)) + suffix;
+        return encodePathParam(stringify(param)) + suffix;
       }
 
       // Remove any optional markers from optional static segments
