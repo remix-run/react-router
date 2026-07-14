@@ -8,7 +8,7 @@ title: createPath
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createPath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createPath.html)
 
 Creates a string URL path from the given pathname, search, and hash components.
 

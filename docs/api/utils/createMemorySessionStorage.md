@@ -8,7 +8,7 @@ title: createMemorySessionStorage
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createMemorySessionStorage.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createMemorySessionStorage.html)
 
 Creates and returns a simple in-memory SessionStorage object, mostly useful
 for testing and as a reference implementation.

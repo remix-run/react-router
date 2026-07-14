@@ -9,7 +9,7 @@ hidden: true
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createSessionStorage.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createSessionStorage.html)
 
 Creates a SessionStorage object using a SessionIdStorageStrategy.
 
