@@ -5,7 +5,7 @@ import { RouterProvider } from "../components";
 import { RSCRouterContext } from "../context";
 import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
-import { createBrowserHistory, invariant } from "../router/history";
+import { createBrowserHistory, createPath, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
 import {
   createRouter,
@@ -44,7 +44,11 @@ import {
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  handleClientVersionMismatch,
+} from "../dom/ssr/fog-of-war";
 
 const defaultManifestPath = "/__manifest";
 
@@ -259,6 +263,8 @@ function createRouterFromPayload({
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
+  let { clientVersion } = payload;
+
   globalVar.__reactRouterRouteModules =
     globalVar.__reactRouterRouteModules ?? {};
   populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
@@ -303,7 +309,7 @@ function createRouterFromPayload({
       basename: payload.basename,
       isSpaMode: false,
     }),
-    async patchRoutesOnNavigation({ path, signal }) {
+    async patchRoutesOnNavigation({ path, signal, fetcherKey }) {
       if (payload.routeDiscovery.mode === "initial") {
         if (!applyPatchesPromise) {
           applyPatchesPromise = (async () => {
@@ -331,10 +337,17 @@ function createRouterFromPayload({
       if (discoveredPaths.has(path)) {
         return;
       }
+      let { state } = globalVar.__reactRouterDataRouter;
       await fetchAndApplyManifestPatches(
         [path],
         createFromReadableStream,
         fetchImplementation,
+        clientVersion,
+        // If we're patching for a fetcher call, reload the current location.
+        // Otherwise prefer any ongoing navigation location.
+        fetcherKey
+          ? window.location.href
+          : createPath(state.navigation.location || state.location),
         signal,
       );
     },
@@ -344,6 +357,7 @@ function createRouterFromPayload({
       true,
       createFromReadableStream,
       fetchImplementation,
+      clientVersion,
     ),
   });
 
@@ -444,6 +458,7 @@ export function getRSCSingleFetchDataStrategy(
   ssr: boolean,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  clientVersion?: string,
 ): DataStrategyFunction {
   // TODO: Clean this up with a shared type
   type RSCDataRouteMatch = DataRouteMatch & {
@@ -470,7 +485,12 @@ export function getRSCSingleFetchDataStrategy(
       };
     },
     // pass map into fetchAndDecode so it can add payloads
-    getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
+    getFetchAndDecodeViaRSC(
+      getRouter,
+      createFromReadableStream,
+      fetchImplementation,
+      clientVersion,
+    ),
     ssr,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
@@ -524,8 +544,10 @@ export function getRSCSingleFetchDataStrategy(
 }
 
 function getFetchAndDecodeViaRSC(
+  getRouter: () => DataRouter,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  clientVersion?: string,
 ): FetchAndDecodeFunction {
   return async (args: DataStrategyFunctionArgs, targetRoutes?: string[]) => {
     let { request, context } = args;
@@ -574,6 +596,20 @@ function getFetchAndDecodeViaRSC(
 
       if (payload.type !== "render") {
         throw new Error("Unexpected payload type");
+      }
+
+      if (
+        clientVersion !== undefined &&
+        (await handleClientVersionMismatch(
+          payload.clientVersion !== clientVersion,
+          clientVersion,
+          createPath(
+            getRouter().state.navigation.location || getRouter().state.location,
+          ),
+        ))
+      ) {
+        // The page is about to be reloaded so we can keep this promise pending.
+        return new Promise(() => {});
       }
 
       // Track routes rendered per-single-fetch call so we can gather them up
@@ -681,7 +717,7 @@ export function RSCHydratedRouter({
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let { routeDiscovery } = payload;
+  let { routeDiscovery, clientVersion } = payload;
 
   let { router, routeModules } = React.useMemo(
     () =>
@@ -789,6 +825,8 @@ export function RSCHydratedRouter({
           paths,
           createFromReadableStream,
           fetchImplementation,
+          clientVersion,
+          null,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -808,7 +846,12 @@ export function RSCHydratedRouter({
       attributes: true,
       attributeFilter: ["data-discover", "href", "action"],
     });
-  }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
+  }, [
+    routeDiscovery,
+    createFromReadableStream,
+    fetchImplementation,
+    clientVersion,
+  ]);
 
   const frameworkContext: FrameworkContextObject = {
     future: {},
@@ -983,22 +1026,30 @@ const nextPaths = new Set<string>();
 const discoveredPathsMaxSize = 1000;
 const discoveredPaths = new Set<string>();
 
-function getManifestUrl(paths: string[]): URL | null {
+function getManifestUrl(
+  paths: string[],
+  clientVersion: string | undefined,
+): URL | null {
   if (paths.length === 0) {
     return null;
   }
 
+  let url: URL;
   if (paths.length === 1) {
-    return new URL(`${paths[0]}.manifest`, window.location.origin);
+    url = new URL(`${paths[0]}.manifest`, window.location.origin);
+  } else {
+    const globalVar = window as WindowWithRouterGlobals;
+    let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
+      /^\/|\/$/g,
+      "",
+    );
+    url = new URL(`${basename}/.manifest`, window.location.origin);
+    url.searchParams.set("paths", paths.sort().join(","));
   }
 
-  const globalVar = window as WindowWithRouterGlobals;
-  let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
-    /^\/|\/$/g,
-    "",
-  );
-  let url = new URL(`${basename}/.manifest`, window.location.origin);
-  url.searchParams.set("paths", paths.sort().join(","));
+  if (clientVersion !== undefined) {
+    url.searchParams.set("version", clientVersion);
+  }
 
   return url;
 }
@@ -1007,11 +1058,13 @@ async function fetchAndApplyManifestPatches(
   paths: string[],
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  clientVersion: string | undefined,
+  errorReloadPath: string | null,
   signal?: AbortSignal,
 ) {
   paths = getPathsWithAncestors(paths);
 
-  let url = getManifestUrl(paths);
+  let url = getManifestUrl(paths, clientVersion);
   if (url == null) {
     return;
   }
@@ -1025,6 +1078,15 @@ async function fetchAndApplyManifestPatches(
   }
 
   let response = await fetchImplementation(new Request(url, { signal }));
+  if (
+    clientVersion !== undefined &&
+    response.status === 204 &&
+    response.headers.has("X-Remix-Reload-Document")
+  ) {
+    await handleClientVersionMismatch(true, clientVersion, errorReloadPath);
+    return;
+  }
+
   if (!response.body || response.status < 200 || response.status >= 300) {
     throw new Error("Unable to fetch new route matches from the server");
   }

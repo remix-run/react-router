@@ -243,6 +243,7 @@ export type RSCRenderPayload = {
   type: "render";
   actionData: Record<string, any> | null;
   basename: string | undefined;
+  clientVersion?: string;
   errors: Record<string, any> | null;
   loaderData: Record<string, any>;
   location: Location;
@@ -374,6 +375,8 @@ export type RouteDiscovery =
  * encoding the {@link unstable_RSCPayload}.
  * @param opts.loadServerAction Your `react-server-dom-xyz/server`'s
  * `loadServerAction` function, used to load a server action by ID.
+ * @param opts.clientVersion A version derived from the client build output used
+ * to detect stale clients during lazy route discovery.
  * @param opts.onError An optional error handler that will be called with any
  * errors that occur during the request processing.
  * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
@@ -397,6 +400,7 @@ export async function matchRSCServerRequest({
   loadServerAction,
   decodeAction,
   decodeFormState,
+  clientVersion,
   onError,
   request,
   routes,
@@ -410,6 +414,7 @@ export async function matchRSCServerRequest({
   decodeFormState?: DecodeFormStateFunction;
   requestContext?: RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
+  clientVersion?: string;
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
@@ -464,6 +469,7 @@ export async function matchRSCServerRequest({
       generateResponse,
       temporaryReferences,
       routeDiscovery,
+      clientVersion,
     );
     return response;
   }
@@ -511,6 +517,7 @@ export async function matchRSCServerRequest({
     temporaryReferences,
     allowedActionOrigins,
     routeDiscovery,
+    clientVersion,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -531,12 +538,25 @@ async function generateManifestResponse(
   ) => Response,
   temporaryReferences: unknown,
   routeDiscovery: RouteDiscovery | undefined,
+  clientVersion: string | undefined,
 ) {
   let url = new URL(request.url);
   if (url.toString().length > URL_LIMIT) {
     return new Response(null, {
       statusText: "Bad Request",
       status: 400,
+    });
+  }
+
+  if (
+    clientVersion !== undefined &&
+    clientVersion !== url.searchParams.get("version")
+  ) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "X-Remix-Reload-Document": "true",
+      },
     });
   }
 
@@ -814,6 +834,7 @@ async function generateRenderResponse(
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  clientVersion: string | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -952,6 +973,7 @@ async function generateRenderResponse(
           skipRevalidation,
           ctx.redirect?.headers,
           routeDiscovery,
+          clientVersion,
         );
       },
     }),
@@ -1050,6 +1072,7 @@ async function generateStaticContextResponse(
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  clientVersion: string | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1099,6 +1122,7 @@ async function generateStaticContextResponse(
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
     basename: staticContext.basename,
+    clientVersion,
     routeDiscovery: routeDiscovery ?? { mode: "lazy" },
     actionData: staticContext.actionData,
     errors: staticContext.errors,

@@ -134,6 +134,17 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     ).code;
   }
 
+  async function getClientVersion(source: string) {
+    const digest = await globalThis.crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(source),
+    );
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .slice(0, 8);
+  }
+
   return [
     {
       name: "react-router/rsc",
@@ -573,6 +584,52 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     {
+      name: "react-router/rsc/virtual-client-version",
+      resolveId(id) {
+        if (id === virtual.clientVersion.id) {
+          return virtual.clientVersion.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.clientVersion.resolvedId) {
+          return viteCommand === "build"
+            ? `
+import assetsManifest from "virtual:vite-rsc/assets-manifest";
+export default assetsManifest.clientVersion;
+`
+            : `export default "development";`;
+        }
+      },
+      generateBundle: {
+        order: "post",
+        async handler() {
+          if (this.environment.name !== "client") return;
+
+          const viteRscPlugin = resolvedViteConfig.plugins.find(
+            (plugin) => plugin.name === "rsc:minimal",
+          ) as
+            | (Vite.Plugin & {
+                api?: {
+                  manager?: {
+                    buildAssetsManifest?: Record<string, unknown>;
+                  };
+                };
+              })
+            | undefined;
+          const assetsManifest =
+            viteRscPlugin?.api?.manager?.buildAssetsManifest;
+          invariant(assetsManifest, "Vite RSC assets manifest not found");
+
+          // Add the version before the Vite RSC plugin serializes this manifest
+          // into the RSC and SSR builds. This lets the virtual module expose a
+          // build-time value without rewriting files after Vite writes them.
+          assetsManifest.clientVersion = await getClientVersion(
+            JSON.stringify(assetsManifest),
+          );
+        },
+      },
+    },
+    {
       name: "react-router/rsc/hmr/inject-runtime",
       enforce: "pre",
       resolveId(id) {
@@ -782,6 +839,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
   routeDiscovery: create("unstable_rsc/route-discovery"),
+  clientVersion: create("unstable_rsc/client-version"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   basename: create("unstable_rsc/basename"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
