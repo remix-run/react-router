@@ -69,6 +69,14 @@ export interface Cookie {
 
 /**
  * Creates a logical container for managing a browser cookie from the server.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param name The name of the cookie.
+ * @param cookieOptions Options for parsing and serializing the cookie.
+ * @returns A {@link Cookie} object for parsing and serializing the cookie.
  */
 export const createCookie = (
   name: string,
@@ -123,12 +131,30 @@ export const createCookie = (
   };
 };
 
+/**
+ * A function that determines whether a value is a React Router {@link Cookie}
+ * object.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Cookie} object;
+ * otherwise, `false`.
+ */
 export type IsCookieFunction = (object: any) => object is Cookie;
 
 /**
- * Returns true if an object is a Remix cookie container.
+ * Returns `true` if a value is a React Router {@link Cookie} object.
  *
- * @see https://remix.run/utils/cookies#iscookie
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Cookie} object;
+ * otherwise, `false`.
  */
 export const isCookie: IsCookieFunction = (object): object is Cookie => {
   return (

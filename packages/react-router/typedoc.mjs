@@ -1,4 +1,4 @@
-import { blockTags } from "../../typedoc.mjs";
+import { blockTags, modifierTags, notRenderedTags } from "../../typedoc.mjs";
 
 /** @type {Partial<import('typedoc').TypeDocOptions>} */
 const config = {
@@ -13,6 +13,8 @@ const config = {
     "*",
   ],
   blockTags,
+  modifierTags,
+  notRenderedTags,
 };
 
 export default config;

@@ -50,8 +50,8 @@ function createStaticRouter(
   opts: {
     branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
-  } = ,
-): DataRouter {}
+  } = {},
+): DataRouter
 ```
 
 ## Params

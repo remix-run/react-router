@@ -22,6 +22,14 @@ interface CookieSessionStorageOptions {
  * needed, and can help to simplify some load-balanced scenarios. However, it
  * also has the limitation that serialized session data may not exceed the
  * browser's maximum cookie size. Trade-offs!
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param options Options for creating the cookie-backed session storage.
+ * @returns A {@link SessionStorage} object that stores all session data in its
+ * cookie.
  */
 export function createCookieSessionStorage<
   Data = SessionData,

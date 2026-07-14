@@ -51,8 +51,8 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     viewTransition?: boolean;
     defaultShouldRevalidate?: boolean;
     useTransitions?: boolean;
-  } = ,
-): (event: React.MouseEvent<E, MouseEvent>) => void {}
+  } = {},
+): (event: React.MouseEvent<E, MouseEvent>) => void
 ```
 
 ## Params

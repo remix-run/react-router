@@ -17,14 +17,20 @@ function stringify(p: any) {
 }
 
 /**
-  Returns a resolved URL path for the specified route.
-
-  ```tsx
-  const h = href("/:lang?/about", { lang: "en" })
-  // -> `/en/about`
-
-  <Link to={href("/products/:id", { id: "abc123" })} />
-  ```
+ * Returns a resolved URL path for the specified route.
+ *
+ * @example
+ * const h = href("/:lang?/about", { lang: "en" });
+ * // -> "/en/about"
+ *
+ * <Link to={href("/products/:id", { id: "abc123" })} />;
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @param path The route path to resolve.
+ * @param args The route parameters required by the path.
+ * @returns The resolved URL path with route parameters interpolated.
  */
 export function href<Path extends keyof Args>(
   path: Path,

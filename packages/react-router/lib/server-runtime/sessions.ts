@@ -89,6 +89,14 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  *
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
+ *
+ * @public
+ * @category Utils
+ * @docsHidden
+ * @param initialData The initial data for the session.
+ * @param id The identifier for the session. Defaults to an empty string for a
+ * new session.
+ * @returns A new {@link Session} object.
  */
 export const createSession: CreateSessionFunction = <
   Data = SessionData,
@@ -139,12 +147,30 @@ export const createSession: CreateSessionFunction = <
   };
 };
 
+/**
+ * A function that determines whether a value is a React Router {@link Session}
+ * object.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Session} object;
+ * otherwise, `false`.
+ */
 export type IsSessionFunction = (object: any) => object is Session;
 
 /**
- * Returns true if an object is a React Router session.
+ * Returns `true` if a value is a React Router {@link Session} object.
  *
- * @see https://reactrouter.com/api/utils/isSession
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Session} object;
+ * otherwise, `false`.
  */
 export const isSession: IsSessionFunction = (object): object is Session => {
   return (
@@ -248,6 +274,13 @@ export interface SessionIdStorageStrategy<
  *
  * Note: This is a low-level API that should only be used if none of the
  * existing session storage options meet your requirements.
+ *
+ * @public
+ * @category Utils
+ * @docsHidden
+ * @param strategy The strategy used to store session identifiers and data.
+ * @returns A {@link SessionStorage} object that persists session data using the
+ * provided strategy.
  */
 export function createSessionStorage<Data = SessionData, FlashData = Data>({
   cookie: cookieArg,

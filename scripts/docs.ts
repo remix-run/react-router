@@ -56,6 +56,7 @@ type Category = GetArrayElementType<typeof CATEGORIES>;
 type SimplifiedComment = {
   category: Category;
   name: string;
+  hidden: boolean;
   unstable: boolean;
   codeLink: string;
   modes: Mode[];
@@ -423,6 +424,7 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   // Title with frontmatter
   markdown += `---\n`;
   markdown += `title: ${comment.name.replace(/^unstable_/, "")}\n`;
+  markdown += comment.hidden ? "hidden: true\n" : "";
   markdown += comment.unstable ? "unstable: true\n" : "";
   markdown += `---\n\n`;
 
@@ -570,6 +572,11 @@ function getApiName(comment: ParsedComment): string {
     return matches[1].trim();
   }
 
+  matches = comment.code.match(/^export type ([^<=]+)/);
+  if (matches) {
+    return matches[1].trim();
+  }
+
   throw new Error(`Could not determine API name:\n${comment.code}\n`);
 }
 
@@ -578,6 +585,7 @@ async function simplifyComment(
   filepath: string,
 ): Promise<SimplifiedComment> {
   let name = getApiName(comment);
+  let hidden = comment.tags.some((t) => t.type === "docsHidden");
   let unstable = name.startsWith("unstable_");
 
   let codeLink = `https://github.com/remix-run/react-router/blob/main/${filepath}`;
@@ -661,6 +669,7 @@ async function simplifyComment(
   let simplifiedComment: SimplifiedComment = {
     category,
     name,
+    hidden,
     codeLink,
     modes,
     summary,
@@ -713,7 +722,7 @@ async function getSignature(code: string) {
 
     let formatted = await prettier.format(newCode, { parser: "typescript" });
 
-    return formatted.replace("{}", "").trim();
+    return formatted.replace(/\s*\{\}\s*$/, "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
@@ -729,6 +738,22 @@ async function getSignature(code: string) {
     let api = code.match(/export class (\w+)/);
     warn(`Skipping signature section for \`class\` : ${api?.[1]}`);
     return;
+  }
+
+  if (ts.isTypeAliasDeclaration(ast.statements[0])) {
+    let typeAliasDeclaration = ast.statements[0];
+    let modifiedTypeAlias = {
+      ...typeAliasDeclaration,
+      modifiers: typeAliasDeclaration.modifiers?.filter(
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword,
+      ),
+    } as ts.TypeAliasDeclaration;
+
+    let newCode = ts
+      .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+      .printNode(ts.EmitHint.Unspecified, modifiedTypeAlias, ast);
+
+    return (await prettier.format(newCode, { parser: "typescript" })).trim();
   }
 
   throw new Error("Unable to parse signature from code: " + code);

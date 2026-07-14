@@ -35,8 +35,8 @@ generatePath("/users/:id", { id: "123" }); // "/users/123"
 ```tsx
 function generatePath<Path extends string>(
   originalPath: Path,
-  params: GeneratePathParams<Path> =  as any,
-): string {}
+  params: GeneratePathParams<Path> = {} as any,
+): string
 ```
 
 ## Params

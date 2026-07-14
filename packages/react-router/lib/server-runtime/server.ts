@@ -325,6 +325,20 @@ function derive(build: ServerBuild, mode?: string) {
   };
 }
 
+/**
+ * Creates a request handler for a React Router server build.
+ *
+ * This is a low-level API used by server adapters to translate incoming
+ * requests into React Router responses.
+ *
+ * @public
+ * @category Utils
+ * @docsHidden
+ * @param build The server build, or a function that resolves to the server
+ * build, used to handle requests.
+ * @param mode The mode in which the server build is running.
+ * @returns A request handler that returns a response for each incoming request.
+ */
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
   mode,
