@@ -1690,7 +1690,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       (nextLocationPathname === toPathname ||
         (!end &&
           nextLocationPathname.startsWith(toPathname) &&
-          nextLocationPathname.charAt(toPathname.length) === "/"));
+          nextLocationPathname.charAt(endSlashPosition) === "/"));
 
     let renderProps = {
       isActive,
