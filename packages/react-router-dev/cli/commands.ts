@@ -8,6 +8,7 @@ import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
 
+import developmentConditionEnabled from "#development-condition-enabled";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
 import { hasNodeDependency, loadConfig } from "../config/config";
@@ -18,6 +19,7 @@ import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
+import { restartWithMergedOptions } from "../restart-with-conditions";
 
 const nodeRequire = createRequire(import.meta.url);
 
@@ -62,14 +64,18 @@ export async function build(
 }
 
 export async function dev(root?: string, options: ViteDevOptions = {}) {
-  let { dev } = await import("../vite/dev");
-  if (options.profile) {
-    await profiler.start();
-  }
-  exitHook(() => profiler.stop(console.info));
+  if (developmentConditionEnabled) {
+    let { dev } = await import("../vite/dev");
+    if (options.profile) {
+      await profiler.start();
+    }
+    exitHook(() => profiler.stop(console.info));
 
-  root = resolveRootDirectory(root, options);
-  await dev(root, options);
+    root = resolveRootDirectory(root, options);
+    await dev(root, options);
+  } else {
+    restartWithMergedOptions("--conditions=development");
+  }
 
   // keep `react-router dev` alive by waiting indefinitely
   await new Promise(() => {});

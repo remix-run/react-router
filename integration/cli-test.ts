@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
 import dedent from "dedent";
+import getPort from "get-port";
 import semver from "semver";
 
 import { build, createProject, reactRouterConfig } from "./helpers/vite";
@@ -22,6 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDirectory = path.resolve(__dirname, "..");
 const nodeBin = process.argv[0];
 const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterPackageBinPath = "node_modules/@react-router/dev/bin.cjs";
 const reactRouterPackageBin = path.join(
   rootDirectory,
   "packages/react-router-dev/bin.cjs",
@@ -29,6 +31,121 @@ const reactRouterPackageBin = path.join(
 
 const run = (command: string[], options: Parameters<typeof spawnSync>[2]) =>
   spawnSync(nodeBin, [reactRouterBin, ...command], options);
+
+function bufferize(stream: NodeJS.ReadableStream | null): () => string {
+  let buffer = "";
+  stream?.on("data", (data) => (buffer += data.toString()));
+  return () => buffer;
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function restartCount(output: string) {
+  return (
+    output.match(/\[restart\] Relaunching with NODE_OPTIONS:/g)?.length ?? 0
+  );
+}
+
+function getLogs(stdout: string, stderr: string) {
+  return [
+    `stdout:\n${stdout || "<empty>"}`,
+    `stderr:\n${stderr || "<empty>"}`,
+  ].join("\n\n");
+}
+
+async function waitForDevServer(args: {
+  port: number;
+  proc: ChildProcess;
+  stdout: () => string;
+  stderr: () => string;
+}) {
+  let timeout = process.platform === "win32" ? 20_000 : 10_000;
+  let start = Date.now();
+  let lastError: unknown;
+
+  while (Date.now() - start < timeout) {
+    let stdout = args.stdout();
+    let stderr = args.stderr();
+
+    if (restartCount(stdout) > 1) {
+      throw new Error(
+        `Expected react-router dev to restart once, but it restarted ${restartCount(
+          stdout,
+        )} times.\n\n${getLogs(stdout, stderr)}`,
+      );
+    }
+
+    if (args.proc.exitCode !== null || args.proc.signalCode !== null) {
+      throw new Error(
+        `react-router dev exited before the server started.\n\n${getLogs(
+          stdout,
+          stderr,
+        )}`,
+      );
+    }
+
+    try {
+      let response = await fetch(`http://127.0.0.1:${args.port}/`, {
+        signal: AbortSignal.timeout(1_000),
+      });
+      let html = await response.text();
+      if (response.ok && html.includes("Welcome to React Router")) {
+        return;
+      }
+      lastError = new Error(`Unexpected response ${response.status}: ${html}`);
+    } catch (error) {
+      lastError = error;
+    }
+
+    await delay(100);
+  }
+
+  throw new Error(
+    [
+      `Timed out waiting for react-router dev to start: ${String(lastError)}`,
+      getLogs(args.stdout(), args.stderr()),
+    ].join("\n\n"),
+  );
+}
+
+function waitForExit(proc: ChildProcess, timeout: number) {
+  return new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
+    (resolve, reject) => {
+      if (proc.exitCode !== null || proc.signalCode !== null) {
+        resolve({ code: proc.exitCode, signal: proc.signalCode });
+        return;
+      }
+
+      let timer = setTimeout(() => {
+        reject(new Error("Timed out waiting for react-router dev to exit"));
+      }, timeout);
+
+      proc.once("exit", (code, signal) => {
+        clearTimeout(timer);
+        resolve({ code, signal });
+      });
+    },
+  );
+}
+
+function killProcessGroup(proc: ChildProcess) {
+  if (proc.exitCode !== null || proc.signalCode !== null) {
+    return;
+  }
+
+  if (proc.pid && process.platform !== "win32") {
+    try {
+      process.kill(-proc.pid, "SIGKILL");
+      return;
+    } catch {
+      // Fall back to killing just the parent process below.
+    }
+  }
+
+  proc.kill("SIGKILL");
+}
 
 const getBinNodeEnv = (command: string[]) => {
   let cwd = mkdtempSync(path.join(tmpdir(), "react-router-bin-"));
@@ -160,6 +277,60 @@ test.describe("cli", () => {
     expect(getBinNodeEnv(["--mode", "development", "build"])).toBe(
       "production",
     );
+  });
+
+  test("dev restarts with the development condition and starts the server", async ({
+    browserName: _browserName,
+  }, { project }) => {
+    test.skip(
+      project.name !== "chromium",
+      "CLI smoke test only needs one browser project",
+    );
+
+    let cwd = await createProject();
+    let port = await getPort();
+    let proc = spawn(
+      nodeBin,
+      [
+        reactRouterPackageBinPath,
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        String(port),
+        "--strictPort",
+      ],
+      {
+        cwd,
+        detached: process.platform !== "win32",
+        env: {
+          ...process.env,
+          FORCE_COLOR: undefined,
+          NO_COLOR: "1",
+          NODE_OPTIONS: "--no-warnings=ExperimentalWarning",
+        },
+        stdio: "pipe",
+      },
+    );
+    let stdout = bufferize(proc.stdout);
+    let stderr = bufferize(proc.stderr);
+
+    try {
+      await waitForDevServer({ port, proc, stdout, stderr });
+      expect(restartCount(stdout())).toBe(1);
+
+      proc.kill("SIGTERM");
+      await expect(waitForExit(proc, 5_000)).resolves.toBeDefined();
+    } catch (error) {
+      throw new Error(
+        [
+          error instanceof Error ? error.message : String(error),
+          getLogs(stdout(), stderr()),
+        ].join("\n\n"),
+      );
+    } finally {
+      killProcessGroup(proc);
+    }
   });
 
   test("routes", async () => {

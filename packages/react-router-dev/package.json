@@ -40,6 +40,10 @@
     "./package.json": "./package.json"
   },
   "imports": {
+    "#development-condition-enabled": {
+      "development": "./development-condition-enabled/true.mjs",
+      "default": "./development-condition-enabled/false.mjs"
+    },
     "#module-sync-enabled": {
       "module-sync": "./module-sync-enabled/true.mjs",
       "default": "./module-sync-enabled/false.cjs"
@@ -70,6 +74,7 @@
         "../../pnpm-workspace.yaml",
         "cli/**",
         "config/**",
+        "development-condition-enabled/**",
         "module-sync-enabled/**",
         "typegen/**",
         "vite/**",
@@ -165,6 +170,7 @@
   },
   "files": [
     "dist/",
+    "development-condition-enabled/",
     "module-sync-enabled/",
     "bin.cjs",
     "rsc-types.d.ts",
