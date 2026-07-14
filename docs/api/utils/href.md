@@ -24,11 +24,21 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hr
 
 Returns a resolved URL path for the specified route.
 
-```tsx
-const h = href("/:lang?/about", { lang: "en" });
-// -> "/en/about"
+Param values are percent-encoded for use in a path segment: characters that
+would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
+are escaped, while characters that RFC 3986 allows literally in a path
+segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
+encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
+delimiters and must be escaped. Splat (`*`) values are encoded per segment,
+preserving `/` separators.
 
-<Link to={href("/products/:id", { id: "abc123" })} />;
+See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
+
+```tsx
+const h = href("/:lang?/about", { lang: "en" })
+// -> `/en/about`
+
+<Link to={href("/products/:id", { id: "abc123" })} />
 ```
 
 ## Signature
@@ -44,13 +54,13 @@ function href<Path extends keyof Args>(
 
 ### path
 
-The route path to resolve.
+The route path to resolve
 
 ### args
 
-The route parameters required by the path.
+The route params to use when resolving the path
 
 ## Returns
 
-The resolved URL path with route parameters interpolated.
+The resolved URL path
 
