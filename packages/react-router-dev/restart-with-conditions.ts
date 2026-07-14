@@ -8,7 +8,7 @@ import process from "node:process";
 export function restartWithMergedOptions(nodeOptions: string): void {
   if (process.env.REACT_ROUTER_DEV_RESTARTED === "true") {
     throw new Error(
-      "restartWithMergedOptions() was called, but the process has already been restarted. This is likely a bug in @react-router/dev."
+      "restartWithMergedOptions() was called, but the process has already been restarted. This is likely a bug in @react-router/dev.",
     );
   }
   const mergedOptions = [process.env.NODE_OPTIONS, nodeOptions]
