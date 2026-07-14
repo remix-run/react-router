@@ -1511,15 +1511,14 @@ const PATH_PARAM_OVERESCAPED: Record<string, string> = {
  *
  * Escapes characters that would break the path (`/ ? # %`, whitespace,
  * non-ASCII, …) while leaving characters that RFC 3986 permits literally in a
- * path segment (see {@link PATH_PARAM_OVERESCAPED}) untouched. Escaping those
- * would needlessly rewrite URLs — e.g. a semver build param `1.0.0+1` would
- * become `1.0.0%2B1` even though browsers display and match the `+` literally
- * in `location.pathname`.
+ * path segment untouched. Escaping those would needlessly rewrite URLs — e.g.
+ *  a semver build param `1.0.0+1` would become `1.0.0%2B1` even though browsers
+ * display and match the `+` literally in `location.pathname`.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3))
  *
  * @param value The param value to encode.
  * @returns The encoded value, safe for use as a single path segment.
- *
- * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
  */
 export function encodePathParam(value: string): string {
   return encodeURIComponent(value).replace(
@@ -1534,11 +1533,12 @@ export function encodePathParam(value: string): string {
  * Param values are percent-encoded for use in a path segment: characters that
  * would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
  * are escaped, while characters that RFC 3986 allows literally in a path
- * segment (`$ & + , ; = : @` — see
- * [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3))
- * are kept as-is. Note this differs from query-string encoding
- * (`encodeURIComponent`/`URLSearchParams`), where those characters are
- * delimiters and must be escaped.
+ * segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
+ * encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
+ * delimiters and must be escaped. Splat (`*`) values are encoded per segment,
+ * preserving `/` separators.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
  *
  * @example
  * import { generatePath } from "react-router";
