@@ -115,6 +115,28 @@ describe("injectRSCPayload", () => {
     );
   });
 
+  it("adds an escaped nonce to every RSC payload script", async () => {
+    let html = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode("<html><body>hi</body></html>"));
+        controller.close();
+      },
+    });
+
+    let result = await readStream(
+      html.pipeThrough(
+        injectRSCPayload(
+          createRSCStream({ chunks: ["first", "second"] }).stream,
+          { nonce: 'test"&<>' },
+        ),
+      ),
+    );
+
+    expect(result).toBe(
+      '<html><body>hi<script nonce="test&quot;&amp;&lt;&gt;">(self.__FLIGHT_DATA||=[]).push("first")</script><script nonce="test&quot;&amp;&lt;&gt;">(self.__FLIGHT_DATA||=[]).push("second")</script></body></html>',
+    );
+  });
+
   it("does not crash when the readable side is cancelled while a flush is pending", async () => {
     let rsc = createRSCStream({ keepOpen: true });
     let transform = injectRSCPayload(rsc.stream);
@@ -169,6 +191,67 @@ describe("injectRSCPayload", () => {
 });
 
 describe("routeRSCServerRequest", () => {
+  it("passes a nonce to the HTML renderer and RSC payload scripts", async () => {
+    let renderNonce: string | undefined;
+    let response = await routeRSCServerRequest({
+      request: new Request("https://remix.run/"),
+      serverResponse: new Response(createRSCStream().stream),
+      nonce: "test-nonce",
+      createFromReadableStream: async (body) => {
+        await readStream(body);
+        return { type: "render" } as never;
+      },
+      async renderHTML(getPayload, options) {
+        await getPayload();
+        renderNonce = options.nonce;
+        return new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(encoder.encode("<html><body>hi</body></html>"));
+            controller.close();
+          },
+        });
+      },
+    });
+
+    expect(renderNonce).toBe("test-nonce");
+    await expect(readStream(response.body!)).resolves.toContain(
+      '<script nonce="test-nonce">(self.__FLIGHT_DATA||=[]).push(',
+    );
+  });
+
+  it("passes the nonce through an HTML render retry", async () => {
+    let renderNonces: Array<string | undefined> = [];
+    let response = await routeRSCServerRequest({
+      request: new Request("https://remix.run/"),
+      serverResponse: new Response(createRSCStream().stream),
+      nonce: "test-nonce",
+      createFromReadableStream: async (body) => {
+        await readStream(body);
+        return { type: "render" } as never;
+      },
+      async renderHTML(getPayload, options) {
+        renderNonces.push(options.nonce);
+        if (renderNonces.length === 1) {
+          throw new Error("render failed");
+        }
+        await getPayload();
+        return new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(
+              encoder.encode("<html><body>retry</body></html>"),
+            );
+            controller.close();
+          },
+        });
+      },
+    });
+
+    expect(renderNonces).toEqual(["test-nonce", "test-nonce"]);
+    await expect(readStream(response.body!)).resolves.toContain(
+      '<script nonce="test-nonce">(self.__FLIGHT_DATA||=[]).push(',
+    );
+  });
+
   it("does not crash when an RSC Framework document response is cancelled while payload injection has a pending flush", async () => {
     let htmlPulled = createDeferred();
     let htmlCancelled = createDeferred<unknown>();
