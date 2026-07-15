@@ -96,7 +96,7 @@
     "@babel/preset-typescript": "^7.29.7",
     "@babel/traverse": "^7.29.7",
     "@babel/types": "^7.29.7",
-    "@react-router/node": "workspace:*",
+    "@react-router/node": "remix-run/react-router#preview/pr-15320&path:packages/react-router-node",
     "@remix-run/node-fetch-server": "^0.13.3",
     "babel-dead-code-elimination": "^1.0.12",
     "chokidar": "^5.0.0",
