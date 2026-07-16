@@ -45,12 +45,17 @@ routeRSCServerRequest({
   request,
   serverResponse,
   createFromReadableStream,
-  async renderHTML(getPayload) {
+  nonce,
+  async renderHTML(getPayload, options) {
     const payload = getPayload();
 
     return await renderHTMLToReadableStream(
-      <RSCStaticRouter getPayload={getPayload} />,
+      <RSCStaticRouter
+        getPayload={getPayload}
+        nonce={options.nonce}
+      />,
       {
+        ...options,
         bootstrapScriptContent,
         formState: await payload.formState,
       }
@@ -62,7 +67,7 @@ routeRSCServerRequest({
 ## Signature
 
 ```tsx
-function RSCStaticRouter({ getPayload }: RSCStaticRouterProps)
+function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps)
 ```
 
 ## Props
@@ -71,4 +76,10 @@ function RSCStaticRouter({ getPayload }: RSCStaticRouterProps)
 
 A function that starts decoding of the [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html). Usually passed
 through from [`unstable_routeRSCServerRequest`](../rsc/routeRSCServerRequest)'s `renderHTML`.
+
+### nonce
+
+An optional [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+used as the default for nonce-aware components such as `<Links>` and
+`<ScrollRestoration>`.
 
