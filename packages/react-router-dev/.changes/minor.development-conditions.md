@@ -1,2 +1,1 @@
-- Restart `react-router dev` with `--conditions=development` when not enabled
--
+Restart `react-router dev` with `--conditions=development` when not already configured
