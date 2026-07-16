@@ -453,6 +453,19 @@ function createRouterFromPayload({
 
 const renderedRoutesContext = createContext<RSCRouteManifest[]>();
 
+type DataRouteObjectWithManifestInfo = DataRouteObject & {
+  children?: DataRouteObjectWithManifestInfo[];
+  hasLoader: boolean;
+  hasClientLoader: boolean;
+  hasComponent: boolean;
+  hasAction: boolean;
+  hasClientAction: boolean;
+};
+
+type RSCDataRouteMatch = DataRouteMatch & {
+  route: DataRouteObjectWithManifestInfo;
+};
+
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
@@ -460,17 +473,6 @@ export function getRSCSingleFetchDataStrategy(
   fetchImplementation: (request: Request) => Promise<Response>,
   clientVersion?: string,
 ): DataStrategyFunction {
-  // TODO: Clean this up with a shared type
-  type RSCDataRouteMatch = DataRouteMatch & {
-    route: DataRouteObject & {
-      hasLoader: boolean;
-      hasClientLoader: boolean;
-      hasComponent: boolean;
-      hasAction: boolean;
-      hasClientAction: boolean;
-    };
-  };
-
   // create map
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -479,9 +481,6 @@ export function getRSCSingleFetchDataStrategy(
       return {
         hasLoader: M.route.hasLoader,
         hasClientLoader: M.route.hasClientLoader,
-        hasComponent: M.route.hasComponent,
-        hasAction: M.route.hasAction,
-        hasClientAction: M.route.hasClientAction,
       };
     },
     // pass map into fetchAndDecode so it can add payloads
@@ -497,7 +496,7 @@ export function getRSCSingleFetchDataStrategy(
     // `serverLoader` or not, otherwise we'll have nothing to render.
     (match) => {
       let M = match as RSCDataRouteMatch;
-      return M.route.hasComponent && !M.route.element;
+      return !M.route.hasComponent || M.route.element != null;
     },
   );
   return async (args) =>
@@ -892,14 +891,6 @@ export function RSCHydratedRouter({
   );
 }
 
-type DataRouteObjectWithManifestInfo = DataRouteObject & {
-  children?: DataRouteObjectWithManifestInfo[];
-  hasLoader: boolean;
-  hasClientLoader: boolean;
-  hasAction: boolean;
-  hasClientAction: boolean;
-};
-
 function createRouteFromServerManifest(
   match: RSCRouteManifest,
   payload?: RSCRenderPayload,
@@ -982,6 +973,7 @@ function createRouteFromServerManifest(
     // have a `loader` we may need to get the `element` implementation
     hasLoader: true,
     hasClientLoader: match.clientLoader != null,
+    hasComponent: match.hasComponent,
     hasAction: match.hasAction,
     hasClientAction: match.clientAction != null,
   };

@@ -486,6 +486,11 @@ implementations.forEach((implementation) => {
                       lazy: () => import("./routes/client-route-component-props/home"),
                     },
                     {
+                      id: "client-loader-revalidation",
+                      path: "client-loader-revalidation",
+                      lazy: () => import("./routes/client-loader-revalidation/home"),
+                    },
+                    {
                       id: "client-error-boundary-props-client-loader",
                       path: "client-error-boundary-props-client-loader",
                       lazy: () => import("./routes/client-error-boundary-props-client-loader/home"),
@@ -586,6 +591,17 @@ implementations.forEach((implementation) => {
 
               export default function RootRoute() {
                 return <Outlet />;
+              }
+
+              export { shouldRevalidate } from "./root.client";
+            `,
+            "src/routes/root.client.tsx": js`
+              "use client";
+
+              export function shouldRevalidate({ currentUrl, defaultShouldRevalidate }) {
+                return currentUrl.pathname === "/client-loader-revalidation"
+                  ? false
+                  : defaultShouldRevalidate;
               }
             `,
 
@@ -1208,6 +1224,36 @@ implementations.forEach((implementation) => {
                         Submit Action
                       </button>
                     </Form>
+                  </div>
+                );
+              }
+            `,
+
+            "src/routes/client-loader-revalidation/home.tsx": js`
+              export { default, clientLoader } from "./home.client";
+            `,
+            "src/routes/client-loader-revalidation/home.client.tsx": js`
+              "use client";
+
+              import { useRevalidator } from "react-router";
+
+              let count = 0;
+
+              export async function clientLoader() {
+                return { count: ++count };
+              }
+
+              export default function HomeRoute({ loaderData }) {
+                const revalidator = useRevalidator();
+                return (
+                  <div>
+                    <p data-client-loader-count>{loaderData.count}</p>
+                    <button
+                      data-revalidate
+                      onClick={() => revalidator.revalidate()}
+                    >
+                      Revalidate
+                    </button>
                   </div>
                 );
               }
@@ -2326,6 +2372,32 @@ implementations.forEach((implementation) => {
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
+        });
+
+        test("Allows client loaders to opt out of server revalidation once their component is rendered", async ({
+          page,
+        }) => {
+          await page.goto(
+            `http://localhost:${port}/client-loader-revalidation`,
+          );
+          await expect(page.locator("[data-client-loader-count]")).toHaveText(
+            "1",
+          );
+
+          const rscRequests: string[] = [];
+          page.on("request", (request) => {
+            const url = new URL(request.url());
+            if (url.pathname.endsWith(".rsc")) {
+              rscRequests.push(url.href);
+            }
+          });
+
+          await page.click("[data-revalidate]");
+          await expect(page.locator("[data-client-loader-count]")).toHaveText(
+            "2",
+          );
+
+          expect(rscRequests).toEqual([]);
         });
 
         test("Passes props to client ErrorBoundary when error is thrown in client loader", async ({
