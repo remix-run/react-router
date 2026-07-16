@@ -241,6 +241,64 @@ export function getManifestPath(
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
 
+export async function handleClientVersionMismatch(
+  needsReload: boolean,
+  version: string,
+  errorReloadPath: string | null,
+): Promise<boolean> {
+  if (!needsReload) {
+    // Reset loop-detection on a successful response
+    try {
+      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+    } catch {
+      // Session storage unavailable
+    }
+    return false;
+  }
+
+  if (!errorReloadPath) {
+    // No-op during eager route discovery so we will trigger a hard reload
+    // of the destination during the next navigation instead of reloading
+    // while the user is sitting on the current page. Slightly more
+    // disruptive on fetcher calls because we reload the current page, but
+    // it's better than the `React.useContext` error that occurs without
+    // this detection.
+    console.warn(
+      "Detected a manifest version mismatch during eager route discovery. " +
+        "The next navigation/fetch to an undiscovered route will result in " +
+        "a new document navigation to sync up with the latest manifest.",
+    );
+    return true;
+  }
+
+  try {
+    // This will hard reload the destination path on navigations, or the
+    // current path on fetcher calls
+    if (sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) === version) {
+      // We've already tried fixing for this version, don't try again to
+      // avoid loops - just let this navigation/fetch 404
+      console.error(
+        "Unable to discover routes due to manifest version mismatch.",
+      );
+      return true;
+    }
+
+    sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, version);
+  } catch {
+    // Session storage unavailable
+  }
+
+  window.location.href = errorReloadPath;
+  console.warn("Detected manifest version mismatch, reloading...");
+
+  // Stall here and let the browser reload and avoid triggering a flash of
+  // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
+  await new Promise(() => {
+    // check out of this hook cause the DJs never gonna re[s]olve this
+  });
+  return true;
+}
+
 export async function fetchAndApplyManifestPatches(
   paths: string[],
   errorReloadPath: string | null,
@@ -282,63 +340,18 @@ export async function fetchAndApplyManifestPatches(
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);
-    } else if (
-      res.status === 204 &&
-      res.headers.has("X-Remix-Reload-Document")
+    }
+
+    if (
+      await handleClientVersionMismatch(
+        res.status === 204 && res.headers.has("X-Remix-Reload-Document"),
+        manifest.version,
+        errorReloadPath,
+      )
     ) {
-      if (!errorReloadPath) {
-        // No-op during eager route discovery so we will trigger a hard reload
-        // of the destination during the next navigation instead of reloading
-        // while the user is sitting on the current page.  Slightly more
-        // disruptive on fetcher calls because we reload the current page, but
-        // it's better than the `React.useContext` error that occurs without
-        // this detection.
-        console.warn(
-          "Detected a manifest version mismatch during eager route discovery. " +
-            "The next navigation/fetch to an undiscovered route will result in " +
-            "a new document navigation to sync up with the latest manifest.",
-        );
-        return;
-      }
-
-      try {
-        // This will hard reload the destination path on navigations, or the
-        // current path on fetcher calls
-        if (
-          sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
-          manifest.version
-        ) {
-          // We've already tried fixing for this version, don' try again to
-          // avoid loops - just let this navigation/fetch 404
-          console.error(
-            "Unable to discover routes due to manifest version mismatch.",
-          );
-          return;
-        }
-
-        sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
-      } catch {
-        // Session storage unavailable
-      }
-
-      window.location.href = errorReloadPath;
-      console.warn("Detected manifest version mismatch, reloading...");
-
-      // Stall here and let the browser reload and avoid triggering a flash of
-      // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
-      await new Promise(() => {
-        // check out of this hook cause the DJs never gonna re[s]olve this
-      });
-    } else if (res.status >= 400) {
-      throw new Error(await res.text());
+      return;
     }
 
-    // Reset loop-detection on a successful response
-    try {
-      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
-    } catch {
-      // Session storage unavailable
-    }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
     if (signal?.aborted) return;
