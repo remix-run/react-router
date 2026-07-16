@@ -1,4 +1,5 @@
 import type * as Vite from "vite";
+import { createHash } from "node:crypto";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
 import colors from "picocolors";
@@ -172,8 +173,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.buildEnd) errors.push("buildEnd");
             if (userConfig.presets?.length) errors.push("presets");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.subResourceIntegrity)
-              errors.push("subResourceIntegrity");
             if (errors.length) {
               return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
             }
@@ -523,6 +522,45 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         }
       : null,
 
+    (() => {
+      let sri: Record<string, string> | undefined;
+
+      return {
+        name: "react-router/rsc/subresource-integrity",
+        sharedDuringBuild: true,
+        resolveId(id) {
+          if (id === virtual.subResourceIntegrity.id) {
+            return virtual.subResourceIntegrity.resolvedId;
+          }
+        },
+        load(id) {
+          if (id === virtual.subResourceIntegrity.resolvedId) {
+            return `export default ${JSON.stringify(sri)};`;
+          }
+        },
+        writeBundle(_options, bundle) {
+          if (
+            this.environment.name !== "client" ||
+            !config.subResourceIntegrity
+          ) {
+            return;
+          }
+
+          sri = {};
+          for (let output of Object.values(bundle)) {
+            if (!output.fileName.endsWith(".js")) {
+              continue;
+            }
+
+            let contents =
+              output.type === "chunk" ? output.code : output.source;
+            let hash = createHash("sha384").update(contents).digest("base64");
+            sri[`${resolvedViteConfig.base}${output.fileName}`] =
+              `sha384-${hash}`;
+          }
+        },
+      } satisfies Vite.Plugin;
+    })(),
     {
       name: "react-router/rsc/virtual-route-config",
       resolveId(id) {
@@ -838,6 +876,7 @@ export default assetsManifest.clientVersion;
 
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
+  subResourceIntegrity: create("unstable_rsc/subresource-integrity"),
   routeDiscovery: create("unstable_rsc/route-discovery"),
   clientVersion: create("unstable_rsc/client-version"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),

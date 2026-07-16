@@ -15,6 +15,11 @@ declare module "virtual:react-router/unstable_rsc/ssr" {
   export default ssr;
 }
 
+declare module "virtual:react-router/unstable_rsc/subresource-integrity" {
+  const subResourceIntegrity: Record<string, string> | undefined;
+  export default subResourceIntegrity;
+}
+
 declare module "virtual:react-router/unstable_rsc/react-router-serve-config" {
   const unstable_reactRouterServeConfig: {
     publicPath: string;

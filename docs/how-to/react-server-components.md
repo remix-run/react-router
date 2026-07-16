@@ -385,7 +385,6 @@ The following options from `react-router.config.ts` are not currently supported 
 - `presets`
 - `serverBundles`
 - `splitRouteModules`
-- `subResourceIntegrity`
 
 ## RSC Data Mode
 
