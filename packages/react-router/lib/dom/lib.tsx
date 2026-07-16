@@ -2205,7 +2205,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * for this navigation. To apply specific styles during the transition, see
  * {@link useViewTransitionState}. Defaults to `false`.
  * @param options.defaultShouldRevalidate Specify the default revalidation
- * behavior for the navigation. Defaults to `true`.
+ * behavior for the navigation. When not specified, loaders revalidate
+ * according to the router's standard revalidation behavior.
  * @param options.mask Masked location to display in the browser instead
  * of the router location. Defaults to `undefined`.
  * @param options.useTransitions Wraps the navigation in
