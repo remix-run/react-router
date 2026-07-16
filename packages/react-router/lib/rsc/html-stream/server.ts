@@ -3,7 +3,10 @@
 const encoder = new TextEncoder();
 const trailer = "</body></html>";
 
-export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
+export function injectRSCPayload(
+  rscStream: ReadableStream<Uint8Array>,
+  { nonce }: { nonce?: string } = {},
+) {
   let decoder = new TextDecoder();
   let resolveFlightDataPromise: (value: void) => void;
   let flightDataPromise = new Promise(
@@ -52,7 +55,7 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
         if (!startedRSC) {
           startedRSC = true;
           rscReader = rscStream.getReader();
-          writeRSCStream(rscReader, controller, () => cancelled)
+          writeRSCStream(rscReader, controller, () => cancelled, nonce)
             .catch((err) => controller.error(err))
             .then(resolveFlightDataPromise);
         }
@@ -88,6 +91,7 @@ async function writeRSCStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   controller: TransformStreamDefaultController<Uint8Array>,
   isCancelled: () => boolean,
+  nonce: string | undefined,
 ) {
   let decoder = new TextDecoder("utf-8", { fatal: true });
   try {
@@ -103,6 +107,7 @@ async function writeRSCStream(
         writeChunk(
           JSON.stringify(decoder.decode(chunk, { stream: true })),
           controller,
+          nonce,
         );
       } catch (
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -112,6 +117,7 @@ async function writeRSCStream(
         writeChunk(
           `Uint8Array.from(atob(${base64}), m => m.codePointAt(0))`,
           controller,
+          nonce,
         );
       }
     }
@@ -121,21 +127,31 @@ async function writeRSCStream(
 
   let remaining = decoder.decode();
   if (remaining.length && !isCancelled()) {
-    writeChunk(JSON.stringify(remaining), controller);
+    writeChunk(JSON.stringify(remaining), controller, nonce);
   }
 }
 
 function writeChunk(
   chunk: string,
   controller: TransformStreamDefaultController<Uint8Array>,
+  nonce: string | undefined,
 ) {
+  let nonceAttr = nonce == null ? "" : ` nonce="${escapeAttribute(nonce)}"`;
   controller.enqueue(
     encoder.encode(
-      `<script>${escapeScript(
+      `<script${nonceAttr}>${escapeScript(
         `(self.__FLIGHT_DATA||=[]).push(${chunk})`,
       )}</script>`,
     ),
   );
+}
+
+function escapeAttribute(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 // Escape closing script tags and HTML comments in JS content.

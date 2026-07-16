@@ -254,7 +254,6 @@ export type RSCRenderPayload = {
   // matching on upward navigations.  Only needed on the initial document request,
   // for SPA navigations the manifest call will handle these patches.
   patches?: Promise<RSCRouteManifest[]>;
-  nonce?: string;
   formState?: ReactFormState;
 };
 
