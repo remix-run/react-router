@@ -32,6 +32,7 @@
 import * as fs from "node:fs";
 import * as util from "node:util";
 
+import { parseAllChangeFiles } from "./changes/changes.ts";
 import {
   addPrLabels,
   closePr,
@@ -95,6 +96,15 @@ pnpm run changes:add
 
 > Not every PR needs a change file — you can skip this step if the change is internal-only
 > (tests, tooling, docs)`;
+
+const CHANGE_FILE_INVALID_COMMENT = `${CHANGE_FILE_MARKER}
+### ❌ Invalid Change Files
+
+One or more change files are invalid. Run the following command locally for details:
+
+\`\`\`sh
+pnpm changes:validate
+\`\`\``;
 
 const CLOSE_FEATURE_PR_COMMENT = `\
 To align with our new [Open Governance](https://remix.run/blog/rr-governance) model, we are now asking that all new features go through the [Proposal/RFC process](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process) and that we don't open PRs until a proposal has been accepted and advanced to Stage 1.
@@ -274,6 +284,22 @@ async function changeFileCheck(ctx: CheckContext): Promise<CheckResult> {
   let body = CHANGE_FILE_MISSING_COMMENT;
 
   if (summaries.length > 0) {
+    let { valid } = parseAllChangeFiles();
+    if (!valid) {
+      console.log("changeFileCheck: invalid change files found");
+      return {
+        actions: [
+          {
+            type: "upsert-sticky-comment",
+            marker: CHANGE_FILE_MARKER,
+            body: CHANGE_FILE_INVALID_COMMENT,
+          },
+        ],
+        failureMessage:
+          "Change file validation failed - please run `pnpm changes:validate` locally for details",
+      };
+    }
+
     body = [
       CHANGE_FILE_FOUND_COMMENT,
       "| Type | Change |",
