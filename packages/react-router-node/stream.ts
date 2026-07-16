@@ -37,7 +37,7 @@ export async function writeReadableStreamToWritable(
     } catch {
       // Ignore cancellation errors so we preserve the original write failure.
     }
-    writable.destroy(error as Error);
+    destroyWritable(writable, error as Error);
     throw error;
   } finally {
     writableError.cleanup();
@@ -53,6 +53,18 @@ interface WritableErrorMonitor {
   cleanup(): void;
   race<T>(promise: Promise<T>): Promise<T>;
   throwIfClosed(): void;
+}
+
+function destroyWritable(writable: Writable, error: Error) {
+  if (writable.destroyed) {
+    return;
+  }
+
+  // The write promise carries this error to the caller. Also consume the
+  // asynchronous error event from destroy so it cannot crash the process
+  // after the writable error monitor has been cleaned up.
+  writable.once("error", () => {});
+  writable.destroy(error);
 }
 
 function monitorWritableError(writable: Writable): WritableErrorMonitor {
@@ -166,7 +178,7 @@ export async function writeAsyncIterableToWritable(
         // Ignore return errors so we preserve the original write failure.
       }
     }
-    writable.destroy(error);
+    destroyWritable(writable, error);
     throw error;
   } finally {
     writableError.cleanup();
