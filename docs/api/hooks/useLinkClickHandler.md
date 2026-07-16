@@ -89,7 +89,8 @@ Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/Vie
 
 ### options.defaultShouldRevalidate
 
-Specify the default revalidation behavior for the navigation. Defaults to `true`.
+Specify the default revalidation behavior for the navigation. When not specified, loaders revalidate
+according to the router's standard revalidation behavior.
 
 ### options.mask
 
