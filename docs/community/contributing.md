@@ -16,8 +16,7 @@ Before going any further, please read the Open Governance [blog post](https://re
 
 Before you can contribute to the codebase, you will need to fork the repo. This will look a bit different depending on what type of contribution you are making:
 
-- All new features, bug-fixes, or **anything that touches `react-router` code** should be branched off of and merged into the `dev` branch
-- Changes that only touch documentation can be branched off of and merged into the `main` branch
+- All new features, bug-fixes, documentation updates, or **anything that touches `react-router` code** should be branched off of and merged into the `main` branch
 
 The following steps will get you set up to contribute changes to this repo:
 
@@ -28,16 +27,13 @@ The following steps will get you set up to contribute changes to this repo:
    # in a terminal, cd to parent directory where you want your clone to be, then
    git clone https://github.com/<your_github_username>/react-router.git
    cd react-router
-
-   # if you are making *any* code changes, make sure to checkout the dev branch
-   git checkout dev
    ```
 
 3. Install dependencies and build. React Router uses [pnpm](https://pnpm.io), so you should too. If you install using `npm`, unnecessary `package-lock.json` files will be generated.
 
 ## Think You Found a Bug?
 
-Please conform to the issue template and provide a **minimal** and **runnable** reproduction. Best is a pull request with a [failing test](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts). Next best is a link to [StackBlitz](https://reactrouter.com/new), CodeSsndbox, or GitHub repository that illustrates the bug.
+Please conform to the issue template and provide a **minimal** and **runnable** reproduction. Best is a pull request with a [failing test](https://github.com/remix-run/react-router/blob/main/integration/bug-report-test.ts). Next best is a link to [StackBlitz](https://reactrouter.com/new), CodeSandbox, or GitHub repository that illustrates the bug.
 
 ## Issue Not Getting Attention?
 
@@ -59,13 +55,30 @@ Examples can be added directly to the `main` branch. Create a branch off of your
 
 Pull requests need only the approval of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.
 
-<docs-warning>When creating the PR in GitHub, make sure that you set the base to the correct branch. If you are submitting a PR that touches any code, this should be the `dev` branch. You set the base in GitHub when authoring the PR with the dropdown below the "Compare changes" heading: <img src="https://raw.githubusercontent.com/remix-run/react-router/main/static/base-branch.png" alt="" width="460" height="350" /></docs-warning>
+<docs-warning>When creating the PR in GitHub, make sure that you set the base to the `main` branch. You set the base in GitHub when authoring the PR with the dropdown below the "Compare changes" heading: <img src="https://raw.githubusercontent.com/remix-run/react-router/main/static/base-branch.png" alt="" width="460" height="350" /></docs-warning>
 
 ### Tests
 
 All commits that fix bugs or add features need one or more tests.
 
 <docs-error>Do not merge code without tests!</docs-error>
+
+### Change Files
+
+In order to facilitate release notes generation, every PR with a user-facing impact should include one or more change files. You can generate these vis `pnpm run changes:add` (requires node 24+).
+
+This tool will generate change files in the relevant `packages/<package>/.changes/` directories. Change files are markdown files with a short description of the change. They should be named using the format `<type>.<short-description>.md` where type is either `patch`, `minor`, `major`, or `unstable`. For example:
+
+```sh
+patch.fix-fetcher-redirects.md
+minor.add-some-new-api.md
+major.require-node-24.md
+unstable.update-unstable-api.md
+```
+
+## Code of Conduct/Contributor License Agreement
+
+All contributors must review the [review the CLA](https://github.com/remix-run/react-router/blob/main/CLA.md) and sign it by [adding their github username to `contributors.yml`](https://github.com/remix-run/react-router/blob/main/contributors.yml).
 
 ### Docs + Examples
 
@@ -105,7 +118,6 @@ This repo maintains separate branches for different purposes. They will look som
 
 ```
 - main   > the most recent release and current docs
-- dev    > code under active development between stable releases
 - v6     > the most recent code for a specific major release
 ```
 

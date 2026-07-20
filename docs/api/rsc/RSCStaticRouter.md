@@ -28,9 +28,9 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_RSCStaticRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.unstable_RSCStaticRouter.html)
 
-Pre-renders an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) to HTML. Usually used in
+Pre-renders an [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html) to HTML. Usually used in
 [`unstable_routeRSCServerRequest`](../rsc/routeRSCServerRequest)'s `renderHTML` callback.
 
 ```tsx
@@ -43,14 +43,19 @@ import {
 
 routeRSCServerRequest({
   request,
-  fetchServer,
+  serverResponse,
   createFromReadableStream,
-  async renderHTML(getPayload) {
+  nonce,
+  async renderHTML(getPayload, options) {
     const payload = getPayload();
 
     return await renderHTMLToReadableStream(
-      <RSCStaticRouter getPayload={getPayload} />,
+      <RSCStaticRouter
+        getPayload={getPayload}
+        nonce={options.nonce}
+      />,
       {
+        ...options,
         bootstrapScriptContent,
         formState: await payload.formState,
       }
@@ -62,13 +67,19 @@ routeRSCServerRequest({
 ## Signature
 
 ```tsx
-function RSCStaticRouter({ getPayload }: RSCStaticRouterProps)
+function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps)
 ```
 
 ## Props
 
 ### getPayload
 
-A function that starts decoding of the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html). Usually passed
+A function that starts decoding of the [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html). Usually passed
 through from [`unstable_routeRSCServerRequest`](../rsc/routeRSCServerRequest)'s `renderHTML`.
+
+### nonce
+
+An optional [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+used as the default for nonce-aware components such as `<Links>` and
+`<ScrollRestoration>`.
 

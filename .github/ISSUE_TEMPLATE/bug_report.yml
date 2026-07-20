@@ -17,7 +17,7 @@ body:
         🏆 The most helpful reproduction is to use our _bug report integration test_ template:
 
         1. [Fork `remix-run/react-router`](https://github.com/remix-run/react-router/fork)
-        2. Open [`integration/bug-report-test.ts`](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts) in your editor
+        2. Open [`integration/bug-report-test.ts`](https://github.com/remix-run/react-router/blob/main/integration/bug-report-test.ts) in your editor
         3. Follow the instructions to create a failing bug report test
         4. Link to your forked branch with the failing test in this issue
 

@@ -20,10 +20,12 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.RouterProvider.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.RouterProvider.html)
 
-Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html). This component should
-typically be at the top of an app's element tree.
+Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html). This component should
+typically be at the top of an app's element tree. The router prop should
+be a single router instance created outside of the React tree. Avoid
+creating new routers during React renders/re-renders.
 
 ```tsx
 import { createBrowserRouter } from "react-router";
@@ -48,7 +50,8 @@ implementation. You _almost always_ want to use the version from
 function RouterProvider({
   router,
   flushSync: reactDomFlushSyncImpl,
-  unstable_onError,
+  onError,
+  useTransitions,
 }: RouterProviderProps): React.ReactElement
 ```
 
@@ -64,11 +67,11 @@ You usually don't have to worry about this:
 - If you are rendering in a non-DOM environment, you can import
   `RouterProvider` from `react-router` and ignore this prop
 
-### unstable_onError
+### onError
 
-An error handler function that will be called for any loader/action/render
-errors that are encountered in your application.  This is useful for
-logging or reporting errors instead of the `ErrorBoundary` because it's not
+An error handler function that will be called for any middleware, loader, action,
+or render errors that are encountered in your application.  This is useful for
+logging or reporting errors instead of in the `ErrorBoundary` because it's not
 subject to re-rendering and will only run one time per error.
 
 The `errorInfo` parameter is passed along from
@@ -76,13 +79,35 @@ The `errorInfo` parameter is passed along from
 and is only present for render errors.
 
 ```tsx
-<RouterProvider unstable_onError=(error, errorInfo) => {
-  console.error(error, errorInfo);
-  reportToErrorService(error, errorInfo);
+<RouterProvider onError={(error, info) => {
+  let { location, params, pattern, errorInfo } = info;
+  console.error(error, location, errorInfo);
+  reportToErrorService(error, location, errorInfo);
 }} />
 ```
 
 ### router
 
-The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) instance to use for navigation and data fetching.
+The [`DataRouter`](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html) instance to use for navigation and data fetching. The
+router prop should be a single router instance created outside of the React
+tree. Avoid creating new routers during React renders/re-renders.
+
+### useTransitions
+
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all state updates are wrapped in
+  `React.startTransition`
+  - This can lead to buggy behaviors if you are wrapping your own
+    navigations/fetchers in `startTransition`.
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and router state changes will be wrapped in
+  `React.startTransition` and also sent through
+  [`useOptimistic`](https://react.dev/reference/react/useOptimistic) to
+  surface mid-navigation router state changes to the UI.
+- When set to `false`, the router will not leverage `React.startTransition` or
+  `React.useOptimistic` on any navigations or state changes.
+
+For more information, please see the [docs](../../explanation/react-transitions).
 

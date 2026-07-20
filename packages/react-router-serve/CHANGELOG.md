@@ -1,5 +1,192 @@
 # `@react-router/serve`
 
+## v8.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.2.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.2.0)
+  - [`@react-router/express@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.2.0)
+  - [`@react-router/node@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.2.0)
+
+## v8.1.0
+
+### Patch Changes
+
+- Use Node's built-in networking APIs to find an available port and remove the `get-port` dependency ([#15239](https://github.com/remix-run/react-router/pull/15239))
+- Updated dependencies:
+  - [`react-router@8.1.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.1.0)
+  - [`@react-router/express@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.1.0)
+  - [`@react-router/node@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.1.0)
+
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+  - [`@react-router/express@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.0.1)
+  - [`@react-router/node@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Switch from `@mjackson/node-fetch-server` to `@remix-run/node-fetch-server` now that we can directly use ESM-only packages ([#14930](https://github.com/remix-run/react-router/pull/14930))
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+
+### Minor Changes
+
+- Bump `express` from `4.21.2` to `5.2.1`
+
+### Patch Changes
+
+- Bump dependencies ([#15091](https://github.com/remix-run/react-router/pull/15091))
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+  - Bumped `get-port` from `5.1.1` to `7.2.0`
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+  - [`@react-router/express@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.0.0)
+  - [`@react-router/node@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+  - [`@react-router/express@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.18.0)
+  - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
+
+## v7.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+  - [`@react-router/express@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.17.0)
+  - [`@react-router/node@7.17.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.17.0)
+
+## v7.16.0
+
+### Patch Changes
+
+- Normalize `assetsBuildDirectory` path separators in `react-router-serve` so Windows-built server artifacts can serve `/assets/*` correctly when run on Linux. ([#14982](https://github.com/remix-run/react-router/pull/14982))
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+  - [`@react-router/express@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.16.0)
+  - [`@react-router/node@7.16.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.16.0)
+
+## v7.15.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.1)
+  - [`@react-router/express@7.15.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.15.1)
+  - [`@react-router/node@7.15.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.1)
+
+## v7.15.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.0)
+  - [`@react-router/express@7.15.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.15.0)
+  - [`@react-router/node@7.15.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.15.0)
+
+## v7.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.2`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.2)
+  - [`@react-router/express@7.14.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.14.2)
+  - [`@react-router/node@7.14.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.14.2)
+
+## v7.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+  - [`@react-router/express@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.14.1)
+  - [`@react-router/node@7.14.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.14.1)
+
+## 7.14.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+  - `@react-router/node@7.14.0`
+  - `@react-router/express@7.14.0`
+
+## 7.13.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.2`
+  - `@react-router/node@7.13.2`
+  - `@react-router/express@7.13.2`
+
+## 7.13.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.1`
+  - `@react-router/node@7.13.1`
+  - `@react-router/express@7.13.1`
+
+## 7.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.0`
+  - `@react-router/node@7.13.0`
+  - `@react-router/express@7.13.0`
+
+## 7.12.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.12.0`
+  - `@react-router/node@7.12.0`
+  - `@react-router/express@7.12.0`
+
+## 7.11.0
+
+### Patch Changes
+
+- support custom entrypoints for RSC framework mode ([#14643](https://github.com/remix-run/react-router/pull/14643))
+- Update `compression` and `morgan` dependencies to address `on-headers` CVE: [GHSA-76c9-3jph-rj3q](https://github.com/advisories/GHSA-76c9-3jph-rj3q) ([#14652](https://github.com/remix-run/react-router/pull/14652))
+- Updated dependencies:
+  - `react-router@7.11.0`
+  - `@react-router/node@7.11.0`
+  - `@react-router/express@7.11.0`
+
+## 7.10.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.1`
+  - `@react-router/node@7.10.1`
+  - `@react-router/express@7.10.1`
+
+## 7.10.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+  - `@react-router/node@7.10.0`
+  - `@react-router/express@7.10.0`
+
 ## 7.9.6
 
 ### Patch Changes

@@ -497,6 +497,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
+    await page.waitForSelector("#submit-and-close");
 
     // Works as expected before the fetcher is loaded
 
@@ -509,6 +510,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
 
     // re-mount the fetcher form
     await app.clickElement("#open");
+    await page.waitForSelector("#submit-and-close");
     // submit the fetcher form
     await app.clickElement("#submit-fetcher");
     // submit the main form and unmount the fetcher form

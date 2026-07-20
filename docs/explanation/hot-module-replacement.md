@@ -111,7 +111,7 @@ export default function Component({ loaderData }) {
 
 If you change the key `pet` to `dog`:
 
-```diff
+```tsx diff
  export default function Component() {
 -  const { pet } = useMyCustomHook();
 +  const { dog } = useMyCustomHook();

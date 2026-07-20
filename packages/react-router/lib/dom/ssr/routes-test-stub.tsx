@@ -2,15 +2,13 @@ import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  DataRouteObject,
+  IndexRouteObject,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
-} from "../../router/utils";
-import type {
-  DataRouteObject,
-  IndexRouteObject,
   NonIndexRouteObject,
-} from "../../context";
+} from "../../router/utils";
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
@@ -18,17 +16,12 @@ import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
 } from "../../router/utils";
-import type { MiddlewareEnabled } from "../../types/future";
-import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
   FrameworkContextObject,
 } from "./entry";
 import {
-  type RouteComponentType,
-  type HydrateFallbackType,
-  type ErrorBoundaryType,
   Outlet,
   RouterProvider,
   createMemoryRouter,
@@ -40,9 +33,9 @@ import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
 
 interface StubRouteExtensions {
-  Component?: RouteComponentType;
-  HydrateFallback?: HydrateFallbackType;
-  ErrorBoundary?: ErrorBoundaryType;
+  Component?: React.ComponentType<any>;
+  HydrateFallback?: React.ComponentType<any>;
+  ErrorBoundary?: React.ComponentType<any>;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
@@ -51,7 +44,8 @@ interface StubRouteExtensions {
 }
 
 interface StubIndexRouteObject
-  extends Omit<
+  extends
+    Omit<
       IndexRouteObject,
       | "Component"
       | "HydrateFallback"
@@ -65,7 +59,8 @@ interface StubIndexRouteObject
     StubRouteExtensions {}
 
 interface StubNonIndexRouteObject
-  extends Omit<
+  extends
+    Omit<
       NonIndexRouteObject,
       | "Component"
       | "HydrateFallback"
@@ -114,11 +109,24 @@ export interface RoutesTestStubProps {
 }
 
 /**
+ * Creates a React component that renders the provided routes in a test-friendly
+ * React Router context.
+ *
+ * Use this to unit test components that rely on router context, such as
+ * `loaderData`, `actionData`, and route matches.
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param routes The route objects to render in the test router.
+ * @param _context An optional {@link RouterContextProvider} for supplying
+ * application context values to route middleware, loaders, and actions.
+ * @returns A React component that renders the test router.
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  _context?: AppLoadContext | RouterContextProvider,
+  _context?: RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -126,16 +134,12 @@ export function createRoutesStub(
     hydrationData,
     future,
   }: RoutesTestStubProps) {
-    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let frameworkContextRef = React.useRef<FrameworkContextObject>();
+    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>(null);
+    let frameworkContextRef = React.useRef<FrameworkContextObject>(null);
 
-    if (routerRef.current == null) {
+    if (routerRef.current == null || frameworkContextRef.current == null) {
       frameworkContextRef.current = {
-        future: {
-          unstable_subResourceIntegrity:
-            future?.unstable_subResourceIntegrity === true,
-          v8_middleware: future?.v8_middleware === true,
-        },
+        future: {},
         manifest: {
           routes: {},
           entry: { imports: [], module: "" },
@@ -152,13 +156,9 @@ export function createRoutesStub(
       // the manifest and routeModules during the walk
       let patched = processRoutes(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
-        // types compared to `AgnosticRouteObject`
+        // types compared to `RouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
-        _context !== undefined
-          ? _context
-          : future?.v8_middleware
-            ? new RouterContextProvider()
-            : {},
+        _context ?? new RouterContextProvider(),
         frameworkContextRef.current.manifest,
         frameworkContextRef.current.routeModules,
       );
@@ -179,7 +179,7 @@ export function createRoutesStub(
 
 function processRoutes(
   routes: StubRouteObject[],
-  context: unknown,
+  context: RouterContextProvider,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   parentId?: string,
@@ -214,10 +214,7 @@ function processRoutes(
         ? route.middleware.map(
             (mw) =>
               (...args: Parameters<MiddlewareFunction>) =>
-                mw(
-                  { ...args[0], context: context as RouterContextProvider },
-                  args[1],
-                ),
+                mw({ ...args[0], context }, args[1]),
           )
         : undefined,
       handle: route.handle,

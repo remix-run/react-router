@@ -59,6 +59,13 @@ describe("a browser history", () => {
     expect(unencodedHref).toEqual("/#abc");
   });
 
+  it("uses the configured window when creating URLs", () => {
+    const customWindow = getWindow("/", false, "https://example.com");
+    const customHistory = createBrowserHistory({ window: customWindow });
+
+    expect(customHistory.createURL("/test").origin).toBe("https://example.com");
+  });
+
   describe("listen", () => {
     it("does not immediately call listeners", () => {
       Listen(history);

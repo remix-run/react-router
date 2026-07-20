@@ -912,4 +912,24 @@ describe("flatRoutes", () => {
       );
     });
   });
+
+  describe("generates route manifest entry files relative to the app directory", () => {
+    test("routes directory inside the app directory", () => {
+      let routeFile = path.posix.join(APP_DIR, "routes", "route.tsx");
+      let routeInfo = flatRoutesUniversal(APP_DIR, [routeFile]);
+      let routes = Object.values(routeInfo);
+
+      expect(routes).toHaveLength(1);
+      expect(routes[0].file).toBe("routes/route.tsx");
+    });
+
+    test("routes directory outside the app directory", () => {
+      let routeFile = path.posix.join(APP_DIR, "..", "routes", "route.tsx");
+      let routeInfo = flatRoutesUniversal(APP_DIR, [routeFile]);
+      let routes = Object.values(routeInfo);
+
+      expect(routes).toHaveLength(1);
+      expect(routes[0].file).toBe("../routes/route.tsx");
+    });
+  });
 });

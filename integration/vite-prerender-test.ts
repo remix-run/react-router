@@ -6,12 +6,21 @@ import { test, expect } from "@playwright/test";
 
 import {
   createAppFixture,
-  createFixture,
+  createFixture as _createFixture,
   js,
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
+
+let createFixture = (...args: Parameters<typeof _createFixture>) =>
+  _createFixture(
+    {
+      templateName: args[0].templateName ?? "vite-7-template",
+      ...args[0],
+    },
+    args[1],
+  );
 
 let files = {
   "react-router.config.ts": reactRouterConfig({
@@ -32,7 +41,7 @@ let files = {
     import * as React from "react";
     import { Link, Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
 
-    export function meta({ data }) {
+    export function meta() {
       return [{
         title: "Root Title"
       }];
@@ -83,9 +92,9 @@ let files = {
     import * as React  from "react";
     import { useLoaderData } from "react-router";
 
-    export function meta({ data }) {
+    export function meta({ loaderData }) {
       return [{
-        title: "Index Title: " + data
+        title: "Index Title: " + loaderData
       }];
     }
 
@@ -105,11 +114,11 @@ let files = {
     }
   `,
   "app/routes/about.tsx": js`
-    import { useActionData, useLoaderData } from "react-router";
+    import { useLoaderData } from "react-router";
 
-    export function meta({ data }) {
+    export function meta({ loaderData }) {
       return [{
-        title: "About Title: " + data
+        title: "About Title: " + loaderData
       }];
     }
 
@@ -153,7 +162,7 @@ function listAllFiles(_dir: string) {
   return files.map((f) => f.replace(_dir, "").replace(/^\//, ""));
 }
 
-test.describe("Prerendering", () => {
+test.describe(`Prerendering`, () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
@@ -209,7 +218,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -264,7 +273,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -284,6 +293,51 @@ test.describe("Prerendering", () => {
       expect(html).toMatch("<h1>Root</h1>");
       expect(html).toMatch('<h2 data-route="true">About</h2>');
       expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
+    });
+
+    test("Runs buildEnd after prerendering is complete", async () => {
+      let cwd = await createProject({
+        ...files,
+        "react-router.config.ts": js`
+          import fs from "node:fs";
+          import path from "node:path";
+
+          export default {
+            prerender: ["/about"],
+            async buildEnd({ reactRouterConfig }) {
+              let clientBuildDirectory = path.join(
+                reactRouterConfig.buildDirectory,
+                "client"
+              );
+
+              fs.writeFileSync(
+                "BUILD_END_META.json",
+                JSON.stringify({
+                  htmlExists: fs.existsSync(
+                    path.join(clientBuildDirectory, "about", "index.html")
+                  ),
+                  dataExists: fs.existsSync(
+                    path.join(clientBuildDirectory, "about.data")
+                  ),
+                })
+              );
+            },
+          };
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.stderr.toString()).toBeFalsy();
+      expect(result.status).toBe(0);
+
+      await expect(
+        fs.promises.readFile(path.join(cwd, "BUILD_END_META.json"), "utf8"),
+      ).resolves.toEqual(
+        JSON.stringify({
+          htmlExists: true,
+          dataExists: true,
+        }),
+      );
     });
 
     test("Prerenders a static array of routes with server bundles", async () => {
@@ -318,7 +372,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -374,7 +428,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "a.data",
         "a/index.html",
         "about.data",
@@ -475,7 +529,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -556,7 +610,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -583,14 +637,12 @@ test.describe("Prerendering", () => {
         prerender: true,
         files: {
           ...files,
-          "react-router.config.ts": js`
-            export default {
-              prerender: {
-                paths: ['/', '/about'],
-                unstable_concurrency: 2,
-              },
-            }
-          `,
+          "react-router.config.ts": reactRouterConfig({
+            prerender: {
+              paths: ["/", "/about"],
+              concurrency: 2,
+            },
+          }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -608,7 +660,7 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
-        "_root.data",
+        "_.data",
         "about.data",
         "about/index.html",
         "favicon.ico",
@@ -892,7 +944,7 @@ test.describe("Prerendering", () => {
 
     test("Ignores build-time headers at runtime", async () => {
       fixture = await createFixture({ files });
-      let res = await fixture.requestSingleFetchData("/_root.data", {
+      let res = await fixture.requestSingleFetchData("/_.data", {
         headers: {
           "X-React-Router-Prerender-Data": encodeURI(
             '[{"_1":2},"routes/_index",{"_3":4},"data","Hello World!"]',
@@ -1083,8 +1135,8 @@ test.describe("Prerendering", () => {
 
       let clientDir = path.join(fixture.projectDir, "build", "client");
       expect(listAllFiles(clientDir).sort()).toEqual([
+        "_.data",
         "__spa-fallback.html",
-        "_root.data",
         "favicon.ico",
         "index.html",
       ]);

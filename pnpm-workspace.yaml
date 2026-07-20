@@ -3,3 +3,22 @@ packages:
   - "integration/helpers/*"
   - "packages/*"
   - "playground/*"
+  - "scripts"
+
+allowBuilds:
+  esbuild: false
+  msw: false
+  sharp: false
+  unrs-resolver: false
+  workerd: false
+
+catalog:
+  "@types/react": ^19.2.17
+  "@types/react-dom": ^19.2.3
+  "@vitejs/plugin-rsc": ~0.5.26
+  react: ^19.2.7
+  react-dom: ^19.2.7
+  react-server-dom-webpack: ^19.2.7
+  typescript: ^6.0.3
+  tsdown: ^0.22.0
+  wireit: 0.14.12

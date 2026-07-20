@@ -811,7 +811,6 @@ describe("createMemoryRouter", () => {
     await waitFor(() => screen.getByText("Bar"));
     expect(spy).toHaveBeenCalledWith("Layout", [
       {
-        data: undefined,
         loaderData: undefined,
         handle: undefined,
         id: "0",
@@ -819,7 +818,6 @@ describe("createMemoryRouter", () => {
         pathname: "/",
       },
       {
-        data: "BAR LOADER",
         loaderData: "BAR LOADER",
         handle: {
           key: "value",
@@ -1057,6 +1055,62 @@ describe("createMemoryRouter", () => {
     expect(getHtml(container)).toContain("Home");
     fireEvent.click(screen.getByText("Navigate"));
     await waitFor(() => screen.getByText("Page"));
+
+    expect(sequence).toEqual([
+      "call navigate",
+      "loader start",
+      "loader end",
+      "navigate resolved",
+      "render",
+    ]);
+  });
+
+  it("exposes promise from useNavigate (popstate)", async () => {
+    let sequence: string[] = [];
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          async loader() {
+            sequence.push("loader start");
+            await new Promise((r) => setTimeout(r, 100));
+            sequence.push("loader end");
+            return null;
+          },
+          Component() {
+            sequence.push("render");
+            return <h1>Home</h1>;
+          },
+        },
+        {
+          path: "/page",
+          Component: () => {
+            let navigate = useNavigate();
+            return (
+              <>
+                <h1>Page</h1>
+                <button
+                  onClick={async () => {
+                    sequence.push("call navigate");
+                    await navigate(-1);
+                    sequence.push("navigate resolved");
+                  }}
+                >
+                  Back
+                </button>
+              </>
+            );
+          },
+        },
+      ],
+      { initialEntries: ["/", "/page"] },
+    );
+
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toContain("Page");
+    fireEvent.click(screen.getByText("Back"));
+    await waitFor(() => screen.getByText("Home"));
 
     expect(sequence).toEqual([
       "call navigate",
@@ -2061,7 +2115,6 @@ describe("createMemoryRouter", () => {
       expect(html).toMatch("💿 Hey developer 👋");
     });
 
-    // This test ensures that when manual routes are used, we add hasErrorBoundary
     it("renders navigation errors on leaf elements (when using manual route objects)", async () => {
       let barDefer = createDeferred();
 

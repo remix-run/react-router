@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import type { ServerBuild } from "react-router";
 import { createRequestHandler } from "@react-router/express";
-import { createRequestListener } from "@mjackson/node-fetch-server";
+import { createRequestListener } from "@remix-run/node-fetch-server";
 import compression from "compression";
 import express from "express";
+import type { RequestHandler as ExpressRequestHandler } from "express";
 import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
-import getPort from "get-port";
 
 process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
@@ -33,16 +34,32 @@ sourceMapSupport.install({
 
 run();
 
-type RSCServerBuild = {
-  fetch: (request: Request) => Response;
+type RSCServerBuildModule = {
+  default: {
+    fetch: (request: Request) => Response | Promise<Response>;
+  };
+  unstable_reactRouterServeConfig?: {
+    publicPath: string;
+    assetsBuildDirectory: string;
+  };
+};
+
+type NormalizedBuild = {
+  fetch?: (request: Request) => Response | Promise<Response>;
   publicPath: string;
   assetsBuildDirectory: string;
 };
 
-function isRSCServerBuild(
-  build: ServerBuild | RSCServerBuild,
-): build is RSCServerBuild {
-  return "fetch" in build && typeof build.fetch === "function";
+function isRSCServerBuild(build: unknown): build is RSCServerBuildModule {
+  return Boolean(
+    typeof build === "object" &&
+    build &&
+    "default" in build &&
+    typeof build.default === "object" &&
+    build.default &&
+    "fetch" in build.default &&
+    typeof build.default.fetch === "function",
+  );
 }
 
 function parseNumber(raw?: string) {
@@ -52,8 +69,69 @@ function parseNumber(raw?: string) {
   return maybe;
 }
 
+async function getAvailablePort(
+  preferredPort: number,
+  host?: string,
+): Promise<number> {
+  let preferredAvailablePort = await checkPort(preferredPort, host);
+  let availablePort = preferredAvailablePort ?? (await checkPort(0, host));
+
+  if (availablePort === undefined) {
+    throw new Error("No available port found");
+  }
+
+  return availablePort;
+}
+
+function checkPort(port: number, host?: string): Promise<number | undefined> {
+  return new Promise((resolve, reject) => {
+    let server = net.createServer();
+    let listenOptions = host ? { port, host } : { port };
+
+    server.unref();
+
+    server.once("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE" || error.code === "EACCES") {
+        resolve(undefined);
+      } else {
+        reject(error);
+      }
+    });
+
+    server.listen(listenOptions, () => {
+      let address = server.address();
+      let availablePort =
+        typeof address === "object" && address ? address.port : port;
+
+      server.close((error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(availablePort);
+        }
+      });
+    });
+  });
+}
+
+function getExpressPath(publicPath: string) {
+  // Vite allows `base` to be an absolute URL, but Express route paths must be
+  // pathnames. Strip any origin before mounting static asset middleware.
+  let pathname: string;
+
+  try {
+    pathname = new URL(publicPath).pathname;
+  } catch {
+    pathname = publicPath;
+  }
+
+  return pathname.startsWith("/") ? pathname : `/${pathname}`;
+}
+
 async function run() {
-  let port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
+  let port =
+    parseNumber(process.env.PORT) ??
+    (await getAvailablePort(3000, process.env.HOST));
 
   let buildPathArg = process.argv[2];
 
@@ -66,27 +144,31 @@ async function run() {
   let buildPath = path.resolve(buildPathArg);
 
   let buildModule = await import(url.pathToFileURL(buildPath).href);
-  let build: ServerBuild | RSCServerBuild;
+  let build: NormalizedBuild;
+  let isRSCBuild = false;
 
-  if (buildModule.default && typeof buildModule.default === "function") {
+  if ((isRSCBuild = isRSCServerBuild(buildModule))) {
     const config = {
       publicPath: "/",
-      assetsBuildDirectory: "../client",
+      assetsBuildDirectory: path.join("..", "client"),
       ...(buildModule.unstable_reactRouterServeConfig || {}),
     };
     build = {
-      fetch: buildModule.default,
+      fetch: buildModule.default.fetch,
       publicPath: config.publicPath,
       assetsBuildDirectory: path.resolve(
         path.dirname(buildPath),
         config.assetsBuildDirectory,
       ),
-    } satisfies RSCServerBuild;
+    } satisfies NormalizedBuild;
   } else {
     build = buildModule as ServerBuild;
   }
 
-  let onListen = () => {
+  let onListen = (error: unknown) => {
+    if (error) {
+      throw error;
+    }
     let address =
       process.env.HOST ||
       Object.values(os.networkInterfaces())
@@ -106,30 +188,35 @@ async function run() {
   let app = express();
   app.disable("x-powered-by");
 
-  if (!isRSCServerBuild(build)) {
-    app.use(compression());
+  if (!isRSCBuild) {
+    // `compression` may resolve to Express 4 types from transitive deps while
+    // `react-router-serve` uses Express 5, but the runtime middleware signature
+    // is compatible.
+    app.use(compression() as unknown as ExpressRequestHandler);
   }
 
+  let expressPublicPath = getExpressPath(build.publicPath);
+
   app.use(
-    path.posix.join(build.publicPath, "assets"),
+    path.posix.join(expressPublicPath, "assets"),
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
+  app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
-  if (isRSCServerBuild(build)) {
-    app.all("*", createRequestListener(build.fetch));
+  if (build.fetch) {
+    app.all("/{*splat}", createRequestListener(build.fetch));
   } else {
     app.all(
-      "*",
+      "/{*splat}",
       createRequestHandler({
-        build,
+        build: buildModule,
         mode: process.env.NODE_ENV,
-      }),
+      }) as unknown as ExpressRequestHandler,
     );
   }
 

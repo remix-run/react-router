@@ -10,8 +10,6 @@ export function server() {
 
     const app = express();
 
-    const getLoadContext = () => ({});
-
     if (process.env.NODE_ENV === "production") {
       app.use(
         "/assets",
@@ -20,7 +18,6 @@ export function server() {
       app.use(express.static("build/client", { maxAge: "1h" }));
       app.all("*", createRequestHandler({
         build: await import("./build/index.js"),
-        getLoadContext,
       }));
     } else {
       const viteDevServer = await import("vite").then(
@@ -34,7 +31,6 @@ export function server() {
       app.use(viteDevServer.middlewares);
       app.all("*", createRequestHandler({
         build:() => viteDevServer.ssrLoadModule("virtual:react-router/server-build"),
-        getLoadContext,
       }));
     }
 
@@ -44,7 +40,7 @@ export function server() {
 
 export function rsc() {
   return tsx`
-    import { createRequestListener } from "@mjackson/node-fetch-server";
+    import { createRequestListener } from "@remix-run/node-fetch-server";
     import express from "express";
 
     const port = process.env.PORT ?? 3000
@@ -57,7 +53,7 @@ export function rsc() {
         "/assets",
         express.static("build/client/assets", { immutable: true, maxAge: "1y" })
       );
-      app.all("*", createRequestListener((await import("./build/server/index.js")).default));
+      app.all("*", createRequestListener((await import("./build/server/index.js")).default.fetch));
     } else {
       const viteDevServer = await import("vite").then(
         (vite) => vite.createServer({

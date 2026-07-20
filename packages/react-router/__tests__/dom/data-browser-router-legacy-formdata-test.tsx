@@ -1,5 +1,5 @@
 // Drop support for the submitter parameter, as in a legacy browser. This
-// needs to be done before react-router-dom is required, since it does some
+// needs to be done before DOM code is required, since it does some
 // FormData detection.
 import "./polyfills/drop-FormData-submitter";
 import * as React from "react";

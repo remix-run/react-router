@@ -20,25 +20,25 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useMatch.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.useMatch.html)
 
-Returns a [`PathMatch`](https://api.reactrouter.com/v7/interfaces/react_router.PathMatch.html) object if the given pattern matches the current URL.
+Returns a [`PathMatch`](https://api.reactrouter.com/v8/interfaces/react-router.PathMatch.html) object if the given pattern matches the current URL.
 This is useful for components that need to know "active" state, e.g.
 [`<NavLink>`](../components/NavLink).
 
 ## Signature
 
 ```tsx
-function useMatch<ParamKey extends ParamParseKey<Path>, Path extends string>(
+function useMatch<Path extends string>(
   pattern: PathPattern<Path> | Path,
-): PathMatch<ParamKey> | null
+): PathMatch<ParamParseKey<Path>> | null
 ```
 
 ## Params
 
 ### pattern
 
-The pattern to match against the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html)
+The pattern to match against the current [`Location`](https://api.reactrouter.com/v8/interfaces/react-router.Location.html)
 
 ## Returns
 

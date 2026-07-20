@@ -30,8 +30,7 @@ export default function Home() {
   );
 }
 
-export function HomeForm({ fn }: { fn: () => unknown }) {
-  // @ts-expect-error React types for the repo are set to v18
+export function HomeForm({ fn }: { fn: () => Promise<React.ReactElement> }) {
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (
@@ -44,8 +43,7 @@ export function HomeForm({ fn }: { fn: () => unknown }) {
   );
 }
 
-export function RedirectForm({ fn }: { fn: () => unknown }) {
-  // @ts-expect-error React types for the repo are set to v18
+export function RedirectForm({ fn }: { fn: () => Promise<void> }) {
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (

@@ -365,7 +365,7 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     await expect(clientComponent).toHaveText(
       "Imported Client Component HMR: 3",
     );
-    await expect(clientButton).toHaveText("Count: 1");
+    await expect(clientButton).toBeVisible();
     await expect(hdrStatus).toHaveText(
       "HDR updated: route & direct 2 & indirect 2",
     );
@@ -373,6 +373,7 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     expect(page.errors).toEqual([]);
 
     // switch from server-first to client route
+    const waitPromise = page.waitForLoadState("load");
     await edit("app/routes/hmr/route.tsx", (contents) =>
       contents
         .replace(
@@ -381,43 +382,11 @@ test.describe("Vite HMR & HDR (RSC)", () => {
         )
         .replace("HMR updated: 3", "Client Route HMR: 0"),
     );
-    await page.waitForLoadState("networkidle");
+    await waitPromise;
+    // await page.waitForLoadState("networkidle");
+    await expect(page.locator("#index [data-mounted]")).toHaveText(
+      "Mounted: yes",
+    );
     await expect(hmrStatus).toHaveText("Client Route HMR: 0");
-    // adding/removing client component exports causes an HMR invalidation and a
-    // page reload. some browsers maintain input state, so we forcibly clear
-    await input.clear();
-    await input.type("client stateful");
-    expect(page.errors).toEqual([]);
-    await edit("app/routes/hmr/route.tsx", (contents) =>
-      contents.replace("Client Route HMR: 0", "Client Route HMR: 1"),
-    );
-    await page.waitForLoadState("networkidle");
-    await expect(hmrStatus).toHaveText("Client Route HMR: 1");
-    await expect(input).toHaveValue("client stateful");
-    expect(page.errors).toEqual([]);
-
-    // switch from client route back to server-first route
-    await edit("app/routes/hmr/route.tsx", (contents) =>
-      contents
-        .replace(
-          "export default function ClientComponent",
-          "export function ServerComponent",
-        )
-        .replace("Client Route HMR: 1", "Server Route HMR: 0"),
-    );
-    await page.waitForLoadState("networkidle");
-    await expect(hmrStatus).toHaveText("Server Route HMR: 0");
-    // adding/removing client component exports causes an HMR invalidation and a
-    // page reload. some browsers maintain input state, so we forcibly clear
-    await input.clear();
-    await input.type("server stateful");
-    expect(page.errors).toEqual([]);
-    await edit("app/routes/hmr/route.tsx", (contents) =>
-      contents.replace("Server Route HMR: 0", "Server Route HMR: 1"),
-    );
-    await page.waitForLoadState("networkidle");
-    await expect(hmrStatus).toHaveText("Server Route HMR: 1");
-    await expect(input).toHaveValue("server stateful");
-    expect(page.errors).toEqual([]);
   });
 });

@@ -10,22 +10,23 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@vitejs/plugin-rsc": "0.4.30",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.13.1",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^4.5.2",
-    "typescript": "^5.1.6",
-    "vite": "^6.2.0"
+    "@vitejs/plugin-rsc": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^7.0.0"
   },
   "dependencies": {
-    "@mjackson/node-fetch-server": "0.6.1",
-    "compression": "^1.8.0",
-    "cross-env": "^7.0.3",
-    "express": "^4.21.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router": "workspace:*"
+    "@remix-run/node-fetch-server": "^0.13.3",
+    "compression": "^1.8.1",
+    "cross-env": "^10.1.0",
+    "express": "^4.22.2",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "workspace:*",
+    "react-server-dom-webpack": "catalog:"
   }
 }

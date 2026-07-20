@@ -167,7 +167,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-                "prerendering your `index.html` file.",
+                "prerendering your SPA Fallback HTML file.",
             );
             expect(stderr).toMatch("<h1>Loading...</h1>");
           });
@@ -377,7 +377,7 @@ test.describe("SPA Mode", () => {
                 import * as path from "node:path";
                 import { PassThrough } from "node:stream";
 
-                import type { AppLoadContext, EntryContext } from "react-router";
+                import type { EntryContext, RouterContextProvider } from "react-router";
                 import { createReadableStreamFromReadable } from "@react-router/node";
                 import { ServerRouter } from "react-router";
                 import { renderToPipeableStream } from "react-dom/server";
@@ -387,7 +387,7 @@ test.describe("SPA Mode", () => {
                   responseStatusCode: number,
                   responseHeaders: Headers,
                   remixContext: EntryContext,
-                  loadContext: AppLoadContext
+                  loadContext: RouterContextProvider
                 ) {
                   return handleBotRequest(
                     request,
@@ -638,7 +638,9 @@ test.describe("SPA Mode", () => {
                         <Links />
                       </head>
                       <body>
-                        {children}
+                        <div data-layout>
+                          {children}
+                        </div>
                         <ScrollRestoration />
                         <Scripts />
                       </body>
@@ -666,7 +668,7 @@ test.describe("SPA Mode", () => {
           expect(html.match(/<html/g)?.length).toBe(1);
           expect(html.match(/<\/html/g)?.length).toBe(1);
           expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
-          expect(html.match(/💿 Hey developer 👋/g)?.length).toBe(1);
+          expect(html).toMatch('<div data-layout="true">');
         });
 
         test("does not inherit single fetch revalidation behavior", async ({
@@ -830,7 +832,7 @@ test.describe("SPA Mode", () => {
                 import * as React from "react";
                 import { Form, Link, Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta() {
                   return [{
                     title: "Root Title"
                   }];
@@ -913,9 +915,9 @@ test.describe("SPA Mode", () => {
                 import * as React  from "react";
                 import { useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta({ loaderData }) {
                   return [{
-                    title: "Index Title: " + data
+                    title: "Index Title: " + loaderData
                   }];
                 }
 
@@ -950,9 +952,9 @@ test.describe("SPA Mode", () => {
               "app/routes/about.tsx": js`
                 import { useActionData, useLoaderData } from "react-router";
 
-                export function meta({ data }) {
+                export function meta({ loaderData }) {
                   return [{
-                    title: "About Title: " + data
+                    title: "About Title: " + loaderData
                   }];
                 }
 

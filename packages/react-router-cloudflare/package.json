@@ -1,6 +1,7 @@
 {
   "name": "@react-router/cloudflare",
-  "version": "7.9.6",
+  "type": "module",
+  "version": "8.2.0",
   "description": "Cloudflare platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -15,14 +16,8 @@
   "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -32,8 +27,9 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
+        "../../pnpm-workspace.yaml",
         "sessions/**",
         "*.ts",
         "tsconfig.json",
@@ -45,16 +41,16 @@
     }
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250803.0",
+    "@cloudflare/workers-types": "^4.20260527.1",
     "react-router": "workspace:*",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
     "react-router": "workspace:^",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
@@ -62,7 +58,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

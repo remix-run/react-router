@@ -13,14 +13,14 @@ This file is auto-generated from the JSDoc comments in the source
 code, so please edit the JSDoc comments in the file below and this
 file will be re-generated once those changes are merged.
 
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/server.tsx
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/router/router.ts
 -->
 
 [MODES: data]
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createStaticHandler.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createStaticHandler.html)
 
 Create a static handler to perform server-side data loading
 
@@ -47,14 +47,14 @@ export async function handleRequest(request: Request) {
 function createStaticHandler(
   routes: RouteObject[],
   opts?: CreateStaticHandlerOptions,
-)
+): StaticHandler
 ```
 
 ## Params
 
 ### routes
 
-The [route objects](https://api.reactrouter.com/v7/types/react_router.RouteObject.html) to create a static handler for
+The [route objects](https://api.reactrouter.com/v8/types/react-router.RouteObject.html) to create a static handler for
 
 ### opts.basename
 

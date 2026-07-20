@@ -233,6 +233,32 @@ describe(`ScrollRestoration`, () => {
       expect(script instanceof HTMLScriptElement).toBe(true);
     });
 
+    it("uses the FrameworkContext nonce when one is not provided", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration data-testid="scroll-script" />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+
+      render(
+        <FrameworkContext.Provider
+          value={mockFrameworkContext({ nonce: "server-nonce" })}
+        >
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+      expect(script).toHaveAttribute("nonce", "server-nonce");
+    });
+
     it("should pass props to <script>", () => {
       let router = createMemoryRouter([
         {
@@ -259,6 +285,35 @@ describe(`ScrollRestoration`, () => {
       let script = screen.getByTestId("scroll-script");
       expect(script).toHaveAttribute("nonce", "hello");
       expect(script).toHaveAttribute("crossorigin", "anonymous");
+    });
+
+    it("prefers an explicit nonce over the FrameworkContext nonce", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration
+                data-testid="scroll-script"
+                nonce="explicit-nonce"
+              />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+
+      render(
+        <FrameworkContext.Provider
+          value={mockFrameworkContext({ nonce: "server-nonce" })}
+        >
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+      expect(script).toHaveAttribute("nonce", "explicit-nonce");
     });
 
     it("should restore scroll position", () => {

@@ -7,5 +7,5 @@ contact_links:
     url: https://github.com/remix-run/remix/discussions/new?category=q-a
     about: Open a Discussion in GitHub with the `Q&A` label
   - name: 💬 Remix Discord Channel
-    url: https://rmx.as/discord
+    url: https://remix.run/discord
     about: Interact with other people using React Router and Remix 📀

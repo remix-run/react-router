@@ -141,9 +141,9 @@ test.describe("loader in an app", async () => {
         `,
         "app/routes/$.tsx": js`
           import { useRouteError } from "react-router";
-          export function loader({ request }) {
+          export function loader({ url }) {
             throw Response.json({
-              message: new URL(request.url).pathname + ' not found'
+              message: url.pathname + ' not found'
             }, {
               status: 404
             });

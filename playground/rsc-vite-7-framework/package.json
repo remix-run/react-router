@@ -1,0 +1,40 @@
+{
+  "name": "@playground/rsc-vite-7-framework",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "dev:vite-middleware": "node start-vite-middleware.js",
+    "build": "react-router build",
+    "start:custom": "cross-env NODE_ENV=production node start.js",
+    "start": "react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc"
+  },
+  "devDependencies": {
+    "@mdx-js/rollup": "^3.1.1",
+    "@react-router/dev": "workspace:*",
+    "@react-router/fs-routes": "workspace:*",
+    "@react-router/serve": "workspace:*",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "cross-env": "^10.1.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-mdx-frontmatter": "^5.2.0",
+    "typescript": "catalog:",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@remix-run/node-fetch-server": "^0.13.3",
+    "compression": "^1.8.1",
+    "express": "^4.22.2",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "workspace:*",
+    "react-server-dom-webpack": "catalog:",
+    "remix-utils": "^8.7.0"
+  }
+}

@@ -36,7 +36,7 @@ const files = {
   "app/routes/splittable/route.tsx": js`
     import type { Route } from "./+types/splittable/route";
     import { Form } from "react-router";
-    
+
     // Ensure these style imports are still included in the page even though
     // they're not used in the main chunk
     import clientLoaderStyles from "./clientLoader.module.css";
@@ -136,7 +136,7 @@ const files = {
       await Promise.race([pollingPromise, timeoutPromise]);
       return "clientLoader in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
     };
- 
+
     export const clientAction = () => {
       inUnsplittableMainChunk();
       return "clientAction in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
@@ -192,7 +192,7 @@ const files = {
       await Promise.race([pollingPromise, timeoutPromise]);
       return "clientLoader in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
     };
- 
+
     export const clientAction = () => {
       return "clientAction in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
     };
@@ -250,7 +250,6 @@ async function unblockClientLoader(page: Page) {
 
 test.describe("Split route modules", async () => {
   test.describe("enabled", () => {
-    let splitRouteModules = true;
     let port: number;
     let cwd: string;
     let stop: Awaited<ReturnType<typeof reactRouterServe>>;
@@ -258,7 +257,7 @@ test.describe("Split route modules", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+        "react-router.config.ts": reactRouterConfig(),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });
@@ -363,7 +362,9 @@ test.describe("Split route modules", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+        "react-router.config.ts": reactRouterConfig({
+          splitRouteModules,
+        }),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });
@@ -452,7 +453,9 @@ test.describe("Split route modules", async () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules,
+          }),
           "vite.config.js": await viteConfig.basic({ port }),
           // Make unsplittable routes valid so the build can pass
           "app/routes/unsplittable.tsx": "export default function(){}",
@@ -470,7 +473,9 @@ test.describe("Split route modules", async () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules,
+          }),
           "vite.config.js": await viteConfig.basic({ port }),
           "app/root.tsx": js`
             import { Outlet } from "react-router";
@@ -496,7 +501,9 @@ test.describe("Split route modules", async () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules,
+          }),
           "vite.config.js": await viteConfig.basic({ port }),
           "app/root.tsx": js`
             import { Outlet } from "react-router";
@@ -523,7 +530,9 @@ test.describe("Split route modules", async () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules,
+          }),
           "vite.config.js": await viteConfig.basic({ port }),
           ...files,
           // Ensure we're only testing the mixed route
@@ -537,7 +546,7 @@ test.describe("Split route modules", async () => {
         expect(stderr.toString()).toMatch(
           dedent`
             Error splitting route module: routes/mixed.tsx
-            
+
             - clientLoader
             - HydrateFallback
 

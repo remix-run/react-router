@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useNavigation.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.useNavigation.html)
 
-Returns the current [`Navigation`](https://api.reactrouter.com/v7/types/react_router.Navigation.html), defaulting to an "idle" navigation
+Returns the current [`Navigation`](https://api.reactrouter.com/v8/types/react-router.Navigation.html), defaulting to an "idle" navigation
 when no navigation is in progress. You can use this to render pending UI
 (like a global spinner) or read [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
 from a form navigation.
@@ -41,10 +41,10 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useNavigation(): Navigation
+function useNavigation(): UseNavigationResult
 ```
 
 ## Returns
 
-The current [`Navigation`](https://api.reactrouter.com/v7/types/react_router.Navigation.html) object
+The current [`Navigation`](https://api.reactrouter.com/v8/types/react-router.Navigation.html) object
 

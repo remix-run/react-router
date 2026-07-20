@@ -33,6 +33,22 @@ Because these entry points are coupled to URL segments, React Router knows just 
 
 If the user visits `"/about"` then the bundles for `about.tsx` will be loaded but not `contact.tsx`. This drastically reduces the JavaScript footprint for initial page loads and speeds up your application.
 
+## Route Module Splitting
+
+React Router can also split client-side route exports (`clientLoader`, `clientAction`, `clientMiddleware`, `HydrateFallback`) into separate chunks that can be loaded independently from the route component.
+
+This allows these exports to be fetched and executed while the component code is still downloading, improving performance for client-side data loading.
+
+This behavior is enabled by default. You can set `splitRouteModules` to `false` to opt out, or `"enforce"` to require all routes to be splittable. The `"enforce"` option will cause build failures for routes that cannot be split due to shared code.
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  splitRouteModules: false,
+} satisfies Config;
+```
+
 ## Removal of Server Code
 
 Any server-only [Route Module APIs][route-module] will be removed from the bundles. Consider this route module:
@@ -58,4 +74,4 @@ export default function Component({ loaderData }) {
 
 After building for the browser, only the `Component` will still be in the bundle, so you can use server-only code in the other module exports.
 
-[route-module]: ../../start/framework/route-module
+[route-module]: ../start/framework/route-module

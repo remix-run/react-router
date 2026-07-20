@@ -5,12 +5,18 @@ import * as React from "react";
 import {
   createMemoryRouter,
   Link,
+  Links,
   NavLink,
   Outlet,
   RouterProvider,
+  Scripts,
 } from "../../../index";
 import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
-import { FrameworkContext } from "../../../lib/dom/ssr/components";
+import {
+  FrameworkContext,
+  usePrefetchBehavior,
+} from "../../../lib/dom/ssr/components";
+import { DataRouterStateContext } from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom";
@@ -281,5 +287,399 @@ describe("<HydratedRouter>", () => {
 
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
+  });
+});
+
+describe("<Links />", () => {
+  it("uses the FrameworkContext nonce when one is not provided", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("nonce", "server-nonce");
+  });
+
+  it("prefers an explicit nonce over the FrameworkContext nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="explicit-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("nonce", "explicit-nonce");
+  });
+
+  it("renders critical css with nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("data-react-router-critical-css");
+    expect(style).toHaveAttribute("nonce", "test-nonce");
+    expect(style).toHaveTextContent(".critical { color: red; }");
+  });
+
+  it("renders critical css object with nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: { rel: "stylesheet", href: "/critical.css" },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[rel='stylesheet']");
+    expect(link).toHaveAttribute("data-react-router-critical-css");
+    expect(link).toHaveAttribute("href", "/critical.css");
+    expect(link).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates nonce to route links", () => {
+    let context = mockFrameworkContext({
+      routeModules: {
+        root: {
+          default: () => null,
+          links: () => [{ rel: "stylesheet", href: "/style.css" }],
+        },
+      },
+      manifest: {
+        routes: {
+          root: {
+            id: "root",
+            module: "root.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            hasClientAction: false,
+            hasClientLoader: false,
+            hasClientMiddleware: false,
+            clientActionModule: undefined,
+            clientLoaderModule: undefined,
+            clientMiddlewareModule: undefined,
+            hydrateFallbackModule: undefined,
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={
+          {
+            matches: [
+              {
+                route: { id: "root" },
+              },
+            ],
+          } as any
+        }
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links nonce="test-nonce" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[href='/style.css']");
+    expect(link).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates the FrameworkContext nonce to route links", () => {
+    let context = mockFrameworkContext({
+      nonce: "server-nonce",
+      routeModules: {
+        root: {
+          default: () => null,
+          links: () => [{ rel: "stylesheet", href: "/style.css" }],
+        },
+      },
+      manifest: {
+        routes: {
+          root: {
+            id: "root",
+            module: "root.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            hasClientAction: false,
+            hasClientLoader: false,
+            hasClientMiddleware: false,
+            clientActionModule: undefined,
+            clientLoaderModule: undefined,
+            clientMiddlewareModule: undefined,
+            hydrateFallbackModule: undefined,
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={
+          {
+            matches: [
+              {
+                route: { id: "root" },
+              },
+            ],
+          } as any
+        }
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[href='/style.css']");
+    expect(link).toHaveAttribute("nonce", "server-nonce");
+  });
+});
+
+describe("<Scripts />", () => {
+  it("propagates nonce to modulepreload links", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/"),
+    );
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: ["preload-a.js", "preload-b.js"],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
+      routeModules: {
+        root: {
+          default: () => (
+            <>
+              <h1>Root</h1>
+              <Scripts nonce="test-nonce" />
+            </>
+          ),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter context={context} url="http://localhost/" />,
+    );
+
+    let modulePreloads = container.ownerDocument.querySelectorAll(
+      'link[rel="modulepreload"]',
+    );
+    expect(modulePreloads.length).toBeGreaterThan(0);
+    modulePreloads.forEach((link) => {
+      expect(link).toHaveAttribute("nonce", "test-nonce");
+    });
+
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="manifest.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="entry.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-a.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-b.js"]',
+      ),
+    ).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/"),
+    );
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      manifest: {
+        routes: {
+          root: {
+            // No server loader and a hydrating clientLoader with no
+            // HydrateFallback => the default HydrateFallback is rendered on the
+            // server, emitting `<Scripts>` (and a dev console script) inline.
+            hasLoader: false,
+            hasClientLoader: true,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: [],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeModules: {
+        root: {
+          default: () => <h1>Root</h1>,
+          clientLoader: Object.assign(() => null, { hydrate: true as const }),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter
+        context={context}
+        url="http://localhost/"
+        nonce="test-nonce"
+      />,
+    );
+
+    let scripts = container.ownerDocument.querySelectorAll("script");
+    expect(scripts.length).toBeGreaterThan(0);
+    scripts.forEach((script) => {
+      expect(script).toHaveAttribute("nonce", "test-nonce");
+    });
+  });
+});
+
+describe("usePrefetchBehavior", () => {
+  function TestComponent({
+    prefetch,
+  }: {
+    prefetch: "intent" | "render" | "none" | "viewport";
+  }) {
+    let [shouldPrefetch, ref] = usePrefetchBehavior(prefetch, {});
+    return (
+      // eslint-disable-next-line jsx-a11y/anchor-is-valid
+      <a ref={ref} data-prefetch={shouldPrefetch}>
+        Link
+      </a>
+    );
+  }
+
+  it("handles prefetch='render'", () => {
+    let context = mockFrameworkContext({});
+
+    // Wrap in FrameworkContext because usePrefetchBehavior checks for it
+    let { container } = render(
+      <FrameworkContext.Provider value={context}>
+        <TestComponent prefetch="render" />
+      </FrameworkContext.Provider>,
+    );
+
+    expect(container.firstChild).toHaveAttribute("data-prefetch", "true");
+  });
+
+  it("handles prefetch='viewport'", () => {
+    let context = mockFrameworkContext({});
+    let observeCallback: IntersectionObserverCallback;
+    let observeMock = jest.fn();
+    let disconnectMock = jest.fn();
+
+    window.IntersectionObserver = class {
+      constructor(cb: IntersectionObserverCallback) {
+        observeCallback = cb;
+      }
+      observe = observeMock;
+      unobserve = jest.fn();
+      disconnect = disconnectMock;
+      takeRecords = () => [];
+      root = null;
+      rootMargin = "";
+      thresholds = [];
+    };
+
+    let { container } = render(
+      <FrameworkContext.Provider value={context}>
+        <TestComponent prefetch="viewport" />
+      </FrameworkContext.Provider>,
+    );
+
+    // Initial state
+    expect(container.firstChild).toHaveAttribute("data-prefetch", "false");
+    expect(observeMock).toHaveBeenCalled();
+
+    // Trigger intersection
+    act(() => {
+      observeCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        new IntersectionObserver(() => {}),
+      );
+    });
+
+    expect(container.firstChild).toHaveAttribute("data-prefetch", "true");
   });
 });

@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { createRequestListener } from "@mjackson/node-fetch-server";
+import { createRequestListener } from "@remix-run/node-fetch-server";
 import compression from "compression";
 import express from "express";
 

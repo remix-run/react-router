@@ -26,6 +26,7 @@ type _Normalize<Key extends keyof any, T> =
 type UnionKeys<T> = T extends any ? keyof T : never;
 
 // prettier-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   Expect<Equal<Normalize<{}>, {}>>,
   Expect<Equal<Normalize<{a: string}>, {a: string}>>,

@@ -1,5 +1,8 @@
 // RSC APIs
-export { matchRSCServerRequest as unstable_matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export {
+  getRequest as unstable_getRequest,
+  matchRSCServerRequest as unstable_matchRSCServerRequest,
+} from "./lib/rsc/server.rsc";
 
 export type {
   DecodeActionFunction as unstable_DecodeActionFunction,

@@ -1,9 +1,9 @@
-name: ⚙️ Deduplicate lock file
+name: Deduplicate lock file
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
       - pnpm-lock.yaml
 
@@ -17,24 +17,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+      - name: Checkout repo
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.FORMAT_PAT }}
 
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
-      - name: ⚙️ Dedupe lock file
+      - name: Dedupe lock file
         run: pnpm dedupe && rm -rf ./node_modules && pnpm install
 
-      - name: 💪 Commit
+      - name: Commit
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"

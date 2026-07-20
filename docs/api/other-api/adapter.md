@@ -18,11 +18,11 @@ If you initialized your app with `npx create-react-router@latest` with something
 
 <docs-info>If you're using the built-in React Router App Server, you don't interact with this API</docs-info>
 
-Each adapter has the same API. In the future, we may have helpers specific to the platform you're deploying to.
+Each adapter has the same API. Some adapters also have options specific to the platform you're deploying to.
 
 ## `@react-router/express`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_express.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_express.html)
 
 Here's an example with [Express][express]:
 
@@ -112,7 +112,7 @@ Update the `dev` and `start` scripts to use your new Express server:
 {
   // ...
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node server.js",
+    "dev": "cross-env NODE_ENV=development node --conditions development server.js",
     "start": "node server.js"
     // ...
   }
@@ -120,23 +120,40 @@ Update the `dev` and `start` scripts to use your new Express server:
 }
 ```
 
+Make sure that `--conditions development` is included in the `dev` script so that the proper version of React Router is used in development.
+
+## `@react-router/architect`
+
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_architect.html)
+
+Here's an example with Architect:
+
+```ts
+import { createRequestHandler } from "@react-router/architect";
+import * as build from "./build/server";
+
+export const handler = createRequestHandler({
+  build,
+});
+```
+
 ## `@react-router/cloudflare`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_cloudflare.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_cloudflare.html)
 
 Here's an example with Cloudflare:
 
 ```ts
-import { createRequestHandler } from "react-router";
+import {
+  RouterContextProvider,
+  createContext,
+  createRequestHandler,
+} from "react-router";
 
-declare module "react-router" {
-  export interface AppLoadContext {
-    cloudflare: {
-      env: Env;
-      ctx: ExecutionContext;
-    };
-  }
-}
+const cloudflareContext = createContext<{
+  env: Env;
+  ctx: ExecutionContext;
+}>();
 
 const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
@@ -145,9 +162,9 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
-    return requestHandler(request, {
-      cloudflare: { env, ctx },
-    });
+    let routerContext = new RouterContextProvider();
+    routerContext.set(cloudflareContext, { env, ctx });
+    return requestHandler(request, routerContext);
   },
 } satisfies ExportedHandler<Env>;
 ```
@@ -156,11 +173,25 @@ export default {
 
 While not a direct "adapter" like the above, this package contains utilities for working with Node-based adapters.
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_node.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_node.html)
 
 ### Node Version Support
 
-React Router officially supports **Active** and **Maintenance** [Node LTS versions][node-releases] at any given point in time. Dropped support for End of Life Node versions is done in a React Router Minor release.
+React Router officially supports all versions of [**Active** LTS][node-releases] and the latest minor line of [**Maintenance** LTS][node-releases] at any given point in time.
+
+For example, at the time of this writing (6/17/2026):
+
+- Node 24 is in _Active LTS_ status, so React Router officially supports all `24.x` versions
+- Node 22 is in _Maintenance LTS_ status and the latest release is `22.22.3`, so React Router officially supports all `22.22.x` versions
+
+We make this distinction for Maintenance LTS for 2 reasons:
+
+- When security patches are released for old maintenance lines, we want to be able to bump our minimum supported versions
+- This better allows us to adopt new features shipped in Active LTS and backported to Maintenance LTS and keep our implementations aligned
+
+Updating the minimum supported Maintenance LTS **minor** version may be done in a React Router **minor** release.
+
+Dropping support for an EOL Node **major** version will always be done in a React Router **major** release.
 
 [express]: https://expressjs.com
 [node-releases]: https://nodejs.org/en/about/previous-releases

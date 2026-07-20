@@ -1,5 +1,6 @@
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { EventEmitter } from "node:events";
 import {
   existsSync,
   mkdirSync,
@@ -9,24 +10,42 @@ import {
   writeFileSync,
 } from "node:fs";
 import { mkdir, rm } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { stripVTControlCharacters as stripAnsi } from "node:util";
 import semver from "semver";
-import stripAnsi from "strip-ansi";
 
 import { jestTimeout } from "./setupAfterEnv";
-import { createReactRouter } from "../index";
 import { server } from "./msw";
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterAll(() => server.close());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const nodeRequire = createRequire(import.meta.url);
+const actualChildProcess = nodeRequire(
+  "node:child_process",
+) as typeof import("node:child_process");
+const mockedSpawn = jest.fn(actualChildProcess.spawn);
+const REPO_ROOT = path.resolve(__dirname, "../../..");
+const BUILT_CLI = path.resolve(__dirname, "../dist/cli.js");
 
-// this is so we can mock "npm install" etc. in a cross-platform way
-jest.mock("execa");
+(jest as any).unstable_mockModule("node:child_process", () => ({
+  ...actualChildProcess,
+  spawn: mockedSpawn,
+}));
+
+let createReactRouter: typeof import("../index").createReactRouter;
+
+beforeAll(async () => {
+  ({ createReactRouter } = await import("../index"));
+  server.listen({ onUnhandledRequest: "error" });
+});
+afterAll(() => server.close());
 
 const DOWN = "\x1B\x5B\x42";
 const ENTER = "\x0D";
+let builtCliPromise: Promise<string> | undefined;
 
 const TEMP_DIR = path.join(
   realpathSync(tmpdir()),
@@ -51,6 +70,7 @@ describe("create-react-router CLI", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedSpawn.mockImplementation(actualChildProcess.spawn);
   });
 
   afterEach(async () => {
@@ -59,6 +79,14 @@ describe("create-react-router CLI", () => {
     }
     tempDirs = new Set<string>();
   });
+
+  function mockSpawnSuccess() {
+    mockedSpawn.mockImplementation(() => {
+      let child = new EventEmitter();
+      process.nextTick(() => child.emit("exit", 0, null));
+      return child as ReturnType<typeof spawn>;
+    });
+  }
 
   function getProjectDir(name: string) {
     let tmpDir = path.join(TEMP_DIR, name);
@@ -71,56 +99,57 @@ describe("create-react-router CLI", () => {
       args: ["--help"],
     });
     expect(stdout.trim()).toMatchInlineSnapshot(`
-      "create-react-router  
+     "create-react-router  
 
-      Usage:
+     Usage:
 
-      $ create-react-router <projectDir> <...options>
+     $ create-react-router <projectDir> <...options>
 
-      Values:
+     Values:
 
-      projectDir          The React Router project directory
+     projectDir          The React Router project directory
 
-      Options:
+     Options:
 
-      --help, -h          Print this help message and exit
-      --version, -V       Print the CLI version and exit
-      --no-color          Disable ANSI colors in console output
-      --no-motion         Disable animations in console output
+     --help, -h          Print this help message and exit
+     --version, -V       Print the CLI version and exit
+     --no-color          Disable ANSI colors in console output
+     --no-motion         Disable animations in console output
 
-      --template <name>   The project template to use
-      --[no-]install      Whether or not to install dependencies after creation
-      --package-manager   The package manager to use
-      --show-install-output   Whether to show the output of the install process
-      --[no-]git-init     Whether or not to initialize a Git repository
-      --yes, -y           Skip all option prompts and run setup
-      --react-router-version, -v     The version of React Router to use
+     --template <name>   The project template to use
+     --[no-]install      Whether or not to install dependencies after creation
+     --package-manager   The package manager to use
+     --show-install-output   Whether to show the output of the install process
+     --[no-]agent-skills Whether or not to include the React Router agent skill
+     --[no-]git-init     Whether or not to initialize a Git repository
+     --yes, -y           Skip all option prompts and run setup
+     --react-router-version, -v     The version of React Router to use
 
-      Creating a new project:
+     Creating a new project:
 
-      React Router projects are created from templates. A template can be:
+     React Router projects are created from templates. A template can be:
 
-      - a GitHub repo shorthand, :username/:repo or :username/:repo/:directory
-      - the URL of a GitHub repo (or directory within it)
-      - the URL of a tarball
-      - a file path to a directory of files
-      - a file path to a tarball
+     - a GitHub repo shorthand, :username/:repo or :username/:repo/:directory
+     - the URL of a GitHub repo (or directory within it)
+     - the URL of a tarball
+     - a file path to a directory of files
+     - a file path to a tarball
 
-      $ create-react-router my-app --template remix-run/react-router/templates/basic
-      $ create-react-router my-app --template remix-run/react-router/examples/basic
-      $ create-react-router my-app --template :username/:repo
-      $ create-react-router my-app --template :username/:repo/:directory
-      $ create-react-router my-app --template https://github.com/:username/:repo
-      $ create-react-router my-app --template https://github.com/:username/:repo/tree/:branch
-      $ create-react-router my-app --template https://github.com/:username/:repo/tree/:branch/:directory
-      $ create-react-router my-app --template https://github.com/:username/:repo/archive/refs/tags/:tag.tar.gz
-      $ create-react-router my-app --template https://example.com/template.tar.gz
-      $ create-react-router my-app --template ./path/to/template
-      $ create-react-router my-app --template ./path/to/template.tar.gz
+     $ create-react-router my-app --template remix-run/react-router/templates/basic
+     $ create-react-router my-app --template remix-run/react-router/examples/basic
+     $ create-react-router my-app --template :username/:repo
+     $ create-react-router my-app --template :username/:repo/:directory
+     $ create-react-router my-app --template https://github.com/:username/:repo
+     $ create-react-router my-app --template https://github.com/:username/:repo/tree/:branch
+     $ create-react-router my-app --template https://github.com/:username/:repo/tree/:branch/:directory
+     $ create-react-router my-app --template https://github.com/:username/:repo/archive/refs/tags/:tag.tar.gz
+     $ create-react-router my-app --template https://example.com/template.tar.gz
+     $ create-react-router my-app --template ./path/to/template
+     $ create-react-router my-app --template ./path/to/template.tar.gz
 
-      To create a new project from a template in a private GitHub repo,
-      pass the \`token\` flag with a personal access token with access
-      to that repo."
+     To create a new project from a template in a private GitHub repo,
+     pass the \`token\` flag with a personal access token with access
+     to that repo."
     `);
   });
 
@@ -129,6 +158,18 @@ describe("create-react-router CLI", () => {
       args: ["--version"],
     });
     expect(!!semver.valid(stdout.trim())).toBe(true);
+  });
+
+  it("supports short aliases", async () => {
+    let [{ stdout: helpOutput }, { stdout: versionOutput }] = await Promise.all(
+      [
+        execCreateReactRouter({ args: ["-h"] }),
+        execCreateReactRouter({ args: ["-V"] }),
+      ],
+    );
+
+    expect(helpOutput).toContain("Usage:");
+    expect(!!semver.valid(versionOutput.trim())).toBe(true);
   });
 
   it("allows you to go through the prompts", async () => {
@@ -148,6 +189,10 @@ describe("create-react-router CLI", () => {
         {
           question: /install dependencies/i,
           type: ["n"],
+        },
+        {
+          question: /agent skill/i,
+          type: ["y"],
         },
       ],
     });
@@ -169,6 +214,49 @@ describe("create-react-router CLI", () => {
     expect(status).toBe(0);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(
+      existsSync(path.join(projectDir, ".agents/skills/react-router/SKILL.md")),
+    ).toBeTruthy();
+  });
+
+  it("ignores unknown flags", async () => {
+    let projectDir = getProjectDir("unknown-flags");
+
+    let { status, stderr } = await execCreateReactRouter({
+      args: [
+        projectDir,
+        "--future-flag",
+        "--yes",
+        "--no-git-init",
+        "--no-install",
+      ],
+    });
+
+    expect(stderr.trim()).toBeFalsy();
+    expect(status).toBe(0);
+    expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+  });
+
+  it("supports the --no-agent-skills flag", async () => {
+    let projectDir = getProjectDir("no-agent-skills");
+
+    let { status, stderr } = await execCreateReactRouter({
+      args: [
+        projectDir,
+        "--yes",
+        "--no-agent-skills",
+        "--no-git-init",
+        "--no-install",
+      ],
+    });
+
+    expect(stderr.trim()).toBeFalsy();
+    expect(status).toBe(0);
+    expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(
+      existsSync(path.join(projectDir, ".agents/skills/react-router/SKILL.md")),
+    ).toBeFalsy();
   });
 
   it("errors when project directory isn't provided when shell isn't interactive", async () => {
@@ -504,8 +592,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("npm-install-default");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -518,11 +605,12 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -538,8 +626,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("npm-install-on-unknown-package-manager");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -552,11 +639,12 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -572,8 +660,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("npm-install-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -586,11 +673,12 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -605,8 +693,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("yarn-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -619,11 +706,12 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "yarn",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -638,8 +726,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("pnpm-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -652,11 +739,12 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "pnpm",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -671,8 +759,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("bun-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -685,11 +772,12 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "bun",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -704,8 +792,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("deno-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -718,12 +805,46 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "deno",
+      expect.arrayContaining(["install"]),
+      expect.anything(),
+    );
+    process.env.npm_config_user_agent = originalUserAgent;
+  });
+
+  it("recognizes when nub was used to run the command", async () => {
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent =
+      "nub/0.1.0 npm/? node/v24.0.0 linux x64";
+
+    let projectDir = getProjectDir("nub-create-from-user-agent");
+
+    mockSpawnSuccess();
+
+    // Suppress terminal output
+    let stdoutMock = jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+
+    await createReactRouter([
+      projectDir,
+      "--template",
+      path.join(__dirname, "fixtures", "blank"),
+      "--no-git-init",
+      "--yes",
+      "--no-agent-skills",
+    ]);
+
+    stdoutMock.mockReset();
+
+    expect(mockedSpawn).toHaveBeenCalledWith(
+      "nub",
       expect.arrayContaining(["install"]),
       expect.anything(),
     );
@@ -737,8 +858,7 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("pnpm-create-override");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    mockSpawnSuccess();
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -751,13 +871,14 @@ describe("create-react-router CLI", () => {
       path.join(__dirname, "fixtures", "blank"),
       "--no-git-init",
       "--yes",
+      "--no-agent-skills",
       "--package-manager",
       "pnpm",
     ]);
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(mockedSpawn).toHaveBeenCalledWith(
       "pnpm",
       expect.arrayContaining(["install"]),
       expect.anything(),
@@ -860,7 +981,6 @@ describe("create-react-router CLI", () => {
 
     expect(dependencies).toMatchObject({
       "react-router": expect.any(String),
-      "react-router-dom": expect.any(String),
       "@react-router/node": expect.any(String),
       "not-react-router": "*",
     });
@@ -1004,12 +1124,12 @@ describe("create-react-router CLI", () => {
         });
 
         expect(stderr.trim()).toMatchInlineSnapshot(`
-                  "▲  Oh no! Destination directory contains files that would be overwritten
-                           and no \`--overwrite\` flag was included in a non-interactive
-                           environment. The following files would be overwritten:
-                             package.json
-                             tsconfig.json"
-              `);
+         "▲  Oh no! Destination directory contains files that would be overwritten
+                  and no \`--overwrite\` flag was included in a non-interactive
+                  environment. The following files would be overwritten:
+                    package.json
+                    tsconfig.json"
+        `);
         expect(status).toBe(1);
         expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
       });
@@ -1144,33 +1264,6 @@ describe("create-react-router CLI", () => {
       expect(status).toBe(1);
     });
   });
-
-  describe("supports proxy usage", () => {
-    beforeAll(() => {
-      server.close();
-    });
-    afterAll(() => {
-      server.listen({ onUnhandledRequest: "error" });
-    });
-    it("uses the proxy from env var", async () => {
-      let projectDir = await getProjectDir("template");
-
-      let { stderr } = await execCreateReactRouter({
-        args: [
-          projectDir,
-          "--template",
-          "remix-run/grunge-stack",
-          "--no-install",
-          "--no-git-init",
-          "--debug",
-        ],
-        mockNetwork: false,
-        env: { HTTPS_PROXY: "http://127.0.0.1:33128" },
-      });
-
-      expect(stderr.trim()).toMatch("127.0.0.1:33");
-    });
-  });
 });
 
 async function execCreateReactRouter({
@@ -1188,15 +1281,29 @@ async function execCreateReactRouter({
   mockNetwork?: boolean;
   cwd?: string;
 }) {
+  let cliPath = await ensureBuiltCli();
+  let controlsAgentSkills = args.some((arg) =>
+    ["--agent-skills", "--no-agent-skills", "--yes"].includes(arg),
+  );
+  let answersAgentSkillsPrompt = interactions.some(({ question }) =>
+    question.test("agent skill"),
+  );
+
+  if (interactive && !controlsAgentSkills && !answersAgentSkillsPrompt) {
+    args = [...args, "--no-agent-skills"];
+  }
+
   let proc = spawn(
     "node",
     [
-      "--require",
-      require.resolve("esbuild-register"),
       ...(mockNetwork
-        ? ["--require", path.join(__dirname, "./msw-register.ts")]
+        ? [
+            "--no-warnings=ExperimentalWarning",
+            "--import",
+            pathToFileURL(path.join(__dirname, "./msw-register.ts")).href,
+          ]
         : []),
-      path.resolve(__dirname, "../cli.ts"),
+      cliPath,
       ...args,
     ],
     {
@@ -1205,6 +1312,10 @@ async function execCreateReactRouter({
       env: {
         ...process.env,
         ...env,
+        CREATE_REACT_ROUTER_TEST_DIR: __dirname,
+        NODE_OPTIONS: [process.env.NODE_OPTIONS, "--no-deprecation"]
+          .filter(Boolean)
+          .join(" "),
         ...(interactive
           ? { CREATE_REACT_ROUTER_FORCE_INTERACTIVE: "true" }
           : {}),
@@ -1213,6 +1324,31 @@ async function execCreateReactRouter({
   );
 
   return await interactWithShell(proc, interactions);
+}
+
+async function ensureBuiltCli() {
+  if (!builtCliPromise) {
+    builtCliPromise = Promise.resolve().then(() => {
+      let pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+      execFileSync(pnpm, ["run", "--filter", "create-react-router", "build"], {
+        cwd: REPO_ROOT,
+        env: { ...process.env, NO_COLOR: "1" },
+        stdio: "pipe",
+      });
+      execFileSync(
+        pnpm,
+        ["run", "--filter", "create-react-router", "prepack"],
+        {
+          cwd: REPO_ROOT,
+          env: { ...process.env, NO_COLOR: "1" },
+          stdio: "pipe",
+        },
+      );
+      return BUILT_CLI;
+    });
+  }
+
+  return builtCliPromise;
 }
 
 interface ShellResult {

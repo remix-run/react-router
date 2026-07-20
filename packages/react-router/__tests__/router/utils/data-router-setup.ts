@@ -6,10 +6,7 @@ import type {
   RouterNavigateOptions,
   RouterInit,
 } from "../../../lib/router/router";
-import type {
-  AgnosticDataRouteObject,
-  AgnosticRouteMatch,
-} from "../../../lib/router/utils";
+import type { DataRouteObject, RouteMatch } from "../../../lib/router/utils";
 import { createRouter, IDLE_FETCHER } from "../../../lib/router/router";
 import {
   createMemoryHistory,
@@ -17,10 +14,11 @@ import {
   parsePath,
 } from "../../../lib/router/history";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
+  IndexRouteObject,
+  NonIndexRouteObject,
 } from "../../../lib/router/utils";
 import {
+  defaultMapRouteProperties,
   matchRoutes,
   redirect,
   stripBasename,
@@ -32,7 +30,7 @@ import { isRedirect, tick } from "./utils";
 // indicating they want a stub.  They get enhanced back to AgnosticRouteObjects
 // by our test harness
 export type TestIndexRouteObject = Pick<
-  AgnosticIndexRouteObject,
+  IndexRouteObject,
   | "id"
   | "index"
   | "path"
@@ -40,14 +38,14 @@ export type TestIndexRouteObject = Pick<
   | "handle"
   | "lazy"
   | "middleware"
+  | "ErrorBoundary"
 > & {
   loader?: boolean;
   action?: boolean;
-  hasErrorBoundary?: boolean;
 };
 
 export type TestNonIndexRouteObject = Pick<
-  AgnosticNonIndexRouteObject,
+  NonIndexRouteObject,
   | "id"
   | "index"
   | "path"
@@ -55,10 +53,10 @@ export type TestNonIndexRouteObject = Pick<
   | "handle"
   | "lazy"
   | "middleware"
+  | "ErrorBoundary"
 > & {
   loader?: boolean;
   action?: boolean;
-  hasErrorBoundary?: boolean;
   children?: TestRouteObject[];
 };
 
@@ -116,7 +114,7 @@ export const TASK_ROUTES: TestRouteObject[] = [
     id: "root",
     path: "/",
     loader: true,
-    hasErrorBoundary: true,
+    ErrorBoundary: () => null,
     children: [
       {
         id: "index",
@@ -128,14 +126,14 @@ export const TASK_ROUTES: TestRouteObject[] = [
         path: "tasks",
         loader: true,
         action: true,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       },
       {
         id: "tasksId",
         path: "tasks/:id",
         loader: true,
         action: true,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
       },
       {
         id: "noLoader",
@@ -235,7 +233,7 @@ export function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: AgnosticDataRouteObject = {
+      let enhancedRoute: DataRouteObject = {
         middleware: undefined,
         ...r,
         loader: undefined,
@@ -299,9 +297,12 @@ export function setup({
           );
         };
       }
-      if (!r.index && r.children) {
+      if (!r.index && "children" in r && r.children) {
         enhancedRoute.children = enhanceRoutes(r.children);
       }
+      // Match what the router does internally so that tests comparing
+      // enhanceRoutes() output against router.routes line up
+      Object.assign(enhancedRoute, defaultMapRouteProperties(enhancedRoute));
       return enhancedRoute;
     });
   }
@@ -380,7 +381,10 @@ export function setup({
           await internalHelpers.dfd.resolve(redirectResponse);
         }
         await tick();
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
       return helpers;
     }
 
@@ -400,7 +404,10 @@ export function setup({
       async reject(value) {
         try {
           await internalHelpers.dfd.reject(value);
-        } catch (e) {}
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          e
+        ) {}
       },
       async redirect(href, status = 301, headers = {}, shims = []) {
         return _redirect(true, href, status, headers, shims);
@@ -413,7 +420,7 @@ export function setup({
   }
 
   function getHelpers(
-    matches: AgnosticRouteMatch<string, AgnosticDataRouteObject>[],
+    matches: RouteMatch<string, DataRouteObject>[],
     navigationId: number,
     addHelpers: (routeId: string, helpers: InternalHelpers) => void,
   ): Record<string, Helpers> {
@@ -426,8 +433,8 @@ export function setup({
     );
   }
 
-  let inFlightRoutes: AgnosticDataRouteObject[] | undefined;
-  function _internalSetRoutes(routes: AgnosticDataRouteObject[]) {
+  let inFlightRoutes: DataRouteObject[] | undefined;
+  function _internalSetRoutes(routes: DataRouteObject[]) {
     inFlightRoutes = routes;
     currentRouter?._internalSetRoutes(routes);
   }
@@ -717,7 +724,7 @@ export function setup({
     history,
     router: currentRouter,
     get fetchers() {
-      let fetchers = {};
+      let fetchers: Record<string, Fetcher> = {};
       currentRouter?.state.fetchers.forEach((f, key) => {
         fetchers[key] = {
           ...f,

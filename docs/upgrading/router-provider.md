@@ -7,7 +7,7 @@ order: 5
 
 If you are not using `<RouterProvider>` please see [Framework Adoption from Component Routes][upgrade-component-routes] instead.
 
-The React Router Vite plugin adds framework features to React Router. This guide will help you adopt the plugin in your app. If you run into any issues, please reach out for help on [Twitter](https://x.com/remix_run) or [Discord](https://rmx.as/discord).
+The React Router Vite plugin adds framework features to React Router. This guide will help you adopt the plugin in your app. If you run into any issues, please reach out for help on [Twitter](https://x.com/remix_run) or [Discord](https://remix.run/discord).
 
 ## Features
 
@@ -26,8 +26,8 @@ The initial setup requires the most work. However, once complete, you can adopt 
 
 To use the Vite plugin, your project requires:
 
-- Node.js 20+ (if using Node as your runtime)
-- Vite 5+
+- Node.js 22.22.0+
+- Vite 7+ or Vite 8+
 
 ## 1. Move route definitions into route modules
 
@@ -85,7 +85,7 @@ Instead of importing your route modules directly, lazy load and convert them to 
 
 Not only does your route definition now conform to the Route Module API, but you also get the benefits of code-splitting your routes.
 
-```diff filename=src/main.tsx
+```tsx diff filename=src/main.tsx
 let router = createBrowserRouter([
   // ... other routes
   {
@@ -120,7 +120,7 @@ npm install @react-router/node
 
 **👉 Swap out the React plugin for React Router**
 
-```diff filename=vite.config.ts
+```tsx diff filename=vite.config.ts
 -import react from '@vitejs/plugin-react'
 +import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
@@ -247,7 +247,7 @@ export default function App() {
 
 You would move everything above the `RouterProvider` into `root.tsx`.
 
-```diff filename=src/root.tsx
+```tsx diff filename=src/root.tsx
 +import "./index.css";
 
 // ... other imports and Layout
@@ -276,7 +276,10 @@ If your current `src/main.tsx` looks like this:
 ```tsx filename=src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router";
 import App from "./App";
 
 const router = createBrowserRouter([
@@ -323,7 +326,7 @@ touch src/routes.ts src/catchall.tsx
 
 Move your route definitions to `routes.ts`. Note that the schemas don't match exactly, so you will get type errors; we'll fix this next.
 
-```diff filename=src/routes.ts
+```tsx diff filename=src/routes.ts
 +import type { RouteConfig } from "@react-router/dev/routes";
 
 -const router = createBrowserRouter([
@@ -359,7 +362,7 @@ Move your route definitions to `routes.ts`. Note that the schemas don't match ex
 
 **👉 Replace the `lazy` loader with a `file` loader**
 
-```diff filename=src/routes.ts
+```tsx diff filename=src/routes.ts
 export default [
   {
     path: "/",

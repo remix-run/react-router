@@ -30,6 +30,9 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  BaseRouteObject,
+  DataRouteMatch,
+  DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
@@ -39,16 +42,22 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  IndexRouteObject,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   MiddlewareFunction,
+  NonIndexRouteObject,
   ParamParseKey,
   Params,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  RouteMatch,
+  RouteObject,
   RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
@@ -62,14 +71,17 @@ export {
   parsePath,
 } from "./lib/router/history";
 export type {
-  unstable_ServerInstrumentation,
-  unstable_ClientInstrumentation,
-  unstable_InstrumentRequestHandlerFunction,
-  unstable_InstrumentRouterFunction,
-  unstable_InstrumentRouteFunction,
-  unstable_InstrumentationHandlerResult,
+  ServerInstrumentation,
+  ClientInstrumentation,
+  InstrumentRequestHandlerFunction,
+  InstrumentRouterFunction,
+  InstrumentRouteFunction,
+  InstrumentationHandlerResult,
+  InstrumentationClientRouterResult,
+  InstrumentationServerHandlerResult,
 } from "./lib/router/instrumentation";
 export {
+  createStaticHandler,
   IDLE_NAVIGATION,
   IDLE_FETCHER,
   IDLE_BLOCKER,
@@ -87,23 +99,12 @@ export {
 } from "./lib/router/utils";
 
 // Expose react-router public API
-export type {
-  DataRouteMatch,
-  DataRouteObject,
-  IndexRouteObject,
-  NavigateOptions,
-  Navigator,
-  NonIndexRouteObject,
-  PatchRoutesOnNavigationFunction,
-  PatchRoutesOnNavigationFunctionArgs,
-  RouteMatch,
-  RouteObject,
-} from "./lib/context";
+export type { NavigateOptions, Navigator } from "./lib/context";
 export { AwaitContextProvider as UNSAFE_AwaitContextProvider } from "./lib/context";
 export type {
   AwaitProps,
   IndexRouteProps,
-  unstable_ClientOnErrorFunction,
+  ClientOnErrorFunction,
   LayoutRouteProps,
   MemoryRouterOpts,
   MemoryRouterProps,
@@ -129,7 +130,12 @@ export {
   createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
+export type {
+  NavigateFunction,
+  unstable_RouterState,
+  unstable_RouterStateActiveVariant,
+  unstable_RouterStatePendingVariant,
+} from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -153,6 +159,7 @@ export {
   useRouteLoaderData,
   useRoutes,
   useRoute as unstable_useRoute,
+  useRouterState as unstable_useRouterState,
 } from "./lib/hooks";
 
 // Expose old RR DOM API
@@ -205,7 +212,6 @@ export type {
   StaticRouterProviderProps,
 } from "./lib/dom/server";
 export {
-  createStaticHandler,
   createStaticRouter,
   StaticRouter,
   StaticRouterProvider,
@@ -273,8 +279,6 @@ export type {
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
 
-export type { AppLoadContext } from "./lib/server-runtime/data";
-
 export type {
   PageLinkDescriptor,
   HtmlLinkDescriptor,
@@ -291,10 +295,7 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
-export type {
-  Future,
-  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
-} from "./lib/types/future.ts";
+export type { Future } from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
@@ -316,7 +317,8 @@ export {
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 // Re-export of RSC types
-import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+import type { getRequest, matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export declare const unstable_getRequest: typeof getRequest;
 export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
 
 export type {
@@ -349,7 +351,9 @@ export type {
 
 /** @internal */
 export {
+  createMemoryHistory as UNSAFE_createMemoryHistory,
   createBrowserHistory as UNSAFE_createBrowserHistory,
+  createHashHistory as UNSAFE_createHashHistory,
   invariant as UNSAFE_invariant,
 } from "./lib/router/history";
 
@@ -357,7 +361,10 @@ export {
 export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
 
 /** @internal */
-export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+export {
+  defaultMapRouteProperties as UNSAFE_defaultMapRouteProperties,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
+} from "./lib/router/utils";
 
 /** @internal */
 export {
@@ -373,7 +380,6 @@ export {
 /** @internal */
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
-  mapRouteProperties as UNSAFE_mapRouteProperties,
   WithComponentProps as UNSAFE_WithComponentProps,
   withComponentProps as UNSAFE_withComponentProps,
   WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
@@ -387,9 +393,6 @@ export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/compo
 
 /** @internal */
 export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entry";
-
-/** @internal */
-export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
 
 /** @internal */
 export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";

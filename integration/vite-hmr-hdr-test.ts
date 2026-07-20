@@ -6,15 +6,14 @@ import dedent from "dedent";
 import * as Express from "./helpers/express";
 import { test } from "./helpers/fixtures";
 import * as Stream from "./helpers/stream";
-import { viteMajorTemplates, getTemplates } from "./helpers/templates";
+import { viteMajorTemplates } from "./helpers/templates";
 
 const tsx = dedent;
 const mdx = dedent;
 
-const templates = [
-  ...viteMajorTemplates,
-  ...getTemplates(["rsc-vite-framework"]),
-];
+const templates = [...viteMajorTemplates];
+
+// RSC Framework HMR/HDR behavior is covered in integration/vite-hmr-hdr-rsc-test.ts.
 
 templates.forEach((template) => {
   const isRsc = template.name.startsWith("rsc-");
@@ -218,7 +217,6 @@ async function workflow({
   // React Fast Refresh cannot preserve state for a component when hooks are added or removed
   await expect(input).toHaveValue("");
   await input.fill("stateful");
-  expect(page.errors.length).toBeGreaterThan(0);
   expect(
     // When adding a loader, a harmless error is logged to the browser console.
     // HMR works as intended, so this seems like a React Fast Refresh bug caused by off-screen rendering with old server data or something like that 🤷

@@ -1,7 +1,15 @@
 {
   "name": "@react-router/dev",
-  "version": "7.9.6",
+  "type": "module",
+  "version": "8.2.0",
   "description": "Dev tools and CLI for React Router",
+  "keywords": [
+    "react",
+    "router",
+    "react-router",
+    "vite",
+    "vite-plugin"
+  ],
   "homepage": "https://reactrouter.com",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -13,6 +21,9 @@
   },
   "license": "MIT",
   "exports": {
+    "./config/default-rsc-entries/entry.client": "./dist/config/default-rsc-entries/entry.client.tsx",
+    "./config/default-rsc-entries/entry.rsc": "./dist/config/default-rsc-entries/entry.rsc.tsx",
+    "./config/default-rsc-entries/entry.ssr": "./dist/config/default-rsc-entries/entry.ssr.tsx",
     "./config": {
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
@@ -21,24 +32,36 @@
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"
     },
+    "./rsc-types": "./rsc-types.d.ts",
     "./vite": {
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
     },
-    "./vite/cloudflare": {
-      "types": "./dist/vite/cloudflare.d.ts",
-      "default": "./dist/vite/cloudflare.js"
-    },
     "./package.json": "./package.json"
   },
   "imports": {
+    "#development-condition-enabled": {
+      "development": "./development-condition-enabled/true.mjs",
+      "default": "./development-condition-enabled/false.mjs"
+    },
     "#module-sync-enabled": {
       "module-sync": "./module-sync-enabled/true.mjs",
       "default": "./module-sync-enabled/false.cjs"
     }
   },
   "bin": {
-    "react-router": "bin.js"
+    "react-router": "bin.cjs"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "rolldown": {
+      "type": "incompatible",
+      "reason": "Uses Vite-specific APIs"
+    },
+    "rollup": {
+      "type": "incompatible",
+      "reason": "Uses Vite-specific APIs"
+    }
   },
   "scripts": {
     "build": "wireit",
@@ -46,15 +69,17 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
+        "../../pnpm-workspace.yaml",
         "cli/**",
         "config/**",
+        "development-condition-enabled/**",
         "module-sync-enabled/**",
         "typegen/**",
         "vite/**",
         "*.ts",
-        "bin.js",
+        "bin.cjs",
         "tsconfig.json",
         "package.json"
       ],
@@ -64,66 +89,64 @@
     }
   },
   "dependencies": {
-    "@babel/core": "^7.27.7",
-    "@babel/generator": "^7.27.5",
-    "@babel/parser": "^7.27.7",
-    "@babel/plugin-syntax-jsx": "^7.27.1",
-    "@babel/preset-typescript": "^7.27.1",
-    "@babel/traverse": "^7.27.7",
-    "@babel/types": "^7.27.7",
-    "@npmcli/package-json": "^4.0.1",
+    "@babel/core": "^7.29.7",
+    "@babel/generator": "^7.29.7",
+    "@babel/parser": "^7.29.7",
+    "@babel/plugin-syntax-jsx": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@babel/traverse": "^7.29.7",
+    "@babel/types": "^7.29.7",
     "@react-router/node": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.9.0",
-    "arg": "^5.0.1",
-    "babel-dead-code-elimination": "^1.0.6",
-    "chokidar": "^4.0.0",
-    "dedent": "^1.5.3",
-    "es-module-lexer": "^1.3.1",
-    "exit-hook": "2.2.1",
-    "isbot": "^5.1.11",
-    "jsesc": "3.0.2",
-    "lodash": "^4.17.21",
-    "p-map": "^7.0.3",
-    "pathe": "^1.1.2",
+    "@remix-run/node-fetch-server": "^0.13.3",
+    "babel-dead-code-elimination": "^1.0.12",
+    "chokidar": "^5.0.0",
+    "dedent": "^1.7.2",
+    "es-module-lexer": "^2.1.0",
+    "exit-hook": "5.1.0",
+    "isbot": "^5.1.40",
+    "jsesc": "3.1.0",
+    "lodash": "^4.18.1",
+    "p-map": "^7.0.4",
+    "pathe": "^2.0.3",
     "picocolors": "^1.1.1",
-    "prettier": "^3.6.2",
-    "react-refresh": "^0.14.0",
-    "semver": "^7.3.7",
-    "tinyglobby": "^0.2.14",
-    "valibot": "^1.1.0",
-    "vite-node": "^3.2.2"
+    "pkg-types": "^2.3.1",
+    "prettier": "^3.8.3",
+    "react-refresh": "^0.18.0",
+    "semver": "^7.8.1",
+    "tinyglobby": "^0.2.16",
+    "valibot": "^1.4.1"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
-    "@types/babel__traverse": "^7.20.7",
+    "@types/babel__traverse": "^7.28.0",
     "@types/dedent": "^0.7.0",
-    "@types/express": "^4.17.9",
+    "@types/jest": "^30.0.0",
     "@types/jsesc": "^3.0.1",
-    "@types/lodash": "^4.14.182",
-    "@types/node": "^20.0.0",
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^22.19.19",
     "@types/npmcli__package-json": "^4.0.0",
-    "@types/semver": "^7.7.0",
-    "@vitejs/plugin-rsc": "0.4.30",
+    "@types/semver": "^7.7.1",
+    "@vitejs/plugin-rsc": "catalog:",
     "esbuild-register": "^3.6.0",
-    "execa": "5.1.1",
-    "express": "^4.19.2",
-    "fast-glob": "3.2.11",
+    "execa": "9.6.1",
+    "fast-glob": "3.3.3",
     "react-router": "workspace:^",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "vite": "^6.1.0",
-    "wireit": "0.14.9",
-    "wrangler": "^4.23.0"
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^7.0.0",
+    "wireit": "catalog:",
+    "wrangler": "^4.95.0"
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",
-    "@vitejs/plugin-rsc": "*",
+    "@vitejs/plugin-rsc": "catalog:",
     "react-router": "workspace:^",
-    "typescript": "^5.1.0",
-    "vite": "^5.1.0 || ^6.0.0 || ^7.0.0",
-    "wrangler": "^3.28.2 || ^4.0.0"
+    "react-server-dom-webpack": "catalog:",
+    "typescript": "^5.1.0 || ^6.0.0",
+    "vite": "^7.0.0 || ^8.0.0",
+    "wrangler": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "@vitejs/plugin-rsc": {
@@ -135,17 +158,22 @@
     "typescript": {
       "optional": true
     },
+    "react-server-dom-webpack": {
+      "optional": true
+    },
     "wrangler": {
       "optional": true
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",
+    "development-condition-enabled/",
     "module-sync-enabled/",
-    "bin.js",
+    "bin.cjs",
+    "rsc-types.d.ts",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

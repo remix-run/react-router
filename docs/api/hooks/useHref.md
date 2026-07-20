@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useHref.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.useHref.html)
 
-Resolves a URL against the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html).
+Resolves a URL against the current [`Location`](https://api.reactrouter.com/v8/interfaces/react-router.Location.html).
 
 ```tsx
 import { useHref } from "react-router";
@@ -42,8 +42,8 @@ function useHref(
     relative,
   }: {
     relative?: RelativeRoutingType;
-  } = ,
-): string {}
+  } = {},
+): string
 ```
 
 ## Params

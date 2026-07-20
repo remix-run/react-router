@@ -290,6 +290,47 @@ describe("matchPath optional dynamic segments", () => {
     const match = matchPath("/:lang?/user/:id?", "/en/user/123");
     expect(match).toMatchObject({ params: { lang: "en", id: "123" } });
   });
+
+  it("should NOT match when pathname extends base path without separator", () => {
+    expect(matchPath("/test_route/:part?", "/test_route_more")).toBeNull();
+  });
+
+  it("should NOT match when pathname extends base path without separator (middle optional param)", () => {
+    expect(
+      matchPath("/test_route/:part?/edit", "/test_route_more/edit"),
+    ).toBeNull();
+  });
+
+  it("should NOT match optional param when pathname has extra characters after base", () => {
+    expect(matchPath("/users/:id?", "/usersblah")).toBeNull();
+    expect(matchPath("/api/:version?", "/api123")).toBeNull();
+    expect(matchPath("/home/:section?", "/homepage")).toBeNull();
+  });
+
+  it("should still match optional param with proper path separator", () => {
+    expect(matchPath("/test_route/:part?", "/test_route/more")).toMatchObject({
+      params: { part: "more" },
+    });
+    expect(matchPath("/test_route/:part?", "/test_route")).toMatchObject({
+      params: { part: undefined },
+    });
+    expect(matchPath("/test_route/:part?", "/test_route/")).toMatchObject({
+      params: { part: undefined },
+    });
+  });
+
+  it("should match a middle optional param with proper path separators", () => {
+    expect(
+      matchPath("/test_route/:part?/edit", "/test_route/more/edit"),
+    ).toMatchObject({
+      params: { part: "more" },
+    });
+    expect(
+      matchPath("/test_route/:part?/edit", "/test_route/edit"),
+    ).toMatchObject({
+      params: { part: undefined },
+    });
+  });
 });
 
 describe("matchPath optional static segments", () => {
@@ -363,6 +404,36 @@ describe("matchPath optional static segments", () => {
       pathname: "/school/user/admin",
       pathnameBase: "/school/user/admin",
     });
+  });
+
+  it("correctly extracts dynamic params when optional static segment is present", () => {
+    const match = matchPath("/school?/user/:id", "/school/user/123");
+    expect(match?.params).toMatchObject({ id: "123" });
+  });
+
+  it("correctly extracts dynamic params when optional static segment is absent", () => {
+    const match = matchPath("/school?/user/:id", "/user/123");
+    expect(match?.params).toMatchObject({ id: "123" });
+  });
+
+  it("should match consecutive optional static segments when none are provided", () => {
+    expect(matchPath("/one?/two?", "/")).toMatchObject({ pathname: "/" });
+    expect(matchPath("/one?/two?", "/one")).toMatchObject({ pathname: "/one" });
+    expect(matchPath("/one?/two?", "/two")).toMatchObject({ pathname: "/two" });
+    expect(matchPath("/one?/two?", "/one/two")).toMatchObject({
+      pathname: "/one/two",
+    });
+  });
+
+  it("correctly extracts params after consecutive optional static segments", () => {
+    const match1 = matchPath("/one?/two?/:three?", "/one/two/tres");
+    expect(match1?.params).toMatchObject({ three: "tres" });
+
+    const match2 = matchPath("/one?/two?/:three?", "/one/two");
+    expect(match2?.params).toMatchObject({ three: undefined });
+
+    const match3 = matchPath("/one?/two?/:three?", "/tres");
+    expect(match3?.params).toMatchObject({ three: "tres" });
   });
 
   it("does not trigger from question marks in the middle of the optional static segment", () => {

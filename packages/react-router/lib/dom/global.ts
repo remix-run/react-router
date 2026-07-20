@@ -17,7 +17,7 @@ export interface ViewTransition {
 }
 
 declare global {
-  // TODO: v7 - Can this go away in favor of "just use remix"?
+  // TODO: (v9) Can this go away in favor of "just use remix"?
   var __staticRouterHydrationData: HydrationState | undefined;
   // v6 SPA info
   var __reactRouterVersion: string;

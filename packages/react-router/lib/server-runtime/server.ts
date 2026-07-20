@@ -1,27 +1,33 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse } from "../router/utils";
-import { RouterContextProvider } from "../router/utils";
+import type {
+  DataRouteObject,
+  ErrorResponse,
+  RouteBranch,
+} from "../router/utils";
 import {
+  defaultMapRouteProperties,
   isRouteErrorResponse,
   ErrorResponseImpl,
+  RouterContextProvider,
   stripBasename,
+  removeTrailingSlash,
 } from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
   isRedirectResponse,
   isResponse,
+  isMutationMethod,
 } from "../router/router";
-import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { CriticalCss, EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
-import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
+import { sanitizeErrors, serializeError } from "./errors";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
-import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
+import { createStaticHandlerDataRoutes } from "./routes";
 import type { ServerHandoff } from "./serverHandoff";
 import { createServerHandoffString } from "./serverHandoff";
 import { getBuildTimeHeader, getDevServerHooks } from "./dev";
@@ -34,16 +40,19 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
-import type { MiddlewareEnabled } from "../types/future";
-import { getManifestPath } from "../dom/ssr/fog-of-war";
-import type { unstable_InstrumentRequestHandlerFunction } from "../router/instrumentation";
-import { instrumentHandler } from "../router/instrumentation";
+import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
+import {
+  instrumentationResultMetaContext,
+  instrumentHandler,
+} from "../router/instrumentation";
+import { createDataFunctionUrl, getRoutePattern } from "../router/utils";
+import { throwIfPotentialCSRFAttack } from "../actions";
+import { getNormalizedPath } from "./urls";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: MiddlewareEnabled extends true
-    ? RouterContextProvider
-    : AppLoadContext,
+  loadContext?: RouterContextProvider,
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -52,12 +61,13 @@ export type CreateRequestHandlerFunction = (
 ) => RequestHandler;
 
 function derive(build: ServerBuild, mode?: string) {
-  let routes = createRoutes(build.routes);
-  let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
+  let dataRoutes = createStaticHandlerDataRoutes(build.routes);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
-    unstable_instrumentations: build.entry.module.unstable_instrumentations,
+    mapRouteProperties: defaultMapRouteProperties,
+    instrumentations: build.entry.module.instrumentations,
+    future: build.future,
   });
 
   let errorHandler =
@@ -70,10 +80,13 @@ function derive(build: ServerBuild, mode?: string) {
         );
       }
     });
+  let requestHandlerInstrumentations = build.entry.module.instrumentations
+    ?.map((i) => i.handler)
+    .filter(Boolean) as InstrumentRequestHandlerFunction[];
 
   let requestHandler: RequestHandler = async (request, initialContext) => {
     let params: RouteMatch<ServerRoute>["params"] = {};
-    let loadContext: AppLoadContext | RouterContextProvider;
+    let loadContext: RouterContextProvider;
 
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -87,41 +100,20 @@ function derive(build: ServerBuild, mode?: string) {
       });
     };
 
-    if (build.future.v8_middleware) {
-      if (
-        initialContext &&
-        !(initialContext instanceof RouterContextProvider)
-      ) {
-        let error = new Error(
-          "Invalid `context` value provided to `handleRequest`. When middleware " +
-            "is enabled you must return an instance of `RouterContextProvider` " +
-            "from your `getLoadContext` function.",
-        );
-        handleError(error);
-        return returnLastResortErrorResponse(error, serverMode);
-      }
-      loadContext = initialContext || new RouterContextProvider();
-    } else {
-      loadContext = initialContext || {};
+    if (initialContext && !(initialContext instanceof RouterContextProvider)) {
+      let error = new Error(
+        "Invalid `context` value provided to `handleRequest`. You must " +
+          "return an instance of `RouterContextProvider` from your " +
+          "`getLoadContext` function.",
+      );
+      handleError(error);
+      return returnLastResortErrorResponse(error, serverMode);
     }
+    loadContext = initialContext || new RouterContextProvider();
 
-    let url = new URL(request.url);
-
-    let normalizedBasename = build.basename || "/";
-    let normalizedPath = url.pathname;
-    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
-      normalizedPath = normalizedBasename;
-    } else if (normalizedPath.endsWith(".data")) {
-      normalizedPath = normalizedPath.replace(/\.data$/, "");
-    }
-
-    if (
-      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
-      normalizedPath.endsWith("/")
-    ) {
-      normalizedPath = normalizedPath.slice(0, -1);
-    }
-
+    let requestUrl = new URL(request.url);
+    let normalizedPath = getNormalizedPath(request);
+    let normalizedPathname = normalizedPath.pathname;
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -129,17 +121,17 @@ function derive(build: ServerBuild, mode?: string) {
     // pre-rendered site would
     if (!build.ssr) {
       // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPath);
+      let decodedPath = decodeURI(normalizedPathname);
 
-      if (normalizedBasename !== "/") {
-        let strippedPath = stripBasename(decodedPath, normalizedBasename);
+      if (build.basename && build.basename !== "/") {
+        let strippedPath = stripBasename(decodedPath, build.basename);
         if (strippedPath == null) {
           errorHandler(
             new ErrorResponseImpl(
               404,
               "Not Found",
               `Refusing to prerender the \`${decodedPath}\` path because it does ` +
-                `not start with the basename \`${normalizedBasename}\``,
+                `not start with the basename \`${build.basename}\``,
             ),
             {
               context: loadContext,
@@ -161,10 +153,11 @@ function derive(build: ServerBuild, mode?: string) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !build.prerender.includes(decodedPath) &&
-        !build.prerender.includes(decodedPath + "/")
+        !build.prerender.some(
+          (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
+        )
       ) {
-        if (url.pathname.endsWith(".data")) {
+        if (requestUrl.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
           errorHandler(
             new ErrorResponseImpl(
@@ -192,11 +185,19 @@ function derive(build: ServerBuild, mode?: string) {
     // Manifest request for fog of war
     let manifestUrl = getManifestPath(
       build.routeDiscovery.manifestPath,
-      normalizedBasename,
+      build.basename,
     );
-    if (url.pathname === manifestUrl) {
+    if (
+      build.routeDiscovery.mode === "lazy" &&
+      requestUrl.pathname === manifestUrl
+    ) {
       try {
-        let res = await handleManifestRequest(build, routes, url);
+        let res = await handleManifestRequest(
+          build,
+          staticHandler.dataRoutes,
+          staticHandler._internalRouteBranches,
+          requestUrl,
+        );
         return res;
       } catch (e) {
         handleError(e);
@@ -204,28 +205,31 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
-    let matches = matchServerRoutes(routes, normalizedPath, build.basename);
+    let matches = matchServerRoutes(
+      build.routes,
+      staticHandler.dataRoutes,
+      staticHandler._internalRouteBranches,
+      normalizedPathname,
+      build.basename,
+    );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
+    if (requestHandlerInstrumentations?.length) {
+      loadContext.set(instrumentationResultMetaContext, {
+        url: createDataFunctionUrl(request, normalizedPath),
+        pattern: matches ? getRoutePattern(matches) : "",
+        params: matches?.[0]?.params ? { ...matches[0].params } : {},
+      });
+    }
 
     let response: Response;
-    if (url.pathname.endsWith(".data")) {
-      let handlerUrl = new URL(request.url);
-      handlerUrl.pathname = normalizedPath;
-
-      let singleFetchMatches = matchServerRoutes(
-        routes,
-        handlerUrl.pathname,
-        build.basename,
-      );
-
+    if (requestUrl.pathname.endsWith(".data")) {
       response = await handleSingleFetchRequest(
         serverMode,
         build,
         staticHandler,
         request,
-        handlerUrl,
         loadContext,
         handleError,
       );
@@ -242,7 +246,7 @@ function derive(build: ServerBuild, mode?: string) {
       if (build.entry.module.handleDataRequest) {
         response = await build.entry.module.handleDataRequest(response, {
           context: loadContext,
-          params: singleFetchMatches ? singleFetchMatches[0].params : {},
+          params: matches ? matches[0].params : {},
           request,
         });
 
@@ -271,7 +275,7 @@ function derive(build: ServerBuild, mode?: string) {
         handleError,
       );
     } else {
-      let { pathname } = url;
+      let { pathname } = requestUrl;
 
       let criticalCss: CriticalCss | undefined = undefined;
       if (build.unstable_getCriticalCss) {
@@ -306,18 +310,14 @@ function derive(build: ServerBuild, mode?: string) {
     return response;
   };
 
-  if (build.entry.module.unstable_instrumentations) {
+  if (requestHandlerInstrumentations?.length) {
     requestHandler = instrumentHandler(
       requestHandler,
-      build.entry.module.unstable_instrumentations
-        .map((i) => i.handler)
-        .filter(Boolean) as unstable_InstrumentRequestHandlerFunction[],
+      requestHandlerInstrumentations,
     );
   }
 
   return {
-    routes,
-    dataRoutes,
     serverMode,
     staticHandler,
     errorHandler,
@@ -325,12 +325,23 @@ function derive(build: ServerBuild, mode?: string) {
   };
 }
 
+/**
+ * Creates a request handler for a React Router server build.
+ *
+ * This is a low-level API used by server adapters to translate incoming
+ * requests into React Router responses.
+ *
+ * @category Utils
+ * @param build The server build, or a function that resolves to the server
+ * build, used to handle requests.
+ * @param mode The mode in which the server build is running.
+ * @returns A request handler that returns a response for each incoming request.
+ */
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
   mode,
 ) => {
   let _build: ServerBuild;
-  let routes: ServerRoute[];
   let serverMode: ServerMode;
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
@@ -341,20 +352,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     if (typeof build === "function") {
       let derived = derive(_build, mode);
-      routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
       _requestHandler = derived.requestHandler;
     } else if (
-      !routes ||
       !serverMode ||
       !staticHandler ||
       !errorHandler ||
       !_requestHandler
     ) {
       let derived = derive(_build, mode);
-      routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
@@ -367,9 +375,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  routes: ServerRoute[],
+  dataRoutes: DataRouteObject[],
+  branches: RouteBranch<DataRouteObject>[],
   url: URL,
 ) {
+  if (url.toString().length > URL_LIMIT) {
+    return new Response(null, {
+      statusText: "Bad Request",
+      status: 400,
+    });
+  }
+
   if (build.assets.version !== url.searchParams.get("version")) {
     return new Response(null, {
       status: 204,
@@ -382,31 +398,19 @@ async function handleManifestRequest(
   let patches: Record<string, EntryRoute> = {};
 
   if (url.searchParams.has("paths")) {
-    let paths = new Set<string>();
-
-    // In addition to responding with the patches for the requested paths, we
-    // need to include patches for each partial path so that we pick up any
-    // pathless/index routes below ancestor segments.  So if we
-    // get a request for `/parent/child`, we need to look for a match on `/parent`
-    // so that if a `parent._index` route exists we return it so it's available
-    // for client side matching if the user routes back up to `/parent`.
-    // This is the same thing we do on initial load in <Scripts> via
-    // `getPartialManifest()`
     let pathParam = url.searchParams.get("paths") || "";
-    let requestedPaths = pathParam.split(",").filter(Boolean);
-    requestedPaths.forEach((path) => {
+    let paths = new Set(pathParam.split(",").filter(Boolean));
+    for (let path of paths) {
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let segments = path.split("/").slice(1);
-      segments.forEach((_, i) => {
-        let partialPath = segments.slice(0, i + 1).join("/");
-        paths.add(`/${partialPath}`);
-      });
-    });
-
-    for (let path of paths) {
-      let matches = matchServerRoutes(routes, path, build.basename);
+      let matches = matchServerRoutes(
+        build.routes,
+        dataRoutes,
+        branches,
+        path,
+        build.basename,
+      );
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -433,30 +437,26 @@ async function handleSingleFetchRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  handlerUrl: URL,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ): Promise<Response> {
-  let response =
-    request.method !== "GET"
-      ? await singleFetchAction(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        )
-      : await singleFetchLoaders(
-          build,
-          serverMode,
-          staticHandler,
-          request,
-          handlerUrl,
-          loadContext,
-          handleError,
-        );
+  let response = isMutationMethod(request.method)
+    ? await singleFetchAction(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        loadContext,
+        handleError,
+      )
+    : await singleFetchLoaders(
+        build,
+        serverMode,
+        staticHandler,
+        request,
+        loadContext,
+        handleError,
+      );
 
   return response;
 }
@@ -466,28 +466,40 @@ async function handleDocumentRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
   isSpaMode: boolean,
   criticalCss?: CriticalCss,
 ) {
   try {
+    if (isMutationMethod(request.method)) {
+      try {
+        throwIfPotentialCSRFAttack(
+          request,
+          Array.isArray(build.allowedActionOrigins)
+            ? build.allowedActionOrigins
+            : [],
+        );
+      } catch (e) {
+        handleError(e);
+        return new Response("Bad Request", { status: 400 });
+      }
+    }
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (query) => {
-            try {
-              let innerResult = await query(request);
-              if (!isResponse(innerResult)) {
-                innerResult = await renderHtml(innerResult, isSpaMode);
-              }
-              return innerResult;
-            } catch (error: unknown) {
-              handleError(error);
-              return new Response(null, { status: 500 });
-            }
+      generateMiddlewareResponse: async (query) => {
+        try {
+          let innerResult = await query(request);
+          if (!isResponse(innerResult)) {
+            innerResult = await renderHtml(innerResult, isSpaMode);
           }
-        : undefined,
+          return innerResult;
+        } catch (error: unknown) {
+          handleError(error);
+          return new Response(null, { status: 500 });
+        }
+      },
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     if (!isResponse(result)) {
@@ -524,7 +536,7 @@ async function handleDocumentRequest(
     let state = {
       loaderData: context.loaderData,
       actionData: context.actionData,
-      errors: serializeErrors(context.errors, serverMode),
+      errors: context.errors,
     };
     let baseServerHandoff: ServerHandoff = {
       basename: build.basename,
@@ -535,6 +547,7 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
+      branches: staticHandler._internalRouteBranches,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
@@ -563,9 +576,7 @@ async function handleDocumentRequest(
         context.statusCode,
         headers,
         entryContext,
-        loadContext as MiddlewareEnabled extends true
-          ? RouterContextProvider
-          : AppLoadContext,
+        loadContext,
       );
     } catch (error: unknown) {
       handleError(error);
@@ -582,7 +593,10 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (e) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          e
+        ) {
           // If we can't unwrap the response - just leave it as-is
         }
       }
@@ -606,7 +620,7 @@ async function handleDocumentRequest(
       let state = {
         loaderData: context.loaderData,
         actionData: context.actionData,
-        errors: serializeErrors(context.errors, serverMode),
+        errors: context.errors,
       };
       entryContext = {
         ...entryContext,
@@ -627,9 +641,7 @@ async function handleDocumentRequest(
           context.statusCode,
           headers,
           entryContext,
-          loadContext as MiddlewareEnabled extends true
-            ? RouterContextProvider
-            : AppLoadContext,
+          loadContext,
         );
       } catch (error: any) {
         handleError(error);
@@ -645,7 +657,7 @@ async function handleResourceRequest(
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext | RouterContextProvider,
+  loadContext: RouterContextProvider,
   handleError: (err: unknown) => void,
 ) {
   try {
@@ -655,16 +667,15 @@ async function handleResourceRequest(
     let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      generateMiddlewareResponse: build.future.v8_middleware
-        ? async (queryRoute) => {
-            try {
-              let innerResult = await queryRoute(request);
-              return handleQueryRouteResult(innerResult);
-            } catch (error) {
-              return handleQueryRouteError(error);
-            }
-          }
-        : undefined,
+      generateMiddlewareResponse: async (queryRoute) => {
+        try {
+          let innerResult = await queryRoute(request);
+          return handleQueryRouteResult(innerResult);
+        } catch (error) {
+          return handleQueryRouteError(error);
+        }
+      },
+      normalizePath: (r) => getNormalizedPath(r),
     });
 
     return handleQueryRouteResult(result);

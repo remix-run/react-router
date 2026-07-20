@@ -13,7 +13,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {

@@ -90,3 +90,15 @@ Cloudflare maintains their own template for React Router. Checkout the [Cloudfla
 ### Netlify
 
 Netlify maintains their own template for React Router. Checkout the [Netlify Guide](https://docs.netlify.com/build/frameworks/framework-setup-guides/react-router/) for more information.
+
+### EdgeOne Pages
+
+EdgeOne Pages maintains their own template for React Router. Checkout the [EdgeOne Pages Guide](https://pages.edgeone.ai/document/framework-react-router) for more information.
+
+### DeployHQ
+
+DeployHQ maintains their own guide for deploying React Router to your own server. Checkout the [DeployHQ Guide](https://www.deployhq.com/guides/deploy-react-router-from-github) for more information.
+
+### Hostinger
+
+Hostinger supports deploying React Router applications with server rendering on its managed Node.js hosting, including automatic deployments from GitHub. Checkout the [Hostinger Guide](https://www.hostinger.com/web-apps-hosting/react-router-hosting) for more information.

@@ -1,10 +1,9 @@
-name: 📚 Docs
+name: Docs
 
 on:
   push:
     branches:
       - main
-      - dev
     paths:
       - "packages/**/*.ts"
       - "packages/**/*.tsx"
@@ -25,34 +24,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v5
+      - name: Checkout repo
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.FORMAT_PAT }}
           ref: ${{ github.event.inputs.branch }}
 
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
-      - name: ⎔ Setup node
+      - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: pnpm
 
-      - name: 📥 Install deps
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🏗 Build
+      - name: Build
         run: pnpm build
 
-      - name: 📚 Generate Typedoc Docs
+      - name: Generate Typedoc Docs
         run: pnpm run docs:typedoc
 
-      - name: 📚 Generate Markdown Docs
+      - name: Generate Markdown Docs
         run: pnpm run docs:jsdoc --write
 
-      - name: 💪 Commit
+      - name: Commit
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"

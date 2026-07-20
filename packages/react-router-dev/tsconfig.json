@@ -1,17 +1,17 @@
 {
-  "include": ["**/*.ts", "package.json"],
-  "exclude": ["dist", "__tests__", "node_modules"],
+  "extends": "../../tsconfig.base.json",
+  "include": ["**/*.ts", "./rsc-types.d.ts", "package.json"],
+  "exclude": [
+    "dist",
+    "__tests__",
+    "node_modules",
+    "**/*-test.ts",
+    "config/default-rsc-entries"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
-
-    "strict": true,
+    "types": ["node", "vite/client", "@vitejs/plugin-rsc/types"],
     "jsx": "react",
-
-    "skipLibCheck": true,
-
     "outDir": "dist",
     "rootDir": ".",
     "noEmit": true,

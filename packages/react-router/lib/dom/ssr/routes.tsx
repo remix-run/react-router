@@ -3,6 +3,7 @@ import * as React from "react";
 import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
+  DataRouteObject,
   LoaderFunctionArgs,
   RouteManifest,
   ShouldRevalidateFunction,
@@ -21,7 +22,6 @@ import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
 import { useRouteError } from "../../hooks";
-import type { DataRouteObject } from "../../context";
 
 export interface Route {
   index?: boolean;
@@ -340,49 +340,49 @@ export function createClientRoutes(
         (routeModule.clientLoader?.hydrate === true || !route.hasLoader);
 
       dataRoute.loader = async (
-        { request, params, context, unstable_pattern }: LoaderFunctionArgs,
+        { request, params, context, pattern, url }: LoaderFunctionArgs,
         singleFetch?: unknown,
       ) => {
-        try {
-          let result = await prefetchStylesAndCallHandler(async () => {
-            invariant(
-              routeModule,
-              "No `routeModule` available for critical-route loader",
-            );
-            if (!routeModule.clientLoader) {
-              // Call the server when no client loader exists
-              return fetchServerLoader(singleFetch);
-            }
+        // Capture and clear immediately so that if this call is aborted
+        // mid-flight, subsequent calls won't see a stale `true` value
+        let _isHydrationRequest = isHydrationRequest;
+        isHydrationRequest = false;
 
-            return routeModule.clientLoader({
-              request,
-              params,
-              context,
-              unstable_pattern,
-              async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route);
+        let result = await prefetchStylesAndCallHandler(async () => {
+          invariant(
+            routeModule,
+            "No `routeModule` available for critical-route loader",
+          );
+          if (!routeModule.clientLoader) {
+            // Call the server when no client loader exists
+            return fetchServerLoader(singleFetch);
+          }
 
-                // On the first call, resolve with the server result
-                if (isHydrationRequest) {
-                  if (hasInitialData) {
-                    return initialData;
-                  }
-                  if (hasInitialError) {
-                    throw initialError;
-                  }
+          return routeModule.clientLoader({
+            request,
+            params,
+            context,
+            pattern,
+            url,
+            async serverLoader() {
+              preventInvalidServerHandlerCall("loader", route);
+
+              // On the first call, resolve with the server result
+              if (_isHydrationRequest) {
+                if (hasInitialData) {
+                  return initialData;
                 }
+                if (hasInitialError) {
+                  throw initialError;
+                }
+              }
 
-                // Call the server loader for client-side navigations
-                return fetchServerLoader(singleFetch);
-              },
-            });
+              // Call the server loader for client-side navigations
+              return fetchServerLoader(singleFetch);
+            },
           });
-          return result;
-        } finally {
-          // Whether or not the user calls `serverLoader`, we only let this
-          // stick around as true for one loader call
-          isHydrationRequest = false;
-        }
+        });
+        return result;
       };
 
       // Let React Router know whether to run this on hydration
@@ -394,7 +394,7 @@ export function createClientRoutes(
       );
 
       dataRoute.action = (
-        { request, params, context, unstable_pattern }: ActionFunctionArgs,
+        { request, params, context, pattern, url }: ActionFunctionArgs,
         singleFetch?: unknown,
       ) => {
         return prefetchStylesAndCallHandler(async () => {
@@ -413,7 +413,8 @@ export function createClientRoutes(
             request,
             params,
             context,
-            unstable_pattern,
+            pattern,
+            url,
             async serverAction() {
               preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);
@@ -602,14 +603,6 @@ function getShouldRevalidateFunction(
     } else {
       return (opts: ShouldRevalidateFunctionArgs) => didParamsChange(opts);
     }
-  }
-
-  // Single fetch revalidates by default, so override the RR default value which
-  // matches the multi-fetch behavior with `true`
-  if (ssr && route.shouldRevalidate) {
-    let fn = route.shouldRevalidate;
-    return (opts: ShouldRevalidateFunctionArgs) =>
-      fn({ ...opts, defaultShouldRevalidate: true });
   }
 
   return route.shouldRevalidate;

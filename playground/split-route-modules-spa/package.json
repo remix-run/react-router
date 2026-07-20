@@ -12,20 +12,20 @@
   },
   "dependencies": {
     "@react-router/node": "workspace:*",
-    "isbot": "^5",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "isbot": "^5.1.40",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "workspace:*"
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "typescript": "^5.1.6",
-    "vite": "^6.1.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "@types/node": "^22.19.19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^8.0.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   }
 }

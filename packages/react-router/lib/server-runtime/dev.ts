@@ -19,10 +19,16 @@ export function getDevServerHooks(): DevServerHooks | undefined {
 export function getBuildTimeHeader(request: Request, headerName: string) {
   if (typeof process !== "undefined") {
     try {
-      if (process.env?.IS_RR_BUILD_REQUEST === "yes") {
+      if (
+        process.env.hasOwnProperty("IS_RR_BUILD_REQUEST") &&
+        process.env.IS_RR_BUILD_REQUEST === "yes"
+      ) {
         return request.headers.get(headerName);
       }
-    } catch (e) {}
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {}
   }
   return null;
 }

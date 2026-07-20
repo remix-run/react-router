@@ -278,7 +278,7 @@ The `expires` argument to `createData` and `updateData` is the same `Date` at wh
 There are also several other session utilities available if you need them:
 
 - [`isSession`][is-session]
-- [`createMemorySessionStorage`][create-memory-session-storage]
+- [`createMemorySessionStorage`][create-memory-session-storage] (local dev and testing)
 - [`createSession`][create-session] (custom storage)
 - [`createFileSessionStorage`][create-file-session-storage] (node)
 - [`createWorkersKVSessionStorage`][create-workers-kv-session-storage] (Cloudflare Workers)
@@ -449,17 +449,17 @@ To learn more about each attribute, please see the [MDN Set-Cookie docs][cookie-
 [csrf]: https://developer.mozilla.org/en-US/docs/Glossary/CSRF
 [cookies]: #cookies
 [sessions]: #sessions
-[session-storage]: https://api.reactrouter.com/v7/interfaces/react_router.SessionStorage
-[session-api]: https://api.reactrouter.com/v7/interfaces/react_router.Session
-[is-session]: https://api.reactrouter.com/v7/functions/react_router.isSession
-[cookie-api]: https://api.reactrouter.com/v7/interfaces/react_router.Cookie
-[create-session-storage]: https://api.reactrouter.com/v7/functions/react_router.createSessionStorage
-[create-session]: https://api.reactrouter.com/v7/functions/react_router.createSession
-[create-memory-session-storage]: https://api.reactrouter.com/v7/functions/react_router.createMemorySessionStorage
-[create-file-session-storage]: https://api.reactrouter.com/v7/functions/_react_router_node.createFileSessionStorage
-[create-workers-kv-session-storage]: https://api.reactrouter.com/v7/functions/_react_router_cloudflare.createWorkersKVSessionStorage
-[create-arc-table-session-storage]: https://api.reactrouter.com/v7/functions/_react_router_architect.createArcTableSessionStorage
+[session-storage]: https://api.reactrouter.com/v8/interfaces/react-router.SessionStorage
+[session-api]: https://api.reactrouter.com/v8/interfaces/react-router.Session
+[is-session]: https://api.reactrouter.com/v8/variables/react-router.isSession.html
+[cookie-api]: https://api.reactrouter.com/v8/interfaces/react-router.Cookie
+[create-session-storage]: https://api.reactrouter.com/v8/functions/react-router.createSessionStorage
+[create-session]: https://api.reactrouter.com/v8/variables/react-router.createSession.html
+[create-memory-session-storage]: https://api.reactrouter.com/v8/functions/react-router.createMemorySessionStorage
+[create-file-session-storage]: https://api.reactrouter.com/v8/functions/_react-router_node.createFileSessionStorage
+[create-workers-kv-session-storage]: https://api.reactrouter.com/v8/functions/_react-router_cloudflare.createWorkersKVSessionStorage
+[create-arc-table-session-storage]: https://api.reactrouter.com/v8/functions/_react-router_architect.createArcTableSessionStorage
 [cookie]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies
 [cookie-attrs]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes
-[is-cookie]: https://api.reactrouter.com/v7/functions/react_router.isCookie
-[create-cookie]: https://api.reactrouter.com/v7/functions/react_router.createCookie
+[is-cookie]: https://api.reactrouter.com/v8/variables/react-router.isCookie.html
+[create-cookie]: https://api.reactrouter.com/v8/functions/react-router.createCookie

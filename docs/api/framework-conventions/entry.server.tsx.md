@@ -160,5 +160,5 @@ Note that this does not handle thrown `Response` instances from your `loader`/`a
 [streaming]: ../../how-to/suspense
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
-[node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
+[node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/main/packages/react-router-dev/config/defaults/entry.server.node.tsx
 [templates-repo]: https://github.com/remix-run/react-router-templates

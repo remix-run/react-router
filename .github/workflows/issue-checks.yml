@@ -1,0 +1,57 @@
+# Issue automation triggered by labels
+
+name: Issue Checks
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  close-no-repro-issue:
+    name: Close issue without a reproduction
+    if: github.repository == 'remix-run/react-router' && github.event.label.name == 'no-reproduction'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Close issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_BODY: |
+            :wave: @${{ github.event.issue.user.login }}, to align with our new [Open Governance](https://remix.run/blog/rr-governance) model, we are now requiring that all issues have a [**minimal** and **runnable** reproduction](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process). This should help us to focus on actionable issues and be more responsive to newly filed issues.
+
+            To get this re-opened, please add a reproduction to the Issue description and tag `@brophdawg11` or `@brookslybrand` in a comment so we can re-open.
+
+            Or, if this was closed by mistake and there is a valid reproduction, please ensure that it is linked in the Issue description and tag `@brophdawg11` or `@brookslybrand` in a comment so we can re-open.
+
+            If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "$COMMENT_BODY"
+          gh issue edit ${{ github.event.issue.number }} --remove-label "${{ github.event.label.name }}"
+          gh issue close ${{ github.event.issue.number }} -r "not planned"
+
+  close-support-issue:
+    name: Close support issue
+    if: github.repository == 'remix-run/react-router' && github.event.label.name == 'support'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Close issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_BODY: |
+            :wave: @${{ github.event.issue.user.login }}, we use the issue tracker exclusively for bug reports and feature requests. However, this issue appears to be a support request.
+
+            For usage questions, please use [Stack Overflow](https://stackoverflow.com/questions/tagged/react-router) or [Discord](https://remix.run/discord) where there are a lot more people ready to help you out, or [post a new question](https://github.com/remix-run/react-router/discussions/new?category=q-a) in the Discussions tab of this repository.
+
+            Please feel free to clarify your issue if you think it was closed prematurely.
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "$COMMENT_BODY"
+          gh issue edit ${{ github.event.issue.number }} --remove-label "${{ github.event.label.name }}"
+          gh issue close ${{ github.event.issue.number }} -r "not planned"

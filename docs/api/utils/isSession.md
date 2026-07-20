@@ -4,10 +4,34 @@ title: isSession
 
 # isSession
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/server-runtime/sessions.ts
+-->
+
 [MODES: framework, data]
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.isSession.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.isSession.html)
 
-Returns true if an object is a React Router session.
+Returns `true` if a value is a React Router [`Session`](https://api.reactrouter.com/v8/interfaces/react-router.Session.html) object.
+
+## Params
+
+### object
+
+The value to check.
+
+## Returns
+
+`true` if the value is a React Router [`Session`](https://api.reactrouter.com/v8/interfaces/react-router.Session.html) object;
+otherwise, `false`.
+

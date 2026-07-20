@@ -1,3 +1,4 @@
+import { SUPPORTED_ERROR_TYPES } from "../../lib/router/utils";
 import {
   Deferred,
   HOLE,
@@ -184,7 +185,11 @@ function hydrate(this: ThisDecode, index: number): any {
           case TYPE_ERROR:
             const [, message, errorType] = value;
             let error =
-              errorType && globalObj && globalObj[errorType]
+              errorType &&
+              globalObj &&
+              SUPPORTED_ERROR_TYPES.includes(errorType) &&
+              errorType in globalObj &&
+              typeof globalObj[errorType] === "function"
                 ? new globalObj[errorType](message)
                 : new Error(message);
             hydrated[index] = error;

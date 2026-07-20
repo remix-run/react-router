@@ -1,13 +1,10 @@
-import type { ParseOptions, SerializeOptions } from "cookie";
-import { parse, serialize } from "cookie";
+import type { CookieParseOptions, CookieSerializeOptions } from "cookie-es";
+import { parse, serialize } from "cookie-es";
 
 import { sign, unsign } from "./crypto";
 import { warnOnce } from "./warnings";
 
-export type {
-  ParseOptions as CookieParseOptions,
-  SerializeOptions as CookieSerializeOptions,
-};
+export type { CookieParseOptions, CookieSerializeOptions };
 
 export interface CookieSignatureOptions {
   /**
@@ -21,8 +18,8 @@ export interface CookieSignatureOptions {
   secrets?: string[];
 }
 
-export type CookieOptions = ParseOptions &
-  SerializeOptions &
+export type CookieOptions = CookieParseOptions &
+  CookieSerializeOptions &
   CookieSignatureOptions;
 
 /**
@@ -58,17 +55,28 @@ export interface Cookie {
    * Parses a raw `Cookie` header and returns the value of this cookie or
    * `null` if it's not present.
    */
-  parse(cookieHeader: string | null, options?: ParseOptions): Promise<any>;
+  parse(
+    cookieHeader: string | null,
+    options?: CookieParseOptions,
+  ): Promise<any>;
 
   /**
    * Serializes the given value to a string and returns the `Set-Cookie`
    * header.
    */
-  serialize(value: any, options?: SerializeOptions): Promise<string>;
+  serialize(value: any, options?: CookieSerializeOptions): Promise<string>;
 }
 
 /**
  * Creates a logical container for managing a browser cookie from the server.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param name The name of the cookie.
+ * @param cookieOptions Options for parsing and serializing the cookie.
+ * @returns A {@link Cookie} object for parsing and serializing the cookie.
  */
 export const createCookie = (
   name: string,
@@ -123,12 +131,30 @@ export const createCookie = (
   };
 };
 
+/**
+ * A function that determines whether a value is a React Router {@link Cookie}
+ * object.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Cookie} object;
+ * otherwise, `false`.
+ */
 export type IsCookieFunction = (object: any) => object is Cookie;
 
 /**
- * Returns true if an object is a Remix cookie container.
+ * Returns `true` if a value is a React Router {@link Cookie} object.
  *
- * @see https://remix.run/utils/cookies#iscookie
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Cookie} object;
+ * otherwise, `false`.
  */
 export const isCookie: IsCookieFunction = (object): object is Cookie => {
   return (
@@ -178,7 +204,10 @@ function encodeData(value: any): string {
 function decodeData(value: string): any {
   try {
     return JSON.parse(decodeURIComponent(myEscape(atob(value))));
-  } catch (error: unknown) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     return {};
   }
 }

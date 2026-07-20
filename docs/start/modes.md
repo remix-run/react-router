@@ -98,7 +98,6 @@ Every mode supports any architecture and deployment target, so the question isn'
 - are considering Next.js, Solid Start, SvelteKit, Astro, TanStack Start, etc. and want to compare
 - just want to build something with React
 - might want to server render, might not
-- are coming from Remix (React Router v7 is the "next version" after Remix v2)
 - are migrating from Next.js
 
 [→ Get Started with Framework Mode](./framework/installation).
@@ -113,7 +112,7 @@ Every mode supports any architecture and deployment target, so the question isn'
 **Use Declarative Mode if you:**
 
 - want to use React Router as simply as possible
-- are coming from v6 and are happy with the `<BrowserRouter>`
+- are coming from earlier React Router versions and are happy with the `<BrowserRouter>`
 - have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
 - are coming from Create React App (you may want to consider framework mode though)
 

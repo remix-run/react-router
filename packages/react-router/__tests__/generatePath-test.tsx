@@ -141,7 +141,29 @@ describe("generatePath", () => {
     });
   });
 
-  it("throws only on on missing named parameters, but not missing splat params", () => {
+  describe("param encoding", () => {
+    it("encodes characters that would change the URL structure", () => {
+      expect(generatePath("/courses/:id", { id: "a b?c#d%e" })).toBe(
+        "/courses/a%20b%3Fc%23d%25e",
+      );
+      expect(generatePath("/courses/:id", { id: "café…" })).toBe(
+        "/courses/caf%C3%A9%E2%80%A6",
+      );
+    });
+
+    it("preserves characters RFC 3986 allows literally in a path segment", () => {
+      // pchar sub-delims plus ":" and "@" — see RFC 3986 §3.3
+      expect(generatePath("/courses/:id", { id: "$&+,;=:@" })).toBe(
+        "/courses/$&+,;=:@",
+      );
+      // e.g. a semver build suffix survives untouched
+      expect(generatePath("/releases/:version", { version: "1.0.0+1" })).toBe(
+        "/releases/1.0.0+1",
+      );
+    });
+  });
+
+  it("throws only on missing named parameters, but not missing splat params", () => {
     expect(() => generatePath(":foo")).toThrow();
     expect(() => generatePath("/:foo")).toThrow();
     expect(() => generatePath("*")).not.toThrow();
@@ -190,5 +212,26 @@ describe("generatePath", () => {
     `);
 
     consoleWarn.mockRestore();
+  });
+
+  describe("with params followed by static text", () => {
+    it("interpolates params with file extensions", () => {
+      expect(generatePath("/books/:id.json", { id: "42" })).toBe(
+        "/books/42.json",
+      );
+      expect(generatePath("/api/:resource.xml", { resource: "users" })).toBe(
+        "/api/users.xml",
+      );
+      expect(generatePath("/:lang.html", { lang: "en" })).toBe("/en.html");
+    });
+
+    it("handles multiple extensions", () => {
+      expect(generatePath("/files/:name.tar.gz", { name: "archive" })).toBe(
+        "/files/archive.tar.gz",
+      );
+      expect(generatePath("/:file.min.js", { file: "app" })).toBe(
+        "/app.min.js",
+      );
+    });
   });
 });

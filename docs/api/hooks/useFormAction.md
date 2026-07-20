@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useFormAction.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.useFormAction.html)
 
 Resolves the URL to the closest route in the component hierarchy instead of
 the current URL of the app.
@@ -28,7 +28,7 @@ the current URL of the app.
 This is used internally by [`Form`](../components/Form) to resolve the `action` to the closest
 route, but can be used generically as well.
 
-```tsx
+```ts
 import { useFormAction } from "react-router";
 
 function SomeComponent() {
@@ -40,6 +40,12 @@ function SomeComponent() {
 }
 ```
 
+<docs-info>This hook adds a `basename` if your app specifies one, so that it
+can be used with raw `<form>` elements in a progressively enhanced way.  If
+you are using this to provide an `action` to `<Form>` or `fetcher.submit`, you
+will need to remove the `basename` since both of those will prepend it
+internally.</docs-info>
+
 ## Signature
 
 ```tsx
@@ -49,8 +55,8 @@ function useFormAction(
     relative,
   }: {
     relative?: RelativeRoutingType;
-  } = ,
-): string {}
+  } = {},
+): string
 ```
 
 ## Params

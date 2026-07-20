@@ -1,6 +1,7 @@
 {
   "name": "@react-router/express",
-  "version": "7.9.6",
+  "type": "module",
+  "version": "8.2.0",
   "description": "Express server request handler for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -15,19 +16,9 @@
   "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "node": {
-        "types": "./dist/index.d.ts",
-        "module-sync": "./dist/index.mjs",
-        "default": "./dist/index.js"
-      },
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "module-sync": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -37,8 +28,9 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "tsconfig.json",
         "package.json"
@@ -52,20 +44,20 @@
     "@react-router/node": "workspace:*"
   },
   "devDependencies": {
-    "@types/express": "^4.17.9",
-    "@types/node": "^20.0.0",
-    "@types/supertest": "^2.0.10",
-    "express": "^4.19.2",
-    "node-mocks-http": "^1.10.1",
-    "supertest": "^6.3.3",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.19",
+    "@types/supertest": "^7.2.0",
+    "express": "^4.22.2",
+    "node-mocks-http": "^1.17.2",
+    "supertest": "^7.2.2",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "peerDependencies": {
-    "express": "^4.17.1 || ^5",
+    "express": "^4.22.2 || ^5",
     "react-router": "workspace:*",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
@@ -73,7 +65,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

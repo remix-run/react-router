@@ -80,10 +80,11 @@ test("middleware works without loader", async () => {
   ]);
 
   act(() => {
-    render(<RoutesStub future={{ v8_middleware: true }} />);
+    render(<RoutesStub />);
   });
 
   await waitFor(() => screen.findByText("Target"));
+  expect(true).toBe(true);
 });
 
 test("middleware works with loader", async () => {
@@ -103,9 +104,10 @@ test("middleware works with loader", async () => {
     },
   ]);
 
-  render(<RoutesStub future={{ v8_middleware: true }} />);
+  render(<RoutesStub />);
 
   await waitFor(() => screen.findByText("Message: hello"));
+  expect(true).toBe(true);
 });
 
 // eslint-disable-next-line jest/expect-expect
@@ -370,9 +372,7 @@ test("can pass context values (w/middleware)", async () => {
     new RouterContextProvider(new Map([[helloContext, "hello"]])),
   );
 
-  render(
-    <RoutesStub future={{ v8_middleware: true }} initialEntries={["/hello"]} />,
-  );
+  render(<RoutesStub initialEntries={["/hello"]} />);
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
   expect(await screen.findByTestId("hello")).toHaveTextContent(

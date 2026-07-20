@@ -7,9 +7,7 @@ import type {
   RouterContextProvider,
 } from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
-import type { AppLoadContext } from "../server-runtime/data";
 
-import type { MiddlewareEnabled } from "./future";
 import type { RouteModule } from "./route-module";
 import type { unstable_SerializesTo } from "./serializes-to";
 import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
@@ -78,6 +76,15 @@ export type ClientDataFunctionArgs<Params> = {
    **/
   request: Request;
   /**
+   * A URL instance representing the application location being navigated to or
+   * fetched.
+   *
+   * In Framework mode, this is a normalized URL with React-Router-specific
+   * implementation details removed (`.data` suffixes, `index`/`_routes` search
+   * params). For the raw incoming URL, use `request.url`.
+   */
+  url: URL;
+  /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
    * // app/routes.ts
@@ -96,14 +103,11 @@ export type ClientDataFunctionArgs<Params> = {
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  unstable_pattern: string;
+  pattern: string;
   /**
-   * When `future.v8_middleware` is not enabled, this is undefined.
-   *
-   * When `future.v8_middleware` is enabled, this is an instance of
-   * `RouterContextProvider` and can be used to access context values
-   * from your route middlewares.  You may pass in initial context values in your
-   * `<HydratedRouter getContext>` prop
+   * An instance of `RouterContextProvider` that can be used to access context
+   * values from your route middlewares.  You may pass in initial context values
+   * in your `<HydratedRouter getContext>` prop.
    */
   context: Readonly<RouterContextProvider>;
 };
@@ -111,6 +115,15 @@ export type ClientDataFunctionArgs<Params> = {
 export type ServerDataFunctionArgs<Params> = {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
   request: Request;
+  /**
+   * A URL instance representing the application location being navigated to or
+   * fetched.
+   *
+   * In Framework mode, this is a normalized URL with React-Router-specific
+   * implementation details removed (`.data` suffixes, `index`/`_routes` search
+   * params). For the raw incoming URL, use `request.url`.
+   */
+  url: URL;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -130,22 +143,14 @@ export type ServerDataFunctionArgs<Params> = {
    * Matched un-interpolated route pattern for the current path (i.e., /blog/:slug).
    * Mostly useful as a identifier to aggregate on for logging/tracing/etc.
    */
-  unstable_pattern: string;
+  pattern: string;
   /**
-   * Without `future.v8_middleware` enabled, this is the context passed in
-   * to your server adapter's `getLoadContext` function. It's a way to bridge the
-   * gap between the adapter's request/response API with your React Router app.
-   * It is only applicable if you are using a custom server adapter.
-   *
-   * With `future.v8_middleware` enabled, this is an instance of
-   * `RouterContextProvider` and can be used for type-safe access to
-   * context value set in your route middlewares.  If you are using a custom
-   * server adapter, you may provide an initial set of context values from your
-   * `getLoadContext` function.
+   * An instance of `RouterContextProvider` that can be used for type-safe
+   * access to context values set in your route middlewares.  If you are using
+   * a custom server adapter, you may provide an initial set of context values
+   * from your `getLoadContext` function.
    */
-  context: MiddlewareEnabled extends true
-    ? Readonly<RouterContextProvider>
-    : AppLoadContext;
+  context: Readonly<RouterContextProvider>;
 };
 
 export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
@@ -202,6 +207,7 @@ type _DataActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   // ServerDataFrom
   Expect<Equal<ServerDataFrom<any>, undefined>>,

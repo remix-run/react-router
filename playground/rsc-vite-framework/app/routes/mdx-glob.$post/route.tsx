@@ -2,7 +2,7 @@ import type { Route } from "./+types/route";
 import { getPost } from "./posts/posts";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const post = await getPost(params.post);
+  const post = await getPost(params.post as string);
 
   if (!post) {
     throw new Response("Not Found", { status: 404, statusText: "Not Found" });

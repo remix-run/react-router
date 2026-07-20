@@ -56,6 +56,7 @@ test(
     // This sets up the Remix modules cache in memory, priming the error case.
     await app.goto("/");
     await app.clickLink("/burgers");
+    await page.waitForSelector("#cheeseburger");
     expect(await page.content()).toContain("cheeseburger");
     await page.goBack();
     await page.waitForSelector("#pizza");
@@ -146,7 +147,7 @@ test("allows users to pass an onError function to HydratedRouter", async ({
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_onError={(error, errorInfo) => {
+                onError={(error, errorInfo) => {
                   console.log(error.message, JSON.stringify(errorInfo))
                 }}
               />
@@ -212,13 +213,17 @@ test("allows users to instrument the client side router via HydratedRouter", asy
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_instrumentations={[{
+                instrumentations={[{
                   router(router) {
                     router.instrument({
                       async navigate(impl, info) {
                         console.log("start navigate", JSON.stringify(Object.entries(info).sort()));
-                        await impl();
-                        console.log("end navigate", JSON.stringify(Object.entries(info).sort()));
+                        let result = await impl();
+                        console.log("end navigate", JSON.stringify(Object.entries(info).sort()), JSON.stringify({
+                          url: result.meta.url,
+                          pattern: result.meta.pattern,
+                          params: result.meta.params,
+                        }));
                       },
                       async fetch(impl, info) {
                         console.log("start fetch", JSON.stringify(Object.entries(info).sort()));
@@ -299,7 +304,9 @@ test("allows users to instrument the client side router via HydratedRouter", asy
     "start loader routes/page /page",
     "end loader root /page",
     "end loader routes/page /page",
-    'end navigate [["currentUrl","/"],["to","/page"]]',
+    expect.stringMatching(
+      /^end navigate \[\["currentUrl","\/"\],\["to","\/page"\]\] \{"url":"http:\/\/localhost:\d+\/page","pattern":"page","params":\{\}\}$/,
+    ),
   ]);
   logs.splice(0);
 

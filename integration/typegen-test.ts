@@ -4,6 +4,7 @@ import tsx from "dedent";
 import * as Path from "pathe";
 
 import { test } from "./helpers/fixtures";
+import { reactRouterConfig } from "./helpers/vite";
 
 const viteConfig = ({ rsc }: { rsc: boolean }) => {
   const reactRouterImportSpecifier = rsc
@@ -311,11 +312,9 @@ test.describe("typegen", () => {
 
   test("custom app dir", async ({ cwd, edit, $ }) => {
     await edit({
-      "react-router.config.ts": tsx`
-        export default {
-          appDirectory: "src/myapp",
-        }
-      `,
+      "react-router.config.ts": reactRouterConfig({
+        appDirectory: "src/myapp",
+      }),
       "app/routes/products.$id.tsx": tsx`
         import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/products.$id"
@@ -391,36 +390,36 @@ test.describe("typegen", () => {
 
         export function meta({ matches }: Route.MetaArgs) {
           const parent1 = matches[1]
-          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+          type Test1 = Expect<Equal<typeof parent1.loaderData, { parent1: number }>>
 
           const parent2 = matches[2]
-          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+          type Test2 = Expect<Equal<typeof parent2.loaderData, { parent2: number }>>
 
           const current = matches[3]
-          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
+          type Test3 = Expect<Equal<typeof current.loaderData, { current: number }>>
 
           const child1 = matches[4]
           type Test4a = Expect<undefined extends typeof child1 ? true : false>
           if (child1) {
-            type Test4b = Expect<Equal<typeof child1.data, unknown>>
+            type Test4b = Expect<Equal<typeof child1.loaderData, unknown>>
           }
           return []
         }
 
         export default function Component({ matches }: Route.ComponentProps) {
           const parent1 = matches[1]
-          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+          type Test1 = Expect<Equal<typeof parent1.loaderData, { parent1: number }>>
 
           const parent2 = matches[2]
-          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+          type Test2 = Expect<Equal<typeof parent2.loaderData, { parent2: number }>>
 
           const current = matches[3]
-          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
+          type Test3 = Expect<Equal<typeof current.loaderData, { current: number }>>
 
           const child1 = matches[4]
           type Test4a = Expect<undefined extends typeof child1 ? true : false>
           if (child1) {
-            type Test4b = Expect<Equal<typeof child1.data, unknown>>
+            type Test4b = Expect<Equal<typeof child1.loaderData, unknown>>
           }
         }
       `,
@@ -435,7 +434,7 @@ test.describe("typegen", () => {
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
         export default [
-          route("absolute/:id", path.resolve(__dirname, "routes/absolute.tsx")),
+          route("absolute/:id", path.resolve(import.meta.dirname, "routes/absolute.tsx")),
         ] satisfies RouteConfig;
       `,
       "app/routes/absolute.tsx": tsx`
@@ -716,10 +715,10 @@ test.describe("typegen", () => {
               return { client: "client" }
             }
 
-            export function ServerComponent({ 
-              loaderData, 
-              actionData 
-            }: Route.ComponentProps) {
+            export function ServerComponent({
+              loaderData,
+              actionData
+            }: Route.ServerComponentProps) {
               type TestLoaderData = Expect<Equal<typeof loaderData, { server: string }>>
               type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
 
@@ -732,10 +731,10 @@ test.describe("typegen", () => {
               )
             }
 
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
+            export function ServerErrorBoundary({
+              loaderData,
+              actionData
+            }: Route.ServerErrorBoundaryProps) {
               type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
               type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
 
@@ -748,10 +747,10 @@ test.describe("typegen", () => {
               )
             }
 
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
+            export function ServerHydrateFallback({
+              loaderData,
+              actionData
+            }: Route.ServerHydrateFallbackProps) {
               type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | undefined>>
               type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
 
@@ -760,95 +759,6 @@ test.describe("typegen", () => {
                   <h1>HydrateFallback</h1>
                   <p>Loader data: {loaderData?.server}</p>
                   <p>Action data: {actionData?.server}</p>
-                </>
-              )
-            }
-          `,
-        });
-        await $("pnpm typecheck");
-      });
-
-      test("when RSC Framework Mode plugin is not present", async ({
-        edit,
-        $,
-      }) => {
-        await edit({
-          "vite.config.ts": viteConfig({ rsc: false }),
-          "app/routes.ts": tsx`
-            import { type RouteConfig, route } from "@react-router/dev/routes";
-
-            export default [
-              route("server-component/:id", "routes/server-component.tsx")
-            ] satisfies RouteConfig;
-          `,
-          "app/routes/server-component.tsx": tsx`
-            import type { Expect, Equal } from "../expect-type"
-            import type { Route } from "./+types/server-component"
-
-            export function loader({ params }: Route.LoaderArgs) {
-              type Test = Expect<Equal<typeof params, { id: string} >>
-              return { server: "server" }
-            }
-
-            export function clientLoader() {
-              return { client: "client" }
-            }
-
-            export function action() {
-              return { server: "server" }
-            }
-
-            export function clientAction() {
-              return { client: "client" }
-            }
-
-            // This export is not used in standard Framework Mode. This is just
-            // to test that the typegen is unaffected by this export outside of
-            // RSC Framework Mode.
-            export function ServerComponent({ 
-              loaderData, 
-              actionData 
-            }: Route.ComponentProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string }>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ServerComponent (unused)</h1>
-                  <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function ErrorBoundary({ 
-              loaderData, 
-              actionData 
-            }: Route.ErrorBoundaryProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>ErrorBoundary</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
-                </>
-              )
-            }
-
-            export function HydrateFallback({ 
-              loaderData, 
-              actionData 
-            }: Route.HydrateFallbackProps) {
-              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
-              type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
-
-              return (
-                <>
-                  <h1>HydrateFallback</h1>
-                  {loaderData && <p>Loader data: {"server" in loaderData ? loaderData.server : loaderData.client}</p>}
-                  {actionData && <p>Action data: {"server" in actionData ? actionData.server : actionData.client}</p>}
                 </>
               )
             }
@@ -888,9 +798,9 @@ test.describe("typegen", () => {
             return { client: "client" }
           }
 
-          export default function ClientComponent({ 
-            loaderData, 
-            actionData 
+          export default function ClientComponent({
+            loaderData,
+            actionData
           }: Route.ComponentProps) {
             type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string }>>
             type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
@@ -904,9 +814,9 @@ test.describe("typegen", () => {
             )
           }
 
-          export function ErrorBoundary({ 
-            loaderData, 
-            actionData 
+          export function ErrorBoundary({
+            loaderData,
+            actionData
           }: Route.ErrorBoundaryProps) {
             type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
             type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
@@ -920,9 +830,9 @@ test.describe("typegen", () => {
             )
           }
 
-          export function HydrateFallback({ 
-            loaderData, 
-            actionData 
+          export function HydrateFallback({
+            loaderData,
+            actionData
           }: Route.HydrateFallbackProps) {
             type TestLoaderData = Expect<Equal<typeof loaderData, { server: string } | { client: string } | undefined>>
             type TestActionData = Expect<Equal<typeof actionData, { server: string } | { client: string } | undefined>>
@@ -957,5 +867,24 @@ test.describe("typegen", () => {
         await $("pnpm typecheck");
       });
     });
+  });
+
+  test("layout without pages", async ({ edit, $ }) => {
+    await edit({
+      "app/routes.ts": tsx`
+        import { type RouteConfig, layout } from "@react-router/dev/routes";
+
+        export default [
+          layout("routes/layout.tsx", []),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/layout.tsx": tsx`
+        import { Outlet } from "react-router"
+        export default function Component() {
+          return <div><Outlet /></div>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
   });
 });

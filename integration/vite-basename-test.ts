@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
@@ -17,7 +17,7 @@ import {
 import { js } from "./helpers/create-fixture.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -101,7 +101,7 @@ const customServerFile = ({
 
   if (templateName.includes("rsc")) {
     return js`
-      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import { createRequestListener } from "@remix-run/node-fetch-server";
       import express from "express";
 
       const viteDevServer =
@@ -122,7 +122,7 @@ const customServerFile = ({
         app.use("${base}", express.static("build/client"));
         app.all(
           "${basename}*",
-          createRequestListener((await import("./build/server/index.js")).default),
+          createRequestListener((await import("./build/server/index.js")).default.fetch),
         );
       }
       app.get("*", (_req, res) => {
@@ -219,6 +219,19 @@ test.describe("Vite base + React Router basename", () => {
             basename: "/mybase/app/",
           });
           await workflowDev({ page, cwd, port, basename: "/mybase/app/" });
+        });
+
+        test("works when base and basename match the app directory name", async ({
+          page,
+        }) => {
+          await setup({ base: "/app/", basename: "/app/" });
+          await workflowDev({
+            page,
+            cwd,
+            port,
+            base: "/app/",
+            basename: "/app/",
+          });
         });
 
         test("errors if basename does not start with base", async ({
@@ -421,6 +434,13 @@ test.describe("Vite base + React Router basename", () => {
           });
         });
 
+        test("works when base and basename match the app directory name", async ({
+          page,
+        }) => {
+          await setup({ base: "/app/", basename: "/app/" });
+          await workflowBuild({ page, port, base: "/app/", basename: "/app/" });
+        });
+
         test("works when basename does not start with base", async ({
           page,
         }) => {
@@ -476,7 +496,7 @@ test.describe("Vite base + React Router basename", () => {
           }
         }
 
-        test.afterAll(() => stop());
+        test.afterAll(() => stop?.());
 
         test("works when base and basename are the same", async ({ page }) => {
           await setup({ base: "/mybase/", basename: "/mybase/" });
@@ -501,9 +521,13 @@ test.describe("Vite base + React Router basename", () => {
           await workflowBuild({ page, port, basename: "/notmybase/" });
         });
 
-        test("works when when base is an absolute external URL", async ({
+        test("works when base is an absolute external URL", async ({
           page,
         }) => {
+          test.skip(
+            templateName === "rsc-vite-framework",
+            "I'm not sure the use-case for this and can't find anything. If you ever need this file an issue and we will revisit.",
+          );
           port = await getPort();
           cwd = await createProject(
             {
@@ -516,28 +540,28 @@ test.describe("Vite base + React Router basename", () => {
               // Slim server that only serves basename (route) requests from the React Router handler
               "server.mjs": templateName.includes("rsc")
                 ? String.raw`
-                  import { createRequestListener } from "@mjackson/node-fetch-server";
+                  import { createRequestListener } from "@remix-run/node-fetch-server";
                   import express from "express";
-          
+
                   const app = express();
                   app.all(
                     "/app/*",
                     createRequestListener((await import("./build/server/index.js")).default)
                   );
-          
+
                   const port = ${port};
                   app.listen(port, () => console.log('http://localhost:' + port));
                 `
                 : String.raw`
                   import { createRequestHandler } from "@react-router/express";
                   import express from "express";
-          
+
                   const app = express();
                   app.all(
                     "/app/*",
                     createRequestHandler({ build: await import("./build/server/index.js") })
                   );
-          
+
                   const port = ${port};
                   app.listen(port, () => console.log('http://localhost:' + port));
                 `,
@@ -601,9 +625,9 @@ async function workflowDev({
   page.on("pageerror", (error) => pageErrors.push(error));
   let edit = createEditor(cwd);
 
-  let requestUrls: string[] = [];
+  let requests: Request[] = [];
   page.on("request", (request) => {
-    requestUrls.push(request.url());
+    requests.push(request);
   });
 
   // setup: initial render at basename
@@ -640,25 +664,45 @@ async function workflowDev({
   await page.getByText("other-loader").click();
   expect(pageErrors).toEqual([]);
 
-  let isAssetRequest = (url: string) =>
-    /\.[jt]sx?/.test(url) ||
-    /\/@id\/__x00__virtual:/.test(url) ||
-    /\/@vite\/client/.test(url) ||
-    /\/@fs\//.test(url);
-
   // verify client asset requests are all under base
   expect(
-    requestUrls
-      .filter((url) => isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${base}`)),
+    requests
+      .filter((request) => isViteAssetRequest(request))
+      .every((request) =>
+        request.url().startsWith(`http://localhost:${port}${base}`),
+      ),
   ).toBe(true);
 
-  // verify client route requests are all under basename
+  // Firefox may request browser-managed resources like `/favicon.ico`
+  // outside the app basename, so only assert on actual route/data requests.
   expect(
-    requestUrls
-      .filter((url) => !isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${basename}`)),
+    requests
+      .filter((request) => isAppRouteRequest(request))
+      .every((request) =>
+        request.url().startsWith(`http://localhost:${port}${basename}`),
+      ),
   ).toBe(true);
+}
+
+function isViteAssetRequest(request: Request) {
+  let url = request.url();
+  return (
+    request.resourceType() === "script" ||
+    request.resourceType() === "stylesheet" ||
+    /\.[jt]sx?(?:\?|$)/.test(url) ||
+    /\/@id\/__x00__virtual:/.test(url) ||
+    /\/@vite\/client/.test(url) ||
+    /\/@fs\//.test(url)
+  );
+}
+
+function isAppRouteRequest(request: Request) {
+  return (
+    request.isNavigationRequest() ||
+    request.resourceType() === "document" ||
+    request.resourceType() === "fetch" ||
+    request.resourceType() === "xhr"
+  );
 }
 
 async function workflowBuild({

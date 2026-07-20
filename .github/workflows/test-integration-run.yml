@@ -1,0 +1,58 @@
+name: Test (Integration)
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      node_version:
+        required: true
+        type: string
+      browser:
+        required: true
+        type: string
+      timeout:
+        required: false
+        type: number
+        default: 30
+
+env:
+  CI: true
+
+jobs:
+  integration:
+    name: "${{ inputs.os }} / node@${{ inputs.node_version }} / ${{ inputs.browser }}"
+
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup node ${{ inputs.node_version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: "pnpm"
+
+      - name: Setup wireit cache
+        uses: google/wireit@setup-github-actions-caching/v2.0.4
+
+      - name: Disable GitHub Actions Annotations
+        run: |
+          echo "::remove-matcher owner=tsc::"
+          echo "::remove-matcher owner=eslint-compact::"
+          echo "::remove-matcher owner=eslint-stylish::"
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps ${{ inputs.browser }}
+
+      - name: Run Integration Tests ${{ inputs.browser }}
+        run: "pnpm test:integration --project=${{ inputs.browser }}"
+        timeout-minutes: ${{inputs.timeout}}

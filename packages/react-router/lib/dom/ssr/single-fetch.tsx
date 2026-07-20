@@ -4,23 +4,23 @@ import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
+  DataRouteMatch,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyResult,
 } from "../../router/utils";
 import {
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   isRouteErrorResponse,
   redirect,
   data,
-  stripBasename,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
 import type { RouteModules } from "./routeModules";
-import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -162,14 +162,12 @@ export function StreamTransfer({
 type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
   hasClientLoader: boolean;
-  hasShouldRevalidate: boolean;
 };
 
 type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
 
 export type FetchAndDecodeFunction = (
   args: DataStrategyFunctionArgs,
-  basename: string | undefined,
   targetRoutes?: string[],
   shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
@@ -179,23 +177,19 @@ export function getTurboStreamSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
-  basename: string | undefined,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
     (match: DataRouteMatch) => {
       let manifestRoute = manifest.routes[match.route.id];
       invariant(manifestRoute, "Route not found in manifest");
-      let routeModule = routeModules[match.route.id];
       return {
         hasLoader: manifestRoute.hasLoader,
         hasClientLoader: manifestRoute.hasClientLoader,
-        hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
       };
     },
     fetchAndDecodeViaTurboStream,
     ssr,
-    basename,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -205,7 +199,6 @@ export function getSingleFetchDataStrategyImpl(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
 ): DataStrategyFunction {
   return async (args) => {
@@ -214,12 +207,12 @@ export function getSingleFetchDataStrategyImpl(
 
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
-      return singleFetchActionStrategy(args, fetchAndDecode, basename);
+      return singleFetchActionStrategy(args, fetchAndDecode);
     }
 
     let foundRevalidatingServerLoader = matches.some((m) => {
       let { hasLoader, hasClientLoader } = getRouteInfo(m);
-      return m.unstable_shouldCallHandler() && hasLoader && !hasClientLoader;
+      return m.shouldCallHandler() && hasLoader && !hasClientLoader;
     });
     if (!ssr && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
@@ -254,12 +247,12 @@ export function getSingleFetchDataStrategyImpl(
       //   errored otherwise
       // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      return nonSsrStrategy(args, getRouteInfo, fetchAndDecode, basename);
+      return nonSsrStrategy(args, getRouteInfo, fetchAndDecode);
     }
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return singleFetchLoaderFetcherStrategy(args, fetchAndDecode, basename);
+      return singleFetchLoaderFetcherStrategy(args, fetchAndDecode);
     }
 
     // Navigational loads are more complex...
@@ -269,7 +262,6 @@ export function getSingleFetchDataStrategyImpl(
       getRouteInfo,
       fetchAndDecode,
       ssr,
-      basename,
       shouldAllowOptOut,
     );
   };
@@ -280,14 +272,13 @@ export function getSingleFetchDataStrategyImpl(
 async function singleFetchActionStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined,
 ) {
-  let actionMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
+  let actionMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
     let result = await handler(async () => {
-      let { data, status } = await fetchAndDecode(args, basename, [
+      let { data, status } = await fetchAndDecode(args, [
         actionMatch!.route.id,
       ]);
       actionStatus = status;
@@ -319,11 +310,8 @@ async function nonSsrStrategy(
   args: DataStrategyFunctionArgs,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined,
 ) {
-  let matchesToLoad = args.matches.filter((m) =>
-    m.unstable_shouldCallHandler(),
-  );
+  let matchesToLoad = args.matches.filter((m) => m.shouldCallHandler());
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
     matchesToLoad.map((m) =>
@@ -336,7 +324,7 @@ async function nonSsrStrategy(
           let routeId = m.route.id;
           let result = hasClientLoader
             ? await handler(async () => {
-                let { data } = await fetchAndDecode(args, basename, [routeId]);
+                let { data } = await fetchAndDecode(args, [routeId]);
                 return unwrapSingleFetchResult(data, routeId);
               })
             : await handler();
@@ -358,7 +346,6 @@ async function singleFetchLoaderNavigationStrategy(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
 ) {
   // Track which routes need a server load for use in a `_routes` param
@@ -381,21 +368,19 @@ async function singleFetchLoaderNavigationStrategy(
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
         let routeId = m.route.id;
-        let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(m);
+        let { hasLoader, hasClientLoader } = getRouteInfo(m);
 
         let defaultShouldRevalidate =
-          !m.unstable_shouldRevalidateArgs ||
-          m.unstable_shouldRevalidateArgs.actionStatus == null ||
-          m.unstable_shouldRevalidateArgs.actionStatus < 400;
-        let shouldCall = m.unstable_shouldCallHandler(defaultShouldRevalidate);
+          !m.shouldRevalidateArgs ||
+          m.shouldRevalidateArgs.actionStatus == null ||
+          m.shouldRevalidateArgs.actionStatus < 400;
+        let shouldCall = m.shouldCallHandler(defaultShouldRevalidate);
 
         if (!shouldCall) {
           // If this route opted out, don't include in the .data request
           foundOptOutRoute ||=
-            m.unstable_shouldRevalidateArgs != null && // This is a revalidation,
-            hasLoader && // for a route with a server loader,
-            hasShouldRevalidate === true; // and a shouldRevalidate function
+            m.shouldRevalidateArgs != null && // This is a revalidation,
+            hasLoader; // for a route with a server loader
           return;
         }
 
@@ -407,7 +392,7 @@ async function singleFetchLoaderNavigationStrategy(
           }
           try {
             let result = await handler(async () => {
-              let { data } = await fetchAndDecode(args, basename, [routeId]);
+              let { data } = await fetchAndDecode(args, [routeId]);
               return unwrapSingleFetchResult(data, routeId);
             });
 
@@ -465,7 +450,7 @@ async function singleFetchLoaderNavigationStrategy(
         ? [...routesParams.keys()]
         : undefined;
     try {
-      let data = await fetchAndDecode(args, basename, targetRoutes);
+      let data = await fetchAndDecode(args, targetRoutes);
       singleFetchDfd.resolve(data.data);
     } catch (e) {
       singleFetchDfd.reject(e);
@@ -526,7 +511,10 @@ async function bubbleMiddlewareErrors(
         }
       });
     }
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // No-op - this logic is only intended to process successful responses
     // If the `.data` failed, the routes will handle those errors themselves
   }
@@ -536,14 +524,13 @@ async function bubbleMiddlewareErrors(
 async function singleFetchLoaderFetcherStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined,
 ) {
-  let fetcherMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
+  let fetcherMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
   let routeId = fetcherMatch.route.id;
   let result = await fetcherMatch.resolve(async (handler) =>
     handler(async () => {
-      let { data } = await fetchAndDecode(args, basename, [routeId]);
+      let { data } = await fetchAndDecode(args, [routeId]);
       return unwrapSingleFetchResult(data, routeId);
     }),
   );
@@ -568,7 +555,6 @@ export function stripIndexParam(url: URL) {
 
 export function singleFetchUrl(
   reqUrl: URL | string,
-  basename: string | undefined,
   extension: "data" | "rsc",
 ) {
   let url =
@@ -583,12 +569,12 @@ export function singleFetchUrl(
         )
       : reqUrl;
 
-  if (url.pathname === "/") {
-    url.pathname = `_root.${extension}`;
-  } else if (basename && stripBasename(url.pathname, basename) === "/") {
-    url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
+  if (url.pathname.endsWith("/")) {
+    // Preserve trailing slash by using /_.data pattern
+    // e.g., /about/ -> /about/_.data
+    url.pathname = `${url.pathname}_.${extension}`;
   } else {
-    url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
+    url.pathname = `${url.pathname}.${extension}`;
   }
 
   return url;
@@ -596,11 +582,10 @@ export function singleFetchUrl(
 
 async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
-  basename: string | undefined,
   targetRoutes?: string[],
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
-  let url = singleFetchUrl(request.url, basename, "data");
+  let url = singleFetchUrl(request.url, "data");
   if (request.method === "GET") {
     url = stripIndexParam(url);
     if (targetRoutes) {
@@ -672,7 +657,10 @@ async function fetchAndDecodeViaTurboStream(
       }
     }
     return { status: res.status, data };
-  } catch (e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
     // content type here, or even X-Remix-Response but then folks can't
@@ -701,8 +689,13 @@ export function decodeViaTurboStream(
             string | undefined,
           ];
           let Constructor = Error;
-          // @ts-expect-error
-          if (name && name in global && typeof global[name] === "function") {
+          if (
+            name &&
+            SUPPORTED_ERROR_TYPES.includes(name) &&
+            name in global &&
+            // @ts-expect-error
+            typeof global[name] === "function"
+          ) {
             // @ts-expect-error
             Constructor = global[name];
           }
@@ -783,13 +776,19 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
     reject = async (error?: unknown) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
   });
   return {

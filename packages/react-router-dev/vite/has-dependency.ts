@@ -1,3 +1,7 @@
+import { createRequire } from "node:module";
+
+const nodeRequire = createRequire(import.meta.url);
+
 export function hasDependency({
   name,
   rootDirectory,
@@ -6,8 +10,11 @@ export function hasDependency({
   rootDirectory: string;
 }) {
   try {
-    return Boolean(require.resolve(name, { paths: [rootDirectory] }));
-  } catch (err) {
+    return Boolean(nodeRequire.resolve(name, { paths: [rootDirectory] }));
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e
+  ) {
     return false;
   }
 }

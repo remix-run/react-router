@@ -1,5 +1,147 @@
 # `@react-router/cloudflare`
 
+## v8.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.2.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.2.0)
+
+## v8.1.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.1.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.1.0)
+
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Update minimum Node version to 22.22.0 ([#15143](https://github.com/remix-run/react-router/pull/15143))
+
+### Minor Changes
+
+- Bump `@cloudflare/workers-types` fromn `^4.20260520.1` to `^4.20260527.1` ([#15106](https://github.com/remix-run/react-router/pull/15106))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+
+## v7.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.17.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.17.0)
+
+## v7.16.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.16.0)
+
+## v7.15.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.1)
+
+## v7.15.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.15.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.15.0)
+
+## v7.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.14.2`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.2)
+
+## v7.14.1
+
+### Patch Changes
+
+- Add TypeScript 6 support to peer dependency ranges
+- Updated dependencies:
+  - [`react-router@7.14.1`](https://github.com/remix-run/react-router/releases/tag/react-router@7.14.1)
+
+## 7.14.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.14.0`
+
+## 7.13.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.2`
+
+## 7.13.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.1`
+
+## 7.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.13.0`
+
+## 7.12.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.12.0`
+
+## 7.11.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.11.0`
+
+## 7.10.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.1`
+
+## 7.10.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.10.0`
+
 ## 7.9.6
 
 ### Patch Changes

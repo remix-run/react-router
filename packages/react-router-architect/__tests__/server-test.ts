@@ -1,36 +1,52 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { createRequestHandler as createReactRequestHandler } from "react-router";
+import { fileURLToPath } from "node:url";
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
 import lambdaTester from "lambda-tester";
+import "@react-router/node";
 
-import {
-  createRequestHandler,
-  createReactRouterHeaders,
-  createReactRouterRequest,
-  sendReactRouterResponse,
-} from "../server";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+let createRequestHandler: typeof import("../server").createRequestHandler;
+let createReactRouterHeaders: typeof import("../server").createReactRouterHeaders;
+let createReactRouterRequest: typeof import("../server").createReactRouterRequest;
+let sendReactRouterResponse: typeof import("../server").sendReactRouterResponse;
 
 // We don't want to test that the React Router server works here,
 // we just want to test the architect adapter
-jest.mock("react-router", () => {
-  let original = jest.requireActual("react-router");
-  return {
-    ...original,
-    createRequestHandler: jest.fn(),
-  };
-});
-let mockedCreateRequestHandler =
-  createReactRequestHandler as jest.MockedFunction<
-    typeof createReactRequestHandler
-  >;
+let mockedCreateRequestHandler = jest.fn() as jest.MockedFunction<
+  typeof import("react-router").createRequestHandler
+>;
 
-function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
+(jest as any).unstable_mockModule("react-router", () => ({
+  createRequestHandler: mockedCreateRequestHandler,
+}));
+
+beforeAll(async () => {
+  ({
+    createRequestHandler,
+    createReactRouterHeaders,
+    createReactRouterRequest,
+    sendReactRouterResponse,
+  } = await import("../server"));
+});
+
+type MockEvent = Omit<Partial<APIGatewayProxyEventV2>, "requestContext"> & {
+  requestContext?: Partial<APIGatewayProxyEventV2["requestContext"]>;
+};
+
+function createMockEvent(event: MockEvent = {}) {
   let now = new Date();
   return {
+    isBase64Encoded: false,
+    rawPath: "/",
+    rawQueryString: "",
+    routeKey: "foo",
+    version: "2.0",
+    ...event,
     headers: {
       host: "localhost:3333",
       accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -41,9 +57,6 @@ function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
       "accept-encoding": "gzip, deflate",
       ...event.headers,
     },
-    isBase64Encoded: false,
-    rawPath: "/",
-    rawQueryString: "",
     requestContext: {
       http: {
         method: "GET",
@@ -65,9 +78,6 @@ function createMockEvent(event: Partial<APIGatewayProxyEventV2> = {}) {
       timeEpoch: now.getTime(),
       ...event.requestContext,
     },
-    routeKey: "foo",
-    version: "2.0",
-    ...event,
   };
 }
 
@@ -110,6 +120,36 @@ describe("architect createRequestHandler", () => {
         .expectResolve((res: any) => {
           expect(res.statusCode).toBe(200);
           expect(res.body).toBe("URL: //");
+        });
+    });
+
+    it("uses the request context domain name", async () => {
+      mockedCreateRequestHandler.mockImplementation(() => async (req) => {
+        return new Response(`Host: ${new URL(req.url).host}`);
+      });
+
+      await lambdaTester(
+        createRequestHandler({
+          // We don't have a real app to test, but it doesn't matter. We won't ever
+          // call through to the real createRequestHandler
+          // @ts-expect-error
+          build: undefined,
+        }),
+      )
+        .event(
+          createMockEvent({
+            headers: {
+              host: "localhost:3333",
+              "x-forwarded-host": "ignore.com",
+            },
+            requestContext: {
+              domainName: "example.com",
+            },
+          }),
+        )
+        .expectResolve((res: APIGatewayProxyStructuredResultV2) => {
+          expect(res.statusCode).toBe(200);
+          expect(res.body).toBe("Host: example.com");
         });
     });
 
@@ -247,6 +287,54 @@ describe("architect createReactRouterRequest", () => {
 
     expect(request.method).toBe("GET");
     expect(request.headers.get("cookie")).toBe("__session=value");
+  });
+
+  it("uses request context domain name", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+          "x-forwarded-host": "ignore.com",
+        },
+        requestContext: {
+          domainName: "example.com",
+        },
+      }),
+    );
+
+    expect(request.url).toBe("https://example.com/");
+  });
+
+  it("ignores invalid characters in request context domain name", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+        },
+        requestContext: {
+          domainName: "context.example.com:4444/invalid@chars",
+        },
+        rawPath: "/foo",
+      }),
+    );
+
+    expect(request.url).toBe("https://context.example.com:4444/foo");
+  });
+
+  it("falls back for invalid host values", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "#invalid",
+        },
+        rawPath: "/foo",
+        requestContext: {
+          domainName: "@invalid",
+        },
+      }),
+    );
+
+    expect(request.url).toBe("https://localhost/foo");
   });
 });
 

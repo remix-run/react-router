@@ -1,6 +1,7 @@
 {
   "name": "@react-router/node",
-  "version": "7.9.6",
+  "type": "module",
+  "version": "8.2.0",
   "description": "Node.js platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -15,19 +16,9 @@
   "main": "dist/index.js",
   "exports": {
     ".": {
-      "node": {
-        "types": "./dist/index.d.ts",
-        "module-sync": "./dist/index.mjs",
-        "default": "./dist/index.js"
-      },
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "module-sync": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -37,8 +28,9 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
+        "../../pnpm-workspace.yaml",
         "sessions/**",
         "*.ts",
         "tsconfig.json",
@@ -50,17 +42,18 @@
     }
   },
   "dependencies": {
-    "@mjackson/node-fetch-server": "^0.2.0"
+    "@remix-run/node-fetch-server": "^0.13.3"
   },
   "devDependencies": {
+    "@types/node": "^22.19.19",
     "react-router": "workspace:*",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "react-router": "workspace:*",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
@@ -68,7 +61,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

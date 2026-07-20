@@ -172,4 +172,3 @@ See the [Using Fetchers][fetchers] guide for more information.
 Next: [Navigating](./navigating)
 
 [fetchers]: ../../how-to/fetchers
-[data]: ../../api/react-router/data

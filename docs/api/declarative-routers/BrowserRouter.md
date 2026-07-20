@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.BrowserRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.BrowserRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 API for client-side routing.
@@ -28,7 +28,12 @@ API for client-side routing.
 ## Signature
 
 ```tsx
-function BrowserRouter({ basename, children, window }: BrowserRouterProps)
+function BrowserRouter({
+  basename,
+  children,
+  useTransitions,
+  window,
+}: BrowserRouterProps)
 ```
 
 ## Props
@@ -40,6 +45,21 @@ Application basename
 ### children
 
 ``<Route>`` components describing your route configuration
+
+### useTransitions
+
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all router state updates are wrapped in
+  `React.startTransition`
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and all router state updates are wrapped in
+  `React.startTransition`
+- When set to `false`, the router will not leverage `React.startTransition`
+  on any navigations or state changes.
+
+For more information, please see the [docs](../../explanation/react-transitions).
 
 ### window
 

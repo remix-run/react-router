@@ -1,8 +1,6 @@
 import type { ServerResponse } from "node:http";
-
 import { createRequest } from "@remix-run/node-fetch-server";
 import type * as Vite from "vite";
-
 import invariant from "../invariant";
 
 export type NodeRequestHandler = (
@@ -10,10 +8,10 @@ export type NodeRequestHandler = (
   res: ServerResponse,
 ) => Promise<void>;
 
-export function fromNodeRequest(
+export async function fromNodeRequest(
   nodeReq: Vite.Connect.IncomingMessage,
   nodeRes: ServerResponse<Vite.Connect.IncomingMessage>,
-): Request {
+): Promise<Request> {
   // Use `req.originalUrl` so React Router is aware of the full path
   invariant(
     nodeReq.originalUrl,

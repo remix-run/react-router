@@ -185,6 +185,89 @@ describe("path matching", () => {
     expect(
       matchPath("/sitemap/:lang?.xml", "/sitemap/.xml")?.params,
     ).toStrictEqual({ lang: undefined });
+    expect(
+      matchPath("/sitemap/:lang?.xml", "/sitemap/en.xml")?.params,
+    ).toStrictEqual({ lang: "en" });
+    expect(matchPath("/sitemap/:lang?.xml", "/sitemap.xml")).toBeNull();
+  });
+
+  it("ranks a static routes above dynamic params with a static suffix", () => {
+    // Dynamic before static
+    expect(
+      pickPathsAndParams(
+        [{ path: "/:lang.xml" }, { path: "/sitemap.xml" }],
+        "/sitemap.xml",
+      ),
+    ).toEqual([
+      {
+        path: "/sitemap.xml",
+        params: {},
+      },
+    ]);
+
+    // Static before dynamic
+    expect(
+      pickPathsAndParams(
+        [{ path: "/sitemap.xml" }, { path: "/:lang.xml" }],
+        "/sitemap.xml",
+      ),
+    ).toEqual([
+      {
+        path: "/sitemap.xml",
+        params: {},
+      },
+    ]);
+
+    // Params still get extracted for dynamic-matching paths
+    expect(
+      pickPathsAndParams(
+        [{ path: "/sitemap.xml" }, { path: "/:lang.xml" }],
+        "/fr.xml",
+      ),
+    ).toEqual([
+      {
+        path: "/:lang.xml",
+        params: { lang: "fr" },
+      },
+    ]);
+  });
+
+  it("ranks dynamic params with a suffix above dynamic params", () => {
+    // Dynamic+suffix before dynamic
+    expect(
+      pickPathsAndParams(
+        [{ path: "/:a.json" }, { path: "/:b" }],
+        "/thing.json",
+      ),
+    ).toEqual([
+      {
+        path: "/:a.json",
+        params: { a: "thing" },
+      },
+    ]);
+
+    // Dynamic before dynamic+suffix
+    expect(
+      pickPathsAndParams(
+        [{ path: "/:b" }, { path: "/:a.json" }],
+        "/thing.json",
+      ),
+    ).toEqual([
+      {
+        path: "/:a.json",
+        params: { a: "thing" },
+      },
+    ]);
+
+    // Non-suffix still matches dynamic param
+    expect(
+      pickPathsAndParams([{ path: "/:a.json" }, { path: "/:b" }], "/thing"),
+    ).toEqual([
+      {
+        path: "/:b",
+        params: { b: "thing" },
+      },
+    ]);
   });
 });
 

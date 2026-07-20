@@ -80,7 +80,7 @@ function Component() {
 }
 ```
 
-[loader]: ../api/data-routers/loader
+[loader]: ../start/data/route-object#loader
 [form_element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
 [form_component]: ../api/components/Form
-[action]: ../api/data-routers/action
+[action]: ../start/data/route-object#action

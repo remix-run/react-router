@@ -5,40 +5,33 @@ import { expect } from "@playwright/test";
 import dedent from "dedent";
 
 import {
-  reactRouterConfig,
   viteConfig,
   test,
   type TemplateName,
   type Files,
+  reactRouterConfig,
 } from "./helpers/vite.js";
 
 const tsx = dedent;
 
 const fixtures = [
   {
-    templateName: "vite-5-template",
-    viteEnvironmentApi: false,
+    templateName: "vite-7-template",
   },
   {
-    templateName: "vite-6-template",
-    viteEnvironmentApi: true,
+    templateName: "vite-8-template",
   },
   {
     templateName: "rsc-vite-framework",
-    viteEnvironmentApi: true,
   },
 ] as const satisfies ReadonlyArray<{
   templateName: TemplateName;
-  viteEnvironmentApi: boolean;
 }>;
 
 test.describe("Vite dev", () => {
-  for (const { templateName, viteEnvironmentApi } of fixtures) {
-    test.describe(`template: ${templateName} viteEnvironmentApi: ${viteEnvironmentApi}`, () => {
+  for (const { templateName } of fixtures) {
+    test.describe(`template: ${templateName}`, () => {
       const files: Files = async ({ port }) => ({
-        "react-router.config.ts": reactRouterConfig({
-          viteEnvironmentApi,
-        }),
         "vite.config.ts": await viteConfig.basic({
           port,
           templateName,
@@ -500,4 +493,65 @@ test.describe("Vite dev", () => {
       });
     });
   }
+
+  test("does not prebundle RSC server-only route imports in the client optimizer", async ({
+    page,
+    dev,
+  }) => {
+    let files: Files = async ({ port }) => ({
+      "react-router.config.ts": reactRouterConfig({
+        future: { unstable_optimizeDeps: true },
+      }),
+      "vite.config.ts": await viteConfig.basic({
+        port,
+        templateName: "rsc-vite-framework",
+      }),
+      "app/routes/_index.tsx": tsx`
+        import { readServerSecret } from "rsc-server-only-package";
+
+        export async function loader() {
+          return { secret: readServerSecret() };
+        }
+
+        export default function IndexRoute() {
+          return <h1 data-route>Index route</h1>;
+        }
+      `,
+      "node_modules/rsc-server-only-package/package.json": JSON.stringify({
+        name: "rsc-server-only-package",
+        version: "1.0.0",
+        type: "module",
+        main: "index.js",
+      }),
+      "node_modules/rsc-server-only-package/index.js": tsx`
+        export function readServerSecret() {
+          return "server-only";
+        }
+      `,
+    });
+
+    let { cwd, port } = await dev(files, "rsc-vite-framework");
+
+    await page.goto(`http://localhost:${port}/`);
+    await expect(page.locator("[data-route]")).toHaveText("Index route");
+
+    let metadataPath = path.join(cwd, "node_modules/.vite/deps/_metadata.json");
+
+    await expect
+      .poll(async () => {
+        try {
+          return await fs.readFile(metadataPath, "utf8");
+        } catch {
+          return "";
+        }
+      })
+      .not.toBe("");
+
+    let clientDeps = [
+      await fs.readFile(metadataPath, "utf8"),
+      ...(await fs.readdir(path.dirname(metadataPath))),
+    ].join("\n");
+
+    expect(clientDeps).not.toMatch(/rsc[-_]server[-_]only[-_]package/);
+  });
 });

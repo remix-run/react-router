@@ -7,7 +7,7 @@ export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
 
 export function isHtmlElement(object: any): object is HTMLElement {
-  return object != null && typeof object.tagName === "string";
+  return typeof HTMLElement !== "undefined" && object instanceof HTMLElement;
 }
 
 export function isButtonElement(object: any): object is HTMLButtonElement {
@@ -51,38 +51,38 @@ export type URLSearchParamsInit =
   | URLSearchParams;
 
 /**
-  Creates a URLSearchParams object using the given initializer.
-
-  This is identical to `new URLSearchParams(init)` except it also
-  supports arrays as values in the object form of the initializer
-  instead of just strings. This is convenient when you need multiple
-  values for a given key, but don't want to use an array initializer.
-
-  For example, instead of:
-
-  ```tsx
-  let searchParams = new URLSearchParams([
-    ['sort', 'name'],
-    ['sort', 'price']
-  ]);
-  ```
-  you can do:
-
-  ```
-  let searchParams = createSearchParams({
-    sort: ['name', 'price']
-  });
-  ```
-
-  @category Utils
+ * Creates a URLSearchParams object using the given initializer.
+ *
+ * This is identical to `new URLSearchParams(init)` except it also supports
+ * arrays as values in the object form of the initializer instead of just
+ * strings. This is convenient when you need multiple values for a given key,
+ * but don't want to use an array initializer.
+ *
+ * @example
+ * // Instead of:
+ * let searchParams = new URLSearchParams([
+ *   ["sort", "name"],
+ *   ["sort", "price"],
+ * ]);
+ *
+ * // You can do:
+ * let searchParams = createSearchParams({
+ *   sort: ["name", "price"],
+ * });
+ *
+ * @public
+ * @category Utils
+ * @param init The value used to initialize the URL search parameters.
+ * @returns A URLSearchParams object containing the initialized search
+ * parameters.
  */
 export function createSearchParams(
   init: URLSearchParamsInit = "",
 ): URLSearchParams {
   return new URLSearchParams(
     typeof init === "string" ||
-    Array.isArray(init) ||
-    init instanceof URLSearchParams
+      Array.isArray(init) ||
+      init instanceof URLSearchParams
       ? init
       : Object.keys(init).reduce((memo, key) => {
           let value = init[key];
@@ -146,7 +146,10 @@ function isFormDataSubmitterSupported() {
         0,
       );
       _formDataSupportsSubmitter = false;
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {
       _formDataSupportsSubmitter = true;
     }
   }
@@ -192,6 +195,19 @@ interface SharedSubmitOptions {
    * Enable flushSync for this submission's state updates
    */
   flushSync?: boolean;
+
+  /**
+   * Specify the default revalidation behavior after this submission
+   *
+   * If no `shouldRevalidate` functions are present on the active routes, then this
+   * value will be used directly.  Otherwise it will be passed into `shouldRevalidate`
+   * so the route can make the final determination on revalidation. This can be
+   * useful when updating search params and you don't want to trigger a revalidation.
+   *
+   * By default (when not specified), loaders will revalidate according to the routers
+   * standard revalidation behavior.
+   */
+  defaultShouldRevalidate?: boolean;
 }
 
 /**

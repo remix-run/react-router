@@ -26,7 +26,7 @@ interface FileSessionStorageOptions {
  * The advantage of using this instead of cookie session storage is that
  * files may contain much more data than cookies.
  *
- * @see https://api.reactrouter.com/v7/functions/_react_router_node.createFileSessionStorage
+ * @see https://api.reactrouter.com/v7/functions/_react-router_node.createFileSessionStorage
  */
 export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   cookie,

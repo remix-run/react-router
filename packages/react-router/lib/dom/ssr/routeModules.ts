@@ -8,11 +8,11 @@ import type {
   MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
+  DataRouteMatch,
   DataStrategyResult,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
-import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
 import type { SerializeFrom } from "../../types/route-data";
 
@@ -131,10 +131,6 @@ export interface MetaMatch<
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
-  /** @deprecated Use `MetaMatch.loaderData` instead */
-  data: Loader extends LoaderFunction | ClientLoaderFunction
-    ? SerializeFrom<Loader>
-    : unknown;
   loaderData: Loader extends LoaderFunction | ClientLoaderFunction
     ? SerializeFrom<Loader>
     : unknown;
@@ -165,12 +161,6 @@ export interface MetaArgs<
     LoaderFunction | ClientLoaderFunction | unknown
   > = Record<string, unknown>,
 > {
-  /** @deprecated Use `MetaArgs.loaderData` instead */
-  data:
-    | (Loader extends LoaderFunction | ClientLoaderFunction
-        ? SerializeFrom<Loader>
-        : unknown)
-    | undefined;
   loaderData:
     | (Loader extends LoaderFunction | ClientLoaderFunction
         ? SerializeFrom<Loader>
@@ -220,14 +210,14 @@ export interface MetaArgs<
  *  "root": RootLoader,
  *  "routes/sales": SalesLoader,
  *  "routes/sales/customers": CustomersLoader,
- * }> = ({ data, matches }) => {
- *   const { name } = data
+ * }> = ({ loaderData, matches }) => {
+ *   const { name } = loaderData
  *   //      ^? string
- *   const { customerCount } = matches.find((match) => match.id === "routes/sales/customers").data
+ *   const { customerCount } = matches.find((match) => match.id === "routes/sales/customers").loaderData
  *   //      ^? number
- *   const { salesCount } = matches.find((match) => match.id === "routes/sales").data
+ *   const { salesCount } = matches.find((match) => match.id === "routes/sales").loaderData
  *   //      ^? number
- *   const { hello } = matches.find((match) => match.id === "root").data
+ *   const { hello } = matches.find((match) => match.id === "root").loaderData
  *   //      ^? "world"
  * }
  * ```
@@ -248,7 +238,7 @@ export type MetaDescriptor =
   | { name: string; content: string }
   | { property: string; content: string }
   | { httpEquiv: string; content: string }
-  | { "script:ld+json": LdJsonObject }
+  | { "script:ld+json": LdJsonObject | LdJsonObject[] }
   | { tagName: "meta" | "link"; [name: string]: string }
   | { [name: string]: unknown };
 

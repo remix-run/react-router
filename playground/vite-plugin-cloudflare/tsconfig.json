@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.base.json",
   "files": [],
   "references": [
     { "path": "./tsconfig.node.json" },
@@ -6,9 +7,6 @@
   ],
   "compilerOptions": {
     "checkJs": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "strict": true,
     "noEmit": true
   }
 }

@@ -1,6 +1,7 @@
 {
   "name": "create-react-router",
-  "version": "7.9.6",
+  "type": "module",
+  "version": "8.2.0",
   "description": "Create a new React Router app",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -20,12 +21,14 @@
   },
   "scripts": {
     "build": "wireit",
+    "prepack": "node ./scripts/copy-agent-skills.mjs",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "tsconfig.json",
         "package.json"
@@ -36,34 +39,28 @@
     }
   },
   "dependencies": {
-    "@remix-run/web-fetch": "^4.4.2",
-    "arg": "^5.0.1",
-    "chalk": "^4.1.2",
-    "execa": "5.1.1",
     "gunzip-maybe": "^1.4.2",
-    "log-update": "^5.0.1",
-    "proxy-agent": "^6.3.0",
-    "semver": "^7.3.7",
+    "log-update": "^8.0.0",
+    "picocolors": "^1.1.1",
+    "semver": "^7.8.1",
     "sisteransi": "^1.0.5",
-    "sort-package-json": "^1.55.0",
-    "strip-ansi": "^6.0.1",
-    "tar-fs": "^2.1.3"
+    "sort-package-json": "^3.6.1",
+    "tar-fs": "^3.1.2"
   },
   "devDependencies": {
-    "@types/gunzip-maybe": "^1.4.0",
+    "@types/gunzip-maybe": "^1.4.3",
+    "@types/node": "^22.19.19",
     "@types/recursive-readdir": "^2.2.1",
-    "@types/semver": "^7.7.0",
-    "@types/tar-fs": "^2.0.1",
-    "esbuild": "0.25.0",
-    "esbuild-register": "^3.6.0",
-    "msw": "^2.7.5",
+    "@types/semver": "^7.7.1",
+    "@types/tar-fs": "^2.0.4",
+    "msw": "^2.14.6",
     "tiny-invariant": "^1.2.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

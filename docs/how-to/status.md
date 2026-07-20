@@ -54,7 +54,7 @@ export async function loader({ params }: Route.ActionArgs) {
   let project = await fakeDb.getProject(params.id);
   if (!project) {
     // throw to ErrorBoundary
-    throw data(null, { status: 404 });
+    throw data("Not Found", { status: 404 });
   }
   return project;
 }

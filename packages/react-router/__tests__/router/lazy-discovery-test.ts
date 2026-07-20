@@ -1398,20 +1398,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
     expect(count).toBe(1);
     expect(router.routes).toMatchInlineSnapshot(`
-      [
-        {
-          "children": undefined,
-          "hasErrorBoundary": false,
-          "id": "0",
-          "path": "/",
-        },
-        {
-          "children": undefined,
-          "hasErrorBoundary": false,
-          "id": "param",
-          "path": ":param",
-        },
-      ]
+     [
+       {
+         "children": undefined,
+         "id": "0",
+         "path": "/",
+       },
+       {
+         "children": undefined,
+         "id": "param",
+         "path": ":param",
+       },
+     ]
     `);
 
     await router.navigate("/");
@@ -1426,20 +1424,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(count).toBe(2);
     // But not patched again
     expect(router.routes).toMatchInlineSnapshot(`
-      [
-        {
-          "children": undefined,
-          "hasErrorBoundary": false,
-          "id": "0",
-          "path": "/",
-        },
-        {
-          "children": undefined,
-          "hasErrorBoundary": false,
-          "id": "param",
-          "path": ":param",
-        },
-      ]
+     [
+       {
+         "children": undefined,
+         "id": "0",
+         "path": "/",
+       },
+       {
+         "children": undefined,
+         "id": "param",
+         "path": ":param",
+       },
+     ]
     `);
   });
 
@@ -1504,39 +1500,34 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(count).toBe(1);
 
     expect(router.routes).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": undefined,
-                  "hasErrorBoundary": false,
-                  "id": "a",
-                  "path": "a",
-                },
-              ],
-              "hasErrorBoundary": false,
-              "id": "a-layout",
-            },
-            {
-              "children": [
-                {
-                  "children": undefined,
-                  "hasErrorBoundary": false,
-                  "id": "b",
-                  "path": "b",
-                },
-              ],
-              "hasErrorBoundary": false,
-              "id": "b-layout",
-            },
-          ],
-          "hasErrorBoundary": false,
-          "id": "root",
-          "path": "/",
-        },
-      ]
+     [
+       {
+         "children": [
+           {
+             "children": [
+               {
+                 "children": undefined,
+                 "id": "a",
+                 "path": "a",
+               },
+             ],
+             "id": "a-layout",
+           },
+           {
+             "children": [
+               {
+                 "children": undefined,
+                 "id": "b",
+                 "path": "b",
+               },
+             ],
+             "id": "b-layout",
+           },
+         ],
+         "id": "root",
+         "path": "/",
+       },
+     ]
     `);
   });
 
@@ -1597,39 +1588,34 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(count).toBe(1);
 
     expect(router.routes).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": undefined,
-                  "hasErrorBoundary": false,
-                  "id": "0-0-0",
-                  "path": "a",
-                },
-              ],
-              "hasErrorBoundary": false,
-              "id": "0-0",
-            },
-            {
-              "children": [
-                {
-                  "children": undefined,
-                  "hasErrorBoundary": false,
-                  "id": "root-patch-1-0-0",
-                  "path": "b",
-                },
-              ],
-              "hasErrorBoundary": false,
-              "id": "root-patch-1-0",
-            },
-          ],
-          "hasErrorBoundary": false,
-          "id": "root",
-          "path": "/",
-        },
-      ]
+     [
+       {
+         "children": [
+           {
+             "children": [
+               {
+                 "children": undefined,
+                 "id": "0-0-0",
+                 "path": "a",
+               },
+             ],
+             "id": "0-0",
+           },
+           {
+             "children": [
+               {
+                 "children": undefined,
+                 "id": "root-patch-1-0-0",
+                 "path": "b",
+               },
+             ],
+             "id": "root-patch-1-0",
+           },
+         ],
+         "id": "root",
+         "path": "/",
+       },
+     ]
     `);
   });
 
@@ -1681,7 +1667,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           pathnameBase: "",
           route: {
             children: undefined,
-            hasErrorBoundary: false,
             id: "0",
             path: "/",
           },
@@ -1740,7 +1725,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           pathnameBase: "",
           route: {
             children: undefined,
-            hasErrorBoundary: false,
             id: "0",
             path: "/",
           },
@@ -1775,7 +1759,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
               {
                 id: "c",
                 path: "c",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 async loader() {
                   await tick();
                   throw new Error("C ERROR");
@@ -1820,7 +1804,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
               {
                 id: "b",
                 path: "b",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
               },
             ]);
           } else if (last(matches).route.id === "b") {
@@ -1933,7 +1917,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
               {
                 id: "c",
                 path: "c",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 async action() {
                   await tick();
                   throw new Error("C ERROR");
@@ -1982,7 +1966,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
               {
                 id: "b",
                 path: "b",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
               },
             ]);
           } else if (last(matches).route.id === "b") {
@@ -2236,7 +2220,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             pathnameBase: "",
             route: {
               children: undefined,
-              hasErrorBoundary: false,
               id: "a",
               path: "a",
             },
@@ -2280,7 +2263,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             pathnameBase: "",
             route: {
               children: undefined,
-              hasErrorBoundary: false,
               id: "a",
               path: "a",
             },
@@ -2304,7 +2286,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           {
             id: "parent",
             path: "parent",
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 id: "child",

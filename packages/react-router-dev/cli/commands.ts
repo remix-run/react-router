@@ -1,15 +1,17 @@
 import { existsSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, copyFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
-import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
+import { readPackageJSON } from "pkg-types";
 import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
 
+import developmentConditionEnabled from "#development-condition-enabled";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
-import { loadConfig } from "../config/config";
+import { hasNodeDependency, loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
 import { transpile as convertFileToJS } from "./useJavascript";
@@ -17,6 +19,9 @@ import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
+import { restartWithMergedOptions } from "../restart-with-conditions";
+
+const nodeRequire = createRequire(import.meta.url);
 
 export async function routes(
   rootDirectory?: string,
@@ -59,14 +64,18 @@ export async function build(
 }
 
 export async function dev(root?: string, options: ViteDevOptions = {}) {
-  let { dev } = await import("../vite/dev");
-  if (options.profile) {
-    await profiler.start();
-  }
-  exitHook(() => profiler.stop(console.info));
+  if (developmentConditionEnabled) {
+    let { dev } = await import("../vite/dev");
+    if (options.profile) {
+      await profiler.start();
+    }
+    exitHook(() => profiler.stop(console.info));
 
-  root = resolveRootDirectory(root, options);
-  await dev(root, options);
+    root = resolveRootDirectory(root, options);
+    await dev(root, options);
+  } else {
+    restartWithMergedOptions("--conditions=development");
+  }
 
   // keep `react-router dev` alive by waiting indefinitely
   await new Promise(() => {});
@@ -75,6 +84,7 @@ export async function dev(root?: string, options: ViteDevOptions = {}) {
 let clientEntries = ["entry.client.tsx", "entry.client.js", "entry.client.jsx"];
 let serverEntries = ["entry.server.tsx", "entry.server.js", "entry.server.jsx"];
 let entries = ["entry.client", "entry.server"];
+let rscEntries = ["entry.client", "entry.rsc", "entry.ssr"];
 
 let conjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
@@ -92,6 +102,10 @@ export async function generateEntry(
 ) {
   rootDirectory = resolveRootDirectory(rootDirectory, flags);
 
+  let configDir = "defaults";
+  let entriesToUse = entries;
+  let isRsc = false;
+
   if (
     await hasReactRouterRscPlugin({
       root: rootDirectory,
@@ -101,12 +115,16 @@ export async function generateEntry(
       },
     })
   ) {
-    console.error(
-      colors.red(
-        `The reveal command is currently not supported in RSC Framework Mode.`,
-      ),
-    );
-    process.exit(1);
+    if (!entry) {
+      await generateEntry("entry.client", rootDirectory, flags);
+      await generateEntry("entry.rsc", rootDirectory, flags);
+      await generateEntry("entry.ssr", rootDirectory, flags);
+      return;
+    }
+
+    configDir = "default-rsc-entries";
+    entriesToUse = rscEntries;
+    isRsc = true;
   }
 
   // if no entry passed, attempt to create both
@@ -128,8 +146,8 @@ export async function generateEntry(
 
   let appDirectory = configResult.value.appDirectory;
 
-  if (!entries.includes(entry)) {
-    let entriesArray = Array.from(entries);
+  if (!entriesToUse.includes(entry)) {
+    let entriesArray = Array.from(entriesToUse);
     let list = conjunctionListFormat.format(entriesArray);
 
     console.error(
@@ -138,46 +156,65 @@ export async function generateEntry(
     return;
   }
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
-
-  if (!deps["@react-router/node"]) {
-    console.error(colors.red(`No default server entry detected.`));
-    return;
-  }
-
   let defaultsDirectory = path.resolve(
-    path.dirname(require.resolve("@react-router/dev/package.json")),
+    path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
-    "defaults",
-  );
-  let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
-
-  let defaultEntryServer = path.resolve(
-    defaultsDirectory,
-    `entry.server.node.tsx`,
+    configDir,
   );
 
-  let isServerEntry = entry === "entry.server";
+  let outputFile: string;
+  if (isRsc) {
+    let defaultEntry = path.resolve(defaultsDirectory, `${entry}.tsx`);
+    outputFile = path.resolve(appDirectory, `${entry}.tsx`);
 
-  let contents = isServerEntry
-    ? await createServerEntry(rootDirectory, appDirectory, defaultEntryServer)
-    : await createClientEntry(rootDirectory, appDirectory, defaultEntryClient);
+    if (existsSync(outputFile)) {
+      let relative = path.relative(rootDirectory, outputFile);
+      console.error(colors.red(`Entry file ${relative} already exists.`));
+      return;
+    }
 
-  let useTypeScript = flags.typescript ?? true;
-  let outputExtension = useTypeScript ? "tsx" : "jsx";
-  let outputEntry = `${entry}.${outputExtension}`;
-  let outputFile = path.resolve(appDirectory, outputEntry);
-
-  if (!useTypeScript) {
-    let javascript = await convertFileToJS(contents, {
-      cwd: rootDirectory,
-      filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
-    });
-    await writeFile(outputFile, javascript, "utf-8");
+    await copyFile(defaultEntry, outputFile);
   } else {
-    await writeFile(outputFile, contents, "utf-8");
+    let pkgJson = await readPackageJSON(rootDirectory);
+
+    let defaultEntryClient = path.resolve(
+      defaultsDirectory,
+      "entry.client.tsx",
+    );
+
+    let defaultEntryServer = path.resolve(
+      defaultsDirectory,
+      hasNodeDependency(pkgJson.dependencies) &&
+        !configResult.value.future.unstable_enableNodeReadableStream
+        ? `entry.server.node.tsx`
+        : `entry.server.web.tsx`,
+    );
+
+    let isServerEntry = entry === "entry.server";
+
+    let contents = isServerEntry
+      ? await createServerEntry(rootDirectory, appDirectory, defaultEntryServer)
+      : await createClientEntry(
+          rootDirectory,
+          appDirectory,
+          defaultEntryClient,
+        );
+
+    let useTypeScript = flags.typescript ?? true;
+    let outputExtension = useTypeScript ? "tsx" : "jsx";
+    let outputEntry = `${entry}.${outputExtension}`;
+    outputFile = path.resolve(appDirectory, outputEntry);
+
+    if (!useTypeScript) {
+      let javascript = await convertFileToJS(contents, {
+        cwd: rootDirectory,
+        filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
+      });
+      await writeFile(outputFile, javascript, "utf-8");
+    } else {
+      await writeFile(outputFile, contents, "utf-8");
+    }
   }
 
   console.log(

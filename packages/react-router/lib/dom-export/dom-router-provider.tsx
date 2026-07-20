@@ -6,6 +6,6 @@ import { RouterProvider as BaseRouterProvider } from "react-router";
 
 export type RouterProviderProps = Omit<BaseRouterProviderProps, "flushSync">;
 
-export function RouterProvider(props: Omit<RouterProviderProps, "flushSync">) {
+export function RouterProvider(props: RouterProviderProps) {
   return <BaseRouterProvider flushSync={ReactDOM.flushSync} {...props} />;
 }

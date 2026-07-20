@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.HashRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.HashRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) that stores the location in the
 [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash) portion
@@ -29,7 +29,12 @@ of the URL so it is not sent to the server.
 ## Signature
 
 ```tsx
-function HashRouter({ basename, children, window }: HashRouterProps)
+function HashRouter({
+  basename,
+  children,
+  useTransitions,
+  window,
+}: HashRouterProps)
 ```
 
 ## Props
@@ -41,6 +46,21 @@ Application basename
 ### children
 
 ``<Route>`` components describing your route configuration
+
+### useTransitions
+
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all router state updates are wrapped in
+  `React.startTransition`
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and all router state updates are wrapped in
+  `React.startTransition`
+- When set to `false`, the router will not leverage `React.startTransition`
+  on any navigations or state changes.
+
+For more information, please see the [docs](../../explanation/react-transitions).
 
 ### window
 

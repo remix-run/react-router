@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_HistoryRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.unstable_HistoryRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) that accepts a pre-instantiated
 `history` object.
@@ -39,7 +39,12 @@ the same version of the `history` library that React Router uses internally.
 ## Signature
 
 ```tsx
-function HistoryRouter({ basename, children, history }: HistoryRouterProps)
+function HistoryRouter({
+  basename,
+  children,
+  history,
+  useTransitions,
+}: HistoryRouterProps)
 ```
 
 ## Props
@@ -55,4 +60,19 @@ Application basename
 ### history
 
 A `History` implementation for use by the router
+
+### useTransitions
+
+Control whether router state updates are internally wrapped in
+[`React.startTransition`](https://react.dev/reference/react/startTransition).
+
+- When left `undefined`, all router state updates are wrapped in
+  `React.startTransition`
+- When set to `true`, [`Link`](../components/Link) and [`Form`](../components/Form) navigations will be wrapped
+  in `React.startTransition` and all router state updates are wrapped in
+  `React.startTransition`
+- When set to `false`, the router will not leverage `React.startTransition`
+  on any navigations or state changes.
+
+For more information, please see the [docs](../../explanation/react-transitions).
 

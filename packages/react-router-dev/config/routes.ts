@@ -1,6 +1,6 @@
 import * as Path from "pathe";
 import * as v from "valibot";
-import pick from "lodash/pick";
+import pick from "lodash/pick.js";
 
 import invariant from "../invariant";
 
@@ -310,6 +310,7 @@ function prefix(
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const helpers = { route, index, layout, prefix };
 export { route, index, layout, prefix };
 /**

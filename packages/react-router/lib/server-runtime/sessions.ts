@@ -1,4 +1,4 @@
-import type { ParseOptions, SerializeOptions } from "cookie";
+import type { CookieParseOptions, CookieSerializeOptions } from "cookie-es";
 
 import type { Cookie, CookieOptions } from "./cookies";
 import { createCookie, isCookie } from "./cookies";
@@ -89,6 +89,12 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  *
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
+ *
+ * @category Utils
+ * @param initialData The initial data for the session.
+ * @param id The identifier for the session. Defaults to an empty string for a
+ * new session.
+ * @returns A new {@link Session} object.
  */
 export const createSession: CreateSessionFunction = <
   Data = SessionData,
@@ -139,12 +145,30 @@ export const createSession: CreateSessionFunction = <
   };
 };
 
+/**
+ * A function that determines whether a value is a React Router {@link Session}
+ * object.
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Session} object;
+ * otherwise, `false`.
+ */
 export type IsSessionFunction = (object: any) => object is Session;
 
 /**
- * Returns true if an object is a React Router session.
+ * Returns `true` if a value is a React Router {@link Session} object.
  *
- * @see https://reactrouter.com/api/utils/isSession
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param object The value to check.
+ * @returns `true` if the value is a React Router {@link Session} object;
+ * otherwise, `false`.
  */
 export const isSession: IsSessionFunction = (object): object is Session => {
   return (
@@ -174,7 +198,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   getSession: (
     cookieHeader?: string | null,
-    options?: ParseOptions,
+    options?: CookieParseOptions,
   ) => Promise<Session<Data, FlashData>>;
 
   /**
@@ -183,7 +207,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   commitSession: (
     session: Session<Data, FlashData>,
-    options?: SerializeOptions,
+    options?: CookieSerializeOptions,
   ) => Promise<string>;
 
   /**
@@ -192,7 +216,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   destroySession: (
     session: Session<Data, FlashData>,
-    options?: SerializeOptions,
+    options?: CookieSerializeOptions,
   ) => Promise<string>;
 }
 
@@ -248,6 +272,11 @@ export interface SessionIdStorageStrategy<
  *
  * Note: This is a low-level API that should only be used if none of the
  * existing session storage options meet your requirements.
+ *
+ * @category Utils
+ * @param strategy The strategy used to store session identifiers and data.
+ * @returns A {@link SessionStorage} object that persists session data using the
+ * provided strategy.
  */
 export function createSessionStorage<Data = SessionData, FlashData = Data>({
   cookie: cookieArg,

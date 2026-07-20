@@ -1,3 +1,5 @@
+import { PROTOCOL_RELATIVE_URL_REGEX } from "./url";
+
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +51,7 @@ export interface Path {
   hash: string;
 }
 
-// TODO: (v7) Change the Location generic default from `any` to `unknown` and
+// TODO: (v9) Change the Location generic default from `any` to `unknown` and
 // remove Remix `useLocation` wrapper.
 
 /**
@@ -69,6 +71,12 @@ export interface Location<State = any> extends Path {
    * Note: This value is always "default" on the initial location.
    */
   key: string;
+
+  /**
+   * The masked location displayed in the URL bar, which differs from the URL the
+   * router is operating on
+   */
+  mask?: Path;
 }
 
 /**
@@ -189,9 +197,23 @@ type HistoryState = {
   usr: any;
   key?: string;
   idx: number;
+  masked?: Path;
 };
 
 const PopStateEventType = "popstate";
+
+function isLocation(obj: unknown): obj is Location {
+  return (
+    typeof obj === "object" &&
+    obj != null &&
+    "pathname" in obj &&
+    "search" in obj &&
+    "hash" in obj &&
+    "state" in obj &&
+    "key" in obj
+  );
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +258,7 @@ export function createMemoryHistory(
       entry,
       typeof entry === "string" ? null : entry.state,
       index === 0 ? "default" : undefined,
+      typeof entry === "string" ? undefined : entry.mask,
     ),
   );
   let index = clampIndex(
@@ -254,12 +277,14 @@ export function createMemoryHistory(
     to: To,
     state: any = null,
     key?: string,
+    mask?: Path,
   ): Location {
     let location = createLocation(
       entries ? getCurrentLocation().pathname : "/",
       to,
       state,
       key,
+      mask,
     );
     warning(
       location.pathname.charAt(0) === "/",
@@ -298,7 +323,7 @@ export function createMemoryHistory(
     },
     push(to, state) {
       action = Action.Push;
-      let nextLocation = createMemoryLocation(to, state);
+      let nextLocation = isLocation(to) ? to : createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
       if (v5Compat && listener) {
@@ -307,7 +332,7 @@ export function createMemoryHistory(
     },
     replace(to, state) {
       action = Action.Replace;
-      let nextLocation = createMemoryLocation(to, state);
+      let nextLocation = isLocation(to) ? to : createMemoryLocation(to, state);
       entries[index] = nextLocation;
       if (v5Compat && listener) {
         listener({ action, location: nextLocation, delta: 0 });
@@ -363,13 +388,21 @@ export function createBrowserHistory(
     window: Window,
     globalHistory: Window["history"],
   ) {
-    let { pathname, search, hash } = window.location;
+    let maskedLocation = (globalHistory.state as HistoryState)?.masked;
+    let { pathname, search, hash } = maskedLocation || window.location;
     return createLocation(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
       (globalHistory.state && globalHistory.state.key) || "default",
+      maskedLocation
+        ? {
+            pathname: window.location.pathname,
+            search: window.location.search,
+            hash: window.location.hash,
+          }
+        : undefined,
     );
   }
 
@@ -505,7 +538,10 @@ export function warning(cond: any, message: string) {
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
-    } catch (e) {}
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      e
+    ) {}
   }
 }
 
@@ -521,6 +557,13 @@ function getHistoryState(location: Location, index: number): HistoryState {
     usr: location.state,
     key: location.key,
     idx: index,
+    masked: location.mask
+      ? {
+          pathname: location.pathname,
+          search: location.search,
+          hash: location.hash,
+        }
+      : undefined,
   };
 }
 
@@ -532,6 +575,7 @@ export function createLocation(
   to: To,
   state: any = null,
   key?: string,
+  mask?: Path,
 ): Readonly<Location> {
   let location: Readonly<Location> = {
     pathname: typeof current === "string" ? current : current.pathname,
@@ -544,6 +588,7 @@ export function createLocation(
     // But that's a pretty big refactor to the current test suite so going to
     // keep as is for the time being and just let any incoming keys take precedence
     key: (to && (to as Location).key) || key || createKey(),
+    mask,
   };
   return location;
 }
@@ -551,7 +596,10 @@ export function createLocation(
 /**
  * Creates a string URL path from the given pathname, search, and hash components.
  *
+ * @public
  * @category Utils
+ * @param path The pathname, search, and hash components to combine.
+ * @returns The combined URL path.
  */
 export function createPath({
   pathname = "/",
@@ -568,7 +616,10 @@ export function createPath({
 /**
  * Parses a string URL path into its separate pathname, search, and hash components.
  *
+ * @public
  * @category Utils
+ * @param path The URL path to parse.
+ * @returns The parsed pathname, search, and hash components.
  */
 export function parsePath(path: string): Partial<Path> {
   let parsedPath: Partial<Path> = {};
@@ -636,14 +687,16 @@ function getUrlBasedHistory(
     }
   }
 
-  function push(to: To, state?: any) {
+  function push(to: Location | To, state?: any) {
     action = Action.Push;
-    let location = createLocation(history.location, to, state);
+    let location = isLocation(to)
+      ? to
+      : createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex() + 1;
     let historyState = getHistoryState(location, index);
-    let url = history.createHref(location);
+    let url = history.createHref(location.mask || location);
 
     // try...catch because iOS limits us to 100 pushState calls :/
     try {
@@ -668,12 +721,14 @@ function getUrlBasedHistory(
 
   function replace(to: To, state?: any) {
     action = Action.Replace;
-    let location = createLocation(history.location, to, state);
+    let location = isLocation(to)
+      ? to
+      : createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex();
     let historyState = getHistoryState(location, index);
-    let url = history.createHref(location);
+    let url = history.createHref(location.mask || location);
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
@@ -682,7 +737,7 @@ function getUrlBasedHistory(
   }
 
   function createURL(to: To): URL {
-    return createBrowserURLImpl(to);
+    return createBrowserURLImpl(window, to);
   }
 
   let history: History = {
@@ -727,16 +782,20 @@ function getUrlBasedHistory(
   return history;
 }
 
-export function createBrowserURLImpl(to: To, isAbsolute = false): URL {
+export function createBrowserURLImpl(
+  windowImpl: Window,
+  to: To,
+  isAbsolute = false,
+): URL {
   let base = "http://localhost";
-  if (typeof window !== "undefined") {
+  if (windowImpl) {
     // window.location.origin is "null" (the literal string value) in Firefox
     // under certain conditions, notably when serving from a local HTML file
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
     base =
-      window.location.origin !== "null"
-        ? window.location.origin
-        : window.location.href;
+      windowImpl.location.origin !== "null"
+        ? windowImpl.location.origin
+        : windowImpl.location.href;
   }
 
   invariant(base, "No window.location.(origin|href) available to create URL");
@@ -752,7 +811,7 @@ export function createBrowserURLImpl(to: To, isAbsolute = false): URL {
   // then we need to avoid the URL constructor treating a leading double slash
   // as a protocol-less URL. By prepending the base, it forces the double slash
   // to be parsed correctly as part of the pathname.
-  if (!isAbsolute && href.startsWith("//")) {
+  if (!isAbsolute && PROTOCOL_RELATIVE_URL_REGEX.test(href)) {
     // new URL('//', 'https://localhost') -> error!
     // new URL('https://localhost//', 'https://localhost') -> no error!
     href = base + href;

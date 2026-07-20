@@ -179,11 +179,8 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Index Error");
       expect(html).not.toMatch("LOADER");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs.length).toBe(1);
       expect(errorLogs[0][0].message).toMatch("Loader Error");
@@ -195,11 +192,8 @@ test.describe("Error Sanitization", () => {
       let html = await response.text();
       expect(html).toMatch("Index Error");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs.length).toBe(1);
       expect(errorLogs[0][0].message).toMatch("Render Error");
@@ -230,7 +224,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("returns data without errors", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data");
+      let { data } = await fixture.requestSingleFetchData("/_.data");
       expect(data).toEqual({
         "routes/_index": {
           data: "LOADER",
@@ -239,7 +233,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
+      let { data } = await fixture.requestSingleFetchData("/_.data?loader");
       expect(data).toEqual({
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
@@ -304,11 +298,15 @@ test.describe("Error Sanitization", () => {
 
       // Hydration
       let appFixture = await createAppFixture(fixture);
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/?subclass", true);
-      html = await app.getHtml();
-      expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
-      expect(html).toMatch("<p>NAME:Error");
+      try {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/?subclass", true);
+        html = await app.getHtml();
+        expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
+        expect(html).toMatch("<p>NAME:Error");
+      } finally {
+        appFixture.close();
+      }
     });
   });
 
@@ -384,7 +382,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("returns data without errors", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data");
+      let { data } = await fixture.requestSingleFetchData("/_.data");
       expect(data).toEqual({
         "routes/_index": {
           data: "LOADER",
@@ -393,7 +391,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
+      let { data } = await fixture.requestSingleFetchData("/_.data?loader");
       expect(data).toEqual({
         "routes/_index": {
           error: new Error("Loader Error"),
@@ -462,14 +460,18 @@ test.describe("Error Sanitization", () => {
 
       // Hydration
       let appFixture = await createAppFixture(fixture, ServerMode.Development);
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/?subclass", true);
-      html = await app.getHtml();
-      expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
-      expect(html).toMatch("<p>NAME:ReferenceError");
-      expect(html).toMatch(
-        "STACK:ReferenceError: thisisnotathing is not defined",
-      );
+      try {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/?subclass", true);
+        html = await app.getHtml();
+        expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
+        expect(html).toMatch("<p>NAME:ReferenceError");
+        expect(html).toMatch(
+          "STACK:ReferenceError: thisisnotathing is not defined",
+        );
+      } finally {
+        appFixture.close();
+      }
     });
   });
 
@@ -571,11 +573,8 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Index Error");
       expect(html).not.toMatch("LOADER");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual("  Request: GET test://test/?loader");
@@ -589,11 +588,8 @@ test.describe("Error Sanitization", () => {
       let html = await response.text();
       expect(html).toMatch("Index Error");
       expect(html).toMatch("MESSAGE:Unexpected Server Error");
-      // This is the turbo-stream encoding - the fact that stack goes right
-      // into __type means it has no value
-      expect(html).toMatch(
-        '\\"message\\",\\"Unexpected Server Error\\",\\"stack\\",\\"__type\\",\\"Error\\"',
-      );
+      expect(html).toMatch('\\"SanitizedError\\"');
+      expect(html).toMatch('\\"Error\\",\\"Unexpected Server Error\\"');
       expect(html).not.toMatch(/ at /i);
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual("  Request: GET test://test/?render");
@@ -626,7 +622,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("returns data without errors", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data");
+      let { data } = await fixture.requestSingleFetchData("/_.data");
       expect(data).toEqual({
         "routes/_index": {
           data: "LOADER",
@@ -635,7 +631,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
+      let { data } = await fixture.requestSingleFetchData("/_.data?loader");
       expect(data).toEqual({
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
@@ -643,7 +639,7 @@ test.describe("Error Sanitization", () => {
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(
-        "  Request: GET test://test/_root.data?loader",
+        "  Request: GET test://test/_.data?loader",
       );
       expect(errorLogs[2][0]).toEqual("  Error: Loader Error");
       expect(errorLogs[3][0]).toMatch(" at ");

@@ -1,31 +1,41 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
-// @ts-expect-error
-import * as ReactDomServer from "react-dom/server.edge";
+import { renderToReadableStream } from "react-dom/server.edge";
 import {
-  unstable_RSCStaticRouter as RSCStaticRouter,
   unstable_routeRSCServerRequest as routeRSCServerRequest,
+  unstable_RSCStaticRouter as RSCStaticRouter,
 } from "react-router";
+import subResourceIntegrity from "virtual:react-router/unstable_rsc/subresource-integrity";
 
-export default async function handler(
+export async function generateHTML(
   request: Request,
-  fetchServer: (request: Request) => Promise<Response>,
-) {
-  const bootstrapScriptContent =
-    await import.meta.viteRsc.loadBootstrapScriptContent("index");
-
-  return routeRSCServerRequest({
+  serverResponse: Response,
+): Promise<Response> {
+  return await routeRSCServerRequest({
+    // The incoming request.
     request,
-    fetchServer,
+    // The response from the RSC server.
+    serverResponse,
+    // Provide the React Server touchpoints.
     createFromReadableStream,
-    async renderHTML(getPayload) {
-      const payload = getPayload();
+    // Render the router to HTML.
+    async renderHTML(getPayload, options) {
+      const payload = await getPayload();
+      const formState =
+        payload.type === "render" ? await payload.formState : undefined;
 
-      return ReactDomServer.renderToReadableStream(
+      const bootstrapScriptContent =
+        await import.meta.viteRsc.loadBootstrapScriptContent("index");
+
+      return await renderToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
         {
+          ...options,
           bootstrapScriptContent,
+          formState,
+          importMap: subResourceIntegrity
+            ? { integrity: subResourceIntegrity }
+            : undefined,
           signal: request.signal,
-          formState: await payload.formState,
         },
       );
     },

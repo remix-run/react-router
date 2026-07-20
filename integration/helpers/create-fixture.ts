@@ -104,7 +104,7 @@ export function json(value: JsonObject) {
   return JSON.stringify(value, null, 2);
 }
 
-const defaultTemplateName = "vite-5-template" satisfies TemplateName;
+const defaultTemplateName = "vite-7-template" satisfies TemplateName;
 
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let templateName = init.templateName ?? defaultTemplateName;
@@ -157,7 +157,9 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       isSpaMode: init.spaMode,
       prerender: init.prerender,
       requestDocument(href: string) {
-        let file = new URL(href, "test://test").pathname + "/index.html";
+        let pathname = new URL(href, "test://test").pathname;
+        let file =
+          (pathname.endsWith("/") ? pathname : pathname + "/") + "index.html";
         let clientDir = path.join(projectDir, "build", "client");
         let mainPath = path.join(clientDir, file);
         let fallbackPath = path.join(clientDir, "__spa-fallback.html");
@@ -199,7 +201,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   type RequestHandler = (request: Request) => Promise<Response>;
   let handler: RequestHandler;
   if (templateName === "rsc-vite-framework") {
-    handler = (await import(buildPath)).default;
+    handler = (await import(buildPath))?.default?.fetch;
     if (typeof handler !== "function") {
       throw new Error(
         "Expected a default request handler function export in Vite RSC Framework Mode server build",
@@ -334,20 +336,19 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         );
         app.get("*", (req, res, next) => {
           let dir = path.join(fixture.projectDir, "build", "client");
-          let file;
+          let filePath;
           if (req.path.endsWith(".data")) {
-            file = req.path;
+            filePath = path.join(dir, req.path);
           } else {
-            let mainPath = req.path + "/index.html";
-            let fallbackPath = "__spa-fallback.html";
-            let fallbackPath2 = "index.html";
-            file = existsSync(mainPath)
+            let mainPath = path.join(dir, req.path, "index.html");
+            let fallbackPath = path.join(dir, "__spa-fallback.html");
+            let fallbackPath2 = path.join(dir, "index.html");
+            filePath = existsSync(mainPath)
               ? mainPath
               : existsSync(fallbackPath)
                 ? fallbackPath
                 : fallbackPath2;
           }
-          let filePath = path.join(dir, file);
           if (existsSync(filePath)) {
             res.sendFile(filePath, next);
           } else {
@@ -477,54 +478,14 @@ export async function createFixtureProject(
     projectDir,
   );
 
-  if (templateName.includes("parcel")) {
-    parcelBuild(projectDir, init.buildStdio, mode);
-  } else {
-    reactRouterBuild(
-      projectDir,
-      init.buildStdio,
-      mode,
-      templateName.includes("rsc"),
-    );
-  }
+  reactRouterBuild(
+    projectDir,
+    init.buildStdio,
+    mode,
+    templateName.includes("rsc"),
+  );
 
   return projectDir;
-}
-
-function parcelBuild(
-  projectDir: string,
-  buildStdio?: Writable,
-  mode?: ServerMode,
-) {
-  let parcelBin = "node_modules/parcel/lib/bin.js";
-
-  let buildArgs: string[] = [parcelBin, "build", "--no-cache"];
-
-  let buildSpawn = spawnSync("node", buildArgs, {
-    cwd: projectDir,
-    env: {
-      ...process.env,
-      NODE_ENV: mode || ServerMode.Production,
-    },
-  });
-
-  // These logs are helpful for debugging. Remove comments if needed.
-  // console.log("spawning node " + buildArgs.join(" ") + ":\n");
-  // console.log("  STDOUT:");
-  // console.log("  " + buildSpawn.stdout.toString("utf-8"));
-  // console.log("  STDERR:");
-  // console.log("  " + buildSpawn.stderr.toString("utf-8"));
-
-  if (buildStdio) {
-    buildStdio.write(buildSpawn.stdout.toString("utf-8"));
-    buildStdio.write(buildSpawn.stderr.toString("utf-8"));
-    buildStdio.end();
-  }
-
-  if (buildSpawn.error || buildSpawn.status) {
-    console.error(buildSpawn.stderr.toString("utf-8"));
-    throw buildSpawn.error || new Error(`Build failed, check the output above`);
-  }
 }
 
 function reactRouterBuild(
@@ -550,9 +511,6 @@ function reactRouterBuild(
     env: {
       ...process.env,
       NODE_ENV: mode || ServerMode.Production,
-      // Ensure build can pass in Rolldown. This can be removed once
-      // "preserveEntrySignatures" is supported in rolldown-vite.
-      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 

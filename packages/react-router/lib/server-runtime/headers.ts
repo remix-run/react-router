@@ -1,6 +1,6 @@
-import { splitCookiesString } from "set-cookie-parser";
+import { splitSetCookieString } from "cookie-es";
 
-import type { DataRouteMatch } from "../context";
+import type { DataRouteMatch } from "../router/utils";
 import type { StaticHandlerContext } from "../router/router";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
 import type { ServerBuild } from "./build";
@@ -111,7 +111,7 @@ function prependCookies(parentHeaders: Headers, childHeaders: Headers): void {
   let parentSetCookieString = parentHeaders.get("Set-Cookie");
 
   if (parentSetCookieString) {
-    let cookies = splitCookiesString(parentSetCookieString);
+    let cookies = splitSetCookieString(parentSetCookieString);
     let childCookies = new Set(childHeaders.getSetCookie());
     cookies.forEach((cookie) => {
       if (!childCookies.has(cookie)) {

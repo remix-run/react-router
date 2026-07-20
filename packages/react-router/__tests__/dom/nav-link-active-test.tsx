@@ -696,6 +696,45 @@ describe("NavLink using a data router", () => {
     expect(screen.getByText("Link to Bar").className).toBe("active");
   });
 
+  it("applies the 'pending' className to a NavLink whose 'to' has a trailing slash", async () => {
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
+        <Route path="/" element={<Layout />}>
+          <Route path="home" element={<Outlet />}>
+            <Route
+              path="child"
+              loader={() => dfd.promise}
+              element={<p>Child page</p>}
+            />
+          </Route>
+        </Route>,
+      ),
+      {
+        window: getWindow("/"),
+      },
+    );
+    render(<RouterProvider router={router} />);
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/home/">Home</NavLink>
+          <NavLink to="/home/child">Child</NavLink>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Home").className).toBe("");
+
+    fireEvent.click(screen.getByText("Child"));
+    expect(screen.getByText("Home").className).toBe("pending");
+
+    dfd.resolve(null);
+    await waitFor(() => screen.getByText("Child page"));
+  });
+
   it("applies its className correctly when provided as a function", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
@@ -1045,13 +1084,19 @@ function createDeferred() {
       res(val);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
     reject = async (error?: Error) => {
       rej(error);
       try {
         await promise;
-      } catch (e) {}
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        e
+      ) {}
     };
   });
   return {

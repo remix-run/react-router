@@ -1,6 +1,7 @@
 {
   "name": "@react-router/remix-routes-option-adapter",
-  "version": "7.9.6",
+  "type": "module",
+  "version": "8.2.0",
   "description": "Adapter for Remix's \"routes\" config option, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -25,8 +26,9 @@
   },
   "wireit": {
     "build": {
-      "command": "tsup",
+      "command": "tsdown",
       "files": [
+        "../../pnpm-workspace.yaml",
         "*.ts",
         "tsconfig.json",
         "package.json"
@@ -38,13 +40,14 @@
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "tsup": "^8.3.0",
-    "typescript": "^5.1.6",
-    "wireit": "0.14.9"
+    "@types/node": "^22.19.19",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "wireit": "catalog:"
   },
   "peerDependencies": {
     "@react-router/dev": "workspace:^",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
@@ -52,7 +55,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.22.0"
   },
   "files": [
     "dist/",

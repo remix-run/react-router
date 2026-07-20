@@ -3,8 +3,10 @@ import path from "node:path";
 import util from "node:util";
 
 import fg from "fast-glob";
+// @ts-expect-error
 import dox from "dox";
 import prettier from "prettier";
+import * as semver from "semver";
 import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
 
@@ -97,7 +99,6 @@ const isComponentApi = (c: SimplifiedComment) =>
 // Read a filename from standard input using the node parseArgs utility
 
 const { values: args } = util.parseArgs({
-  args: process.argv.slice(2),
   options: {
     path: {
       type: "string",
@@ -120,7 +121,6 @@ const { values: args } = util.parseArgs({
       short: "h",
     },
   },
-  allowPositionals: true,
 });
 
 if (args.help) {
@@ -162,7 +162,8 @@ const outputDir = args.output || "docs/api";
 
 // Build lookup table for @link resolution
 const repoApiLookup = buildRepoDocsLinks(outputDir);
-const typedocLookup = buildTypedocLinks(outputDir);
+const reactRouterApiDocsVersion = getReactRouterApiDocsVersion();
+const typedocLookup = buildTypedocLinks(outputDir, reactRouterApiDocsVersion);
 
 run();
 
@@ -203,7 +204,23 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   return lookup;
 }
 
-function buildTypedocLinks(outputDir: string) {
+function getReactRouterApiDocsVersion() {
+  let packageJsonPath = "packages/react-router/package.json";
+  let packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
+    version?: string;
+  };
+  let version = packageJson.version ? semver.parse(packageJson.version) : null;
+
+  if (!version) {
+    throw new Error(
+      `Unable to detect React Router major version from ${packageJsonPath}`,
+    );
+  }
+
+  return `v${version.major}`;
+}
+
+function buildTypedocLinks(outputDir: string, apiDocsVersion: string) {
   const lookup = new Map<string, { href: string; description?: string }>();
 
   // Prerequisite: `typedoc` has been run first via `npm run docs`
@@ -214,7 +231,7 @@ function buildTypedocLinks(outputDir: string) {
 
     apiData.children
       ?.filter((c) => c.kind === ReflectionKind.Module)
-      .forEach((child) => processTypedocModule(child, lookup));
+      .forEach((child) => processTypedocModule(child, lookup, apiDocsVersion));
   } else {
     warn(
       'Typedoc API data not found at "public/dev/api.json", will not ' +
@@ -228,6 +245,7 @@ function buildTypedocLinks(outputDir: string) {
 function processTypedocModule(
   child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
   lookup: Map<string, { href: string; description?: string }>,
+  apiDocsVersion: string,
   prefix: string[] = [],
 ) {
   let newPrefix = [...prefix, child.name];
@@ -235,7 +253,7 @@ function processTypedocModule(
   child.children?.forEach((subChild) => {
     // Recurse into submodules
     if (subChild.kind === ReflectionKind.Module) {
-      processTypedocModule(subChild, lookup, newPrefix);
+      processTypedocModule(subChild, lookup, apiDocsVersion, newPrefix);
       return;
     }
 
@@ -267,18 +285,6 @@ function processTypedocModule(
                   ? "variables"
                   : undefined;
 
-    // Assigning an arrow function to a variable will be a "variable" here but
-    // typedoc will classify it as a "function".  We can identify these if they
-    // define `@params` or `@returns` tags in their JSDoc.
-    if (
-      type === "variables" &&
-      subChild.comment?.blockTags?.some(
-        (tag) => tag.tag === "@param" || tag.tag === "@returns",
-      )
-    ) {
-      type = "functions";
-    }
-
     if (!type) {
       warn(
         `Skipping ${apiName} because it is not a function, class, enum, interface, or type`,
@@ -286,9 +292,9 @@ function processTypedocModule(
       return;
     }
 
-    let modulePath = moduleName.replace(/[@\-/]/g, "_");
+    let modulePath = moduleName.replace(/[@/]/g, "_");
     let path = `${type}/${modulePath}.${subChild.name}.html`;
-    let url = `https://api.reactrouter.com/v7/${path}`;
+    let url = `https://api.reactrouter.com/${apiDocsVersion}/${path}`;
     lookup.set(apiName, { href: url });
 
     // When this is an interface, also include it's child properties in the lookup
@@ -564,6 +570,11 @@ function getApiName(comment: ParsedComment): string {
     return matches[1].trim();
   }
 
+  matches = comment.code.match(/^export type ([^<=]+)/);
+  if (matches) {
+    return matches[1].trim();
+  }
+
   throw new Error(`Could not determine API name:\n${comment.code}\n`);
 }
 
@@ -707,7 +718,7 @@ async function getSignature(code: string) {
 
     let formatted = await prettier.format(newCode, { parser: "typescript" });
 
-    return formatted.replace("{}", "").trim();
+    return formatted.replace(/\s*\{\}\s*$/, "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
@@ -725,6 +736,22 @@ async function getSignature(code: string) {
     return;
   }
 
+  if (ts.isTypeAliasDeclaration(ast.statements[0])) {
+    let typeAliasDeclaration = ast.statements[0];
+    let modifiedTypeAlias = {
+      ...typeAliasDeclaration,
+      modifiers: typeAliasDeclaration.modifiers?.filter(
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword,
+      ),
+    } as ts.TypeAliasDeclaration;
+
+    let newCode = ts
+      .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+      .printNode(ts.EmitHint.Unspecified, modifiedTypeAlias, ast);
+
+    return (await prettier.format(newCode, { parser: "typescript" })).trim();
+  }
+
   throw new Error("Unable to parse signature from code: " + code);
 }
 
@@ -737,7 +764,7 @@ function resolveLinkTags(text: string): string {
   // Match {@link ApiName} as well as {@link ApiName | description}
   const linkPattern = /\{@link\s+([^}]+)\}/g;
 
-  return text.replace(linkPattern, (match, linkContent) => {
+  return text.replace(linkPattern, (_, linkContent: string) => {
     // Split on the pipe in case a different link text is specified after.
     // This is not standard JSDoc syntax but instead something typedoc picks up
     // from TSDoc. See:

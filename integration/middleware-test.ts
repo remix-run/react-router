@@ -40,7 +40,7 @@ test.describe("Middleware", () => {
           // ...existing code...
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            v8_middleware: true,
+            splitRouteModules: false,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -368,8 +368,6 @@ test.describe("Middleware", () => {
         files: {
           "react-router.config.ts": reactRouterConfig({
             ssr: false,
-            v8_middleware: true,
-            splitRouteModules: true,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -466,7 +464,7 @@ test.describe("Middleware", () => {
       fixture = await createFixture({
         files: {
           "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
+            splitRouteModules: false,
           }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
@@ -772,9 +770,7 @@ test.describe("Middleware", () => {
     }) => {
       let fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -894,9 +890,7 @@ test.describe("Middleware", () => {
     }) => {
       let fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1059,10 +1053,7 @@ test.describe("Middleware", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({
-            v8_middleware: true,
-            splitRouteModules: true,
-          }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1156,7 +1147,7 @@ test.describe("Middleware", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "react-router.config.ts": reactRouterConfig({ v8_middleware: true }),
+          "react-router.config.ts": reactRouterConfig(),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
@@ -1982,9 +1973,7 @@ test.describe("Middleware", () => {
       fixture = await createFixture(
         {
           files: {
-            "react-router.config.ts": reactRouterConfig({
-              v8_middleware: true,
-            }),
+            "react-router.config.ts": reactRouterConfig(),
             "vite.config.ts": js`
               import { defineConfig } from "vite";
               import { reactRouter } from "@react-router/dev/vite";
@@ -1997,7 +1986,7 @@ test.describe("Middleware", () => {
             "app/entry.server.tsx": js`
               import { PassThrough } from "node:stream";
 
-              import type { AppLoadContext, EntryContext } from "react-router";
+              import type { EntryContext } from "react-router";
               import { createReadableStreamFromReadable } from "@react-router/node";
               import { ServerRouter } from "react-router";
               import type { RenderToPipeableStreamOptions } from "react-dom/server";

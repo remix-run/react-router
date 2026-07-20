@@ -3,6 +3,7 @@ npm-debug.log
 
 /website/build/
 node_modules/
+.pnpm-store/
 
 /examples/*/yarn.lock
 /examples/*/pnpm-lock.yaml
@@ -27,13 +28,16 @@ node_modules/
 
 .wireit
 .eslintcache
-.parcel-cache
 .tmp
-tsup.config.bundled_*.mjs
+tsdown.config.bundled_*.mjs
 build.utils.d.ts
 worker-configuration.d.ts
 /.env
 /NOTES.md
+/packages/react-router/docs/
 
 # v7 reference docs
 /public
+
+.claude/settings.local.json
+.claude/skills

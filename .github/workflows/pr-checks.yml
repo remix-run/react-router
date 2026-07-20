@@ -1,0 +1,97 @@
+name: PR Checks
+
+# Read-only PR inspection. Computes a list of "actions" (sticky comments,
+# label changes, close, etc.) and uploads them as an artifact. The PR (Actions)
+# workflow consumes the artifact and applies the actions with write
+# permissions — keeping that step out of the PR's untrusted code path.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: PR Checks
+    if: >
+      github.repository == 'remix-run/react-router' &&
+      (
+        github.event.action != 'labeled' ||
+        github.event.label.name == 'feature-request'
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+
+    steps:
+      - name: Check changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        id: changed-files
+        run: |
+          changed_files="$(gh pr diff "${{ github.event.pull_request.number }}" --repo "$GITHUB_REPOSITORY" --name-only)"
+
+          touches_scripts="false"
+          touches_packages="false"
+
+          while IFS= read -r file; do
+            case "$file" in
+              scripts/pr.ts) touches_scripts="true" ;;
+              scripts/utils/*) touches_scripts="true" ;;
+              packages/*) touches_packages="true" ;;
+            esac
+          done <<< "$changed_files"
+
+          if [ "$touches_scripts" = "true" ] && [ "$touches_packages" = "true" ]; then
+            echo "PR checks cannot safely run when a PR changes both scripts/ and packages/."
+            echo "Please split automation changes and package changes into separate PRs."
+            exit 1
+          elif [ "$touches_scripts" = "true" ]; then
+            echo "PR touches scripts/ without touching packages/; skipping community helper checks."
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=run" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repo
+        if: steps.changed-files.outputs.mode == 'run'
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        if: steps.changed-files.outputs.mode == 'run'
+        uses: pnpm/action-setup@v6
+
+      - name: Setup node
+        if: steps.changed-files.outputs.mode == 'run'
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install deps
+        if: steps.changed-files.outputs.mode == 'run'
+        run: pnpm install --frozen-lockfile
+
+      - name: Run checks
+        if: steps.changed-files.outputs.mode == 'run'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_HEAD_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.name }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          LABEL_NAME: ${{ github.event.label.name }}
+        run: node scripts/pr.ts check pr-checks-result.json
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-checks-result
+          path: pr-checks-result.json
+          if-no-files-found: ignore

@@ -1,13 +1,17 @@
 import * as React from "react";
-import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
-import type { RouteManifest } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
+import type {
+  DataRouteObject,
+  PatchRoutesOnNavigationFunction,
+  RouteManifest,
+} from "../../router/utils";
+import { joinPaths, matchRoutesImpl } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
+import { createPath } from "../../router/history";
 
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
@@ -19,7 +23,32 @@ const discoveredPaths = new Set<string>();
 
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
-const URL_LIMIT = 7680;
+export const URL_LIMIT = 7680;
+
+export function getPathsWithAncestors(paths: string[]): string[] {
+  let result = new Set<string>();
+
+  paths.forEach((path) => {
+    if (!path.startsWith("/")) {
+      path = `/${path}`;
+    }
+    // In addition to the requested path, we need to include patches for each
+    // ancestor path so that we pick up any pathless/index routes below ancestor
+    // segments. So if we get a request for `/parent/child`, we need to look for
+    // a match on `/parent` so that if a `parent._index` route exists we return
+    // it and it's available for client side matching if the user routes back up
+    // to `/parent`. This is the same thing we do on initial load in <Scripts>
+    // via `getPartialManifest()`.
+    for (let i = 1; i < path.length; i++) {
+      if (path[i] === "/") {
+        result.add(path.slice(0, i));
+      }
+    }
+    result.add(path);
+  });
+
+  return Array.from(result);
+}
 
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
@@ -49,7 +78,13 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutes(router.routes, path, router.basename);
+    let matches = matchRoutesImpl<DataRouteObject>(
+      router.routes,
+      path,
+      router.basename || "/",
+      false,
+      router.branches,
+    );
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }
@@ -67,6 +102,7 @@ export function getPartialManifest(
 }
 
 export function getPatchRoutesOnNavigationFunction(
+  getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
@@ -82,9 +118,14 @@ export function getPatchRoutesOnNavigationFunction(
     if (discoveredPaths.has(path)) {
       return;
     }
+    let { state } = getRouter();
     await fetchAndApplyManifestPatches(
       [path],
-      fetcherKey ? window.location.href : path,
+      // If we're patching for a fetcher call, reload the current location
+      // Otherwise prefer any ongoing navigation location
+      fetcherKey
+        ? window.location.href
+        : createPath(state.navigation.location || state.location),
       manifest,
       routeModules,
       ssr,
@@ -195,15 +236,68 @@ export function getManifestPath(
   basename: string | undefined,
 ) {
   let manifestPath = _manifestPath || "/__manifest";
-
-  if (basename == null) {
-    return manifestPath;
-  }
-
-  return `${basename}${manifestPath}`.replace(/\/+/g, "/");
+  return basename == null ? manifestPath : joinPaths([basename, manifestPath]);
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
+
+export async function handleClientVersionMismatch(
+  needsReload: boolean,
+  version: string,
+  errorReloadPath: string | null,
+): Promise<boolean> {
+  if (!needsReload) {
+    // Reset loop-detection on a successful response
+    try {
+      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+    } catch {
+      // Session storage unavailable
+    }
+    return false;
+  }
+
+  if (!errorReloadPath) {
+    // No-op during eager route discovery so we will trigger a hard reload
+    // of the destination during the next navigation instead of reloading
+    // while the user is sitting on the current page. Slightly more
+    // disruptive on fetcher calls because we reload the current page, but
+    // it's better than the `React.useContext` error that occurs without
+    // this detection.
+    console.warn(
+      "Detected a manifest version mismatch during eager route discovery. " +
+        "The next navigation/fetch to an undiscovered route will result in " +
+        "a new document navigation to sync up with the latest manifest.",
+    );
+    return true;
+  }
+
+  try {
+    // This will hard reload the destination path on navigations, or the
+    // current path on fetcher calls
+    if (sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) === version) {
+      // We've already tried fixing for this version, don't try again to
+      // avoid loops - just let this navigation/fetch 404
+      console.error(
+        "Unable to discover routes due to manifest version mismatch.",
+      );
+      return true;
+    }
+
+    sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, version);
+  } catch {
+    // Session storage unavailable
+  }
+
+  window.location.href = errorReloadPath;
+  console.warn("Detected manifest version mismatch, reloading...");
+
+  // Stall here and let the browser reload and avoid triggering a flash of
+  // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
+  await new Promise(() => {
+    // check out of this hook cause the DJs never gonna re[s]olve this
+  });
+  return true;
+}
 
 export async function fetchAndApplyManifestPatches(
   paths: string[],
@@ -217,6 +311,8 @@ export async function fetchAndApplyManifestPatches(
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
 ): Promise<void> {
+  paths = getPathsWithAncestors(paths);
+
   // NOTE: Intentionally using a standalone `URLSearchParams` instance
   // instead of mutating `url.searchParams`, which is *significantly* slower:
   // https://issues.chromium.org/issues/331406951
@@ -244,63 +340,18 @@ export async function fetchAndApplyManifestPatches(
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);
-    } else if (
-      res.status === 204 &&
-      res.headers.has("X-Remix-Reload-Document")
+    }
+
+    if (
+      await handleClientVersionMismatch(
+        res.status === 204 && res.headers.has("X-Remix-Reload-Document"),
+        manifest.version,
+        errorReloadPath,
+      )
     ) {
-      if (!errorReloadPath) {
-        // No-op during eager route discovery so we will trigger a hard reload
-        // of the destination during the next navigation instead of reloading
-        // while the user is sitting on the current page.  Slightly more
-        // disruptive on fetcher calls because we reload the current page, but
-        // it's better than the `React.useContext` error that occurs without
-        // this detection.
-        console.warn(
-          "Detected a manifest version mismatch during eager route discovery. " +
-            "The next navigation/fetch to an undiscovered route will result in " +
-            "a new document navigation to sync up with the latest manifest.",
-        );
-        return;
-      }
-
-      try {
-        // This will hard reload the destination path on navigations, or the
-        // current path on fetcher calls
-        if (
-          sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
-          manifest.version
-        ) {
-          // We've already tried fixing for this version, don' try again to
-          // avoid loops - just let this navigation/fetch 404
-          console.error(
-            "Unable to discover routes due to manifest version mismatch.",
-          );
-          return;
-        }
-
-        sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
-      } catch {
-        // Session storage unavailable
-      }
-
-      window.location.href = errorReloadPath;
-      console.warn("Detected manifest version mismatch, reloading...");
-
-      // Stall here and let the browser reload and avoid triggering a flash of
-      // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
-      await new Promise(() => {
-        // check out of this hook cause the DJs never gonna re[s]olve this
-      });
-    } else if (res.status >= 400) {
-      throw new Error(await res.text());
+      return;
     }
 
-    // Reset loop-detection on a successful response
-    try {
-      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
-    } catch {
-      // Session storage unavailable
-    }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
     if (signal?.aborted) return;
@@ -339,7 +390,9 @@ export async function fetchAndApplyManifestPatches(
 function addToFifoQueue(path: string, queue: Set<string>) {
   if (queue.size >= discoveredPathsMaxSize) {
     let first = queue.values().next().value;
-    queue.delete(first);
+    if (first !== undefined) {
+      queue.delete(first);
+    }
   }
   queue.add(path);
 }

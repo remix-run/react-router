@@ -104,9 +104,9 @@ function runTests() {
     let scroll = await page.evaluate(() => window.scrollY);
     expect(scroll).toBe(0);
     await app.clickLink("/hash#hello-world");
-    await new Promise((r) => setTimeout(r, 0));
-    scroll = await page.evaluate(() => window.scrollY);
-    expect(scroll).toBeGreaterThan(0);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
   });
 
   test("should scroll to hash locations with URL encoded characters", async ({
@@ -117,8 +117,8 @@ function runTests() {
     let scroll = await page.evaluate(() => window.scrollY);
     expect(scroll).toBe(0);
     await app.clickLink("/hash#hello 🌎");
-    await new Promise((r) => setTimeout(r, 0));
-    scroll = await page.evaluate(() => window.scrollY);
-    expect(scroll).toBeGreaterThan(0);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
   });
 }
