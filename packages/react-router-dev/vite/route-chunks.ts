@@ -109,15 +109,26 @@ function getExportDependencies(
           ...getTopLevelStatementsForPaths(identifiers),
         ]);
 
-        // We also keep track of non-import statements since import statements
-        // get more fine-grained filtering, meaning that we often need to
-        // exclude import statements in our chunking logic.
+        // We also keep track of non-module statements since most import/export
+        // statements get more fine-grained filtering. Exported function and
+        // class declarations are atomic, so keep them for shared code detection.
         let topLevelNonModuleStatements = new Set(
-          Array.from(topLevelStatements).filter(
-            (statement) =>
-              !t.isImportDeclaration(statement) &&
-              !t.isExportDeclaration(statement),
-          ),
+          Array.from(topLevelStatements).filter((statement) => {
+            if (t.isImportDeclaration(statement)) {
+              return false;
+            }
+
+            if (!t.isExportDeclaration(statement)) {
+              return true;
+            }
+
+            return (
+              (t.isExportNamedDeclaration(statement) ||
+                t.isExportDefaultDeclaration(statement)) &&
+              (t.isFunctionDeclaration(statement.declaration) ||
+                t.isClassDeclaration(statement.declaration))
+            );
+          }),
         );
 
         // We keep track of imported identifiers for each export since we
