@@ -1,1 +1,0 @@
-Harden RSC CSRF codepaths.
