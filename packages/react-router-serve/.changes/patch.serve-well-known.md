@@ -1,0 +1,1 @@
+Serve `/.well-known/*` files from the client build directory. Express 5's static middleware ignores every dot-segment path by default, so RFC 8615 well-known URIs — ACME challenges, Android's `assetlinks.json`, Apple's `apple-app-site-association` — fell through to the request handler and came back as app-rendered HTML instead of the static file. Other dotfiles remain hidden.
