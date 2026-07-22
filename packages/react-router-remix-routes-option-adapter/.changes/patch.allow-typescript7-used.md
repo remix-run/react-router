@@ -1,1 +1,1 @@
-allow typescript@7 to be used
+Allow `typescript@7` to be used
