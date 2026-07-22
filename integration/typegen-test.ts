@@ -257,6 +257,32 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
+  test("route file in literal star folder", async ({ cwd, edit, $ }) => {
+    test.skip(
+      process.platform === "win32",
+      'Windows does not support literal "*" path segments.',
+    );
+
+    await fs.mkdir(Path.join(cwd, "app/routes/*"), { recursive: true });
+    await edit({
+      "app/routes/*/route.tsx": tsx`
+        import type { Expect, Equal } from "../../expect-type"
+        import type { Route } from "./+types/route"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params, { "*": string }>>
+          return { value: params["*"] }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof loaderData.value, string>>
+          return <h1>{loaderData.value}</h1>
+        }
+      `,
+    });
+    await $("pnpm typecheck");
+  });
+
   test("clientLoader.hydrate = true", async ({ edit, $ }) => {
     await edit({
       "app/routes/_index.tsx": tsx`

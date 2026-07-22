@@ -171,7 +171,20 @@ export function flatRoutesUniversal(
 
   for (let [routeId, file] of sortedRouteIds) {
     let index = routeId.endsWith("_index");
-    let [segments, raw] = getRouteSegments(routeId.slice(prefix.length + 1));
+    let routePath = routeId.slice(prefix.length + 1);
+    let fileExt = path.posix.extname(file);
+    let fileName = path.posix.basename(file, fileExt);
+    let isFolderRouteModule =
+      path.posix.dirname(file) !== appWithPrefix &&
+      (fileName === "route" || fileName === "index");
+    if (isFolderRouteModule) {
+      routePath = routePath
+        .split("/")
+        .map((segment) => (segment === "*" ? paramPrefixChar : segment))
+        .join("/");
+    }
+
+    let [segments, raw] = getRouteSegments(routePath);
     let pathname = createRoutePath(segments, raw, index);
 
     routeManifest[routeId] = {
