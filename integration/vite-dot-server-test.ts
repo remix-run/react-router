@@ -76,6 +76,24 @@ test("Vite / dead-code elimination for server exports", async () => {
   expect(lines).toHaveLength(0);
 });
 
+test("Vite / unused route import from .server directory", async () => {
+  let cwd = await createProject({
+    "app/.server/fun.ts": serverOnlyModule,
+    "app/routes/_index.tsx": `
+      import { serverOnly } from "../.server/fun";
+
+      export default function Index() {
+        return <h1>Index</h1>;
+      }
+    `,
+  });
+  let { status } = build({ cwd });
+  expect(status).toBe(0);
+
+  let lines = grep(path.join(cwd, "build/client"), /SERVER_ONLY|\.server\/fun/);
+  expect(lines).toHaveLength(0);
+});
+
 test.describe("Vite / route / server-only module referenced by client", () => {
   let matrix = [
     { type: "file", path: "app/utils.server.ts", specifier: `~/utils.server` },

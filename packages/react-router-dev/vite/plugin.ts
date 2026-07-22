@@ -2267,7 +2267,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let ast = parse(code, { sourceType: "module" });
         if (!options?.ssr) {
-          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS, {
+            removeUnusedImportSpecifiers: isDotServerImportPath,
+          });
         }
         decorateComponentExportsWithProps(ast);
         return generate(ast, {
@@ -2846,6 +2848,12 @@ function isRoute(
   file: string,
 ): boolean {
   return Boolean(getRoute(pluginConfig, file));
+}
+
+function isDotServerImportPath(specifier: string) {
+  let serverFileRE = /\.server(\.[cm]?[jt]sx?)?$/;
+  let serverDirRE = /(?:^|\/)\.server(?:\/|$)/;
+  return serverFileRE.test(specifier) || serverDirRE.test(specifier);
 }
 
 async function getRouteMetadata(

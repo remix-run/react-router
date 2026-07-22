@@ -1,9 +1,13 @@
 import { generate, parse } from "./babel";
 import { removeExports } from "./remove-exports";
 
-function transform(code: string, exportsToRemove: string[]) {
+function transform(
+  code: string,
+  exportsToRemove: string[],
+  options?: Parameters<typeof removeExports>[2],
+) {
   let ast = parse(code, { sourceType: "module" });
-  removeExports(ast, exportsToRemove);
+  removeExports(ast, exportsToRemove, options);
   return generate(ast);
 }
 
@@ -56,6 +60,53 @@ describe("transform", () => {
       export const keptExport_2 = () => keptUtil();"
     `);
     expect(result.code).not.toMatch(/removed/i);
+  });
+
+  test("unused import specifiers from matched sources", () => {
+    let result = transform(
+      `
+      import { serverOnly } from '../.server/fun'
+      import { unusedClientValue } from './client-module'
+
+      export default function Route() {
+        return null;
+      }
+    `,
+      ["loader"],
+      {
+        removeUnusedImportSpecifiers: (source) => source.includes("/.server/"),
+      },
+    );
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { unusedClientValue } from './client-module';
+      export default function Route() {
+        return null;
+      }"
+    `);
+    expect(result.code).not.toMatch(/serverOnly|\.server/);
+  });
+
+  test("used import specifiers from matched sources", () => {
+    let result = transform(
+      `
+      import { serverOnly, unusedServerOnly } from '../.server/fun'
+
+      export default function Route() {
+        return serverOnly;
+      }
+    `,
+      ["loader"],
+      {
+        removeUnusedImportSpecifiers: (source) => source.includes("/.server/"),
+      },
+    );
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { serverOnly } from '../.server/fun';
+      export default function Route() {
+        return serverOnly;
+      }"
+    `);
+    expect(result.code).not.toMatch(/unusedServerOnly/);
   });
 
   test("arrow function with property assignment", () => {
