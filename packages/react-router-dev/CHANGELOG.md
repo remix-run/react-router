@@ -12,7 +12,7 @@
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - Add `unstable_rsc/client-version` client build version virtual module ([#15318](https://github.com/remix-run/react-router/pull/15318))
 
@@ -35,6 +35,7 @@
     signal: request.signal,
   });
   ```
+
 - Updated dependencies:
   - [`react-router@8.3.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.0)
   - [`@react-router/node@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.0)

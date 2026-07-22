@@ -145,7 +145,7 @@ If you maintain custom RSC entries, review the generated unstable change notes f
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - `react-router` - Preserve RSC route component metadata so routes with a `clientLoader` can skip unnecessary server requests once their components have rendered while still fetching missing server-rendered elements ([#15323](https://github.com/remix-run/react-router/pull/15323))
 - `react-router` - Harden RSC CSRF code paths ([#15311](https://github.com/remix-run/react-router/pull/15311))
@@ -167,7 +167,6 @@ If you maintain custom RSC entries, review the generated unstable change notes f
   ```
 
 - `react-router` - Add CSP nonce support to RSC document rendering ([#15320](https://github.com/remix-run/react-router/pull/15320))
-
   - Add `nonce` options to `unstable_routeRSCServerRequest` and `unstable_RSCStaticRouter`
   - Forward the nonce to the HTML renderer and apply it to injected RSC payload scripts and nonce-aware framework components
 

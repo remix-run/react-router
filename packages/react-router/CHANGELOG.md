@@ -17,7 +17,7 @@
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - Detect stale RSC clients during lazy route discovery and reload the destination document ([#15318](https://github.com/remix-run/react-router/pull/15318))
 
@@ -35,7 +35,6 @@
   ```
 
 - Add CSP nonce support to RSC document rendering ([#15320](https://github.com/remix-run/react-router/pull/15320))
-
   - Add `nonce` options to `unstable_routeRSCServerRequest` and `unstable_RSCStaticRouter`
   - Forward the nonce to the HTML renderer and apply it to injected RSC payload scripts and nonce-aware framework components
 
