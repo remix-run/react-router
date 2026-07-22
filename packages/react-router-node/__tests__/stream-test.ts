@@ -3,6 +3,8 @@
  */
 
 import { Writable } from "node:stream";
+import v8 from "node:v8";
+import vm from "node:vm";
 
 import {
   writeAsyncIterableToWritable,
@@ -43,6 +45,23 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([promise, timeoutPromise]).finally(() =>
     clearTimeout(timeout),
   );
+}
+
+function getGarbageCollector(): () => void {
+  let globalWithGc = globalThis as typeof globalThis & { gc?: () => void };
+  if (typeof globalWithGc.gc === "function") {
+    return globalWithGc.gc;
+  }
+
+  v8.setFlagsFromString("--expose-gc");
+  return vm.runInNewContext("gc") as () => void;
+}
+
+async function collectGarbage(gc: () => void) {
+  for (let i = 0; i < 5; i++) {
+    gc();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 }
 
 describe("writeReadableStreamToWritable", () => {
@@ -91,6 +110,54 @@ describe("writeReadableStreamToWritable", () => {
     await expect(withTimeout(writePromise, 100)).rejects.toThrow(
       "Writable failed",
     );
+  });
+
+  it("does not retain written chunks while waiting for the next chunk", async () => {
+    let gc = getGarbageCollector();
+    let numChunks = 500;
+    let chunkSize = 16 * 1024;
+    let refs: WeakRef<Uint8Array>[] = [];
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    let resolveChunksWritten!: () => void;
+    let chunksWritten = new Promise<void>((resolve) => {
+      resolveChunksWritten = resolve;
+    });
+    let writeCount = 0;
+
+    let readable = new ReadableStream<Uint8Array>({
+      start(readableController) {
+        controller = readableController;
+
+        for (let i = 0; i < numChunks; i++) {
+          let chunk = new Uint8Array(chunkSize);
+          refs.push(new WeakRef(chunk));
+          readableController.enqueue(chunk);
+        }
+      },
+    });
+    let writable = new Writable({
+      highWaterMark: numChunks * chunkSize,
+      write(_chunk, _encoding, callback) {
+        writeCount++;
+        if (writeCount === numChunks) {
+          resolveChunksWritten();
+        }
+        callback();
+      },
+    });
+
+    let writePromise = writeReadableStreamToWritable(readable, writable);
+
+    try {
+      await chunksWritten;
+      await collectGarbage(gc);
+
+      let retainedChunks = refs.filter((ref) => ref.deref()).length;
+      expect(retainedChunks).toBeLessThan(numChunks / 10);
+    } finally {
+      controller.close();
+      await writePromise.catch(() => {});
+    }
   });
 });
 
