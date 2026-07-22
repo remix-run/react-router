@@ -1,0 +1,1 @@
+Add support for a `DISABLE_COMPRESSION` environment variable that disables the built-in `compression` middleware, for deployments where a proxy or CDN in front of the app server handles compression instead

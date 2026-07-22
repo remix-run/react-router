@@ -281,7 +281,11 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
  * which has caused many integration tests to leak noisy logs for expected errors.
  * It also means that sometimes the CLI is skipped over in those tests, missing out on code paths that should be tested.
  */
-export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
+export async function createAppFixture(
+  fixture: Fixture,
+  mode?: ServerMode,
+  options?: { env?: Record<string, string> },
+) {
   let startAppServer = async (): Promise<{
     port: number;
     stop: VoidFunction;
@@ -298,6 +302,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         env: {
           NODE_ENV: mode || "production",
           PORT: port.toFixed(0),
+          ...options?.env,
         },
         regex: /\[react-router-serve\] http:\/\/localhost:(\d+)\s/,
         validate: (matches) => {
