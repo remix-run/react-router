@@ -11,17 +11,19 @@ let cache: [Cache, string] = [new Map(), "cacheKey"];
 
 describe("route chunks", () => {
   describe("chunkable", () => {
-    test("functions with no identifiers", () => {
+    test("independent declarations with no identifiers", () => {
       const code = dedent`
         export default function () { return null; }
         export function target1() { return null; }
         export function other1() { return null; }
+        export class OtherClass {}
         export const target2 = () => null;
         export const other2 = () => null;
       `;
       expect(hasChunkableExport(code, "default", ...cache)).toBe(true);
       expect(hasChunkableExport(code, "target1", ...cache)).toBe(true);
       expect(hasChunkableExport(code, "target2", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "OtherClass", ...cache)).toBe(true);
       expect(getChunkedExport(code, "default", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "export default function () {
@@ -38,9 +40,12 @@ describe("route chunks", () => {
         getChunkedExport(code, "target2", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const target2 = () => null;"`);
       expect(
+        getChunkedExport(code, "OtherClass", {}, ...cache)?.code,
+      ).toMatchInlineSnapshot(`"export class OtherClass {}"`);
+      expect(
         omitChunkedExports(
           code,
-          ["default", "target1", "target2"],
+          ["default", "target1", "target2", "OtherClass"],
           {},
           ...cache,
         )?.code,
@@ -715,6 +720,108 @@ describe("route chunks", () => {
         export const other2 = () => getOtherMessage2();"
       `);
     });
+
+    test("function depending on an exported function declaration", () => {
+      const code = dedent`
+        export function exportedHelper() {
+          return "loaded";
+        }
+        export function clientLoader() {
+          return exportedHelper();
+        }
+        export default function Component() {
+          return null;
+        }
+      `;
+
+      expect(hasChunkableExport(code, "exportedHelper", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "clientLoader", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "default", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "clientLoader", {}, ...cache),
+      ).toBeUndefined();
+      expect(omitChunkedExports(code, ["clientLoader"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "export function exportedHelper() {
+          return "loaded";
+        }
+        export function clientLoader() {
+          return exportedHelper();
+        }
+        export default function Component() {
+          return null;
+        }"
+      `);
+    });
+
+    test("function depending transitively on an exported class declaration", () => {
+      const code = dedent`
+        export class ExportedClass {
+          message = "loaded";
+        }
+        const createExportedClass = () => new ExportedClass();
+        export function clientLoader() {
+          return createExportedClass();
+        }
+        export default function Component() {
+          return null;
+        }
+      `;
+
+      expect(hasChunkableExport(code, "ExportedClass", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "clientLoader", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "default", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "clientLoader", {}, ...cache),
+      ).toBeUndefined();
+    });
+
+    test("retained default export depending on an exported route function", () => {
+      const code = dedent`
+        export function clientLoader() {
+          return "loaded";
+        }
+        export default function Component() {
+          return clientLoader();
+        }
+      `;
+
+      expect(hasChunkableExport(code, "clientLoader", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "default", ...cache)).toBe(false);
+      expect(
+        getChunkedExport(code, "clientLoader", {}, ...cache),
+      ).toBeUndefined();
+      expect(omitChunkedExports(code, ["clientLoader"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "export function clientLoader() {
+          return "loaded";
+        }
+        export default function Component() {
+          return clientLoader();
+        }"
+      `);
+    });
+
+    test.each([
+      ["function", "export default function Component() {}"],
+      ["class", "export default class Component {}"],
+    ])(
+      "export depending on a named default %s declaration",
+      (_, defaultDeclaration) => {
+        const code = dedent`
+          ${defaultDeclaration}
+          export function clientLoader() {
+            return Component.name;
+          }
+        `;
+
+        expect(hasChunkableExport(code, "default", ...cache)).toBe(false);
+        expect(hasChunkableExport(code, "clientLoader", ...cache)).toBe(false);
+        expect(
+          getChunkedExport(code, "clientLoader", {}, ...cache),
+        ).toBeUndefined();
+      },
+    );
 
     test("functions sharing an imported identifier", () => {
       const code = dedent`
