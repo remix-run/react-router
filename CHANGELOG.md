@@ -135,10 +135,6 @@ If you maintain custom RSC entries, review the generated unstable change notes f
 - `react-router` - Use `crypto.randomUUID()` for `createMemorySessionStorage` session ids ([#15302](https://github.com/remix-run/react-router/pull/15302))
   - `createMemorySessionStorage` is only intended for local development and testing - sessions are lost when the server restarts
 - `react-router` - Fix `NavLink` not applying its `pending` state when `to` has a trailing slash ([#15300](https://github.com/remix-run/react-router/pull/15300))
-- `react-router` - Preserve RSC route component metadata so routes with a `clientLoader` can skip unnecessary server requests once their components have rendered while still fetching missing server-rendered elements ([#15323](https://github.com/remix-run/react-router/pull/15323))
-- `react-router` - Harden RSC CSRF code paths ([#15311](https://github.com/remix-run/react-router/pull/15311))
-- `react-router` - Fix server crash (`TypeError: Invalid state: Unable to enqueue`) when a request is aborted while the RSC HTML stream has a pending flush ([#15286](https://github.com/remix-run/react-router/pull/15286))
-  - Handle cancellation of the `injectRSCPayload` readable side, clear the pending flush, and cancel the underlying RSC payload stream
 - `@react-router/architect` - Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
 - `@react-router/cloudflare` - Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
 - `@react-router/dev` - Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
@@ -151,6 +147,10 @@ If you maintain custom RSC entries, review the generated unstable change notes f
 
 ⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
+- `react-router` - Preserve RSC route component metadata so routes with a `clientLoader` can skip unnecessary server requests once their components have rendered while still fetching missing server-rendered elements ([#15323](https://github.com/remix-run/react-router/pull/15323))
+- `react-router` - Harden RSC CSRF code paths ([#15311](https://github.com/remix-run/react-router/pull/15311))
+- `react-router` - Fix server crash (`TypeError: Invalid state: Unable to enqueue`) when a request is aborted while the RSC HTML stream has a pending flush ([#15286](https://github.com/remix-run/react-router/pull/15286))
+  - Handle cancellation of the `injectRSCPayload` readable side, clear the pending flush, and cancel the underlying RSC payload stream
 - `react-router` - Detect stale RSC clients during lazy route discovery and reload the destination document ([#15318](https://github.com/remix-run/react-router/pull/15318))
 
   #### Migration
