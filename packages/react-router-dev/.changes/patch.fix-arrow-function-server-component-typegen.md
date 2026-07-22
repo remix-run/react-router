@@ -1,0 +1,1 @@
+Fix generated `Route.ComponentProps` / `Route.ServerComponentProps` triggering a `TS2456` / `TS7022` circular type-alias error when used as the parameter type of an arrow-function route component export — typegen now indexes into `GetAnnotations<...>` directly instead of routing through an intermediate `type Annotations = GetAnnotations<...>` alias
