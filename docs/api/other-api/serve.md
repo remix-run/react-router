@@ -46,6 +46,16 @@ You can change the port of the server with an environment variable.
 PORT=4000 npx react-router-serve build/index.js
 ```
 
+## `DISABLE_COMPRESSION` environment variable
+
+By default, responses are compressed with the [`compression`][compression] middleware. If a proxy or CDN in front of your app server handles compression instead, you can set `DISABLE_COMPRESSION` to `true` (or `1`) so the server sends identity-encoded responses with a `Content-Length` header.
+
+```shellscript nonumber
+DISABLE_COMPRESSION=true npx react-router-serve build/index.js
+```
+
+This is useful behind edge caches (for example Azure Front Door or other CDNs) that compress at the edge — compressing at both layers can break edge caching, since the origin's compressed responses are chunked and carry no `Content-Length` for the cache to store.
+
 ## Development Environment
 
 Depending on `process.env.NODE_ENV`, the server will boot in development or production mode.
