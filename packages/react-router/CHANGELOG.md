@@ -1,5 +1,72 @@
 # `react-router`
 
+## v8.3.0
+
+### Patch Changes
+
+- Encode path params in `href`/`generatePath` per RFC 3986 path-segment rules instead of `encodeURIComponent` ([#15310](https://github.com/remix-run/react-router/pull/15310))
+  - Characters that are valid literally in a path segment (`$ & + , ; = : @` — RFC 3986 `pchar`) are no longer percent-encoded, so values like a semver build `1.0.0+1` interpolate unchanged instead of becoming `1.0.0%2B1`
+  - Structural/unsafe characters (`/ ? # %`, whitespace, non-ASCII) are still escaped exactly as before
+- Use `crypto.randomUUID()` for `createMemorySessionStorage` session ids ([#15302](https://github.com/remix-run/react-router/pull/15302))
+  - `createMemorySessionStorage` is only intended for local development and testing - sessions are lost when the server restarts
+- Fix `NavLink` not applying its `pending` state when `to` has a trailing slash ([#15300](https://github.com/remix-run/react-router/pull/15300))
+- Preserve RSC route component metadata so routes with a `clientLoader` can skip unnecessary server requests once their components have rendered while still fetching missing server-rendered elements ([#15323](https://github.com/remix-run/react-router/pull/15323))
+- Harden RSC CSRF code paths ([#15311](https://github.com/remix-run/react-router/pull/15311))
+- Fix server crash (`TypeError: Invalid state: Unable to enqueue`) when a request is aborted while the RSC HTML stream has a pending flush ([#15286](https://github.com/remix-run/react-router/pull/15286))
+  - Handle cancellation of the `injectRSCPayload` readable side, clear the pending flush, and cancel the underlying RSC payload stream
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Detect stale RSC clients during lazy route discovery and reload the destination document ([#15318](https://github.com/remix-run/react-router/pull/15318))
+
+  #### Migration
+
+  Apps using the default RSC Framework entry do not need to make any changes. Apps with a custom `entry.rsc.tsx` should import the generated client version and pass it to `unstable_matchRSCServerRequest`:
+
+  ```tsx
+  import clientVersion from "virtual:react-router/unstable_rsc/client-version";
+
+  return unstable_matchRSCServerRequest({
+    // ...
+    clientVersion,
+  });
+  ```
+
+- Add CSP nonce support to RSC document rendering ([#15320](https://github.com/remix-run/react-router/pull/15320))
+
+  - Add `nonce` options to `unstable_routeRSCServerRequest` and `unstable_RSCStaticRouter`
+  - Forward the nonce to the HTML renderer and apply it to injected RSC payload scripts and nonce-aware framework components
+
+  To adopt nonce-based CSP, update your `entry.ssr.tsx` (run `react-router reveal entry.ssr` first in RSC Framework Mode) to generate a fresh nonce for each request. Pass it to `routeRSCServerRequest`, spread the `renderHTML` options into React's HTML renderer, pass `options.nonce` to `RSCStaticRouter`, and use the same nonce in the `Content-Security-Policy` response header:
+
+  ```tsx
+  const nonce = crypto.randomUUID();
+  const response = await routeRSCServerRequest({
+    request,
+    serverResponse,
+    createFromReadableStream,
+    nonce,
+    async renderHTML(getPayload, options) {
+      const payload = getPayload();
+      return renderHTMLToReadableStream(
+        <RSCStaticRouter getPayload={getPayload} nonce={options.nonce} />,
+        {
+          ...options,
+          bootstrapScriptContent,
+          formState: await payload.formState,
+          signal: request.signal,
+        },
+      );
+    },
+  });
+  response.headers.set(
+    "Content-Security-Policy",
+    `script-src 'self' 'nonce-${nonce}'`,
+  );
+  ```
+
 ## v8.2.0
 
 ### Patch Changes

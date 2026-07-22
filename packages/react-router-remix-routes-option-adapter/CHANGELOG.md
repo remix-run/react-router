@@ -1,5 +1,13 @@
 # `@react-router/remix-config-routes-adapter`
 
+## v8.3.0
+
+### Patch Changes
+
+- Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
+- Updated dependencies:
+  - [`@react-router/dev@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.3.0)
+
 ## v8.2.0
 
 ### Patch Changes
