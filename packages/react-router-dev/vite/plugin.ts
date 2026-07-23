@@ -1589,6 +1589,25 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // Let user servers handle SSR requests in middleware mode,
           // otherwise the Vite plugin will handle the request
           if (!viteDevServer.config.server.middlewareMode) {
+            // Silently handle the Chromium DevTools Automatic Workspace Folders
+            // probe (https://chromium.googlesource.com/devtools/devtools-frontend/+/main/docs/ecosystem/automatic_workspace_folders.md).
+            // Chrome requests /.well-known/appspecific/com.chrome.devtools.json
+            // on every localhost page load. Since there is no matching app route,
+            // React Router would otherwise log a noisy "No route matches URL"
+            // error that is unrelated to application code. We return 204 No
+            // Content here — before the request handler — so the error is
+            // suppressed without affecting any user-defined routes.
+            viteDevServer.middlewares.use((req, res, next) => {
+              if (
+                req.url === "/.well-known/appspecific/com.chrome.devtools.json"
+              ) {
+                res.writeHead(204, { "Cache-Control": "no-store" });
+                res.end();
+                return;
+              }
+              next();
+            });
+
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
                 let vite = getVite();
