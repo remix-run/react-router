@@ -81,4 +81,46 @@ test.describe("react-router-serve", () => {
       });
     });
   }
+
+  test.describe("well-known URIs", () => {
+    for (const templateName of templateNames) {
+      test.describe(`template: ${templateName}`, () => {
+        let fixture: Fixture;
+        let appFixture: AppFixture;
+
+        test.beforeAll(async () => {
+          fixture = await createFixture({
+            templateName,
+            useReactRouterServe: true,
+            files: {
+              "public/.well-known/security.txt":
+                "Contact: mailto:security@example.com",
+              "public/.hidden.txt": "should not be served",
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+        });
+
+        test.afterAll(() => {
+          appFixture.close();
+        });
+
+        test("serves files under /.well-known", async () => {
+          let response = await fetch(
+            `${appFixture.serverUrl}/.well-known/security.txt`,
+          );
+          expect(response.status).toBe(200);
+          expect(await response.text()).toContain(
+            "Contact: mailto:security@example.com",
+          );
+        });
+
+        test("keeps other dotfiles hidden", async () => {
+          let response = await fetch(`${appFixture.serverUrl}/.hidden.txt`);
+          expect(response.status).toBe(404);
+          expect(await response.text()).not.toContain("should not be served");
+        });
+      });
+    }
+  });
 });
