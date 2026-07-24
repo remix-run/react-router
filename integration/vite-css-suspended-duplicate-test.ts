@@ -94,13 +94,18 @@ test.describe("Vite CSS suspended duplicate styles", () => {
             route("layout-shared", "routes/layout-shared/layout.tsx", [
               index("routes/layout-shared/route.tsx"),
             ]),
+            route("persistent-owner", "routes/persistent-owner/layout.tsx", [
+              index("routes/persistent-owner/route.tsx"),
+            ]),
+            route("persistent-without-owner", "routes/persistent-without-owner.tsx"),
             route(":slug", "routes/$slug/layout.tsx", [
               index("routes/$slug/route.tsx"),
             ]),
           ] satisfies RouteConfig;
         `,
             "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router";
+          import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+          import { LoadPersistentWithStyles } from "./components/LoadPersistentWithStyles";
           import { WithStyles } from "./components/WithStyles";
 
           export default function Root() {
@@ -111,6 +116,9 @@ test.describe("Vite CSS suspended duplicate styles", () => {
                   <Links />
                 </head>
                 <body>
+                  <Link to="/persistent-owner">persistent owner</Link>
+                  <Link to="/persistent-without-owner">persistent without owner</Link>
+                  <LoadPersistentWithStyles />
                   <WithStyles />
                   <Outlet />
                   <Scripts />
@@ -161,6 +169,46 @@ test.describe("Vite CSS suspended duplicate styles", () => {
             return <LayoutWithStyles />;
           }
         `,
+            "app/components/PersistentWithStyles.css.ts": js`
+          import { style } from "@vanilla-extract/css";
+
+          export const persistentWithStyles = style({
+            color: "rgb(0, 0, 255)",
+          });
+        `,
+            "app/components/PersistentWithStyles.tsx": js`
+          import * as styles from "./PersistentWithStyles.css";
+
+          export function PersistentWithStyles() {
+            return <div data-persistent-with-styles className={styles.persistentWithStyles}>persistent with styles</div>;
+          }
+        `,
+            "app/components/LoadPersistentWithStyles.tsx": js`
+          import { lazy, Suspense, useState } from "react";
+
+          const PersistentWithStylesLazy = lazy(() =>
+            import("./PersistentWithStyles").then(({ PersistentWithStyles }) => ({
+              default: PersistentWithStyles,
+            })),
+          );
+
+          export function LoadPersistentWithStyles() {
+            const [show, setShow] = useState(false);
+
+            return (
+              <>
+                <button data-load-persistent-with-styles onClick={() => setShow(true)}>
+                  load persistent with styles
+                </button>
+                {show ? (
+                  <Suspense fallback={"loading-persistent-with-styles"}>
+                    <PersistentWithStylesLazy />
+                  </Suspense>
+                ) : null}
+              </>
+            );
+          }
+        `,
             "app/routes/layout-shared/layout.tsx": js`
           import { Outlet } from "react-router";
           import { LayoutWithStyles } from "../../components/LayoutWithStyles";
@@ -193,6 +241,30 @@ test.describe("Vite CSS suspended duplicate styles", () => {
                 </Suspense>
               </>
             );
+          }
+        `,
+            "app/routes/persistent-owner/layout.tsx": js`
+          import { Outlet } from "react-router";
+          import { PersistentWithStyles } from "../../components/PersistentWithStyles";
+
+          export default function PersistentOwnerLayoutRoute() {
+            return (
+              <>
+                <h1 data-persistent-owner>persistent owner</h1>
+                <PersistentWithStyles />
+                <Outlet />
+              </>
+            );
+          }
+        `,
+            "app/routes/persistent-owner/route.tsx": js`
+          export default function PersistentOwnerIndexRoute() {
+            return <h2 data-persistent-owner-route>persistent owner route</h2>;
+          }
+        `,
+            "app/routes/persistent-without-owner.tsx": js`
+          export default function PersistentWithoutOwnerRoute() {
+            return <h1 data-persistent-without-owner>persistent without owner</h1>;
           }
         `,
             "app/routes/$slug/layout.tsx": js`
@@ -299,6 +371,49 @@ test.describe("Vite CSS suspended duplicate styles", () => {
           stylesheetRequests,
           assetName: "LayoutWithStyles-",
         });
+      });
+
+      test("retains dynamically imported CSS after leaving a non-leaf route that statically owns the same asset", async ({
+        page,
+      }) => {
+        let persistentStylesheetSelector =
+          "link[rel='stylesheet'][href*='PersistentWithStyles-']";
+
+        await page.goto(`http://localhost:${port}/persistent-owner`, {
+          waitUntil: "networkidle",
+        });
+
+        await page.locator("[data-load-persistent-with-styles]").click();
+        await expect(page.locator("[data-persistent-with-styles]")).toHaveCount(
+          2,
+        );
+        await expect(
+          page.locator("[data-persistent-with-styles]").first(),
+        ).toHaveCSS("color", "rgb(0, 0, 255)");
+        await expect(page.locator(persistentStylesheetSelector)).toHaveCount(2);
+        await expect(
+          page.locator(`${persistentStylesheetSelector}[href$='#']`),
+        ).toHaveCount(1);
+
+        await page
+          .getByRole("link", {
+            name: "persistent without owner",
+          })
+          .click();
+        await expect(
+          page.locator("[data-persistent-without-owner]"),
+        ).toHaveText("persistent without owner");
+        await expect(page.locator("[data-persistent-with-styles]")).toHaveCount(
+          1,
+        );
+        await expect(page.locator("[data-persistent-with-styles]")).toHaveCSS(
+          "color",
+          "rgb(0, 0, 255)",
+        );
+        await expect(page.locator(persistentStylesheetSelector)).toHaveCount(1);
+        await expect(
+          page.locator(`${persistentStylesheetSelector}[href$='#']`),
+        ).toHaveCount(0);
       });
     });
   });
