@@ -1,5 +1,11 @@
 # `react-router`
 
+## v7.18.2
+
+### Patch Changes
+
+- Harden RSC CSRF codepaths. ([#15353](https://github.com/remix-run/react-router/pull/15353))
+
 ## v7.18.1
 
 ### Patch Changes
