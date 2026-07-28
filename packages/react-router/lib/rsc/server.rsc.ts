@@ -861,7 +861,19 @@ async function generateRenderResponse(
         if (isMutationMethod(request.method)) {
           try {
             throwIfPotentialCSRFAttack(request, allowedActionOrigins);
+          } catch (error) {
+            onError?.(error);
+            potentialCSRFAttackError = error;
+            // Downgrade the request to a GET so that `query` below cannot
+            // execute any route `action` for this potential CSRF attack
+            request = new Request(request.url, {
+              method: "GET",
+              headers: request.headers,
+              signal: request.signal,
+            });
+          }
 
+          if (!potentialCSRFAttackError) {
             ctx.runningAction = true;
             let result = await processServerAction(
               request,
@@ -904,18 +916,12 @@ async function generateRenderResponse(
                 undefined,
               );
             }
-          } catch (error) {
-            potentialCSRFAttackError = error;
           }
         }
 
         let staticContext = await query(
           request,
-          skipRevalidation || !!potentialCSRFAttackError
-            ? {
-                filterMatchesToLoad: () => false,
-              }
-            : undefined,
+          skipRevalidation ? { filterMatchesToLoad: () => false } : undefined,
         );
 
         if (isResponse(staticContext)) {
