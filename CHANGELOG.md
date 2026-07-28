@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.2](#v7182)
   - [v7.18.1](#v7181)
   - [v7.18.0](#v7180)
     - [CSRF Check Logic Fix](#csrf-check-logic-fix)
@@ -179,6 +180,16 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.2
+
+Date: 2026-07-28
+
+### Patch Changes
+
+- `react-router` - Harden RSC CSRF codepaths. ([#15353](https://github.com/remix-run/react-router/pull/15353))
+
+**Full Changelog**: [`v7.18.1...v7.18.2`](https://github.com/remix-run/react-router/compare/react-router@7.18.1...react-router@7.18.2)
 
 ## v7.18.1
 
