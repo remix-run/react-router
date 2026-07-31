@@ -1140,6 +1140,9 @@ test.describe(`Prerendering`, () => {
         "favicon.ico",
         "index.html",
       ]);
+      expect(
+        fs.existsSync(path.join(fixture.projectDir, "build", "server")),
+      ).toBe(false);
 
       let res = await fixture.requestDocument("/");
       let html = await res.text();

@@ -2728,6 +2728,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 try {
                   await buildApp?.(builder);
 
+                  // `ssr:false` still needs the server build while prerendering
+                  // the SPA fallback, but it has no runtime server to ship.
+                  if (!ctx.reactRouterConfig.ssr) {
+                    await rm(getServerBuildDirectory(ctx.reactRouterConfig), {
+                      force: true,
+                      recursive: true,
+                    });
+                  }
+
                   invariant(viteConfig);
                   let { buildManifest, reactRouterConfig } = ctx;
                   invariant(buildManifest, "Expected build manifest");
