@@ -503,7 +503,9 @@ export const middleware: Route.MiddlewareFunction[] = [
 export async function loader({
   context,
 }: Route.LoaderArgs) {
-  const user = context.get(userContext); // Guaranteed to exist
+  // Guaranteed at runtime by authMiddleware, but still typed `User | null`;
+  // create the context as `createContext<User>()` if you want a non-nullable `User`.
+  const user = context.get(userContext);
   return { user };
 }
 ```
