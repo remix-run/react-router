@@ -3704,6 +3704,69 @@ describe("fetchers", () => {
     });
   });
 
+  describe("fetchReloadIds cleanup", () => {
+    it("does not strand a reload id when a load supersedes a submission on the same key", async () => {
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
+      let key = "key";
+
+      let A = await t.fetch("/foo", key, {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await A.actions.foo.resolve("ACTION");
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      let B = await t.fetch("/foo", key);
+
+      await A.loaders.root.resolve("ROOT*");
+      await A.loaders.foo.resolve("FOO*");
+      await B.loaders.foo.resolve("FOO-LOADED");
+
+      // idle fetchers are pruned from state.fetchers
+      expect(t.router.state.fetchers.has(key)).toBe(false);
+
+      let C = await t.navigate("/bar");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.bar.resolve("BAR");
+
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/bar");
+    });
+
+    it("does not strand a reload id when a fetcher is reset during post-action revalidation", async () => {
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
+      let key = "key";
+
+      let A = await t.fetch("/foo", key, {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await A.actions.foo.resolve("ACTION");
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      t.router.resetFetcher(key);
+      expect(t.router.state.fetchers.has(key)).toBe(false);
+
+      await A.loaders.root.resolve("ROOT*");
+      await A.loaders.foo.resolve("FOO*");
+
+      let B = await t.navigate("/bar");
+      await B.loaders.root.resolve("ROOT**");
+      await B.loaders.bar.resolve("BAR");
+
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/bar");
+    });
+  });
+
   describe("fetcher Map mutation", () => {
     // The root cause of the bug: after updateState({ fetchers: new Map(...) })
     // hands a Map (MapA) to React, a subsequent direct mutation of

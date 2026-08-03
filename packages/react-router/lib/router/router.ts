@@ -2951,6 +2951,11 @@ export function createRouter(init: RouterInit): Router {
         scopedContext,
       );
 
+    // Drop this before the aborted bail-out below.  An aborted fetcher goes
+    // idle and is pruned from state.fetchers, and abortStaleFetchLoads
+    // invariants on a fetcher existing for every key still in fetchReloadIds
+    fetchReloadIds.delete(key);
+
     if (abortController.signal.aborted) {
       return;
     }
@@ -2960,7 +2965,6 @@ export function createRouter(init: RouterInit): Router {
       abortPendingFetchRevalidations,
     );
 
-    fetchReloadIds.delete(key);
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
