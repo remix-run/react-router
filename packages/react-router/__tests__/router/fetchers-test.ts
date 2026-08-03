@@ -3706,24 +3706,40 @@ describe("fetchers", () => {
 
   describe("fetchReloadIds cleanup", () => {
     it("does not strand a reload id when a load supersedes a submission on the same key", async () => {
-      let t = initializeTest({
-        url: "/foo",
-        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
-      });
+      let t = initializeTest();
       let key = "key";
 
       let A = await t.fetch("/foo", key, {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
+      expect(t.fetchers[key].state).toBe("submitting");
+
       await A.actions.foo.resolve("ACTION");
-      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: "POST",
+        formAction: "/foo",
+        state: "loading",
+        data: "ACTION",
+      });
 
       let B = await t.fetch("/foo", key);
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: undefined,
+        formAction: undefined,
+        state: "loading",
+        data: "ACTION",
+      });
 
       await A.loaders.root.resolve("ROOT*");
-      await A.loaders.foo.resolve("FOO*");
-      await B.loaders.foo.resolve("FOO-LOADED");
+      await A.loaders.index.resolve("INDEX*");
+      await B.loaders.foo.resolve("FOO");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: undefined,
+        formAction: undefined,
+        state: "idle",
+        data: "FOO",
+      });
 
       // idle fetchers are pruned from state.fetchers
       expect(t.router.state.fetchers.has(key)).toBe(false);
@@ -3731,39 +3747,60 @@ describe("fetchers", () => {
       let C = await t.navigate("/bar");
       await C.loaders.root.resolve("ROOT**");
       await C.loaders.bar.resolve("BAR");
-
-      expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.location.pathname).toBe("/bar");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/bar" },
+        navigation: { state: "idle" },
+        loaderData: {
+          root: "ROOT**",
+          bar: "BAR",
+        },
+      });
     });
 
     it("does not strand a reload id when a fetcher is reset during post-action revalidation", async () => {
-      let t = initializeTest({
-        url: "/foo",
-        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
-      });
+      let t = initializeTest();
       let key = "key";
 
       let A = await t.fetch("/foo", key, {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
-      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: "POST",
+        formAction: "/foo",
+        state: "submitting",
+        data: undefined,
+      });
 
       await A.actions.foo.resolve("ACTION");
-      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: "POST",
+        formAction: "/foo",
+        state: "loading",
+        data: "ACTION",
+      });
 
       t.router.resetFetcher(key);
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
       expect(t.router.state.fetchers.has(key)).toBe(false);
 
       await A.loaders.root.resolve("ROOT*");
-      await A.loaders.foo.resolve("FOO*");
+      await A.loaders.index.resolve("INDEX*");
 
       let B = await t.navigate("/bar");
       await B.loaders.root.resolve("ROOT**");
       await B.loaders.bar.resolve("BAR");
-
-      expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.location.pathname).toBe("/bar");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/bar" },
+        navigation: { state: "idle" },
+        loaderData: {
+          root: "ROOT**",
+          bar: "BAR",
+        },
+      });
     });
   });
 
