@@ -145,5 +145,10 @@ export const RouteContext = React.createContext<RouteContextObject>({
 });
 RouteContext.displayName = "Route";
 
+export const RouteIdContext = React.createContext<string | undefined>(
+  undefined,
+);
+RouteIdContext.displayName = "RouteId";
+
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";

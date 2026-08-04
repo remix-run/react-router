@@ -9,6 +9,7 @@ import {
   RSCRouterContext,
   RouteContext,
   RouteErrorContext,
+  RouteIdContext,
 } from "./context";
 import type { Location, Path, To } from "./router/history";
 import {
@@ -1091,10 +1092,18 @@ export class RenderErrorBoundary extends React.Component<
     let result =
       error !== undefined ? (
         <RouteContext.Provider value={this.props.routeContext}>
-          <RouteErrorContext.Provider
-            value={error}
-            children={this.props.component}
-          />
+          <RouteIdContext.Provider
+            value={
+              this.props.routeContext.matches[
+                this.props.routeContext.matches.length - 1
+              ]?.route.id
+            }
+          >
+            <RouteErrorContext.Provider
+              value={error}
+              children={this.props.component}
+            />
+          </RouteIdContext.Provider>
         </RouteContext.Provider>
       ) : (
         this.props.children
@@ -1178,7 +1187,9 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 
   return (
     <RouteContext.Provider value={routeContext}>
-      {children}
+      <RouteIdContext.Provider value={match.route.id}>
+        {children}
+      </RouteIdContext.Provider>
     </RouteContext.Provider>
   );
 }
@@ -1414,21 +1425,14 @@ function useDataRouterState(hookName: DataRouterStateHook) {
   return state;
 }
 
-function useRouteContext(hookName: DataRouterStateHook) {
-  let route = React.useContext(RouteContext);
-  invariant(route, getDataRouterConsoleError(hookName));
-  return route;
-}
-
 // Internal version with hookName-aware debugging
 function useCurrentRouteId(hookName: DataRouterStateHook) {
-  let route = useRouteContext(hookName);
-  let thisRoute = route.matches[route.matches.length - 1];
+  let routeId = React.useContext(RouteIdContext);
   invariant(
-    thisRoute.route.id,
+    routeId,
     `${hookName} can only be used on routes that contain a unique "id"`,
   );
-  return thisRoute.route.id;
+  return routeId;
 }
 
 /**
