@@ -96,15 +96,11 @@ import {
 import type { SerializeFrom } from "../types/route-data";
 import type { ClientInstrumentation } from "../router/instrumentation";
 import { escapeHtml } from "./ssr/markup";
+import { registerReactRouterVersion } from "./version";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
 ////////////////////////////////////////////////////////////////////////////////
-
-const isBrowser =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined";
 
 // HEY YOU! DON'T TOUCH THIS VARIABLE!
 //
@@ -115,18 +111,7 @@ const isBrowser =
 // Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
 // to detect and properly classify live websites as being built with React Router:
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
-try {
-  if (isBrowser) {
-    window.__reactRouterVersion =
-      // @ts-expect-error
-      REACT_ROUTER_VERSION;
-  }
-} catch (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  e
-) {
-  // no-op
-}
+registerReactRouterVersion();
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////

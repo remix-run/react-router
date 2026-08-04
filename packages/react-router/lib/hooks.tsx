@@ -63,6 +63,7 @@ import {
   decodeRedirectErrorDigest,
   decodeRouteErrorResponseDigest,
 } from "./errors";
+import { warnIfReactRouterVersionMismatch } from "./dom/version";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -123,6 +124,7 @@ export function useHref(
  * @returns Whether the component is within a {@link Router} context
  */
 export function useInRouterContext(): boolean {
+  warnIfReactRouterVersionMismatch();
   return React.useContext(LocationContext) != null;
 }
 
@@ -535,6 +537,7 @@ export function useOutletContext<Context = unknown>(): Context {
  * @returns The child route element or `null` if no child routes match
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
+  warnIfReactRouterVersionMismatch();
   let outlet = React.useContext(RouteContext).outlet;
   return React.useMemo(
     () =>
