@@ -766,12 +766,6 @@ importers:
       '@babel/parser':
         specifier: ^7.29.7
         version: 7.29.7
-      '@babel/plugin-syntax-jsx':
-        specifier: ^7.29.7
-        version: 7.29.7(@babel/core@7.29.7)
-      '@babel/preset-typescript':
-        specifier: ^7.29.7
-        version: 7.29.7(@babel/core@7.29.7)
       '@babel/traverse':
         specifier: ^7.29.7
         version: 7.29.7
@@ -820,9 +814,6 @@ importers:
       pkg-types:
         specifier: ^2.3.1
         version: 2.3.1
-      prettier:
-        specifier: ^3.8.3
-        version: 3.8.3
       react-refresh:
         specifier: ^0.18.0
         version: 0.18.0
@@ -839,6 +830,12 @@ importers:
         specifier: ^1.4.1
         version: 1.4.1(typescript@6.0.3)
     devDependencies:
+      '@babel/plugin-syntax-jsx':
+        specifier: ^7.29.7
+        version: 7.29.7(@babel/core@7.29.7)
+      '@babel/preset-typescript':
+        specifier: ^7.29.7
+        version: 7.29.7(@babel/core@7.29.7)
       '@react-router/serve':
         specifier: workspace:*
         version: link:../react-router-serve
@@ -884,6 +881,9 @@ importers:
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
       react-router:
         specifier: workspace:^
         version: link:../react-router
