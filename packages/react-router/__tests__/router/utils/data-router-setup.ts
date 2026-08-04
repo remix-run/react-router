@@ -381,10 +381,7 @@ export function setup({
           await internalHelpers.dfd.resolve(redirectResponse);
         }
         await tick();
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {}
+      } catch {}
       return helpers;
     }
 
@@ -404,10 +401,7 @@ export function setup({
       async reject(value) {
         try {
           await internalHelpers.dfd.reject(value);
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          e
-        ) {}
+        } catch {}
       },
       async redirect(href, status = 301, headers = {}, shims = []) {
         return _redirect(true, href, status, headers, shims);

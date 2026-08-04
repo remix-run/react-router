@@ -272,10 +272,7 @@ class StreamPump {
         if (available <= 0) {
           this.pause();
         }
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {
+      } catch {
         this.controller.error(
           new Error(
             "Could not create Buffer, chunk must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object",

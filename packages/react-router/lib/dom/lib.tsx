@@ -121,10 +121,7 @@ try {
       // @ts-expect-error
       REACT_ROUTER_VERSION;
   }
-} catch (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  e
-) {
+} catch {
   // no-op
 }
 //#endregion
@@ -751,10 +748,7 @@ function deserializeErrors(
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
             serialized[key] = error;
-          } catch (
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            e
-          ) {
+          } catch {
             // no-op - fall through and create a normal Error
           }
         }
@@ -3143,10 +3137,7 @@ export function useScrollRestoration({
         if (sessionPositions) {
           savedScrollPositions = JSON.parse(sessionPositions);
         }
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {
+      } catch {
         // no-op, use default empty object
       }
     }, [storageKey]);
