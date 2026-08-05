@@ -48,6 +48,8 @@ import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
+  DataRouterDataContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
   LocationContext,
@@ -647,6 +649,48 @@ export function RouterProvider({
     [router, navigator, basename, onError],
   );
 
+  let dataRouterState = React.useMemo(
+    () => ({
+      historyAction: state.historyAction,
+      location: state.location,
+      matches: state.matches,
+      initialized: state.initialized,
+      renderFallback: state.renderFallback,
+      restoreScrollPosition: state.restoreScrollPosition,
+      preventScrollReset: state.preventScrollReset,
+      fetchers: state.fetchers,
+      blockers: state.blockers,
+    }),
+    [
+      state.historyAction,
+      state.location,
+      state.matches,
+      state.initialized,
+      state.renderFallback,
+      state.restoreScrollPosition,
+      state.preventScrollReset,
+      state.fetchers,
+      state.blockers,
+    ],
+  );
+
+  let dataRouterNavigation = React.useMemo(
+    () => ({
+      navigation: state.navigation,
+      revalidation: state.revalidation,
+    }),
+    [state.navigation, state.revalidation],
+  );
+
+  let dataRouterData = React.useMemo(
+    () => ({
+      loaderData: state.loaderData,
+      actionData: state.actionData,
+      errors: state.errors,
+    }),
+    [state.loaderData, state.actionData, state.errors],
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -656,27 +700,31 @@ export function RouterProvider({
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetcherData.current}>
-            <ViewTransitionContext.Provider value={vtContext}>
-              <Router
-                basename={basename}
-                location={state.location}
-                navigationType={state.historyAction}
-                navigator={navigator}
-                useTransitions={useTransitions}
-              >
-                <MemoizedDataRoutes
-                  routes={router.routes}
-                  manifest={router.manifest}
-                  future={router.future}
-                  state={state}
-                  isStatic={false}
-                  onError={onError}
-                />
-              </Router>
-            </ViewTransitionContext.Provider>
-          </FetchersContext.Provider>
+        <DataRouterStateContext.Provider value={dataRouterState}>
+          <DataRouterNavigationContext.Provider value={dataRouterNavigation}>
+            <DataRouterDataContext.Provider value={dataRouterData}>
+              <FetchersContext.Provider value={fetcherData.current}>
+                <ViewTransitionContext.Provider value={vtContext}>
+                  <Router
+                    basename={basename}
+                    location={state.location}
+                    navigationType={state.historyAction}
+                    navigator={navigator}
+                    useTransitions={useTransitions}
+                  >
+                    <MemoizedDataRoutes
+                      routes={router.routes}
+                      manifest={router.manifest}
+                      future={router.future}
+                      state={state}
+                      isStatic={false}
+                      onError={onError}
+                    />
+                  </Router>
+                </ViewTransitionContext.Provider>
+              </FetchersContext.Provider>
+            </DataRouterDataContext.Provider>
+          </DataRouterNavigationContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}

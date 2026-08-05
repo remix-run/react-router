@@ -29,6 +29,7 @@ import type {
 import { singleFetchUrl } from "./single-fetch";
 import {
   DataRouterContext,
+  DataRouterDataContext,
   DataRouterStateContext,
   useIsRSCRouterContext,
 } from "../../context";
@@ -51,6 +52,15 @@ function useDataRouterStateContext() {
   invariant(
     context,
     "You must render this element inside a <DataRouterStateContext.Provider> element",
+  );
+  return context;
+}
+
+function useDataRouterDataContext() {
+  let context = React.useContext(DataRouterDataContext);
+  invariant(
+    context,
+    "You must render this element inside a <DataRouterDataContext.Provider> element",
   );
   return context;
 }
@@ -273,7 +283,8 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     criticalCss,
     nonce: contextNonce,
   } = useFrameworkContext();
-  let { errors, matches: routerMatches } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterStateContext();
+  let { errors } = useDataRouterDataContext();
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
 
@@ -456,7 +467,8 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
-  let { loaderData, matches } = useDataRouterStateContext();
+  let { matches } = useDataRouterStateContext();
+  let { loaderData } = useDataRouterDataContext();
 
   let newMatchesForData = React.useMemo(
     () =>
@@ -601,11 +613,8 @@ function PrefetchPageLinksImpl({
  */
 export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
-  let {
-    errors,
-    matches: routerMatches,
-    loaderData,
-  } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterStateContext();
+  let { errors, loaderData } = useDataRouterDataContext();
   let location = useLocation();
 
   let _matches = getActiveMatches(routerMatches, errors, isSpaMode);

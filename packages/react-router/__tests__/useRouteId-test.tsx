@@ -4,9 +4,14 @@ import {
   createMemoryRouter,
   Outlet,
   RouterProvider,
+  UNSAFE_DataRouterDataContext as DataRouterDataContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  useLoaderData,
   useLocation,
+  useNavigation,
 } from "react-router";
 import { useRouteId } from "../lib/hooks";
+import { createDeferred } from "./router/utils/utils";
 
 describe("useRouteId", () => {
   it("does not re-render when the route ID remains unchanged", async () => {
@@ -52,6 +57,198 @@ describe("useRouteId", () => {
 
     expect(parentRenders).toBe(1);
     expect(childRenders).toBe(2);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
+  it("does not re-render when loader data remains unchanged", async () => {
+    let parentRenders = 0;
+    let childRenders = 0;
+    let loaderCalls = 0;
+
+    function Parent() {
+      parentRenders++;
+      expect(useLoaderData()).toEqual({ message: "parent data" });
+      return (
+        <>
+          <ContextObserver />
+          <Outlet />
+        </>
+      );
+    }
+
+    function ContextObserver() {
+      let state = React.useContext(DataRouterStateContext);
+      let data = React.useContext(DataRouterDataContext);
+      expect(state).not.toHaveProperty("loaderData");
+      expect(state).not.toHaveProperty("actionData");
+      expect(state).not.toHaveProperty("errors");
+      expect(data?.loaderData.parent).toEqual({ message: "parent data" });
+      return null;
+    }
+
+    function Child() {
+      childRenders++;
+      useLocation();
+      return null;
+    }
+
+    let router = createMemoryRouter(
+      [
+        {
+          id: "parent",
+          path: "/",
+          loader() {
+            loaderCalls++;
+            return { message: "parent data" };
+          },
+          shouldRevalidate: () => false,
+          HydrateFallback: () => null,
+          Component: Parent,
+          children: [{ id: "child", index: true, Component: Child }],
+        },
+      ],
+      { initialEntries: ["/?value=before"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
+    expect(loaderCalls).toBe(1);
+    expect(parentRenders).toBe(1);
+    expect(childRenders).toBe(1);
+
+    await TestRenderer.act(async () => {
+      await router.navigate("/?value=after");
+    });
+
+    expect(loaderCalls).toBe(1);
+    expect(parentRenders).toBe(1);
+    expect(childRenders).toBe(2);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
+  it("re-renders when a loader runs and returns the same reference", async () => {
+    let loaderData = { message: "loader data" };
+    let loaderCalls = 0;
+    let renders = 0;
+
+    function Component() {
+      renders++;
+      expect(useLoaderData()).toBe(loaderData);
+      return null;
+    }
+
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            loaderCalls++;
+            return loaderData;
+          },
+          HydrateFallback: () => null,
+          Component,
+        },
+      ],
+      { initialEntries: ["/?value=before"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
+    expect(loaderCalls).toBe(1);
+    expect(renders).toBe(1);
+
+    await TestRenderer.act(async () => {
+      await router.navigate("/?value=after");
+    });
+
+    expect(loaderCalls).toBe(2);
+    expect(renders).toBe(2);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
+  it("does not re-render useLocation consumers for pending navigation state", async () => {
+    let loaderDfd = createDeferred();
+    let renders: string[] = [];
+    let stateContextRenders = 0;
+    let navigationStates: string[] = [];
+
+    let StateContextObserver = React.memo(function StateContextObserver() {
+      let state = React.useContext(DataRouterStateContext);
+      expect(state).not.toHaveProperty("navigation");
+      expect(state).not.toHaveProperty("revalidation");
+      stateContextRenders++;
+      return null;
+    });
+
+    let NavigationObserver = React.memo(function NavigationObserver() {
+      navigationStates.push(useNavigation().state);
+      return null;
+    });
+
+    function Root() {
+      renders.push(useLocation().pathname);
+      return (
+        <>
+          <StateContextObserver />
+          <NavigationObserver />
+          <Outlet />
+        </>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          Component: Root,
+          children: [
+            { index: true, Component: () => null },
+            {
+              path: "next",
+              loader: () => loaderDfd.promise,
+              Component: () => null,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
+    let navigationPromise: Promise<void>;
+    await TestRenderer.act(async () => {
+      navigationPromise = router.navigate("/next");
+    });
+
+    expect(router.state.navigation.state).toBe("loading");
+    expect(renders).toEqual(["/"]);
+    expect(stateContextRenders).toBe(1);
+    expect(navigationStates).toEqual(["idle", "loading"]);
+
+    await TestRenderer.act(async () => {
+      loaderDfd.resolve(null);
+      await navigationPromise;
+    });
+
+    expect(renders).toEqual(["/", "/next"]);
+    expect(stateContextRenders).toBe(2);
+    expect(navigationStates).toEqual(["idle", "loading", "idle"]);
 
     TestRenderer.act(() => renderer.unmount());
     router.dispose();

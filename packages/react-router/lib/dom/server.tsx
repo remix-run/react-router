@@ -28,6 +28,8 @@ import { ABSOLUTE_URL_REGEX } from "../router/url";
 import { DataRoutes, Router } from "../components";
 import {
   DataRouterContext,
+  DataRouterDataContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
   ViewTransitionContext,
@@ -191,31 +193,57 @@ export function StaticRouterProvider({
   }
 
   let { state } = dataRouterContext.router;
+  let dataRouterState = {
+    historyAction: state.historyAction,
+    location: state.location,
+    matches: state.matches,
+    initialized: state.initialized,
+    renderFallback: state.renderFallback,
+    restoreScrollPosition: state.restoreScrollPosition,
+    preventScrollReset: state.preventScrollReset,
+    fetchers: state.fetchers,
+    blockers: state.blockers,
+  };
+  let dataRouterNavigation = {
+    navigation: state.navigation,
+    revalidation: state.revalidation,
+  };
+  let dataRouterData = {
+    loaderData: state.loaderData,
+    actionData: state.actionData,
+    errors: state.errors,
+  };
 
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetchersContext}>
-            <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
-              <Router
-                basename={dataRouterContext.basename}
-                location={state.location}
-                navigationType={state.historyAction}
-                navigator={dataRouterContext.navigator}
-                static={dataRouterContext.static}
-                useTransitions={false}
-              >
-                <DataRoutes
-                  manifest={router.manifest}
-                  routes={router.routes}
-                  future={router.future}
-                  state={state}
-                  isStatic={true}
-                />
-              </Router>
-            </ViewTransitionContext.Provider>
-          </FetchersContext.Provider>
+        <DataRouterStateContext.Provider value={dataRouterState}>
+          <DataRouterNavigationContext.Provider value={dataRouterNavigation}>
+            <DataRouterDataContext.Provider value={dataRouterData}>
+              <FetchersContext.Provider value={fetchersContext}>
+                <ViewTransitionContext.Provider
+                  value={{ isTransitioning: false }}
+                >
+                  <Router
+                    basename={dataRouterContext.basename}
+                    location={state.location}
+                    navigationType={state.historyAction}
+                    navigator={dataRouterContext.navigator}
+                    static={dataRouterContext.static}
+                    useTransitions={false}
+                  >
+                    <DataRoutes
+                      manifest={router.manifest}
+                      routes={router.routes}
+                      future={router.future}
+                      state={state}
+                      isStatic={true}
+                    />
+                  </Router>
+                </ViewTransitionContext.Provider>
+              </FetchersContext.Provider>
+            </DataRouterDataContext.Provider>
+          </DataRouterNavigationContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {hydrateScript ? (

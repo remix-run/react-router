@@ -77,6 +77,7 @@ import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
   NavigationContext,
@@ -1639,10 +1640,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   ) {
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
-    let routerState = React.useContext(DataRouterStateContext);
+    let routerNavigation = React.useContext(DataRouterNavigationContext);
     let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
-      routerState != null &&
+      routerNavigation != null &&
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
@@ -1652,10 +1653,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       ? navigator.encodeLocation(path).pathname
       : path.pathname;
     let locationPathname = location.pathname;
-    let nextLocationPathname =
-      routerState && routerState.navigation && routerState.navigation.location
-        ? routerState.navigation.location.pathname
-        : null;
+    let nextLocationPathname = routerNavigation?.navigation.location
+      ? routerNavigation.navigation.location.pathname
+      : null;
 
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
