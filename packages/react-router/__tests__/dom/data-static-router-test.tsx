@@ -166,6 +166,29 @@ describe("A <StaticRouterProvider>", () => {
     ]);
   });
 
+  it("warns that createStaticRouter branches are deprecated and unused", async () => {
+    let routes = [
+      {
+        path: "/",
+        element: <h1>Root</h1>,
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      }),
+    )) as StaticHandlerContext;
+
+    let router = createStaticRouter(routes, context, { branches: [] });
+
+    expect(router.state.matches.map((m) => m.route.path)).toEqual(["/"]);
+    expect(console.warn).toHaveBeenCalledWith(
+      "`createStaticRouter({ branches })` is deprecated and no longer used. " +
+        "Branch caching is done automatically inside the static router.",
+    );
+  });
+
   it("renders an initialized router with lazy routes", async () => {
     let hooksData1: {
       location: ReturnType<typeof useLocation>;

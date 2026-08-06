@@ -6,6 +6,7 @@ import {
   createPath,
   invariant,
   parsePath,
+  warning,
 } from "../router/history";
 import type {
   FutureConfig,
@@ -333,15 +334,28 @@ function getStatelessNavigator() {
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
+ * @param opts.branches Deprecated optional pre-computed route branches. This option
+ * is no longer used because branch caching is done automatically inside the static router.
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    /**
+     * @deprecated This option is no longer used because branch caching is done
+     * automatically inside the static router.
+     */
+    branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
+  warning(
+    opts.branches == null,
+    "`createStaticRouter({ branches })` is deprecated and no longer used. " +
+      "Branch caching is done automatically inside the static router.",
+  );
+
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
