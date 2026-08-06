@@ -122,6 +122,9 @@ export interface Router {
   get routes(): DataRouteObject[];
 
   /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
    * Match routes against a location using the router's configured route
    * matching implementation.
    */
