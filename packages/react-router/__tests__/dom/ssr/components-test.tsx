@@ -32,33 +32,6 @@ type PrefetchEventHandlerProps = {
   [Property in `on${Capitalize<(typeof setIntentEvents)[number]>}`]?: Function;
 };
 
-function DataRouterContexts({
-  value,
-  children,
-}: React.PropsWithChildren<{ value: any }>) {
-  let {
-    loaderData = {},
-    actionData = null,
-    errors = null,
-    navigation = IDLE_NAVIGATION,
-    revalidation = "idle",
-    ...state
-  } = value;
-  return (
-    <DataRouterStateContext.Provider value={state}>
-      <DataRouterNavigationContext.Provider
-        value={{ navigation, revalidation }}
-      >
-        <DataRouterDataContext.Provider
-          value={{ loaderData, actionData, errors }}
-        >
-          {children}
-        </DataRouterDataContext.Provider>
-      </DataRouterNavigationContext.Provider>
-    </DataRouterStateContext.Provider>
-  );
-}
-
 function itPrefetchesPageLinks<
   Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps,
 >(Component: React.ComponentType<Props>) {
@@ -330,11 +303,19 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterContexts value={{ matches: [], errors: null } as any}>
-        <FrameworkContext.Provider value={context}>
-          <Links />
-        </FrameworkContext.Provider>
-      </DataRouterContexts>,
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let style = container.querySelector("style");
@@ -348,11 +329,19 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterContexts value={{ matches: [], errors: null } as any}>
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="explicit-nonce" />
-        </FrameworkContext.Provider>
-      </DataRouterContexts>,
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="explicit-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let style = container.querySelector("style");
@@ -365,11 +354,19 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterContexts value={{ matches: [], errors: null } as any}>
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
-      </DataRouterContexts>,
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let style = container.querySelector("style");
@@ -384,11 +381,19 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterContexts value={{ matches: [], errors: null } as any}>
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
-      </DataRouterContexts>,
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let link = container.querySelector("link[rel='stylesheet']");
@@ -429,7 +434,7 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterContexts
+      <DataRouterStateContext.Provider
         value={
           {
             matches: [
@@ -440,10 +445,18 @@ describe("<Links />", () => {
           } as any
         }
       >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
-      </DataRouterContexts>,
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let link = container.querySelector("link[href='/style.css']");
@@ -483,7 +496,7 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterContexts
+      <DataRouterStateContext.Provider
         value={
           {
             matches: [
@@ -494,10 +507,18 @@ describe("<Links />", () => {
           } as any
         }
       >
-        <FrameworkContext.Provider value={context}>
-          <Links />
-        </FrameworkContext.Provider>
-      </DataRouterContexts>,
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
     );
 
     let link = container.querySelector("link[href='/style.css']");
