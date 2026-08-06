@@ -350,7 +350,14 @@ export function HydratedRouter(props: HydratedRouterProps) {
   );
   React.useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      setCriticalCss(undefined);
+      // Wrap the reset in `startTransition` so it doesn't interrupt hydration
+      // of Suspense boundaries that are still streaming in from the server.
+      // Without this, React 18 discards the server HTML for any boundary that
+      // hasn't finished hydrating when this update lands ("This Suspense
+      // boundary received an update before it finished hydrating").
+      React.startTransition(() => {
+        setCriticalCss(undefined);
+      });
     }
   }, []);
   React.useEffect(() => {
