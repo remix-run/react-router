@@ -1404,7 +1404,6 @@ enum DataRouterStateHook {
   UseMatches = "useMatches",
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
-  UseRouteId = "useRouteId",
   UseRoute = "useRoute",
   UseRouterState = "unstable_useRouterState",
 }
@@ -1439,24 +1438,14 @@ function useDataRouterNavigation(hookName: DataRouterStateHook) {
   return navigation;
 }
 
-// Internal version with hookName-aware debugging
-function useCurrentRouteId(hookName: DataRouterStateHook) {
+// Internal helper with hookName-aware debugging
+export function useCurrentRouteId(hookName: string) {
   let routeId = React.useContext(RouteIdContext);
   invariant(
     routeId,
     `${hookName} can only be used on routes that contain a unique "id"`,
   );
   return routeId;
-}
-
-/**
- * Returns the ID for the nearest contextual route
- *
- * @category Hooks
- * @returns The ID of the nearest contextual route
- */
-export function useRouteId() {
-  return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
 // Omit the fields from each navigation state individually to preserve the discriminated union

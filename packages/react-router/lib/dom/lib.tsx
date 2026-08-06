@@ -86,13 +86,13 @@ import {
 } from "../context";
 import {
   useBlocker,
+  useCurrentRouteId,
   useHref,
   useLocation,
   useMatches,
   useNavigate,
   useNavigation,
   useResolvedPath,
-  useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
 import type { ClientInstrumentation } from "../router/instrumentation";
@@ -2592,7 +2592,7 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
-  let currentRouteId = useRouteId();
+  let currentRouteId = useCurrentRouteId(DataRouterHook.UseSubmit);
 
   let routerFetch = router.fetch;
   let routerNavigate = router.navigate;

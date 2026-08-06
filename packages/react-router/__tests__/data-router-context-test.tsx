@@ -12,23 +12,23 @@ import {
   useMatches,
   useNavigation,
 } from "react-router";
-import { useRouteId } from "../lib/hooks";
+import { RouteIdContext } from "../lib/context";
 import { createDeferred } from "./router/utils/utils";
 
-describe("useRouteId", () => {
+describe("data router contexts", () => {
   it("does not re-render when the route ID remains unchanged", async () => {
     let parentRenders = 0;
     let childRenders = 0;
 
     function Parent() {
       parentRenders++;
-      expect(useRouteId()).toBe("parent");
+      expect(React.useContext(RouteIdContext)).toBe("parent");
       return <Outlet />;
     }
 
     function Child() {
       childRenders++;
-      expect(useRouteId()).toBe("child");
+      expect(React.useContext(RouteIdContext)).toBe("child");
       useLocation();
       return null;
     }
@@ -328,7 +328,7 @@ describe("useRouteId", () => {
     }
 
     function ErrorBoundary() {
-      expect(useRouteId()).toBe("broken");
+      expect(React.useContext(RouteIdContext)).toBe("broken");
       return <p>Error boundary</p>;
     }
 
