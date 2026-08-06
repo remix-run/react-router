@@ -1154,6 +1154,32 @@ test.describe(`Prerendering`, () => {
       expect(html).toMatch("<p>Loading...</p>");
     });
 
+    test("Prerenders a spa fallback under the Vite base path", async () => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+            prerender: ["/"],
+          }),
+          "vite.config.ts": files["vite.config.ts"].replace(
+            "export default defineConfig({",
+            'export default defineConfig({ base: "/app/",',
+          ),
+          "app/root.tsx": files["app/root.tsx"],
+          "app/routes/_index.tsx": files["app/routes/_index.tsx"],
+        },
+      });
+
+      let clientDir = path.join(fixture.projectDir, "build", "client");
+      expect(listAllFiles(clientDir).sort()).toEqual([
+        "app/_.data",
+        "app/index.html",
+        "favicon.ico",
+        "index.html",
+      ]);
+    });
+
     test("Hydrates into a navigable app", async ({ page }) => {
       fixture = await createFixture({
         prerender: true,
