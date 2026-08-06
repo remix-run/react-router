@@ -593,10 +593,7 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          e
-        ) {
+        } catch {
           // If we can't unwrap the response - just leave it as-is
         }
       }

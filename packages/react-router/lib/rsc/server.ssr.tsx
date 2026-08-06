@@ -451,10 +451,7 @@ export async function routeRSCServerRequest({
         statusText,
         headers,
       });
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      error2
-    ) {
+    } catch {
       // Throw the original error below
     }
 
