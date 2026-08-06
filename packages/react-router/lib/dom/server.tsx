@@ -174,8 +174,6 @@ export function StaticRouterProvider({
     basename: context.basename || "/",
   };
 
-  let fetchersContext = new Map();
-
   let hydrateScript = "";
 
   if (hydrate !== false) {
@@ -201,7 +199,6 @@ export function StaticRouterProvider({
     renderFallback: state.renderFallback,
     restoreScrollPosition: state.restoreScrollPosition,
     preventScrollReset: state.preventScrollReset,
-    fetchers: state.fetchers,
     blockers: state.blockers,
   };
   let dataRouterNavigation = {
@@ -212,6 +209,10 @@ export function StaticRouterProvider({
     loaderData: state.loaderData,
     actionData: state.actionData,
     errors: state.errors,
+  };
+  let fetchersContext = {
+    fetchers: state.fetchers,
+    fetcherData: new Map(),
   };
 
   return (

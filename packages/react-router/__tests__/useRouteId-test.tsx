@@ -6,8 +6,10 @@ import {
   RouterProvider,
   UNSAFE_DataRouterDataContext as DataRouterDataContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  useFetcher,
   useLoaderData,
   useLocation,
+  useMatches,
   useNavigation,
 } from "react-router";
 import { useRouteId } from "../lib/hooks";
@@ -249,6 +251,68 @@ describe("useRouteId", () => {
     expect(renders).toEqual(["/", "/next"]);
     expect(stateContextRenders).toBe(2);
     expect(navigationStates).toEqual(["idle", "loading", "idle"]);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
+  it("does not re-render useMatches consumers for fetcher state changes", async () => {
+    let loaderDfd = createDeferred();
+    let matchesRenders = 0;
+    let fetcherStates: string[] = [];
+    let fetcher!: ReturnType<typeof useFetcher>;
+
+    function Fetcher() {
+      fetcher = useFetcher();
+      fetcherStates.push(`${fetcher.state}:${fetcher.data}`);
+      return null;
+    }
+
+    function Matches() {
+      matchesRenders++;
+      useMatches();
+      return <Fetcher />;
+    }
+
+    let router = createMemoryRouter(
+      [
+        { path: "/", Component: Matches },
+        {
+          path: "/fetch",
+          loader: () => loaderDfd.promise,
+          Component: () => null,
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
+    expect(matchesRenders).toBe(1);
+    expect(fetcherStates).toEqual(["idle:undefined"]);
+
+    let fetchPromise: Promise<void>;
+    await TestRenderer.act(async () => {
+      fetchPromise = fetcher.load("/fetch");
+    });
+
+    expect(matchesRenders).toBe(1);
+    expect(fetcherStates).toEqual(["idle:undefined", "loading:undefined"]);
+
+    await TestRenderer.act(async () => {
+      loaderDfd.resolve("FETCHED");
+      await fetchPromise;
+    });
+
+    expect(matchesRenders).toBe(1);
+    expect(fetcherStates).toEqual([
+      "idle:undefined",
+      "loading:undefined",
+      "idle:FETCHED",
+    ]);
 
     TestRenderer.act(() => renderer.unmount());
     router.dispose();

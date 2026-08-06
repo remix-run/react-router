@@ -658,7 +658,6 @@ export function RouterProvider({
       renderFallback: state.renderFallback,
       restoreScrollPosition: state.restoreScrollPosition,
       preventScrollReset: state.preventScrollReset,
-      fetchers: state.fetchers,
       blockers: state.blockers,
     }),
     [
@@ -669,7 +668,6 @@ export function RouterProvider({
       state.renderFallback,
       state.restoreScrollPosition,
       state.preventScrollReset,
-      state.fetchers,
       state.blockers,
     ],
   );
@@ -691,6 +689,14 @@ export function RouterProvider({
     [state.loaderData, state.actionData, state.errors],
   );
 
+  let fetchersContext = React.useMemo(
+    () => ({
+      fetchers: state.fetchers,
+      fetcherData: fetcherData.current,
+    }),
+    [state.fetchers],
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -703,7 +709,7 @@ export function RouterProvider({
         <DataRouterStateContext.Provider value={dataRouterState}>
           <DataRouterNavigationContext.Provider value={dataRouterNavigation}>
             <DataRouterDataContext.Provider value={dataRouterData}>
-              <FetchersContext.Provider value={fetcherData.current}>
+              <FetchersContext.Provider value={fetchersContext}>
                 <ViewTransitionContext.Provider value={vtContext}>
                   <Router
                     basename={basename}
