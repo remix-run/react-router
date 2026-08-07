@@ -9,6 +9,9 @@ import { traverse } from "./babel";
 export const removeExports = (
   ast: ParseResult<Babel.File>,
   exportsToRemove: readonly string[],
+  options?: {
+    removeUnusedImportSpecifiers?: (source: string) => boolean;
+  },
 ) => {
   let previouslyReferencedIdentifiers = findReferencedIdentifiers(ast);
   let exportsFiltered = false;
@@ -156,7 +159,43 @@ export const removeExports = (
     // Run dead code elimination on any newly unreferenced identifiers
     deadCodeElimination(ast, previouslyReferencedIdentifiers);
   }
+
+  if (options?.removeUnusedImportSpecifiers) {
+    removeUnusedImportSpecifiers(ast, options.removeUnusedImportSpecifiers);
+  }
 };
+
+function removeUnusedImportSpecifiers(
+  ast: ParseResult<Babel.File>,
+  shouldRemoveFromSource: (source: string) => boolean,
+) {
+  traverse(ast, {
+    Program(path) {
+      path.scope.crawl();
+    },
+    ImportDeclaration(path) {
+      if (!shouldRemoveFromSource(path.node.source.value)) {
+        return;
+      }
+
+      let removalsBefore = path.node.specifiers.length;
+      for (let specifier of path.get("specifiers")) {
+        let local = specifier.get("local");
+        let binding = local.scope.getBinding(local.node.name);
+
+        if (!binding?.referenced) {
+          specifier.remove();
+        }
+      }
+
+      if (removalsBefore > path.node.specifiers.length) {
+        if (path.node.specifiers.length === 0) {
+          path.remove();
+        }
+      }
+    },
+  });
+}
 
 function validateDestructuredExports(
   id: Babel.ArrayPattern | Babel.ObjectPattern,
