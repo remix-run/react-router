@@ -27,10 +27,34 @@ export const DataRouterContext =
   React.createContext<DataRouterContextObject | null>(null);
 DataRouterContext.displayName = "DataRouter";
 
-export const DataRouterStateContext = React.createContext<
-  Router["state"] | null
->(null);
+export type DataRouterDataContextObject = Pick<
+  Router["state"],
+  "loaderData" | "actionData" | "errors"
+>;
+
+export type DataRouterNavigationContextObject = Pick<
+  Router["state"],
+  "navigation" | "revalidation"
+>;
+
+export type DataRouterStateContextObject = Omit<
+  Router["state"],
+  | keyof DataRouterDataContextObject
+  | keyof DataRouterNavigationContextObject
+  | "fetchers"
+>;
+
+export const DataRouterStateContext =
+  React.createContext<DataRouterStateContextObject | null>(null);
 DataRouterStateContext.displayName = "DataRouterState";
+
+export const DataRouterDataContext =
+  React.createContext<DataRouterDataContextObject | null>(null);
+DataRouterDataContext.displayName = "DataRouterData";
+
+export const DataRouterNavigationContext =
+  React.createContext<DataRouterNavigationContextObject | null>(null);
+DataRouterNavigationContext.displayName = "DataRouterNavigation";
 
 export const RSCRouterContext = React.createContext<boolean>(false);
 
@@ -55,12 +79,16 @@ export const ViewTransitionContext =
   });
 ViewTransitionContext.displayName = "ViewTransition";
 
-// TODO: (v9) Change the useFetcher data from `any` to `unknown`
-export type FetchersContextObject = Map<string, any>;
+export type FetchersContextObject = {
+  fetchers: Router["state"]["fetchers"];
+  // TODO: (v9) Change the useFetcher data from `any` to `unknown`
+  fetcherData: Map<string, any>;
+};
 
-export const FetchersContext = React.createContext<FetchersContextObject>(
-  new Map(),
-);
+export const FetchersContext = React.createContext<FetchersContextObject>({
+  fetchers: new Map(),
+  fetcherData: new Map(),
+});
 FetchersContext.displayName = "Fetchers";
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
@@ -144,6 +172,11 @@ export const RouteContext = React.createContext<RouteContextObject>({
   isDataRoute: false,
 });
 RouteContext.displayName = "Route";
+
+export const RouteIdContext = React.createContext<string | undefined>(
+  undefined,
+);
+RouteIdContext.displayName = "RouteId";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";

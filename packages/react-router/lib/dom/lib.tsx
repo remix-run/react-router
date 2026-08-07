@@ -77,6 +77,7 @@ import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
   DataRouterContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
   NavigationContext,
@@ -85,13 +86,13 @@ import {
 } from "../context";
 import {
   useBlocker,
+  useCurrentRouteId,
   useHref,
   useLocation,
   useMatches,
   useNavigate,
   useNavigation,
   useResolvedPath,
-  useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
 import type { ClientInstrumentation } from "../router/instrumentation";
@@ -1633,10 +1634,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   ) {
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
-    let routerState = React.useContext(DataRouterStateContext);
+    let routerNavigation = React.useContext(DataRouterNavigationContext);
     let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
-      routerState != null &&
+      routerNavigation != null &&
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
@@ -1646,10 +1647,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       ? navigator.encodeLocation(path).pathname
       : path.pathname;
     let locationPathname = location.pathname;
-    let nextLocationPathname =
-      routerState && routerState.navigation && routerState.navigation.location
-        ? routerState.navigation.location.pathname
-        : null;
+    let nextLocationPathname = routerNavigation?.navigation.location
+      ? routerNavigation.navigation.location.pathname
+      : null;
 
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
@@ -2586,7 +2586,7 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
-  let currentRouteId = useRouteId();
+  let currentRouteId = useCurrentRouteId(DataRouterHook.UseSubmit);
 
   let routerFetch = router.fetch;
   let routerNavigate = router.navigate;
@@ -2911,16 +2911,12 @@ export function useFetcher<T = any>({
   key?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let state = useDataRouterState(DataRouterStateHook.UseFetcher);
-  let fetcherData = React.useContext(FetchersContext);
-  let route = React.useContext(RouteContext);
-  let routeId = route.matches[route.matches.length - 1]?.route.id;
+  let fetchersContext = React.useContext(FetchersContext);
+  let routeId = useCurrentRouteId(DataRouterHook.UseFetcher);
 
-  invariant(fetcherData, `useFetcher must be used inside a FetchersContext`);
-  invariant(route, `useFetcher must be used inside a RouteContext`);
   invariant(
-    routeId != null,
-    `useFetcher can only be used on routes that contain a unique "id"`,
+    fetchersContext,
+    `useFetcher must be used inside a FetchersContext`,
   );
 
   // Fetcher key handling
@@ -2977,8 +2973,8 @@ export function useFetcher<T = any>({
   }, [fetcherKey]);
 
   // Exposed FetcherWithComponents
-  let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
-  let data = fetcherData.get(fetcherKey);
+  let fetcher = fetchersContext.fetchers.get(fetcherKey) || IDLE_FETCHER;
+  let data = fetchersContext.fetcherData.get(fetcherKey);
   let fetcherWithComponents = React.useMemo(
     () => ({
       Form: FetcherForm,
@@ -3017,14 +3013,14 @@ export function useFetcher<T = any>({
  * property.
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
-  let state = useDataRouterState(DataRouterStateHook.UseFetchers);
+  let { fetchers } = React.useContext(FetchersContext);
   return React.useMemo(
     () =>
-      Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+      Array.from(fetchers.entries()).map(([key, fetcher]) => ({
         ...fetcher,
         key,
       })),
-    [state.fetchers],
+    [fetchers],
   );
 }
 

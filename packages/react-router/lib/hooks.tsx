@@ -3,12 +3,15 @@ import type { NavigateOptions, RouteContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
+  DataRouterDataContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RSCRouterContext,
   RouteContext,
   RouteErrorContext,
+  RouteIdContext,
 } from "./context";
 import type { Location, Path, To } from "./router/history";
 import {
@@ -1091,10 +1094,18 @@ export class RenderErrorBoundary extends React.Component<
     let result =
       error !== undefined ? (
         <RouteContext.Provider value={this.props.routeContext}>
-          <RouteErrorContext.Provider
-            value={error}
-            children={this.props.component}
-          />
+          <RouteIdContext.Provider
+            value={
+              this.props.routeContext.matches[
+                this.props.routeContext.matches.length - 1
+              ]?.route.id
+            }
+          >
+            <RouteErrorContext.Provider
+              value={error}
+              children={this.props.component}
+            />
+          </RouteIdContext.Provider>
         </RouteContext.Provider>
       ) : (
         this.props.children
@@ -1178,7 +1189,9 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 
   return (
     <RouteContext.Provider value={routeContext}>
-      {children}
+      <RouteIdContext.Provider value={match.route.id}>
+        {children}
+      </RouteIdContext.Provider>
     </RouteContext.Provider>
   );
 }
@@ -1391,7 +1404,6 @@ enum DataRouterStateHook {
   UseMatches = "useMatches",
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
-  UseRouteId = "useRouteId",
   UseRoute = "useRoute",
   UseRouterState = "unstable_useRouterState",
 }
@@ -1414,31 +1426,26 @@ function useDataRouterState(hookName: DataRouterStateHook) {
   return state;
 }
 
-function useRouteContext(hookName: DataRouterStateHook) {
-  let route = React.useContext(RouteContext);
-  invariant(route, getDataRouterConsoleError(hookName));
-  return route;
+function useDataRouterData(hookName: DataRouterStateHook) {
+  let data = React.useContext(DataRouterDataContext);
+  invariant(data, getDataRouterConsoleError(hookName));
+  return data;
 }
 
-// Internal version with hookName-aware debugging
-function useCurrentRouteId(hookName: DataRouterStateHook) {
-  let route = useRouteContext(hookName);
-  let thisRoute = route.matches[route.matches.length - 1];
+function useDataRouterNavigation(hookName: DataRouterStateHook) {
+  let navigation = React.useContext(DataRouterNavigationContext);
+  invariant(navigation, getDataRouterConsoleError(hookName));
+  return navigation;
+}
+
+// Internal helper with hookName-aware debugging
+export function useCurrentRouteId(hookName: string) {
+  let routeId = React.useContext(RouteIdContext);
   invariant(
-    thisRoute.route.id,
+    routeId,
     `${hookName} can only be used on routes that contain a unique "id"`,
   );
-  return thisRoute.route.id;
-}
-
-/**
- * Returns the ID for the nearest contextual route
- *
- * @category Hooks
- * @returns The ID of the nearest contextual route
- */
-export function useRouteId() {
-  return useCurrentRouteId(DataRouterStateHook.UseRouteId);
+  return routeId;
 }
 
 // Omit the fields from each navigation state individually to preserve the discriminated union
@@ -1474,11 +1481,13 @@ type UseNavigationResultStates = {
  * @returns The current {@link Navigation} object
  */
 export function useNavigation(): UseNavigationResult {
-  let state = useDataRouterState(DataRouterStateHook.UseNavigation);
+  let { navigation } = useDataRouterNavigation(
+    DataRouterStateHook.UseNavigation,
+  );
   return React.useMemo<UseNavigationResult>(() => {
-    let { matches, historyAction, ...rest } = state.navigation;
+    let { matches, historyAction, ...rest } = navigation;
     return rest;
-  }, [state.navigation]);
+  }, [navigation]);
 }
 
 /**
@@ -1521,14 +1530,16 @@ export function useRevalidator(): {
   state: DataRouter["state"]["revalidation"];
 } {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
-  let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
+  let { revalidation } = useDataRouterNavigation(
+    DataRouterStateHook.UseRevalidator,
+  );
   let revalidate = React.useCallback(async () => {
     await dataRouterContext.router.revalidate();
   }, [dataRouterContext.router]);
 
   return React.useMemo(
-    () => ({ revalidate, state: state.revalidation }),
-    [revalidate, state.revalidation],
+    () => ({ revalidate, state: revalidation }),
+    [revalidate, revalidation],
   );
 }
 
@@ -1567,9 +1578,8 @@ export function useRevalidator(): {
  * @returns An array of {@link UIMatch | UI matches} for the current route hierarchy
  */
 export function useMatches(): UIMatch[] {
-  let { matches, loaderData } = useDataRouterState(
-    DataRouterStateHook.UseMatches,
-  );
+  let { matches } = useDataRouterState(DataRouterStateHook.UseMatches);
+  let { loaderData } = useDataRouterData(DataRouterStateHook.UseMatches);
   return React.useMemo(
     () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
     [matches, loaderData],
@@ -1600,9 +1610,9 @@ export function useMatches(): UIMatch[] {
  * @returns The data returned from the route's [`loader`](../../start/framework/route-module#loader) or [`clientLoader`](../../start/framework/route-module#clientloader) function
  */
 export function useLoaderData<T = any>(): SerializeFrom<T> {
-  let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
+  let data = useDataRouterData(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-  return state.loaderData[routeId] as SerializeFrom<T>;
+  return data.loaderData[routeId] as SerializeFrom<T>;
 }
 
 /**
@@ -1640,8 +1650,8 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
 export function useRouteLoaderData<T = any>(
   routeId: string,
 ): SerializeFrom<T> | undefined {
-  let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
-  return state.loaderData[routeId] as SerializeFrom<T> | undefined;
+  let data = useDataRouterData(DataRouterStateHook.UseRouteLoaderData);
+  return data.loaderData[routeId] as SerializeFrom<T> | undefined;
 }
 
 /**
@@ -1677,9 +1687,9 @@ export function useRouteLoaderData<T = any>(
  * has been called
  */
 export function useActionData<T = any>(): SerializeFrom<T> | undefined {
-  let state = useDataRouterState(DataRouterStateHook.UseActionData);
+  let data = useDataRouterData(DataRouterStateHook.UseActionData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-  return (state.actionData ? state.actionData[routeId] : undefined) as
+  return (data.actionData ? data.actionData[routeId] : undefined) as
     | SerializeFrom<T>
     | undefined;
 }
@@ -1706,7 +1716,7 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
-  let state = useDataRouterState(DataRouterStateHook.UseRouteError);
+  let data = useDataRouterData(DataRouterStateHook.UseRouteError);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseRouteError);
 
   // If this was a render error, we put it in a RouteError context inside
@@ -1715,8 +1725,8 @@ export function useRouteError(): unknown {
     return error;
   }
 
-  // Otherwise look for errors from our data router state
-  return state.errors?.[routeId];
+  // Otherwise look for errors from our data router data
+  return data.errors?.[routeId];
 }
 
 /**
@@ -2021,13 +2031,14 @@ export function useRoute<Args extends UseRouteArgs>(
   const id: keyof RouteModules = args[0] ?? currentRouteId;
 
   const state = useDataRouterState(DataRouterStateHook.UseRoute);
+  const data = useDataRouterData(DataRouterStateHook.UseRoute);
   const route = state.matches.find(({ route }) => route.id === id);
 
   if (route === undefined) return undefined as UseRouteResult<Args>;
   return {
     handle: route.route.handle,
-    loaderData: state.loaderData[id],
-    actionData: state.actionData?.[id],
+    loaderData: data.loaderData[id],
+    actionData: data.actionData?.[id],
   } as UseRouteResult<Args>;
 }
 
@@ -2137,8 +2148,10 @@ export function useRouterState(): unstable_RouterState {
     location,
     historyAction: type,
     matches,
-    navigation,
   } = useDataRouterState(DataRouterStateHook.UseRouterState);
+  let { navigation } = useDataRouterNavigation(
+    DataRouterStateHook.UseRouterState,
+  );
 
   let active = React.useMemo<unstable_RouterStateActiveVariant>(
     () => ({
