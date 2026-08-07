@@ -293,20 +293,16 @@ function escapeRoutePatternLiteral(value: string): string {
 function validateRouteMatchParams<
   RouteObjectType extends RouteObject = RouteObject,
 >(matches: RouteMatch<string, RouteObjectType>[]): boolean {
-  return matches.every(({ route, params }) => {
-    try {
-      return (
-        typeof route.unstable_validateParams !== "function" ||
-        route.unstable_validateParams(params) === true
-      );
-    } catch (e) {
-      warning(
-        false,
-        `Route "${route.id || route.path}" failed param validation with the following error:\n` +
-          (e instanceof Error ? e.message : String(e)),
-      );
-    }
-  });
+  return matches.every(
+    ({ route, params }) =>
+      route.unstable_validateParams == null ||
+      Object.keys(route.unstable_validateParams).length === 0 ||
+      Object.entries(route.unstable_validateParams).every(([param, re]) =>
+        params[param] != null
+          ? new RegExp(re.source, re.flags).test(params[param])
+          : true,
+      ),
+  );
 }
 
 function prioritizeValidatedMatches<
@@ -320,7 +316,9 @@ function prioritizeValidatedMatches<
   for (let match of matches) {
     if (
       match.data.routesMeta.some(
-        (meta) => typeof meta.route.unstable_validateParams === "function",
+        (meta) =>
+          meta.route.unstable_validateParams != null &&
+          Object.keys(meta.route.unstable_validateParams).length > 0,
       )
     ) {
       validatedMatches.push(match);

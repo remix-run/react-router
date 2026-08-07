@@ -441,10 +441,6 @@ export interface ShouldRevalidateFunction {
   (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
-export interface UnstableValidateParamsFunction {
-  (params: Params): boolean;
-}
-
 export interface DataStrategyMatch extends RouteMatch<string, DataRouteObject> {
   /**
    * @private
@@ -689,9 +685,10 @@ export type BaseRouteObject = {
    */
   shouldRevalidate?: ShouldRevalidateFunction;
   /**
-   * Validate route params after a route-pattern match.
+   * A map of route param names to regular expressions used to validate params
+   * after a route-pattern match.
    */
-  unstable_validateParams?: UnstableValidateParamsFunction;
+  unstable_validateParams?: Record<string, RegExp>;
   /**
    * The route handle.
    */
