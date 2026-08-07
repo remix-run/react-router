@@ -244,14 +244,16 @@ describe("unstable route-pattern matching", () => {
         {
           path: "/:drink",
           id: "drink",
-          unstable_validateParams: ({ drink }) =>
-            /^(wines|whiskeys|sakes|beers)$/.test(drink!),
+          unstable_validateParams: {
+            drink: /^(wines|whiskeys|sakes|beers)$/,
+          },
         },
         {
           path: "/:food",
           id: "food",
-          unstable_validateParams: ({ food }) =>
-            /^(meats|veggies|cheeses|sweets)$/.test(food!),
+          unstable_validateParams: {
+            food: /^(meats|veggies|cheeses|sweets)$/,
+          },
         },
       ],
       {
@@ -274,8 +276,9 @@ describe("unstable route-pattern matching", () => {
         {
           path: "/:drink",
           id: "drink",
-          unstable_validateParams: ({ drink }) =>
-            /^(wines|whiskeys|sakes|beers)$/.test(drink!),
+          unstable_validateParams: {
+            drink: /^(wines|whiskeys|sakes|beers)$/,
+          },
         },
         {
           path: "/:other",
@@ -284,8 +287,9 @@ describe("unstable route-pattern matching", () => {
         {
           path: "/:food",
           id: "food",
-          unstable_validateParams: ({ food }) =>
-            /^(meats|veggies|cheeses|sweets)$/.test(food!),
+          unstable_validateParams: {
+            food: /^(meats|veggies|cheeses|sweets)$/,
+          },
         },
       ],
       {
@@ -303,29 +307,30 @@ describe("unstable route-pattern matching", () => {
   });
 
   it("runs unstable_validateParams for all routes in the matched branch", () => {
-    let calls: string[] = [];
     let router = createMemoryRouter(
       [
         {
           path: "/:section",
           id: "section",
-          unstable_validateParams: ({ section, item }) => {
-            calls.push(`section:${section}/${item}`);
-            return section === "drinks";
+          unstable_validateParams: {
+            section: /^drinks$/,
           },
           children: [
             {
               path: ":item",
               id: "section-item",
+              unstable_validateParams: {
+                item: /^beer$/,
+              },
             },
           ],
         },
         {
           path: "/:food/:item",
           id: "food-item",
-          unstable_validateParams: ({ food, item }) => {
-            calls.push(`food:${food}/${item}`);
-            return food === "meats";
+          unstable_validateParams: {
+            food: /^meats$/,
+            item: /^ribeye$/,
           },
         },
       ],
@@ -340,8 +345,6 @@ describe("unstable route-pattern matching", () => {
       food: "meats",
       item: "ribeye",
     });
-    expect(calls).toEqual(["section:meats/ribeye", "food:meats/ribeye"]);
-    calls = [];
 
     let matches = router.match("/drinks/beer");
     expect(matches?.map((m) => m.route.id)).toEqual([
@@ -349,84 +352,32 @@ describe("unstable route-pattern matching", () => {
       "section-item",
     ]);
     expect(matches?.[0].params).toEqual({ section: "drinks", item: "beer" });
-    expect(calls).toEqual(["section:drinks/beer"]);
+    expect(router.match("/drinks/wine")).toBeNull();
   });
 
-  it("warns and treats unstable_validateParams errors as not validated", () => {
-    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+  it("only validates optional params when they exist", () => {
     let router = createMemoryRouter(
       [
         {
-          id: "root",
-          path: "/",
-        },
-        {
-          id: "param",
-          path: "/:id",
-          unstable_validateParams() {
-            throw new Error("Invalid params");
-          },
-          ErrorBoundary: () => null,
-        },
-      ],
-      {
-        future: routePatternFuture,
-        initialEntries: ["/123"],
-      },
-    );
-
-    expect(router.state).toMatchObject({
-      navigation: { state: "idle" },
-      location: { pathname: "/123" },
-      errors: { root: { status: 404 } },
-    });
-    expect(consoleWarn).toHaveBeenCalledWith(
-      'Route "param" failed param validation with the following error:\n' +
-        "Invalid params",
-    );
-    consoleWarn.mockRestore();
-  });
-
-  it("continues matching after unstable_validateParams errors", async () => {
-    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
-    let router = createMemoryRouter(
-      [
-        {
-          id: "root",
-          path: "/",
-        },
-        {
-          id: "param",
-          path: "/:id",
-          unstable_validateParams() {
-            throw new Error("Invalid params");
-          },
-        },
-        {
-          id: "food",
-          path: "/:food",
-          unstable_validateParams({ food }) {
-            return food === "meats";
+          id: "language",
+          path: "/about/:language?",
+          unstable_validateParams: {
+            language: /^(en|fr)$/,
           },
         },
       ],
       {
         future: routePatternFuture,
+        initialEntries: ["/about"],
       },
     );
 
-    await router.navigate("/meats");
-    expect(router.state).toMatchObject({
-      navigation: { state: "idle" },
-      location: { pathname: "/meats" },
-      matches: [{ route: { id: "food" } }],
-      errors: null,
-    });
-    expect(consoleWarn).toHaveBeenCalledWith(
-      'Route "param" failed param validation with the following error:\n' +
-        "Invalid params",
-    );
-    consoleWarn.mockRestore();
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["language"]);
+    expect(router.state.matches[0].params).toEqual({});
+    expect(router.match("/about/en")?.map((m) => m.route.id)).toEqual([
+      "language",
+    ]);
+    expect(router.match("/about/de")).toBeNull();
   });
 
   it("throws for caseSensitive routes", () => {

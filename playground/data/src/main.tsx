@@ -25,7 +25,7 @@ const router = createBrowserRouter(
           Component: Index,
         },
         {
-          path: "projects(/optional)",
+          path: "projects/:projectId?",
           Component: ProjectsLayout,
           loader({ params }) {
             return { params };
@@ -58,24 +58,6 @@ const router = createBrowserRouter(
     },
   },
 );
-
-/*
-Route-pattern matching keeps route definitions in React Router path syntax:
-
-createBrowserRouter(
-  [
-    {
-      path: "/",
-      children: [
-        { path: "projects/:projectId?", Component: ProjectsLayout },
-        { path: "archive/:year?/:month?", Component: Archive },
-        { path: "files/*", Component: Files },
-      ],
-    },
-  ],
-  { future: { unstable_routePatternMatching: true } },
-);
-*/
 
 function Root() {
   return (
