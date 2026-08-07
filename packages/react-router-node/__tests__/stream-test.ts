@@ -2,9 +2,10 @@
  * @jest-environment node
  */
 
-import { Writable } from "node:stream";
+import { PassThrough, Writable } from "node:stream";
 
 import {
+  createReadableStreamFromReadable,
   writeAsyncIterableToWritable,
   writeReadableStreamToWritable,
 } from "../stream";
@@ -136,5 +137,51 @@ describe("writeAsyncIterableToWritable", () => {
     await expect(withTimeout(writePromise, 100)).rejects.toThrow(
       "Writable closed before stream finished",
     );
+  });
+});
+
+describe("createReadableStreamFromReadable", () => {
+  it("handles the error emitted asynchronously by destroy() when canceled with a reason", async () => {
+    let source = new PassThrough();
+    let stream = createReadableStreamFromReadable(source);
+    let reader = stream.getReader();
+
+    source.write("<!DOCTYPE html><html>");
+    await reader.read();
+
+    // Mirrors a client disconnecting mid-stream: Node's web streams machinery
+    // cancels the source stream with an `AbortError`.
+    let cancelPromise = reader.cancel(new Error("The operation was aborted"));
+
+    // `destroy(reason)` emits "error" on a later tick, so the pump must keep
+    // its "error" listener attached or the emit escalates to an
+    // uncaughtException and crashes the process.
+    expect(source.listenerCount("error")).toBe(1);
+
+    await cancelPromise;
+
+    // Let `destroy()` flush its asynchronous "error" event, then verify the
+    // once-listener consumed it.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(source.listenerCount("error")).toBe(0);
+  });
+
+  it("swallows errors emitted by the source after cancelation", async () => {
+    let source = new PassThrough();
+    let stream = createReadableStreamFromReadable(source);
+    let reader = stream.getReader();
+
+    source.write("<!DOCTYPE html><html>");
+    await reader.read();
+
+    await reader.cancel();
+
+    expect(source.listenerCount("error")).toBe(1);
+
+    // With no "error" listener attached this `emit` would throw synchronously
+    // (ERR_UNHANDLED_ERROR) — the production crash.
+    source.emit("error", new Error("premature close"));
+
+    expect(source.listenerCount("error")).toBe(0);
   });
 });

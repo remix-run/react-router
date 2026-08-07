@@ -249,14 +249,19 @@ class StreamPump {
   }
 
   cancel(reason?: Error) {
+    this.stream.off("data", this.enqueue);
+    this.stream.off("end", this.close);
+    this.stream.off("close", this.close);
+
+    // Intentionally keep the "error" listener attached: `destroy()` emits its
+    // error asynchronously (on a later tick), so removing the listener here
+    // would leave that error unhandled and crash the process with an
+    // uncaughtException. The listener was registered with `once`, so it cleans
+    // itself up once the error (if any) is emitted, and erroring the
+    // controller of an already-canceled stream is a no-op.
     if (this.stream.destroy) {
       this.stream.destroy(reason);
     }
-
-    this.stream.off("data", this.enqueue);
-    this.stream.off("error", this.error);
-    this.stream.off("end", this.close);
-    this.stream.off("close", this.close);
   }
 
   enqueue(chunk: Uint8Array | string) {

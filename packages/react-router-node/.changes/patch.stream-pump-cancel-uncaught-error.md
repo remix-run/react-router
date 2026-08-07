@@ -1,0 +1,1 @@
+Fix process crash (`uncaughtException`) when a stream created by `createReadableStreamFromReadable` is canceled, e.g. when a client disconnects mid-response behind compression middleware. `StreamPump.cancel` removed its `error` listener immediately after calling `destroy()`, but `destroy()` emits its error asynchronously, so the error fired with no listener attached.
