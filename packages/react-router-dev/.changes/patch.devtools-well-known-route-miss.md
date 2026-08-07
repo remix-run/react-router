@@ -1,0 +1,1 @@
+Silently return 204 No Content for Chromium DevTools `/.well-known/appspecific/com.chrome.devtools.json` requests in the Vite dev server to prevent noisy "No route matches URL" errors that are unrelated to application code.

@@ -554,4 +554,36 @@ test.describe("Vite dev", () => {
 
     expect(clientDeps).not.toMatch(/rsc[-_]server[-_]only[-_]package/);
   });
+
+  test("silently returns 204 for Chromium DevTools well-known route probe", async ({
+    dev,
+  }) => {
+    // Chrome requests /.well-known/appspecific/com.chrome.devtools.json on every
+    // localhost page load. Without the fix this triggers a noisy "No route matches URL"
+    // error in the dev server console. Verify it is intercepted and returns 204.
+    let files: Files = async ({ port }) => ({
+      "vite.config.ts": await viteConfig.basic({ port }),
+    });
+
+    let { port } = await dev(files);
+
+    // Verify the well-known URL is handled silently with 204 No Content.
+    let response = await fetch(
+      `http://localhost:${port}/.well-known/appspecific/com.chrome.devtools.json`,
+    );
+
+    // Should be 204 No Content — not a 404 or 500.
+    expect(response.status).toBe(204);
+
+    // Body must be empty.
+    let body = await response.text();
+    expect(body).toBe("");
+
+    // Cache-Control header should be no-store so browsers don't cache the 204.
+    expect(response.headers.get("cache-control")).toBe("no-store");
+
+    // Normal app routes must still be reachable after the well-known middleware.
+    let indexResponse = await fetch(`http://localhost:${port}/`);
+    expect(indexResponse.status).toBe(200);
+  });
 });
