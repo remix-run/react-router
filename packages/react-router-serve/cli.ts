@@ -206,6 +206,10 @@ async function run() {
   );
   app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
+  app.use(
+    "/.well-known",
+    express.static(path.join(build.assetsBuildDirectory, ".well-known")),
+  );
   app.use(morgan("tiny"));
 
   if (build.fetch) {
