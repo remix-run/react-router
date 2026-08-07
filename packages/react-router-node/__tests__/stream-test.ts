@@ -92,6 +92,37 @@ describe("writeReadableStreamToWritable", () => {
       "Writable failed",
     );
   });
+
+  it("handles writable errors after the writable closes mid-stream", async () => {
+    let errorListenerCountOnDestroy: number | undefined;
+    let writable = new Writable({
+      write(_chunk, _encoding, callback) {
+        callback();
+      },
+    });
+    let destroy = writable.destroy.bind(writable);
+    writable.destroy = function (error?: Error) {
+      errorListenerCountOnDestroy = writable.listenerCount("error");
+      // Prevent this regression test from crashing the Jest process when the
+      // implementation removes its error listener too early.
+      writable.once("error", () => {});
+      return destroy(error);
+    } as typeof writable.destroy;
+    let readable = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(1));
+      },
+    });
+
+    let writePromise = writeReadableStreamToWritable(readable, writable);
+
+    setTimeout(() => writable.emit("close"), 10);
+
+    await expect(withTimeout(writePromise, 100)).rejects.toThrow(
+      "Writable closed before stream finished",
+    );
+    expect(errorListenerCountOnDestroy).toBeGreaterThan(0);
+  });
 });
 
 describe("writeAsyncIterableToWritable", () => {
