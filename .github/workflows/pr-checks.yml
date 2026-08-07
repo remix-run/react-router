@@ -62,7 +62,7 @@ jobs:
 
       - name: Setup pnpm
         if: steps.changed-files.outputs.mode == 'run'
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         if: steps.changed-files.outputs.mode == 'run'
