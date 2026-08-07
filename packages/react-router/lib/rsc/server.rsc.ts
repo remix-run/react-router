@@ -12,6 +12,7 @@ import type {
 } from "../dom/ssr/routeModules";
 import { type Location } from "../router/history";
 import {
+  createDataRouteMatcher,
   createStaticHandler,
   isDataWithResponseInit,
   isMutationMethod,
@@ -21,6 +22,7 @@ import {
 } from "../router/router";
 import {
   type ActionFunction,
+  type DataRouteObject,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
@@ -29,7 +31,6 @@ import {
   type TrackedPromise,
   isAbsoluteUrl,
   isRouteErrorResponse,
-  matchRoutes,
   prependBasename,
   convertRouteMatchToUiMatch,
   redirect as baseRedirect,
@@ -213,6 +214,16 @@ export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
 export type RSCRouteConfig = Array<RSCRouteConfigEntry>;
 
 type RSCRouteDataMatch = RouteMatch<string, RSCRouteConfigEntry>;
+type RSCDataRouteMatcher = ReturnType<typeof createDataRouteMatcher>;
+
+function createRSCDataRouteMatcher(
+  routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
+): RSCDataRouteMatcher {
+  let dataRouteMatcher = createDataRouteMatcher(basename ?? "/");
+  dataRouteMatcher.update(routes as unknown as DataRouteObject[]);
+  return dataRouteMatcher;
+}
 
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
@@ -479,7 +490,10 @@ export async function matchRSCServerRequest({
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
   // and if we move to `lazy: {}` then we lose all the other things from the
   // `RSCRouteConfigEntry` like `Layout` etc.
-  let matches = matchRoutes(routes, url.pathname, basename);
+  let dataRouteMatcher = createRSCDataRouteMatcher(routes, basename);
+  let matches = dataRouteMatcher.match(
+    url.pathname,
+  ) as RSCRouteDataMatch[] | null;
   if (matches) {
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
@@ -581,10 +595,13 @@ async function generateManifestResponse(
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
     : [url.pathname.replace(/\.manifest$/, "")];
+  let dataRouteMatcher = createRSCDataRouteMatcher(routes, basename);
   let routeIds = new Set<string>();
   let matchedRoutes = pathnames
     .flatMap((pathname) => {
-      let pathnameMatches = matchRoutes(routes, pathname, basename);
+      let pathnameMatches = dataRouteMatcher.match(
+        pathname,
+      ) as RSCRouteDataMatch[] | null;
       return (
         pathnameMatches?.map((m, i) => ({
           ...m.route,
@@ -605,8 +622,7 @@ async function generateManifestResponse(
       ...matchedRoutes.map((route) => getManifestRoute(route)),
       getAdditionalRoutePatches(
         pathnames,
-        routes,
-        basename,
+        dataRouteMatcher,
         Array.from(routeIds),
       ),
     ]).then((r) => r.flat(1)),
@@ -1215,20 +1231,21 @@ async function getRenderPayload(
     }),
   );
 
-  let patches =
-    routeDiscovery?.mode === "initial" && !isDataRequest
-      ? getAllRoutePatches(routes, basename).then((patches) =>
-          patches.filter(
-            (patch) =>
-              !staticContext.matches.some((m) => m.route.id === patch.id),
-          ),
-        )
-      : getAdditionalRoutePatches(
-          getPathsWithAncestors([staticContext.location.pathname]),
-          routes,
-          basename,
-          staticContext.matches.map((m) => m.route.id),
-        );
+  let patches: Promise<RSCRouteManifest[]>;
+  if (routeDiscovery?.mode === "initial" && !isDataRequest) {
+    patches = getAllRoutePatches(routes, basename).then((patches) =>
+      patches.filter(
+        (patch) => !staticContext.matches.some((m) => m.route.id === patch.id),
+      ),
+    );
+  } else {
+    let dataRouteMatcher = createRSCDataRouteMatcher(routes, basename);
+    patches = getAdditionalRoutePatches(
+      getPathsWithAncestors([staticContext.location.pathname]),
+      dataRouteMatcher,
+      staticContext.matches.map((m) => m.route.id),
+    );
+  }
 
   return {
     ...baseRenderPayload,
@@ -1446,8 +1463,7 @@ async function getAllRoutePatches(
 
 async function getAdditionalRoutePatches(
   pathnames: string[],
-  routes: RSCRouteConfigEntry[],
-  basename: string | undefined,
+  dataRouteMatcher: RSCDataRouteMatcher,
   matchedRouteIds: string[],
 ): Promise<RSCRouteManifest[]> {
   let patchRouteMatches = new Map<
@@ -1461,7 +1477,9 @@ async function getAdditionalRoutePatches(
       continue;
     }
     matchedPaths.add(pathname);
-    let matches = matchRoutes(routes, pathname, basename) || [];
+    let matches =
+      (dataRouteMatcher.match(pathname) as RSCRouteDataMatch[] | null) ||
+      [];
     matches.forEach((m, i) => {
       if (patchRouteMatches.get(m.route.id)) {
         return;

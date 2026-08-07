@@ -752,11 +752,11 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterOpts?: {
+    router: DataRouter;
     manifest: RouteManifest;
     state: DataRouter["state"];
     isStatic: boolean;
     onError: ClientOnErrorFunction | undefined;
-    future: DataRouter["future"];
   },
 ): React.ReactElement | null {
   invariant(
@@ -853,16 +853,22 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  let matches =
-    dataRouterOpts && dataRouterOpts.state.matches.length
-      ? // If we're in a data router, use the matches we've already identified but ensure
-        // we have the latest route instances from the manifest in case elements have changed
-        dataRouterOpts.state.matches.map((m) =>
-          Object.assign(m, {
-            route: dataRouterOpts.manifest[m.route.id] || m.route,
-          }),
-        )
-      : matchRoutes(routes, { pathname: remainingPathname });
+  let matches: RouteMatch[] | null;
+  if (dataRouterOpts) {
+    if (dataRouterOpts.state.matches.length) {
+      // If we're in a data router with existing matches, use them but ensure we have the
+      // latest route instances from the manifest in case elements have changed
+      matches = dataRouterOpts.state.matches.map((m) =>
+        Object.assign(m, {
+          route: dataRouterOpts.manifest[m.route.id] || m.route,
+        }),
+      );
+    } else {
+      matches = dataRouterOpts.router.match(dataRouterOpts.state.location);
+    }
+  } else {
+    matches = matchRoutes(routes, { pathname: remainingPathname });
+  }
 
   if (ENABLE_DEV_WARNINGS) {
     warning(
@@ -1190,7 +1196,6 @@ export function _renderMatches(
     state: DataRouter["state"];
     isStatic: boolean;
     onError: ClientOnErrorFunction | undefined;
-    future: DataRouter["future"];
   },
 ): React.ReactElement | null {
   let dataRouterState = dataRouterOpts?.state;

@@ -6,6 +6,7 @@ import {
   createPath,
   invariant,
   parsePath,
+  warning,
 } from "../router/history";
 import type {
   FutureConfig,
@@ -13,7 +14,12 @@ import type {
   RevalidationState,
   StaticHandlerContext,
 } from "../router/router";
-import { IDLE_BLOCKER, IDLE_FETCHER, IDLE_NAVIGATION } from "../router/router";
+import {
+  createDataRouteMatcher,
+  IDLE_BLOCKER,
+  IDLE_FETCHER,
+  IDLE_NAVIGATION,
+} from "../router/router";
 import type {
   DataRouteObject,
   RouteBranch,
@@ -209,7 +215,6 @@ export function StaticRouterProvider({
                 <DataRoutes
                   manifest={router.manifest}
                   routes={router.routes}
-                  future={router.future}
                   state={state}
                   isStatic={true}
                 />
@@ -328,17 +333,28 @@ function getStatelessNavigator() {
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
- * @param opts.branches Optional pre-computed route branches
+ * @param opts.branches Deprecated optional pre-computed route branches. This option
+ * is no longer used because branch caching is done automatically inside the static router.
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    /**
+     * @deprecated This option is no longer used because branch caching is done
+     * automatically inside the static router.
+     */
     branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
+  warning(
+    opts.branches == null,
+    "`createStaticRouter({ branches })` is deprecated and no longer used. " +
+      "Branch caching is done automatically inside the static router.",
+  );
+
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
@@ -346,6 +362,11 @@ export function createStaticRouter(
     undefined,
     manifest,
   );
+  let future: FutureConfig = {
+    ...opts?.future,
+  };
+  let dataRouteMatcher = createDataRouteMatcher(context.basename || "/");
+  dataRouteMatcher.update(dataRoutes);
 
   // Because our context matches may be from a set of routes passed to
   // createStaticHandler(), we update them here with our newly created/enhanced
@@ -366,9 +387,7 @@ export function createStaticRouter(
       return context.basename;
     },
     get future() {
-      return {
-        ...opts?.future,
-      };
+      return future;
     },
     get state() {
       return {
@@ -391,14 +410,14 @@ export function createStaticRouter(
     get routes() {
       return dataRoutes;
     },
-    get branches() {
-      return opts.branches;
-    },
     get manifest() {
       return manifest;
     },
     get window() {
       return undefined;
+    },
+    match(locationArg) {
+      return dataRouteMatcher.match(locationArg);
     },
     initialize() {
       throw msg("initialize");
