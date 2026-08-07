@@ -2918,17 +2918,11 @@ export function useFetcher<T = any>({
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let fetchersContext = React.useContext(FetchersContext);
-  let route = React.useContext(RouteContext);
-  let routeId = route.matches[route.matches.length - 1]?.route.id;
+  let routeId = useCurrentRouteId(DataRouterHook.UseFetcher);
 
   invariant(
     fetchersContext,
     `useFetcher must be used inside a FetchersContext`,
-  );
-  invariant(route, `useFetcher must be used inside a RouteContext`);
-  invariant(
-    routeId != null,
-    `useFetcher can only be used on routes that contain a unique "id"`,
   );
 
   // Fetcher key handling

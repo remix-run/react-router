@@ -135,6 +135,55 @@ describe("data router contexts", () => {
     router.dispose();
   });
 
+  it("does not re-render useFetcher consumers when the route ID remains unchanged", async () => {
+    let fetcherRenders = 0;
+    let locationRenders = 0;
+
+    function Fetcher() {
+      fetcherRenders++;
+      useFetcher();
+      return null;
+    }
+
+    function Location() {
+      locationRenders++;
+      useLocation();
+      return null;
+    }
+
+    function Root() {
+      return (
+        <>
+          <Fetcher />
+          <Location />
+        </>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [{ id: "root", path: "/", Component: Root }],
+      { initialEntries: ["/?value=before"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
+    expect(fetcherRenders).toBe(1);
+    expect(locationRenders).toBe(1);
+
+    await TestRenderer.act(async () => {
+      await router.navigate("/?value=after");
+    });
+
+    expect(fetcherRenders).toBe(1);
+    expect(locationRenders).toBe(2);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
   it("re-renders when a loader runs and returns the same reference", async () => {
     let loaderData = { message: "loader data" };
     let loaderCalls = 0;
