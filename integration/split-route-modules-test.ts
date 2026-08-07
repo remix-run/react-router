@@ -121,7 +121,9 @@ const files = {
     // chunk. The variable name is globally unique to prevent name mangling,
     // e.g. inUnsplittableMainChunk$1. The use of console.log prevents dead code
     // elimination in the build by introducing a side effect
-    export const inUnsplittableMainChunk = () => console.log() || true;
+    export function inUnsplittableMainChunk() {
+      return console.log() || true;
+    }
 
     export const clientLoader = async () => {
       inUnsplittableMainChunk();
@@ -177,7 +179,9 @@ const files = {
     // chunk. The variable name is globally unique to prevent name mangling,
     // e.g. inMixedMainChunk$1. The use of console.log prevents dead code
     // elimination in the build by introducing a side effect
-    export const inMixedMainChunk = () => console.log() || true;
+    export function inMixedMainChunk() {
+      return console.log() || true;
+    }
 
     export const clientLoader = async () => {
       inMixedMainChunk();
