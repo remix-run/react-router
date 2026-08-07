@@ -358,6 +358,15 @@ export async function fetchAndApplyManifestPatches(
     throw e;
   }
 
+  // If the triggering navigation/fetcher aborted while we were fetching, bail
+  // before mutating anything.  `patchRoutes` no-ops on an aborted signal, so
+  // updating the manifest and the discovered paths here would leave the paths
+  // cached as discovered with the route tree never patched, and subsequent
+  // navigations to those paths would skip discovery for the rest of the session
+  if (signal?.aborted) {
+    return;
+  }
+
   // Patch routes we don't know about yet into the manifest
   let knownRoutes = new Set(Object.keys(manifest.routes));
   let patches = Object.values(serverPatches).reduce((acc, route) => {
