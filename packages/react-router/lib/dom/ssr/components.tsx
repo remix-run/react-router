@@ -7,7 +7,6 @@ import * as React from "react";
 
 import type { RouterState } from "../../router/router";
 import type { DataRouteMatch } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
@@ -357,8 +356,10 @@ export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let { nonce: contextNonce } = useFrameworkContext();
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
-    () => matchRoutes(router.routes, page, router.basename),
-    [router.routes, page, router.basename],
+    () => router.match(page),
+    // Include router.routes to re-match if new routes arrive
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [router, router.routes, page],
   );
 
   if (!matches) {

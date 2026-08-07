@@ -66,7 +66,6 @@ import {
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
-  matchRoutesImpl,
   prependBasename,
   resolveTo,
   stripBasename,
@@ -436,8 +435,7 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {
-}
+export interface FutureConfig {}
 
 /**
  * Initialization options for createRouter
@@ -1089,7 +1087,7 @@ export function createRouter(init: RouterInit): Router {
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
 
-  let initialMatches = dataRouteMatcher.match(init.history.location, false);
+  let initialMatches = dataRouteMatcher.match(init.history.location);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
   let initialized: boolean;
@@ -1902,7 +1900,7 @@ export function createRouter(init: RouterInit): Router {
       !initialMatchesIsFOW
         ? // `matchRoutes()` has already been called if we're in here via `router.initialize()`
           state.matches
-        : dataRouteMatcher.match(location, false);
+        : dataRouteMatcher.match(location);
     let flushSync = (opts && opts.flushSync) === true;
 
     // Short circuit if it's only a hash change and not a revalidation or
@@ -2603,7 +2601,6 @@ export function createRouter(init: RouterInit): Router {
     let instrumentationResultMetaReceiver =
       consumeInstrumentationClientResultMetaReceiver(router);
 
-    let routesToUse = dataRoutes.activeRoutes;
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -2612,7 +2609,7 @@ export function createRouter(init: RouterInit): Router {
       routeId,
       opts?.relative,
     );
-    let matches = dataRouteMatcher.match(normalizedPath, false);
+    let matches = dataRouteMatcher.match(normalizedPath);
 
     let fogOfWar = checkFogOfWar(matches, normalizedPath);
     if (fogOfWar.active && fogOfWar.matches) {
@@ -2844,7 +2841,7 @@ export function createRouter(init: RouterInit): Router {
     );
     let matches =
       state.navigation.state !== "idle"
-        ? dataRouteMatcher.match(state.navigation.location, false)
+        ? dataRouteMatcher.match(state.navigation.location)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -3832,7 +3829,7 @@ export function createRouter(init: RouterInit): Router {
         return { type: "aborted" };
       }
 
-      let newMatches = dataRouteMatcher.match(pathname, false);
+      let newMatches = dataRouteMatcher.match(pathname);
       let newPartialMatches: DataRouteMatch[] | null = null;
 
       if (newMatches) {
@@ -3933,7 +3930,7 @@ export function createRouter(init: RouterInit): Router {
       return dataRoutes.stableRoutes;
     },
     match(locationArg) {
-      return dataRouteMatcher.match(locationArg, false);
+      return dataRouteMatcher.match(locationArg);
     },
     get manifest() {
       return manifest;
@@ -4114,7 +4111,7 @@ export function createStaticHandler(
       null,
       "default",
     );
-    let matches = dataRouteMatcher.match(location, false);
+    let matches = dataRouteMatcher.match(location);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
 
@@ -4394,7 +4391,7 @@ export function createStaticHandler(
       null,
       "default",
     );
-    let matches = dataRouteMatcher.match(location, false);
+    let matches = dataRouteMatcher.match(location);
     requestContext =
       requestContext != null ? requestContext : new RouterContextProvider();
 
@@ -5427,7 +5424,7 @@ function getMatchesToLoad(
     let fetcher = state.fetchers.get(key);
     let isMidInitialLoad =
       fetcher && fetcher.state !== "idle" && fetcher.data === undefined;
-    let fetcherMatches = dataRouteMatcher.match(f.path, false);
+    let fetcherMatches = dataRouteMatcher.match(f.path);
 
     // If the fetcher path no longer matches, push it in with null matches so
     // we can trigger a 404 in callLoadersAndMaybeResolveData.  Note this is

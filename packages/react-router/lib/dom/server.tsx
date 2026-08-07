@@ -215,7 +215,6 @@ export function StaticRouterProvider({
                 <DataRoutes
                   manifest={router.manifest}
                   routes={router.routes}
-                  future={router.future}
                   state={state}
                   isStatic={true}
                 />
@@ -418,7 +417,7 @@ export function createStaticRouter(
       return undefined;
     },
     match(locationArg) {
-      return dataRouteMatcher.match(locationArg, false);
+      return dataRouteMatcher.match(locationArg);
     },
     initialize() {
       throw msg("initialize");

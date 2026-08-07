@@ -5,7 +5,7 @@ export interface DataRouteMatcher {
   update(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[];
   match(
     locationArg: Partial<Location> | string,
-    allowPartial: boolean,
+    allowPartial?: boolean,
   ): DataRouteMatch[] | null;
 }
 
@@ -26,7 +26,7 @@ export class V6RegExMatcher implements DataRouteMatcher {
 
   match(
     locationArg: Partial<Location> | string,
-    allowPartial: boolean,
+    allowPartial = false,
   ): DataRouteMatch[] | null {
     return matchRoutesImpl(
       this.#routes,

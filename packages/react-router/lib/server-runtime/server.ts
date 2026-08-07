@@ -1,9 +1,6 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type {
-  DataRouteObject,
-  ErrorResponse,
-  RouteBranch,
-} from "../router/utils";
+import type { DataRouteMatcher } from "../router/matcher";
+import type { ErrorResponse } from "../router/utils";
 import {
   defaultMapRouteProperties,
   isRouteErrorResponse,
@@ -15,6 +12,7 @@ import {
 import {
   getStaticContextFromError,
   createStaticHandler,
+  createDataRouteMatcher,
   isRedirectResponse,
   isResponse,
   isMutationMethod,
@@ -187,6 +185,9 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
+    let dataRouteMatcher = createDataRouteMatcher(build.basename ?? "/");
+    dataRouteMatcher.update(staticHandler.dataRoutes);
+
     if (
       build.routeDiscovery.mode === "lazy" &&
       requestUrl.pathname === manifestUrl
@@ -194,8 +195,7 @@ function derive(build: ServerBuild, mode?: string) {
       try {
         let res = await handleManifestRequest(
           build,
-          staticHandler.dataRoutes,
-          staticHandler._internalRouteBranches,
+          dataRouteMatcher,
           requestUrl,
         );
         return res;
@@ -207,10 +207,8 @@ function derive(build: ServerBuild, mode?: string) {
 
     let matches = matchServerRoutes(
       build.routes,
-      staticHandler.dataRoutes,
-      staticHandler._internalRouteBranches,
+      dataRouteMatcher,
       normalizedPathname,
-      build.basename,
     );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
@@ -375,8 +373,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  dataRoutes: DataRouteObject[],
-  branches: RouteBranch<DataRouteObject>[],
+  dataRouteMatcher: DataRouteMatcher,
   url: URL,
 ) {
   if (url.toString().length > URL_LIMIT) {
@@ -406,10 +403,8 @@ async function handleManifestRequest(
       }
       let matches = matchServerRoutes(
         build.routes,
-        dataRoutes,
-        branches,
+        dataRouteMatcher,
         path,
-        build.basename,
       );
       if (matches) {
         for (let match of matches) {
