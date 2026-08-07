@@ -188,7 +188,14 @@ async function run() {
   let app = express();
   app.disable("x-powered-by");
 
-  if (!isRSCBuild) {
+  // Compression can be disabled for deployments where a proxy/CDN in front of
+  // the app server handles it instead (e.g. edge caches that require an
+  // identity response with a `Content-Length` from the origin).
+  let disableCompression =
+    process.env.DISABLE_COMPRESSION === "true" ||
+    process.env.DISABLE_COMPRESSION === "1";
+
+  if (!isRSCBuild && !disableCompression) {
     // `compression` may resolve to Express 4 types from transitive deps while
     // `react-router-serve` uses Express 5, but the runtime middleware signature
     // is compatible.

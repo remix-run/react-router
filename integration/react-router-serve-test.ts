@@ -81,4 +81,57 @@ test.describe("react-router-serve", () => {
       });
     });
   }
+
+  test.describe("compression", () => {
+    let fixture: Fixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
+        templateName: "vite-7-template",
+        useReactRouterServe: true,
+        files: {
+          "app/routes/_index.tsx": js`
+            import { useLoaderData } from "react-router";
+
+            // Large enough to clear the compression middleware's default
+            // 1kb threshold
+            export function loader() {
+              return "x".repeat(4096);
+            }
+
+            export default function Index() {
+              let data = useLoaderData();
+              return <div>{data}</div>;
+            }
+          `,
+        },
+      });
+    });
+
+    test("compresses responses by default", async () => {
+      let appFixture = await createAppFixture(fixture);
+      try {
+        let response = await fetch(appFixture.serverUrl);
+        expect(response.headers.get("content-encoding")).toMatch(
+          /\b(gzip|deflate|br|zstd)\b/,
+        );
+        expect(await response.text()).toContain("x".repeat(4096));
+      } finally {
+        appFixture.close();
+      }
+    });
+
+    test("does not compress responses when DISABLE_COMPRESSION is set", async () => {
+      let appFixture = await createAppFixture(fixture, undefined, {
+        env: { DISABLE_COMPRESSION: "true" },
+      });
+      try {
+        let response = await fetch(appFixture.serverUrl);
+        expect(response.headers.get("content-encoding")).toBeNull();
+        expect(await response.text()).toContain("x".repeat(4096));
+      } finally {
+        appFixture.close();
+      }
+    });
+  });
 });
