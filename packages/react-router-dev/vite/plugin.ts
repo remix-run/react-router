@@ -2433,12 +2433,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       // each other, so we need to manually trigger client HMR updates if server
       // code has changed.
       hotUpdate(this, { server, modules }) {
-        if (this.environment.name !== "ssr" && modules.length <= 0) {
+        if (this.environment.name !== "ssr" || modules.length <= 0) {
           return;
         }
 
-        let clientModules = modules.flatMap((mod) =>
-          getParentClientNodes(server.environments.client.moduleGraph, mod),
+        let clientModuleGraph = server.environments.client.moduleGraph;
+        let clientModules = new Set(
+          modules.flatMap((mod) => {
+            // Modules that exist in the client graph already receive Vite's
+            // native client HMR update. Only propagate changes from modules
+            // that are exclusive to the server graph.
+            if (mod.id && clientModuleGraph.getModuleById(mod.id)) {
+              return [];
+            }
+            return getParentClientNodes(clientModuleGraph, mod);
+          }),
         );
 
         for (let clientModule of clientModules) {
