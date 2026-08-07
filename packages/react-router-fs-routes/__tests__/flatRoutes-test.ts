@@ -99,6 +99,26 @@ describe("flatRoutes", () => {
       });
     }
 
+    test("folder named * creates a splat route", () => {
+      let manifest = flatRoutesUniversal(APP_DIR, [
+        path.join(APP_DIR, "routes", "*", "route.tsx"),
+      ]);
+
+      let routeInfo = manifest["routes/*"];
+      expect(routeInfo.id).toBe("routes/*");
+      expect(routeInfo.file).toBe("routes/*/route.tsx");
+      expect(routeInfo.path).toBe("*");
+    });
+
+    test("file named * is still unsupported", () => {
+      expect(() =>
+        flatRoutesUniversal(APP_DIR, [path.join(APP_DIR, "routes", "*.tsx")]),
+      ).toThrow(
+        'Route segment "*" for "*" cannot contain "*".\n' +
+          "If this is something you need, upvote this proposal for React Router https://github.com/remix-run/react-router/discussions/9822.",
+      );
+    });
+
     let invalidSlashFiles = [
       "($[$dollabills]).([.]lol)[/](what)/([$]).$",
       "$[$dollabills].[.]lol[/]what/[$].$",
