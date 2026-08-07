@@ -1,11 +1,10 @@
 import * as React from "react";
 import type { Router as DataRouter } from "../../router/router";
 import type {
-  DataRouteObject,
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { joinPaths, matchRoutesImpl } from "../../router/utils";
+import { joinPaths } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";

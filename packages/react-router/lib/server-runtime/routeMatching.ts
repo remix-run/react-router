@@ -1,6 +1,5 @@
-import type { DataRouteObject, Params } from "../router/utils";
-import type { RouteBranch } from "../router/utils";
-import { matchRoutesImpl } from "../router/utils";
+import type { DataRouteMatcher } from "../router/matcher";
+import type { Params } from "../router/utils";
 import invariant from "./invariant";
 import type { ServerRoute, ServerRouteManifest } from "./routes";
 
@@ -12,18 +11,10 @@ export interface RouteMatch<Route> {
 
 export function matchServerRoutes(
   manifest: ServerRouteManifest,
-  dataRoutes: DataRouteObject[],
-  branches: RouteBranch<DataRouteObject>[],
+  dataRouteMatcher: DataRouteMatcher,
   pathname: string,
-  basename?: string,
 ): RouteMatch<Omit<ServerRoute, "children">>[] | null {
-  let matches = matchRoutesImpl(
-    dataRoutes,
-    pathname,
-    basename ?? "/",
-    false,
-    branches,
-  );
+  let matches = dataRouteMatcher.match(pathname);
   if (!matches) return null;
 
   return matches.map((match) => {

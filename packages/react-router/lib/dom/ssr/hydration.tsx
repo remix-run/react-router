@@ -1,7 +1,7 @@
 import type { Path } from "../../router/history";
 import type { Router as DataRouter, HydrationState } from "../../router/router";
+import { createDataRouteMatcher } from "../../router/router";
 import type { DataRouteObject } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
 import type { ClientLoaderFunction } from "./routeModules";
 import { shouldHydrateRouteLoader } from "./routes";
 
@@ -38,7 +38,10 @@ export function getHydrationData({
     ...state,
     loaderData: { ...state.loaderData },
   };
-  let initialMatches = matchRoutes(routes, location, basename);
+  let dataRouteMatcher = createDataRouteMatcher(basename || "/");
+  dataRouteMatcher.update(routes);
+
+  let initialMatches = dataRouteMatcher.match(location);
   if (initialMatches) {
     for (let match of initialMatches) {
       let routeId = match.route.id;
