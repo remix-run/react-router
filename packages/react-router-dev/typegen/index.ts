@@ -11,11 +11,35 @@ import {
   generateRoutes,
   generateServerBuild,
 } from "./generate";
+import { acquire } from "./lock";
 
 const { green, red } = pc;
 
+const RETRY_ON = ["ENOTEMPTY", "EBUSY", "EPERM"];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function rmWithRetry(
+  path: string,
+  options: { recursive: boolean; force: boolean },
+): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await fs.rm(path, options);
+      return;
+    } catch (err: any) {
+      if (attempt === 2 || !RETRY_ON.includes(err.code)) {
+        throw err;
+      }
+      await sleep(100);
+    }
+  }
+}
+
 async function clearRouteModuleAnnotations(ctx: Context) {
-  await fs.rm(
+  await rmWithRetry(
     Path.join(typesDirectory(ctx), Path.basename(ctx.config.appDirectory)),
     { recursive: true, force: true },
   );
@@ -35,8 +59,17 @@ export async function run(
   { mode, rsc }: { mode: string; rsc: boolean },
 ) {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
-  await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
-  await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+  const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
+  const release = await acquire(lockPath);
+  try {
+    await rmWithRetry(typesDirectory(ctx), {
+      recursive: true,
+      force: true,
+    });
+    await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+  } finally {
+    release();
+  }
 }
 
 export type Watcher = {
@@ -48,8 +81,18 @@ export async function watch(
   { mode, logger, rsc }: { mode: string; logger?: Logger; rsc: boolean },
 ): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
-  await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
-  await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+  const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
+
+  const release = await acquire(lockPath);
+  try {
+    await rmWithRetry(typesDirectory(ctx), {
+      recursive: true,
+      force: true,
+    });
+    await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+  } finally {
+    release();
+  }
   logger?.info(green("generated types"), { timestamp: true, clear: true });
 
   ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
@@ -60,8 +103,13 @@ export async function watch(
     ctx.config = result.value;
 
     if (routeConfigChanged) {
-      await clearRouteModuleAnnotations(ctx);
-      await write(...generateRoutes(ctx));
+      const release = await acquire(lockPath);
+      try {
+        await clearRouteModuleAnnotations(ctx);
+        await write(...generateRoutes(ctx));
+      } finally {
+        release();
+      }
       logger?.info(green("regenerated types"), {
         timestamp: true,
         clear: true,
