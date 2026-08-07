@@ -188,7 +188,7 @@ describe("lazily loaded route modules", () => {
                 id: async () => "lazy",
                 index: async () => true,
                 children: async () => [],
-                unstable_validateParams: async () => () => true,
+                unstable_validateParams: { id: /.+/ },
               };
             },
           },
@@ -243,7 +243,7 @@ describe("lazily loaded route modules", () => {
               id: async () => "lazy",
               index: async () => true,
               children: async () => [],
-              unstable_validateParams: async () => () => true,
+              unstable_validateParams: async () => ({ id: /.+/ }),
             },
           },
         ],
