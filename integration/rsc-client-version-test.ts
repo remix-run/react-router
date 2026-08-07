@@ -225,6 +225,92 @@ test.describe("RSC client versions", () => {
     expect(documentRequests[1]).toBe(`${baseUrl}/other`);
   });
 
+  test("reloads when a server function rerender has a new client version", async ({
+    page,
+    vitePreview,
+  }) => {
+    let files: Files = async () => ({
+      ...getFiles(),
+      "app/actions.ts": js`
+        "use server";
+
+        export async function incrementCounter(count: number) {
+          return count + 1;
+        }
+      `,
+      "app/counter.client.tsx": js`
+        "use client";
+
+        import { useActionState } from "react";
+
+        import { incrementCounter } from "./actions";
+
+        export function Counter() {
+          const [count, increment] = useActionState(incrementCounter, 0);
+          return (
+            <form action={increment}>
+              <output data-count>{count}</output>
+              <button type="submit" data-submit>Increment</button>
+            </form>
+          );
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        import { Counter } from "../counter.client";
+
+        export default function Index() {
+          return (
+            <div>
+              <h1>Home</h1>
+              <Counter />
+            </div>
+          );
+        }
+      `,
+    });
+    let { cwd, port } = await vitePreview(files, templateName);
+    let baseUrl = `http://localhost:${port}`;
+    let documentRequests = trackDocumentRequests(page);
+
+    let { default: assetsManifest } = await import(
+      pathToFileURL(
+        path.join(cwd, "build/server/__vite_rsc_assets_manifest.js"),
+      ).href
+    );
+    let clientVersion = assetsManifest.clientVersion as string;
+    let newVersion = clientVersion === "deadbeef" ? "feedface" : "deadbeef";
+
+    // Swap the client version inside the server function's rerender payload,
+    // simulating an action response from a newer deployment.
+    let replacedVersion = false;
+    await page.route(`${baseUrl}/`, async (route) => {
+      if (route.request().method() !== "POST" || replacedVersion) {
+        await route.continue();
+        return;
+      }
+
+      replacedVersion = true;
+      let response = await route.fetch();
+      let source = await response.text();
+      expect(source).toContain(clientVersion);
+      await route.fulfill({
+        response,
+        body: source.replaceAll(clientVersion, newVersion),
+      });
+    });
+
+    await page.goto(`${baseUrl}/`);
+    await expect(page.locator("[data-count]")).toHaveText("0");
+
+    await page.getByRole("button", { name: "Increment" }).click();
+
+    // The stale client must reload the document instead of applying the
+    // mismatched rerender.
+    await expect.poll(() => documentRequests.length).toBe(2);
+    expect(documentRequests[1]).toBe(`${baseUrl}/`);
+    await expect(page.locator("[data-count]")).toHaveText("0");
+  });
+
   test("does not reload repeatedly for the same stale client version", async ({
     page,
     vitePreview,

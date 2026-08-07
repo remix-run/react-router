@@ -69,6 +69,7 @@ export type EncodeReplyFunction = (
 type WindowWithRouterGlobals = Window &
   typeof globalThis & {
     __reactRouterDataRouter: DataRouter;
+    __reactRouterClientVersion?: string;
     __routerInitialized: boolean;
     __routerActionID: number;
   };
@@ -172,6 +173,27 @@ export function createCallServer({
           }
 
           const rerender = await payload.rerender;
+          // Version skew is a whole-client condition, so check before the
+          // action-supersede guard below — a superseded action must still
+          // reload a stale document. Redirect rerenders carry no version and
+          // are re-checked by the data strategy when they navigate.
+          const clientVersion = globalVar.__reactRouterClientVersion;
+          if (
+            rerender &&
+            rerender.type === "render" &&
+            clientVersion !== undefined &&
+            (await handleClientVersionMismatch(
+              rerender.clientVersion !== clientVersion,
+              clientVersion,
+              createPath(
+                globalVar.__reactRouterDataRouter.state.navigation.location ||
+                  globalVar.__reactRouterDataRouter.state.location,
+              ),
+            ))
+          ) {
+            // The stale rerender is never applied; the document is reloading.
+            return;
+          }
           if (
             rerender &&
             landedActionId < actionId &&
@@ -264,6 +286,9 @@ function createRouterFromPayload({
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let { clientVersion } = payload;
+  // Baseline for skew detection in paths constructed outside this function
+  // (`createCallServer` is wired via `setServerCallback` before hydration).
+  globalVar.__reactRouterClientVersion = clientVersion;
 
   globalVar.__reactRouterRouteModules =
     globalVar.__reactRouterRouteModules ?? {};
