@@ -575,7 +575,8 @@ type UnsupportedLazyRouteObjectKey =
   | "path"
   | "id"
   | "index"
-  | "children";
+  | "children"
+  | "unstable_validateParams";
 const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
@@ -583,6 +584,7 @@ const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "id",
   "index",
   "children",
+  "unstable_validateParams",
 ]);
 export function isUnsupportedLazyRouteObjectKey(
   key: string,
@@ -609,6 +611,7 @@ const unsupportedLazyRouteFunctionKeys =
     "index",
     "middleware",
     "children",
+    "unstable_validateParams",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
   key: string,
@@ -681,6 +684,11 @@ export type BaseRouteObject = {
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
    */
   shouldRevalidate?: ShouldRevalidateFunction;
+  /**
+   * A map of route param names to regular expressions used to validate params
+   * after a route-pattern match.
+   */
+  unstable_validateParams?: Record<string, RegExp>;
   /**
    * The route handle.
    */
@@ -1145,7 +1153,7 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
@@ -1646,7 +1654,7 @@ export interface PathMatch<ParamKey extends string = string> {
   pattern: PathPattern;
 }
 
-type Mutable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
