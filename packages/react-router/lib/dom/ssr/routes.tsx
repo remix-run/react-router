@@ -85,7 +85,7 @@ function getRouteComponents(
       ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
       : undefined;
 
-  if (route.id === "root" && routeModule.Layout) {
+  if (routeModule.Layout) {
     return {
       ...(Component
         ? {
@@ -470,6 +470,30 @@ export function createClientRoutes(
         return await lazyRoutePromise;
       }
 
+      function createClientLoaderWrapper(clientLoader: ClientLoaderFunction) {
+        return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
+          clientLoader({
+            ...args,
+            async serverLoader() {
+              preventInvalidServerHandlerCall("loader", route);
+              return fetchServerLoader(singleFetch);
+            },
+          });
+      }
+
+      function createClientActionWrapper(
+        clientAction: Exclude<RouteModule["clientAction"], undefined>,
+      ) {
+        return (args: ActionFunctionArgs, singleFetch?: unknown) =>
+          clientAction({
+            ...args,
+            async serverAction() {
+              preventInvalidServerHandlerCall("action", route);
+              return fetchServerAction(singleFetch);
+            },
+          });
+      }
+
       dataRoute.lazy = {
         loader: route.hasClientLoader
           ? async () => {
@@ -481,14 +505,7 @@ export function createClientRoutes(
                   )
                 : await getLazyRoute();
               invariant(clientLoader, "No `clientLoader` export found");
-              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
-                clientLoader({
-                  ...args,
-                  async serverLoader() {
-                    preventInvalidServerHandlerCall("loader", route);
-                    return fetchServerLoader(singleFetch);
-                  },
-                });
+              return createClientLoaderWrapper(clientLoader);
             }
           : undefined,
         action: route.hasClientAction
@@ -503,14 +520,7 @@ export function createClientRoutes(
               prefetchRouteModuleChunks(route);
               let { clientAction } = await clientActionPromise;
               invariant(clientAction, "No `clientAction` export found");
-              return (args: ActionFunctionArgs, singleFetch?: unknown) =>
-                clientAction({
-                  ...args,
-                  async serverAction() {
-                    preventInvalidServerHandlerCall("action", route);
-                    return fetchServerAction(singleFetch);
-                  },
-                });
+              return createClientActionWrapper(clientAction);
             }
           : undefined,
         middleware: route.hasClientMiddleware
@@ -537,11 +547,34 @@ export function createClientRoutes(
           );
         },
         handle: async () => (await getLazyRoute()).handle,
-        // No need to wrap these in layout since the root route is never
-        // loaded via route.lazy()
-        Component: async () => (await getLazyRoute()).Component,
-        ErrorBoundary: route.hasErrorBoundary
-          ? async () => (await getLazyRoute()).ErrorBoundary
+        // Resolve `element`/`errorElement` (rather than `Component`/
+        // `ErrorBoundary`) so the rendered element identity stays stable across
+        // success/error transitions.  Both close over the same memoized module
+        // load, so the optional `Layout` is the same reference for both and
+        // stays mounted when we swap the component for the error boundary.
+        element: async () => {
+          let { Component, Layout } = await getLazyRoute();
+          if (!Component) return undefined;
+          return Layout ? (
+            <Layout>
+              <Component />
+            </Layout>
+          ) : (
+            <Component />
+          );
+        },
+        errorElement: route.hasErrorBoundary
+          ? async () => {
+              let { ErrorBoundary, Layout } = await getLazyRoute();
+              if (!ErrorBoundary) return undefined;
+              return Layout ? (
+                <Layout>
+                  <ErrorBoundary />
+                </Layout>
+              ) : (
+                <ErrorBoundary />
+              );
+            }
           : undefined,
       };
     }
@@ -648,6 +681,7 @@ async function loadRouteModuleWithBlockingLinks(
   return {
     Component: getRouteModuleComponent(routeModule),
     ErrorBoundary: routeModule.ErrorBoundary,
+    Layout: routeModule.Layout,
     clientMiddleware: routeModule.clientMiddleware,
     clientAction: routeModule.clientAction,
     clientLoader: routeModule.clientLoader,
