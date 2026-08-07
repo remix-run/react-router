@@ -1,5 +1,11 @@
 # `react-router`
 
+## v8.3.1
+
+### Patch Changes
+
+- Fix `Expected fetcher: <key>` error thrown on navigation when a fetcher is aborted during its post-action revalidation ([#15365](https://github.com/remix-run/react-router/pull/15365))
+
 ## v8.3.0
 
 ### Patch Changes

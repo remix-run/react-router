@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.3.1](#v831)
   - [v8.3.0](#v830)
     - [RSC Entry Updates](#rsc-entry-updates)
   - [v8.2.0](#v820)
@@ -110,6 +111,18 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.3.1
+
+Date: 2026-08-07
+
+### Patch Changes
+
+- `react-router` - Fix `Expected fetcher: <key>` error thrown on navigation when a fetcher is aborted during its post-action revalidation ([#15365](https://github.com/remix-run/react-router/pull/15365))
+- `@react-router/dev` - Generate JavaScript entry files at package build time so `react-router reveal --no-typescript` does not require Prettier at runtime ([#15373](https://github.com/remix-run/react-router/pull/15373))
+  - Deprecate the `--no-typescript` flag ahead of its removal in React Router v9
+
+**Full Changelog**: [`v8.3.0...v8.3.1`](https://github.com/remix-run/react-router/compare/react-router@8.3.0...react-router@8.3.1)
 
 ## v8.3.0
 
