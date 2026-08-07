@@ -867,6 +867,101 @@ test.describe("typegen", () => {
         await $("pnpm typecheck");
       });
     });
+
+    // https://github.com/remix-run/react-router/issues/14676
+    test.describe("arrow function route components", () => {
+      test("ServerComponent as arrow function typechecks", async ({
+        edit,
+        $,
+      }) => {
+        await edit({
+          "vite.config.ts": viteConfig({ rsc: true }),
+          "app/routes.ts": tsx`
+            import { type RouteConfig, route } from "@react-router/dev/routes";
+
+            export default [
+              route("server-component/:id", "routes/server-component.tsx")
+            ] satisfies RouteConfig;
+          `,
+          "app/routes/server-component.tsx": tsx`
+            import type { Expect, Equal } from "../expect-type"
+            import type { Route } from "./+types/server-component"
+
+            export function loader({ params }: Route.LoaderArgs) {
+              type Test = Expect<Equal<typeof params, { id: string} >>
+              return { server: "server" }
+            }
+
+            export function action() {
+              return { server: "server" }
+            }
+
+            export const ServerComponent = ({
+              loaderData,
+              actionData,
+            }: Route.ServerComponentProps) => {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string }>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
+              return (
+                <>
+                  <h1>ServerComponent</h1>
+                  <p>Loader data: {loaderData.server}</p>
+                  <p>Action data: {actionData?.server}</p>
+                </>
+              )
+            }
+          `,
+        });
+        await $("pnpm typecheck");
+      });
+
+      test("default (Component) as arrow function typechecks", async ({
+        edit,
+        $,
+      }) => {
+        await edit({
+          "vite.config.ts": viteConfig({ rsc: false }),
+          "app/routes.ts": tsx`
+            import { type RouteConfig, route } from "@react-router/dev/routes";
+
+            export default [
+              route("client-component/:id", "routes/client-component.tsx")
+            ] satisfies RouteConfig;
+          `,
+          "app/routes/client-component.tsx": tsx`
+            import type { Expect, Equal } from "../expect-type"
+            import type { Route } from "./+types/client-component"
+
+            export function loader({ params }: Route.LoaderArgs) {
+              type Test = Expect<Equal<typeof params, { id: string} >>
+              return { server: "server" }
+            }
+
+            export function action() {
+              return { server: "server" }
+            }
+
+            const Component = ({
+              loaderData,
+              actionData,
+            }: Route.ComponentProps) => {
+              type TestLoaderData = Expect<Equal<typeof loaderData, { server: string }>>
+              type TestActionData = Expect<Equal<typeof actionData, { server: string } | undefined>>
+              return (
+                <>
+                  <h1>default (Component)</h1>
+                  <p>Loader data: {loaderData.server}</p>
+                  {actionData && <p>Action data: {actionData.server}</p>}
+                </>
+              )
+            }
+
+            export default Component
+          `,
+        });
+        await $("pnpm typecheck");
+      });
+    });
   });
 
   test("layout without pages", async ({ edit, $ }) => {

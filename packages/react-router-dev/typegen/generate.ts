@@ -287,57 +287,65 @@ function getRouteAnnotations({
     Babel.generate(matchesType).code +
     "\n\n" +
     ts`
-      type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;
+      // The Route type aliases below index directly into
+      // \`GetAnnotations<...>\` instead of going through an intermediate
+      // \`type Annotations = GetAnnotations<...>\` alias. The intermediate
+      // alias forced TypeScript to eagerly compute the full annotations
+      // object, which triggered a type-alias circularity error
+      // (TS2456 / TS7022) when \`Route.ComponentProps\` was used as the
+      // contextual parameter type of a \`const\` arrow-function route
+      // export. See https://github.com/remix-run/react-router/issues/14676
+      type AnnotationsInput = Info & { module: Module, matches: Matches };
 
       export namespace Route {
         // links
-        export type LinkDescriptors = Annotations["LinkDescriptors"];
-        export type LinksFunction = Annotations["LinksFunction"];
+        export type LinkDescriptors = GetAnnotations<AnnotationsInput>["LinkDescriptors"];
+        export type LinksFunction = GetAnnotations<AnnotationsInput>["LinksFunction"];
 
         // meta
-        export type MetaArgs = Annotations["MetaArgs"];
-        export type MetaDescriptors = Annotations["MetaDescriptors"];
-        export type MetaFunction = Annotations["MetaFunction"];
+        export type MetaArgs = GetAnnotations<AnnotationsInput>["MetaArgs"];
+        export type MetaDescriptors = GetAnnotations<AnnotationsInput>["MetaDescriptors"];
+        export type MetaFunction = GetAnnotations<AnnotationsInput>["MetaFunction"];
 
         // headers
-        export type HeadersArgs = Annotations["HeadersArgs"];
-        export type HeadersFunction = Annotations["HeadersFunction"];
+        export type HeadersArgs = GetAnnotations<AnnotationsInput>["HeadersArgs"];
+        export type HeadersFunction = GetAnnotations<AnnotationsInput>["HeadersFunction"];
 
         // middleware
-        export type MiddlewareFunction = Annotations["MiddlewareFunction"];
+        export type MiddlewareFunction = GetAnnotations<AnnotationsInput>["MiddlewareFunction"];
 
         // clientMiddleware
-        export type ClientMiddlewareFunction = Annotations["ClientMiddlewareFunction"];
+        export type ClientMiddlewareFunction = GetAnnotations<AnnotationsInput>["ClientMiddlewareFunction"];
 
         // loader
-        export type LoaderArgs = Annotations["LoaderArgs"];
+        export type LoaderArgs = GetAnnotations<AnnotationsInput>["LoaderArgs"];
 
         // clientLoader
-        export type ClientLoaderArgs = Annotations["ClientLoaderArgs"];
+        export type ClientLoaderArgs = GetAnnotations<AnnotationsInput>["ClientLoaderArgs"];
 
         // action
-        export type ActionArgs = Annotations["ActionArgs"];
+        export type ActionArgs = GetAnnotations<AnnotationsInput>["ActionArgs"];
 
         // clientAction
-        export type ClientActionArgs = Annotations["ClientActionArgs"];
+        export type ClientActionArgs = GetAnnotations<AnnotationsInput>["ClientActionArgs"];
 
         // HydrateFallback
-        export type HydrateFallbackProps = Annotations["HydrateFallbackProps"];
+        export type HydrateFallbackProps = GetAnnotations<AnnotationsInput>["HydrateFallbackProps"];
 
         // ServerHydrateFallback
-        export type ServerHydrateFallbackProps = Annotations["ServerHydrateFallbackProps"];
+        export type ServerHydrateFallbackProps = GetAnnotations<AnnotationsInput>["ServerHydrateFallbackProps"];
 
         // Component
-        export type ComponentProps = Annotations["ComponentProps"];
+        export type ComponentProps = GetAnnotations<AnnotationsInput>["ComponentProps"];
 
         // ServerComponent
-        export type ServerComponentProps = Annotations["ServerComponentProps"];
+        export type ServerComponentProps = GetAnnotations<AnnotationsInput>["ServerComponentProps"];
 
         // ErrorBoundary
-        export type ErrorBoundaryProps = Annotations["ErrorBoundaryProps"];
+        export type ErrorBoundaryProps = GetAnnotations<AnnotationsInput>["ErrorBoundaryProps"];
 
         // ServerErrorBoundary
-        export type ServerErrorBoundaryProps = Annotations["ServerErrorBoundaryProps"];
+        export type ServerErrorBoundaryProps = GetAnnotations<AnnotationsInput>["ServerErrorBoundaryProps"];
       }
     `;
   return { filename, content };
