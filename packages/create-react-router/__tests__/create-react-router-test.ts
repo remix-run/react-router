@@ -1264,6 +1264,75 @@ describe("create-react-router CLI", () => {
       expect(status).toBe(1);
     });
   });
+
+  // https://github.com/remix-run/react-router/issues/15385
+  describe("reporting a failed install", () => {
+    function mockSpawnFailure(stderrOutput: string | null) {
+      mockedSpawn.mockImplementation(() => {
+        let child = new EventEmitter();
+        if (stderrOutput !== null) {
+          let stderrStream = new EventEmitter();
+          (child as unknown as { stderr: EventEmitter }).stderr = stderrStream;
+          process.nextTick(() => stderrStream.emit("data", stderrOutput));
+        }
+        process.nextTick(() => child.emit("exit", 1, null));
+        return child as ReturnType<typeof spawn>;
+      });
+    }
+
+    async function runFailingInstall(name: string) {
+      let projectDir = getProjectDir(name);
+      let stdoutMock = jest
+        .spyOn(process.stdout, "write")
+        .mockImplementation(() => true);
+      let written: string[] = [];
+      let stderrMock = jest
+        .spyOn(process.stderr, "write")
+        .mockImplementation((chunk: any) => {
+          written.push(String(chunk));
+          return true;
+        });
+
+      try {
+        await expect(
+          createReactRouter([
+            projectDir,
+            "--template",
+            path.join(__dirname, "fixtures", "blank"),
+            "--no-git-init",
+            "--yes",
+            "--no-agent-skills",
+          ]),
+        ).rejects.toThrow();
+      } finally {
+        stdoutMock.mockReset();
+        stderrMock.mockReset();
+      }
+
+      return stripAnsi(written.join(""));
+    }
+
+    it("includes the package manager output when the install fails", async () => {
+      mockSpawnFailure(
+        "npm error code EACCES\nnpm error syscall mkdir\nnpm error path /usr/lib/node_modules\n",
+      );
+
+      let output = await runFailingInstall("install-failure-stderr");
+
+      expect(output).toContain("Failed to install dependencies.");
+      expect(output).toContain("npm error code EACCES");
+      expect(output).toContain("npm error syscall mkdir");
+    });
+
+    it("points at --show-install-output when there is nothing to report", async () => {
+      mockSpawnFailure(null);
+
+      let output = await runFailingInstall("install-failure-silent");
+
+      expect(output).toContain("Failed to install dependencies.");
+      expect(output).toContain("--show-install-output");
+    });
+  });
 });
 
 async function execCreateReactRouter({

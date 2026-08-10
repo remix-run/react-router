@@ -622,11 +622,45 @@ async function installDependencies({
   try {
     await runCommand(pkgManager, ["install"], {
       cwd,
-      stdio: showInstallOutput ? "inherit" : "ignore",
+      // Capture stderr when it isn't already being streamed, so that a failure
+      // can report why it failed rather than only that it did.
+      stdio: showInstallOutput ? "inherit" : ["ignore", "ignore", "pipe"],
     });
   } catch (err) {
-    error("Oh no!", "Failed to install dependencies.");
+    error("Oh no!", [
+      "Failed to install dependencies.",
+      ...(showInstallOutput ? [] : installFailureDetails(err)),
+    ]);
     throw err;
+  }
+}
+
+// A package manager can print a lot before the line that actually explains the
+// failure, so only the tail is surfaced here.
+const INSTALL_ERROR_LINES = 10;
+
+function installFailureDetails(err: unknown): string[] {
+  let stderr = err instanceof RunCommandError ? err.stderr : "";
+  let lines = stderr
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return [
+      `Re-run with ${color.bold("--show-install-output")} to see the full output.`,
+    ];
+  }
+
+  return lines.slice(-INSTALL_ERROR_LINES);
+}
+
+class RunCommandError extends Error {
+  stderr: string;
+  constructor(message: string, stderr: string) {
+    super(message);
+    this.name = "RunCommandError";
+    this.stderr = stderr;
   }
 }
 
@@ -637,16 +671,21 @@ function runCommand(
 ) {
   return new Promise<void>((resolve, reject) => {
     let child = spawn(command, args, options);
+    let stderr = "";
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk;
+    });
     child.on("error", reject);
     child.on("exit", (code, signal) => {
       if (code === 0) {
         resolve();
       } else {
         reject(
-          new Error(
+          new RunCommandError(
             signal
               ? `${command} exited with signal ${signal}`
               : `${command} exited with code ${code}`,
+            stderr,
           ),
         );
       }
