@@ -840,6 +840,9 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   // fetch streaming scripts
   if (renderMeta) {
     renderMeta.didRenderScripts = true;
+    // If `<StreamTransfer>` rendered before us (because a component above
+    // `<Scripts>` suspended) it's suspended waiting on this signal
+    renderMeta.onScriptsRendered?.();
   }
 
   let matches = getActiveMatches(routerMatches, null, isSpaMode);
