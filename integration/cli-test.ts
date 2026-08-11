@@ -213,7 +213,7 @@ const helpText = dedent`
       --json              Print the routes as JSON
     \`reveal\` Options:
       --config, -c        Use specified Vite config file (string)
-      --no-typescript     Generate plain JavaScript files
+      --no-typescript     Generate plain JavaScript files (deprecated; will be removed in v9)
     \`typegen\` Options:
       --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
@@ -461,10 +461,46 @@ test.describe("cli", () => {
       expect(existsSync(entryServerFile)).toBeFalsy();
       expect(existsSync(entryClientFile)).toBeFalsy();
 
-      run(["reveal", "--no-typescript"], { cwd });
+      let { stderr, status } = run(["reveal", "--no-typescript"], {
+        cwd,
+        env: {
+          ...process.env,
+          FORCE_COLOR: undefined,
+          NO_COLOR: "1",
+        },
+      });
 
       expect(existsSync(entryServerFile)).toBeTruthy();
       expect(existsSync(entryClientFile)).toBeTruthy();
+      expect(readFileSync(entryServerFile, "utf-8")).toContain(
+        "renderToPipeableStream",
+      );
+      expect(readFileSync(entryServerFile, "utf-8")).not.toContain(
+        "import type",
+      );
+      expect(stderr.toString().trim()).toBe(
+        "The --no-typescript flag is deprecated and will be removed in React Router v9.",
+      );
+      expect(status).toBe(0);
+      expect(build({ cwd }).status).toBe(0);
+    });
+
+    test("generates a web JavaScript server entry for non-Node projects", async () => {
+      const cwd = await createProject();
+      let packageJsonPath = path.join(cwd, "package.json");
+      let pkg = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+      delete pkg.dependencies["@react-router/express"];
+      delete pkg.dependencies["@react-router/node"];
+      delete pkg.dependencies["@react-router/serve"];
+      writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2));
+
+      let entryServerFile = path.join(cwd, "app", "entry.server.jsx");
+
+      run(["reveal", "entry.server", "--no-typescript"], { cwd });
+
+      expect(readFileSync(entryServerFile, "utf-8")).toContain(
+        "renderToReadableStream",
+      );
     });
   });
 

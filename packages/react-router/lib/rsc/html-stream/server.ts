@@ -109,10 +109,7 @@ async function writeRSCStream(
           controller,
           nonce,
         );
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {
+      } catch {
         let base64 = JSON.stringify(btoa(String.fromCodePoint(...chunk)));
         writeChunk(
           `Uint8Array.from(atob(${base64}), m => m.codePointAt(0))`,

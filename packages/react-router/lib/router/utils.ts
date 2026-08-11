@@ -2425,10 +2425,7 @@ export function parseToInfo<T extends To | string>(
       } else {
         isExternal = true;
       }
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {
+    } catch {
       // We can't do external URL detection without a valid URL
       warning(
         false,

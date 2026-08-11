@@ -4,6 +4,7 @@ import { defineConfig } from "tsdown";
 
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.ts";
+import { transpile as convertFileToJS } from "./cli/useJavascript.ts";
 
 import pkg from "./package.json" with { type: "json" };
 
@@ -34,6 +35,16 @@ async function copyBuildAssets() {
       `config/defaults/${file}`,
       `dist/config/defaults/${file}`,
     );
+    if (file.endsWith(".tsx")) {
+      let inputFile = `config/defaults/${file}`;
+      let tsx = await fsp.readFile(inputFile, "utf-8");
+      let jsx = await convertFileToJS(tsx, { filename: inputFile });
+      await fsp.writeFile(
+        `dist/config/defaults/${file.replace(/\.tsx$/, ".jsx")}`,
+        jsx,
+        "utf-8",
+      );
+    }
   }
 
   await fsp.mkdir("dist/config/default-rsc-entries", {

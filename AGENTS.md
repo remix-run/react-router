@@ -4,7 +4,7 @@
 
 - **Build**: `pnpm build` (all packages) or `pnpm run --filter <package> build` (single package)
 - **Test (Jest)**: `pnpm test` (all packages), `pnpm test packages/<package>/` (single package), `pnpm test packages/react-router/__tests__/router/fetchers-test.ts` (single file), or `pnpm test -- -t "action fetch"` (tests matching name)
-- **Integration tests (Playwright)**: `pnpm test:integration --project chromium` (build + test all), `pnpm test:integration:run --project chromium` (test only, all), `pnpm test:integration:run --project chromium integration/middleware-test.ts` (single file), or `pnpm test:integration:run --project chromium -g "middleware"` (tests matching name)
+- **Integration tests (Playwright)**: `pnpm test:integration --project chromium` (build + test all), `pnpm test:integration:run --project chromium` (test only, all), `pnpm test:integration:run integration/middleware-test.ts --project chromium` (single file), or `pnpm test:integration:run --project chromium -g "middleware"` (tests matching name)
 - **Typecheck**: `pnpm run typecheck`
 - **Lint**: `pnpm run lint`
 - **Docs generation**: `pnpm run docs` (regenerates API docs from JSDoc)
@@ -56,7 +56,7 @@ Use Playwright for Vite plugin, build pipeline, SSR/hydration, RSC, type generat
 ```bash
 pnpm test:integration --project chromium                                     # Build + test all
 pnpm test:integration:run --project chromium                                 # Test only, all
-pnpm test:integration:run --project chromium integration/middleware-test.ts  # Single file
+pnpm test:integration:run integration/middleware-test.ts --project chromium  # Single file
 pnpm test:integration:run --project chromium -g "middleware"                 # Tests matching name
 ```
 

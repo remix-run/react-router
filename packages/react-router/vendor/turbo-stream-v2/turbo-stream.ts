@@ -70,10 +70,7 @@ async function decodeInitial(
   let line: unknown;
   try {
     line = JSON.parse(read.value);
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    reason
-  ) {
+  } catch {
     throw new SyntaxError();
   }
 
@@ -103,10 +100,7 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          reason
-        ) {
+        } catch {
           throw new SyntaxError();
         }
 
@@ -126,10 +120,7 @@ async function decodeDeferred(
         let jsonLine: unknown;
         try {
           jsonLine = JSON.parse(lineData);
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          reason
-        ) {
+        } catch {
           throw new SyntaxError();
         }
         const value = unflatten.call(this, jsonLine);
