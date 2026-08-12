@@ -7680,11 +7680,11 @@ function persistAppliedTransitions(
 }
 
 function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
+  let resolve!: (val?: T) => Promise<void>;
+  let reject!: (error?: Error) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
-    resolve = async (val: T) => {
-      res(val);
+    resolve = async (val?: T) => {
+      res(val as T);
       try {
         await promise;
       } catch {}
@@ -7698,9 +7698,7 @@ function createDeferred<T = unknown>() {
   });
   return {
     promise,
-    //@ts-ignore
     resolve,
-    //@ts-ignore
     reject,
   };
 }
