@@ -37,26 +37,33 @@ export function getKeyedLinksForMatches(
   return dedupeLinkDescriptors(descriptors, preloads);
 }
 
-function getRouteCssDescriptors(route: EntryRoute): HtmlLinkDescriptor[] {
+function getRouteCssDescriptors(
+  route: EntryRoute,
+  crossOrigin?: "anonymous" | "use-credentials",
+): HtmlLinkDescriptor[] {
   if (!route.css) return [];
-  return route.css.map((href) => ({ rel: "stylesheet", href }));
+  return route.css.map((href) => ({ rel: "stylesheet", href, crossOrigin }));
 }
 
-export async function prefetchRouteCss(route: EntryRoute): Promise<void> {
+export async function prefetchRouteCss(
+  route: EntryRoute,
+  crossOrigin?: "anonymous" | "use-credentials",
+): Promise<void> {
   if (!route.css) return;
-  let descriptors = getRouteCssDescriptors(route);
+  let descriptors = getRouteCssDescriptors(route, crossOrigin);
   await Promise.all(descriptors.map(prefetchStyleLink));
 }
 
 export async function prefetchStyleLinks(
   route: EntryRoute,
   routeModule: RouteModule,
+  crossOrigin?: "anonymous" | "use-credentials",
 ): Promise<void> {
   if ((!route.css && !routeModule.links) || !isPreloadSupported()) return;
 
   let descriptors: LinkDescriptor[] = [];
   if (route.css) {
-    descriptors.push(...getRouteCssDescriptors(route));
+    descriptors.push(...getRouteCssDescriptors(route, crossOrigin));
   }
   if (routeModule.links) {
     descriptors.push(...routeModule.links());
@@ -70,6 +77,12 @@ export async function prefetchStyleLinks(
         ...descriptor,
         rel: "preload",
         as: "style",
+        // Preload must fetch with the same CORS mode as the eventual
+        // stylesheet load, otherwise the browser discards the preload and
+        // fetches the asset twice. A per-descriptor `crossOrigin` wins;
+        // otherwise fall back to the app-wide value (matching `<Links
+        // crossOrigin>` / the cross-origin asset host).
+        crossOrigin: descriptor.crossOrigin ?? crossOrigin,
       } as HtmlLinkDescriptor);
     }
   }
@@ -169,8 +182,17 @@ export async function getKeyedPrefetchLinks(
       .filter((link) => link.rel === "stylesheet" || link.rel === "preload")
       .map((link) =>
         link.rel === "stylesheet"
-          ? ({ ...link, rel: "prefetch", as: "style" } as HtmlLinkDescriptor)
-          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor),
+          ? ({
+              ...link,
+              rel: "prefetch",
+              as: "style",
+              crossOrigin: link.crossOrigin ?? manifest.crossOrigin,
+            } as HtmlLinkDescriptor)
+          : ({
+              ...link,
+              rel: "prefetch",
+              crossOrigin: link.crossOrigin ?? manifest.crossOrigin,
+            } as HtmlLinkDescriptor),
       ),
   );
 }

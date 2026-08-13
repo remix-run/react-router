@@ -126,6 +126,10 @@ function createHydratedRouter({
     ssrInfo.context.state,
     ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode,
+    "",
+    undefined,
+    undefined,
+    ssrInfo.manifest.crossOrigin,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
