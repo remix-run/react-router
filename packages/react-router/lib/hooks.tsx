@@ -853,6 +853,26 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
+  // `matchRoutes` decodes the pathname a segment at a time, and `decodePath`
+  // escapes any `/` that decoding produced back to `%2F` so it doesn't turn into
+  // a segment boundary. The result can't be re-encoded on its own, because a
+  // `%2F` in it may have come from either `%2F` (an escaped slash) or `%252F` (a
+  // literal "%2F") in the URL. Decoding preserves the number of segments though,
+  // so map a decoded match pathname back onto the encoded one by segment index,
+  // the same way the parent base is removed above.
+  let remainingSegments =
+    remainingPathname === "/"
+      ? []
+      : remainingPathname.replace(/^\//, "").split("/");
+
+  let toEncodedPathname = (decodedPathname: string) => {
+    if (decodedPathname === "/") {
+      return "/";
+    }
+    let segmentCount = decodedPathname.replace(/^\//, "").split("/").length;
+    return "/" + remainingSegments.slice(0, segmentCount).join("/");
+  };
+
   let matches =
     dataRouterOpts && dataRouterOpts.state.matches.length
       ? // If we're in a data router, use the matches we've already identified but ensure
@@ -889,17 +909,16 @@ export function useRoutesImpl(
           pathname: joinPaths([
             parentPathnameBase,
             // Re-encode pathnames that were decoded inside matchRoutes.
-            // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
+            // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
             // `new URL()` internally and we need to prevent it from treating
             // them as separators
             navigator.encodeLocation
               ? navigator.encodeLocation(
-                  match.pathname
-                    .replace(/%/g, "%25")
+                  toEncodedPathname(match.pathname)
                     .replace(/\?/g, "%3F")
                     .replace(/#/g, "%23"),
                 ).pathname
-              : match.pathname,
+              : toEncodedPathname(match.pathname),
           ]),
           pathnameBase:
             match.pathnameBase === "/"
@@ -907,17 +926,16 @@ export function useRoutesImpl(
               : joinPaths([
                   parentPathnameBase,
                   // Re-encode pathnames that were decoded inside matchRoutes
-                  // Pre-encode `%`, `?` and `#` ahead of `encodeLocation` because it uses
+                  // Pre-encode `?` and `#` ahead of `encodeLocation` because it uses
                   // `new URL()` internally and we need to prevent it from treating
                   // them as separators
                   navigator.encodeLocation
                     ? navigator.encodeLocation(
-                        match.pathnameBase
-                          .replace(/%/g, "%25")
+                        toEncodedPathname(match.pathnameBase)
                           .replace(/\?/g, "%3F")
                           .replace(/#/g, "%23"),
                       ).pathname
-                    : match.pathnameBase,
+                    : toEncodedPathname(match.pathnameBase),
                 ]),
         }),
       ),
