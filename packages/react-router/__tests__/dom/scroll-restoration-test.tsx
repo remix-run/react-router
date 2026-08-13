@@ -192,6 +192,46 @@ describe(`ScrollRestoration`, () => {
     consoleWarnMock.mockRestore();
   });
 
+  it("re-enables manual scroll restoration when the page is restored from the bfcache", () => {
+    let testWindow = getWindow("/base");
+    window.scrollTo = jest.fn();
+
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <ScrollRestoration />
+              </>
+            );
+          },
+          children: testPages,
+        },
+      ],
+      { basename: "/base", window: testWindow },
+    );
+    render(<RouterProvider router={router} />);
+
+    // While <ScrollRestoration> is mounted we own scroll restoration
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // Hand it back to the browser when the page is hidden, so that a
+    // re-created document restores its own scroll position
+    window.dispatchEvent(new Event("pagehide"));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A bfcache restore keeps this document (and this component) alive, so we
+    // own scroll restoration again
+    let pageshow = new Event("pageshow");
+    Object.defineProperty(pageshow, "persisted", { value: true });
+    window.dispatchEvent(pageshow);
+
+    expect(window.history.scrollRestoration).toBe("manual");
+  });
+
   describe("SSR", () => {
     let scrollTo = window.scrollTo;
     beforeAll(() => {

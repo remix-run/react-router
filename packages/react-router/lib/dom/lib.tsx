@@ -3099,7 +3099,21 @@ export function useScrollRestoration({
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
     window.history.scrollRestoration = "manual";
+
+    // The pagehide handler below hands scroll restoration back to the browser
+    // so that a re-created document restores its own scroll position. A
+    // bfcache restore keeps this document alive instead, so take it back over
+    // — otherwise the browser restores scroll on subsequent history
+    // traversals before we've rendered the destination route.
+    let handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.history.scrollRestoration = "manual";
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+
     return () => {
+      window.removeEventListener("pageshow", handlePageShow);
       window.history.scrollRestoration = "auto";
     };
   }, []);
