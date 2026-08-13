@@ -193,6 +193,8 @@ describe(`ScrollRestoration`, () => {
   });
 
   it("re-enables manual scroll restoration when the page is restored from the bfcache", () => {
+    jest.restoreAllMocks();
+
     let testWindow = getWindow("/base");
     window.scrollTo = jest.fn();
 
@@ -213,7 +215,7 @@ describe(`ScrollRestoration`, () => {
       ],
       { basename: "/base", window: testWindow },
     );
-    render(<RouterProvider router={router} />);
+    let { unmount } = render(<RouterProvider router={router} />);
 
     // While <ScrollRestoration> is mounted we own scroll restoration
     expect(window.history.scrollRestoration).toBe("manual");
@@ -223,13 +225,20 @@ describe(`ScrollRestoration`, () => {
     window.dispatchEvent(new Event("pagehide"));
     expect(window.history.scrollRestoration).toBe("auto");
 
+    // A discarded document goes through mount again, so we leave that case
+    // to the browser
+    window.dispatchEvent(pageShowEvent(false));
+    expect(window.history.scrollRestoration).toBe("auto");
+
     // A bfcache restore keeps this document (and this component) alive, so we
     // own scroll restoration again
-    let pageshow = new Event("pageshow");
-    Object.defineProperty(pageshow, "persisted", { value: true });
-    window.dispatchEvent(pageshow);
-
+    window.dispatchEvent(pageShowEvent(true));
     expect(window.history.scrollRestoration).toBe("manual");
+
+    // …until we're unmounted, after which the browser keeps control
+    unmount();
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("auto");
   });
 
   describe("SSR", () => {
@@ -416,6 +425,12 @@ describe(`ScrollRestoration`, () => {
     });
   });
 });
+
+function pageShowEvent(persisted: boolean) {
+  let event = new Event("pageshow");
+  Object.defineProperty(event, "persisted", { value: persisted });
+  return event;
+}
 
 const testPages = [
   {
