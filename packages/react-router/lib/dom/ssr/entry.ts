@@ -66,4 +66,9 @@ export interface AssetsManifest {
     runtime: string;
   };
   sri?: Record<string, string> | true;
+  // The CORS mode to use when the client imperatively prefetches assets
+  // (e.g. `<Link prefetch>` CSS preloads). Mirrors the `<Links crossOrigin>` /
+  // `<Scripts crossOrigin>` render props so prefetched assets served from a
+  // cross-origin host fetch with a matching CORS mode and aren't double-fetched.
+  crossOrigin?: "anonymous" | "use-credentials";
 }
