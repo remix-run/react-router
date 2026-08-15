@@ -36,6 +36,7 @@ import type {
 } from "../router/utils";
 import {
   defaultMapRouteProperties,
+  decodePath,
   ErrorResponseImpl,
   SUPPORTED_ERROR_TYPES,
   joinPaths,
@@ -1650,6 +1651,17 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       routerState && routerState.navigation && routerState.navigation.location
         ? routerState.navigation.location.pathname
         : null;
+
+    // When generated, `toPathname` is URL-encoded (e.g. `%7C` for `|`), but
+    // `location.pathname` from the browser keeps these characters raw.
+    // Decode both sides so pathnames with special characters are compared
+    // consistently. `decodePath` is safe because it preserves already-encoded
+    // `%2F` sequences and leaves malformed encodings unchanged.
+    toPathname = decodePath(toPathname);
+    locationPathname = decodePath(locationPathname);
+    nextLocationPathname = nextLocationPathname
+      ? decodePath(nextLocationPathname)
+      : null;
 
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
