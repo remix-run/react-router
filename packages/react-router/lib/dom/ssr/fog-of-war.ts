@@ -299,6 +299,48 @@ export async function handleClientVersionMismatch(
   return true;
 }
 
+// A stalled manifest request must eventually fail the discovery rather than
+// hang it: `fetch()` has no default timeout, so a request that never settles
+// (proxy stall, exhausted HTTP/1.1 connection pool, dropped connection)
+// previously pinned the pending navigation or fetcher in a permanent
+// "loading"/"submitting" state with no error surfaced anywhere. Timing out
+// makes the discovery throw, which the router already routes to the nearest
+// error boundary via `discoverRoutes`'s error result.
+export const FOG_OF_WAR_TIMEOUT_MS = 10_000;
+
+// `AbortSignal.any`/`AbortSignal.timeout` composition, written by hand so we
+// don't raise the browser support floor for this one call site.
+function signalWithTimeout(
+  signal: AbortSignal | undefined,
+  timeoutMs: number,
+): { signal: AbortSignal; cleanup: () => void } {
+  let controller = new AbortController();
+  let timeoutId = setTimeout(
+    () =>
+      controller.abort(
+        new Error(
+          `Route discovery manifest request timed out after ${timeoutMs}ms`,
+        ),
+      ),
+    timeoutMs,
+  );
+  let onAbort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) {
+      onAbort();
+    } else {
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+  }
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener("abort", onAbort);
+    },
+  };
+}
+
 export async function fetchAndApplyManifestPatches(
   paths: string[],
   errorReloadPath: string | null,
@@ -335,8 +377,12 @@ export async function fetchAndApplyManifestPatches(
   }
 
   let serverPatches: AssetsManifest["routes"];
+  let { signal: fetchSignal, cleanup } = signalWithTimeout(
+    signal,
+    FOG_OF_WAR_TIMEOUT_MS,
+  );
   try {
-    let res = await fetch(url, { signal });
+    let res = await fetch(url, { signal: fetchSignal });
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);
@@ -354,8 +400,17 @@ export async function fetchAndApplyManifestPatches(
 
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
+    // The caller (navigation/fetcher) aborting stays silent, as before. A
+    // timeout abort is NOT silent: the caller signal is still live, so the
+    // rejection propagates and settles the pending state with an error
+    // instead of hanging it forever.
     if (signal?.aborted) return;
+    if (fetchSignal.aborted && fetchSignal.reason instanceof Error) {
+      throw fetchSignal.reason;
+    }
     throw e;
+  } finally {
+    cleanup();
   }
 
   // Patch routes we don't know about yet into the manifest
