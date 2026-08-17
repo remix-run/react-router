@@ -5,8 +5,8 @@ import type { LinkDescriptor } from "../../../lib/router/links";
 import { getKeyedPrefetchLinks } from "../../../lib/dom/ssr/links";
 
 // Minimal fakes for the pure prefetch-link transform. `getKeyedPrefetchLinks`
-// only reads `match.route.id`, `manifest.routes[id]`, `manifest.crossOrigin`,
-// and the cached route module's `links()`, so we stub just those.
+// only reads `match.route.id`, `manifest.routes[id]`, and the cached route
+// module's `links()`, so we stub just those.
 function setup(
   links: LinkDescriptor[],
   crossOrigin?: AssetsManifest["crossOrigin"],
@@ -37,49 +37,31 @@ async function prefetchLinks(
 }
 
 describe("getKeyedPrefetchLinks crossOrigin", () => {
-  it("applies manifest.crossOrigin to prefetched stylesheet links", async () => {
-    let [link] = await prefetchLinks(
-      [{ rel: "stylesheet", href: "/assets/styles.css" }],
-      "anonymous",
-    );
+  it("preserves descriptor crossOrigin while transforming links", async () => {
+    let [link] = await prefetchLinks([
+      {
+        rel: "stylesheet",
+        href: "/assets/styles.css",
+        crossOrigin: "use-credentials",
+      },
+    ]);
     expect(link).toMatchObject({
       rel: "prefetch",
       as: "style",
       href: "/assets/styles.css",
-      crossOrigin: "anonymous",
-    });
-  });
-
-  it("applies manifest.crossOrigin to prefetched preload links", async () => {
-    let [link] = await prefetchLinks(
-      [{ rel: "preload", as: "font", href: "/assets/font.woff2" }],
-      "use-credentials",
-    );
-    expect(link).toMatchObject({
-      rel: "prefetch",
-      href: "/assets/font.woff2",
       crossOrigin: "use-credentials",
     });
   });
 
-  it("lets a per-descriptor crossOrigin win over manifest.crossOrigin", async () => {
+  it("leaves descriptor crossOrigin undefined when config provides one", async () => {
     let [link] = await prefetchLinks(
-      [
-        {
-          rel: "stylesheet",
-          href: "/assets/styles.css",
-          crossOrigin: "use-credentials",
-        },
-      ],
+      [{ rel: "preload", as: "font", href: "/assets/font.woff2" }],
       "anonymous",
     );
-    expect(link).toMatchObject({ crossOrigin: "use-credentials" });
-  });
-
-  it("leaves crossOrigin undefined when neither source provides one", async () => {
-    let [link] = await prefetchLinks([
-      { rel: "stylesheet", href: "/assets/styles.css" },
-    ]);
+    expect(link).toMatchObject({
+      rel: "prefetch",
+      href: "/assets/font.woff2",
+    });
     expect(link.crossOrigin).toBeUndefined();
   });
 });

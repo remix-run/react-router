@@ -285,6 +285,9 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
   if (nonce == null && contextNonce) {
     nonce = contextNonce;
   }
+  if (crossOrigin == null) {
+    crossOrigin = manifest.crossOrigin;
+  }
 
   return (
     <>
@@ -567,7 +570,9 @@ function PrefetchPageLinksImpl({
           key={key}
           nonce={linkProps.nonce}
           {...link}
-          crossOrigin={link.crossOrigin ?? linkProps.crossOrigin}
+          crossOrigin={
+            link.crossOrigin ?? linkProps.crossOrigin ?? manifest.crossOrigin
+          }
         />
       ))}
     </>
@@ -834,6 +839,9 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   // internally without props (such as in the default `HydrateFallback`).
   if (scriptProps.nonce == null && contextNonce) {
     scriptProps = { ...scriptProps, nonce: contextNonce };
+  }
+  if (scriptProps.crossOrigin == null && manifest.crossOrigin) {
+    scriptProps = { ...scriptProps, crossOrigin: manifest.crossOrigin };
   }
 
   // Let <ServerRouter> know that we hydrated and we should render the single

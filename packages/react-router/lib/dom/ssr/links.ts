@@ -186,12 +186,10 @@ export async function getKeyedPrefetchLinks(
               ...link,
               rel: "prefetch",
               as: "style",
-              crossOrigin: link.crossOrigin ?? manifest.crossOrigin,
             } as HtmlLinkDescriptor)
           : ({
               ...link,
               rel: "prefetch",
-              crossOrigin: link.crossOrigin ?? manifest.crossOrigin,
             } as HtmlLinkDescriptor),
       ),
   );

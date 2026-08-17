@@ -22,6 +22,7 @@ export type ManifestRoute = {
 export type Manifest = {
   version: string;
   url?: string;
+  crossOrigin?: "anonymous" | "use-credentials";
   entry: {
     module: string;
     imports: string[];

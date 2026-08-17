@@ -210,10 +210,23 @@ function createHydratedRouter({
     router.initialize();
   }
 
+  let createRoutesForHMR = (
+    ...args: Parameters<typeof createClientRoutesWithHMRRevalidationOptOut>
+  ) =>
+    createClientRoutesWithHMRRevalidationOptOut(
+      args[0],
+      args[1],
+      args[2],
+      args[3],
+      args[4],
+      args[5],
+      localSsrInfo.manifest.crossOrigin,
+    );
+
   // @ts-ignore
   router.createRoutesForHMR =
     /* spacer so ts-ignore does not affect the right hand of the assignment */
-    createClientRoutesWithHMRRevalidationOptOut;
+    createRoutesForHMR;
   window.__reactRouterDataRouter = router;
 
   return router;

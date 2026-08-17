@@ -1,5 +1,5 @@
 import { createStaticHandler } from "react-router";
-import { act, fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import * as React from "react";
 
 import {
@@ -8,6 +8,7 @@ import {
   Links,
   NavLink,
   Outlet,
+  PrefetchPageLinks,
   RouterProvider,
   Scripts,
 } from "../../../index";
@@ -154,6 +155,96 @@ describe("<Link />", () => {
 
 describe("<NavLink />", () => {
   itPrefetchesPageLinks(NavLink);
+});
+
+describe("<PrefetchPageLinks />", () => {
+  beforeEach(() => {
+    jest.useRealTimers();
+  });
+
+  async function renderPrefetchLinks(
+    crossOrigin?: "anonymous" | "use-credentials",
+  ) {
+    let context = mockFrameworkContext({
+      routeModules: {
+        root: { default: () => null },
+        about: {
+          default: () => null,
+          links: () => [{ rel: "stylesheet", href: "/about.css" }],
+        },
+      },
+      manifest: {
+        ...mockFrameworkContext().manifest,
+        crossOrigin: "anonymous",
+        routes: {
+          root: {
+            id: "root",
+            path: "/",
+            module: "root.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+          },
+          about: {
+            id: "about",
+            path: "about",
+            module: "about.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+          },
+        },
+      },
+    });
+    let router;
+
+    act(() => {
+      router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <PrefetchPageLinks page="/about" crossOrigin={crossOrigin} />
+          ),
+        },
+        { id: "about", path: "/about", element: <h1>About</h1> },
+      ]);
+    });
+
+    let result = render(
+      <FrameworkContext.Provider value={context}>
+        <RouterProvider router={router} />
+      </FrameworkContext.Provider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        result.container.ownerDocument.querySelector(
+          "link[rel='prefetch'][as='style']",
+        ),
+      ).toBeTruthy(),
+    );
+
+    return result;
+  }
+
+  it("uses config crossOrigin as a fallback", async () => {
+    let { container, unmount } = await renderPrefetchLinks();
+
+    expect(
+      container.ownerDocument.querySelector("link[rel='prefetch'][as='style']"),
+    ).toHaveAttribute("crossorigin", "anonymous");
+    unmount();
+  });
+
+  it("prefers an explicit component crossOrigin over config", async () => {
+    let { container, unmount } = await renderPrefetchLinks("use-credentials");
+
+    expect(
+      container.ownerDocument.querySelector("link[rel='prefetch'][as='style']"),
+    ).toHaveAttribute("crossorigin", "use-credentials");
+    unmount();
+  });
 });
 
 describe("<ServerRouter>", () => {
@@ -479,10 +570,58 @@ describe("<Links />", () => {
     let link = container.querySelector("link[href='/style.css']");
     expect(link).toHaveAttribute("nonce", "server-nonce");
   });
+
+  it("uses manifest crossOrigin when one is not provided", () => {
+    let context = mockFrameworkContext({
+      manifest: {
+        ...mockFrameworkContext().manifest,
+        crossOrigin: "anonymous",
+      },
+      criticalCss: { rel: "stylesheet", href: "/critical.css" },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    expect(
+      container.querySelector("link[href='/critical.css']"),
+    ).toHaveAttribute("crossorigin", "anonymous");
+  });
+
+  it("prefers an explicit crossOrigin over manifest crossOrigin", () => {
+    let context = mockFrameworkContext({
+      manifest: {
+        ...mockFrameworkContext().manifest,
+        crossOrigin: "anonymous",
+      },
+      criticalCss: { rel: "stylesheet", href: "/critical.css" },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={{ matches: [], errors: null } as any}
+      >
+        <FrameworkContext.Provider value={context}>
+          <Links crossOrigin="use-credentials" />
+        </FrameworkContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    expect(
+      container.querySelector("link[href='/critical.css']"),
+    ).toHaveAttribute("crossorigin", "use-credentials");
+  });
 });
 
 describe("<Scripts />", () => {
-  it("propagates nonce to modulepreload links", async () => {
+  it("propagates nonce and resolves crossOrigin for asset tags", async () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
       new Request("http://localhost/"),
     );
@@ -510,6 +649,7 @@ describe("<Scripts />", () => {
         },
         url: "manifest.js",
         version: "",
+        crossOrigin: "anonymous",
       },
       routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
       routeModules: {
@@ -518,6 +658,7 @@ describe("<Scripts />", () => {
             <>
               <h1>Root</h1>
               <Scripts nonce="test-nonce" />
+              <Scripts nonce="test-nonce" crossOrigin="use-credentials" />
             </>
           ),
         },
@@ -556,6 +697,26 @@ describe("<Scripts />", () => {
         'link[rel="modulepreload"][href="preload-b.js"]',
       ),
     ).toHaveAttribute("nonce", "test-nonce");
+    expect(
+      container.ownerDocument.querySelector(
+        "script[type='module'][crossorigin='anonymous']",
+      ),
+    ).toBeTruthy();
+    expect(
+      container.ownerDocument.querySelector(
+        "script[type='module'][crossorigin='use-credentials']",
+      ),
+    ).toBeTruthy();
+    expect(
+      container.ownerDocument.querySelector(
+        "link[rel='modulepreload'][crossorigin='anonymous']",
+      ),
+    ).toBeTruthy();
+    expect(
+      container.ownerDocument.querySelector(
+        "link[rel='modulepreload'][crossorigin='use-credentials']",
+      ),
+    ).toBeTruthy();
   });
 
   it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {

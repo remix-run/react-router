@@ -162,6 +162,14 @@ export type ReactRouterConfig = {
    */
   buildEnd?: BuildEndHook;
   /**
+   * The canonical app-wide CORS mode for initial generated asset links and
+   * scripts and imperative client prefetches. Component props override this
+   * value only for tags rendered by that component.
+   *
+   * This does not apply to RSC Framework Mode.
+   */
+  crossOrigin?: "anonymous" | "use-credentials";
+  /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    *
@@ -286,6 +294,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    * A function that is called after the full React Router build is complete.
    */
   buildEnd?: BuildEndHook;
+  /**
+   * The CORS mode to use for generated asset links and scripts.
+   */
+  crossOrigin: ReactRouterConfig["crossOrigin"];
   /**
    * Enabled future flags
    */
@@ -751,6 +763,7 @@ async function resolveConfig({
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+  let crossOrigin = userAndPresetConfigs.crossOrigin;
   let splitRouteModules = userAndPresetConfigs.splitRouteModules ?? true;
   let subResourceIntegrity = userAndPresetConfigs.subResourceIntegrity ?? false;
 
@@ -759,6 +772,7 @@ async function resolveConfig({
     basename,
     buildDirectory,
     buildEnd,
+    crossOrigin,
     future,
     prerender,
     routes,
