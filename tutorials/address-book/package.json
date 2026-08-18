@@ -25,7 +25,7 @@
     "@types/react-dom": "^19.2.3",
     "cross-env": "^7.0.3",
     "typescript": "^5.4.5",
-    "vite": "^5.4.11"
+    "vite": "^8.2.1"
   },
   "engines": {
     "node": ">=22.22.0"
