@@ -138,16 +138,16 @@ async function main() {
   let publishCommand = "pnpm publish --access public --no-git-checks";
   let packageInfo = [
     {
+      dir: "./packages/router",
+      tag: "latest",
+    },
+    {
       dir: "./packages/react-router",
       tag: "version-6",
     },
     {
       dir: "./packages/react-router-dom",
       tag: "version-6",
-    },
-    {
-      dir: "./packages/router",
-      tag: "latest",
     },
     {
       dir: "./packages/react-router-native",
