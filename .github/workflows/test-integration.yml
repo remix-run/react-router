@@ -56,7 +56,6 @@ jobs:
         id: suites
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         # If `gh pr diff` exits with a non-zero code, it might be because the PR
         # has >300 files, or it could be for any number of unknown reasons.  If
         # that happens take the conservative route and run the larger `dev` suite.
@@ -64,9 +63,6 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "Selected integration suite: full (push to main)"
             echo "type=full" >> "$GITHUB_OUTPUT"
-          elif [ "$PR_HEAD_REF" = "v8" ]; then
-            echo "Selected integration suite: dev (v8 PR)"
-            echo "type=dev" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.pull_request.draft }}" = "true" ]; then
             echo "Selected integration suite: base (draft PR)"
             echo "type=base" >> "$GITHUB_OUTPUT"
