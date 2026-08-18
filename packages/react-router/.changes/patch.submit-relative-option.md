@@ -1,1 +1,1 @@
-Fix `useSubmit` and `fetcher.submit` ignoring the `relative` option when resolving the submission `action`
+Properly respect the `relative` option in `useSubmit`/`fetcher.submit` when resolivng the `action` path
