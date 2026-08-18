@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v6.30.6](#v6306)
   - [v6.30.5](#v6305)
   - [v6.30.5](#v6305)
   - [v6.30.4](#v6304)
@@ -103,6 +104,19 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v6.30.6
+
+Date: 2026-08-18
+
+### Patch Changes
+
+- `@remix-run/router` - Fix double slash normalization for `useNavigate` colon urls ([3ed85d5](https://github.com/remix-run/react-router/commit/3ed85d5))
+
+  - As a reminder, `navigate()` is only intended for navigations within the React Router application and not for external navigations to other domains
+  - This change may be a breaking bug fix if you are using `navigate` for external navigations
+
+**Full Changelog**: [`v6.30.5...v6.30.6`](https://github.com/remix-run/react-router/compare/react-router@6.30.5...react-router@6.30.6)
 
 ## v6.30.5
 
