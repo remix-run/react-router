@@ -1145,23 +1145,11 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
-    if (isAbsoluteUrl(toPathname)) {
-      pathname = toPathname;
+    toPathname = removeDoubleSlashes(toPathname);
+    if (toPathname.startsWith("/")) {
+      pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
-      if (toPathname.includes("//")) {
-        let oldPathname = toPathname;
-        toPathname = removeDoubleSlashes(toPathname);
-        warning(
-          false,
-          `Pathnames cannot have embedded double slashes - normalizing ` +
-            `${oldPathname} -> ${toPathname}`
-        );
-      }
-      if (toPathname.startsWith("/")) {
-        pathname = resolvePathname(toPathname.substring(1), "/");
-      } else {
-        pathname = resolvePathname(toPathname, fromPathname);
-      }
+      pathname = resolvePathname(toPathname, fromPathname);
     }
   } else {
     pathname = fromPathname;

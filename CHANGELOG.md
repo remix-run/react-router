@@ -102,6 +102,16 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 </details>
 
+## v6.30.5
+
+Date: 2026-08-18
+
+### Patch Changes
+
+- Fix double slash normalization for `useNavigate` colon urls
+
+**Full Changelog**: [`v6.30.4...v6.30.5`](https://github.com/remix-run/react-router/compare/react-router@6.30.4...react-router@6.30.5)
+
 ## v6.30.4
 
 Date: 2026-05-29
@@ -406,7 +416,7 @@ const router = createBrowserRouter(
         patch("root", [route]);
       }
     },
-  },
+  }
 );
 ```
 
@@ -1186,7 +1196,7 @@ let routes = createRoutesFromElements(
     <Route index element={<Home />} />
     <Route path="a" lazy={() => import("./a")} />
     <Route path="b" lazy={() => import("./b")} />
-  </Route>,
+  </Route>
 );
 ```
 
