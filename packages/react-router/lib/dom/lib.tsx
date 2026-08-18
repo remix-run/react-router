@@ -2603,6 +2603,7 @@ export function useSubmit(): SubmitFunction {
         await routerFetch(key, currentRouteId, options.action || action, {
           defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
+          relative: options.relative,
           formData,
           body,
           formMethod: options.method || (method as HTMLFormMethod),
@@ -2613,6 +2614,7 @@ export function useSubmit(): SubmitFunction {
         await routerNavigate(options.action || action, {
           defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
+          relative: options.relative,
           formData,
           body,
           formMethod: options.method || (method as HTMLFormMethod),
