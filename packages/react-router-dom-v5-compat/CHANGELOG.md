@@ -1,5 +1,12 @@
 # `react-router-dom-v5-compat`
 
+## v6.30.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@6.30.5`](https://github.com/remix-run/react-router/releases/tag/react-router@6.30.5)
+
 ## v6.30.4
 
 ### Patch Changes
