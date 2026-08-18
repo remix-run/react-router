@@ -1,5 +1,14 @@
 # `react-router`
 
+## v6.30.5
+
+### Patch Changes
+
+- Fix double slash normalization for `useNavigate` colon urls ([#15410](https://github.com/remix-run/react-router/pull/15410))
+
+  - As a reminder, `navigate()` is only intended for navigations within the React Router application and not for external navigations to other domains
+  - This change may be a breaking bug fix if you are using `navigate` for external navigations
+
 ## v6.30.4
 
 ### Patch Changes
