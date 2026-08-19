@@ -3099,24 +3099,21 @@ export function useScrollRestoration({
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
     window.history.scrollRestoration = "manual";
-
-    // The pagehide handler below hands scroll restoration back to the browser
-    // so that a re-created document restores its own scroll position. A
-    // bfcache restore keeps this document alive instead, so take it back over
-    // — otherwise the browser restores scroll on subsequent history
-    // traversals before we've rendered the destination route.
-    let handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        window.history.scrollRestoration = "manual";
-      }
-    };
-    window.addEventListener("pageshow", handlePageShow);
-
     return () => {
-      window.removeEventListener("pageshow", handlePageShow);
       window.history.scrollRestoration = "auto";
     };
   }, []);
+
+  // Take scroll restoration back over on a bfcache restore. The pagehide
+  // handler below hands it to the browser for documents that get discarded,
+  // but a restored document stays alive so the effect above never re-runs.
+  usePageShow(
+    React.useCallback((event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.history.scrollRestoration = "manual";
+      }
+    }, []),
+  );
 
   // Save positions on pagehide
   usePageHide(
@@ -3259,6 +3256,20 @@ function usePageHide(
     window.addEventListener("pagehide", callback, opts);
     return () => {
       window.removeEventListener("pagehide", callback, opts);
+    };
+  }, [callback, capture]);
+}
+
+function usePageShow(
+  callback: (event: PageTransitionEvent) => any,
+  options?: { capture?: boolean },
+): void {
+  let { capture } = options || {};
+  React.useEffect(() => {
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("pageshow", callback, opts);
+    return () => {
+      window.removeEventListener("pageshow", callback, opts);
     };
   }, [callback, capture]);
 }
