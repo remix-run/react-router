@@ -5,6 +5,13 @@ import { getGitTag } from "./packages.ts";
 const OWNER = "remix-run";
 const REPO = "react-router";
 
+type WorkflowRunHead = {
+  headOwner: string;
+  headRepositoryId: number;
+  headBranch: string;
+  headSha: string;
+};
+
 function getToken(): string {
   let token = process.env.GITHUB_TOKEN;
   if (!token) {
@@ -117,6 +124,32 @@ export async function findOpenPr(head: string, base: string) {
   });
 
   return response.data.length > 0 ? response.data[0] : null;
+}
+
+/**
+ * Resolve the open PR whose current head produced a workflow_run event.
+ */
+export async function getWorkflowRunPrNumber(workflowRun: WorkflowRunHead) {
+  let response = await request("GET /repos/{owner}/{repo}/pulls", {
+    ...requestOptions(),
+    state: "open",
+    head: `${workflowRun.headOwner}:${workflowRun.headBranch}`,
+    per_page: 100,
+  });
+
+  let matches = response.data.filter(
+    (pr) =>
+      pr.head.repo?.id === workflowRun.headRepositoryId &&
+      pr.head.ref === workflowRun.headBranch &&
+      pr.head.sha === workflowRun.headSha,
+  );
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one open PR for workflow run, found ${matches.length}`,
+    );
+  }
+
+  return matches[0].number;
 }
 
 /**

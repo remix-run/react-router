@@ -50,4 +50,8 @@ jobs:
       - name: Apply actions
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_RUN_HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+          WORKFLOW_RUN_HEAD_REPO_ID: ${{ github.event.workflow_run.head_repository.id }}
+          WORKFLOW_RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: node scripts/pr.ts actions pr-checks-result.json
