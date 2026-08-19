@@ -3106,6 +3106,15 @@ export function useScrollRestoration({
     };
   }, []);
 
+  // Re-enable manual scroll restoration on a bfcache restore
+  usePageShow(
+    React.useCallback((event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.history.scrollRestoration = "manual";
+      }
+    }, []),
+  );
+
   // Save positions on pagehide
   usePageHide(
     React.useCallback(() => {
@@ -3247,6 +3256,24 @@ function usePageHide(
     window.addEventListener("pagehide", callback, opts);
     return () => {
       window.removeEventListener("pagehide", callback, opts);
+    };
+  }, [callback, capture]);
+}
+
+/*
+ * Setup a callback to be fired on the window's `pageshow` event. The event's
+ * `persisted` flag indicates the document was restored from the bfcache.
+ */
+function usePageShow(
+  callback: (event: PageTransitionEvent) => any,
+  options?: { capture?: boolean },
+): void {
+  let { capture } = options || {};
+  React.useEffect(() => {
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("pageshow", callback, opts);
+    return () => {
+      window.removeEventListener("pageshow", callback, opts);
     };
   }, [callback, capture]);
 }
