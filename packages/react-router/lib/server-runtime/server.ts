@@ -1,5 +1,4 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { DataRouteMatcher } from "../router/matcher";
 import type { ErrorResponse } from "../router/utils";
 import {
   defaultMapRouteProperties,
@@ -12,7 +11,6 @@ import {
 import {
   getStaticContextFromError,
   createStaticHandler,
-  createDataRouteMatcher,
   isRedirectResponse,
   isResponse,
   isMutationMethod,
@@ -185,19 +183,12 @@ function derive(build: ServerBuild, mode?: string) {
       build.routeDiscovery.manifestPath,
       build.basename,
     );
-    let dataRouteMatcher = createDataRouteMatcher(build.basename ?? "/");
-    dataRouteMatcher.update(staticHandler.dataRoutes);
-
     if (
       build.routeDiscovery.mode === "lazy" &&
       requestUrl.pathname === manifestUrl
     ) {
       try {
-        let res = await handleManifestRequest(
-          build,
-          dataRouteMatcher,
-          requestUrl,
-        );
+        let res = await handleManifestRequest(build, staticHandler, requestUrl);
         return res;
       } catch (e) {
         handleError(e);
@@ -207,7 +198,7 @@ function derive(build: ServerBuild, mode?: string) {
 
     let matches = matchServerRoutes(
       build.routes,
-      dataRouteMatcher,
+      staticHandler,
       normalizedPathname,
     );
     if (matches && matches.length > 0) {
@@ -373,7 +364,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  dataRouteMatcher: DataRouteMatcher,
+  staticHandler: StaticHandler,
   url: URL,
 ) {
   if (url.toString().length > URL_LIMIT) {
@@ -401,11 +392,7 @@ async function handleManifestRequest(
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let matches = matchServerRoutes(
-        build.routes,
-        dataRouteMatcher,
-        path,
-      );
+      let matches = matchServerRoutes(build.routes, staticHandler, path);
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -542,7 +529,6 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
-      branches: staticHandler._internalRouteBranches,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,

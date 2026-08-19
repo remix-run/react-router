@@ -51,7 +51,6 @@ import type {
   MiddlewareFunction,
   MiddlewareNextFunction,
   PatchRoutesOnNavigationFunction,
-  RouteBranch,
   MapRoutePropertiesFunction,
 } from "./utils";
 import {
@@ -483,10 +482,10 @@ export interface StaticHandler {
    * @private
    * PRIVATE - DO NOT USE
    *
-   * The route branches derived from the data routes, used for internal route
-   * matching in Framework Mode
+   * Match routes against a location using the handler's configured route
+   * matching implementation.
    */
-  _internalRouteBranches: RouteBranch<DataRouteObject>[];
+  match(locationArg: Partial<Location> | string): DataRouteMatch[] | null;
   /**
    * Perform a query for a given request - executing all matched route
    * loaders/actions.  Used for document requests.
@@ -4062,8 +4061,7 @@ export function createStaticHandler(
     undefined,
     manifest,
   );
-  // Pre-compute route branches using the configured matching strategy.
-  let routeBranches = dataRouteMatcher.update(dataRoutes);
+  dataRouteMatcher.update(dataRoutes);
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -4965,7 +4963,9 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
-    _internalRouteBranches: routeBranches,
+    match(locationArg) {
+      return dataRouteMatcher.match(locationArg);
+    },
     query,
     queryRoute,
   };
