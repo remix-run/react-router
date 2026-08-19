@@ -28,6 +28,10 @@
  *
  * Environment (actions):
  *   GITHUB_TOKEN  - Required (issues:write + pull-requests:write).
+ *   WORKFLOW_RUN_HEAD_OWNER   - Required. workflow_run.head_repository.owner.login
+ *   WORKFLOW_RUN_HEAD_REPO_ID - Required. workflow_run.head_repository.id
+ *   WORKFLOW_RUN_HEAD_BRANCH  - Required. workflow_run.head_branch
+ *   WORKFLOW_RUN_HEAD_SHA     - Required. workflow_run.head_sha
  */
 import * as fs from "node:fs";
 import * as util from "node:util";
@@ -39,6 +43,7 @@ import {
   createPrComment,
   getPrComments,
   getPrFiles,
+  getWorkflowRunPrNumber,
   removePrLabel,
   updatePrComment,
 } from "./utils/github.ts";
@@ -344,7 +349,9 @@ async function runActions() {
     return;
   }
 
-  let { prNumber, actions } = JSON.parse(fs.readFileSync(filename, "utf8")) as {
+  let { prNumber: artifactPrNumber, actions } = JSON.parse(
+    fs.readFileSync(filename, "utf8"),
+  ) as {
     prNumber: number;
     actions: Action[];
   };
@@ -352,6 +359,25 @@ async function runActions() {
   if (actions.length === 0) {
     console.log("No actions to apply");
     return;
+  }
+
+  let headRepositoryId = Number(requireEnv("WORKFLOW_RUN_HEAD_REPO_ID"));
+  if (!Number.isSafeInteger(headRepositoryId) || headRepositoryId <= 0) {
+    throw new Error("WORKFLOW_RUN_HEAD_REPO_ID must be a positive integer");
+  }
+
+  // The artifact is PR-controlled. Resolve its only permitted target from the
+  // trusted workflow_run event and reject stale or cross-PR instructions.
+  let prNumber = await getWorkflowRunPrNumber({
+    headOwner: requireEnv("WORKFLOW_RUN_HEAD_OWNER"),
+    headRepositoryId,
+    headBranch: requireEnv("WORKFLOW_RUN_HEAD_BRANCH"),
+    headSha: requireEnv("WORKFLOW_RUN_HEAD_SHA"),
+  });
+  if (artifactPrNumber !== prNumber) {
+    throw new Error(
+      `Artifact targets PR #${String(artifactPrNumber)}, but workflow run belongs to PR #${prNumber}`,
+    );
   }
 
   console.log(actions);
