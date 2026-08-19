@@ -48,6 +48,12 @@ describe("a browser history", () => {
     expect(href).toEqual("/the/path?the=query#the-hash");
   });
 
+  it("normalizes special characters in relative hrefs", () => {
+    for (let char of ["\t", "\n", "\r"]) {
+      expect(history.createHref(`/${char}/nested/path`)).toBe("/nested/path");
+    }
+  });
+
   it("does not encode the generated path", () => {
     const encodedHref = history.createHref({
       pathname: "/%23abc",
