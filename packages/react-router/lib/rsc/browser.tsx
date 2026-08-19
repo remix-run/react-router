@@ -12,6 +12,7 @@ import {
   hasInvalidProtocol,
   isMutationMethod,
 } from "../router/router";
+import { normalizeRedirectLocation } from "./redirect";
 import type {
   RSCPayload,
   RSCRouteManifest,
@@ -22,13 +23,8 @@ import type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
-import {
-  normalizeRelativeUrl,
-  PROTOCOL_RELATIVE_URL_REGEX,
-} from "../router/url";
+import { ErrorResponseImpl, createContext } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -1131,17 +1127,6 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
 function isExternalLocation(location: string) {
   const newLocation = new URL(location, window.location.href);
   return newLocation.origin !== window.location.origin;
-}
-
-function normalizeRedirectLocation(location: string): string {
-  location = normalizeRelativeUrl(location);
-
-  if (PROTOCOL_RELATIVE_URL_REGEX.test(location)) {
-    let path = resolvePath(location);
-    return path.pathname + path.search + path.hash;
-  }
-
-  return location;
 }
 
 function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {
