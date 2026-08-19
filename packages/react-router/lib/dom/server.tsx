@@ -365,19 +365,20 @@ export function createStaticRouter(
   let future: FutureConfig = {
     ...opts?.future,
   };
-  let dataRouteMatcher = createDataRouteMatcher(context.basename || "/");
-  dataRouteMatcher.update(dataRoutes);
+  let matchRoutes = context._match;
+  let dataRouteMatcher: ReturnType<typeof createDataRouteMatcher> | undefined;
 
   // Because our context matches may be from a set of routes passed to
   // createStaticHandler(), we update them here with our newly created/enhanced
   // data routes
-  let matches = context.matches.map((match) => {
+  let mapRouteMatch = (match: (typeof context.matches)[number]) => {
     let route = manifest[match.route.id] || match.route;
     return {
       ...match,
       route,
     };
-  });
+  };
+  let matches = context.matches.map(mapRouteMatch);
 
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
@@ -417,7 +418,18 @@ export function createStaticRouter(
       return undefined;
     },
     match(locationArg) {
-      return dataRouteMatcher.match(locationArg);
+      let routeMatches;
+      if (matchRoutes) {
+        routeMatches = matchRoutes(locationArg);
+      } else {
+        // Contexts not created by createStaticHandler() need their own matcher.
+        if (!dataRouteMatcher) {
+          dataRouteMatcher = createDataRouteMatcher(context.basename || "/");
+          dataRouteMatcher.update(dataRoutes);
+        }
+        routeMatches = dataRouteMatcher.match(locationArg);
+      }
+      return routeMatches && routeMatches.map(mapRouteMatch);
     },
     initialize() {
       throw msg("initialize");

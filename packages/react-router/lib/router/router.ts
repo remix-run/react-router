@@ -468,6 +468,8 @@ export interface StaticHandlerContext {
   loaderHeaders: Record<string, Headers>;
   actionHeaders: Record<string, Headers>;
   _deepestRenderedBoundaryId?: string | null;
+  /** @private */
+  _match?: StaticHandler["match"];
 }
 
 /**
@@ -4062,6 +4064,8 @@ export function createStaticHandler(
     manifest,
   );
   dataRouteMatcher.update(dataRoutes);
+  let match: StaticHandler["match"] = (locationArg) =>
+    dataRouteMatcher.match(locationArg);
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -4130,6 +4134,7 @@ export function createStaticHandler(
         statusCode: error.status,
         loaderHeaders: {},
         actionHeaders: {},
+        _match: match,
       };
       return generateMiddlewareResponse
         ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
@@ -4150,6 +4155,7 @@ export function createStaticHandler(
         statusCode: error.status,
         loaderHeaders: {},
         actionHeaders: {},
+        _match: match,
       };
       return generateMiddlewareResponse
         ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
@@ -4223,7 +4229,12 @@ export function createStaticHandler(
                 // When returning StaticHandlerContext, we patch back in the location here
                 // since we need it for React Context.  But this helps keep our submit and
                 // loadRouteData operating on a Request instead of a Location
-                renderedStaticContext = { location, basename, ...result };
+                renderedStaticContext = {
+                  location,
+                  basename,
+                  ...result,
+                  _match: match,
+                };
                 return renderedStaticContext;
               },
             );
@@ -4305,6 +4316,7 @@ export function createStaticHandler(
                 statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
+                _match: match,
               };
               return generateMiddlewareResponse(() =>
                 Promise.resolve(staticContext),
@@ -4342,7 +4354,7 @@ export function createStaticHandler(
     // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
-    return { location, basename, ...result };
+    return { location, basename, ...result, _match: match };
   }
 
   /**
@@ -4963,9 +4975,7 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
-    match(locationArg) {
-      return dataRouteMatcher.match(locationArg);
-    },
+    match,
     query,
     queryRoute,
   };
