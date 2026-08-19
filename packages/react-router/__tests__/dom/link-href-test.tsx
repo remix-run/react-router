@@ -129,6 +129,26 @@ describe("<Link> href", () => {
       expect(renderer.root.findByType("a").props.href).toEqual("//remix.run");
     });
 
+    test("normalizes special characters in relative <Link> values", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={<Link to={"/\t/nested/path"} />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual("/nested/path");
+    });
+
     test('<Link to="mailto:remix@example.com"> is treated as external link', () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
