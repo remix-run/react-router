@@ -24,8 +24,7 @@ import type {
   DataStrategyFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
-import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
+import { ErrorResponseImpl, createContext } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -45,6 +44,7 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
 import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import { normalizeRedirectLocation } from "./redirect";
 
 const defaultManifestPath = "/__manifest";
 
@@ -1109,15 +1109,6 @@ function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
 function isExternalLocation(location: string) {
   const newLocation = new URL(location, window.location.href);
   return newLocation.origin !== window.location.origin;
-}
-
-function normalizeRedirectLocation(location: string): string {
-  if (PROTOCOL_RELATIVE_URL_REGEX.test(location)) {
-    let path = resolvePath(location);
-    return path.pathname + path.search + path.hash;
-  }
-
-  return location;
 }
 
 function cloneRoutes(routes: DataRouteObject[] | undefined): DataRouteObject[] {
