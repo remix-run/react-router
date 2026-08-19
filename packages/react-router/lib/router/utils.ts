@@ -1584,7 +1584,7 @@ function matchPathImpl<Path extends string>(
   if (!match) return null;
 
   let matchedPathname = match[0];
-  let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
+  let pathnameBase = removeTrailingSlash(matchedPathname, 1);
   let captureGroups = match.slice(1);
   let params: Params = compiledParams.reduce<Mutable<Params>>(
     (memo, { paramName, isOptional }, index) => {
@@ -1592,9 +1592,10 @@ function matchPathImpl<Path extends string>(
       // instead of using params["*"] later because it will be decoded then
       if (paramName === "*") {
         let splatValue = captureGroups[index] || "";
-        pathnameBase = matchedPathname
-          .slice(0, matchedPathname.length - splatValue.length)
-          .replace(/(.)\/+$/, "$1");
+        pathnameBase = removeTrailingSlash(
+          matchedPathname.slice(0, matchedPathname.length - splatValue.length),
+          1,
+        );
       }
 
       const value = captureGroups[index];
@@ -1944,8 +1945,14 @@ export const removeDoubleSlashes = (path: string): string =>
 export const joinPaths = (paths: string[]): string =>
   removeDoubleSlashes(paths.join("/"));
 
-export const removeTrailingSlash = (path: string): string =>
-  path.replace(/\/+$/, "");
+// Scan from the end to avoid repeated RegExp work on long paths.
+export function removeTrailingSlash(path: string, minLength = 0): string {
+  let end = path.length;
+  while (end > minLength && path.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+  return end === path.length ? path : path.slice(0, end);
+}
 
 export const normalizePathname = (pathname: string): string =>
   removeTrailingSlash(pathname).replace(/^\/*/, "/");
