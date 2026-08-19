@@ -3104,9 +3104,7 @@ export function useScrollRestoration({
     };
   }, []);
 
-  // Take scroll restoration back over on a bfcache restore. The pagehide
-  // handler below hands it to the browser for documents that get discarded,
-  // but a restored document stays alive so the effect above never re-runs.
+  // Re-enable manual scroll restoration on a bfcache restore
   usePageShow(
     React.useCallback((event: PageTransitionEvent) => {
       if (event.persisted) {
@@ -3260,6 +3258,10 @@ function usePageHide(
   }, [callback, capture]);
 }
 
+/*
+ * Setup a callback to be fired on the window's `pageshow` event. The event's
+ * `persisted` flag indicates the document was restored from the bfcache.
+ */
 function usePageShow(
   callback: (event: PageTransitionEvent) => any,
   options?: { capture?: boolean },
