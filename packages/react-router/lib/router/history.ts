@@ -1,4 +1,4 @@
-import { PROTOCOL_RELATIVE_URL_REGEX } from "./url";
+import { normalizeRelativeUrl, PROTOCOL_RELATIVE_URL_REGEX } from "./url";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -407,7 +407,7 @@ export function createBrowserHistory(
   }
 
   function createBrowserHref(window: Window, to: To) {
-    return typeof to === "string" ? to : createPath(to);
+    return normalizeRelativeUrl(typeof to === "string" ? to : createPath(to));
   }
 
   return getUrlBasedHistory(
@@ -798,6 +798,7 @@ export function createBrowserURLImpl(
   invariant(base, "No window.location.(origin|href) available to create URL");
 
   let href = typeof to === "string" ? to : createPath(to);
+  href = normalizeRelativeUrl(href);
 
   // Treating this as a full URL will strip any trailing spaces so we need to
   // pre-encode them since they might be part of a matching splat param from
