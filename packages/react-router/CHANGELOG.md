@@ -1,5 +1,18 @@
 # `react-router`
 
+## v7.18.3
+
+### Patch Changes
+
+- Improve route matching performance for long paths ([#15423](https://github.com/remix-run/react-router/pull/15423))
+- Improve validation of action request origins ([#15420](https://github.com/remix-run/react-router/pull/15420))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Improve redirect handling during RSC server rendering ([#15421](https://github.com/remix-run/react-router/pull/15421))
+
 ## v7.18.2
 
 ### Patch Changes
