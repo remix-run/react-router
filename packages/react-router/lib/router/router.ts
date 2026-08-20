@@ -73,6 +73,7 @@ import {
 } from "./utils";
 import {
   normalizeProtocolRelativeUrl,
+  normalizeRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
 
@@ -6849,6 +6850,8 @@ function normalizeRedirectLocation(
   basename: string,
   historyInstance: History,
 ): string {
+  location = normalizeRelativeUrl(location);
+
   if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
     let normalizedLocation = location;

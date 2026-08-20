@@ -6,6 +6,7 @@ import { invariant, parsePath, warning } from "./history";
 import {
   ABSOLUTE_URL_REGEX,
   normalizeProtocolRelativeUrl,
+  normalizeRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
 
@@ -1746,7 +1747,8 @@ export function prependBasename({
   return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
-export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
+export const isAbsoluteUrl = (url: string) =>
+  ABSOLUTE_URL_REGEX.test(normalizeRelativeUrl(url));
 
 /**
  * Returns a resolved {@link Path} object relative to the given pathname.
@@ -1767,6 +1769,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
+    toPathname = normalizeRelativeUrl(toPathname);
     toPathname = removeDoubleSlashes(toPathname);
     if (toPathname.startsWith("/")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
@@ -2263,7 +2266,9 @@ export function parseToInfo<T extends To | string>(
   _to: T,
   basename: string,
 ): ParsedLocationInfo<T | string> {
-  let to = _to as string;
+  let to = (
+    typeof _to === "string" ? normalizeRelativeUrl(_to) : _to
+  ) as string;
   if (typeof to !== "string" || !ABSOLUTE_URL_REGEX.test(to)) {
     return {
       absoluteURL: undefined,
