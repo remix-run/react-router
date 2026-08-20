@@ -650,6 +650,9 @@ importers:
 
   packages/react-router:
     dependencies:
+      '@remix-run/cookie':
+        specifier: ^0.6.0
+        version: 0.6.0
       cookie-es:
         specifier: ^3.1.1
         version: 3.1.1
@@ -3799,6 +3802,12 @@ packages:
 
   '@remix-run/node-fetch-server@0.13.3':
     resolution: {integrity: sha512-UfjOXed/DQteaM5VyTfqTeGpHwyL2J5aoRGY6cydip4tt1ehNNeSwuXCC7AEGE0RWBs/7bgKxYkL/B/+UDe4AA==}
+
+  '@remix-run/cookie@0.6.0':
+    resolution: {integrity: sha512-juCoNHiHbXLT0gXDAYg06eVaFSKNqMS/dud49ZQdCHfCpHk1PPFDAbWajSz90ZG5BWWMPSWDvod4o1SAqPnlFA==}
+
+  '@remix-run/headers@0.21.1':
+    resolution: {integrity: sha512-DRhRveigepAQDUIi0MrOFhpcl3/KTv/fkpIhulv7Asv1pUwM8RpY2ENjdI8lfii6Z3MEsWtYhGt6If8bi6bYpQ==}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     resolution: {integrity: sha512-SJ+/g+xNnOh6NqYxD0V3uVN4W3VfnrGsC9/hoglicgTNfABFG9JjISvkkU0dNY84MNHLWyOgxP9v9Y9pX4S7+A==}
@@ -11292,6 +11301,12 @@ snapshots:
       quansync: 1.0.0
 
   '@remix-run/node-fetch-server@0.13.3': {}
+
+  '@remix-run/cookie@0.6.0':
+    dependencies:
+      '@remix-run/headers': 0.21.1
+
+  '@remix-run/headers@0.21.1': {}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     optional: true

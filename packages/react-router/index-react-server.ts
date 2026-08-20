@@ -60,7 +60,11 @@ export {
 } from "./lib/router/utils";
 export { href } from "./lib/href";
 
-export { createCookie, isCookie } from "./lib/server-runtime/cookies";
+export {
+  createCookie,
+  isCookie,
+} from "./lib/server-runtime/cookies";
+export { unstable_v9_createCookie } from "./lib/server-runtime/cookies-v9";
 export {
   createSession,
   createSessionStorage,
@@ -83,6 +87,10 @@ export type {
   CookieSignatureOptions,
   IsCookieFunction,
 } from "./lib/server-runtime/cookies";
+export type {
+  unstable_V9Cookie,
+  unstable_V9CookieOptions,
+} from "./lib/server-runtime/cookies-v9";
 export type {
   IsSessionFunction,
   Session,

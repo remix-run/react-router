@@ -3,6 +3,7 @@
  */
 
 import { createCookie, isCookie } from "../../lib/server-runtime/cookies";
+import { unstable_v9_createCookie } from "../../lib/server-runtime/cookies-v9";
 
 function getCookieFromSetCookie(setCookie: string): string {
   return setCookie.split(/;\s*/)[0];
@@ -196,7 +197,271 @@ describe("cookies", () => {
       );
     });
   });
+
+  describe("custom encoding/decoding", () => {
+    it("uses default base64 encoding when no functions are provided", async () => {
+      let rawCookieValue = "hello world";
+      let cookie = createCookie("my-cookie");
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(setCookie).toContain("my-cookie=ImhlbGxvIHdvcmxkIg%3D%3D;");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(parsed).toBe(rawCookieValue);
+    });
+
+    it("keeps encode/decode scoped to cookie-es encoding", async () => {
+      let rawCookieValue = "hello world";
+      let encodedValue = "ImhlbGxvIHdvcmxkIg==";
+      let encodeValue: string | undefined;
+      let decodeValue: string | undefined;
+      let cookie = createCookie("my-cookie", {
+        encode(str: string) {
+          encodeValue = str;
+          return encodeURIComponent(str);
+        },
+        decode(str: string) {
+          decodeValue = str;
+          return decodeURIComponent(str);
+        },
+      });
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(encodeValue).toBe(encodedValue);
+      expect(setCookie).toContain("my-cookie=ImhlbGxvIHdvcmxkIg%3D%3D;");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(decodeValue).toBe("ImhlbGxvIHdvcmxkIg%3D%3D");
+      expect(parsed).toBe(rawCookieValue);
+    });
+
+    it("keeps usage-time encode/decode scoped to cookie-es encoding", async () => {
+      let rawCookieValue = "hello world";
+      let cookie = createCookie("my-cookie");
+      let encodedValue = "ImhlbGxvIHdvcmxkIg==";
+      let encodeValue: string | undefined;
+      let decodeValue: string | undefined;
+      let setCookie = await cookie.serialize(rawCookieValue, {
+        encode(str: string) {
+          encodeValue = str;
+          return encodeURIComponent(str);
+        },
+      });
+      expect(encodeValue).toBe(encodedValue);
+      expect(setCookie).toContain("my-cookie=ImhlbGxvIHdvcmxkIg%3D%3D;");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie), {
+        decode(str: string) {
+          decodeValue = str;
+          return decodeURIComponent(str);
+        },
+      });
+      expect(decodeValue).toBe("ImhlbGxvIHdvcmxkIg%3D%3D");
+      expect(parsed).toBe(rawCookieValue);
+    });
+
+    it("applies custom encoding after signing", async () => {
+      let rawCookieValue = "hello world";
+      let encodedValue = "ImhlbGxvIHdvcmxkIg==";
+      let encodeValue: string | undefined;
+      let decodeValue: string | undefined;
+      let cookie = createCookie("my-cookie", {
+        secrets: ["s3cr3t"],
+        encode(str: string) {
+          encodeValue = str;
+          return encodeURIComponent(str);
+        },
+        decode(str: string) {
+          decodeValue = str;
+          return decodeURIComponent(str);
+        },
+      });
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(encodeValue?.startsWith(`${encodedValue}.`)).toBe(true);
+      expect(setCookie).toContain("my-cookie=ImhlbGxvIHdvcmxkIg%3D%3D.");
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(decodeValue?.startsWith("ImhlbGxvIHdvcmxkIg%3D%3D.")).toBe(true);
+      expect(parsed).toBe(rawCookieValue);
+
+      // Fails if the cookie value is tampered with
+      let [, signature] = getCookieFromSetCookie(setCookie).split(".");
+      parsed = await cookie.parse(
+        `my-cookie=Im1hcnMi.${signature}`,
+      );
+      expect(parsed).toBe(null);
+    });
+
+    it("unstable_v9_createCookie uses the remix cookie default encoding", async () => {
+      let rawCookieValue = "hello world";
+      let cookie = unstable_v9_createCookie("my-cookie");
+
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(setCookie).toContain("my-cookie=aGVsbG8gd29ybGQ=;");
+
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(parsed).toBe(rawCookieValue);
+    });
+
+    it("unstable_v9_createCookie exposes the remix cookie object shape", async () => {
+      let cookie = unstable_v9_createCookie("my-cookie", {
+        secrets: ["s3cr3t"],
+      });
+
+      expect(cookie.signed).toBe(true);
+      expect(cookie.path).toBe("/");
+    });
+
+    it("unstable_v9_createCookie uses custom encode/decode as the value codec", async () => {
+      let rawCookieValue = "hello world";
+      let encodeValue: string | undefined;
+      let decodeValue: string | undefined;
+      let cookie = unstable_v9_createCookie("my-cookie", {
+        encode(str: string) {
+          encodeValue = str;
+          return str.replaceAll(" ", "-");
+        },
+        decode(str: string) {
+          decodeValue = str;
+          return str.replaceAll("-", " ");
+        },
+      });
+
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(encodeValue).toBe(rawCookieValue);
+      expect(setCookie).toContain("my-cookie=hello-world;");
+
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(decodeValue).toBe("hello-world");
+      expect(parsed).toBe(rawCookieValue);
+    });
+
+    it("unstable_v9_createCookie supports unicode values with custom codecs", async () => {
+      let rawCookieValue = "日本語";
+      let cookie = unstable_v9_createCookie("my-cookie", {
+        encode: encodeURIComponent,
+        decode: decodeURIComponent,
+      });
+
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(setCookie).toContain(
+        "my-cookie=%E6%97%A5%E6%9C%AC%E8%AA%9E;",
+      );
+
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(parsed).toBe(rawCookieValue);
+    });
+
+    it("unstable_v9_createCookie signs encoded values without wrapping them in base64", async () => {
+      let rawCookieValue = "hello world";
+      let encodeValue: string | undefined;
+      let decodeValue: string | undefined;
+      let cookie = unstable_v9_createCookie("my-cookie", {
+        secrets: ["s3cr3t"],
+        encode(str: string) {
+          encodeValue = str;
+          return encodeURIComponent(str);
+        },
+        decode(str: string) {
+          decodeValue = str;
+          return decodeURIComponent(str);
+        },
+      });
+
+      let setCookie = await cookie.serialize(rawCookieValue);
+      expect(encodeValue).toBe(rawCookieValue);
+      expect(setCookie).toContain("my-cookie=hello%20world.");
+
+      let parsed = await cookie.parse(getCookieFromSetCookie(setCookie));
+      expect(decodeValue).toBe("hello%20world");
+      expect(parsed).toBe(rawCookieValue);
+
+      // Fails if the cookie value is tampered with
+      let [, signature] = getCookieFromSetCookie(setCookie).split(".");
+      parsed = await cookie.parse(`my-cookie=hello%20mars.${signature}`);
+      expect(parsed).toBe(null);
+    });
+
+    it("can use unstable_v9_createCookie for v8-compatible string cookies", async () => {
+      let value = "日本語";
+      let scenarios = [{ secrets: [] }, { secrets: ["s3cr3t"] }];
+
+      for (let { secrets } of scenarios) {
+        let oldPrefs = createCookie("prefs", { secrets });
+        let newPrefs = unstable_v9_createCookie("prefs", {
+          secrets,
+          encode(value) {
+            return encodeUtf8Base64(JSON.stringify(value));
+          },
+          decode(value) {
+            return JSON.parse(decodeUtf8Base64(value));
+          },
+        });
+
+        let oldSetCookie = await oldPrefs.serialize(value);
+        let newSetCookie = await newPrefs.serialize(value);
+
+        expect(await oldPrefs.parse(getCookieFromSetCookie(newSetCookie))).toBe(
+          value,
+        );
+        expect(
+          await newPrefs.parse(
+            decodeCookieHeaderValues(getCookieFromSetCookie(oldSetCookie)),
+          ),
+        ).toBe(value);
+      }
+    });
+
+    it("can use unstable_v9_createCookie for v8-compatible object cookies", async () => {
+      let value = { displayName: "みち", theme: "dark" };
+      let scenarios = [{ secrets: [] }, { secrets: ["s3cr3t"] }];
+
+      for (let { secrets } of scenarios) {
+        let oldPrefs = createCookie("prefs", { secrets });
+        let newPrefs = unstable_v9_createCookie("prefs", {
+          secrets,
+          encode: encodeUtf8Base64,
+          decode: decodeUtf8Base64,
+        });
+
+        let oldSetCookie = await oldPrefs.serialize(value);
+        let newSetCookie = await newPrefs.serialize(JSON.stringify(value));
+
+        expect(await oldPrefs.parse(getCookieFromSetCookie(newSetCookie))).toEqual(
+          value,
+        );
+
+        let newValue = await newPrefs.parse(
+          decodeCookieHeaderValues(getCookieFromSetCookie(oldSetCookie)),
+        );
+        expect(JSON.parse(newValue!)).toEqual(value);
+      }
+    });
+  });
 });
+
+function encodeUtf8Base64(value: string): string {
+  return btoa(
+    Array.from(new TextEncoder().encode(value), (byte) =>
+      String.fromCharCode(byte),
+    ).join(""),
+  );
+}
+
+function decodeUtf8Base64(value: string): string {
+  let binary = atob(decodeURIComponent(value));
+  return new TextDecoder().decode(
+    Uint8Array.from(binary, (char) => char.charCodeAt(0)),
+  );
+}
+
+function decodeCookieHeaderValues(cookieHeader: string): string {
+  return cookieHeader
+    .split(/;\s*/)
+    .map((cookie) => {
+      let separator = cookie.indexOf("=");
+      if (separator === -1) return cookie;
+      return [
+        cookie.slice(0, separator),
+        decodeURIComponent(cookie.slice(separator + 1)),
+      ].join("=");
+    })
+    .join("; ");
+}
 
 function spyConsole() {
   // https://github.com/facebook/react/issues/7047

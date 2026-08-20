@@ -247,7 +247,11 @@ export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";
 export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
 
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
-export { createCookie, isCookie } from "./lib/server-runtime/cookies";
+export {
+  createCookie,
+  isCookie,
+} from "./lib/server-runtime/cookies";
+export { unstable_v9_createCookie } from "./lib/server-runtime/cookies-v9";
 
 export { createRequestHandler } from "./lib/server-runtime/server";
 export {
@@ -278,6 +282,10 @@ export type {
   CookieSerializeOptions,
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
+export type {
+  unstable_V9Cookie,
+  unstable_V9CookieOptions,
+} from "./lib/server-runtime/cookies-v9";
 
 export type {
   PageLinkDescriptor,
