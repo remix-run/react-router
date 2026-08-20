@@ -85,10 +85,8 @@ export type FetchersContextObject = {
   fetcherData: Map<string, any>;
 };
 
-export const FetchersContext = React.createContext<FetchersContextObject>({
-  fetchers: new Map(),
-  fetcherData: new Map(),
-});
+export const FetchersContext =
+  React.createContext<FetchersContextObject | null>(null);
 FetchersContext.displayName = "Fetchers";
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);

@@ -76,10 +76,7 @@ import {
 import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
-  DataRouterContext,
   DataRouterNavigationContext,
-  DataRouterStateContext,
-  FetchersContext,
   NavigationContext,
   RouteContext,
   ViewTransitionContext,
@@ -87,6 +84,9 @@ import {
 import {
   useBlocker,
   useCurrentRouteId,
+  useDataRouterContext,
+  useDataRouterFetchers,
+  useDataRouterState,
   useHref,
   useLocation,
   useMatches,
@@ -2146,40 +2146,6 @@ ScrollRestoration.displayName = "ScrollRestoration";
 //#region Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
-enum DataRouterHook {
-  UseScrollRestoration = "useScrollRestoration",
-  UseSubmit = "useSubmit",
-  UseSubmitFetcher = "useSubmitFetcher",
-  UseFetcher = "useFetcher",
-  useViewTransitionState = "useViewTransitionState",
-}
-
-enum DataRouterStateHook {
-  UseFetcher = "useFetcher",
-  UseFetchers = "useFetchers",
-  UseScrollRestoration = "useScrollRestoration",
-}
-
-// Internal hooks
-
-function getDataRouterConsoleError(
-  hookName: DataRouterHook | DataRouterStateHook,
-) {
-  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
-}
-
-function useDataRouterContext(hookName: DataRouterHook) {
-  let ctx = React.useContext(DataRouterContext);
-  invariant(ctx, getDataRouterConsoleError(hookName));
-  return ctx;
-}
-
-function useDataRouterState(hookName: DataRouterStateHook) {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, getDataRouterConsoleError(hookName));
-  return state;
-}
-
 // External hooks
 
 /**
@@ -2590,9 +2556,9 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  * @returns A function that can be called to submit a {@link Form} imperatively.
  */
 export function useSubmit(): SubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
+  let { router } = useDataRouterContext("useSubmit");
   let { basename } = React.useContext(NavigationContext);
-  let currentRouteId = useCurrentRouteId(DataRouterHook.UseSubmit);
+  let currentRouteId = useCurrentRouteId("useSubmit");
 
   let routerFetch = router.fetch;
   let routerNavigate = router.navigate;
@@ -2916,14 +2882,9 @@ export function useFetcher<T = any>({
 }: {
   key?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let fetchersContext = React.useContext(FetchersContext);
-  let routeId = useCurrentRouteId(DataRouterHook.UseFetcher);
-
-  invariant(
-    fetchersContext,
-    `useFetcher must be used inside a FetchersContext`,
-  );
+  let { router } = useDataRouterContext("useFetcher");
+  let fetchersContext = useDataRouterFetchers("useFetcher");
+  let routeId = useCurrentRouteId("useFetcher");
 
   // Fetcher key handling
   let defaultKey = React.useId();
@@ -3019,7 +2980,7 @@ export function useFetcher<T = any>({
  * property.
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
-  let { fetchers } = React.useContext(FetchersContext);
+  let { fetchers } = useDataRouterFetchers("useFetchers");
   return React.useMemo(
     () =>
       Array.from(fetchers.entries()).map(([key, fetcher]) => ({
@@ -3089,9 +3050,9 @@ export function useScrollRestoration({
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
 } = {}): void {
-  let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
+  let { router } = useDataRouterContext("useScrollRestoration");
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
-    DataRouterStateHook.UseScrollRestoration,
+    "useScrollRestoration",
   );
   let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
@@ -3365,9 +3326,7 @@ export function useViewTransitionState(
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 
-  let { basename } = useDataRouterContext(
-    DataRouterHook.useViewTransitionState,
-  );
+  let { basename } = useDataRouterContext("useViewTransitionState");
   let path = useResolvedPath(to, { relative });
   if (!vtContext.isTransitioning) {
     return false;

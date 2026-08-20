@@ -15,7 +15,10 @@ import {
 import { RouteIdContext } from "../lib/context";
 import { createDeferred } from "./router/utils/utils";
 
-describe("data router contexts", () => {
+describe.each([
+  { label: "default transitions", useTransitions: undefined },
+  { label: "optimistic transitions", useTransitions: true },
+])("data router contexts ($label)", ({ useTransitions }) => {
   it("does not re-render when the route ID remains unchanged", async () => {
     let parentRenders = 0;
     let childRenders = 0;
@@ -47,7 +50,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     await TestRenderer.act(async () => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     expect(parentRenders).toBe(1);
@@ -116,7 +121,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     await TestRenderer.act(async () => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     expect(loaderCalls).toBe(1);
@@ -167,7 +174,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     await TestRenderer.act(async () => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     expect(fetcherRenders).toBe(1);
@@ -212,7 +221,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     await TestRenderer.act(async () => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     expect(loaderCalls).toBe(1);
@@ -279,7 +290,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     await TestRenderer.act(async () => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     let navigationPromise: Promise<void>;
@@ -337,7 +350,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     await TestRenderer.act(async () => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     expect(matchesRenders).toBe(1);
@@ -392,7 +407,9 @@ describe("data router contexts", () => {
 
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
     });
 
     expect(renderer.toJSON()).toEqual({
