@@ -19,7 +19,6 @@ node_modules/
 
 # v6 build files
 /build/
-/packages/*/dist/
 /packages/*/LICENSE.md
 
 # v7 build files
