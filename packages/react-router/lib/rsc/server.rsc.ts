@@ -12,17 +12,16 @@ import type {
 } from "../dom/ssr/routeModules";
 import { type Location } from "../router/history";
 import {
-  createDataRouteMatcher,
   createStaticHandler,
   isDataWithResponseInit,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
+  type StaticHandler,
   type StaticHandlerContext,
 } from "../router/router";
 import {
   type ActionFunction,
-  type DataRouteObject,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
@@ -214,16 +213,6 @@ export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
 export type RSCRouteConfig = Array<RSCRouteConfigEntry>;
 
 type RSCRouteDataMatch = RouteMatch<string, RSCRouteConfigEntry>;
-type RSCDataRouteMatcher = ReturnType<typeof createDataRouteMatcher>;
-
-function createRSCDataRouteMatcher(
-  routes: RSCRouteConfigEntry[],
-  basename: string | undefined,
-): RSCDataRouteMatcher {
-  let dataRouteMatcher = createDataRouteMatcher(basename ?? "/");
-  dataRouteMatcher.update(routes as unknown as DataRouteObject[]);
-  return dataRouteMatcher;
-}
 
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
@@ -490,10 +479,8 @@ export async function matchRSCServerRequest({
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
   // and if we move to `lazy: {}` then we lose all the other things from the
   // `RSCRouteConfigEntry` like `Layout` etc.
-  let dataRouteMatcher = createRSCDataRouteMatcher(routes, basename);
-  let matches = dataRouteMatcher.match(
-    url.pathname,
-  ) as RSCRouteDataMatch[] | null;
+  let staticHandler = createStaticHandler(routes, { basename });
+  let matches = staticHandler.match(url.pathname) as RSCRouteDataMatch[] | null;
   if (matches) {
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
@@ -507,8 +494,7 @@ export async function matchRSCServerRequest({
   ) {
     return generateResourceResponse(
       routerRequest,
-      routes,
-      basename,
+      staticHandler,
       leafMatch.route.id,
       requestContext,
       onError,
@@ -517,7 +503,7 @@ export async function matchRSCServerRequest({
 
   let response = await generateRenderResponse(
     routerRequest,
-    routes,
+    staticHandler,
     basename,
     isDataRequest,
     decodeReply,
@@ -595,36 +581,41 @@ async function generateManifestResponse(
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
     : [url.pathname.replace(/\.manifest$/, "")];
-  let dataRouteMatcher = createRSCDataRouteMatcher(routes, basename);
+  let staticHandler =
+    routes.length > 0 ? createStaticHandler(routes, { basename }) : undefined;
   let routeIds = new Set<string>();
-  let matchedRoutes = pathnames
-    .flatMap((pathname) => {
-      let pathnameMatches = dataRouteMatcher.match(
-        pathname,
-      ) as RSCRouteDataMatch[] | null;
-      return (
-        pathnameMatches?.map((m, i) => ({
-          ...m.route,
-          parentId: pathnameMatches[i - 1]?.route.id,
-        })) ?? []
-      );
-    })
-    .filter((route) => {
-      if (!routeIds.has(route.id)) {
-        routeIds.add(route.id);
-        return true;
-      }
-      return false;
-    });
+  let matchedRoutes = staticHandler
+    ? pathnames
+        .flatMap((pathname) => {
+          let pathnameMatches = staticHandler.match(pathname) as
+            | RSCRouteDataMatch[]
+            | null;
+          return (
+            pathnameMatches?.map((m, i) => ({
+              ...m.route,
+              parentId: pathnameMatches[i - 1]?.route.id,
+            })) ?? []
+          );
+        })
+        .filter((route) => {
+          if (!routeIds.has(route.id)) {
+            routeIds.add(route.id);
+            return true;
+          }
+          return false;
+        })
+    : [];
   let payload: RSCManifestPayload = {
     type: "manifest",
     patches: Promise.all([
       ...matchedRoutes.map((route) => getManifestRoute(route)),
-      getAdditionalRoutePatches(
-        pathnames,
-        dataRouteMatcher,
-        Array.from(routeIds),
-      ),
+      staticHandler
+        ? getAdditionalRoutePatches(
+            pathnames,
+            staticHandler,
+            Array.from(routeIds),
+          )
+        : Promise.resolve([]),
     ]).then((r) => r.flat(1)),
   };
 
@@ -768,17 +759,12 @@ async function processServerAction(
 
 async function generateResourceResponse(
   request: Request,
-  routes: RSCRouteConfigEntry[],
-  basename: string | undefined,
+  staticHandler: StaticHandler,
   routeId: string,
   requestContext: RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
   try {
-    const staticHandler = createStaticHandler(routes, {
-      basename,
-    });
-
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext,
@@ -830,7 +816,7 @@ async function generateResourceResponse(
 
 async function generateRenderResponse(
   request: Request,
-  routes: RSCRouteConfigEntry[],
+  staticHandler: StaticHandler,
   basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
@@ -861,11 +847,6 @@ async function generateRenderResponse(
     !isSubmission && url.searchParams.has("_routes")
       ? url.searchParams.get("_routes")!.split(",")
       : null;
-
-  // Create the handler here with exploded routes
-  const staticHandler = createStaticHandler(routes, {
-    basename,
-  });
 
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {
@@ -974,7 +955,7 @@ async function generateRenderResponse(
         }
 
         return generateStaticContextResponse(
-          routes,
+          staticHandler,
           basename,
           generateResponse,
           statusCode,
@@ -1067,7 +1048,7 @@ function generateRedirectResponse(
 }
 
 async function generateStaticContextResponse(
-  routes: RSCRouteConfigEntry[],
+  staticHandler: StaticHandler,
   basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
@@ -1149,7 +1130,7 @@ async function generateStaticContextResponse(
   const renderPayloadPromise = () =>
     getRenderPayload(
       baseRenderPayload,
-      routes,
+      staticHandler,
       basename,
       routeIdsToLoad,
       isDataRequest,
@@ -1191,13 +1172,14 @@ async function generateStaticContextResponse(
 
 async function getRenderPayload(
   baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches">,
-  routes: RSCRouteConfigEntry[],
+  staticHandler: StaticHandler,
   basename: string | undefined,
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
   staticContext: StaticHandlerContext,
   routeDiscovery: RouteDiscovery | undefined,
 ) {
+  let routes = staticHandler.dataRoutes as unknown as RSCRouteConfigEntry[];
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
   let deepestRenderedRouteIdx = staticContext.matches.length - 1;
@@ -1239,10 +1221,9 @@ async function getRenderPayload(
       ),
     );
   } else {
-    let dataRouteMatcher = createRSCDataRouteMatcher(routes, basename);
     patches = getAdditionalRoutePatches(
       getPathsWithAncestors([staticContext.location.pathname]),
-      dataRouteMatcher,
+      staticHandler,
       staticContext.matches.map((m) => m.route.id),
     );
   }
@@ -1463,7 +1444,7 @@ async function getAllRoutePatches(
 
 async function getAdditionalRoutePatches(
   pathnames: string[],
-  dataRouteMatcher: RSCDataRouteMatcher,
+  staticHandler: StaticHandler,
   matchedRouteIds: string[],
 ): Promise<RSCRouteManifest[]> {
   let patchRouteMatches = new Map<
@@ -1478,8 +1459,7 @@ async function getAdditionalRoutePatches(
     }
     matchedPaths.add(pathname);
     let matches =
-      (dataRouteMatcher.match(pathname) as RSCRouteDataMatch[] | null) ||
-      [];
+      (staticHandler.match(pathname) as RSCRouteDataMatch[] | null) || [];
     matches.forEach((m, i) => {
       if (patchRouteMatches.get(m.route.id)) {
         return;

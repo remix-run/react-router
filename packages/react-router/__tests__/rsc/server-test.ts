@@ -6,6 +6,39 @@ import {
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
+  test("reuses the static handler route matcher after exploding lazy routes", async () => {
+    let childRoute: RSCRouteConfigEntry = {
+      id: "child",
+      path: "child",
+      lazy: async () => {
+        // Mutate the source route tree so compiling it again would fail. The
+        // static handler's enhanced route tree and matcher should be reused.
+        childRoute.path = "/invalid";
+        return { Component: () => null };
+      },
+    };
+    let match: RSCMatch | undefined;
+
+    let response = await matchRSCServerRequest({
+      createTemporaryReferenceSet: () => ({}),
+      request: new Request("https://remix.run/parent/child"),
+      routes: [
+        {
+          id: "parent",
+          path: "/parent",
+          children: [childRoute],
+        },
+      ],
+      generateResponse(nextMatch) {
+        match = nextMatch;
+        return new Response(null, { status: nextMatch.statusCode });
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(match?.payload.type).toBe("render");
+  });
+
   describe("manifest requests", () => {
     test("rejects manifest requests over the URL limit", async () => {
       let path = `/${"a".repeat(URL_LIMIT)}.manifest`;
