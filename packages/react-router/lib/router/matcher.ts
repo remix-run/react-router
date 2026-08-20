@@ -2,7 +2,7 @@ import type { DataRouteObject, RouteBranch, DataRouteMatch } from "./utils";
 import { flattenAndRankRoutes, matchRoutesImpl } from "./utils";
 
 export interface DataRouteMatcher {
-  update(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[];
+  update(routes: DataRouteObject[]): void;
   match(
     locationArg: Partial<Location> | string,
     allowPartial?: boolean,
@@ -18,10 +18,9 @@ export class V6RegExMatcher implements DataRouteMatcher {
     this.#basename = basename;
   }
 
-  update(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[] {
+  update(routes: DataRouteObject[]): void {
     this.#routes = routes;
     this.#branches = flattenAndRankRoutes(routes);
-    return this.#branches;
   }
 
   match(
