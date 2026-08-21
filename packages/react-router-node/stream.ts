@@ -33,7 +33,9 @@ export async function writeReadableStreamToWritable(
     }
   } catch (error: unknown) {
     try {
-      reader.cancel(error).catch(() => {});
+      reader
+        .cancel(error instanceof WritableClosedError ? undefined : error)
+        .catch(() => {});
     } catch {
       // Ignore cancellation errors so we preserve the original write failure.
     }
@@ -55,8 +57,10 @@ interface WritableErrorMonitor {
   throwIfClosed(): void;
 }
 
+class WritableClosedError extends Error {}
+
 function destroyWritable(writable: Writable, error: Error) {
-  if (writable.destroyed) {
+  if (error instanceof WritableClosedError || writable.destroyed) {
     return;
   }
 
@@ -97,7 +101,7 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   }
 
   function onClose() {
-    reject(new Error("Writable closed before stream finished"));
+    reject(new WritableClosedError("Writable closed before stream finished"));
   }
 
   writable.once("error", onError);
@@ -114,7 +118,9 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
       }
 
       if (writable.destroyed || writable.writableEnded) {
-        throw new Error("Cannot write to a destroyed or ended writable stream");
+        throw new WritableClosedError(
+          "Cannot write to a destroyed or ended writable stream",
+        );
       }
     },
   };

@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { Writable } from "node:stream";
+import { fileURLToPath } from "node:url";
 
 import {
   writeAsyncIterableToWritable,
@@ -93,35 +96,29 @@ describe("writeReadableStreamToWritable", () => {
     );
   });
 
-  it("handles writable errors after the writable closes mid-stream", async () => {
-    let errorListenerCountOnDestroy: number | undefined;
-    let writable = new Writable({
-      write(_chunk, _encoding, callback) {
-        callback();
-      },
-    });
-    let destroy = writable.destroy.bind(writable);
-    writable.destroy = function (error?: Error) {
-      errorListenerCountOnDestroy = writable.listenerCount("error");
-      // Prevent this regression test from crashing the Jest process when the
-      // implementation removes its error listener too early.
-      writable.once("error", () => {});
-      return destroy(error);
-    } as typeof writable.destroy;
-    let readable = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(new Uint8Array(1));
-      },
-    });
-
-    let writePromise = writeReadableStreamToWritable(readable, writable);
-
-    setTimeout(() => writable.emit("close"), 10);
-
-    await expect(withTimeout(writePromise, 100)).rejects.toThrow(
-      "Writable closed before stream finished",
+  it("does not crash when the writable closes mid-stream", () => {
+    let fixture = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "fixtures",
+      "stream-client-disconnect.ts",
     );
-    expect(errorListenerCountOnDestroy).toBeGreaterThan(0);
+    let result = spawnSync(
+      process.execPath,
+      ["--experimental-strip-types", "--no-warnings", fixture],
+      { encoding: "utf8", timeout: 5_000 },
+    );
+
+    expect({
+      status: result.status,
+      signal: result.signal,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    }).toEqual({
+      status: 0,
+      signal: null,
+      stdout: "process survived\n",
+      stderr: "",
+    });
   });
 });
 
