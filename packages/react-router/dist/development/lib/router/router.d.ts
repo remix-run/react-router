@@ -1,0 +1,663 @@
+
+import { Action, History, Location, Path, To } from "./history.js";
+import { DataRouteMatch, DataRouteObject, DataStrategyFunction, FormEncType, HTMLFormMethod, MapRoutePropertiesFunction, MaybePromise, PatchRoutesOnNavigationFunction, RouteBranch, RouteData, RouteManifest, RouteObject, RouterContextProvider, Submission, UIMatch } from "./utils.js";
+import { ClientInstrumentation, ServerInstrumentation } from "./instrumentation.js";
+
+//#region lib/router/router.d.ts
+/**
+ * A Router instance manages all navigation and data loading/mutations
+ */
+interface Router {
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the basename for the router
+   */
+  get basename(): RouterInit["basename"];
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the future config for the router
+   */
+  get future(): FutureConfig;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the current state of the router
+   */
+  get state(): RouterState;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the routes for this router instance
+   */
+  get routes(): DataRouteObject[];
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the route branches for this router instance
+   */
+  get branches(): RouteBranch<DataRouteObject>[] | undefined;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the manifest for this router instance
+   */
+  get manifest(): RouteManifest;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Return the window associated with the router
+   */
+  get window(): RouterInit["window"];
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Initialize the router, including adding history listeners and kicking off
+   * initial data fetches.  Returns a function to cleanup listeners and abort
+   * any in-progress loads
+   */
+  initialize(): Router;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Subscribe to router.state updates
+   *
+   * @param fn function to call with the new state
+   */
+  subscribe(fn: RouterSubscriber): () => void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Enable scroll restoration behavior in the router
+   *
+   * @param savedScrollPositions Object that will manage positions, in case
+   *                             it's being restored from sessionStorage
+   * @param getScrollPosition    Function to get the active Y scroll position
+   * @param getKey               Function to get the key to use for restoration
+   */
+  enableScrollRestoration(savedScrollPositions: Record<string, number>, getScrollPosition: GetScrollPositionFunction, getKey?: GetScrollRestorationKeyFunction): () => void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Navigate forward/backward in the history stack
+   * @param to Delta to move in the history stack
+   */
+  navigate(to: number): Promise<void>;
+  /**
+   * Navigate to the given path
+   * @param to Path to navigate to
+   * @param opts Navigation options (method, submission, etc.)
+   */
+  navigate(to: To | null, opts?: RouterNavigateOptions): Promise<void>;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Trigger a fetcher load/submission
+   *
+   * @param key     Fetcher key
+   * @param routeId Route that owns the fetcher
+   * @param href    href to fetch
+   * @param opts    Fetcher options, (method, submission, etc.)
+   */
+  fetch(key: string, routeId: string, href: string | null, opts?: RouterFetchOptions): Promise<void>;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Trigger a revalidation of all current route loaders and fetcher loads
+   */
+  revalidate(): Promise<void>;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Utility function to create an href for the given location
+   * @param location
+   */
+  createHref(location: Location | URL): string;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Utility function to URL encode a destination path according to the internal
+   * history implementation
+   * @param to
+   */
+  encodeLocation(to: To): Path;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Get/create a fetcher for the given key
+   * @param key
+   */
+  getFetcher<TData = any>(key: string): Fetcher<TData>;
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Reset the fetcher for a given key
+   * @param key
+   */
+  resetFetcher(key: string, opts?: {
+    reason?: unknown;
+  }): void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Delete the fetcher for a given key
+   * @param key
+   */
+  deleteFetcher(key: string): void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Cleanup listeners and abort any in-progress loads
+   */
+  dispose(): void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Get a navigation blocker
+   * @param key The identifier for the blocker
+   * @param fn The blocker function implementation
+   */
+  getBlocker(key: string, fn: BlockerFunction): Blocker;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Delete a navigation blocker
+   * @param key The identifier for the blocker
+   */
+  deleteBlocker(key: string): void;
+  /**
+   * @private
+   * PRIVATE DO NOT USE
+   *
+   * Patch additional children routes into an existing parent route
+   * @param routeId The parent route id or a callback function accepting `patch`
+   *                to perform batch patching
+   * @param children The additional children routes
+   * @param unstable_allowElementMutations Allow mutation or route elements on
+   *                                       existing routes. Intended for RSC-usage
+   *                                       only.
+   */
+  patchRoutes(routeId: string | null, children: RouteObject[], unstable_allowElementMutations?: boolean): void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * HMR needs to pass in-flight route updates to React Router
+   * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
+   */
+  _internalSetRoutes(routes: RouteObject[]): void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Cause subscribers to re-render.  This is used to force a re-render.
+   */
+  _internalSetStateDoNotUseOrYouWillBreakYourApp(state: Partial<RouterState>): void;
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Internal fetch AbortControllers accessed by unit tests
+   */
+  _internalFetchControllers: Map<string, AbortController>;
+}
+/**
+ * State maintained internally by the router.  During a navigation, all states
+ * reflect the "old" location unless otherwise noted.
+ */
+interface RouterState {
+  /**
+   * The action of the most recent navigation
+   */
+  historyAction: Action;
+  /**
+   * The current location reflected by the router
+   */
+  location: Location;
+  /**
+   * The current set of route matches
+   */
+  matches: DataRouteMatch[];
+  /**
+   * Tracks whether we've completed our initial data load
+   */
+  initialized: boolean;
+  /**
+   * Tracks whether we should be rendering a HydrateFallback during hydration
+   */
+  renderFallback: boolean;
+  /**
+   * Current scroll position we should start at for a new view
+   *  - number -> scroll position to restore to
+   *  - false -> do not restore scroll at all (used during submissions/revalidations)
+   *  - null -> don't have a saved position, scroll to hash or top of page
+   */
+  restoreScrollPosition: number | false | null;
+  /**
+   * Indicate whether this navigation should skip resetting the scroll position
+   * if we are unable to restore the scroll position
+   */
+  preventScrollReset: boolean;
+  /**
+   * Tracks the state of the current navigation
+   */
+  navigation: Navigation;
+  /**
+   * Tracks any in-progress revalidations
+   */
+  revalidation: RevalidationState;
+  /**
+   * Data from the loaders for the current matches
+   */
+  loaderData: RouteData;
+  /**
+   * Data from the action for the current matches
+   */
+  actionData: RouteData | null;
+  /**
+   * Errors caught from loaders for the current matches
+   */
+  errors: RouteData | null;
+  /**
+   * Map of current fetchers
+   */
+  fetchers: Map<string, Fetcher>;
+  /**
+   * Map of current blockers
+   */
+  blockers: Map<string, Blocker>;
+}
+/**
+ * Data that can be passed into hydrate a Router from SSR
+ */
+type HydrationState = Partial<Pick<RouterState, "loaderData" | "actionData" | "errors">>;
+/**
+ * Future flags to toggle new feature behavior
+ */
+interface FutureConfig {}
+/**
+ * Initialization options for createRouter
+ */
+interface RouterInit {
+  routes: RouteObject[];
+  history: History;
+  basename?: string;
+  getContext?: () => MaybePromise<RouterContextProvider>;
+  instrumentations?: ClientInstrumentation[];
+  mapRouteProperties?: MapRoutePropertiesFunction;
+  future?: Partial<FutureConfig>;
+  hydrationRouteProperties?: string[];
+  hydrationData?: HydrationState;
+  window?: Window;
+  dataStrategy?: DataStrategyFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+}
+/**
+ * State returned from a server-side query() call
+ */
+interface StaticHandlerContext {
+  basename: Router["basename"];
+  location: RouterState["location"];
+  matches: RouterState["matches"];
+  loaderData: RouterState["loaderData"];
+  actionData: RouterState["actionData"];
+  errors: RouterState["errors"];
+  statusCode: number;
+  loaderHeaders: Record<string, Headers>;
+  actionHeaders: Record<string, Headers>;
+  _deepestRenderedBoundaryId?: string | null;
+}
+/**
+ * A StaticHandler instance manages a singular SSR navigation/fetch event
+ */
+interface StaticHandler {
+  /**
+   * The set of data routes managed by this handler
+   */
+  dataRoutes: DataRouteObject[];
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * The route branches derived from the data routes, used for internal route
+   * matching in Framework Mode
+   */
+  _internalRouteBranches: RouteBranch<DataRouteObject>[];
+  /**
+   * Perform a query for a given request - executing all matched route
+   * loaders/actions.  Used for document requests.
+   *
+   * @param request The request to query
+   * @param opts Optional query options
+   * @param opts.dataStrategy Alternate dataStrategy implementation
+   * @param opts.filterMatchesToLoad Predicate function to filter which matches should be loaded
+   * @param opts.generateMiddlewareResponse To enable middleware, provide a function
+   * to generate a response to bubble back up the middleware chain
+   * @param opts.requestContext Context object to pass to loaders/actions
+   * @param opts.skipLoaderErrorBubbling Skip loader error bubbling
+   * @param opts.skipRevalidation Skip revalidation after action submission
+   * @param opts.normalizePath Normalize the request path
+   */
+  query(request: Request, opts?: {
+    requestContext?: unknown;
+    filterMatchesToLoad?: (match: DataRouteMatch) => boolean;
+    skipLoaderErrorBubbling?: boolean;
+    skipRevalidation?: boolean;
+    dataStrategy?: DataStrategyFunction<unknown>;
+    generateMiddlewareResponse?: (query: (r: Request, args?: {
+      filterMatchesToLoad?: (match: DataRouteMatch) => boolean;
+    }) => Promise<StaticHandlerContext | Response>) => MaybePromise<Response>;
+    normalizePath?: (request: Request) => Path;
+  }): Promise<StaticHandlerContext | Response>;
+  /**
+   * Perform a query for a specific route.  Used for resource requests.
+   *
+   * @param request The request to query
+   * @param opts Optional queryRoute options
+   * @param opts.dataStrategy Alternate dataStrategy implementation
+   * @param opts.generateMiddlewareResponse To enable middleware, provide a function
+   * to generate a response to bubble back up the middleware chain
+   * @param opts.requestContext Context object to pass to loaders/actions
+   * @param opts.routeId The ID of the route to query
+   * @param opts.normalizePath Normalize the request path
+      */
+  queryRoute(request: Request, opts?: {
+    routeId?: string;
+    requestContext?: unknown;
+    dataStrategy?: DataStrategyFunction<unknown>;
+    generateMiddlewareResponse?: (queryRoute: (r: Request) => Promise<Response>) => MaybePromise<Response>;
+    normalizePath?: (request: Request) => Path;
+  }): Promise<any>;
+}
+type ViewTransitionOpts = {
+  currentLocation: Location;
+  nextLocation: Location;
+};
+/**
+ * Subscriber function signature for changes to router state
+ */
+interface RouterSubscriber {
+  (state: RouterState, opts: {
+    deletedFetchers: string[];
+    newErrors: RouteData | null;
+    viewTransitionOpts?: ViewTransitionOpts;
+    flushSync: boolean;
+  }): void;
+}
+/**
+ * Function signature for determining the key to be used in scroll restoration
+ * for a given location
+ */
+interface GetScrollRestorationKeyFunction {
+  (location: Location, matches: UIMatch[]): string | null;
+}
+/**
+ * Function signature for determining the current scroll position
+ */
+interface GetScrollPositionFunction {
+  (): number;
+}
+/**
+ * - "route": relative to the route hierarchy so `..` means remove all segments
+ * of the current route even if it has many. For example, a `route("posts/:id")`
+ * would have both `:id` and `posts` removed from the url.
+ * - "path": relative to the pathname so `..` means remove one segment of the
+ * pathname. For example, a `route("posts/:id")` would have only `:id` removed
+ * from the url.
+ */
+type RelativeRoutingType = "route" | "path";
+type BaseNavigateOrFetchOptions = {
+  preventScrollReset?: boolean;
+  relative?: RelativeRoutingType;
+  flushSync?: boolean;
+  defaultShouldRevalidate?: boolean;
+};
+type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
+  replace?: boolean;
+  state?: any;
+  fromRouteId?: string;
+  viewTransition?: boolean;
+  mask?: To;
+};
+type BaseSubmissionOptions = {
+  formMethod?: HTMLFormMethod;
+  formEncType?: FormEncType;
+} & ({
+  formData: FormData;
+  body?: undefined;
+} | {
+  formData?: undefined;
+  body: any;
+});
+/**
+ * Options for a navigate() call for a normal (non-submission) navigation
+ */
+type LinkNavigateOptions = BaseNavigateOptions;
+/**
+ * Options for a navigate() call for a submission navigation
+ */
+type SubmissionNavigateOptions = BaseNavigateOptions & BaseSubmissionOptions;
+/**
+ * Options to pass to navigate() for a navigation
+ */
+type RouterNavigateOptions = LinkNavigateOptions | SubmissionNavigateOptions;
+/**
+ * Options for a fetch() load
+ */
+type LoadFetchOptions = BaseNavigateOrFetchOptions;
+/**
+ * Options for a fetch() submission
+ */
+type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
+/**
+ * Options to pass to fetch()
+ */
+type RouterFetchOptions = LoadFetchOptions | SubmitFetchOptions;
+/**
+ * Potential states for state.navigation
+ */
+type NavigationStates = {
+  Idle: {
+    state: "idle";
+    location: undefined;
+    matches: undefined;
+    historyAction: undefined;
+    formMethod: undefined;
+    formAction: undefined;
+    formEncType: undefined;
+    formData: undefined;
+    json: undefined;
+    text: undefined;
+  };
+  Loading: {
+    state: "loading";
+    location: Location;
+    matches: DataRouteMatch[];
+    historyAction: Action;
+    formMethod: Submission["formMethod"] | undefined;
+    formAction: Submission["formAction"] | undefined;
+    formEncType: Submission["formEncType"] | undefined;
+    formData: Submission["formData"] | undefined;
+    json: Submission["json"] | undefined;
+    text: Submission["text"] | undefined;
+  };
+  Submitting: {
+    state: "submitting";
+    location: Location;
+    matches: DataRouteMatch[];
+    historyAction: Action;
+    formMethod: Submission["formMethod"];
+    formAction: Submission["formAction"];
+    formEncType: Submission["formEncType"];
+    formData: Submission["formData"];
+    json: Submission["json"];
+    text: Submission["text"];
+  };
+};
+type Navigation = NavigationStates[keyof NavigationStates];
+type RevalidationState = "idle" | "loading";
+/**
+ * Potential states for fetchers
+ */
+type FetcherStates<TData = any> = {
+  /**
+   * The fetcher is not calling a loader or action
+   *
+   * ```tsx
+   * fetcher.state === "idle"
+   * ```
+   */
+  Idle: {
+    state: "idle";
+    formMethod: undefined;
+    formAction: undefined;
+    formEncType: undefined;
+    text: undefined;
+    formData: undefined;
+    json: undefined;
+    /**
+     * If the fetcher has never been called, this will be undefined.
+     */
+    data: TData | undefined;
+  };
+  /**
+   * The fetcher is loading data from a {@link LoaderFunction | loader} from a
+   * call to {@link FetcherWithComponents.load | `fetcher.load`}.
+   *
+   * ```tsx
+   * // somewhere
+   * <button onClick={() => fetcher.load("/some/route") }>Load</button>
+   *
+   * // the state will update
+   * fetcher.state === "loading"
+   * ```
+   */
+  Loading: {
+    state: "loading";
+    formMethod: Submission["formMethod"] | undefined;
+    formAction: Submission["formAction"] | undefined;
+    formEncType: Submission["formEncType"] | undefined;
+    text: Submission["text"] | undefined;
+    formData: Submission["formData"] | undefined;
+    json: Submission["json"] | undefined;
+    data: TData | undefined;
+  };
+  /**
+    The fetcher is submitting to a {@link LoaderFunction} (GET) or {@link ActionFunction} (POST) from a {@link FetcherWithComponents.Form | `fetcher.Form`} or {@link FetcherWithComponents.submit | `fetcher.submit`}.
+       ```tsx
+    // somewhere
+    <input
+      onChange={e => {
+        fetcher.submit(event.currentTarget.form, { method: "post" });
+      }}
+    />
+       // the state will update
+    fetcher.state === "submitting"
+       // and formData will be available
+    fetcher.formData
+    ```
+   */
+  Submitting: {
+    state: "submitting";
+    formMethod: Submission["formMethod"];
+    formAction: Submission["formAction"];
+    formEncType: Submission["formEncType"];
+    text: Submission["text"];
+    formData: Submission["formData"];
+    json: Submission["json"];
+    data: TData | undefined;
+  };
+};
+type Fetcher<TData = any> = FetcherStates<TData>[keyof FetcherStates<TData>];
+interface BlockerBlocked {
+  state: "blocked";
+  reset: () => void;
+  proceed: () => void;
+  location: Location;
+}
+interface BlockerUnblocked {
+  state: "unblocked";
+  reset: undefined;
+  proceed: undefined;
+  location: undefined;
+}
+interface BlockerProceeding {
+  state: "proceeding";
+  reset: undefined;
+  proceed: undefined;
+  location: Location;
+}
+type Blocker = BlockerUnblocked | BlockerBlocked | BlockerProceeding;
+type BlockerFunction = (args: {
+  currentLocation: Location;
+  nextLocation: Location;
+  historyAction: Action;
+}) => boolean;
+declare const IDLE_NAVIGATION: NavigationStates["Idle"];
+declare const IDLE_FETCHER: FetcherStates["Idle"];
+declare const IDLE_BLOCKER: BlockerUnblocked;
+/**
+ * Create a router and listen to history POP navigations
+ */
+declare function createRouter(init: RouterInit): Router;
+interface CreateStaticHandlerOptions {
+  basename?: string;
+  mapRouteProperties?: MapRoutePropertiesFunction;
+  instrumentations?: Pick<ServerInstrumentation, "route">[];
+  future?: Partial<FutureConfig>;
+}
+/**
+ * Create a static handler to perform server-side data loading
+ *
+ * @example
+ * export async function handleRequest(request: Request) {
+ *   let { query, dataRoutes } = createStaticHandler(routes);
+ *   let context = await query(request);
+ *
+ *   if (context instanceof Response) {
+ *     return context;
+ *   }
+ *
+ *   let router = createStaticRouter(dataRoutes, context);
+ *   return new Response(
+ *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
+ *     { headers: { "Content-Type": "text/html" } }
+ *   );
+ * }
+ *
+ * @public
+ * @category Data Routers
+ * @mode data
+ * @param routes The {@link RouteObject | route objects} to create a static
+ * handler for
+ * @param opts Options
+ * @param opts.basename The base URL for the static handler (default: `/`)
+ * @param opts.future Future flags for the static handler
+ * @returns A static handler that can be used to query data for the provided
+ * routes
+ */
+declare function createStaticHandler(routes: RouteObject[], opts?: CreateStaticHandlerOptions): StaticHandler;
+//#endregion
+export { Blocker, BlockerFunction, Fetcher, FutureConfig, GetScrollPositionFunction, GetScrollRestorationKeyFunction, HydrationState, IDLE_BLOCKER, IDLE_FETCHER, IDLE_NAVIGATION, Navigation, NavigationStates, RelativeRoutingType, RevalidationState, Router, RouterFetchOptions, RouterInit, RouterNavigateOptions, RouterState, RouterSubscriber, StaticHandler, StaticHandlerContext, createRouter, createStaticHandler };
