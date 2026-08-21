@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.3.1](#v831)
   - [v8.3.0](#v830)
     - [RSC Entry Updates](#rsc-entry-updates)
   - [v8.2.0](#v820)
@@ -110,6 +111,24 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.3.1
+
+Date: 2026-08-21
+
+### Patch Changes
+
+- `react-router` - Fix `Expected fetcher: <key>` error thrown on navigation when a fetcher is aborted during its post-action revalidation ([#15365](https://github.com/remix-run/react-router/pull/15365))
+- `react-router` - Improve route matching performance for long paths ([#15417](https://github.com/remix-run/react-router/pull/15417))
+- `react-router` - Improve handling of special characters in navigation paths ([#15416](https://github.com/remix-run/react-router/pull/15416))
+- `react-router` - Improve validation of action request origins ([#15419](https://github.com/remix-run/react-router/pull/15419))
+- `react-router` - Fix `<ScrollRestoration>` leaving `history.scrollRestoration` set to `"auto"` after a bfcache restore, which let the browser restore scroll on subsequent history traversals before the destination route had rendered ([#15397](https://github.com/remix-run/react-router/pull/15397))
+- `react-router` - Properly respect the `relative` option in `useSubmit`/`fetcher.submit` when resolivng the `action` path ([#15400](https://github.com/remix-run/react-router/pull/15400))
+- `@react-router/dev` - Generate JavaScript entry files at package build time so `react-router reveal --no-typescript` does not require Prettier at runtime ([#15373](https://github.com/remix-run/react-router/pull/15373))
+  - Deprecate the `--no-typescript` flag ahead of its removal in React Router v9
+- `@react-router/serve` - Serve `/.well-known/*` files from the client build directory. Express 5's static middleware ignores every dot-segment path by default, so RFC 8615 well-known URIs — ACME challenges, Android's `assetlinks.json`, Apple's `apple-app-site-association` — fell through to the request handler and came back as app-rendered HTML instead of the static file. Other dotfiles remain hidden. ([#15340](https://github.com/remix-run/react-router/pull/15340))
+
+**Full Changelog**: [`v8.3.0...v8.3.1`](https://github.com/remix-run/react-router/compare/react-router@8.3.0...react-router@8.3.1)
 
 ## v8.3.0
 
