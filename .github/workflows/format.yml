@@ -33,9 +33,6 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Sort contributors.yml
-        run: sort --ignore-case --output contributors.yml contributors.yml
-
       - name: Format
         run: pnpm format
 

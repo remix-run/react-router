@@ -2,7 +2,7 @@
  * Opens or updates the release PR.
  *
  * Usage:
- *   node scripts/pr.ts [--preview]
+ *   node scripts/changes/pr.ts [--preview]
  *
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
