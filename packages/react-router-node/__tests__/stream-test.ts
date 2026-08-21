@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { Writable } from "node:stream";
+import { fileURLToPath } from "node:url";
 
 import {
   writeAsyncIterableToWritable,
@@ -91,6 +94,31 @@ describe("writeReadableStreamToWritable", () => {
     await expect(withTimeout(writePromise, 100)).rejects.toThrow(
       "Writable failed",
     );
+  });
+
+  it("does not crash when the writable closes mid-stream", () => {
+    let fixture = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "fixtures",
+      "stream-client-disconnect.ts",
+    );
+    let result = spawnSync(
+      process.execPath,
+      ["--experimental-strip-types", "--no-warnings", fixture],
+      { encoding: "utf8", timeout: 5_000 },
+    );
+
+    expect({
+      status: result.status,
+      signal: result.signal,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    }).toEqual({
+      status: 0,
+      signal: null,
+      stdout: "process survived\n",
+      stderr: "",
+    });
   });
 });
 

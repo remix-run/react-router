@@ -33,11 +33,13 @@ export async function writeReadableStreamToWritable(
     }
   } catch (error: unknown) {
     try {
-      reader.cancel(error).catch(() => {});
+      reader
+        .cancel(error instanceof WritableClosedError ? undefined : error)
+        .catch(() => {});
     } catch {
       // Ignore cancellation errors so we preserve the original write failure.
     }
-    writable.destroy(error as Error);
+    destroyWritable(writable, error as Error);
     throw error;
   } finally {
     writableError.cleanup();
@@ -53,6 +55,20 @@ interface WritableErrorMonitor {
   cleanup(): void;
   race<T>(promise: Promise<T>): Promise<T>;
   throwIfClosed(): void;
+}
+
+class WritableClosedError extends Error {}
+
+function destroyWritable(writable: Writable, error: Error) {
+  if (error instanceof WritableClosedError || writable.destroyed) {
+    return;
+  }
+
+  // The write promise carries this error to the caller. Also consume the
+  // asynchronous error event from destroy so it cannot crash the process
+  // after the writable error monitor has been cleaned up.
+  writable.once("error", () => {});
+  writable.destroy(error);
 }
 
 function monitorWritableError(writable: Writable): WritableErrorMonitor {
@@ -85,7 +101,7 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   }
 
   function onClose() {
-    reject(new Error("Writable closed before stream finished"));
+    reject(new WritableClosedError("Writable closed before stream finished"));
   }
 
   writable.once("error", onError);
@@ -102,7 +118,9 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
       }
 
       if (writable.destroyed || writable.writableEnded) {
-        throw new Error("Cannot write to a destroyed or ended writable stream");
+        throw new WritableClosedError(
+          "Cannot write to a destroyed or ended writable stream",
+        );
       }
     },
   };
@@ -166,7 +184,7 @@ export async function writeAsyncIterableToWritable(
         // Ignore return errors so we preserve the original write failure.
       }
     }
-    writable.destroy(error);
+    destroyWritable(writable, error);
     throw error;
   } finally {
     writableError.cleanup();
