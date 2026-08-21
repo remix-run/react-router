@@ -693,6 +693,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let publicPath = viteUserConfig.base ?? "/";
 
     if (
+      viteCommand === "build" &&
+      reactRouterConfig.basename === "/" &&
+      publicPath.startsWith("/") &&
+      !publicPath.startsWith("//")
+    ) {
+      reactRouterConfig = { ...reactRouterConfig, basename: publicPath };
+    }
+
+    if (
       reactRouterConfig.basename !== "/" &&
       viteCommand === "serve" &&
       !viteUserConfig.server?.middlewareMode &&
