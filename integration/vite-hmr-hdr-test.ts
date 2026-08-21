@@ -26,6 +26,11 @@ templates.forEach((template) => {
           // imports
           import { useState, useEffect } from "react";
 
+          if (typeof window !== "undefined") {
+            const global = window as typeof window & { __routeEvaluations?: number };
+            global.__routeEvaluations = (global.__routeEvaluations ?? 0) + 1;
+          }
+
           export const meta = () => [{ title: "HMR updated title: 0" }]
 
           // loader
@@ -170,6 +175,15 @@ async function workflow({
 
   await expect(page).toHaveTitle("HMR updated title: 0");
   await expect(hmrStatus).toHaveText("HMR updated: 0");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as typeof window & { __routeEvaluations?: number })
+            .__routeEvaluations,
+      ),
+    )
+    .toBe(1);
   let input = page.locator("#index input");
   await expect(input).toBeVisible();
   await input.fill("stateful");
@@ -187,6 +201,14 @@ async function workflow({
   await expect(page).toHaveTitle("HMR updated title: 1");
   await expect(hmrStatus).toHaveText("HMR updated: 1");
   await expect(input).toHaveValue("stateful");
+  await page.waitForTimeout(100);
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { __routeEvaluations?: number })
+          .__routeEvaluations,
+    ),
+  ).toBe(2);
   expect(page.errors).toEqual([]);
 
   // route: add loader
