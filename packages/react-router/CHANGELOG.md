@@ -1,5 +1,16 @@
 # `react-router`
 
+## v8.3.1
+
+### Patch Changes
+
+- Fix `Expected fetcher: <key>` error thrown on navigation when a fetcher is aborted during its post-action revalidation ([#15365](https://github.com/remix-run/react-router/pull/15365))
+- Improve route matching performance for long paths ([#15417](https://github.com/remix-run/react-router/pull/15417))
+- Improve handling of special characters in navigation paths ([#15416](https://github.com/remix-run/react-router/pull/15416))
+- Improve validation of action request origins ([#15419](https://github.com/remix-run/react-router/pull/15419))
+- Fix `<ScrollRestoration>` leaving `history.scrollRestoration` set to `"auto"` after a bfcache restore, which let the browser restore scroll on subsequent history traversals before the destination route had rendered ([#15397](https://github.com/remix-run/react-router/pull/15397))
+- Properly respect the `relative` option in `useSubmit`/`fetcher.submit` when resolivng the `action` path ([#15400](https://github.com/remix-run/react-router/pull/15400))
+
 ## v8.3.0
 
 ### Patch Changes
