@@ -7191,7 +7191,18 @@ function mergeLoaderData(
       break;
     }
   }
-  return mergedLoaderData;
+
+  let loaderDataKeys = Object.keys(loaderData);
+  let mergedLoaderDataKeys = Object.keys(mergedLoaderData);
+  // If no loaders produced new data and the merge retained every existing
+  // entry, reuse the prior object so data context consumers aren't notified.
+  // Don't reuse it after a loader ran, even if it returned the same reference.
+  let canReuseLoaderData =
+    Object.keys(newLoaderData).length === 0 &&
+    loaderDataKeys.length === mergedLoaderDataKeys.length &&
+    mergedLoaderDataKeys.every((key) => loaderData.hasOwnProperty(key));
+
+  return canReuseLoaderData ? loaderData : mergedLoaderData;
 }
 
 function getActionDataForCommit(

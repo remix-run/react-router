@@ -797,15 +797,7 @@ describe("createMemoryRouter", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Bar"));
-    expect(spy).toHaveBeenCalledWith("Layout", [
-      {
-        data: undefined,
-        handle: undefined,
-        id: "0",
-        params: {},
-        pathname: "/",
-      },
-    ]);
+    expect(spy).not.toHaveBeenCalled();
 
     spy.mockClear();
     await waitFor(() => screen.getByText("Bar"));
