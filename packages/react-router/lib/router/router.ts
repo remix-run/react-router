@@ -5539,6 +5539,21 @@ function getMatchesToLoad(
       return;
     }
 
+    // If the fetcher is still mid initial load and the only match we have is
+    // ambiguous (dynamic param or splat), it may only be matching because the
+    // real route hasn't been discovered/patched into the tree yet (see
+    // checkFogOfWar which uses the same heuristic).  Revalidating now would
+    // target the wrong route (e.g. `_routes=routes/$` in framework mode,
+    // producing SingleFetchNoResultError) - skip and let the in-flight
+    // initial load finish; it will re-match after discovery completes.
+    if (
+      hasPatchRoutesOnNavigation &&
+      isMidInitialLoad &&
+      Object.keys(fetcherMatches[0].params).length > 0
+    ) {
+      return;
+    }
+
     if (fetchRedirectIds.has(key)) {
       // Never trigger a revalidation of an actively redirecting fetcher
       return;
