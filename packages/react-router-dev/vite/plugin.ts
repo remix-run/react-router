@@ -1359,19 +1359,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
         };
       },
-      // buildApp: {
-      //   order: "post",
-      //   handler: async (builder) => {
-      //     let { reactRouterConfig } = ctx;
+      buildApp: {
+        order: "post",
+        handler: async (builder) => {
+          let { reactRouterConfig } = ctx;
 
-      //     let serverBuildDirectory =
-      //       builder.environments.ssr.config?.build?.outDir;
-      //     if (serverBuildDirectory && !reactRouterConfig.ssr) {
-      //       // For both SPA mode and prerendering, we can remove the server builds
-      //       rmSync(serverBuildDirectory, { force: true, recursive: true });
-      //     }
-      //   },
-      // },
+          let serverBuildDirectory =
+            builder.environments.ssr?.config?.build?.outDir ??
+            getServerBuildDirectory(reactRouterConfig);
+          if (serverBuildDirectory && !reactRouterConfig.ssr) {
+            // For both SPA mode and prerendering, we can remove the server builds
+            // since there is no runtime server. The cleaner version of this was
+            // commented out in 75de31f but the `build/server/index.js` artifact
+            // was left behind (see https://github.com/remix-run/react-router/issues/15305).
+            await rm(serverBuildDirectory, { force: true, recursive: true });
+          }
+        },
+      },
       configEnvironment(name, options) {
         if (isReactRouterServerEnvironment(ctx, name)) {
           const vite = getVite();
