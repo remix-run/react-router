@@ -1265,6 +1265,9 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
 
+  // Fetchers currently being revalidated from a prior loader/action pass
+  let revalidatingFetchersInFlight = new Set<string>();
+
   // Ref-count mounted fetchers so we know when it's ok to clean them up
   let activeFetchers = new Map<string, number>();
 
@@ -2408,6 +2411,7 @@ export function createRouter(init: RouterInit): Router {
       initialHydration === true,
       isRevalidationRequired,
       cancelledFetcherLoads,
+      revalidatingFetchersInFlight,
       fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
@@ -2474,6 +2478,7 @@ export function createRouter(init: RouterInit): Router {
         // Fetchers use an independent AbortController so that aborting a fetcher
         // (via deleteFetcher) does not abort the triggering navigation that
         // triggered the revalidation
+        revalidatingFetchersInFlight.add(rf.key);
         fetchControllers.set(rf.key, rf.controller);
       }
     });
@@ -2511,7 +2516,10 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
+    revalidatingFetchers.forEach((rf) => {
+      fetchControllers.delete(rf.key);
+      revalidatingFetchersInFlight.delete(rf.key);
+    });
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(loaderResults);
@@ -2895,6 +2903,7 @@ export function createRouter(init: RouterInit): Router {
       false,
       isRevalidationRequired,
       cancelledFetcherLoads,
+      revalidatingFetchersInFlight,
       fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
@@ -2929,6 +2938,7 @@ export function createRouter(init: RouterInit): Router {
         workingFetchers.set(staleKey, revalidatingFetcher);
         abortFetcher(staleKey);
         if (rf.controller) {
+          revalidatingFetchersInFlight.add(staleKey);
           fetchControllers.set(staleKey, rf.controller);
         }
       });
@@ -2969,7 +2979,10 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
+    revalidatingFetchers.forEach((r) => {
+      fetchControllers.delete(r.key);
+      revalidatingFetchersInFlight.delete(r.key);
+    });
 
     let fetcherIsMounted = state.fetchers.has(key);
 
@@ -3595,6 +3608,7 @@ export function createRouter(init: RouterInit): Router {
     if (controller) {
       controller.abort(reason);
       fetchControllers.delete(key);
+      revalidatingFetchersInFlight.delete(key);
     }
   }
 
@@ -5343,6 +5357,7 @@ function getMatchesToLoad(
   initialHydration: boolean,
   isRevalidationRequired: boolean,
   cancelledFetcherLoads: Set<string>,
+  revalidatingFetchersInFlight: Set<string>,
   fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
@@ -5541,6 +5556,15 @@ function getMatchesToLoad(
 
     if (fetchRedirectIds.has(key)) {
       // Never trigger a revalidation of an actively redirecting fetcher
+      return;
+    }
+
+    if (
+      revalidatingFetchersInFlight.has(key) &&
+      !cancelledFetcherLoads.has(key)
+    ) {
+      // Let in-flight fetcher revalidations complete instead of aborting and
+      // restarting the same fetcher load.
       return;
     }
 
