@@ -191,6 +191,29 @@ describe("injectRSCPayload", () => {
 });
 
 describe("routeRSCServerRequest", () => {
+  it("normalizes RSC server redirect locations", async () => {
+    let response = await routeRSCServerRequest({
+      request: new Request("https://remix.run/"),
+      serverResponse: new Response(createRSCStream().stream, { status: 202 }),
+      createFromReadableStream: async (body) => {
+        await readStream(body);
+        return {
+          type: "redirect",
+          location: "//example/path?search=value#hash",
+          status: 302,
+        } as never;
+      },
+      async renderHTML() {
+        throw new Error("Unexpected HTML render");
+      },
+    });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Location")).toBe(
+      "/example/path?search=value#hash",
+    );
+  });
+
   it("passes a nonce to the HTML renderer and RSC payload scripts", async () => {
     let renderNonce: string | undefined;
     let response = await routeRSCServerRequest({
