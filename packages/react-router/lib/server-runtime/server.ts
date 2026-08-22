@@ -1,9 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type {
-  DataRouteObject,
-  ErrorResponse,
-  RouteBranch,
-} from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import {
   defaultMapRouteProperties,
   isRouteErrorResponse,
@@ -192,12 +188,7 @@ function derive(build: ServerBuild, mode?: string) {
       requestUrl.pathname === manifestUrl
     ) {
       try {
-        let res = await handleManifestRequest(
-          build,
-          staticHandler.dataRoutes,
-          staticHandler._internalRouteBranches,
-          requestUrl,
-        );
+        let res = await handleManifestRequest(build, staticHandler, requestUrl);
         return res;
       } catch (e) {
         handleError(e);
@@ -207,10 +198,8 @@ function derive(build: ServerBuild, mode?: string) {
 
     let matches = matchServerRoutes(
       build.routes,
-      staticHandler.dataRoutes,
-      staticHandler._internalRouteBranches,
+      staticHandler,
       normalizedPathname,
-      build.basename,
     );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
@@ -375,8 +364,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  dataRoutes: DataRouteObject[],
-  branches: RouteBranch<DataRouteObject>[],
+  staticHandler: StaticHandler,
   url: URL,
 ) {
   if (url.toString().length > URL_LIMIT) {
@@ -404,13 +392,7 @@ async function handleManifestRequest(
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let matches = matchServerRoutes(
-        build.routes,
-        dataRoutes,
-        branches,
-        path,
-        build.basename,
-      );
+      let matches = matchServerRoutes(build.routes, staticHandler, path);
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -547,7 +529,6 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
-      branches: staticHandler._internalRouteBranches,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,

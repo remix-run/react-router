@@ -669,7 +669,6 @@ export function RouterProvider({
                 <MemoizedDataRoutes
                   routes={router.routes}
                   manifest={router.manifest}
-                  future={router.future}
                   state={state}
                   isStatic={false}
                   onError={onError}
@@ -717,24 +716,29 @@ const MemoizedDataRoutes = React.memo(DataRoutes);
 export function DataRoutes({
   routes,
   manifest,
-  future,
   state,
   isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
   manifest: RouteManifest;
-  future: DataRouter["future"];
   state: RouterState;
   isStatic: boolean;
   onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
+  let dataRouterContext = React.useContext(DataRouterContext);
+
+  invariant(
+    dataRouterContext,
+    "You must render this element inside a <DataRouterContext.Provider> element",
+  );
+
   return useRoutesImpl(routes, undefined, {
+    router: dataRouterContext.router,
     manifest,
     state,
     isStatic,
     onError,
-    future,
   });
 }
 
