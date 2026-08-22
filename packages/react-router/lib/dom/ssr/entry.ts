@@ -66,4 +66,6 @@ export interface AssetsManifest {
     runtime: string;
   };
   sri?: Record<string, string> | true;
+  // App-wide CORS mode for generated tags and imperative client prefetches.
+  crossOrigin?: "anonymous" | "use-credentials";
 }
