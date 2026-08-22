@@ -247,6 +247,38 @@ describe("NavLink", () => {
         "",
       ]);
     });
+
+    // Regression: https://github.com/remix-run/react-router/issues/10781
+    it("matches when the pipe character is used in the path", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <BrowserRouter window={getWindow("/users/a|b")}>
+            <Routes>
+              <Route
+                path="/users/:name"
+                element={
+                  <>
+                    <NavLink to=".">user</NavLink>
+                    <NavLink to="/users/a|b">user (explicit)</NavLink>
+                    <NavLink to="/users/a/b">other</NavLink>
+                  </>
+                }
+              />
+            </Routes>
+          </BrowserRouter>,
+        );
+      });
+
+      let anchors = renderer.root.findAllByType("a");
+
+      expect(anchors.map((a) => a.props.className)).toEqual([
+        "active",
+        "active",
+        "",
+      ]);
+    });
   });
 
   describe("when it matches a partial URL segment", () => {
