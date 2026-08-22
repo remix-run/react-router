@@ -1583,8 +1583,11 @@ export function generatePath<Path extends string>(
 
       // only apply the splat if it's the last segment
       if (isLastSegment && segment === "*") {
-        // Apply the splat
-        return stringify(params["*" as keyof typeof params]);
+        // Apply the splat, encoding each segment while preserving separators
+        return stringify(params["*" as keyof typeof params])
+          .split("/")
+          .map(encodePathParam)
+          .join("/");
       }
 
       const keyMatch = segment.match(/^:([\w-]+)(\??)(.*)/);
