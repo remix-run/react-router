@@ -375,7 +375,9 @@ describe("A <Link> click", () => {
 
         return (
           <div>
-            <button onClick={() => setCount((value) => value + 1)}>Update</button>
+            <button onClick={() => setCount((value) => value + 1)}>
+              Update
+            </button>
             <Link to="/home" ref={ref}>
               Home {count}
             </Link>
