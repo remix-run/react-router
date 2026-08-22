@@ -309,6 +309,7 @@ function createRouterFromPayload({
       },
       location: payload.location,
       basename: payload.basename,
+      future: {},
       isSpaMode: false,
     }),
     async patchRoutesOnNavigation({ path, signal, fetcherKey }) {
