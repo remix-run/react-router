@@ -802,15 +802,15 @@ type Simplify<T> = { [K in keyof T]: T[K] } & {};
 // prettier-ignore
 type GeneratePathParams<path extends string> = Simplify<
   & ParseParams<path>
-  & { [key in string]: string | null | undefined }
+  & { [key in string]: string | number | null | undefined }
 >
 
 // prettier-ignore
 type ParseParams<path extends string> =
   // check if path is just a wildcard
-  path extends '*' ? { '*': string } :
+  path extends '*' ? { '*': string | number } :
   // look for wildcard at the end of the path
-  path extends `${infer rest}/*` ? { '*': string } & ParseParams<rest> :
+  path extends `${infer rest}/*` ? { '*': string | number } & ParseParams<rest> :
   // look for params in the absence of wildcards
   _ParseParams<path>;
 
@@ -821,10 +821,10 @@ type _ParseParams<path extends string> =
     _ParseParams<left> & _ParseParams<right> :
   // look for optional param in segment
   path extends `:${infer param}?${string}` ?
-    { [key in RegexMatchPlus<ParamNameChar, param>]?: string | null | undefined } :
+    { [key in RegexMatchPlus<ParamNameChar, param>]?: string | number | null | undefined } :
   // look for required param in segment
   path extends `:${infer param}` ?
-    { [key in RegexMatchPlus<ParamNameChar, param>]: string } :
+    { [key in RegexMatchPlus<ParamNameChar, param>]: string | number } :
   {};
 
 // prettier-ignore
@@ -843,25 +843,25 @@ type _tests = [
   Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
 
   // ParseParams
-  Expect<Equal<ParseParams<"/a/b/*">, { "*": string }>>,
-  Expect<Equal<ParseParams<":a">, { a: string }>>,
-  Expect<Equal<ParseParams<"/a/:b">, { b: string }>>,
+  Expect<Equal<ParseParams<"/a/b/*">, { "*": string | number }>>,
+  Expect<Equal<ParseParams<":a">, { a: string | number }>>,
+  Expect<Equal<ParseParams<"/a/:b">, { b: string | number }>>,
   Expect<Equal<ParseParams<"/a/blahblahblah:b">, {}>>,
-  Expect<Equal<Simplify<ParseParams<"/:a/:b">>, { a: string; b: string }>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:b">>, { a: string | number; b: string | number }>>,
   Expect<
     Equal<
       Simplify<ParseParams<"/:a/b/:c/*">>,
-      { a: string; c: string; "*": string }
+      { a: string | number; c: string | number; "*": string | number }
     >
   >,
-  Expect<Equal<ParseParams<"/:lang.xml">, { lang: string }>>,
+  Expect<Equal<ParseParams<"/:lang.xml">, { lang: string | number }>>,
   Expect<
-    Equal<ParseParams<"/:lang?.xml">, { lang?: string | null | undefined }>
+    Equal<ParseParams<"/:lang?.xml">, { lang?: string | number | null | undefined }>
   >,
-  Expect<Equal<Simplify<ParseParams<"/:a/:a">>, { a: string }>>,
-  Expect<Equal<Simplify<ParseParams<"/:a/:a?">>, { a: string }>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:a">>, { a: string | number }>>,
+  Expect<Equal<Simplify<ParseParams<"/:a/:a?">>, { a: string | number }>>,
   Expect<
-    Equal<Simplify<ParseParams<"/:a?/:a?">>, { a?: string | null | undefined }>
+    Equal<Simplify<ParseParams<"/:a?/:a?">>, { a?: string | number | null | undefined }>
   >,
 ];
 
