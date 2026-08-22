@@ -1088,16 +1088,35 @@ export class RenderErrorBoundary extends React.Component<
       if (decoded) error = decoded;
     }
 
+    // Data errors are already rendered as the route's `errorElement` inside
+    // the same `RenderedRoute` wrapper as the happy path (see
+    // `_renderMatches`), so for them we can render `children` and keep the
+    // element tree's shape stable — that way ancestor layouts don't remount
+    // (and lose their state) when an error appears or clears. The `children`
+    // are always wrapped in `RouteErrorContext.Provider` so the tree shape
+    // is identical with and without an error. The `component` branch below
+    // is still required for render errors caught via
+    // `getDerivedStateFromError` (the `children` tree is what crashed), for
+    // errors retained in state after router state cleared them, and for RSC
+    // errors whose digest was decoded above.
+    let isActiveDataError =
+      !this.context &&
+      this.props.error !== undefined &&
+      this.props.error === this.state.error;
+
     let result =
-      error !== undefined ? (
+      error === undefined || isActiveDataError ? (
+        <RouteErrorContext.Provider
+          value={this.props.error}
+          children={this.props.children}
+        />
+      ) : (
         <RouteContext.Provider value={this.props.routeContext}>
           <RouteErrorContext.Provider
             value={error}
             children={this.props.component}
           />
         </RouteContext.Provider>
-      ) : (
-        this.props.children
       );
 
     if (this.context) {
