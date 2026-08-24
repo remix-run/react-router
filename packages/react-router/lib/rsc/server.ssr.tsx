@@ -16,7 +16,6 @@ import {
   decodeRouteErrorResponseDigest,
 } from "../errors";
 import { escapeHtml } from "../dom/ssr/markup";
-import { normalizeRedirectLocation } from "./redirect";
 
 const defaultManifestPath = "/__manifest";
 
@@ -204,8 +203,7 @@ export async function routeRSCServerRequest({
       serverResponse.status === SINGLE_FETCH_REDIRECT_STATUS &&
       payload.type === "redirect"
     ) {
-      let location = normalizeRedirectLocation(payload.location);
-      if (hasInvalidProtocol(location)) {
+      if (hasInvalidProtocol(payload.location)) {
         throw new Error("Invalid redirect location");
       }
 
@@ -214,7 +212,7 @@ export async function routeRSCServerRequest({
       headers.delete("Content-Length");
       headers.delete("Content-Type");
       headers.delete("X-Remix-Response");
-      headers.set("Location", location);
+      headers.set("Location", payload.location);
 
       return new Response(serverResponseB?.body || "", {
         headers,
@@ -262,12 +260,11 @@ export async function routeRSCServerRequest({
     headers.set("Content-Type", "text/html; charset=utf-8");
 
     if (renderRedirect) {
-      let location = normalizeRedirectLocation(renderRedirect.location);
-      if (hasInvalidProtocol(location)) {
+      if (hasInvalidProtocol(renderRedirect.location)) {
         throw new Error("Invalid redirect location");
       }
 
-      headers.set("Location", location);
+      headers.set("Location", renderRedirect.location);
       return new Response(html, {
         status: renderRedirect.status,
         headers,
@@ -277,14 +274,13 @@ export async function routeRSCServerRequest({
     const redirectTransform = new TransformStream({
       flush(controller) {
         if (renderRedirect) {
-          let location = normalizeRedirectLocation(renderRedirect.location);
-          if (hasInvalidProtocol(location)) {
+          if (hasInvalidProtocol(renderRedirect.location)) {
             return;
           }
 
           controller.enqueue(
             new TextEncoder().encode(
-              `<meta http-equiv="refresh" content="0;url=${escapeHtml(location)}"/>`,
+              `<meta http-equiv="refresh" content="0;url=${escapeHtml(renderRedirect.location)}"/>`,
             ),
           );
         }
@@ -317,15 +313,14 @@ export async function routeRSCServerRequest({
     }
 
     if (renderRedirect) {
-      let location = normalizeRedirectLocation(renderRedirect.location);
-      if (hasInvalidProtocol(location)) {
+      if (hasInvalidProtocol(renderRedirect.location)) {
         throw new Error("Invalid redirect location");
       }
 
-      return new Response(`Redirect: ${location}`, {
+      return new Response(`Redirect: ${renderRedirect.location}`, {
         status: renderRedirect.status,
         headers: {
-          Location: location,
+          Location: renderRedirect.location,
         },
       });
     }
@@ -410,12 +405,11 @@ export async function routeRSCServerRequest({
       headers.set("Content-Type", "text/html; charset=utf-8");
 
       if (retryRedirect) {
-        let location = normalizeRedirectLocation(retryRedirect.location);
-        if (hasInvalidProtocol(location)) {
+        if (hasInvalidProtocol(retryRedirect.location)) {
           throw new Error("Invalid redirect location");
         }
 
-        headers.set("Location", location);
+        headers.set("Location", retryRedirect.location);
         return new Response(html, {
           status: retryRedirect.status,
           headers,
@@ -425,14 +419,13 @@ export async function routeRSCServerRequest({
       const retryRedirectTransform = new TransformStream({
         flush(controller) {
           if (retryRedirect) {
-            let location = normalizeRedirectLocation(retryRedirect.location);
-            if (hasInvalidProtocol(location)) {
+            if (hasInvalidProtocol(retryRedirect.location)) {
               return;
             }
 
             controller.enqueue(
               new TextEncoder().encode(
-                `<meta http-equiv="refresh" content="0;url=${escapeHtml(location)}"/>`,
+                `<meta http-equiv="refresh" content="0;url=${escapeHtml(retryRedirect.location)}"/>`,
               ),
             );
           }
@@ -527,15 +520,14 @@ export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   const payload = useSafe(decoded);
 
   if (payload.type === "redirect") {
-    let location = normalizeRedirectLocation(payload.location);
-    if (hasInvalidProtocol(location)) {
+    if (hasInvalidProtocol(payload.location)) {
       throw new Error("Invalid redirect location");
     }
 
     throw new Response(null, {
       status: payload.status,
       headers: {
-        Location: location,
+        Location: payload.location,
       },
     });
   }
