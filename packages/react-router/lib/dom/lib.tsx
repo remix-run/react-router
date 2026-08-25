@@ -2355,6 +2355,16 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * other state causes the component to re-render and URL will not reflect the
  * values.
  *
+ * `setSearchParams` is also a stable reference — it stays the same for the
+ * lifetime of the component — so it is also safe to use as a dependency in
+ * `useEffect` hooks. When called, it reads the `searchParams` and `navigate`
+ * values from the latest committed render, even when you call a reference
+ * captured before a navigation. Calls made from inside another component's
+ * `useLayoutEffect` that flushes earlier in the same commit may see the
+ * previous render's values; calls from event handlers and passive effects
+ * (`useEffect`) always see the latest committed values. See the queueing
+ * caveat above for functional updates.
+ *
  * @public
  * @category Hooks
  * @param defaultInit
@@ -2408,17 +2418,25 @@ export function useSearchParams(
   );
 
   let navigate = useNavigate();
+
+  let searchParamsRef = React.useRef(searchParams);
+  let navigateRef = React.useRef(navigate);
+  React.useLayoutEffect(() => {
+    searchParamsRef.current = searchParams;
+    navigateRef.current = navigate;
+  });
+
   let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOptions) => {
       const newSearchParams = createSearchParams(
         typeof nextInit === "function"
-          ? nextInit(new URLSearchParams(searchParams))
+          ? nextInit(new URLSearchParams(searchParamsRef.current))
           : nextInit,
       );
       hasSetSearchParamsRef.current = true;
-      navigate("?" + newSearchParams, navigateOptions);
+      navigateRef.current("?" + newSearchParams, navigateOptions);
     },
-    [navigate, searchParams],
+    [],
   );
 
   return [searchParams, setSearchParams];

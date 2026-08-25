@@ -10,7 +10,9 @@ import {
   useBlocker,
   RouterProvider,
   useLocation,
+  useNavigate,
 } from "../../index";
+import type { SetURLSearchParams } from "../../index";
 
 describe("useSearchParams", () => {
   let node: HTMLDivElement;
@@ -293,5 +295,432 @@ describe("useSearchParams", () => {
         blocked=blocked
       </pre>
     `);
+  });
+
+  it("maintains a stable setSearchParams reference when the search changes", () => {
+    let latestSetter: SetURLSearchParams | undefined;
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      latestSetter = setSearchParams;
+      return (
+        <div>
+          <p id="output">a={searchParams.get("a")}</p>
+          <button id="update" onClick={() => setSearchParams({ a: "2" })}>
+            update
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?a=1"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    let initialSetter = latestSetter!;
+
+    act(() => {
+      node
+        .querySelector("#update")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(/a=2/);
+    expect(latestSetter).toBe(initialSetter);
+  });
+
+  it("maintains a stable setSearchParams reference when the pathname changes", () => {
+    let latestSetter: SetURLSearchParams | undefined;
+    function SearchPage() {
+      let location = useLocation();
+      let [, setSearchParams] = useSearchParams();
+      let navigate = useNavigate();
+      latestSetter = setSearchParams;
+      return (
+        <div>
+          <p id="output">pathname={location.pathname}</p>
+          <button id="navigate" onClick={() => navigate("/other")}>
+            navigate
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <Routes>
+            <Route path="/*" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    let initialSetter = latestSetter!;
+
+    act(() => {
+      node
+        .querySelector("#navigate")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(
+      /pathname=\/other/,
+    );
+    expect(latestSetter).toBe(initialSetter);
+  });
+
+  it("reads the latest committed search params from a reference captured before a navigation", () => {
+    let firstSetter: SetURLSearchParams | undefined;
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      let navigate = useNavigate();
+      if (firstSetter === undefined) {
+        firstSetter = setSearchParams;
+      }
+      return (
+        <div>
+          <p id="output">{searchParams.toString()}</p>
+          <button id="to-a1" onClick={() => navigate("/search?a=1")}>
+            to a=1
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    act(() => {
+      node
+        .querySelector("#to-a1")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(/a=1/);
+
+    act(() => {
+      firstSetter!((prev) => {
+        let next = new URLSearchParams(prev);
+        next.set("b", prev.get("a") === "1" ? "fresh" : "stale");
+        return next;
+      });
+    });
+
+    expect(node.querySelector("#output")!.textContent).toMatch(/a=1&b=fresh/);
+  });
+
+  it("does not build functional updates on each other when called in the same tick", () => {
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      return (
+        <div>
+          <p id="output">{searchParams.toString()}</p>
+          <button
+            id="double"
+            onClick={() => {
+              setSearchParams((prev) => {
+                prev.set("foo", "one");
+                return prev;
+              });
+              setSearchParams((prev) => {
+                prev.set(
+                  "bar",
+                  prev.get("foo") === "one" ? "built" : "not-built",
+                );
+                return prev;
+              });
+            }}
+          >
+            double
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    act(() => {
+      node
+        .querySelector("#double")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(/bar=not-built/);
+    expect(node.querySelector("#output")!.innerHTML).not.toMatch(/foo/);
+  });
+
+  it("maintains a stable setSearchParams reference across unrelated re-renders", () => {
+    let latestSetter: SetURLSearchParams | undefined;
+    function SearchPage() {
+      let [, setSearchParams] = useSearchParams();
+      latestSetter = setSearchParams;
+      return null;
+    }
+    function Parent() {
+      let [count, setCount] = React.useState(0);
+      return (
+        <div>
+          <p id="output">count={count}</p>
+          <button id="bump" onClick={() => setCount(count + 1)}>
+            bump
+          </button>
+          <SearchPage />
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <Routes>
+            <Route path="search" element={<Parent />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    let initialSetter = latestSetter!;
+
+    act(() => {
+      node
+        .querySelector("#bump")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(/count=1/);
+    expect(latestSetter).toBe(initialSetter);
+  });
+
+  it("maintains a stable setSearchParams reference and fresh reads in a data router", () => {
+    let latestSetter: SetURLSearchParams | undefined;
+    let firstSetter: SetURLSearchParams | undefined;
+    global.history.pushState({}, "", "/search");
+    let router = createBrowserRouter([
+      {
+        path: "/search",
+        Component() {
+          let [searchParams, setSearchParams] = useSearchParams();
+          if (firstSetter === undefined) {
+            firstSetter = setSearchParams;
+          }
+          latestSetter = setSearchParams;
+          return (
+            <div>
+              <p id="output">{searchParams.toString()}</p>
+              <button id="update" onClick={() => setSearchParams({ a: "2" })}>
+                update
+              </button>
+            </div>
+          );
+        },
+      },
+    ]);
+
+    act(() => {
+      ReactDOM.createRoot(node).render(<RouterProvider router={router} />);
+    });
+
+    let initialSetter = latestSetter!;
+
+    act(() => {
+      node
+        .querySelector("#update")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(/a=2/);
+    expect(latestSetter).toBe(initialSetter);
+
+    act(() => {
+      firstSetter!((prev) => {
+        let next = new URLSearchParams(prev);
+        next.set("b", prev.get("a") === "2" ? "fresh" : "stale");
+        return next;
+      });
+    });
+
+    expect(node.querySelector("#output")!.textContent).toMatch(/a=2&b=fresh/);
+  });
+
+  it("maintains a stable setSearchParams reference when sibling data routes share an element", () => {
+    let latestSetter: SetURLSearchParams | undefined;
+    function SharedPage() {
+      let location = useLocation();
+      let [, setSearchParams] = useSearchParams();
+      let navigate = useNavigate();
+      latestSetter = setSearchParams;
+      return (
+        <div>
+          <p id="output">pathname={location.pathname}</p>
+          <button id="navigate" onClick={() => navigate("/b")}>
+            navigate
+          </button>
+        </div>
+      );
+    }
+    let sharedElement = <SharedPage />;
+    global.history.pushState({}, "", "/a");
+    let router = createBrowserRouter([
+      { path: "/a", element: sharedElement },
+      { path: "/b", element: sharedElement },
+    ]);
+
+    act(() => {
+      ReactDOM.createRoot(node).render(<RouterProvider router={router} />);
+    });
+
+    let initialSetter = latestSetter!;
+
+    act(() => {
+      node
+        .querySelector("#navigate")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(
+      /pathname=\/b/,
+    );
+    expect(latestSetter).toBe(initialSetter);
+  });
+
+  it("maintains a stable setSearchParams reference in StrictMode", () => {
+    let latestSetter: SetURLSearchParams | undefined;
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      latestSetter = setSearchParams;
+      return (
+        <div>
+          <p id="output">a={searchParams.get("a")}</p>
+          <button id="update" onClick={() => setSearchParams({ a: "2" })}>
+            update
+          </button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <React.StrictMode>
+          <MemoryRouter initialEntries={["/search?a=1"]}>
+            <Routes>
+              <Route path="search" element={<SearchPage />} />
+            </Routes>
+          </MemoryRouter>
+        </React.StrictMode>,
+      );
+    });
+
+    let initialSetter = latestSetter!;
+
+    act(() => {
+      node
+        .querySelector("#update")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.innerHTML).toMatch(/a=2/);
+    expect(latestSetter).toBe(initialSetter);
+  });
+
+  it("reads the previous committed search from another component's layout effect in the same commit, and fresh values from passive effects", () => {
+    let firstSetter: SetURLSearchParams | undefined;
+    let currentSetter: SetURLSearchParams | undefined;
+    function BoundaryParent() {
+      let [searchParams, setSearchParams] = useSearchParams();
+      let navigate = useNavigate();
+      if (firstSetter === undefined) {
+        firstSetter = setSearchParams;
+      }
+      currentSetter = setSearchParams;
+      return (
+        <div>
+          <p id="output">{searchParams.toString()}</p>
+          <button id="to-a1" onClick={() => navigate("/search?a=1")}>
+            to a=1
+          </button>
+          <BoundaryChild />
+        </div>
+      );
+    }
+    function BoundaryChild() {
+      let location = useLocation();
+      let layoutCalledRef = React.useRef(false);
+      let passiveCalledRef = React.useRef(false);
+
+      React.useLayoutEffect(() => {
+        if (!layoutCalledRef.current && location.search === "?a=1") {
+          layoutCalledRef.current = true;
+          firstSetter!((prev) => {
+            let next = new URLSearchParams(prev);
+            next.set(
+              "b",
+              prev.get("a") === "1" ? "layout-fresh" : "layout-stale",
+            );
+            return next;
+          });
+        }
+      });
+
+      React.useEffect(() => {
+        if (
+          !passiveCalledRef.current &&
+          location.search.includes("b=layout-stale")
+        ) {
+          passiveCalledRef.current = true;
+          currentSetter!((prev) => {
+            let next = new URLSearchParams(prev);
+            next.set(
+              "c",
+              prev.get("b") === "layout-stale" ? "passive-fresh" : "passive-stale",
+            );
+            return next;
+          });
+        }
+      });
+
+      return null;
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <Routes>
+            <Route path="search" element={<BoundaryParent />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    act(() => {
+      node
+        .querySelector("#to-a1")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")!.textContent).toMatch(
+      /b=layout-stale&c=passive-fresh/,
+    );
+    expect(node.querySelector("#output")!.textContent).not.toMatch(/a=1/);
   });
 });

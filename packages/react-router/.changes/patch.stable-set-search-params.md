@@ -1,0 +1,1 @@
+Fix `setSearchParams` from `useSearchParams` to hold a stable reference across navigations and re-renders, making it safe to use in `useEffect` dependencies; calls read the latest committed `searchParams`/`navigate` values, even through a reference captured before a navigation
