@@ -2,6 +2,8 @@
  * @jest-environment node
  */
 
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { Writable } from "node:stream";
 
 import {
@@ -44,6 +46,29 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     clearTimeout(timeout),
   );
 }
+
+function runFixtureProcess(fixtureName: string) {
+  let fixture = path.join(__dirname, "fixtures", fixtureName);
+  let result = spawnSync(
+    process.execPath,
+    ["--experimental-strip-types", "--no-warnings", fixture],
+    { encoding: "utf8", timeout: 5_000 },
+  );
+
+  return {
+    status: result.status,
+    signal: result.signal,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
+}
+
+let survivedProcess = {
+  status: 0,
+  signal: null,
+  stdout: "process survived\n",
+  stderr: "",
+};
 
 describe("writeReadableStreamToWritable", () => {
   it("respects writable backpressure", async () => {
@@ -90,6 +115,24 @@ describe("writeReadableStreamToWritable", () => {
 
     await expect(withTimeout(writePromise, 100)).rejects.toThrow(
       "Writable failed",
+    );
+  });
+
+  it("does not crash when a destination writable closes mid-stream", () => {
+    expect(runFixtureProcess("stream-closed-writable.ts")).toEqual(
+      survivedProcess,
+    );
+  });
+
+  it("does not crash when a destination close cancels a Node readable", () => {
+    expect(runFixtureProcess("stream-cancelled-node-readable.ts")).toEqual(
+      survivedProcess,
+    );
+  });
+
+  it("does not crash while a destroyed writable has an error pending", () => {
+    expect(runFixtureProcess("stream-pending-writable-error.ts")).toEqual(
+      survivedProcess,
     );
   });
 });
