@@ -72,7 +72,9 @@ function destroyWritable(writable: Writable, error: Error) {
 }
 
 function monitorWritableError(writable: Writable): WritableErrorMonitor {
+  let writableStartedDestroyed = writable.destroyed;
   let settled = false;
+  let writableErrorEmitted = false;
   let writableError: Error | undefined;
   let rejectWritableError!: (error: Error) => void;
   let writableErrorPromise = new Promise<never>((_, reject) => {
@@ -81,6 +83,17 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   writableErrorPromise.catch(() => {});
 
   function cleanup() {
+    // `destroy(error)` sets these properties before a potentially async
+    // destroy callback emits the error, so keep listening during that gap.
+    if (
+      !writableStartedDestroyed &&
+      writable.destroyed &&
+      writable.errored &&
+      !writableErrorEmitted
+    ) {
+      return;
+    }
+
     writable.off("error", onError);
     writable.off("close", onClose);
   }
@@ -97,6 +110,7 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   }
 
   function onError(error: Error) {
+    writableErrorEmitted = true;
     reject(error);
   }
 

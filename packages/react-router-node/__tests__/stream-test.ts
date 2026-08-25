@@ -48,6 +48,33 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   );
 }
 
+function runFixtureProcess(fixtureName: string) {
+  let fixture = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "fixtures",
+    fixtureName,
+  );
+  let result = spawnSync(
+    process.execPath,
+    ["--experimental-strip-types", "--no-warnings", fixture],
+    { encoding: "utf8", timeout: 5_000 },
+  );
+
+  return {
+    status: result.status,
+    signal: result.signal,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
+}
+
+let survivedProcess = {
+  status: 0,
+  signal: null,
+  stdout: "process survived\n",
+  stderr: "",
+};
+
 describe("writeReadableStreamToWritable", () => {
   it("respects writable backpressure", async () => {
     let highWaterMark = 16;
@@ -96,29 +123,22 @@ describe("writeReadableStreamToWritable", () => {
     );
   });
 
-  it("does not crash when the writable closes mid-stream", () => {
-    let fixture = path.join(
-      path.dirname(fileURLToPath(import.meta.url)),
-      "fixtures",
-      "stream-client-disconnect.ts",
+  it("does not crash when a destination writable closes mid-stream", () => {
+    expect(runFixtureProcess("stream-closed-writable.ts")).toEqual(
+      survivedProcess,
     );
-    let result = spawnSync(
-      process.execPath,
-      ["--experimental-strip-types", "--no-warnings", fixture],
-      { encoding: "utf8", timeout: 5_000 },
-    );
+  });
 
-    expect({
-      status: result.status,
-      signal: result.signal,
-      stdout: result.stdout,
-      stderr: result.stderr,
-    }).toEqual({
-      status: 0,
-      signal: null,
-      stdout: "process survived\n",
-      stderr: "",
-    });
+  it("does not crash when a destination close cancels a Node readable", () => {
+    expect(runFixtureProcess("stream-cancelled-node-readable.ts")).toEqual(
+      survivedProcess,
+    );
+  });
+
+  it("does not crash while a destroyed writable has an error pending", () => {
+    expect(runFixtureProcess("stream-pending-writable-error.ts")).toEqual(
+      survivedProcess,
+    );
   });
 });
 

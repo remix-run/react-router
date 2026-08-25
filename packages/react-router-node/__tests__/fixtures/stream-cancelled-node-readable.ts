@@ -16,7 +16,8 @@ let writable = new Writable({
 source.write(Buffer.from("first chunk"));
 let writePromise = writeReadableStreamToWritable(readable, writable);
 
-setTimeout(() => writable.emit("close"), 10);
+await new Promise((resolve) => setImmediate(resolve));
+writable.emit("close");
 
 try {
   await writePromise;
