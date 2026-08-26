@@ -38,13 +38,13 @@ import {
   defaultMapRouteProperties,
   ErrorResponseImpl,
   SUPPORTED_ERROR_TYPES,
-  isAbsoluteUrl,
   joinPaths,
   matchPath,
   parseToInfo,
   resolveTo,
   stripBasename,
 } from "../router/utils";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -1334,7 +1334,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   ) {
     let { basename, navigator, useTransitions } =
       React.useContext(NavigationContext);
-    let isAbsolute = typeof to === "string" && isAbsoluteUrl(to);
+    let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
     let parsed = parseToInfo(to, basename);
     to = parsed.to;
@@ -1944,7 +1944,8 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
-    let isAbsolute = typeof action === "string" && isAbsoluteUrl(action);
+    let isAbsolute =
+      typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
     let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
