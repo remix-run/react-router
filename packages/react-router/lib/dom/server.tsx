@@ -30,7 +30,7 @@ import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import { ABSOLUTE_URL_REGEX, normalizeRelativeUrl } from "../router/url";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
 import { DataRoutes, Router, mapRouteProperties } from "../components";
 import {
   DataRouterContext,
@@ -511,7 +511,6 @@ function createHref(to: To) {
 
 function encodeLocation(to: To): Path {
   let href = typeof to === "string" ? to : createPath(to);
-  href = normalizeRelativeUrl(href);
   // Treating this as a full URL will strip any trailing spaces so we need to
   // pre-encode them since they might be part of a matching splat param from
   // an ancestor route
