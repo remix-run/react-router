@@ -305,3 +305,8 @@ Fetchers can be submitted programmatically with `fetcher.submit`:
 ```
 
 Note the input event's form is passed as the first argument to `fetcher.submit`. The fetcher will use that form to submit the request, reading its attributes and serializing the data from its elements.
+
+`fetcher.submit` accepts the same [`defaultShouldRevalidate`][fetcher-submit-options] option as [`<Form>`][form]. Pass `false` to skip loader revalidation for that submission. See [Revalidation Optimization](./optimize-revalidation) for how that interacts with route-level `shouldRevalidate`.
+
+[fetcher-submit-options]: https://api.reactrouter.com/v8/interfaces/react-router.FetcherSubmitOptions.html#defaultshouldrevalidate
+[form]: ../api/components/Form#defaultshouldrevalidate

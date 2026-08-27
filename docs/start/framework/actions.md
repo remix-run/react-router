@@ -165,11 +165,12 @@ fetcher.submit(
 );
 ```
 
-See the [Using Fetchers][fetchers] guide for more information.
+`fetcher.submit` takes [`FetcherSubmitOptions`][fetcher-submit-options], including `defaultShouldRevalidate`. See the [Using Fetchers][fetchers] guide for more information.
 
 ---
 
 Next: [Navigating](./navigating)
 
 [fetchers]: ../../how-to/fetchers
+[fetcher-submit-options]: https://api.reactrouter.com/v8/interfaces/react-router.FetcherSubmitOptions.html#defaultshouldrevalidate
 [optimize-revalidation]: ../../how-to/optimize-revalidation
