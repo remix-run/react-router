@@ -1768,7 +1768,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   let pathname: string;
   if (toPathname) {
     toPathname = removeDoubleSlashes(toPathname);
-    if (toPathname.startsWith("/")) {
+    if (toPathname.startsWith("/") || toPathname.startsWith("\\")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
       pathname = resolvePathname(toPathname, fromPathname);

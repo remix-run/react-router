@@ -70,11 +70,13 @@ import {
   getRoutePattern,
   removeDoubleSlashes,
   flattenAndRankRoutes,
+  resolvePath,
 } from "./utils";
 import {
   normalizeProtocolRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
+import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -227,6 +229,15 @@ export interface Router {
    * @param location
    */
   createHref(location: Location | URL): string;
+
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Utility function to create a URL for the given location
+   * @param location
+   */
+  createURL?(to: To): URL;
 
   /**
    * @private
@@ -1701,11 +1712,23 @@ export function createRouter(init: RouterInit): Router {
               ...opts.mask,
             };
       maskPath = {
-        pathname: "",
-        search: "",
-        hash: "",
-        ...partialPath,
+        pathname: partialPath.pathname ?? "",
+        search: partialPath.search ?? "",
+        hash: partialPath.hash ?? "",
       };
+
+      if (PROTOCOL_RELATIVE_URL_REGEX.test(maskPath.pathname)) {
+        throw new Error("External navigation is not allowed");
+      } else if (maskPath.pathname.startsWith("\\")) {
+        maskPath.pathname = maskPath.pathname.replace(/^\\+/, "/");
+      }
+
+      validateNavigationTarget(
+        typeof opts.mask === "string" ? opts.mask : createPath(opts.mask),
+        createPath(maskPath),
+        init.history.createURL("/"),
+        "reject",
+      );
     }
 
     let currentLocation = state.location;
@@ -1726,6 +1749,17 @@ export function createRouter(init: RouterInit): Router {
       ...nextLocation,
       ...init.history.encodeLocation(nextLocation),
     };
+
+    validateNavigationTarget(
+      to == null
+        ? init.history.createHref(state.location)
+        : typeof to === "string"
+          ? to
+          : createPath(to),
+      init.history.createHref(nextLocation.mask || nextLocation),
+      init.history.createURL("/"),
+      "reject",
+    );
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
@@ -3213,11 +3247,19 @@ export function createRouter(init: RouterInit): Router {
 
     let location = redirect.response.headers.get("Location");
     invariant(location, "Expected a Location header on the redirect Response");
+    let originalLocation = location;
+    let currentUrl = new URL(request.url);
     location = normalizeRedirectLocation(
       location,
-      new URL(request.url),
+      currentUrl,
       basename,
       init.history,
+    );
+    validateNavigationTarget(
+      originalLocation,
+      location,
+      currentUrl,
+      "allow-explicit",
     );
     let redirectLocation = createLocation(state.location, location, {
       _isRedirect: true,
@@ -3975,6 +4017,7 @@ export function createRouter(init: RouterInit): Router {
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
+    createURL: (to: To) => init.history.createURL(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     resetFetcher,
