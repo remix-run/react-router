@@ -2,7 +2,13 @@
  * @jest-environment node
  */
 
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { Writable } from "node:stream";
+
+import { transformFileSync } from "@babel/core";
 
 import {
   writeAsyncIterableToWritable,
@@ -44,6 +50,62 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     clearTimeout(timeout),
   );
 }
+
+// Fixtures are plain ESM so they can run in a child process on any supported
+// Node version without relying on `--experimental-strip-types` (which is
+// unavailable before Node 22.6). They import the `stream.ts` source via a
+// transpiled copy whose path is provided in the STREAM_MODULE_PATH env var.
+let compiledStreamModulePath: string | undefined;
+
+function getStreamModulePath(): string {
+  if (!compiledStreamModulePath) {
+    let tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "react-router-node-stream-"),
+    );
+    let result = transformFileSync(path.join(__dirname, "..", "stream.ts"), {
+      babelrc: false,
+      configFile: false,
+      presets: ["@babel/preset-typescript"],
+    });
+    compiledStreamModulePath = path.join(tempDir, "stream.mjs");
+    fs.writeFileSync(compiledStreamModulePath, result!.code!);
+  }
+
+  return compiledStreamModulePath;
+}
+
+function runFixtureProcess(fixtureName: string) {
+  let fixture = path.join(__dirname, "fixtures", fixtureName);
+  let result = spawnSync(process.execPath, [fixture], {
+    encoding: "utf8",
+    timeout: 5_000,
+    env: { ...process.env, STREAM_MODULE_PATH: getStreamModulePath() },
+  });
+
+  return {
+    status: result.status,
+    signal: result.signal,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
+}
+
+afterAll(() => {
+  if (compiledStreamModulePath) {
+    fs.rmSync(path.dirname(compiledStreamModulePath), {
+      recursive: true,
+      force: true,
+    });
+    compiledStreamModulePath = undefined;
+  }
+});
+
+let survivedProcess = {
+  status: 0,
+  signal: null,
+  stdout: "process survived\n",
+  stderr: "",
+};
 
 describe("writeReadableStreamToWritable", () => {
   it("respects writable backpressure", async () => {
@@ -90,6 +152,24 @@ describe("writeReadableStreamToWritable", () => {
 
     await expect(withTimeout(writePromise, 100)).rejects.toThrow(
       "Writable failed",
+    );
+  });
+
+  it("does not crash when a destination writable closes mid-stream", () => {
+    expect(runFixtureProcess("stream-closed-writable.mjs")).toEqual(
+      survivedProcess,
+    );
+  });
+
+  it("does not crash when a destination close cancels a Node readable", () => {
+    expect(runFixtureProcess("stream-cancelled-node-readable.mjs")).toEqual(
+      survivedProcess,
+    );
+  });
+
+  it("does not crash while a destroyed writable has an error pending", () => {
+    expect(runFixtureProcess("stream-pending-writable-error.mjs")).toEqual(
+      survivedProcess,
     );
   });
 });
