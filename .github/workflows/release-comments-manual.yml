@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         uses: actions/setup-node@v6
@@ -39,4 +39,5 @@ jobs:
       - name: Comment on released issues and pull requests
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm run release-comments --release=${{ github.event.inputs.release }}
+          RELEASE: ${{ inputs.release }}
+        run: pnpm run release-comments --release="$RELEASE"

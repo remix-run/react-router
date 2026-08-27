@@ -41,8 +41,22 @@ describe("throwIfPotentialCSRFAttack", () => {
         },
       });
       expect(() => throwIfPotentialCSRFAttack(request, undefined)).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
+    });
+
+    it("should compare complete origins", () => {
+      for (let [origin, requestUrl] of [
+        ["http://example.com", "https://example.com/action"],
+        ["https://example.com", "http://example.com/action"],
+      ]) {
+        let request = new Request(requestUrl, {
+          method: "POST",
+          headers: { origin },
+        });
+
+        expect(() => throwIfPotentialCSRFAttack(request, undefined)).toThrow();
+      }
     });
   });
 
@@ -56,6 +70,18 @@ describe("throwIfPotentialCSRFAttack", () => {
       });
       expect(() =>
         throwIfPotentialCSRFAttack(request, ["trusted.com"]),
+      ).not.toThrow();
+    });
+
+    it("should support explicitly allowed hosts", () => {
+      let request = new Request("https://example.com/action", {
+        method: "POST",
+        headers: {
+          origin: "http://example.com",
+        },
+      });
+      expect(() =>
+        throwIfPotentialCSRFAttack(request, ["example.com"]),
       ).not.toThrow();
     });
 
@@ -93,7 +119,7 @@ describe("throwIfPotentialCSRFAttack", () => {
       expect(() =>
         throwIfPotentialCSRFAttack(request, ["trusted.com", "*.safe.com"]),
       ).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
     });
 
@@ -134,7 +160,7 @@ describe("throwIfPotentialCSRFAttack", () => {
         },
       });
       expect(() => throwIfPotentialCSRFAttack(request, undefined)).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
     });
 
@@ -181,7 +207,7 @@ describe("throwIfPotentialCSRFAttack", () => {
         },
       });
       expect(() => throwIfPotentialCSRFAttack(request, undefined)).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
     });
 
@@ -195,7 +221,7 @@ describe("throwIfPotentialCSRFAttack", () => {
       expect(() =>
         throwIfPotentialCSRFAttack(request, ["", "other.com"]),
       ).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
     });
 
@@ -219,7 +245,7 @@ describe("throwIfPotentialCSRFAttack", () => {
         },
       });
       expect(() => throwIfPotentialCSRFAttack(request, undefined)).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
     });
 
@@ -243,7 +269,7 @@ describe("throwIfPotentialCSRFAttack", () => {
         },
       });
       expect(() => throwIfPotentialCSRFAttack(request, ["*"])).toThrow(
-        "`request.url` host does not match `origin` header from a forwarded action request",
+        "`request.url` origin does not match `origin` header from a forwarded action request",
       );
     });
 

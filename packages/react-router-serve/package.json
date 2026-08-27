@@ -40,7 +40,7 @@
   "dependencies": {
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.13.3",
+    "@remix-run/node-fetch-server": "^0.14.1",
     "compression": "^1.8.1",
     "express": "^5.2.1",
     "morgan": "^1.10.1",
