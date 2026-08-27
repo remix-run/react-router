@@ -288,8 +288,8 @@ importers:
   integration/helpers/rsc-vite:
     dependencies:
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -343,8 +343,8 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-serve
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -776,8 +776,8 @@ importers:
         specifier: workspace:*
         version: link:../react-router-node
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       babel-dead-code-elimination:
         specifier: ^1.0.12
         version: 1.0.12
@@ -965,8 +965,8 @@ importers:
   packages/react-router-node:
     dependencies:
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
     devDependencies:
       '@types/node':
         specifier: ^22.19.19
@@ -1011,8 +1011,8 @@ importers:
         specifier: workspace:*
         version: link:../react-router-node
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1379,8 +1379,8 @@ importers:
   playground/rsc-vite:
     dependencies:
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1431,8 +1431,8 @@ importers:
   playground/rsc-vite-7-framework:
     dependencies:
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -1501,8 +1501,8 @@ importers:
   playground/rsc-vite-framework:
     dependencies:
       '@remix-run/node-fetch-server':
-        specifier: ^0.13.3
-        version: 0.13.3
+        specifier: ^0.14.1
+        version: 0.14.1
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -3797,8 +3797,8 @@ packages:
   '@quansync/fs@1.0.0':
     resolution: {integrity: sha512-4TJ3DFtlf1L5LDMaM6CanJ/0lckGNtJcMjQ1NAV6zDmA0tEHKZtxNKin8EgPaVX1YzljbxckyT2tJrpQKAtngQ==}
 
-  '@remix-run/node-fetch-server@0.13.3':
-    resolution: {integrity: sha512-UfjOXed/DQteaM5VyTfqTeGpHwyL2J5aoRGY6cydip4tt1ehNNeSwuXCC7AEGE0RWBs/7bgKxYkL/B/+UDe4AA==}
+  '@remix-run/node-fetch-server@0.14.1':
+    resolution: {integrity: sha512-pKenF5ysIN5lDCnCyvoUxDhKP0tfnGagvGbZh01xxHG6DJXSIXWVC9NpLSDGjxcxd1CKdCOKuZFleXBF3pChIg==}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     resolution: {integrity: sha512-SJ+/g+xNnOh6NqYxD0V3uVN4W3VfnrGsC9/hoglicgTNfABFG9JjISvkkU0dNY84MNHLWyOgxP9v9Y9pX4S7+A==}
@@ -11291,7 +11291,7 @@ snapshots:
     dependencies:
       quansync: 1.0.0
 
-  '@remix-run/node-fetch-server@0.13.3': {}
+  '@remix-run/node-fetch-server@0.14.1': {}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     optional: true
