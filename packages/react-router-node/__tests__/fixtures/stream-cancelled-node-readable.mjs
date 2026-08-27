@@ -1,9 +1,7 @@
 import { PassThrough, Writable } from "node:stream";
 
-import {
-  createReadableStreamFromReadable,
-  writeReadableStreamToWritable,
-} from "../../stream.ts";
+const { createReadableStreamFromReadable, writeReadableStreamToWritable } =
+  await import(process.env.STREAM_MODULE_PATH);
 
 let source = new PassThrough();
 let readable = createReadableStreamFromReadable(source);

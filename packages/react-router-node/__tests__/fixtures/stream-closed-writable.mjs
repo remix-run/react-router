@@ -1,9 +1,11 @@
 import { Writable } from "node:stream";
 
-import { writeReadableStreamToWritable } from "../../stream.ts";
+const { writeReadableStreamToWritable } = await import(
+  process.env.STREAM_MODULE_PATH
+);
 
-let controller!: ReadableStreamDefaultController<Uint8Array>;
-let readable = new ReadableStream<Uint8Array>({
+let controller;
+let readable = new ReadableStream({
   start(readableController) {
     controller = readableController;
   },
