@@ -27,6 +27,7 @@ import {
 } from "../../../lib/router/utils";
 
 import { isRedirect, tick } from "./utils";
+import getWindow from "../../utils/getWindow";
 
 // Routes passed into setup() should just have a boolean for loader/action
 // indicating they want a stub.  They get enhanced back to AgnosticRouteObjects
@@ -308,10 +309,13 @@ export function setup({
 
   // jsdom is making more and more properties non-configurable, so we inject
   // our own jest-friendly window.
-  let testWindow = {
-    ...window,
+  let testWindow = getWindow("/");
+  testWindow = {
+    ...testWindow,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
     location: {
-      ...window.location,
+      ...testWindow.location,
       assign: jest.fn(),
       replace: jest.fn(),
     },

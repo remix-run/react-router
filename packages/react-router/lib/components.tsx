@@ -8,6 +8,7 @@ import type {
 } from "./router/history";
 import {
   Action as NavigationType,
+  createPath,
   createMemoryHistory,
   invariant,
   parsePath,
@@ -74,6 +75,10 @@ import {
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
+import {
+  getNavigatorCurrentUrl,
+  validateNavigationTarget,
+} from "./router/navigation";
 
 /**
  * Webpack can fail to compile against react versions without this export -
@@ -704,6 +709,7 @@ export function RouterProvider({
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
+      createURL: router.createURL,
       encodeLocation: router.encodeLocation,
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
@@ -979,7 +985,7 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`,
   );
 
-  let { static: isStatic } = React.useContext(NavigationContext);
+  let { static: isStatic, navigator } = React.useContext(NavigationContext);
 
   warning(
     !isStatic,
@@ -999,6 +1005,12 @@ export function Navigate({
     getResolveToMatches(matches),
     locationPathname,
     relative === "path",
+  );
+  validateNavigationTarget(
+    typeof to === "string" ? to : createPath(to),
+    navigator.createHref(path),
+    getNavigatorCurrentUrl(navigator),
+    "reject",
   );
   let jsonPath = JSON.stringify(path);
 
