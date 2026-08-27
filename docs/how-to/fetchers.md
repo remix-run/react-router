@@ -85,7 +85,7 @@ export default function Component() {
 
 ### 3. Submit the form
 
-If you submit the form now, the fetcher will call the action and revalidate the route data automatically.
+If you submit the form now, the fetcher will call the action and revalidate the route data automatically. See [Revalidation Optimization](./optimize-revalidation) to skip that reload for a route or a single submission.
 
 ### 4. Render pending state
 

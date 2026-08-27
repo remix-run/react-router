@@ -66,6 +66,8 @@ export function action(_: Route.ActionArgs) {
 }
 ```
 
+Calling this `action` through [`<Form>`][form] or [`useFetcher`][fetcher] still revalidates matched UI loaders. A plain `fetch()` to the resource URL does not. See [Revalidation Optimization][optimize-revalidation].
+
 ## Return Types
 
 Resource Routes are flexible when it comes to the return type - you can return [`Response`][Response] instances or [`data()`][data] objects. A good general rule of thumb when deciding which type to use is:
@@ -124,3 +126,4 @@ export function action() {
 [form]: ../api/components/Form
 [await]: ../api/components/Await
 [error-boundary]: ../start/framework/route-module#errorboundary
+[optimize-revalidation]: ./optimize-revalidation

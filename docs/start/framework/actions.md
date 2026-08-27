@@ -9,7 +9,7 @@ order: 6
 
 ## Introduction
 
-Data mutations are done through Route actions. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it.
+Data mutations are done through Route actions. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it. To skip some or all of those reloads, see [Revalidation Optimization][optimize-revalidation].
 
 Route actions defined with `action` are only called on the server while actions defined with `clientAction` are run in the browser.
 
@@ -172,3 +172,4 @@ See the [Using Fetchers][fetchers] guide for more information.
 Next: [Navigating](./navigating)
 
 [fetchers]: ../../how-to/fetchers
+[optimize-revalidation]: ../../how-to/optimize-revalidation
