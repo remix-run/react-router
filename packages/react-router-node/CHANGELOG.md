@@ -1,5 +1,13 @@
 # `@react-router/node`
 
+## v7.18.3
+
+### Patch Changes
+
+- fix: Prevent client disconnects during streaming from crashing the Node process ([#15437](https://github.com/remix-run/react-router/pull/15437))
+- Updated dependencies:
+  - [`react-router@7.18.3`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.3)
+
 ## v7.18.2
 
 ### Patch Changes

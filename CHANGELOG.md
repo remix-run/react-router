@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.3](#v7183)
   - [v7.18.2](#v7182)
   - [v7.18.1](#v7181)
   - [v7.18.0](#v7180)
@@ -180,6 +181,19 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.3
+
+Date: 2026-08-27
+
+### Patch Changes
+
+- `react-router` - Improve route matching performance for long paths ([#15423](https://github.com/remix-run/react-router/pull/15423))
+- `react-router` - Improve validation of action request origins ([#15420](https://github.com/remix-run/react-router/pull/15420))
+- `react-router` - Add additional URL validation on client side navigations/redirects ([#15446](https://github.com/remix-run/react-router/pull/15446))
+- `@react-router/node` - fix: Prevent client disconnects during streaming from crashing the Node process ([#15437](https://github.com/remix-run/react-router/pull/15437))
+
+**Full Changelog**: [`v7.18.2...v7.18.3`](https://github.com/remix-run/react-router/compare/react-router@7.18.2...react-router@7.18.3)
 
 ## v7.18.2
 
