@@ -13,6 +13,7 @@ import {
 import type { Location, Path, To } from "./router/history";
 import {
   Action as NavigationType,
+  createPath,
   invariant,
   parsePath,
   warning,
@@ -63,6 +64,10 @@ import {
   decodeRedirectErrorDigest,
   decodeRouteErrorResponseDigest,
 } from "./errors";
+import {
+  getNavigatorCurrentUrl,
+  validateNavigationTarget,
+} from "./router/navigation";
 
 /**
  * Resolves a URL against the current {@link Location}.
@@ -423,6 +428,13 @@ function useNavigateUnstable(): NavigateFunction {
             ? basename
             : joinPaths([basename, path.pathname]);
       }
+
+      validateNavigationTarget(
+        typeof to === "string" ? to : createPath(to),
+        navigator.createHref(path),
+        getNavigatorCurrentUrl(navigator),
+        "reject",
+      );
 
       (!!options.replace ? navigator.replace : navigator.push)(
         path,
@@ -1117,7 +1129,7 @@ function RSCErrorHandler({
   children: React.ReactNode;
   error: unknown;
 }) {
-  let { basename } = React.useContext(NavigationContext);
+  let { basename, navigator } = React.useContext(NavigationContext);
 
   if (
     typeof error === "object" &&
@@ -1132,6 +1144,12 @@ function RSCErrorHandler({
 
       let parsed = parseToInfo(redirect.location, basename);
       let target = parsed.absoluteURL || parsed.to;
+      validateNavigationTarget(
+        redirect.location,
+        target,
+        getNavigatorCurrentUrl(navigator),
+        "allow-explicit",
+      );
       if (hasInvalidProtocol(target)) {
         throw new Error("Invalid redirect location");
       }
