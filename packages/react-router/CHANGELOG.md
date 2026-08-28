@@ -1,5 +1,13 @@
 # `react-router`
 
+## v7.18.3
+
+### Patch Changes
+
+- Improve route matching performance for long paths ([#15423](https://github.com/remix-run/react-router/pull/15423))
+- Improve validation of action request origins ([#15420](https://github.com/remix-run/react-router/pull/15420))
+- Add additional URL validation on client side navigations/redirects ([#15446](https://github.com/remix-run/react-router/pull/15446))
+
 ## v7.18.2
 
 ### Patch Changes

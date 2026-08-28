@@ -1,5 +1,12 @@
 # react-router-dom
 
+## v7.18.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.3`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.3)
+
 ## v7.18.2
 
 ### Patch Changes
