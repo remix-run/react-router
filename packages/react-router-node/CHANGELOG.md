@@ -1,5 +1,14 @@
 # `@react-router/node`
 
+## v8.3.1
+
+### Patch Changes
+
+- Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- fix: Prevent client disconnects during streaming from crashing the Node process ([#15324](https://github.com/remix-run/react-router/pull/15324))
+- Updated dependencies:
+  - [`react-router@8.3.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.1)
+
 ## v8.3.0
 
 ### Patch Changes
