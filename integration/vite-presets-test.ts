@@ -29,6 +29,7 @@ const files = {
     export default {
       // Ensure user config takes precedence over preset config
       appDirectory: "app",
+      crossOrigin: "use-credentials",
 
       presets: [
         // Ensure user config is passed to reactRouterConfig hook
@@ -39,7 +40,10 @@ const files = {
               throw new Error("React Router user config doesn't have presets array.");
             }
 
-            let expected = JSON.stringify({ appDirectory: "app"});
+            let expected = JSON.stringify({
+              appDirectory: "app",
+              crossOrigin: "use-credentials",
+            });
             let actual = JSON.stringify(restUserConfig);
 
             if (actual !== expected) {
@@ -59,6 +63,7 @@ const files = {
           name: "test-preset",
           reactRouterConfig: async () => ({
             appDirectory: "INCORRECT_APP_DIR", // This is overridden by the user config further down this file
+            crossOrigin: "anonymous",
           }),
         },
         {
@@ -230,6 +235,7 @@ test.describe("Vite / presets", async () => {
         "basename",
         "buildDirectory",
         "buildEnd",
+        "crossOrigin",
         "future",
         "prerender",
         "routes",
@@ -243,6 +249,8 @@ test.describe("Vite / presets", async () => {
         "allowedActionOrigins",
         "unstable_routeConfig",
       ]);
+
+      expect(reactRouterConfig.crossOrigin).toBe("use-credentials");
 
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({

@@ -1026,7 +1026,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       }
     }
 
-    let fingerprintedValues = { entry, routes: browserRoutes };
+    let fingerprintedValues = {
+      crossOrigin: ctx.reactRouterConfig.crossOrigin,
+      entry,
+      routes: browserRoutes,
+    };
     let version = getHash(JSON.stringify(fingerprintedValues), 8);
     let manifestPath = path.posix.join(
       viteConfig.build.assetsDir,
@@ -1150,6 +1154,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let reactRouterManifestForDev = {
       version: String(Math.random()),
       url: combineURLs(ctx.publicPath, virtual.browserManifest.url),
+      crossOrigin: ctx.reactRouterConfig.crossOrigin,
       hmr: {
         runtime: combineURLs(ctx.publicPath, virtualInjectHmrRuntime.url),
       },

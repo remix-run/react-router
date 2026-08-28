@@ -181,6 +181,7 @@ export function createClientRoutesWithHMRRevalidationOptOut(
   initialState: HydrationState,
   ssr: boolean,
   isSpaMode: boolean,
+  crossOrigin?: "anonymous" | "use-credentials",
 ) {
   return createClientRoutes(
     manifest,
@@ -191,6 +192,7 @@ export function createClientRoutesWithHMRRevalidationOptOut(
     "",
     groupRoutesByParentId(manifest),
     needsRevalidation,
+    crossOrigin,
   );
 }
 
@@ -235,6 +237,7 @@ export function createClientRoutes(
     Omit<EntryRoute, "children">[]
   > = groupRoutesByParentId(manifest),
   needsRevalidation?: Set<string>,
+  crossOrigin?: "anonymous" | "use-credentials",
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModulesCache[route.id];
@@ -292,7 +295,7 @@ export function createClientRoutes(
       // prefetching style links via loadRouteModuleWithBlockingLinks.
       let cachedModule = routeModulesCache[route.id];
       let linkPrefetchPromise = cachedModule
-        ? prefetchStyleLinks(route, cachedModule)
+        ? prefetchStyleLinks(route, cachedModule, crossOrigin)
         : Promise.resolve();
       try {
         return handler();
@@ -463,6 +466,7 @@ export function createClientRoutes(
           let routeModulePromise = loadRouteModuleWithBlockingLinks(
             route,
             routeModulesCache,
+            crossOrigin,
           );
           prefetchRouteModuleChunks(route);
           return await routeModulePromise;
@@ -555,6 +559,7 @@ export function createClientRoutes(
       route.id,
       routesByParentId,
       needsRevalidation,
+      crossOrigin,
     );
     if (children.length > 0) dataRoute.children = children;
     return dataRoute;
@@ -631,16 +636,17 @@ function wrapShouldRevalidateForHdr(
 async function loadRouteModuleWithBlockingLinks(
   route: EntryRoute,
   routeModules: RouteModules,
+  crossOrigin?: "anonymous" | "use-credentials",
 ) {
   // Ensure the route module and its static CSS links are loaded in parallel as
   // soon as possible before blocking on the route module
   let routeModulePromise = loadRouteModule(route, routeModules);
-  let prefetchRouteCssPromise = prefetchRouteCss(route);
+  let prefetchRouteCssPromise = prefetchRouteCss(route, crossOrigin);
 
   let routeModule = await routeModulePromise;
   await Promise.all([
     prefetchRouteCssPromise,
-    prefetchStyleLinks(route, routeModule),
+    prefetchStyleLinks(route, routeModule, crossOrigin),
   ]);
 
   // Include all `browserSafeRouteExports` fields, except `HydrateFallback`
