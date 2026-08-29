@@ -97,6 +97,28 @@ import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 import type { PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
 
+function setOwnProperty<T>(
+  object: Record<string, T>,
+  key: string,
+  value: T,
+): void {
+  Object.defineProperty(object, key, {
+    configurable: true,
+    enumerable: true,
+    value,
+    writable: true,
+  });
+}
+
+function getOwnProperty<T>(
+  object: Record<string, T> | null | undefined,
+  key: string,
+): T | undefined {
+  return object != null && Object.prototype.hasOwnProperty.call(object, key)
+    ? object[key]
+    : undefined;
+}
+
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
   mod: Vite.ModuleNode,
@@ -1019,10 +1041,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           : undefined,
       };
 
-      browserRoutes[route.id] = routeManifestEntry;
+      setOwnProperty(browserRoutes, route.id, routeManifestEntry);
 
       if (!routeIds || routeIds.includes(route.id)) {
-        serverRoutes[route.id] = routeManifestEntry;
+        setOwnProperty(serverRoutes, route.id, routeManifestEntry);
       }
     }
 
@@ -1122,7 +1144,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
       }
 
-      routes[key] = {
+      setOwnProperty(routes, key, {
         id: route.id,
         parentId: route.parentId,
         path: route.path,
@@ -1142,7 +1164,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasDefaultExport: sourceExports.includes("default"),
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         imports: [],
-      };
+      });
     }
 
     let sri: ReactRouterManifest["sri"] = undefined;
@@ -2382,8 +2404,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (route) {
           // invalidate manifest on route exports change
-          let oldRouteMetadata =
-            currentReactRouterManifestForDev?.routes[route.id];
+          let oldRouteMetadata = getOwnProperty(
+            currentReactRouterManifestForDev?.routes,
+            route.id,
+          );
           let newRouteMetadata = await getRouteMetadata(
             cache,
             ctx,
@@ -3044,8 +3068,8 @@ function groupRoutesByParentId(manifest: GenericRouteManifest) {
   Object.values(manifest).forEach((route) => {
     if (route) {
       let parentId = route.parentId || "";
-      if (!routes[parentId]) {
-        routes[parentId] = [];
+      if (!Object.prototype.hasOwnProperty.call(routes, parentId)) {
+        setOwnProperty(routes, parentId, []);
       }
       routes[parentId].push(route);
     }
@@ -3229,10 +3253,17 @@ function getRoutesByServerBundleId(
   for (let [routeId, serverBundleId] of Object.entries(
     buildManifest.routeIdToServerBundleId,
   )) {
-    routesByServerBundleId[serverBundleId] ??= {};
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        routesByServerBundleId,
+        serverBundleId,
+      )
+    ) {
+      setOwnProperty(routesByServerBundleId, serverBundleId, {});
+    }
     let branch = getRouteBranch(buildManifest.routes, routeId);
     for (let route of branch) {
-      routesByServerBundleId[serverBundleId][route.id] = route;
+      setOwnProperty(routesByServerBundleId[serverBundleId], route.id, route);
     }
   }
 
@@ -3470,20 +3501,31 @@ export async function getBuildManifest({
           `The "serverBundles" function must only return strings containing alphanumeric characters and underscores.`,
         );
       }
-      buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
+      setOwnProperty(
+        buildManifest.routeIdToServerBundleId,
+        route.id,
+        serverBundleId,
+      );
 
-      buildManifest.serverBundles[serverBundleId] ??= {
-        id: serverBundleId,
-        file: normalizePath(
-          path.join(
-            path.relative(
-              rootDirectory,
-              path.join(serverBuildDirectory, serverBundleId),
+      if (
+        !Object.prototype.hasOwnProperty.call(
+          buildManifest.serverBundles,
+          serverBundleId,
+        )
+      ) {
+        setOwnProperty(buildManifest.serverBundles, serverBundleId, {
+          id: serverBundleId,
+          file: normalizePath(
+            path.join(
+              path.relative(
+                rootDirectory,
+                path.join(serverBuildDirectory, serverBundleId),
+              ),
+              reactRouterConfig.serverBuildFile,
             ),
-            reactRouterConfig.serverBuildFile,
           ),
-        ),
-      };
+        });
+      }
     }),
   );
 

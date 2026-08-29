@@ -9,6 +9,7 @@ import {
   isRouteErrorResponse,
   ErrorResponseImpl,
   RouterContextProvider,
+  setRouteDataValue,
   stripBasename,
   removeTrailingSlash,
 } from "../router/utils";
@@ -416,7 +417,7 @@ async function handleManifestRequest(
           let routeId = match.route.id;
           let route = build.assets.routes[routeId];
           if (route) {
-            patches[routeId] = route;
+            setRouteDataValue(patches, routeId, route);
           }
         }
       }

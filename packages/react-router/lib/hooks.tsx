@@ -42,8 +42,10 @@ import {
   ENABLE_DEV_WARNINGS,
   convertRouteMatchToUiMatch,
   decodePath,
+  getRouteDataValue,
   getResolveToMatches,
   getRoutePattern,
+  hasOwnProperty,
   isBrowser,
   isRouteErrorResponse,
   joinPaths,
@@ -1245,7 +1247,7 @@ export function _renderMatches(
   let errors = dataRouterState?.errors;
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(
-      (m) => m.route.id && errors?.[m.route.id] !== undefined,
+      (m) => m.route.id && getRouteDataValue(errors, m.route.id) !== undefined,
     );
     invariant(
       errorIndex >= 0,
@@ -1276,8 +1278,8 @@ export function _renderMatches(
         let { loaderData, errors } = dataRouterState;
         let needsToRunLoader =
           match.route.loader &&
-          !loaderData.hasOwnProperty(match.route.id) &&
-          (!errors || errors[match.route.id] === undefined);
+          !hasOwnProperty(loaderData, match.route.id) &&
+          getRouteDataValue(errors, match.route.id) === undefined;
         if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
           // lazy, or has a loader that hasn't run yet) - render up until the
@@ -1317,7 +1319,10 @@ export function _renderMatches(
       let errorElement: React.ReactNode | null = null;
       let hydrateFallbackElement: React.ReactNode | null = null;
       if (dataRouterState) {
-        error = errors && match.route.id ? errors[match.route.id] : undefined;
+        error =
+          errors && match.route.id
+            ? getRouteDataValue(errors, match.route.id)
+            : undefined;
         errorElement = match.route.errorElement || defaultErrorElement;
 
         if (renderFallback) {
@@ -1620,7 +1625,7 @@ export function useMatches(): UIMatch[] {
 export function useLoaderData<T = any>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-  return state.loaderData[routeId] as SerializeFrom<T>;
+  return getRouteDataValue(state.loaderData, routeId) as SerializeFrom<T>;
 }
 
 /**
@@ -1659,7 +1664,9 @@ export function useRouteLoaderData<T = any>(
   routeId: string,
 ): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
-  return state.loaderData[routeId] as SerializeFrom<T> | undefined;
+  return getRouteDataValue(state.loaderData, routeId) as
+    | SerializeFrom<T>
+    | undefined;
 }
 
 /**
@@ -1697,7 +1704,7 @@ export function useRouteLoaderData<T = any>(
 export function useActionData<T = any>(): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-  return (state.actionData ? state.actionData[routeId] : undefined) as
+  return getRouteDataValue(state.actionData, routeId) as
     | SerializeFrom<T>
     | undefined;
 }
@@ -1734,7 +1741,7 @@ export function useRouteError(): unknown {
   }
 
   // Otherwise look for errors from our data router state
-  return state.errors?.[routeId];
+  return getRouteDataValue(state.errors, routeId);
 }
 
 /**
@@ -2044,8 +2051,8 @@ export function useRoute<Args extends UseRouteArgs>(
   if (route === undefined) return undefined as UseRouteResult<Args>;
   return {
     handle: route.route.handle,
-    loaderData: state.loaderData[id],
-    actionData: state.actionData?.[id],
+    loaderData: getRouteDataValue(state.loaderData, id),
+    actionData: getRouteDataValue(state.actionData, id),
   } as UseRouteResult<Args>;
 }
 

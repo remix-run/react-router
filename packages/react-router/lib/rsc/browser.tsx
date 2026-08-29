@@ -24,7 +24,13 @@ import type {
   DataStrategyFunctionArgs,
   RouterContextProvider,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
+import {
+  ErrorResponseImpl,
+  createContext,
+  hasOwnProperty,
+  resolvePath,
+  setRouteDataValue,
+} from "../router/utils";
 import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
 import { validateNavigationTarget } from "../router/navigation";
 import type {
@@ -633,11 +639,11 @@ function getFetchAndDecodeViaRSC(
         ? "actionData"
         : "loaderData";
       for (let [routeId, data] of Object.entries(payload[dataKey] || {})) {
-        results.routes[routeId] = { data };
+        setRouteDataValue(results.routes, routeId, { data });
       }
       if (payload.errors) {
         for (let [routeId, error] of Object.entries(payload.errors)) {
-          results.routes[routeId] = { error };
+          setRouteDataValue(results.routes, routeId, { error });
         }
       }
       return { status: res.status, data: results };
@@ -908,10 +914,11 @@ function createRouteFromServerManifest(
   match: RSCRouteManifest,
   payload?: RSCRenderPayload,
 ): DataRouteObjectWithManifestInfo {
-  let hasInitialData = payload && match.id in payload.loaderData;
-  let initialData = payload?.loaderData[match.id];
-  let hasInitialError = payload?.errors && match.id in payload.errors;
-  let initialError = payload?.errors?.[match.id];
+  let hasInitialData = payload && hasOwnProperty(payload.loaderData, match.id);
+  let initialData = hasInitialData ? payload!.loaderData[match.id] : undefined;
+  let hasInitialError =
+    payload?.errors && hasOwnProperty(payload.errors, match.id);
+  let initialError = hasInitialError ? payload!.errors?.[match.id] : undefined;
   let isHydrationRequest =
     match.clientLoader?.hydrate === true ||
     !match.hasLoader ||

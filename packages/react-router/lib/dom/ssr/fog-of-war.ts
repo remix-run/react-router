@@ -1,11 +1,16 @@
 import * as React from "react";
+import {
+  joinPaths,
+  matchRoutesImpl,
+  hasOwnProperty,
+  setRouteDataValue,
+} from "../../router/utils";
 import type { Router as DataRouter } from "../../router/router";
 import type {
   DataRouteObject,
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { joinPaths, matchRoutesImpl } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -90,9 +95,9 @@ export function getPartialManifest(
     }
   });
 
-  let initialRoutes = [...routeIds].reduce(
-    (acc, id) => Object.assign(acc, { [id]: manifest.routes[id] }),
-    {},
+  let initialRoutes: AssetsManifest["routes"] = {};
+  routeIds.forEach((id) =>
+    setRouteDataValue(initialRoutes, id, manifest.routes[id]),
   );
   return {
     ...manifest,
@@ -373,11 +378,13 @@ export async function fetchAndApplyManifestPatches(
   let knownRoutes = new Set(Object.keys(manifest.routes));
   let patches = Object.values(serverPatches).reduce((acc, route) => {
     if (route && !knownRoutes.has(route.id)) {
-      acc[route.id] = route;
+      setRouteDataValue(acc, route.id, route);
     }
     return acc;
   }, {} as RouteManifest<EntryRoute>);
-  Object.assign(manifest.routes, patches);
+  Object.entries(patches).forEach(([routeId, route]) => {
+    setRouteDataValue(manifest.routes, routeId, route);
+  });
 
   // Track discovered paths so we don't have to fetch them again
   paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
@@ -386,7 +393,10 @@ export async function fetchAndApplyManifestPatches(
   // in their new children
   let parentIds = new Set<string | undefined>();
   Object.values(patches).forEach((patch) => {
-    if (patch && (!patch.parentId || !patches[patch.parentId])) {
+    if (
+      patch &&
+      (!patch.parentId || !hasOwnProperty(patches, patch.parentId))
+    ) {
       parentIds.add(patch.parentId);
     }
   });

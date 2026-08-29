@@ -9,6 +9,21 @@ function debounce(fn, delay) {
   };
 }
 
+function setOwnProperty(object, key, value) {
+  Object.defineProperty(object, key, {
+    configurable: true,
+    enumerable: true,
+    value,
+    writable: true,
+  });
+}
+
+function getOwnProperty(object, key) {
+  return Object.prototype.hasOwnProperty.call(object, key)
+    ? object[key]
+    : undefined;
+}
+
 /* eslint-disable no-undef */
 const enqueueUpdate = debounce(async () => {
   let manifest;
@@ -16,31 +31,32 @@ const enqueueUpdate = debounce(async () => {
     manifest = JSON.parse(JSON.stringify(__reactRouterManifest));
 
     for (let route of routeUpdates.values()) {
-      manifest.routes[route.id] = route;
+      setOwnProperty(manifest.routes, route.id, route);
       let imported = window.__reactRouterRouteModuleUpdates.get(route.id);
       if (!imported) {
         throw Error(
           `[react-router:hmr] No module update found for route ${route.id}`,
         );
       }
+      let previousRouteModule = getOwnProperty(
+        window.__reactRouterRouteModules,
+        route.id,
+      );
       let routeModule = {
         ...imported,
         // react-refresh takes care of updating these in-place,
         // if we don't preserve existing values we'll loose state.
         default: imported.default
-          ? (window.__reactRouterRouteModules[route.id]?.default ??
-            imported.default)
+          ? (previousRouteModule?.default ?? imported.default)
           : imported.default,
         ErrorBoundary: imported.ErrorBoundary
-          ? (window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
-            imported.ErrorBoundary)
+          ? (previousRouteModule?.ErrorBoundary ?? imported.ErrorBoundary)
           : imported.ErrorBoundary,
         HydrateFallback: imported.HydrateFallback
-          ? (window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
-            imported.HydrateFallback)
+          ? (previousRouteModule?.HydrateFallback ?? imported.HydrateFallback)
           : imported.HydrateFallback,
       };
-      window.__reactRouterRouteModules[route.id] = routeModule;
+      setOwnProperty(window.__reactRouterRouteModules, route.id, routeModule);
     }
 
     let needsRevalidation = new Set(

@@ -11,6 +11,7 @@ import type {
   DataRouteMatch,
   DataStrategyResult,
 } from "../../router/utils";
+import { hasOwnProperty, setRouteDataValue } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
 import type { LinkDescriptor } from "../../router/links";
@@ -265,7 +266,7 @@ export async function loadRouteModule(
   route: EntryRoute,
   routeModulesCache: RouteModules,
 ): Promise<RouteModule> {
-  if (route.id in routeModulesCache) {
+  if (hasOwnProperty(routeModulesCache, route.id)) {
     return routeModulesCache[route.id] as RouteModule;
   }
 
@@ -275,7 +276,7 @@ export async function loadRouteModule(
       /* webpackIgnore: true */
       route.module
     );
-    routeModulesCache[route.id] = routeModule;
+    setRouteDataValue(routeModulesCache, route.id, routeModule);
     return routeModule;
   } catch (error: unknown) {
     // If we can't load the route it's likely one of 2 things:

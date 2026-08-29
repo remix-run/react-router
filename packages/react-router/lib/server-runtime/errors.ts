@@ -1,5 +1,5 @@
 import type { StaticHandlerContext } from "../router/router";
-import { isRouteErrorResponse } from "../router/utils";
+import { isRouteErrorResponse, setRouteDataValue } from "../router/utils";
 
 import { ServerMode } from "./mode";
 
@@ -59,7 +59,8 @@ export function sanitizeErrors(
   serverMode: ServerMode,
 ) {
   return Object.entries(errors).reduce((acc, [routeId, error]) => {
-    return Object.assign(acc, { [routeId]: sanitizeError(error, serverMode) });
+    setRouteDataValue(acc, routeId, sanitizeError(error, serverMode));
+    return acc;
   }, {});
 }
 
@@ -92,10 +93,13 @@ export function serializeErrors(
     // Hey you!  If you change this, please change the corresponding logic in
     // deserializeErrors in remix-react/errors.ts :)
     if (isRouteErrorResponse(val)) {
-      serialized[key] = { ...val, __type: "RouteErrorResponse" };
+      setRouteDataValue(serialized, key, {
+        ...val,
+        __type: "RouteErrorResponse",
+      });
     } else if (val instanceof Error) {
       let sanitized = sanitizeError(val, serverMode);
-      serialized[key] = {
+      setRouteDataValue(serialized, key, {
         message: sanitized.message,
         stack: sanitized.stack,
         __type: "Error",
@@ -108,9 +112,9 @@ export function serializeErrors(
               __subType: sanitized.name,
             }
           : {}),
-      };
+      });
     } else {
-      serialized[key] = val;
+      setRouteDataValue(serialized, key, val);
     }
   }
   return serialized;

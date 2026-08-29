@@ -6,6 +6,8 @@ import {
   isRouteErrorResponse,
   ErrorResponseImpl,
   data as routerData,
+  hasOwnProperty,
+  setRouteDataValue,
   stripBasename,
 } from "../router/utils";
 import type {
@@ -203,12 +205,12 @@ export async function singleFetchLoaders(
 
     if (context.errors) {
       for (let [id, error] of Object.entries(context.errors)) {
-        results[id] = { error };
+        setRouteDataValue(results, id, { error });
       }
     }
     for (let [id, data] of Object.entries(context.loaderData)) {
-      if (!(id in results) && loadedMatches.has(id)) {
-        results[id] = { data };
+      if (!hasOwnProperty(results, id) && loadedMatches.has(id)) {
+        setRouteDataValue(results, id, { data });
       }
     }
 

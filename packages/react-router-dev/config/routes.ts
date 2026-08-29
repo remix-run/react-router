@@ -373,12 +373,17 @@ export function configRoutesToRouteManifest(
       caseSensitive: route.caseSensitive,
     };
 
-    if (routeManifest.hasOwnProperty(id)) {
+    if (Object.prototype.hasOwnProperty.call(routeManifest, id)) {
       throw new Error(
         `Unable to define routes with duplicate route id: "${id}"`,
       );
     }
-    routeManifest[id] = manifestItem;
+    Object.defineProperty(routeManifest, id, {
+      configurable: true,
+      enumerable: true,
+      value: manifestItem,
+      writable: true,
+    });
 
     if (route.children) {
       for (let child of route.children) {

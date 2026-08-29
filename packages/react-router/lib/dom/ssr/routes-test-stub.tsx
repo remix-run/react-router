@@ -15,6 +15,7 @@ import type { HydrationState } from "../../router/router";
 import {
   convertRoutesToDataRoutes,
   RouterContextProvider,
+  setRouteDataValue,
 } from "../../router/utils";
 import type {
   AssetsManifest,
@@ -243,17 +244,17 @@ function processRoutes(
       clientMiddlewareModule: undefined,
       hydrateFallbackModule: undefined,
     };
-    manifest.routes[newRoute.id] = entryRoute;
+    setRouteDataValue(manifest.routes, newRoute.id, entryRoute);
 
     // Add the route to routeModules
-    routeModules[route.id] = {
+    setRouteDataValue(routeModules, route.id, {
       default: newRoute.Component || Outlet,
       ErrorBoundary: newRoute.ErrorBoundary || undefined,
       handle: route.handle,
       links: route.links,
       meta: route.meta,
       shouldRevalidate: route.shouldRevalidate,
-    };
+    });
 
     if (route.children) {
       newRoute.children = processRoutes(

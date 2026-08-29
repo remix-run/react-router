@@ -1,7 +1,7 @@
 import type { Path } from "../../router/history";
 import type { Router as DataRouter, HydrationState } from "../../router/router";
 import type { DataRouteObject } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
+import { matchRoutes, setRouteDataValue } from "../../router/utils";
 import type { ClientLoaderFunction } from "./routeModules";
 import { shouldHydrateRouteLoader } from "./routes";
 
@@ -63,7 +63,7 @@ export function getHydrationData({
         // for any routes that don't have server loaders so our partial
         // hydration logic doesn't kick off the route module loaders during
         // hydration
-        hydrationData.loaderData![routeId] = null;
+        setRouteDataValue(hydrationData.loaderData!, routeId, null);
       }
     }
   }

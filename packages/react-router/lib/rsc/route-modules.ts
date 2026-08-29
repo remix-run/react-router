@@ -1,4 +1,5 @@
 import type { RouteModules } from "../dom/ssr/routeModules";
+import { setRouteDataValue } from "../router/utils";
 import type { RSCRenderPayload, RSCRouteManifest } from "./server.rsc";
 
 export function createRSCRouteModules(payload: RSCRenderPayload): RouteModules {
@@ -15,11 +16,11 @@ export function populateRSCRouteModules(
 ) {
   matches = Array.isArray(matches) ? matches : [matches];
   for (const match of matches) {
-    routeModules[match.id] = {
+    setRouteDataValue(routeModules, match.id, {
       links: match.links,
       meta: match.meta,
       default: noopComponent,
-    };
+    });
   }
 }
 

@@ -79,18 +79,26 @@ export type URLSearchParamsInit =
 export function createSearchParams(
   init: URLSearchParamsInit = "",
 ): URLSearchParams {
-  return new URLSearchParams(
+  if (
     typeof init === "string" ||
-      Array.isArray(init) ||
-      init instanceof URLSearchParams
-      ? init
-      : Object.keys(init).reduce((memo, key) => {
-          let value = init[key];
-          return memo.concat(
-            Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]],
-          );
-        }, [] as ParamKeyValuePair[]),
-  );
+    Array.isArray(init) ||
+    init instanceof URLSearchParams
+  ) {
+    return new URLSearchParams(init);
+  }
+
+  let entries: ParamKeyValuePair[] = [];
+  for (let key of Object.keys(init)) {
+    let value = init[key];
+    if (Array.isArray(value)) {
+      for (let entry of value) {
+        entries.push([key, entry]);
+      }
+    } else {
+      entries.push([key, value]);
+    }
+  }
+  return new URLSearchParams(entries);
 }
 
 export function getSearchParamsForLocation(

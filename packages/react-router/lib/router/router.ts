@@ -62,6 +62,7 @@ import {
   createDataFunctionUrl,
   getPathContributingMatches,
   getResolveToMatches,
+  getRouteDataValue,
   isAbsoluteUrl,
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
@@ -72,9 +73,11 @@ import {
   stripBasename,
   RouterContextProvider,
   getRoutePattern,
+  hasOwnProperty,
   removeDoubleSlashes,
   flattenAndRankRoutes,
   resolvePath,
+  setRouteDataValue,
 } from "./utils";
 import {
   normalizeProtocolRelativeUrl,
@@ -1176,7 +1179,7 @@ export function createRouter(init: RouterInit): Router {
       // If errors exist, don't consider routes below the boundary
       if (errors) {
         let idx = initialMatches.findIndex(
-          (m) => errors![m.route.id] !== undefined,
+          (m) => getRouteDataValue(errors, m.route.id) !== undefined,
         );
         relevantMatches = relevantMatches.slice(0, idx + 1);
       }
@@ -2220,7 +2223,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Call our action and get the result
-    let result: DataResult;
+    let result: DataResult | undefined;
     let actionMatch = getTargetMatch(matches, location);
 
     if (!actionMatch.route.action && !actionMatch.route.lazy) {
@@ -2250,14 +2253,15 @@ export function createRouter(init: RouterInit): Router {
         scopedContext,
         null,
       );
-      result = results[actionMatch.route.id];
+      result = getRouteDataValue(results, actionMatch.route.id);
 
       if (!result) {
         // If this error came from a parent middleware before the action ran,
         // then it won't be tied to the action route
         for (let match of matches) {
-          if (results[match.route.id]) {
-            result = results[match.route.id];
+          let matchResult = getRouteDataValue(results, match.route.id);
+          if (matchResult) {
+            result = matchResult;
             break;
           }
         }
@@ -2267,6 +2271,8 @@ export function createRouter(init: RouterInit): Router {
         return { shortCircuited: true };
       }
     }
+
+    invariant(result, "No action result returned from data strategy");
 
     if (isRedirectResult(result)) {
       let replace: boolean;
@@ -2832,14 +2838,15 @@ export function createRouter(init: RouterInit): Router {
       scopedContext,
       key,
     );
-    let actionResult = actionResults[match.route.id];
+    let actionResult = getRouteDataValue(actionResults, match.route.id);
 
     if (!actionResult) {
       // If this error came from a parent middleware before the action ran,
       // then it won't be tied to the action route
       for (let match of fetchMatches) {
-        if (actionResults[match.route.id]) {
-          actionResult = actionResults[match.route.id];
+        let matchResult = getRouteDataValue(actionResults, match.route.id);
+        if (matchResult) {
+          actionResult = matchResult;
           break;
         }
       }
@@ -2853,6 +2860,8 @@ export function createRouter(init: RouterInit): Router {
       }
       return;
     }
+
+    invariant(actionResult, "No action result returned from data strategy");
 
     // We don't want errors bubbling up to the UI or redirects processed for
     // unmounted fetchers so we just revert them to idle
@@ -3181,14 +3190,15 @@ export function createRouter(init: RouterInit): Router {
       scopedContext,
       key,
     );
-    let result = results[match.route.id];
+    let result = getRouteDataValue(results, match.route.id);
 
     if (!result) {
       // If this error came from a parent middleware before the loader ran,
       // then it won't be tied to the fetcher target route
       for (let match of matches) {
-        if (results[match.route.id]) {
-          result = results[match.route.id];
+        let matchResult = getRouteDataValue(results, match.route.id);
+        if (matchResult) {
+          result = matchResult;
           break;
         }
       }
@@ -3209,6 +3219,8 @@ export function createRouter(init: RouterInit): Router {
       updateFetcherState(key, getDoneFetcher(undefined));
       return;
     }
+
+    invariant(result, "No loader result returned from data strategy");
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
@@ -3423,10 +3435,10 @@ export function createRouter(init: RouterInit): Router {
       matches
         .filter((m) => m.shouldLoad)
         .forEach((m) => {
-          dataResults[m.route.id] = {
+          setRouteDataValue(dataResults, m.route.id, {
             type: ResultType.error,
             error: e,
-          };
+          });
         });
       return dataResults;
     }
@@ -3442,21 +3454,24 @@ export function createRouter(init: RouterInit): Router {
     // returned on the descendant route
     if (!isMutationMethod(request.method)) {
       for (let match of matches) {
-        if (results[match.route.id]?.type === ResultType.error) {
+        if (
+          hasOwnProperty(results, match.route.id) &&
+          results[match.route.id]?.type === ResultType.error
+        ) {
           break;
         }
         if (
-          !results.hasOwnProperty(match.route.id) &&
-          !state.loaderData.hasOwnProperty(match.route.id) &&
-          (!state.errors || !state.errors.hasOwnProperty(match.route.id)) &&
+          !hasOwnProperty(results, match.route.id) &&
+          !hasOwnProperty(state.loaderData, match.route.id) &&
+          (!state.errors || !hasOwnProperty(state.errors, match.route.id)) &&
           match.shouldCallHandler()
         ) {
-          results[match.route.id] = {
+          setRouteDataValue(results, match.route.id, {
             type: ResultType.error,
             result: new Error(
               `No result returned from dataStrategy for route ${match.route.id}`,
             ),
-          };
+          });
         }
       }
     }
@@ -3464,7 +3479,7 @@ export function createRouter(init: RouterInit): Router {
     for (let [routeId, result] of Object.entries(results)) {
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
-        dataResults[routeId] = {
+        setRouteDataValue(dataResults, routeId, {
           type: ResultType.redirect,
           response: normalizeRelativeRoutingRedirectResponse(
             response,
@@ -3473,10 +3488,13 @@ export function createRouter(init: RouterInit): Router {
             matches,
             basename,
           ),
-        };
+        });
       } else {
-        dataResults[routeId] =
-          await convertDataStrategyResultToDataResult(result);
+        setRouteDataValue(
+          dataResults,
+          routeId,
+          await convertDataStrategyResultToDataResult(result),
+        );
       }
     }
 
@@ -3509,7 +3527,8 @@ export function createRouter(init: RouterInit): Router {
             scopedContext,
             f.key,
           );
-          let result = results[f.match.route.id];
+          let result = getRouteDataValue(results, f.match.route.id);
+          invariant(result, "No fetcher result returned from data strategy");
           // Fetcher results are keyed by fetcher key from here on out, not routeId
           return { [f.key]: result };
         } else {
@@ -4381,8 +4400,12 @@ export function createStaticHandler(
               // to align server/client behavior.  Client side middleware uses
               // dataStrategy and a given route can only have one result, so the
               // error overwrites any prior loader data.
-              if (routeId in renderedStaticContext.loaderData) {
-                renderedStaticContext.loaderData[routeId] = undefined;
+              if (hasOwnProperty(renderedStaticContext.loaderData, routeId)) {
+                setRouteDataValue(
+                  renderedStaticContext.loaderData,
+                  routeId,
+                  undefined,
+                );
               }
 
               let staticContext = getStaticContextFromError(
@@ -4717,7 +4740,7 @@ export function createStaticHandler(
     filterMatchesToLoad: ((m: DataRouteMatch) => boolean) | null,
     skipRevalidation: boolean,
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
-    let result: DataResult;
+    let result: DataResult | undefined;
 
     if (!actionMatch.route.action && !actionMatch.route.lazy) {
       let error = getInternalRouterError(405, {
@@ -4752,12 +4775,14 @@ export function createStaticHandler(
         requestContext,
         dataStrategy,
       );
-      result = results[actionMatch.route.id];
+      result = getRouteDataValue(results, actionMatch.route.id);
 
       if (request.signal.aborted) {
         throwStaticHandlerAbortedError(request, isRouteRequest);
       }
     }
+
+    invariant(result, "No action result returned from data strategy");
 
     if (isRedirectResult(result)) {
       // Uhhhh - this should never happen, we should always throw these from
@@ -5049,7 +5074,7 @@ export function createStaticHandler(
     let dataResults: Record<string, DataResult> = {};
     await Promise.all(
       matches.map(async (match) => {
-        if (!(match.route.id in results)) {
+        if (!hasOwnProperty(results, match.route.id)) {
           return;
         }
         let result = results[match.route.id];
@@ -5079,8 +5104,11 @@ export function createStaticHandler(
           }
         }
 
-        dataResults[match.route.id] =
-          await convertDataStrategyResultToDataResult(result);
+        setRouteDataValue(
+          dataResults,
+          match.route.id,
+          await convertDataStrategyResultToDataResult(result),
+        );
       }),
     );
     return dataResults;
@@ -5703,8 +5731,8 @@ function getRouteHydrationStatus(
     return { shouldLoad: false, renderFallback: false };
   }
 
-  let hasData = loaderData != null && route.id in loaderData;
-  let hasError = errors != null && errors[route.id] !== undefined;
+  let hasData = loaderData != null && hasOwnProperty(loaderData, route.id);
+  let hasError = getRouteDataValue(errors, route.id) !== undefined;
 
   // Don't run if we error'd during SSR
   if (!hasData && hasError) {
@@ -5735,7 +5763,7 @@ function isNewLoader(
 
   // Handle the case that we don't have data for a re-used route, potentially
   // from a prior error
-  let isMissingData = !currentLoaderData.hasOwnProperty(match.route.id);
+  let isMissingData = !hasOwnProperty(currentLoaderData, match.route.id);
 
   // Always load if this is a net-new route or we don't yet have data
   return isNew || isMissingData;
@@ -6176,7 +6204,7 @@ async function defaultDataStrategy(
   let keyedResults: Record<string, DataStrategyResult> = {};
   let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
   results.forEach((result, i) => {
-    keyedResults[matchesToLoad[i].route.id] = result;
+    setRouteDataValue(keyedResults, matchesToLoad[i].route.id, result);
   });
   return keyedResults;
 }
@@ -7064,7 +7092,7 @@ function processRouteLoaderData(
 
   // Process loader results into state.loaderData/state.errors
   matches.forEach((match) => {
-    if (!(match.route.id in results)) {
+    if (!hasOwnProperty(results, match.route.id)) {
       return;
     }
     let id = match.route.id;
@@ -7086,20 +7114,20 @@ function processRouteLoaderData(
       errors = errors || {};
 
       if (skipLoaderErrorBubbling) {
-        errors[id] = error;
+        setRouteDataValue(errors, id, error);
       } else {
         // Look upwards from the matched route for the closest ancestor error
         // boundary, defaulting to the root match.  Prefer higher error values
         // if lower errors bubble to the same boundary
         let boundaryMatch = findNearestBoundary(matches, id);
-        if (errors[boundaryMatch.route.id] == null) {
-          errors[boundaryMatch.route.id] = error;
+        if (!hasOwnProperty(errors, boundaryMatch.route.id)) {
+          setRouteDataValue(errors, boundaryMatch.route.id, error);
         }
       }
 
       // Clear our any prior loaderData for the throwing route
       if (!isStaticHandler) {
-        loaderData[id] = ResetLoaderDataSymbol;
+        setRouteDataValue(loaderData, id, ResetLoaderDataSymbol);
       }
 
       // Once we find our first (highest) error, we set the status code and
@@ -7111,17 +7139,17 @@ function processRouteLoaderData(
           : 500;
       }
       if (result.headers) {
-        loaderHeaders[id] = result.headers;
+        setRouteDataValue(loaderHeaders, id, result.headers);
       }
     } else {
-      loaderData[id] = result.data;
+      setRouteDataValue(loaderData, id, result.data);
       // Error status codes always override success status codes, but if all
       // loaders are successful we take the deepest status code.
       if (result.statusCode && result.statusCode !== 200 && !foundError) {
         statusCode = result.statusCode;
       }
       if (result.headers) {
-        loaderHeaders[id] = result.headers;
+        setRouteDataValue(loaderHeaders, id, result.headers);
       }
     }
   });
@@ -7132,7 +7160,7 @@ function processRouteLoaderData(
     errors = { [pendingActionResult[0]]: pendingError };
     // Clear out any loaderData for the throwing route
     if (pendingActionResult[2]) {
-      loaderData[pendingActionResult[2]] = undefined;
+      setRouteDataValue(loaderData, pendingActionResult[2], undefined);
     }
   }
 
@@ -7180,7 +7208,7 @@ function processLoaderData(
       // Process fetcher non-redirect errors
       if (isErrorResult(result)) {
         let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
-        if (!(errors && errors[boundaryMatch.route.id])) {
+        if (!(errors && getRouteDataValue(errors, boundaryMatch.route.id))) {
           errors = {
             ...errors,
             [boundaryMatch.route.id]: result.error,
@@ -7210,7 +7238,7 @@ function mergeLoaderData(
   let mergedLoaderData = Object.entries(newLoaderData)
     .filter(([, v]) => v !== ResetLoaderDataSymbol)
     .reduce((merged, [k, v]) => {
-      merged[k] = v;
+      setRouteDataValue(merged, k, v);
       return merged;
     }, {} as RouteData);
 
@@ -7219,14 +7247,14 @@ function mergeLoaderData(
   for (let match of matches) {
     let id = match.route.id;
     if (
-      !newLoaderData.hasOwnProperty(id) &&
-      loaderData.hasOwnProperty(id) &&
+      !hasOwnProperty(newLoaderData, id) &&
+      hasOwnProperty(loaderData, id) &&
       match.route.loader
     ) {
-      mergedLoaderData[id] = loaderData[id];
+      setRouteDataValue(mergedLoaderData, id, loaderData[id]);
     }
 
-    if (errors && errors.hasOwnProperty(id)) {
+    if (errors && hasOwnProperty(errors, id)) {
       // Don't keep any loader data below the boundary
       break;
     }

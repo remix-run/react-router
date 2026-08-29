@@ -1,6 +1,6 @@
 import { splitSetCookieString } from "cookie-es";
 
-import type { DataRouteMatch } from "../router/utils";
+import { hasOwnProperty, type DataRouteMatch } from "../router/utils";
 import type { StaticHandlerContext } from "../router/router";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
 import type { ServerBuild } from "./build";
@@ -24,7 +24,11 @@ export function getDocumentHeadersImpl(
   _defaultHeaders?: Headers,
 ): Headers {
   let boundaryIdx = context.errors
-    ? context.matches.findIndex((m) => context.errors![m.route.id])
+    ? context.matches.findIndex(
+        (m) =>
+          hasOwnProperty(context.errors!, m.route.id) &&
+          context.errors![m.route.id],
+      )
     : -1;
   let matches =
     boundaryIdx >= 0
@@ -40,11 +44,16 @@ export function getDocumentHeadersImpl(
     context.matches.slice(boundaryIdx).some((match) => {
       let id = match.route.id;
       if (
+        hasOwnProperty(actionHeaders, id) &&
         actionHeaders[id] &&
-        (!actionData || !actionData.hasOwnProperty(id))
+        (!actionData || !hasOwnProperty(actionData, id))
       ) {
         errorHeaders = actionHeaders[id];
-      } else if (loaderHeaders[id] && !loaderData.hasOwnProperty(id)) {
+      } else if (
+        hasOwnProperty(loaderHeaders, id) &&
+        loaderHeaders[id] &&
+        !hasOwnProperty(loaderData, id)
+      ) {
         errorHeaders = loaderHeaders[id];
       }
       return errorHeaders != null;
@@ -55,8 +64,14 @@ export function getDocumentHeadersImpl(
 
   return matches.reduce((parentHeaders, match, idx) => {
     let { id } = match.route;
-    let loaderHeaders = context.loaderHeaders[id] || new Headers();
-    let actionHeaders = context.actionHeaders[id] || new Headers();
+    let loaderHeaders =
+      (hasOwnProperty(context.loaderHeaders, id) &&
+        context.loaderHeaders[id]) ||
+      new Headers();
+    let actionHeaders =
+      (hasOwnProperty(context.actionHeaders, id) &&
+        context.actionHeaders[id]) ||
+      new Headers();
 
     // Only expose errorHeaders to the leaf headers() function to
     // avoid duplication via parentHeaders

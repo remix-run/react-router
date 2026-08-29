@@ -7,7 +7,7 @@ import * as React from "react";
 
 import type { RouterState } from "../../router/router";
 import type { DataRouteMatch } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
+import { hasOwnProperty, matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
@@ -206,7 +206,10 @@ function getActiveMatches(
   }
 
   if (errors) {
-    let errorIdx = matches.findIndex((m) => errors[m.route.id] !== undefined);
+    let errorIdx = matches.findIndex(
+      (m) =>
+        hasOwnProperty(errors, m.route.id) && errors[m.route.id] !== undefined,
+    );
     return matches.slice(0, errorIdx + 1);
   }
 
@@ -503,7 +506,7 @@ function PrefetchPageLinksImpl({
 
       if (
         !newMatchesForData.some((m2) => m2.route.id === m.route.id) &&
-        m.route.id in loaderData &&
+        hasOwnProperty(loaderData, m.route.id) &&
         routeModules[m.route.id]?.shouldRevalidate
       ) {
         foundOptOutRoute = true;
@@ -621,7 +624,9 @@ export function Meta(): React.JSX.Element {
   for (let i = 0; i < _matches.length; i++) {
     let _match = _matches[i];
     let routeId = _match.route.id;
-    let data = loaderData[routeId];
+    let data = hasOwnProperty(loaderData, routeId)
+      ? loaderData[routeId]
+      : undefined;
     let params = _match.params;
     let routeModule = routeModules[routeId];
     let routeMeta: MetaDescriptor[] | undefined = [];

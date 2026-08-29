@@ -38,10 +38,12 @@ import {
   defaultMapRouteProperties,
   ErrorResponseImpl,
   SUPPORTED_ERROR_TYPES,
+  hasOwnProperty,
   joinPaths,
   matchPath,
   parseToInfo,
   resolveTo,
+  setRouteDataValue,
   stripBasename,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
@@ -727,11 +729,15 @@ function deserializeErrors(
     // Hey you!  If you change this, please change the corresponding logic in
     // serializeErrors in lib/dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
-      serialized[key] = new ErrorResponseImpl(
-        val.status,
-        val.statusText,
-        val.data,
-        val.internal === true,
+      setRouteDataValue(
+        serialized,
+        key,
+        new ErrorResponseImpl(
+          val.status,
+          val.statusText,
+          val.data,
+          val.internal === true,
+        ),
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
@@ -747,22 +753,22 @@ function deserializeErrors(
             // Wipe away the client-side stack trace.  Nothing to fill it in with
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
-            serialized[key] = error;
+            setRouteDataValue(serialized, key, error);
           } catch {
             // no-op - fall through and create a normal Error
           }
         }
       }
 
-      if (serialized[key] == null) {
+      if (!hasOwnProperty(serialized, key)) {
         let error = new Error(val.message);
         // Wipe away the client-side stack trace.  Nothing to fill it in with
         // because we don't serialize SSR stack traces for security reasons
         error.stack = "";
-        serialized[key] = error;
+        setRouteDataValue(serialized, key, error);
       }
     } else {
-      serialized[key] = val;
+      setRouteDataValue(serialized, key, val);
     }
   }
   return serialized;

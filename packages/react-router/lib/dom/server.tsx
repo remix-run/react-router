@@ -23,6 +23,7 @@ import type {
 import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
+  setRouteDataValue,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
 import { DataRoutes, Router } from "../components";
@@ -239,10 +240,13 @@ function serializeErrors(
     // Hey you!  If you change this, please change the corresponding logic in
     // deserializeErrors in lib/dom/lib.tsx :)
     if (isRouteErrorResponse(val)) {
-      serialized[key] = { ...val, __type: "RouteErrorResponse" };
+      setRouteDataValue(serialized, key, {
+        ...val,
+        __type: "RouteErrorResponse",
+      });
     } else if (val instanceof Error) {
       // Do not serialize stack traces from SSR for security reasons
-      serialized[key] = {
+      setRouteDataValue(serialized, key, {
         message: val.message,
         __type: "Error",
         // If this is a subclass (i.e., ReferenceError), send up the type so we
@@ -252,9 +256,9 @@ function serializeErrors(
               __subType: val.name,
             }
           : {}),
-      };
+      });
     } else {
-      serialized[key] = val;
+      setRouteDataValue(serialized, key, val);
     }
   }
   return serialized;

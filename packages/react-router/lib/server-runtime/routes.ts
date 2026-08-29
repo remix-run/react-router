@@ -5,7 +5,13 @@ import type {
   RouteManifest,
   MiddlewareFunction,
 } from "../router/utils";
-import { redirectDocument, replace, redirect } from "../router/utils";
+import {
+  hasOwnProperty,
+  redirectDocument,
+  replace,
+  redirect,
+  setRouteDataValue,
+} from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { Route } from "../dom/ssr/routes";
 import type {
@@ -33,8 +39,8 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   Object.values(manifest).forEach((route) => {
     if (route) {
       let parentId = route.parentId || "";
-      if (!routes[parentId]) {
-        routes[parentId] = [];
+      if (!hasOwnProperty(routes, parentId)) {
+        setRouteDataValue(routes, parentId, []);
       }
       routes[parentId].push(route);
     }
@@ -99,7 +105,7 @@ export function createStaticHandlerDataRoutes(
                 }
               } else {
                 invariant(
-                  data && route.id in data,
+                  data && hasOwnProperty(data, route.id),
                   "Unable to decode prerendered data",
                 );
                 let result = data[route.id] as SingleFetchResult;

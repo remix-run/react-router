@@ -9,7 +9,13 @@ import type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
 } from "../../router/utils";
-import { ErrorResponseImpl, compilePath } from "../../router/utils";
+import {
+  ErrorResponseImpl,
+  compilePath,
+  getRouteDataValue,
+  hasOwnProperty,
+  setRouteDataValue,
+} from "../../router/utils";
 import type {
   ClientLoaderFunction,
   RouteModule,
@@ -56,8 +62,8 @@ function groupRoutesByParentId(manifest: RouteManifest<EntryRoute>) {
   Object.values(manifest).forEach((route) => {
     if (route) {
       let parentId = route.parentId || "";
-      if (!routes[parentId]) {
-        routes[parentId] = [];
+      if (!hasOwnProperty(routes, parentId)) {
+        setRouteDataValue(routes, parentId, []);
       }
       routes[parentId].push(route);
     }
@@ -237,7 +243,7 @@ export function createClientRoutes(
   needsRevalidation?: Set<string>,
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
-    let routeModule = routeModulesCache[route.id];
+    let routeModule = getRouteDataValue(routeModulesCache, route.id);
 
     function fetchServerHandler(singleFetch: unknown) {
       invariant(
@@ -290,7 +296,7 @@ export function createClientRoutes(
       // and navigating back to pages previously loaded via route.lazy).  Initial
       // execution of route.lazy (when the module is not in the cache) will handle
       // prefetching style links via loadRouteModuleWithBlockingLinks.
-      let cachedModule = routeModulesCache[route.id];
+      let cachedModule = getRouteDataValue(routeModulesCache, route.id);
       let linkPrefetchPromise = cachedModule
         ? prefetchStyleLinks(route, cachedModule)
         : Promise.resolve();
@@ -326,12 +332,14 @@ export function createClientRoutes(
       let hasInitialData =
         initialState &&
         initialState.loaderData &&
-        route.id in initialState.loaderData;
+        hasOwnProperty(initialState.loaderData, route.id);
       let initialData = hasInitialData
         ? initialState?.loaderData?.[route.id]
         : undefined;
       let hasInitialError =
-        initialState && initialState.errors && route.id in initialState.errors;
+        initialState &&
+        initialState.errors &&
+        hasOwnProperty(initialState.errors, route.id);
       let initialError = hasInitialError
         ? initialState?.errors?.[route.id]
         : undefined;

@@ -21,6 +21,36 @@ export interface RouteData {
   [routeId: string]: any;
 }
 
+export function hasOwnProperty(object: object, property: PropertyKey): boolean {
+  return Object.prototype.hasOwnProperty.call(object, property);
+}
+
+export function getRouteDataValue<T>(
+  object: Record<string, T> | null | undefined,
+  routeId: string,
+): T | undefined {
+  return object != null && hasOwnProperty(object, routeId)
+    ? object[routeId]
+    : undefined;
+}
+
+export function setRouteDataValue<T, Value extends T>(
+  object: Record<string, T | undefined>,
+  routeId: string,
+  value: Value | undefined,
+): void {
+  if (routeId === "__proto__") {
+    Object.defineProperty(object, routeId, {
+      configurable: true,
+      enumerable: true,
+      value,
+      writable: true,
+    });
+  } else {
+    object[routeId] = value;
+  }
+}
+
 export enum ResultType {
   data = "data",
   redirect = "redirect",
@@ -980,7 +1010,7 @@ export function convertRoutesToDataRoutes(
       `Cannot specify children on an index route`,
     );
     invariant(
-      allowInPlaceMutations || !manifest[id],
+      allowInPlaceMutations || !hasOwnProperty(manifest, id),
       `Found a route id collision on id "${id}".  Route ` +
         "id's must be globally unique within Data Router usages",
     );
@@ -990,9 +1020,10 @@ export function convertRoutesToDataRoutes(
         ...route,
         id,
       };
-      manifest[id] = mergeRouteUpdates(
-        indexRoute,
-        mapRouteProperties(indexRoute),
+      setRouteDataValue(
+        manifest,
+        id,
+        mergeRouteUpdates(indexRoute, mapRouteProperties(indexRoute)),
       );
       return indexRoute;
     } else {
@@ -1001,9 +1032,13 @@ export function convertRoutesToDataRoutes(
         id,
         children: undefined,
       };
-      manifest[id] = mergeRouteUpdates(
-        pathOrLayoutRoute,
-        mapRouteProperties(pathOrLayoutRoute),
+      setRouteDataValue(
+        manifest,
+        id,
+        mergeRouteUpdates(
+          pathOrLayoutRoute,
+          mapRouteProperties(pathOrLayoutRoute),
+        ),
       );
 
       if (route.children) {
@@ -1140,7 +1175,7 @@ export function convertRouteMatchToUiMatch(
     id: route.id,
     pathname,
     params,
-    loaderData: loaderData[route.id],
+    loaderData: getRouteDataValue(loaderData, route.id),
     handle: route.handle,
   };
 }
@@ -1707,9 +1742,9 @@ function matchPathImpl<Path extends string>(
 
       const value = captureGroups[index];
       if (isOptional && !value) {
-        memo[paramName] = undefined;
+        setRouteDataValue(memo, paramName, undefined);
       } else {
-        memo[paramName] = (value || "").replace(/%2F/g, "/");
+        setRouteDataValue(memo, paramName, (value || "").replace(/%2F/g, "/"));
       }
       return memo;
     },

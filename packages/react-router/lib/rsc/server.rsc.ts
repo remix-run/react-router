@@ -28,6 +28,7 @@ import {
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
+  hasOwnProperty,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -35,6 +36,7 @@ import {
   redirect as baseRedirect,
   redirectDocument as baseRedirectDocument,
   replace as baseReplace,
+  setRouteDataValue,
   stripBasename,
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
@@ -952,8 +954,11 @@ async function generateRenderResponse(
 
         if (potentialCSRFAttackError) {
           staticContext.errors ??= {};
-          staticContext.errors[staticContext.matches[0].route.id] =
-            potentialCSRFAttackError;
+          setRouteDataValue(
+            staticContext.errors,
+            staticContext.matches[0].route.id,
+            potentialCSRFAttackError,
+          );
           staticContext.statusCode = 400;
         }
 
@@ -1097,12 +1102,13 @@ async function generateStaticContextResponse(
   // be forced to revalidate on navigation.
   staticContext.matches.forEach((m) => {
     const routeHasNoLoaderData =
+      !hasOwnProperty(staticContext.loaderData, m.route.id) ||
       staticContext.loaderData[m.route.id] === undefined;
     const routeHasError = Boolean(
-      staticContext.errors && m.route.id in staticContext.errors,
+      staticContext.errors && hasOwnProperty(staticContext.errors, m.route.id),
     );
     if (routeHasNoLoaderData && !routeHasError) {
-      staticContext.loaderData[m.route.id] = null;
+      setRouteDataValue(staticContext.loaderData, m.route.id, null);
     }
   });
 
@@ -1190,11 +1196,15 @@ async function getRenderPayload(
 
   staticContext.matches.forEach((m, i) => {
     if (i > 0) {
-      parentIds[m.route.id] = staticContext.matches[i - 1].route.id;
+      setRouteDataValue(
+        parentIds,
+        m.route.id,
+        staticContext.matches[i - 1].route.id,
+      );
     }
     if (
       staticContext.errors &&
-      m.route.id in staticContext.errors &&
+      hasOwnProperty(staticContext.errors, m.route.id) &&
       deepestRenderedRouteIdx > i
     ) {
       deepestRenderedRouteIdx = i;
@@ -1204,7 +1214,9 @@ async function getRenderPayload(
   let matchesPromise = Promise.all(
     (staticContext.matches as RSCRouteDataMatch[]).map((match, i) => {
       let isBelowErrorBoundary = i > deepestRenderedRouteIdx;
-      let parentId = parentIds[match.route.id];
+      let parentId = hasOwnProperty(parentIds, match.route.id)
+        ? parentIds[match.route.id]
+        : undefined;
       return getRSCRouteMatch({
         staticContext,
         match,
@@ -1256,8 +1268,14 @@ async function getRSCRouteMatch({
   const Component = route.Component;
   const ErrorBoundary = route.ErrorBoundary;
   const HydrateFallback = route.HydrateFallback;
-  const loaderData = staticContext.loaderData[route.id];
-  const actionData = staticContext.actionData?.[route.id];
+  const loaderData = hasOwnProperty(staticContext.loaderData, route.id)
+    ? staticContext.loaderData[route.id]
+    : undefined;
+  const actionData =
+    staticContext.actionData &&
+    hasOwnProperty(staticContext.actionData, route.id)
+      ? staticContext.actionData[route.id]
+      : undefined;
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
@@ -1289,7 +1307,11 @@ async function getRSCRouteMatch({
   }
   let error: unknown = undefined;
 
-  if (ErrorBoundary && staticContext.errors) {
+  if (
+    ErrorBoundary &&
+    staticContext.errors &&
+    hasOwnProperty(staticContext.errors, route.id)
+  ) {
     error = staticContext.errors[route.id];
   }
   const errorElement = ErrorBoundary

@@ -15,6 +15,8 @@ import {
   isRouteErrorResponse,
   redirect,
   data,
+  hasOwnProperty,
+  setRouteDataValue,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
@@ -328,9 +330,12 @@ async function nonSsrStrategy(
                 return unwrapSingleFetchResult(data, routeId);
               })
             : await handler();
-          results[m.route.id] = { type: "data", result };
+          setRouteDataValue(results, m.route.id, { type: "data", result });
         } catch (e) {
-          results[m.route.id] = { type: "error", result: e };
+          setRouteDataValue(results, m.route.id, {
+            type: "error",
+            result: e,
+          });
         }
       }),
     ),
@@ -396,9 +401,12 @@ async function singleFetchLoaderNavigationStrategy(
               return unwrapSingleFetchResult(data, routeId);
             });
 
-            results[routeId] = { type: "data", result };
+            setRouteDataValue(results, routeId, { type: "data", result });
           } catch (e) {
-            results[routeId] = { type: "error", result: e };
+            setRouteDataValue(results, routeId, {
+              type: "error",
+              result: e,
+            });
           }
           return;
         }
@@ -414,9 +422,12 @@ async function singleFetchLoaderNavigationStrategy(
             let data = await singleFetchDfd.promise;
             return unwrapSingleFetchResult(data, routeId);
           });
-          results[routeId] = { type: "data", result };
+          setRouteDataValue(results, routeId, { type: "data", result });
         } catch (e) {
-          results[routeId] = { type: "error", result: e };
+          setRouteDataValue(results, routeId, {
+            type: "error",
+            result: e,
+          });
         }
       }),
     ),
@@ -486,17 +497,20 @@ async function bubbleMiddlewareErrors(
 
     if ("routes" in fetchedData) {
       for (let match of matches) {
-        if (match.route.id in fetchedData.routes) {
+        if (hasOwnProperty(fetchedData.routes, match.route.id)) {
           let routeResult = fetchedData.routes[match.route.id];
           if ("error" in routeResult) {
             middlewareError = routeResult.error;
             // If we didn't have a loader to call for this route but it threw an
             // error from middleware, assign the error and let the router bubble it
-            if (results[match.route.id]?.result == null) {
-              results[match.route.id] = {
+            if (
+              !hasOwnProperty(results, match.route.id) ||
+              results[match.route.id]?.result == null
+            ) {
+              setRouteDataValue(results, match.route.id, {
                 type: "error",
                 result: middlewareError,
-              };
+              });
             }
             break;
           }
@@ -623,7 +637,7 @@ async function fetchAndDecodeViaTurboStream(
     // We get back just a single result for action requests - normalize that
     // to a DecodedSingleFetchResults shape here
     if (targetRoutes && request.method !== "GET") {
-      routes[targetRoutes[0]] = { data: undefined };
+      setRouteDataValue(routes, targetRoutes[0], { data: undefined });
     }
     return {
       status: res.status,
@@ -748,7 +762,9 @@ function unwrapSingleFetchResult(
     });
   }
 
-  let routeResult = result.routes[routeId];
+  let routeResult = hasOwnProperty(result.routes, routeId)
+    ? result.routes[routeId]
+    : undefined;
   if (routeResult == null) {
     throw new SingleFetchNoResultError(
       `No result found for routeId "${routeId}"`,

@@ -1,4 +1,5 @@
 import type { RouteModules } from "../dom/ssr/routeModules";
+import { setRouteDataValue } from "../router/utils";
 import type { ServerRouteManifest } from "./routes";
 
 export function createEntryRouteModules(
@@ -7,7 +8,7 @@ export function createEntryRouteModules(
   return Object.keys(manifest).reduce((memo, routeId) => {
     let route = manifest[routeId];
     if (route) {
-      memo[routeId] = route.module;
+      setRouteDataValue(memo, routeId, route.module);
     }
     return memo;
   }, {} as RouteModules);
