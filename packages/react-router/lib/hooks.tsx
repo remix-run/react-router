@@ -7,6 +7,7 @@ import {
   DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
+  IsDataRouteContext,
   LocationContext,
   NavigationContext,
   RSCRouterContext,
@@ -369,7 +370,7 @@ const navigateEffectWarning =
  * @returns A navigate function for programmatic navigation
  */
 export function useNavigate(): NavigateFunction {
-  let { isDataRoute } = React.useContext(RouteContext);
+  let isDataRoute = React.useContext(IsDataRouteContext);
   // Conditional usage is OK here because the usage of a data router is static
   // eslint-disable-next-line react-hooks/rules-of-hooks
   return isDataRoute ? useNavigateStable() : useNavigateUnstable();
@@ -1095,18 +1096,22 @@ export class RenderErrorBoundary extends React.Component<
     let result =
       error !== undefined ? (
         <RouteContext.Provider value={this.props.routeContext}>
-          <RouteIdContext.Provider
-            value={
-              this.props.routeContext.matches[
-                this.props.routeContext.matches.length - 1
-              ]?.route.id
-            }
+          <IsDataRouteContext.Provider
+            value={this.props.routeContext.isDataRoute}
           >
-            <RouteErrorContext.Provider
-              value={error}
-              children={this.props.component}
-            />
-          </RouteIdContext.Provider>
+            <RouteIdContext.Provider
+              value={
+                this.props.routeContext.matches[
+                  this.props.routeContext.matches.length - 1
+                ]?.route.id
+              }
+            >
+              <RouteErrorContext.Provider
+                value={error}
+                children={this.props.component}
+              />
+            </RouteIdContext.Provider>
+          </IsDataRouteContext.Provider>
         </RouteContext.Provider>
       ) : (
         this.props.children
@@ -1190,9 +1195,11 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 
   return (
     <RouteContext.Provider value={routeContext}>
-      <RouteIdContext.Provider value={match.route.id}>
-        {children}
-      </RouteIdContext.Provider>
+      <IsDataRouteContext.Provider value={routeContext.isDataRoute}>
+        <RouteIdContext.Provider value={match.route.id}>
+          {children}
+        </RouteIdContext.Provider>
+      </IsDataRouteContext.Provider>
     </RouteContext.Provider>
   );
 }

@@ -3,16 +3,19 @@ import * as TestRenderer from "react-test-renderer";
 import {
   createMemoryRouter,
   Outlet,
+  Route,
   RouterProvider,
+  Routes,
   UNSAFE_DataRouterDataContext as DataRouterDataContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   useFetcher,
   useLoaderData,
   useLocation,
   useMatches,
+  useNavigate,
   useNavigation,
 } from "react-router";
-import { RouteIdContext } from "../lib/context";
+import { IsDataRouteContext, RouteIdContext } from "../lib/context";
 import { createDeferred } from "./router/utils/utils";
 
 describe.each([
@@ -188,6 +191,97 @@ describe.each([
 
     expect(fetcherRenders).toBe(1);
     expect(locationRenders).toBe(2);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
+  it("does not re-render useNavigate consumers when the route context changes", async () => {
+    let navigateRenders = 0;
+    let locationRenders = 0;
+
+    function Navigate() {
+      navigateRenders++;
+      useNavigate();
+      return null;
+    }
+
+    function Location() {
+      locationRenders++;
+      useLocation();
+      return null;
+    }
+
+    function Root() {
+      return (
+        <>
+          <Navigate />
+          <Location />
+        </>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [{ id: "root", path: "/", Component: Root }],
+      { initialEntries: ["/?value=before"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
+    });
+
+    expect(navigateRenders).toBe(1);
+    expect(locationRenders).toBe(1);
+
+    await TestRenderer.act(async () => {
+      await router.navigate("/?value=after");
+    });
+
+    expect(navigateRenders).toBe(1);
+    expect(locationRenders).toBe(2);
+
+    TestRenderer.act(() => renderer.unmount());
+    router.dispose();
+  });
+
+  it("preserves route-relative navigation in nested declarative routes", async () => {
+    let navigate!: ReturnType<typeof useNavigate>;
+
+    function Child() {
+      navigate = useNavigate();
+      return null;
+    }
+
+    function Root() {
+      return (
+        <Routes>
+          <Route path="parent" element={<Outlet />}>
+            <Route path="child" Component={Child} />
+          </Route>
+        </Routes>
+      );
+    }
+
+    let router = createMemoryRouter(
+      [{ id: "root", path: "app/*", Component: Root }],
+      { initialEntries: ["/app/parent/child"] },
+    );
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => {
+      renderer = TestRenderer.create(
+        <RouterProvider router={router} useTransitions={useTransitions} />,
+      );
+    });
+
+    await TestRenderer.act(async () => {
+      await navigate("..");
+    });
+
+    expect(router.state.location.pathname).toBe("/app/parent");
 
     TestRenderer.act(() => renderer.unmount());
     router.dispose();
@@ -392,6 +486,7 @@ describe.each([
     }
 
     function ErrorBoundary() {
+      expect(React.useContext(IsDataRouteContext)).toBe(true);
       expect(React.useContext(RouteIdContext)).toBe("broken");
       return <p>Error boundary</p>;
     }

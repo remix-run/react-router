@@ -171,6 +171,9 @@ export const RouteContext = React.createContext<RouteContextObject>({
 });
 RouteContext.displayName = "Route";
 
+export const IsDataRouteContext = React.createContext(false);
+IsDataRouteContext.displayName = "IsDataRoute";
+
 export const RouteIdContext = React.createContext<string | undefined>(
   undefined,
 );
