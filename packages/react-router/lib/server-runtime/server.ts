@@ -529,6 +529,7 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
+      branches: [],
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
@@ -602,6 +603,7 @@ async function handleDocumentRequest(
       };
       entryContext = {
         ...entryContext,
+        branches: [],
         staticHandlerContext: context,
         serverHandoffString: createServerHandoffString(baseServerHandoff),
         serverHandoffStream: encodeViaTurboStream(

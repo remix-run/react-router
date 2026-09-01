@@ -45,6 +45,7 @@ export function mockEntryContext(
 ): EntryContext {
   return {
     ...mockFrameworkContext(overrides),
+    branches: [],
     staticHandlerContext: {
       location: {
         pathname: "/",

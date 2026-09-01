@@ -2,7 +2,11 @@ import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
-import type { RouteManifest } from "../../router/utils";
+import type {
+  DataRouteObject,
+  RouteBranch,
+  RouteManifest,
+} from "../../router/utils";
 import type { ServerBuild } from "../../server-runtime/build";
 
 type SerializedError = {
@@ -40,6 +44,11 @@ export interface FrameworkContextObject {
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
 export interface EntryContext extends FrameworkContextObject {
+  /**
+   * @deprecated This property was an internal implementation detail and was
+   * never intended for use in `entry.server.tsx`. It is always an empty array.
+   */
+  branches: RouteBranch<DataRouteObject>[];
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
