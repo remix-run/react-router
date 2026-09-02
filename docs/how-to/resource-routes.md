@@ -66,6 +66,18 @@ export function action(_: Route.ActionArgs) {
 }
 ```
 
+<docs-warning>Actions on resource routes are **not** covered by React Router's
+[origin check][security-csrf]. A direct `POST`/`PUT`/`PATCH`/`DELETE` to a
+resource route URL runs your `action` regardless of which origin sent it —
+that is deliberate, since resource routes exist to be called by other origins.
+Submissions from your own `<Form>` or `useFetcher` are checked, because they
+arrive as data requests.
+
+If a resource route changes state and relies on cookie authentication, add your
+own protection — a `SameSite` session cookie, a bearer token, a CSRF token, or
+an origin check in [middleware][middleware]. See
+[Security][security-csrf].</docs-warning>
+
 ## Return Types
 
 Resource Routes are flexible when it comes to the return type - you can return [`Response`][Response] instances or [`data()`][data] objects. A good general rule of thumb when deciding which type to use is:
@@ -124,3 +136,5 @@ export function action() {
 [form]: ../api/components/Form
 [await]: ../api/components/Await
 [error-boundary]: ../start/framework/route-module#errorboundary
+[security-csrf]: ./security#cross-site-request-forgery
+[middleware]: ./middleware
