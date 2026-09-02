@@ -14,12 +14,7 @@ import type {
   RevalidationState,
   StaticHandlerContext,
 } from "../router/router";
-import {
-  createDataRouteMatcher,
-  IDLE_BLOCKER,
-  IDLE_FETCHER,
-  IDLE_NAVIGATION,
-} from "../router/router";
+import { IDLE_BLOCKER, IDLE_FETCHER, IDLE_NAVIGATION } from "../router/router";
 import type {
   DataRouteObject,
   RouteBranch,
@@ -395,7 +390,6 @@ export function createStaticRouter(
     ...opts?.future,
   };
   let matchRoutes = context._match;
-  let dataRouteMatcher: ReturnType<typeof createDataRouteMatcher> | undefined;
 
   // Because our context matches may be from a set of routes passed to
   // createStaticHandler(), we update them here with our newly created/enhanced
@@ -447,18 +441,7 @@ export function createStaticRouter(
       return undefined;
     },
     match(locationArg) {
-      let routeMatches;
-      if (matchRoutes) {
-        routeMatches = matchRoutes(locationArg);
-      } else {
-        // Contexts not created by createStaticHandler() need their own matcher.
-        if (!dataRouteMatcher) {
-          dataRouteMatcher = createDataRouteMatcher(context.basename || "/");
-          dataRouteMatcher.update(dataRoutes);
-        }
-        routeMatches = dataRouteMatcher.match(locationArg);
-      }
-      return routeMatches && routeMatches.map(mapRouteMatch);
+      return matchRoutes(locationArg)?.map(mapRouteMatch) ?? null;
     },
     initialize() {
       throw msg("initialize");

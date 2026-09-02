@@ -163,9 +163,13 @@ describe("<NavLink />", () => {
 
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      {
+        id: "root",
+        path: "/",
+        children: [{ id: "empty", index: true }],
+      },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -173,6 +177,7 @@ describe("<ServerRouter>", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {
@@ -528,9 +533,9 @@ describe("<Links />", () => {
 
 describe("<Scripts />", () => {
   it("propagates nonce to modulepreload links", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -538,6 +543,7 @@ describe("<Scripts />", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {
@@ -604,9 +610,9 @@ describe("<Scripts />", () => {
   });
 
   it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -614,6 +620,7 @@ describe("<Scripts />", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {

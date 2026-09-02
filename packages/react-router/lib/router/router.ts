@@ -480,7 +480,7 @@ export interface StaticHandlerContext {
   actionHeaders: Record<string, Headers>;
   _deepestRenderedBoundaryId?: string | null;
   /** @private */
-  _match?: StaticHandler["match"];
+  _match: StaticHandler["match"];
 }
 
 /**
@@ -4578,7 +4578,9 @@ export function createStaticHandler(
     routeMatch: DataRouteMatch | null,
     filterMatchesToLoad: ((m: DataRouteMatch) => boolean) | null,
     skipRevalidation: boolean,
-  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
+  ): Promise<
+    Omit<StaticHandlerContext, "location" | "basename" | "_match"> | Response
+  > {
     invariant(
       request.signal,
       "query()/queryRoute() requests must contain an AbortController signal",
@@ -4648,7 +4650,9 @@ export function createStaticHandler(
     isRouteRequest: boolean,
     filterMatchesToLoad: ((m: DataRouteMatch) => boolean) | null,
     skipRevalidation: boolean,
-  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
+  ): Promise<
+    Omit<StaticHandlerContext, "location" | "basename" | "_match"> | Response
+  > {
     let result: DataResult;
 
     if (!actionMatch.route.action && !actionMatch.route.lazy) {
@@ -4844,7 +4848,7 @@ export function createStaticHandler(
   ): Promise<
     | Omit<
         StaticHandlerContext,
-        "location" | "basename" | "actionData" | "actionHeaders"
+        "location" | "basename" | "actionData" | "actionHeaders" | "_match"
       >
     | Response
   > {
