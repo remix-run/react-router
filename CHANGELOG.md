@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.4.0](#v840)
   - [v8.3.1](#v831)
   - [v8.3.0](#v830)
     - [RSC Entry Updates](#rsc-entry-updates)
@@ -111,6 +112,61 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.4.0
+
+Date: 2026-09-02
+
+### Minor Changes
+
+- `react-router` - Deprecate the `createStaticRouter({ branches })` option ([#15297](https://github.com/remix-run/react-router/pull/15297))
+
+  `createStaticRouter` now caches route branches internally, so the `branches` option is no longer used and logs a deprecation warning when provided
+
+  The deprecated `EntryContext.branches` property is retained for compatibility but is now always an empty array
+
+### Patch Changes
+
+- `react-router` - Switch to more granular internal router contexts to avoid unnecessary route component re-renders when unrelated data router state changes ([#15376](https://github.com/remix-run/react-router/pull/15376))
+  - ⚠️ This contains some breaking changes to exported `UNSAFE_` contexts, so please review carefully if you are using those unsafe exports
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - Add a new Data Mode-only `future.unstable_routePatternMatching` flag to opt into more efficient `@remix-run/route-pattern` based route matching internally ([#15298](https://github.com/remix-run/react-router/pull/15298))
+
+  - No code changes required - syntax remains the same for pubic route definitions and route match fields
+  - Once opting into this flag, you should no longer user legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher
+    - A new `router.match()` API exists for those use cases but it's marked private and considered unstable along with the flag
+  - Path generation APIs such as `generatePath` and `href` continue to accept React Router path syntax
+  - This flag also comes with a new `unstable_validateParams` route field which uses keyed regular expressions so a route can reject matched params and let matching continue (non-matched optional params are not validated)
+
+    ```ts
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/:drink",
+          unstable_validateParams: {
+            drink: /^(wines|whiskeys|sakes|beers)$/,
+          },
+        },
+        {
+          path: "/:food",
+          unstable_validateParams: {
+            food: /^(meats|veggies|cheeses|sweets)$/,
+          },
+        },
+      ],
+      {
+        future: {
+          unstable_routePatternMatching: true,
+        },
+      },
+    );
+    ```
+
+**Full Changelog**: [`v8.3.1...v8.4.0`](https://github.com/remix-run/react-router/compare/react-router@8.3.1...react-router@8.4.0)
 
 ## v8.3.1
 

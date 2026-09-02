@@ -1,5 +1,56 @@
 # `react-router`
 
+## v8.4.0
+
+### Minor Changes
+
+- Deprecate the `createStaticRouter({ branches })` option ([#15297](https://github.com/remix-run/react-router/pull/15297))
+
+  `createStaticRouter` now caches route branches internally, so the `branches` option is no longer used and logs a deprecation warning when provided
+
+  The deprecated `EntryContext.branches` property is retained for compatibility but is now always an empty array
+
+### Patch Changes
+
+- Switch to more granular internal router contexts to avoid unnecessary route component re-renders when unrelated data router state changes ([#15376](https://github.com/remix-run/react-router/pull/15376))
+  - ⚠️ This contains some breaking changes to exported `UNSAFE_` contexts, so please review carefully if you are using those unsafe exports
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add a new Data Mode-only `future.unstable_routePatternMatching` flag to opt into more efficient `@remix-run/route-pattern` based route matching internally ([#15298](https://github.com/remix-run/react-router/pull/15298))
+
+  - No code changes required - syntax remains the same for pubic route definitions and route match fields
+  - Once opting into this flag, you should no longer user legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher
+    - A new `router.match()` API exists for those use cases but it's marked private and considered unstable along with the flag
+  - Path generation APIs such as `generatePath` and `href` continue to accept React Router path syntax
+  - This flag also comes with a new `unstable_validateParams` route field which uses keyed regular expressions so a route can reject matched params and let matching continue (non-matched optional params are not validated)
+
+    ```ts
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/:drink",
+          unstable_validateParams: {
+            drink: /^(wines|whiskeys|sakes|beers)$/,
+          },
+        },
+        {
+          path: "/:food",
+          unstable_validateParams: {
+            food: /^(meats|veggies|cheeses|sweets)$/,
+          },
+        },
+      ],
+      {
+        future: {
+          unstable_routePatternMatching: true,
+        },
+      },
+    );
+    ```
+
 ## v8.3.1
 
 ### Patch Changes
