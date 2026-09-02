@@ -46,6 +46,15 @@
       "development": "./dist/development/dom-export.js",
       "default": "./dist/production/dom-export.js"
     },
+    "./route-pattern": {
+      "types": "./dist/production/route-pattern.d.ts",
+      "module-sync": {
+        "development": "./dist/development/route-pattern.js",
+        "default": "./dist/production/route-pattern.js"
+      },
+      "development": "./dist/development/route-pattern.js",
+      "default": "./dist/production/route-pattern.js"
+    },
     "./internal": {
       "types": "./dist/development/lib/types/internal.d.ts"
     },
