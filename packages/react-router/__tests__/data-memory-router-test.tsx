@@ -35,6 +35,8 @@ import {
   useSubmit,
   type ErrorResponse,
 } from "../index";
+import { DataRoutes, Router } from "../lib/components";
+import { DataRouterContext, DataRouterStateContext } from "../lib/context";
 import urlDataStrategy from "./router/utils/urlDataStrategy";
 import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
@@ -137,6 +139,63 @@ describe("createMemoryRouter", () => {
       },
     );
     let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Heyooo
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("uses the router matcher when data router matches are empty with a basename", () => {
+    let router = createMemoryRouter(
+      createRoutesFromElements(
+        <Route path="thing" element={<h1>Heyooo</h1>} />,
+      ),
+      {
+        basename: "/my/base/path",
+        initialEntries: ["/my/base/path/thing"],
+      },
+    );
+    let state = {
+      ...router.state,
+      matches: [],
+    };
+    let navigator = {
+      createHref: (to: any) => (typeof to === "string" ? to : to.pathname),
+      go: () => {},
+      push: () => {},
+      replace: () => {},
+    };
+
+    let { container } = render(
+      <DataRouterContext.Provider
+        value={{
+          basename: router.basename,
+          navigator,
+          router,
+          static: false,
+        }}
+      >
+        <DataRouterStateContext.Provider value={state}>
+          <Router
+            basename={router.basename}
+            location={state.location}
+            navigationType={state.historyAction}
+            navigator={navigator}
+          >
+            <DataRoutes
+              manifest={router.manifest}
+              routes={router.routes}
+              state={state}
+              isStatic={false}
+            />
+          </Router>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>,
+    );
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>

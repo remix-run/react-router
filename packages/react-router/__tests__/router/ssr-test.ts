@@ -138,6 +138,26 @@ describe("ssr", () => {
     "web+remix:whatever",
   ];
 
+  describe("match", () => {
+    it("matches against the static handler routes with a basename", () => {
+      let handler = createStaticHandler(SSR_ROUTES, { basename: "/base" });
+
+      expect(handler.match("/base/parent/child")).toMatchObject([
+        {
+          params: {},
+          pathname: "/parent",
+          route: { id: "parent" },
+        },
+        {
+          params: {},
+          pathname: "/parent/child",
+          route: { id: "child" },
+        },
+      ]);
+      expect(handler.match("/parent/child")).toBeNull();
+    });
+  });
+
   describe("document requests", () => {
     it("should support document load navigations", async () => {
       let { query } = createStaticHandler(SSR_ROUTES);

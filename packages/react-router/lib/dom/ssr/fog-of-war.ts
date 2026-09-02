@@ -1,11 +1,10 @@
 import * as React from "react";
 import type { Router as DataRouter } from "../../router/router";
 import type {
-  DataRouteObject,
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { joinPaths, matchRoutesImpl } from "../../router/utils";
+import { joinPaths } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -78,13 +77,7 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutesImpl<DataRouteObject>(
-      router.routes,
-      path,
-      router.basename || "/",
-      false,
-      router.branches,
-    );
+    let matches = router.match(path);
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }

@@ -6,6 +6,7 @@ import {
   createPath,
   invariant,
   parsePath,
+  warning,
 } from "../router/history";
 import type {
   FutureConfig,
@@ -236,7 +237,6 @@ export function StaticRouterProvider({
                     <DataRoutes
                       manifest={router.manifest}
                       routes={router.routes}
-                      future={router.future}
                       state={state}
                       isStatic={true}
                     />
@@ -357,17 +357,28 @@ function getStatelessNavigator() {
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
- * @param opts.branches Optional pre-computed route branches
+ * @param opts.branches Deprecated optional pre-computed route branches. This option
+ * is no longer used because branch caching is done automatically inside the static router.
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    /**
+     * @deprecated This option is no longer used because branch caching is done
+     * automatically inside the static router.
+     */
     branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
+  warning(
+    opts.branches == null,
+    "`createStaticRouter({ branches })` is deprecated and no longer used. " +
+      "Branch caching is done automatically inside the static router.",
+  );
+
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
@@ -375,17 +386,22 @@ export function createStaticRouter(
     undefined,
     manifest,
   );
+  let future: FutureConfig = {
+    ...opts?.future,
+  };
+  let matchRoutes = context._match;
 
   // Because our context matches may be from a set of routes passed to
   // createStaticHandler(), we update them here with our newly created/enhanced
   // data routes
-  let matches = context.matches.map((match) => {
+  let mapRouteMatch = (match: (typeof context.matches)[number]) => {
     let route = manifest[match.route.id] || match.route;
     return {
       ...match,
       route,
     };
-  });
+  };
+  let matches = context.matches.map(mapRouteMatch);
 
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
@@ -395,9 +411,7 @@ export function createStaticRouter(
       return context.basename;
     },
     get future() {
-      return {
-        ...opts?.future,
-      };
+      return future;
     },
     get state() {
       return {
@@ -420,14 +434,14 @@ export function createStaticRouter(
     get routes() {
       return dataRoutes;
     },
-    get branches() {
-      return opts.branches;
-    },
     get manifest() {
       return manifest;
     },
     get window() {
       return undefined;
+    },
+    match(locationArg) {
+      return matchRoutes(locationArg)?.map(mapRouteMatch) ?? null;
     },
     initialize() {
       throw msg("initialize");

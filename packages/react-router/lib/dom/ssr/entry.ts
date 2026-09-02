@@ -44,6 +44,10 @@ export interface FrameworkContextObject {
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
 export interface EntryContext extends FrameworkContextObject {
+  /**
+   * @deprecated This property was an internal implementation detail and was
+   * never intended for use in `entry.server.tsx`. It is always an empty array.
+   */
   branches: RouteBranch<DataRouteObject>[];
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
