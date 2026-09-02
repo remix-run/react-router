@@ -7185,6 +7185,7 @@ function mergeLoaderData(
 
   // Preserve existing `loaderData` for routes not included in `newLoaderData` and
   // where a loader wasn't removed by HMR
+  let preservedCount = 0;
   for (let match of matches) {
     let id = match.route.id;
     if (
@@ -7193,6 +7194,7 @@ function mergeLoaderData(
       match.route.loader
     ) {
       mergedLoaderData[id] = loaderData[id];
+      preservedCount++;
     }
 
     if (errors && errors.hasOwnProperty(id)) {
@@ -7201,15 +7203,14 @@ function mergeLoaderData(
     }
   }
 
-  let loaderDataKeys = Object.keys(loaderData);
-  let mergedLoaderDataKeys = Object.keys(mergedLoaderData);
   // If no loaders produced new data and the merge retained every existing
   // entry, reuse the prior object so data context consumers aren't notified.
   // Don't reuse it after a loader ran, even if it returned the same reference.
+  // When `newLoaderData` is empty, `mergedLoaderData` can only contain entries
+  // preserved from `loaderData`, so a matching count means nothing was dropped.
   let canReuseLoaderData =
     Object.keys(newLoaderData).length === 0 &&
-    loaderDataKeys.length === mergedLoaderDataKeys.length &&
-    mergedLoaderDataKeys.every((key) => loaderData.hasOwnProperty(key));
+    preservedCount === Object.keys(loaderData).length;
 
   return canReuseLoaderData ? loaderData : mergedLoaderData;
 }
