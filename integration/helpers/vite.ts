@@ -310,6 +310,26 @@ export const build = ({
   });
 };
 
+export const viteBuild = ({
+  cwd,
+  timeout = 20_000,
+}: {
+  cwd: string;
+  timeout?: number;
+}) => {
+  let nodeBin = process.argv[0];
+  let viteBin = "node_modules/vite/bin/vite.js";
+
+  return spawnSync(nodeBin, [viteBin, "build"], {
+    cwd,
+    timeout,
+    env: {
+      ...process.env,
+      ...colorEnv,
+    },
+  });
+};
+
 export const reactRouterServe = async ({
   cwd,
   port,
