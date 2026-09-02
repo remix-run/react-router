@@ -1,0 +1,27 @@
+/**
+ * react-router v8.3.1
+ *
+ * Copyright (c) Remix Software Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+import invariant from "./invariant.js";
+//#region lib/server-runtime/routeMatching.ts
+function matchServerRoutes(manifest, staticHandler, pathname) {
+	let matches = staticHandler.match(pathname);
+	if (!matches) return null;
+	return matches.map((match) => {
+		let route = manifest[match.route.id];
+		invariant(route, `Route with id "${match.route.id}" not found in manifest.`);
+		return {
+			params: match.params,
+			pathname: match.pathname,
+			route
+		};
+	});
+}
+//#endregion
+export { matchServerRoutes };
