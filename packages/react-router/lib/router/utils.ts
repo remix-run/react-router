@@ -1303,7 +1303,7 @@ function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
  * - `/one/three/:four/:five`
  * - `/one/:two/three/:four/:five`
  */
-function explodeOptionalSegments(path: string): string[] {
+export function explodeOptionalSegments(path: string): string[] {
   let segments = path.split("/");
   if (segments.length === 0) return [];
 

@@ -1,7 +1,8 @@
 import { createBrowserRouter, createHashRouter } from "../../lib/dom/lib";
 import { createStaticRouter } from "../../lib/dom/server";
 import { createMemoryRouter } from "../../lib/components";
-import { createStaticHandler } from "../../lib/router/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter, createStaticHandler } from "../../lib/router/router";
 import getWindow from "../utils/getWindow";
 
 describe("unstable route-pattern matching", () => {
@@ -134,6 +135,24 @@ describe("unstable route-pattern matching", () => {
     expect(matches?.[1].route.path).toBe("files/*");
   });
 
+  it("matches encoded URL-structural characters as path params", () => {
+    let router = createMemoryRouter([{ path: "/view/:id", id: "view" }], {
+      future: routePatternFuture,
+      initialEntries: ["/"],
+    });
+
+    expect(router.match("/view/%23abc")?.[0].params).toEqual({ id: "#abc" });
+  });
+
+  it("matches routes case-insensitively by default", () => {
+    let router = createMemoryRouter([{ path: "/Users", id: "users" }], {
+      future: routePatternFuture,
+      initialEntries: ["/"],
+    });
+
+    expect(router.match("/users")?.map((m) => m.route.id)).toEqual(["users"]);
+  });
+
   it("matches optional segments without exploding routes", () => {
     let router = createMemoryRouter(
       [
@@ -238,6 +257,86 @@ describe("unstable route-pattern matching", () => {
     expect(router.state.matches[0].route.path).toBe("/one/:two?");
   });
 
+  it("preserves route boundaries when an optional parent segment is omitted", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/:gate/foo?",
+          id: "optional-parent",
+          children: [
+            {
+              index: true,
+              id: "index",
+              unstable_validateParams: { gate: /^never$/ },
+            },
+            { path: "foo", id: "child" },
+          ],
+        },
+      ],
+      {
+        future: routePatternFuture,
+        initialEntries: ["/ok/foo"],
+      },
+    );
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "optional-parent",
+      "child",
+    ]);
+    expect(router.state.matches.map((m) => m.pathname)).toEqual([
+      "/ok",
+      "/ok/foo",
+    ]);
+  });
+
+  it("matches absolute children under omitted optional parent segments", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/:lang?",
+          id: "language",
+          children: [{ path: "/dashboard", id: "dashboard" }],
+        },
+      ],
+      {
+        future: routePatternFuture,
+        initialEntries: ["/dashboard"],
+      },
+    );
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "language",
+      "dashboard",
+    ]);
+  });
+
+  it("prefers partial static matches over full splat matches during route discovery", async () => {
+    let router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: "/", id: "root" },
+        { path: "parent", id: "parent" },
+        { path: "*", id: "splat" },
+      ],
+      future: routePatternFuture,
+      patchRoutesOnNavigation({ matches, patch }) {
+        if (matches.at(-1)?.route.id === "parent") {
+          patch("parent", [{ path: "child", id: "child" }]);
+        }
+      },
+    });
+
+    try {
+      await router.navigate("/parent/child");
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+    } finally {
+      router.dispose();
+    }
+  });
+
   it("uses unstable_validateParams to continue to the next matching route", () => {
     let router = createMemoryRouter(
       [
@@ -304,6 +403,27 @@ describe("unstable route-pattern matching", () => {
     let matches = router.match("/other");
     expect(matches?.map((m) => m.route.id)).toEqual(["other"]);
     expect(matches?.[0].params).toEqual({ other: "other" });
+  });
+
+  it("prefers static matches over validated dynamic matches", () => {
+    let router = createMemoryRouter(
+      [
+        { path: "/users/new", id: "new-user" },
+        {
+          path: "/users/:id",
+          id: "user",
+          unstable_validateParams: { id: /^new$/ },
+        },
+      ],
+      {
+        future: routePatternFuture,
+        initialEntries: ["/"],
+      },
+    );
+
+    expect(router.match("/users/new")?.map((m) => m.route.id)).toEqual([
+      "new-user",
+    ]);
   });
 
   it("runs unstable_validateParams for all routes in the matched branch", () => {

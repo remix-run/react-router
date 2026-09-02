@@ -1,5 +1,6 @@
 import { createMultiMatcher } from "@remix-run/route-pattern/match";
 import type { Match, MultiMatcher } from "@remix-run/route-pattern/match";
+import { descending } from "@remix-run/route-pattern/specificity";
 
 import type { Location } from "./history";
 import type {
@@ -10,7 +11,14 @@ import type {
   RouteMeta,
   RouteObject,
 } from "./utils";
-import { decodePath, joinPaths, stripBasename, type Mutable } from "./utils";
+import {
+  decodePath,
+  explodeOptionalSegments,
+  joinPaths,
+  matchPath,
+  normalizePathname,
+  stripBasename,
+} from "./utils";
 import { invariant, parsePath, warning } from "./history";
 import type { DataRouteMatcher } from "./matcher";
 
@@ -36,8 +44,12 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
 
   update(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[] {
     let branches = flattenRoutes(routes);
-    let matcher = createMultiMatcher<RouteBranch<DataRouteObject>>();
-    let partialMatcher = createMultiMatcher<RouteBranch<DataRouteObject>>();
+    let matcher = createMultiMatcher<RouteBranch<DataRouteObject>>({
+      ignoreCase: true,
+    });
+    let partialMatcher = createMultiMatcher<RouteBranch<DataRouteObject>>({
+      ignoreCase: true,
+    });
 
     for (let branch of branches) {
       let routePattern = convertReactRouterPathToRoutePattern(branch.path);
@@ -73,7 +85,8 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
     }
 
     let decoded = decodePath(pathname);
-    let url = new URL(decoded, "http://reactrouter.local");
+    let url = new URL("http://reactrouter.local");
+    url.pathname = pathname;
     invariant(
       this.#state,
       "Route pattern routes must be initialized before matching.",
@@ -88,7 +101,7 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
     for (let match of prioritizeValidatedMatches(matches)) {
       let routeMatches = convertRoutePatternMatchToRouteMatches(
         match,
-        pathname,
+        decoded,
         allowPartial,
       );
 
@@ -176,22 +189,30 @@ function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
       childrenIndex: index,
       route,
     };
+    let absolutePath: string | undefined;
 
     if (meta.relativePath.startsWith("/")) {
+      absolutePath = meta.relativePath;
+      let parentPathMatch = explodeOptionalSegments(parentPath).find((path) =>
+        meta.relativePath.startsWith(path),
+      );
+
       invariant(
-        meta.relativePath.startsWith(parentPath),
+        parentPathMatch != null,
         `Absolute route path "${meta.relativePath}" nested under path ` +
           `"${parentPath}" is not valid. An absolute child route path ` +
           `must start with the combined path of all its parent routes.`,
       );
 
-      meta.relativePath = meta.relativePath.slice(parentPath.length);
+      meta.relativePath = meta.relativePath.slice(parentPathMatch.length);
     }
 
     let routesMeta = parentsMeta.concat(meta);
-    let path = meta.relativePath
-      ? joinPaths([parentPath, meta.relativePath])
-      : parentPath;
+    let path =
+      absolutePath ??
+      (meta.relativePath
+        ? joinPaths([parentPath, meta.relativePath])
+        : parentPath);
 
     if (route.children && route.children.length > 0) {
       invariant(
@@ -310,24 +331,24 @@ function prioritizeValidatedMatches<
 >(
   matches: Match<string, RouteBranch<RouteObjectType>>[],
 ): Match<string, RouteBranch<RouteObjectType>>[] {
-  let validatedMatches: Match<string, RouteBranch<RouteObjectType>>[] = [];
-  let unvalidatedMatches: Match<string, RouteBranch<RouteObjectType>>[] = [];
-
-  for (let match of matches) {
-    if (
-      match.data.routesMeta.some(
-        (meta) =>
-          meta.route.unstable_validateParams != null &&
-          Object.keys(meta.route.unstable_validateParams).length > 0,
-      )
-    ) {
-      validatedMatches.push(match);
-    } else {
-      unvalidatedMatches.push(match);
+  return matches.sort((a, b) => {
+    let specificity = descending(a, b);
+    if (specificity !== 0) {
+      return specificity;
     }
-  }
 
-  return validatedMatches.concat(unvalidatedMatches);
+    return Number(hasParamValidators(b)) - Number(hasParamValidators(a));
+  });
+}
+
+function hasParamValidators<RouteObjectType extends RouteObject = RouteObject>(
+  match: Match<string, RouteBranch<RouteObjectType>>,
+): boolean {
+  return match.data.routesMeta.some(
+    (meta) =>
+      meta.route.unstable_validateParams != null &&
+      Object.keys(meta.route.unstable_validateParams).length > 0,
+  );
 }
 
 function convertRoutePatternMatchToRouteMatches<
@@ -337,88 +358,96 @@ function convertRoutePatternMatchToRouteMatches<
   pathname: string,
   allowPartial: boolean,
 ): RouteMatch<string, RouteObjectType>[] | null {
-  let pathSegments = pathname.replace(/^\//, "").split("/").filter(Boolean);
-  let splatParamName = match.paramsMeta.pathname.find(
-    (meta) => meta.type === "*",
-  )?.name;
-  let matchedParams = Object.entries(match.params).reduce<Mutable<Params>>(
-    (params, [key, value]) => {
-      if (key === "__rr_partial" || value === undefined) {
-        return params;
-      }
-      params[key === "__rr_splat" || key === splatParamName ? "*" : key] =
-        value;
-      return params;
-    },
+  let result = matchRoutePatternBranch(
+    match.data,
+    pathname,
+    allowPartial,
+    0,
+    "/",
     {},
   );
-  let consumedSegments = 0;
-  let matches: RouteMatch<string, RouteObjectType>[] = [];
 
-  for (let i = 0; i < match.data.routesMeta.length; i++) {
-    let meta = match.data.routesMeta[i];
-    let splatBaseSegments: number | null = null;
-    let routeSegments = meta.relativePath
-      .replace(/^\//, "")
-      .split("/")
-      .filter(Boolean);
-
-    for (let segment of routeSegments) {
-      if (segment === "*") {
-        splatBaseSegments = consumedSegments;
-        consumedSegments = pathSegments.length;
-        break;
-      }
-
-      if (segment.endsWith("?")) {
-        let routeSegment = segment.slice(0, -1);
-        if (routeSegment.startsWith(":")) {
-          let paramName = routeSegment.slice(1);
-          if (matchedParams[paramName] !== undefined) {
-            consumedSegments++;
-          }
-        } else if (pathSegments[consumedSegments] === routeSegment) {
-          consumedSegments++;
-        }
-        continue;
-      }
-
-      consumedSegments++;
-    }
-
-    let routePathname = getRoutePatternMatchPathname(
-      pathSegments,
-      consumedSegments,
-    );
-    let pathnameBase =
-      splatBaseSegments == null
-        ? routePathname
-        : getRoutePatternMatchPathname(pathSegments, splatBaseSegments);
-
-    matches.push({
-      params: matchedParams,
-      pathname: routePathname,
-      pathnameBase,
-      route: meta.route,
-    });
-  }
-
-  if (
-    !allowPartial &&
-    pathSegments.length > consumedSegments &&
-    !match.data.routesMeta[match.data.routesMeta.length - 1].route.index
-  ) {
+  if (result == null) {
     return null;
   }
 
-  return matches;
+  for (let routeMatch of result.matches) {
+    routeMatch.params = result.params;
+  }
+
+  return result.matches;
 }
 
-function getRoutePatternMatchPathname(
-  pathSegments: string[],
-  consumedSegments: number,
-): string {
-  return consumedSegments === 0
-    ? "/"
-    : `/${pathSegments.slice(0, consumedSegments).join("/")}`;
+function matchRoutePatternBranch<
+  RouteObjectType extends RouteObject = RouteObject,
+>(
+  branch: RouteBranch<RouteObjectType>,
+  pathname: string,
+  allowPartial: boolean,
+  metaIndex: number,
+  matchedPathname: string,
+  matchedParams: Params,
+): {
+  matches: RouteMatch<string, RouteObjectType>[];
+  params: Params;
+} | null {
+  let meta = branch.routesMeta[metaIndex];
+  let end = metaIndex === branch.routesMeta.length - 1;
+  let remainingPathname =
+    matchedPathname === "/"
+      ? pathname
+      : pathname.slice(matchedPathname.length) || "/";
+
+  for (let relativePath of explodeOptionalSegments(meta.relativePath)) {
+    let pattern = {
+      path: relativePath,
+      caseSensitive: false,
+      end,
+    };
+    let pathMatch = matchPath(pattern, remainingPathname);
+
+    if (!pathMatch && end && allowPartial && !meta.route.index) {
+      pathMatch = matchPath({ ...pattern, end: false }, remainingPathname);
+    }
+
+    if (!pathMatch) {
+      continue;
+    }
+
+    let params = { ...matchedParams, ...pathMatch.params };
+    let routeMatch: RouteMatch<string, RouteObjectType> = {
+      params,
+      pathname: joinPaths([matchedPathname, pathMatch.pathname]),
+      pathnameBase: normalizePathname(
+        joinPaths([matchedPathname, pathMatch.pathnameBase]),
+      ),
+      route: meta.route,
+    };
+    let nextMatchedPathname =
+      pathMatch.pathnameBase === "/"
+        ? matchedPathname
+        : joinPaths([matchedPathname, pathMatch.pathnameBase]);
+
+    if (end) {
+      return { matches: [routeMatch], params };
+    }
+
+    let childResult = matchRoutePatternBranch(
+      branch,
+      pathname,
+      allowPartial,
+      metaIndex + 1,
+      nextMatchedPathname,
+      params,
+    );
+
+    if (childResult) {
+      return {
+        matches: [routeMatch, ...childResult.matches],
+        params: childResult.params,
+      };
+    }
+  }
+
+  return null;
 }
