@@ -133,7 +133,7 @@ The flag is also available with `createHashRouter` and `createMemoryRouter`.
 
 **Update your Code**
 
-No route configuration changes are required, but you should review any routes with overlapping patterns to ensure the new ranking behavior selects the intended route.
+No route configuration changes are required, but you should review any routes with overlapping patterns to ensure the new ranking behavior selects the intended route. This is mostly expected to be an issue when you have deep dynamic param paths which could result in an aggregate score that outweighs a shallower static segment route.
 
 For example, both of these routes match `/products/one/two/three`:
 
@@ -142,14 +142,14 @@ const routes = [
   { path: "/products/*", id: "products" },
   {
     path: "/:first/:second/:third/:fourth",
-    id: "four-segments",
+    id: "segments",
   },
 ];
 ```
 
-The legacy matcher selects `four-segments` based on its aggregate segment score. The new matcher selects `products` because its static `products` segment is more specific than the dynamic `:first` segment in the same position.
+The legacy matcher selects `segments` based on its aggregate segment score. The new matcher selects `products` because its static `products` segment is more specific than the dynamic `:first` segment in the same position.
 
-Once you enable this flag, use `router.match()` when you need to match a location. Standalone matching APIs such as `matchRoutes`, `matchPath`, and `useMatch` continue to use the legacy matcher and may return different matches than the router.
+Once you enable this flag, use the `router.match()` when you need to match a location (this is currently marked private and will become stable at the same time this flag stabilizes). Standalone matching APIs such as `matchRoutes`, `matchPath`, and `useMatch` continue to use the legacy matcher and may return different matches than the router.
 
 Case-sensitive routes are not currently supported with this flag.
 

@@ -1,11 +1,10 @@
-Add a Data Mode-only POC for route-pattern based route matching
+Add a new Data Mode-only `future.unstable_routePatternMatching` flag to opt into more efficient `@remix-run/route-pattern` based route matching internally
 
-- Adds `future.unstable_routePatternMatching: true` for Data Router matching only
-- Uses `@remix-run/route-pattern` internally to match and rank route branches when the flag is enabled
-- Keeps route definitions and public route/match fields in React Router path syntax
-- Manual matching APIs such as `matchRoutes`, `matchPath`, and `useMatch` continue to use legacy path matching and should not be used once a Data Router opts into `future.unstable_routePatternMatching` because they may not return the same matches as the router
+- No code changes required - syntax remains the same for pubic route definitions and route match fields
+- Once opting into this flag, you should no longer user legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher
+  - A new `router.match()` API exists for those use cases but it's marked private and considered unstable along with the flag
 - Path generation APIs such as `generatePath` and `href` continue to accept React Router path syntax
-- Adds an `unstable_validateParams` POC using keyed regular expressions so a route can reject matched params and let matching continue. Params omitted from a match, such as optional params, are not validated.
+- This flag also comes with a new `unstable_validateParams` route field which uses keyed regular expressions so a route can reject matched params and let matching continue (non-matched optional params are not validated)
 
   ```ts
   let router = createBrowserRouter(
