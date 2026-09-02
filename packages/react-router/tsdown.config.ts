@@ -9,6 +9,7 @@ const entry = [
   "index.ts",
   "index-react-server-client.ts",
   "dom-export.ts",
+  "route-pattern.ts",
   "lib/types/internal.ts",
 ];
 

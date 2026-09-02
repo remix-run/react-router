@@ -121,15 +121,16 @@ This flag opts Data Routers into a new route matcher powered by [`@remix-run/rou
 
 ```ts
 import { createBrowserRouter } from "react-router";
+import { unstable_routePatternMatching } from "react-router/route-pattern";
 
 const router = createBrowserRouter(routes, {
   future: {
-    unstable_routePatternMatching: true,
+    unstable_routePatternMatching,
   },
 });
 ```
 
-The flag is also available with `createHashRouter` and `createMemoryRouter`.
+The flag is also available with `createHashRouter` and `createMemoryRouter`. The matcher is exported from a separate entry point so applications that do not enable the flag do not include `@remix-run/route-pattern` in their bundles.
 
 **Update your Code**
 

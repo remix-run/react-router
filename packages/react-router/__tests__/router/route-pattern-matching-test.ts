@@ -3,10 +3,11 @@ import { createStaticRouter } from "../../lib/dom/server";
 import { createMemoryRouter } from "../../lib/components";
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
+import { unstable_routePatternMatching } from "../../route-pattern";
 import getWindow from "../utils/getWindow";
 
 describe("unstable route-pattern matching", () => {
-  let routePatternFuture = { unstable_routePatternMatching: true } as const;
+  let routePatternFuture = { unstable_routePatternMatching } as const;
 
   it("matches createMemoryRouter routes", () => {
     let router = createMemoryRouter(
