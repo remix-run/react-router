@@ -19,5 +19,5 @@ export async function fromNodeRequest(
   );
   nodeReq.url = nodeReq.originalUrl;
 
-  return createRequest(nodeReq, nodeRes);
+  return createRequest(nodeReq, nodeRes, { trustProxy: true });
 }
