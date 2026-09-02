@@ -106,6 +106,53 @@ export default {
 
 No code changes are required. If you run into dependency optimization issues after enabling this flag, remove the flag and restart the dev server.
 
+### `future.unstable_routePatternMatching`
+
+[MODES: data]
+
+<br/>
+<br/>
+
+**Background**
+
+This flag opts Data Routers into a new route matcher powered by [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern). It supports the existing React Router path syntax and matching behavior, but ranks ambiguous matches by positional specificity instead of aggregate segment scores. This means a route with a longer static prefix can rank above a route with more dynamic segments.
+
+👉 **Enable the Flag**
+
+```ts
+import { createBrowserRouter } from "react-router";
+
+const router = createBrowserRouter(routes, {
+  future: {
+    unstable_routePatternMatching: true,
+  },
+});
+```
+
+The flag is also available with `createHashRouter` and `createMemoryRouter`.
+
+**Update your Code**
+
+No route configuration changes are required, but you should review any routes with overlapping patterns to ensure the new ranking behavior selects the intended route.
+
+For example, both of these routes match `/products/one/two/three`:
+
+```ts
+const routes = [
+  { path: "/products/*", id: "products" },
+  {
+    path: "/:first/:second/:third/:fourth",
+    id: "four-segments",
+  },
+];
+```
+
+The legacy matcher selects `four-segments` based on its aggregate segment score. The new matcher selects `products` because its static `products` segment is more specific than the dynamic `:first` segment in the same position.
+
+Once you enable this flag, use `router.match()` when you need to match a location. Standalone matching APIs such as `matchRoutes`, `matchPath`, and `useMatch` continue to use the legacy matcher and may return different matches than the router.
+
+Case-sensitive routes are not currently supported with this flag.
+
 [api-development-strategy]: ../community/api-development-strategy
 [governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals
 [unstable]: ../community/api-development-strategy#unstable-flags
