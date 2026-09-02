@@ -82,6 +82,7 @@
     }
   },
   "dependencies": {
+    "@remix-run/route-pattern": "^0.22.1",
     "cookie-es": "^3.1.1"
   },
   "devDependencies": {

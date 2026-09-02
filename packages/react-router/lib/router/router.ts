@@ -77,6 +77,7 @@ import {
   normalizeProtocolRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
+import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
 import { validateNavigationTarget } from "./navigation";
@@ -445,7 +446,9 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_routePatternMatching?: boolean;
+}
 
 /**
  * Initialization options for createRouter
@@ -950,8 +953,13 @@ const ResetLoaderDataSymbol = Symbol("ResetLoaderData");
 //#region createRouter
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createDataRouteMatcher(basename: string): DataRouteMatcher {
-  return new V6RegExMatcher(basename);
+export function createDataRouteMatcher(
+  future: FutureConfig,
+  basename: string,
+): DataRouteMatcher {
+  return future.unstable_routePatternMatching
+    ? new RoutePatternDataRouteMatcher(basename)
+    : new V6RegExMatcher(basename);
 }
 
 /**
@@ -1059,7 +1067,7 @@ export function createRouter(init: RouterInit): Router {
   if (!basename.startsWith("/")) {
     basename = `/${basename}`;
   }
-  let dataRouteMatcher = createDataRouteMatcher(basename);
+  let dataRouteMatcher = createDataRouteMatcher(future, basename);
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};
@@ -4082,7 +4090,7 @@ export function createStaticHandler(
   let future: FutureConfig = {
     ...opts?.future,
   };
-  let dataRouteMatcher = createDataRouteMatcher(basename);
+  let dataRouteMatcher = createDataRouteMatcher(future, basename);
 
   // Leverage the existing mapRouteProperties logic to execute instrumentRoute
   // (if it exists) on all routes in the application
