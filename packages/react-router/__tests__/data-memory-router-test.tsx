@@ -36,10 +36,7 @@ import {
   type ErrorResponse,
 } from "../index";
 import { DataRoutes, Router } from "../lib/components";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-} from "../lib/context";
+import { DataRouterContext, DataRouterStateContext } from "../lib/context";
 import urlDataStrategy from "./router/utils/urlDataStrategy";
 import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
@@ -859,15 +856,7 @@ describe("createMemoryRouter", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Bar"));
-    expect(spy).toHaveBeenCalledWith("Layout", [
-      {
-        data: undefined,
-        handle: undefined,
-        id: "0",
-        params: {},
-        pathname: "/",
-      },
-    ]);
+    expect(spy).not.toHaveBeenCalled();
 
     spy.mockClear();
     await waitFor(() => screen.getByText("Bar"));

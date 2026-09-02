@@ -12,6 +12,7 @@ integration/helpers/**/build/
 playwright-report/
 test-results/
 build.utils.d.ts
+.github/workflows/*.lock.yml
 .wrangler/
 .tmp/
 .react-router/

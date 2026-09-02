@@ -71,6 +71,7 @@ import {
   RouterContextProvider,
   getRoutePattern,
   removeDoubleSlashes,
+  resolvePath,
 } from "./utils";
 import {
   normalizeProtocolRelativeUrl,
@@ -78,6 +79,7 @@ import {
 } from "./url";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
+import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -231,6 +233,15 @@ export interface Router {
    * @param location
    */
   createHref(location: Location | URL): string;
+
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Utility function to create a URL for the given location
+   * @param location
+   */
+  createURL?(to: To): URL;
 
   /**
    * @private
@@ -1702,11 +1713,23 @@ export function createRouter(init: RouterInit): Router {
               ...opts.mask,
             };
       maskPath = {
-        pathname: "",
-        search: "",
-        hash: "",
-        ...partialPath,
+        pathname: partialPath.pathname ?? "",
+        search: partialPath.search ?? "",
+        hash: partialPath.hash ?? "",
       };
+
+      if (PROTOCOL_RELATIVE_URL_REGEX.test(maskPath.pathname)) {
+        throw new Error("External navigation is not allowed");
+      } else if (maskPath.pathname.startsWith("\\")) {
+        maskPath.pathname = maskPath.pathname.replace(/^\\+/, "/");
+      }
+
+      validateNavigationTarget(
+        typeof opts.mask === "string" ? opts.mask : createPath(opts.mask),
+        createPath(maskPath),
+        init.history.createURL("/"),
+        "reject",
+      );
     }
 
     let currentLocation = state.location;
@@ -1727,6 +1750,17 @@ export function createRouter(init: RouterInit): Router {
       ...nextLocation,
       ...init.history.encodeLocation(nextLocation),
     };
+
+    validateNavigationTarget(
+      to == null
+        ? init.history.createHref(state.location)
+        : typeof to === "string"
+          ? to
+          : createPath(to),
+      init.history.createHref(nextLocation.mask || nextLocation),
+      init.history.createURL("/"),
+      "reject",
+    );
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
@@ -3219,11 +3253,19 @@ export function createRouter(init: RouterInit): Router {
 
     let location = redirect.response.headers.get("Location");
     invariant(location, "Expected a Location header on the redirect Response");
+    let originalLocation = location;
+    let currentUrl = new URL(request.url);
     location = normalizeRedirectLocation(
       location,
-      new URL(request.url),
+      currentUrl,
       basename,
       init.history,
+    );
+    validateNavigationTarget(
+      originalLocation,
+      location,
+      currentUrl,
+      "allow-explicit",
     );
     let redirectLocation = createLocation(state.location, location, {
       _isRedirect: true,
@@ -3948,6 +3990,7 @@ export function createRouter(init: RouterInit): Router {
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
+    createURL: (to: To) => init.history.createURL(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     resetFetcher,
@@ -4034,6 +4077,8 @@ export function createStaticHandler(
   let mapRouteProperties: MapRoutePropertiesFunction = _mapRouteProperties
     ? _mapRouteProperties
     : () => ({});
+  // Currently unused in the static handler, but available for additional flags in the future
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let future: FutureConfig = {
     ...opts?.future,
   };
@@ -7095,6 +7140,7 @@ function mergeLoaderData(
 
   // Preserve existing `loaderData` for routes not included in `newLoaderData` and
   // where a loader wasn't removed by HMR
+  let preservedCount = 0;
   for (let match of matches) {
     let id = match.route.id;
     if (
@@ -7103,6 +7149,7 @@ function mergeLoaderData(
       match.route.loader
     ) {
       mergedLoaderData[id] = loaderData[id];
+      preservedCount++;
     }
 
     if (errors && errors.hasOwnProperty(id)) {
@@ -7110,7 +7157,17 @@ function mergeLoaderData(
       break;
     }
   }
-  return mergedLoaderData;
+
+  // If no loaders produced new data and the merge retained every existing
+  // entry, reuse the prior object so data context consumers aren't notified.
+  // Don't reuse it after a loader ran, even if it returned the same reference.
+  // When `newLoaderData` is empty, `mergedLoaderData` can only contain entries
+  // preserved from `loaderData`, so a matching count means nothing was dropped.
+  let canReuseLoaderData =
+    Object.keys(newLoaderData).length === 0 &&
+    preservedCount === Object.keys(loaderData).length;
+
+  return canReuseLoaderData ? loaderData : mergedLoaderData;
 }
 
 function getActionDataForCommit(

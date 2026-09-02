@@ -26,33 +26,16 @@ import type {
   MetaMatches,
 } from "./routeModules";
 import { singleFetchUrl } from "./single-fetch";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-  useIsRSCRouterContext,
-} from "../../context";
+import { useIsRSCRouterContext } from "../../context";
 import { warnOnce } from "../../server-runtime/warnings";
-import { useLocation } from "../../hooks";
+import {
+  useDataRouterContext,
+  useDataRouterData,
+  useDataRouterState,
+  useLocation,
+} from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
-
-function useDataRouterContext() {
-  let context = React.useContext(DataRouterContext);
-  invariant(
-    context,
-    "You must render this element inside a <DataRouterContext.Provider> element",
-  );
-  return context;
-}
-
-function useDataRouterStateContext() {
-  let context = React.useContext(DataRouterStateContext);
-  invariant(
-    context,
-    "You must render this element inside a <DataRouterStateContext.Provider> element",
-  );
-  return context;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // FrameworkContext
@@ -272,7 +255,8 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     criticalCss,
     nonce: contextNonce,
   } = useFrameworkContext();
-  let { errors, matches: routerMatches } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterState("Links");
+  let { errors } = useDataRouterData("Links");
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
 
@@ -354,7 +338,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let rsc = useIsRSCRouterContext();
   let { nonce: contextNonce } = useFrameworkContext();
-  let { router } = useDataRouterContext();
+  let { router } = useDataRouterContext("PrefetchPageLinks");
   let matches = React.useMemo(
     () => router.match(page),
     // Include router.routes to re-match if new routes arrive
@@ -457,7 +441,8 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
-  let { loaderData, matches } = useDataRouterStateContext();
+  let { matches } = useDataRouterState("PrefetchPageLinks");
+  let { loaderData } = useDataRouterData("PrefetchPageLinks");
 
   let newMatchesForData = React.useMemo(
     () =>
@@ -602,11 +587,8 @@ function PrefetchPageLinksImpl({
  */
 export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
-  let {
-    errors,
-    matches: routerMatches,
-    loaderData,
-  } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterState("Meta");
+  let { errors, loaderData } = useDataRouterData("Meta");
   let location = useLocation();
 
   let _matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -824,8 +806,12 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     ssr,
     nonce: contextNonce,
   } = useFrameworkContext();
-  let { router, static: isStatic, staticContext } = useDataRouterContext();
-  let { matches: routerMatches } = useDataRouterStateContext();
+  let {
+    router,
+    static: isStatic,
+    staticContext,
+  } = useDataRouterContext("Scripts");
+  let { matches: routerMatches } = useDataRouterState("Scripts");
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
