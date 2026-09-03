@@ -2691,9 +2691,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let spaFallback = path.join(buildDirectory, "__spa-fallback.html");
           let index = path.join(buildDirectory, "index.html");
 
-          // If the user didn't prerendered `/`, uses the SPA fallback as the main entry point.
+          // If the user didn't prerender `/`, the SPA fallback becomes the main
+          // entry point. This overwrites any `index.html` copied into the client
+          // build directory from the `public` directory so the SPA shell is
+          // served at `/` on static hosts.
+          let prerenderedRoot = ctx.prerenderPaths?.has("/") ?? false;
           let finalSpaPath: string | undefined;
-          if (existsSync(spaFallback) && !existsSync(index)) {
+          if (
+            existsSync(spaFallback) &&
+            (!prerenderedRoot || !existsSync(index))
+          ) {
             await rename(spaFallback, index);
             finalSpaPath = index;
           } else if (existsSync(spaFallback)) {
