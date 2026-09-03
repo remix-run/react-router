@@ -2,7 +2,7 @@
 // context but want to use Vite's ESM build since Vite 7+ is ESM only
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import {
   cp,
   mkdir,
@@ -1359,19 +1359,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
         };
       },
-      // buildApp: {
-      //   order: "post",
-      //   handler: async (builder) => {
-      //     let { reactRouterConfig } = ctx;
-
-      //     let serverBuildDirectory =
-      //       builder.environments.ssr.config?.build?.outDir;
-      //     if (serverBuildDirectory && !reactRouterConfig.ssr) {
-      //       // For both SPA mode and prerendering, we can remove the server builds
-      //       rmSync(serverBuildDirectory, { force: true, recursive: true });
-      //     }
-      //   },
-      // },
       configEnvironment(name, options) {
         if (isReactRouterServerEnvironment(ctx, name)) {
           const vite = getVite();
@@ -2731,6 +2718,26 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   invariant(viteConfig);
                   let { buildManifest, reactRouterConfig } = ctx;
                   invariant(buildManifest, "Expected build manifest");
+
+                  // For both SPA mode and prerendering, the server build is
+                  // only an intermediate artifact (it has already been used to
+                  // generate the SPA fallback and any prerendered pages above),
+                  // so remove it from the build output
+                  if (!reactRouterConfig.ssr) {
+                    let serverBuildDirectory =
+                      getServerBuildDirectory(reactRouterConfig);
+                    viteConfig.logger.info(
+                      [
+                        "Removing the server build in",
+                        colors.green(serverBuildDirectory),
+                        "due to ssr:false",
+                      ].join(" "),
+                    );
+                    rmSync(serverBuildDirectory, {
+                      force: true,
+                      recursive: true,
+                    });
+                  }
 
                   await reactRouterConfig.buildEnd?.({
                     buildManifest,
