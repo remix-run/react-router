@@ -1079,16 +1079,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       ctx,
     );
 
-    let enforceSplitRouteModules =
-      ctx.reactRouterConfig.splitRouteModules === "enforce";
-
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
-      let routeFile = route.file;
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
       let hasClientMiddleware = sourceExports.includes("clientMiddleware");
-      let hasHydrateFallback = sourceExports.includes("HydrateFallback");
       let routeModulePath = combineURLs(
         ctx.publicPath,
         `${resolveFileUrl(
@@ -1096,31 +1091,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
         )}`,
       );
-
-      if (enforceSplitRouteModules) {
-        let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
-          cache,
-          ctx,
-          routeFile,
-          { routeFile, viteChildCompiler },
-        );
-
-        validateRouteChunks({
-          ctx,
-          id: route.file,
-          valid: {
-            clientAction:
-              !hasClientAction || hasRouteChunkByExportName.clientAction,
-            clientLoader:
-              !hasClientLoader || hasRouteChunkByExportName.clientLoader,
-            clientMiddleware:
-              !hasClientMiddleware ||
-              hasRouteChunkByExportName.clientMiddleware,
-            HydrateFallback:
-              !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
-          },
-        });
-      }
 
       routes[key] = {
         id: route.id,
