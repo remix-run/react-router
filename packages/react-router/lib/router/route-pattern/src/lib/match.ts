@@ -1,5 +1,5 @@
 import type { RoutePattern } from './route-pattern.ts'
-import { parsePattern } from './route-pattern/parse.ts'
+import { parsePart, parsePattern } from './route-pattern/parse.ts'
 
 import { Trie } from './match/trie.ts'
 import type { Match } from './match/types.ts'
@@ -21,6 +21,41 @@ export type MultiMatcher<data = unknown> = {
   match(url: string | URL): Match<string, data> | null
   /** Every match for `url`, sorted from most to least specific. */
   matchAll(url: string | URL): Array<Match<string, data>>
+}
+
+export type PathnameMatch<data = unknown> = Pick<
+  Match<string, data>,
+  'data' | 'paramsMeta'
+>
+
+export type PathnameMultiMatcher<data = unknown> = {
+  add(pattern: string, data: data): void
+  matchAll(url: URL): Array<PathnameMatch<data>>
+}
+
+export function createPathnameMultiMatcher<data = unknown>(
+  options?: MatcherOptions,
+): PathnameMultiMatcher<data> {
+  let trie = new Trie<data>(options)
+
+  return {
+    add(pattern, data) {
+      // The trie only reads `pathname` during insertion. The narrow return type above hides the
+      // incomplete pattern stored in its internal matches.
+      trie.insert(
+        {
+          pathname: parsePart(pattern, {
+            span: [pattern.startsWith('/') ? 1 : 0, pattern.length],
+            type: 'pathname',
+          }),
+        } as RoutePattern,
+        data,
+      )
+    },
+    matchAll(url) {
+      return trie.search(url).sort(Specificity.descending)
+    },
+  }
 }
 
 /**

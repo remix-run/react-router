@@ -1,5 +1,7 @@
 import type { Match } from './match/types.ts'
 
+type SpecificityMatch = Pick<Match, 'paramsMeta'>
+
 /**
  * Returns true if match `a` is less specific than match `b`.
  *
@@ -7,7 +9,7 @@ import type { Match } from './match/types.ts'
  * @param b the second match to compare
  * @returns true if `a` is less specific than `b`
  */
-export function lessThan(a: Match, b: Match): boolean {
+export function lessThan(a: SpecificityMatch, b: SpecificityMatch): boolean {
   return compare(a, b) === -1
 }
 
@@ -18,7 +20,7 @@ export function lessThan(a: Match, b: Match): boolean {
  * @param b the second match to compare
  * @returns true if `a` is more specific than `b`
  */
-export function greaterThan(a: Match, b: Match): boolean {
+export function greaterThan(a: SpecificityMatch, b: SpecificityMatch): boolean {
   return compare(a, b) === 1
 }
 
@@ -29,7 +31,7 @@ export function greaterThan(a: Match, b: Match): boolean {
  * @param b the second match to compare
  * @returns true if `a` and `b` have equal specificity
  */
-export function equal(a: Match, b: Match): boolean {
+export function equal(a: SpecificityMatch, b: SpecificityMatch): boolean {
   return compare(a, b) === 0
 }
 
@@ -40,7 +42,7 @@ export function equal(a: Match, b: Match): boolean {
  * @param b the second match to compare
  * @returns negative if `a` is less specific, positive if more specific, 0 if equal
  */
-export const ascending = (a: Match, b: Match): number => compare(a, b)
+export const ascending = (a: SpecificityMatch, b: SpecificityMatch): number => compare(a, b)
 
 /**
  * Comparator function for sorting matches from most specific to least specific.
@@ -49,7 +51,7 @@ export const ascending = (a: Match, b: Match): number => compare(a, b)
  * @param b the second match to compare
  * @returns positive if `a` is less specific, negative if more specific, 0 if equal
  */
-export const descending = (a: Match, b: Match): number => compare(a, b) * -1
+export const descending = (a: SpecificityMatch, b: SpecificityMatch): number => compare(a, b) * -1
 
 /**
  * Compare two matches by specificity.
@@ -59,7 +61,7 @@ export const descending = (a: Match, b: Match): number => compare(a, b) * -1
  * @param b the second match to compare
  * @returns -1 if `a` is less specific, 1 if `a` is more specific, 0 if tied.
  */
-export function compare(a: Match, b: Match): -1 | 0 | 1 {
+export function compare(a: SpecificityMatch, b: SpecificityMatch): -1 | 0 | 1 {
   return comparePathname(a.paramsMeta.pathname, b.paramsMeta.pathname)
 }
 
