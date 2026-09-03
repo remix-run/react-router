@@ -19,5 +19,10 @@ export async function fromNodeRequest(
   );
   nodeReq.url = nodeReq.originalUrl;
 
-  return createRequest(nodeReq, nodeRes, { trustProxy: true });
+  return createRequest(nodeReq, nodeRes, {
+    // Vite validates the Host header against server.allowedHosts. Keep that
+    // validated host instead of trusting a client-controlled forwarded host.
+    host: nodeReq.headers.host ?? "localhost",
+    trustProxy: true,
+  });
 }

@@ -7,7 +7,7 @@ import type * as Vite from "vite";
 import { fromNodeRequest } from "./node-adapter";
 
 describe("fromNodeRequest", () => {
-  it("uses forwarded host and protocol headers", async () => {
+  it("uses the forwarded protocol without trusting the forwarded host", async () => {
     let requestUrl = await new Promise<string>((resolve, reject) => {
       let server = createServer(async (nodeReq, nodeRes) => {
         let viteRequest = Object.assign(nodeReq, {
@@ -32,8 +32,8 @@ describe("fromNodeRequest", () => {
           host: "127.0.0.1",
           port,
           headers: {
-            host: "internal.example.com",
-            "x-forwarded-host": "public.example.com",
+            host: "public.example.com",
+            "x-forwarded-host": "evil.example.com",
             "x-forwarded-proto": "https",
           },
         });
