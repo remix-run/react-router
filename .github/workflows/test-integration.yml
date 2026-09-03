@@ -63,9 +63,6 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "Selected integration suite: full (push to main)"
             echo "type=full" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.pull_request.head.ref }}" = "v8" ]; then
-            echo "Selected integration suite: dev (v8 PR)"
-            echo "type=dev" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.pull_request.draft }}" = "true" ]; then
             echo "Selected integration suite: base (draft PR)"
             echo "type=base" >> "$GITHUB_OUTPUT"

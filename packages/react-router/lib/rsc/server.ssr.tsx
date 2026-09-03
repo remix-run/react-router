@@ -10,7 +10,11 @@ import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
 import { isRouteErrorResponse, type DataRouteObject } from "../router/utils";
-import { hasInvalidProtocol } from "../router/router";
+import {
+  createDataRouteMatcher,
+  hasInvalidProtocol,
+  type StaticHandlerContext,
+} from "../router/router";
 import {
   decodeRedirectErrorDigest,
   decodeRouteErrorResponseDigest,
@@ -560,7 +564,28 @@ export function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps) {
     }
   }
 
-  const context = {
+  const routes = payload.matches.reduceRight((previous, match) => {
+    const route: DataRouteObject = {
+      id: match.id,
+      action: match.hasAction || !!match.clientAction,
+      element: match.element,
+      errorElement: match.errorElement,
+      handle: match.handle,
+      hydrateFallbackElement: match.hydrateFallbackElement,
+      index: match.index,
+      loader: match.hasLoader || !!match.clientLoader,
+      path: match.path,
+      shouldRevalidate: match.shouldRevalidate,
+    };
+    if (previous.length > 0) {
+      route.children = previous;
+    }
+    return [route];
+  }, [] as DataRouteObject[]);
+  const dataRouteMatcher = createDataRouteMatcher({}, payload.basename || "/");
+  dataRouteMatcher.update(routes);
+
+  const context: StaticHandlerContext = {
     get _deepestRenderedBoundaryId() {
       return decoded._deepestRenderedBoundaryId ?? null;
     },
@@ -575,6 +600,7 @@ export function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps) {
     loaderHeaders: {},
     location: payload.location,
     statusCode: 200,
+    _match: (locationArg) => dataRouteMatcher.match(locationArg),
     matches: payload.matches.map((match) => ({
       params: match.params,
       pathname: match.pathname,
@@ -591,27 +617,7 @@ export function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps) {
     })),
   };
 
-  const router = createStaticRouter(
-    payload.matches.reduceRight((previous, match) => {
-      const route: DataRouteObject = {
-        id: match.id,
-        action: match.hasAction || !!match.clientAction,
-        element: match.element,
-        errorElement: match.errorElement,
-        handle: match.handle,
-        hydrateFallbackElement: match.hydrateFallbackElement,
-        index: match.index,
-        loader: match.hasLoader || !!match.clientLoader,
-        path: match.path,
-        shouldRevalidate: match.shouldRevalidate,
-      };
-      if (previous.length > 0) {
-        route.children = previous;
-      }
-      return [route];
-    }, [] as DataRouteObject[]),
-    context,
-  );
+  const router = createStaticRouter(routes, context);
 
   const frameworkContext: FrameworkContextObject = {
     future: {},

@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         uses: actions/setup-node@v6
@@ -32,9 +32,6 @@ jobs:
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
-
-      - name: Sort contributors.yml
-        run: sort --ignore-case --output contributors.yml contributors.yml
 
       - name: Format
         run: pnpm format

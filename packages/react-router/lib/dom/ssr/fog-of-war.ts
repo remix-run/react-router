@@ -1,11 +1,10 @@
 import * as React from "react";
 import type { Router as DataRouter } from "../../router/router";
 import type {
-  DataRouteObject,
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { joinPaths, matchRoutesImpl } from "../../router/utils";
+import { joinPaths } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -78,13 +77,7 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutesImpl<DataRouteObject>(
-      router.routes,
-      path,
-      router.basename || "/",
-      false,
-      router.branches,
-    );
+    let matches = router.match(path);
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }
@@ -356,6 +349,17 @@ export async function fetchAndApplyManifestPatches(
   } catch (e) {
     if (signal?.aborted) return;
     throw e;
+  }
+
+  // If the navigation/fetcher that triggered this discovery was aborted
+  // while we were waiting on the response, bail before applying anything.
+  // The router's `patch` callback no-ops on an aborted signal, so mutating
+  // `manifest.routes`/`discoveredPaths` here would cache the path as
+  // discovered while the route tree is never patched - permanently (for the
+  // session) shadowing the real route behind any ambiguous match (e.g., a
+  // catch-all) on every subsequent visit
+  if (signal?.aborted) {
+    return;
   }
 
   // Patch routes we don't know about yet into the manifest

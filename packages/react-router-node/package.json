@@ -1,7 +1,7 @@
 {
   "name": "@react-router/node",
   "type": "module",
-  "version": "8.3.0",
+  "version": "8.3.1",
   "description": "Node.js platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -42,7 +42,7 @@
     }
   },
   "dependencies": {
-    "@remix-run/node-fetch-server": "^0.13.3"
+    "@remix-run/node-fetch-server": "^0.14.1"
   },
   "devDependencies": {
     "@types/node": "^22.19.19",

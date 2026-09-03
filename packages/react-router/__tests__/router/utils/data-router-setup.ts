@@ -7,7 +7,11 @@ import type {
   RouterInit,
 } from "../../../lib/router/router";
 import type { DataRouteObject, RouteMatch } from "../../../lib/router/utils";
-import { createRouter, IDLE_FETCHER } from "../../../lib/router/router";
+import {
+  createDataRouteMatcher,
+  createRouter,
+  IDLE_FETCHER,
+} from "../../../lib/router/router";
 import {
   createMemoryHistory,
   invariant,
@@ -19,12 +23,12 @@ import type {
 } from "../../../lib/router/utils";
 import {
   defaultMapRouteProperties,
-  matchRoutes,
   redirect,
   stripBasename,
 } from "../../../lib/router/utils";
 
 import { isRedirect, tick } from "./utils";
+import getWindow from "../../utils/getWindow";
 
 // Routes passed into setup() should just have a boolean for loader/action
 // indicating they want a stub.  They get enhanced back to AgnosticRouteObjects
@@ -309,10 +313,13 @@ export function setup({
 
   // jsdom is making more and more properties non-configurable, so we inject
   // our own jest-friendly window.
-  let testWindow = {
-    ...window,
+  let testWindow = getWindow("/");
+  testWindow = {
+    ...testWindow,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
     location: {
-      ...window.location,
+      ...testWindow.location,
       assign: jest.fn(),
       replace: jest.fn(),
     },
@@ -328,6 +335,8 @@ export function setup({
     window: testWindow,
     ...routerInit,
   });
+  let dataRouteMatcher = createDataRouteMatcher({}, "/");
+  dataRouteMatcher.update(currentRouter.routes);
 
   let fetcherData = getFetcherData(currentRouter);
   currentRouter.initialize();
@@ -427,10 +436,9 @@ export function setup({
     );
   }
 
-  let inFlightRoutes: DataRouteObject[] | undefined;
   function _internalSetRoutes(routes: DataRouteObject[]) {
-    inFlightRoutes = routes;
     currentRouter?._internalSetRoutes(routes);
+    dataRouteMatcher.update(routes);
   }
 
   function getNavigationHelpers(
@@ -441,7 +449,7 @@ export function setup({
       currentRouter?.routes,
       "No currentRouter.routes available in getNavigationHelpers",
     );
-    let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
+    let matches = dataRouteMatcher.match(href);
 
     let loaderHelpers = getHelpers(
       (matches || []).filter((m) => m.route.loader),
@@ -479,8 +487,8 @@ export function setup({
       currentRouter?.routes,
       "No currentRouter.routes available in getFetcherHelpers",
     );
-    let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
     invariant(currentRouter, "No currentRouter available");
+    let matches = dataRouteMatcher.match(href);
     let search = parsePath(href).search || "";
     let hasNakedIndexQuery = new URLSearchParams(search)
       .getAll("index")
@@ -511,8 +519,7 @@ export function setup({
     // @ts-expect-error
     if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       if (currentRouter.state.navigation?.location) {
-        let matches = matchRoutes(
-          inFlightRoutes || currentRouter.routes,
+        let matches = dataRouteMatcher.match(
           currentRouter.state.navigation.location,
         );
         invariant(matches, "No matches found for fetcher");

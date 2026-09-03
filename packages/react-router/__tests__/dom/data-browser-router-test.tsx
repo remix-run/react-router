@@ -4132,6 +4132,100 @@ function testDomRouter(
       });
     });
 
+    describe('submit() with relative="path"', () => {
+      it("submits relative to the URL for navigations", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "inbox",
+              action: () => "INDEX",
+              children: [
+                {
+                  path: "messages",
+                  action: () => "MESSAGES",
+                  Component() {
+                    let actionData = useActionData();
+                    return <p>{actionData}</p>;
+                  },
+                },
+                {
+                  path: "messages/:id",
+                  Component() {
+                    let submit = useSubmit();
+                    return (
+                      <button
+                        onClick={() =>
+                          submit(
+                            { a: "1" },
+                            { method: "post", action: "..", relative: "path" },
+                          )
+                        }
+                      >
+                        Submit
+                      </button>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          { window: getWindow("/inbox/messages/1") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("MESSAGES"));
+        expect(router.state.location.pathname).toBe("/inbox/messages");
+      });
+
+      it("submits relative to the URL for fetchers", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "inbox",
+              action: () => "INDEX",
+              children: [
+                {
+                  path: "messages",
+                  action: () => "MESSAGES",
+                },
+                {
+                  path: "messages/:id",
+                  Component() {
+                    let fetcher = useFetcher();
+                    return (
+                      <>
+                        <button
+                          onClick={() =>
+                            fetcher.submit(
+                              { a: "1" },
+                              {
+                                method: "post",
+                                action: "..",
+                                relative: "path",
+                              },
+                            )
+                          }
+                        >
+                          Submit
+                        </button>
+                        {fetcher.data ? <p>{fetcher.data}</p> : null}
+                      </>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          { window: getWindow("/inbox/messages/1") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("MESSAGES"));
+      });
+    });
+
     describe("useSubmit/Form FormData", () => {
       it("gathers form data on <Form> submissions", async () => {
         let actionSpy = jest.fn();
