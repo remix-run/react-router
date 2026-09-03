@@ -115,22 +115,21 @@ No code changes are required. If you run into dependency optimization issues aft
 
 **Background**
 
-This flag opts Data Routers into a new route matcher powered by [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern). It supports the existing React Router path syntax and matching behavior, but ranks ambiguous matches by positional specificity instead of aggregate segment scores. This means a route with a longer static prefix can rank above a route with more dynamic segments.
+This flag opts Data Routers into a new route matcher based on the pathname-matching implementation from [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern). It supports the existing React Router path syntax and matching behavior, but ranks ambiguous matches by positional specificity instead of aggregate segment scores. This means a route with a longer static prefix can rank above a route with more dynamic segments.
 
 👉 **Enable the Flag**
 
 ```ts
 import { createBrowserRouter } from "react-router";
-import { unstable_routePatternMatching } from "react-router/route-pattern";
 
 const router = createBrowserRouter(routes, {
   future: {
-    unstable_routePatternMatching,
+    unstable_routePatternMatching: true,
   },
 });
 ```
 
-The flag is also available with `createHashRouter` and `createMemoryRouter`. The matcher is exported from a separate entry point so applications that do not enable the flag do not include `@remix-run/route-pattern` in their bundles.
+The flag is also available with `createHashRouter` and `createMemoryRouter`.
 
 **Update your Code**
 

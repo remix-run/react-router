@@ -77,8 +77,9 @@ import {
   normalizeProtocolRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
-import type { DataRouteMatcher, DataRouteMatcherFactory } from "./matcher";
+import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
+import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,11 +447,8 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  /**
-   * Enables route-pattern matching with the value exported from
-   * `react-router/route-pattern`.
-   */
-  unstable_routePatternMatching?: DataRouteMatcherFactory;
+  /** Enables route-pattern matching. */
+  unstable_routePatternMatching?: boolean;
 }
 
 /**
@@ -961,7 +959,7 @@ export function createDataRouteMatcher(
   basename: string,
 ): DataRouteMatcher {
   return future.unstable_routePatternMatching
-    ? future.unstable_routePatternMatching(basename)
+    ? new RoutePatternDataRouteMatcher(basename)
     : new V6RegExMatcher(basename);
 }
 

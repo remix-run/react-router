@@ -9,8 +9,6 @@ export interface DataRouteMatcher {
   ): DataRouteMatch[] | null;
 }
 
-export type DataRouteMatcherFactory = (basename: string) => DataRouteMatcher;
-
 export class V6RegExMatcher implements DataRouteMatcher {
   #routes: DataRouteObject[] = [];
   #branches: RouteBranch<DataRouteObject>[] = [];

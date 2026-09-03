@@ -1,6 +1,6 @@
-import { createMultiMatcher } from "@remix-run/route-pattern/match";
-import type { Match, MultiMatcher } from "@remix-run/route-pattern/match";
-import { descending } from "@remix-run/route-pattern/specificity";
+import { createMultiMatcher } from "./route-pattern/src/lib/match";
+import type { Match, MultiMatcher } from "./route-pattern/src/lib/match";
+import { descending } from "./route-pattern/src/lib/specificity";
 
 import type { Location } from "./history";
 import type {
