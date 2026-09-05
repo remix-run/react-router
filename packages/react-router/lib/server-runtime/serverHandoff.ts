@@ -8,6 +8,7 @@ export type ServerHandoff = {
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  unstable_apiOnly?: boolean;
   routeDiscovery: ServerBuild["routeDiscovery"];
 };
 

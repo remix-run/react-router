@@ -165,6 +165,11 @@ async function run() {
     build = buildModule as ServerBuild;
   }
 
+  let isApiOnlyBuild = !isRSCBuild && buildModule.unstable_apiOnly === true;
+  let assetsBuildDirectory = path.isAbsolute(build.assetsBuildDirectory)
+    ? build.assetsBuildDirectory
+    : path.resolve(process.cwd(), build.assetsBuildDirectory);
+
   let onListen = (error: unknown) => {
     if (error) {
       throw error;
@@ -199,16 +204,30 @@ async function run() {
 
   app.use(
     path.posix.join(expressPublicPath, "assets"),
-    express.static(path.join(build.assetsBuildDirectory, "assets"), {
+    express.static(path.join(assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
+  app.use(
+    expressPublicPath,
+    express.static(assetsBuildDirectory, {
+      index: isApiOnlyBuild ? false : undefined,
+    }),
+  );
+  if (isApiOnlyBuild) {
+    app.get("/{*splat}", (req, res, next) => {
+      if (req.path.endsWith(".data")) {
+        next();
+      } else {
+        res.sendFile("index.html", { root: assetsBuildDirectory });
+      }
+    });
+  }
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(
     "/.well-known",
-    express.static(path.join(build.assetsBuildDirectory, ".well-known")),
+    express.static(path.join(assetsBuildDirectory, ".well-known")),
   );
   app.use(morgan("tiny"));
 

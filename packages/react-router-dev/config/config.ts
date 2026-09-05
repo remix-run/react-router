@@ -217,8 +217,17 @@ export type ReactRouterConfig = {
    * Mode", which will request the `/` path at build-time and save it as an
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
+   *
+   * The special value 'unstable_api-only' will disable SSR, but with the
+   * following changes:
+   * - Does NOT error when encountering a `loader` or `action`
+   * - Does NOT delete the server build, instead the server build will *only*
+   *   handle data requests.
+   *
+   * This creates a fully-static "SPA Mode" client build that can utilize
+   * server-side loaders and actions.
    */
-  ssr?: boolean;
+  ssr?: boolean | "unstable_api-only";
 
   /**
    * Enable subresource integrity hashes on asset script tags. Defaults to
@@ -336,8 +345,13 @@ export type ResolvedReactRouterConfig = Readonly<{
    * Mode", which will request the `/` path at build-time and save it as an
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
+   *
+   * The special value 'unstable_api-only' will disable SSR, but with the
+   * following changes:
+   * - Does NOT delete the server build
+   * - Does NOT error when encountering a `loader` or `action`
    */
-  ssr: boolean;
+  ssr: boolean | "unstable_api-only";
   /**
    * Whether to generate subresource integrity hashes for asset script tags.
    */
@@ -541,7 +555,7 @@ async function resolveConfig({
     ...userAndPresetConfigs,
   };
 
-  if (!ssr && serverBundles) {
+  if (ssr === false && serverBundles) {
     serverBundles = undefined;
   }
 
@@ -584,7 +598,7 @@ async function resolveConfig({
 
   let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
   if (userRouteDiscovery == null) {
-    if (ssr) {
+    if (ssr === true) {
       routeDiscovery = {
         mode: "lazy",
         manifestPath: "/__manifest",
@@ -595,7 +609,7 @@ async function resolveConfig({
   } else if (userRouteDiscovery.mode === "initial") {
     routeDiscovery = userRouteDiscovery;
   } else if (userRouteDiscovery.mode === "lazy") {
-    if (!ssr) {
+    if (ssr !== true) {
       return err(
         'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`',
       );

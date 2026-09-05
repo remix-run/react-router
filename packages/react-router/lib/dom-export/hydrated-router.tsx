@@ -96,6 +96,8 @@ function createHydratedRouter({
   // window.__reactRouterContext.state
 
   let localSsrInfo = ssrInfo;
+  let isApiOnly = ssrInfo.context.unstable_apiOnly === true;
+  let ssr = ssrInfo.context.ssr;
   // Note: `stateDecodingPromise` is not coupled to `router` - we'll reach this
   // code potentially many times waiting for our state to arrive, but we'll
   // then only get past here and create the `router` one time
@@ -124,13 +126,17 @@ function createHydratedRouter({
     ssrInfo.manifest.routes,
     ssrInfo.routeModules,
     ssrInfo.context.state,
-    ssrInfo.context.ssr,
+    ssr,
     ssrInfo.context.isSpaMode,
+    "",
+    undefined,
+    undefined,
+    isApiOnly,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
-  // In SPA mode we only hydrate build-time root loader data
   if (ssrInfo.context.isSpaMode) {
+    // In SPA mode we only hydrate build-time root loader data
     let { loaderData } = ssrInfo.context.state;
     if (
       ssrInfo.manifest.routes.root?.hasLoader &&
@@ -185,13 +191,14 @@ function createHydratedRouter({
       () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
-      ssrInfo.context.ssr,
+      ssr,
+      ssrInfo.context.unstable_apiOnly === true,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       () => router,
       ssrInfo.manifest,
       ssrInfo.routeModules,
-      ssrInfo.context.ssr,
+      ssr,
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename,
@@ -393,12 +400,13 @@ export function HydratedRouter(props: HydratedRouterProps) {
   }, [location]);
 
   invariant(ssrInfo, "ssrInfo unavailable for HydratedRouter");
+  let ssr = ssrInfo.context.ssr;
 
   useFogOFWarDiscovery(
     router,
     ssrInfo.manifest,
     ssrInfo.routeModules,
-    ssrInfo.context.ssr,
+    ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
   );

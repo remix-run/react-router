@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
+import { createRequestHandler } from "react-router";
+import type { ServerBuild } from "react-router";
 
 import {
   createAppFixture,
@@ -20,6 +22,87 @@ test.describe("SPA Mode", () => {
     test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
       test.describe("custom builds", () => {
         test.describe("build errors", () => {
+          let createApiOnlyProject = () =>
+            createProject({
+              "react-router.config.ts": reactRouterConfig({
+                ssr: "unstable_api-only",
+                splitRouteModules,
+              }),
+              "app/routes/api.tsx": String.raw`
+                export async function loader() {
+                  return { message: "hello" };
+                }
+
+                export async function action() {
+                  return { ok: true };
+                }
+
+                export async function clientLoader() {
+                  return { message: "CLIENT_LOADER" };
+                }
+
+                export async function clientAction() {
+                  return { ok: "CLIENT_ACTION" };
+                }
+
+                export function ErrorBoundary() {
+                  return "ERROR_UI_ONLY";
+                }
+
+                export function HydrateFallback() {
+                  return "HYDRATE_UI_ONLY";
+                }
+
+                export default function Component() {
+                  return "UI_ONLY";
+                }
+              `,
+            });
+
+          test("preserves server loaders and actions in an API-only server build", async () => {
+            let cwd = await createApiOnlyProject();
+
+            let result = build({ cwd });
+            expect(result.status).toBe(0);
+            let serverBuildPath = path.join(cwd, "build/server/index.js");
+            expect(fs.existsSync(serverBuildPath)).toBe(true);
+            let serverBuild = fs.readFileSync(serverBuildPath, "utf8");
+            expect(serverBuild).toContain("hello");
+            expect(serverBuild).not.toContain("UI_ONLY");
+            expect(serverBuild).not.toContain("CLIENT_LOADER");
+            expect(serverBuild).not.toContain("CLIENT_ACTION");
+
+            let clientAssetsPath = path.join(cwd, "build/client/assets");
+            let clientAssets = fs.readdirSync(clientAssetsPath);
+            expect(
+              clientAssets.some((asset) =>
+                fs
+                  .readFileSync(path.join(clientAssetsPath, asset), "utf8")
+                  .includes("CLIENT_LOADER"),
+              ),
+            ).toBe(true);
+            expect(
+              clientAssets.some((asset) =>
+                fs
+                  .readFileSync(path.join(clientAssetsPath, asset), "utf8")
+                  .includes("CLIENT_ACTION"),
+              ),
+            ).toBe(true);
+          });
+
+          test("does not handle document requests in API-only mode", async () => {
+            let cwd = await createApiOnlyProject();
+
+            let result = build({ cwd });
+            expect(result.status).toBe(0);
+            let serverBuildPath = path.join(cwd, "build/server/index.js");
+            let serverBuild = (await import(serverBuildPath)) as ServerBuild;
+            let response = await createRequestHandler(serverBuild)(
+              new Request("http://localhost/api"),
+            );
+            expect(response.status).toBe(404);
+          });
+
           test("errors on server-only exports", async () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({

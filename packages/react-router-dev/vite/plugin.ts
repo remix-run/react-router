@@ -766,7 +766,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     ${Object.keys(routes)
       .map((key, index) => {
         let route = routes[key]!;
-        if (isSpaMode && key !== "root") {
+        if (
+          isSpaMode &&
+          !isApiOnlyMode(ctx.reactRouterConfig) &&
+          key !== "root"
+        ) {
           // In SPA mode, we only pre-render the root route and its `HydrateFallback`.
           // Therefore, we can stub all other routes with an empty module as they
           // (and their deps) may not be compatible with server-side rendering.
@@ -794,7 +798,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
-      export const ssr = ${ctx.reactRouterConfig.ssr};
+      export const ssr = ${ctx.reactRouterConfig.ssr === true};
+      export const unstable_apiOnly = ${isApiOnlyMode(ctx.reactRouterConfig)};
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
       export const routeDiscovery = ${JSON.stringify(
@@ -1263,7 +1268,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           appType:
             viteCommand === "serve" &&
             _viteConfigEnv.mode === "production" &&
-            ctx.reactRouterConfig.ssr === false
+            ctx.reactRouterConfig.ssr !== true
               ? "spa"
               : "custom",
 
@@ -1731,7 +1736,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // Handle SSR requests in preview mode using the built server bundle
           previewServer.middlewares.use(async (req, res, next) => {
             if (
-              !ctx.reactRouterConfig.ssr &&
+              ctx.reactRouterConfig.ssr === false &&
               (!process.env.hasOwnProperty("IS_RR_BUILD_REQUEST")
                 ? true
                 : process.env.IS_RR_BUILD_REQUEST !== "yes")
@@ -1980,6 +1985,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ctx,
           routeModuleId,
         );
+        let isServerEnvironment = isReactRouterServerEnvironment(
+          ctx,
+          this.environment.name,
+        );
 
         let { chunkedExports = [] } = options?.ssr
           ? {}
@@ -1988,8 +1997,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let reexports = sourceExports
           .filter((exportName) => {
             let isRouteEntryExport =
-              (options?.ssr &&
-                SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
+              (isServerEnvironment &&
+                (isApiOnlyMode(ctx.reactRouterConfig)
+                  ? SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)
+                  : true)) ||
               CLIENT_ROUTE_EXPORTS.includes(exportName);
 
             let isChunkedExport = chunkedExports.includes(
@@ -2100,7 +2111,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
 
             // Check for invalid APIs when SSR is disabled
-            if (!ctx.reactRouterConfig.ssr) {
+            if (ctx.reactRouterConfig.ssr === false) {
               invariant(viteConfig);
               validateSsrFalsePrerenderExports(
                 viteConfig,
@@ -2229,7 +2240,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
 
-        if (!options?.ssr && isSpaModeEnabled(ctx.reactRouterConfig)) {
+        let isServerEnvironment = isReactRouterServerEnvironment(
+          ctx,
+          this.environment.name,
+        );
+
+        if (
+          !isServerEnvironment &&
+          isSpaModeEnabled(ctx.reactRouterConfig) &&
+          !isApiOnlyMode(ctx.reactRouterConfig)
+        ) {
           let exportNames = getExportNames(code);
           let serverOnlyExports = exportNames.filter((exp) => {
             // Root route can have a loader in SPA mode
@@ -2266,9 +2286,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let [filepath] = id.split("?");
 
         let ast = parse(code, { sourceType: "module" });
-        if (!options?.ssr) {
-          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
-        }
+        let exportsToRemove = isServerEnvironment
+          ? isApiOnlyMode(ctx.reactRouterConfig) && viteCommand === "build"
+            ? CLIENT_ROUTE_EXPORTS
+            : []
+          : SERVER_ONLY_ROUTE_EXPORTS;
+        removeExports(ast, exportsToRemove);
         decorateComponentExportsWithProps(ast);
         return generate(ast, {
           sourceMaps: true,
@@ -2537,7 +2560,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // When `ssr:false` is set, we always want a SPA HTML they can use
         // to serve non-prerendered routes.  This file will only SSR the root
         // route and can hydrate for any path.
-        if (!ctx.reactRouterConfig.ssr) {
+        if (ctx.reactRouterConfig.ssr !== true) {
           requests.push(createSpaModeRequest(ctx.reactRouterConfig));
         }
 
@@ -2687,7 +2710,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let { ssr } = ctx.reactRouterConfig;
 
         // if ssr:false is set
-        if (!ssr) {
+        if (ssr !== true) {
           let spaFallback = path.join(buildDirectory, "__spa-fallback.html");
           let index = path.join(buildDirectory, "index.html");
 
@@ -2944,8 +2967,12 @@ function isSpaModeEnabled(
   // ability to use loaders on any routes and prerender the UI with build-time
   // loaderData
   return (
-    reactRouterConfig.ssr === false && !isPrerenderingEnabled(reactRouterConfig)
+    reactRouterConfig.ssr !== true && !isPrerenderingEnabled(reactRouterConfig)
   );
+}
+
+function isApiOnlyMode(reactRouterConfig: ResolvedReactRouterConfig) {
+  return reactRouterConfig.ssr === "unstable_api-only";
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
