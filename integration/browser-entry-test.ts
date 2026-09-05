@@ -131,6 +131,62 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   appFixture.close();
 });
 
+test("allows users to pass a custom fetch implementation to HydratedRouter", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                fetch={(input, init) => {
+                  let request = new Request(input, init);
+                  request.headers.set("X-Custom-Fetch", "true");
+                  return window.fetch(request);
+                }}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+
+        export default function Index() {
+          return <Link to="/page">Go to Page</Link>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export default function Page({ loaderData }) {
+          return <h1 data-custom-fetch>{loaderData}</h1>;
+        }
+      `,
+    },
+  });
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.goto("/", true);
+  await page.click('a[href="/page"]');
+  await page.waitForSelector("[data-custom-fetch]");
+
+  await expect(page.locator("[data-custom-fetch]")).toHaveText("true");
+
+  appFixture.close();
+});
+
 test("allows users to pass an onError function to HydratedRouter", async ({
   page,
   browserName,

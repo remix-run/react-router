@@ -172,11 +172,17 @@ export type FetchAndDecodeFunction = (
   shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
+export type FetchFunction = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>;
+
 export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
+  fetchImplementation: FetchFunction,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -188,7 +194,7 @@ export function getTurboStreamSingleFetchDataStrategy(
         hasClientLoader: manifestRoute.hasClientLoader,
       };
     },
-    fetchAndDecodeViaTurboStream,
+    fetchAndDecodeViaTurboStream(fetchImplementation),
     ssr,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
@@ -577,92 +583,96 @@ export function singleFetchUrl(
   return url;
 }
 
-async function fetchAndDecodeViaTurboStream(
-  args: DataStrategyFunctionArgs,
-  targetRoutes?: string[],
-): Promise<{ status: number; data: DecodedSingleFetchResults }> {
-  let { request } = args;
-  let url = singleFetchUrl(request.url, "data");
-  if (request.method === "GET") {
-    url = stripIndexParam(url);
-    if (targetRoutes) {
-      url.searchParams.set("_routes", targetRoutes.join(","));
-    }
-  }
-
-  let res = await fetch(url, await createRequestInit(request));
-
-  // If this error'd without hitting the running server, then bubble a normal
-  // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
-  //
-  // This could be triggered by a few scenarios:
-  // - `.data` request 404 on a pre-rendered app using a CDN
-  // - 429 error returned from a CDN on a SSR app
-  if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
-    throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
-  }
-
-  // Handle non-RR redirects (i.e., from express middleware)
-  if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
-    return {
-      status: SINGLE_FETCH_REDIRECT_STATUS,
-      data: {
-        redirect: {
-          redirect: res.headers.get("X-Remix-Redirect")!,
-          status: Number(res.headers.get("X-Remix-Status") || "302"),
-          revalidate: res.headers.get("X-Remix-Revalidate") === "true",
-          reload: res.headers.get("X-Remix-Reload-Document") === "true",
-          replace: res.headers.get("X-Remix-Replace") === "true",
-        },
-      },
-    };
-  }
-
-  if (NO_BODY_STATUS_CODES.has(res.status)) {
-    let routes: { [key: string]: SingleFetchResult } = {};
-    // We get back just a single result for action requests - normalize that
-    // to a DecodedSingleFetchResults shape here
-    if (targetRoutes && request.method !== "GET") {
-      routes[targetRoutes[0]] = { data: undefined };
-    }
-    return {
-      status: res.status,
-      data: { routes },
-    };
-  }
-
-  invariant(res.body, "No response body to decode");
-
-  try {
-    let decoded = await decodeViaTurboStream(res.body, window);
-    let data: DecodedSingleFetchResults;
+function fetchAndDecodeViaTurboStream(
+  fetchImplementation: FetchFunction,
+): FetchAndDecodeFunction {
+  return async (
+    args: DataStrategyFunctionArgs,
+    targetRoutes?: string[],
+  ): Promise<{ status: number; data: DecodedSingleFetchResults }> => {
+    let { request } = args;
+    let url = singleFetchUrl(request.url, "data");
     if (request.method === "GET") {
-      let typed = decoded.value as SingleFetchResults;
-      if (SingleFetchRedirectSymbol in typed) {
-        data = { redirect: typed[SingleFetchRedirectSymbol] };
-      } else {
-        data = { routes: typed };
-      }
-    } else {
-      let typed = decoded.value as SingleFetchResult;
-      let routeId = targetRoutes?.[0];
-      invariant(routeId, "No routeId found for single fetch call decoding");
-      if ("redirect" in typed) {
-        data = { redirect: typed };
-      } else {
-        data = { routes: { [routeId]: typed } };
+      url = stripIndexParam(url);
+      if (targetRoutes) {
+        url.searchParams.set("_routes", targetRoutes.join(","));
       }
     }
-    return { status: res.status, data };
-  } catch {
-    // Can't clone after consuming the body via turbo-stream so we can't
-    // include the body here.  In an ideal world we'd look for a turbo-stream
-    // content type here, or even X-Remix-Response but then folks can't
-    // statically deploy their prerendered .data files to a CDN unless they can
-    // tell that CDN to add special headers to those certain files - which is a
-    // bit restrictive.
-    throw new Error("Unable to decode turbo-stream response");
-  }
+
+    let res = await fetchImplementation(url, await createRequestInit(request));
+
+    // If this error'd without hitting the running server, then bubble a normal
+    // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
+    //
+    // This could be triggered by a few scenarios:
+    // - `.data` request 404 on a pre-rendered app using a CDN
+    // - 429 error returned from a CDN on a SSR app
+    if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
+      throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
+    }
+
+    // Handle non-RR redirects (i.e., from express middleware)
+    if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
+      return {
+        status: SINGLE_FETCH_REDIRECT_STATUS,
+        data: {
+          redirect: {
+            redirect: res.headers.get("X-Remix-Redirect")!,
+            status: Number(res.headers.get("X-Remix-Status") || "302"),
+            revalidate: res.headers.get("X-Remix-Revalidate") === "true",
+            reload: res.headers.get("X-Remix-Reload-Document") === "true",
+            replace: res.headers.get("X-Remix-Replace") === "true",
+          },
+        },
+      };
+    }
+
+    if (NO_BODY_STATUS_CODES.has(res.status)) {
+      let routes: { [key: string]: SingleFetchResult } = {};
+      // We get back just a single result for action requests - normalize that
+      // to a DecodedSingleFetchResults shape here
+      if (targetRoutes && request.method !== "GET") {
+        routes[targetRoutes[0]] = { data: undefined };
+      }
+      return {
+        status: res.status,
+        data: { routes },
+      };
+    }
+
+    invariant(res.body, "No response body to decode");
+
+    try {
+      let decoded = await decodeViaTurboStream(res.body, window);
+      let data: DecodedSingleFetchResults;
+      if (request.method === "GET") {
+        let typed = decoded.value as SingleFetchResults;
+        if (SingleFetchRedirectSymbol in typed) {
+          data = { redirect: typed[SingleFetchRedirectSymbol] };
+        } else {
+          data = { routes: typed };
+        }
+      } else {
+        let typed = decoded.value as SingleFetchResult;
+        let routeId = targetRoutes?.[0];
+        invariant(routeId, "No routeId found for single fetch call decoding");
+        if ("redirect" in typed) {
+          data = { redirect: typed };
+        } else {
+          data = { routes: { [routeId]: typed } };
+        }
+      }
+      return { status: res.status, data };
+    } catch {
+      // Can't clone after consuming the body via turbo-stream so we can't
+      // include the body here.  In an ideal world we'd look for a turbo-stream
+      // content type here, or even X-Remix-Response but then folks can't
+      // statically deploy their prerendered .data files to a CDN unless they can
+      // tell that CDN to add special headers to those certain files - which is a
+      // bit restrictive.
+      throw new Error("Unable to decode turbo-stream response");
+    }
+  };
 }
 
 // Note: If you change this function please change the corresponding
