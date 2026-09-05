@@ -172,10 +172,7 @@ export type FetchAndDecodeFunction = (
   shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
-export type FetchFunction = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type FetchFunction = (request: Request) => Promise<Response>;
 
 export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
@@ -599,7 +596,8 @@ function fetchAndDecodeViaTurboStream(
       }
     }
 
-    let res = await fetchImplementation(url, await createRequestInit(request));
+    let req = new Request(url, await createRequestInit(request))
+    let res = await fetchImplementation(req);
 
     // If this error'd without hitting the running server, then bubble a normal
     // `ErrorResponse` and don't try to decode the body with `turbo-stream`.

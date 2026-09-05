@@ -146,8 +146,7 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
             document,
             <StrictMode>
               <HydratedRouter
-                fetch={(input, init) => {
-                  let request = new Request(input, init);
+                fetch={(request) => {
                   request.headers.set("X-Custom-Fetch", "true");
                   return window.fetch(request);
                 }}
