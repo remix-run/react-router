@@ -442,6 +442,18 @@ describe("matchPath optional static segments", () => {
     match = matchPath("/school?abc", "/abc");
     expect(match).toBe(null);
   });
+
+  it("should match an optional static segment containing non-word characters", () => {
+    expect(matchPath("/docs/v1.0?/intro", "/docs/v1.0/intro")).toMatchObject({
+      pathname: "/docs/v1.0/intro",
+    });
+    expect(matchPath("/docs/v1.0?/intro", "/docs/intro")).toMatchObject({
+      pathname: "/docs/intro",
+    });
+    // The `?` must not survive into the compiled RegExp as a quantifier on the
+    // preceding character
+    expect(matchPath("/docs/v1.0?/intro", "/docs/v1./intro")).toBe(null);
+  });
 });
 
 describe("matchPath *", () => {
