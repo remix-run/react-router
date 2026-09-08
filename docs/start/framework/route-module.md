@@ -486,17 +486,42 @@ The meta of the last matching route is used, allowing you to override parent rou
 
 In framework mode with SSR, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode][data-mode-should-revalidate]). This enables middleware and loaders to share a request context and optimize in different ways than they would in Data Mode.
 
-Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
+Defining this function allows you to opt out of revalidation for **this route's** loader. It does not skip parent or sibling loaders. After `fetcher.submit()`, `root` still revalidates unless it also opts out.
+
+Returning `false` for every call turns revalidation off for this loader:
+
+```tsx
+export function shouldRevalidate() {
+  return false;
+}
+```
+
+<docs-warning>
+Always returning `false` can leave this route's UI out of sync with the server. Prefer inspecting the arguments and falling back to `defaultShouldRevalidate`.
+</docs-warning>
 
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
-export function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs,
-) {
-  return true;
+export function shouldRevalidate({
+  formMethod,
+  formAction,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs) {
+  if (
+    formMethod === "POST" &&
+    formAction?.endsWith("/analytics")
+  ) {
+    return false;
+  }
+
+  return defaultShouldRevalidate;
 }
 ```
+
+To skip revalidation for a single `<Form>`, `<Link>`, `useSubmit`, or `fetcher.submit` without changing every route file, pass [`defaultShouldRevalidate={false}`][form-default-should-revalidate] at the call site. Routes without a `shouldRevalidate` export use that value directly; routes that export one receive it as `defaultShouldRevalidate` and still decide.
+
+See [Revalidation Optimization][optimize-revalidation] for Framework vs Data Mode defaults, parent/child behavior, and more examples.
 
 When using [SPA Mode][spa-mode], there are no server loaders to call on navigations, so `shouldRevalidate` behaves the same as it does in [Data Mode][data-mode-should-revalidate].
 
@@ -522,6 +547,8 @@ Next: [Rendering Strategies](./rendering)
 [meta-params]: https://api.reactrouter.com/v8/interfaces/react-router.MetaArgs
 [meta-function]: https://api.reactrouter.com/v8/types/react-router.MetaDescriptor.html
 [data-mode-should-revalidate]: ../data/route-object#shouldrevalidate
+[form-default-should-revalidate]: ../../api/components/Form#defaultshouldrevalidate
+[optimize-revalidation]: ../../how-to/optimize-revalidation
 [spa-mode]: ../../how-to/spa
 [client-data]: ../../how-to/client-data
 [styling]: ../../explanation/styling
