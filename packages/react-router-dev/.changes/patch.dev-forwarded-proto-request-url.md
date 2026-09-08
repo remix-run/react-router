@@ -1,1 +1,3 @@
-Fix `react-router dev` aborting actions behind an HTTPS reverse proxy by using `X-Forwarded-Proto` to construct the dev request URL, so `request.url` keeps the scheme the browser sees and passes action origin validation. `X-Forwarded-Host` is not trusted since Vite only validates the `Host` header against `server.allowedHosts`
+Fix action submissions behind an HTTPS reverse proxy in `react-router dev` and `vite preview` by using `X-Forwarded-Proto` when constructing `request.url`.
+
+No React Router configuration is required. The URL host continues to come from `Host`, not `X-Forwarded-Host`. Configure reverse proxies to overwrite client-supplied `X-Forwarded-Proto` headers, and do not expose dev or preview servers publicly.
