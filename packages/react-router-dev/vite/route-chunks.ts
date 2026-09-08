@@ -983,10 +983,12 @@ export function getRouteChunkModuleId(
   return `${filePath}${routeChunkQueryStrings[chunkName]}`;
 }
 
+export const routeChunkModuleIdRegExp = new RegExp(
+  `\\${routeChunkQueryStringPrefix}(?:${routeChunkNames.join("|")})$`,
+);
+
 export function isRouteChunkModuleId(id: string): boolean {
-  return Object.values(routeChunkQueryStrings).some((queryString) =>
-    id.endsWith(queryString),
-  );
+  return routeChunkModuleIdRegExp.test(id);
 }
 
 function isRouteChunkName(name: string): name is RouteChunkName {
