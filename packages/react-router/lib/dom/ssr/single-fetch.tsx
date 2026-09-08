@@ -314,26 +314,21 @@ async function nonSsrStrategy(
   let matchesToLoad = args.matches.filter((m) => m.shouldCallHandler());
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
-    matchesToLoad.map((m) =>
-      m.resolve(async (handler) => {
-        try {
-          let { hasClientLoader } = getRouteInfo(m);
-          // Need to pass through a `singleFetch` override handler so
-          // clientLoader's can still call server loaders through `.data`
-          // requests
-          let routeId = m.route.id;
-          let result = hasClientLoader
-            ? await handler(async () => {
-                let { data } = await fetchAndDecode(args, [routeId]);
-                return unwrapSingleFetchResult(data, routeId);
-              })
-            : await handler();
-          results[m.route.id] = { type: "data", result };
-        } catch (e) {
-          results[m.route.id] = { type: "error", result: e };
-        }
-      }),
-    ),
+    matchesToLoad.map(async (m) => {
+      let routeId = m.route.id;
+      results[routeId] = await m.resolve(async (handler) => {
+        let { hasClientLoader } = getRouteInfo(m);
+        // Need to pass through a `singleFetch` override handler so
+        // clientLoader's can still call server loaders through `.data`
+        // requests
+        return hasClientLoader
+          ? handler(async () => {
+              let { data } = await fetchAndDecode(args, [routeId]);
+              return unwrapSingleFetchResult(data, routeId);
+            })
+          : handler();
+      });
+    }),
   );
   return results;
 }
