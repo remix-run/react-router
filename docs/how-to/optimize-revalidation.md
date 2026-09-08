@@ -22,25 +22,23 @@ Prefer targeting a specific action or navigation, and fall back to
 
 ## Default behavior
 
-**Framework Mode with SSR** revalidates every matched loader after
-navigations and after [`<Form>`][form], [`useSubmit`][use-submit],
-`<fetcher.Form>`, and `fetcher.submit`. That includes the root
-route. This is different from [Data Mode][data-mode].
+The default behavior differs between Framework and Data Modes:
 
-**Data Mode** already skips some loaders on navigations (for example
-a parent whose params did not change). It still revalidates after
-an action that returns a non-error status, when search params
-change, when the route's own params change, and when navigating to
-the same URL.
+- **Framework Mode with SSR**
+  - Defaults to opt-out behavior - active loaders are revalidated on navigations and successful submissions ([`Link`][link], [`Form`][form], [`fetcher.submit`](fetcher-submit))
+  - Failed submissions returning a 4xx/5xx status do not trigger revalidations by default
+- **Framework "SPA Mode" and Data Mode**
+  - Defaults to opt-out behavior on successful submissions - active loaders are revalidated on successful submissions ([`Form`][form], [`fetcher.submit`])
+    - Failed submissions returning a 4xx/5xx status do not trigger revalidations by default
+  - Defaults to opt-in behavior for GET navigations ([`Link`][link]) - active loaders are only revalidated if their dynamic params changed, or if any search params changed
+    - A GET navigation to the _exact_ same URL is treated like a page refresh and all loaders are revalidated.
 
-Each matched route is decided independently. A child that skips
-revalidation does not skip its parent or `root`. After
-`fetcher.submit()`, a leaf `shouldRevalidate` that returns `false`
-still leaves the root loader free to run.
+Matched matched routes are handled independently - A child that skips
+revalidation does not skip any ancestor routes.
 
-[`fetcher.load`][use-fetcher] only revalidates by default after
-action submissions and explicit [`useRevalidator`][use-revalidator]
-calls, not on search-param or param-driven navigations.
+[`fetcher.load`][use-fetcher] only revalidates by default after action
+submissions and explicit [`useRevalidator`][use-revalidator] calls, not
+on search-param or param-driven navigations.
 
 A plain `fetch()` to a [resource route][resource-routes] does not
 go through the router, so it does not revalidate loaders.
@@ -52,12 +50,14 @@ Export `shouldRevalidate` from the [route module][route-module]
 (Data Mode). Returning `false` skips **that route's** loader.
 
 ```tsx filename=app/routes/dashboard.tsx
+// Framework Mode
 export function shouldRevalidate() {
   return false;
 }
 ```
 
-```tsx
+```tsx src/main.tsx
+// Data Mode
 createBrowserRouter([
   {
     path: "/dashboard",

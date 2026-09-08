@@ -66,7 +66,7 @@ export function action(_: Route.ActionArgs) {
 }
 ```
 
-Calling this `action` through [`<Form>`][form] or [`useFetcher`][fetcher] still revalidates matched UI loaders. A plain `fetch()` to the resource URL does not. See [Revalidation Optimization][optimize-revalidation].
+Calling this `action` through [`<Form>`][form] or [`useFetcher`][fetcher] still revalidates matched UI loaders. A plain `fetch()` to the resource URL does not. See [Revalidation Optimization][optimize-revalidation] for more info.
 
 ## Return Types
 
