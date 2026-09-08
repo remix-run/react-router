@@ -1,5 +1,6 @@
 import * as path from "node:path";
-import { globSync } from "node:fs";
+import { globSync, readFileSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
@@ -379,6 +380,93 @@ test.describe("Build", () => {
 
         expect(pageErrors).toEqual([]);
       });
+    });
+  });
+});
+
+test.describe("Route compilation", () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / reuses transformed routes and generated route chunks within each build`, async () => {
+      let route = (value: string) => js`
+        export const handle = "${value}";
+        export default function Route() {
+          return <h1>Transformed route</h1>;
+        }
+      `;
+      let cwd = await createProject(
+        {
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules: true,
+          }),
+          "vite.config.ts": js`
+            import { resolve } from "node:path";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            let command;
+            export default {
+              plugins: [
+                {
+                  name: "add-route-export",
+                  enforce: "pre",
+                  configEnvironment(name, options, { command }) {
+                    if (command === "build" && name === "client") {
+                      options.build.rollupOptions.input.push(
+                        resolve("app/routes/_index.tsx") + "?route-chunk=clientLoader",
+                      );
+                    }
+                  },
+                  configResolved(config) {
+                    command = config.command;
+                  },
+                  transform(code, id) {
+                    if (!id.split("?")[0].endsWith("/app/routes/_index.tsx")) return;
+                    if (command === "serve") console.log("CHILD_ROUTE_COMPILATION");
+                    return {
+                      code: code.replace(
+                        /export const handle = ("[^"]+");/,
+                        "export async function clientLoader() { return $1; }",
+                      ),
+                      map: null,
+                    };
+                  },
+                },
+                reactRouter(),
+              ],
+            };
+          `,
+          "app/routes/_index.tsx": route("FIRST_BUILD"),
+        },
+        templateName,
+      );
+
+      for (let value of ["FIRST_BUILD", "SECOND_BUILD"]) {
+        writeFileSync(path.join(cwd, "app/routes/_index.tsx"), route(value));
+        let { status, stdout, stderr } = build({ cwd });
+        expect(status, stderr.toString()).toBe(0);
+        expect(
+          stdout.toString().match(/CHILD_ROUTE_COMPILATION/g),
+        ).toHaveLength(1);
+
+        let manifestFiles = globSync("build/client/assets/manifest-*.js", {
+          cwd,
+        });
+        expect(manifestFiles).toHaveLength(1);
+        let manifest = JSON.parse(
+          readFileSync(path.join(cwd, manifestFiles[0]), "utf8").slice(
+            "window.__reactRouterManifest=".length,
+            -1,
+          ),
+        );
+        let routeManifest = manifest.routes["routes/_index"];
+        expect(routeManifest.hasClientLoader).toBe(true);
+        expect(routeManifest.clientLoaderModule).toEqual(expect.any(String));
+        let { clientLoader } = await import(
+          pathToFileURL(
+            path.join(cwd, "build/client", routeManifest.clientLoaderModule),
+          ).href
+        );
+        expect(await clientLoader()).toBe(value);
+      }
     });
   });
 });

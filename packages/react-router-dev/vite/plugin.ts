@@ -238,6 +238,7 @@ type ReactRouterPluginContext = {
   viteManifestEnabled: boolean;
   reactRouterManifest: ReactRouterManifest | null;
   prerenderPaths: Set<string> | null;
+  compiledRouteFiles?: Map<string, Promise<string>>;
 };
 
 let virtualHmrRuntime = VirtualModule.create("hmr-runtime");
@@ -535,23 +536,36 @@ const compileRouteFile = async (
   let { pluginContainer, moduleGraph } = viteChildCompiler;
 
   let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
-  let url = resolveFileUrl(ctx, routePath);
+  let compiledRouteFiles = readRouteFile ? undefined : ctx.compiledRouteFiles;
+  let cached = compiledRouteFiles?.get(routePath);
+  if (cached) return cached;
 
-  let resolveId = async () => {
-    let result = await pluginContainer.resolveId(url, undefined, { ssr });
-    if (!result) throw new Error(`Could not resolve module ID for ${url}`);
-    return result.id;
+  let compile = async () => {
+    let url = resolveFileUrl(ctx, routePath);
+
+    let resolveId = async () => {
+      let result = await pluginContainer.resolveId(url, undefined, { ssr });
+      if (!result) throw new Error(`Could not resolve module ID for ${url}`);
+      return result.id;
+    };
+
+    let [id, code] = await Promise.all([
+      resolveId(),
+      readRouteFile?.() ?? readFile(routePath, "utf-8"),
+      // pluginContainer.transform(...) fails if we don't do this first:
+      moduleGraph.ensureEntryFromUrl(url, ssr),
+    ]);
+
+    let transformed = await pluginContainer.transform(code, id, { ssr });
+    return transformed.code;
   };
 
-  let [id, code] = await Promise.all([
-    resolveId(),
-    readRouteFile?.() ?? readFile(routePath, "utf-8"),
-    // pluginContainer.transform(...) fails if we don't do this first:
-    moduleGraph.ensureEntryFromUrl(url, ssr),
-  ]);
-
-  let transformed = await pluginContainer.transform(code, id, { ssr });
-  return transformed.code;
+  let promise = compile().catch((error) => {
+    compiledRouteFiles?.delete(routePath);
+    throw error;
+  });
+  compiledRouteFiles?.set(routePath, promise);
+  return promise;
 };
 
 const getRouteModuleExports = async (
@@ -947,7 +961,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         cache,
         ctx,
         routeFile,
-        { routeFile, viteChildCompiler },
+        { routeFile, viteChildCompiler, sourceExports },
       );
 
       if (enforceSplitRouteModules) {
@@ -1102,7 +1116,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           cache,
           ctx,
           routeFile,
-          { routeFile, viteChildCompiler },
+          { routeFile, viteChildCompiler, sourceExports },
         );
 
         validateRouteChunks({
@@ -1416,6 +1430,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteConfig = resolvedViteConfig;
         invariant(viteConfig);
+
+        if (
+          viteConfig.command === "build" &&
+          !viteConfig.build.watch &&
+          Object.values(viteConfig.environments).every(
+            (environment) => !environment.build.watch,
+          )
+        ) {
+          ctx.compiledRouteFiles = new Map();
+        }
 
         // We load the same Vite config file again for the child compiler so
         // that both parent and child compiler's plugins have independent state.
@@ -1896,6 +1920,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     {
       name: "react-router:route-chunks-index",
+      apply: "build",
+      applyToEnvironment(environment) {
+        return environment.config.consumer === "client";
+      },
       // This plugin provides the route module "index" since route modules can
       // be chunked and may be made up of multiple smaller modules. This plugin
       // primarily ensures code is never duplicated across a route module and
@@ -1969,168 +1997,196 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     {
       name: "react-router:build-client-route",
-      async transform(code, id, options) {
-        if (!id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) return;
-        let routeModuleId = id.replace(BUILD_CLIENT_ROUTE_QUERY_STRING, "");
+      transform: {
+        filter: { id: /\?__react-router-build-client-route$/ },
+        async handler(code, id, options) {
+          if (!id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) return;
+          let routeModuleId = id.replace(BUILD_CLIENT_ROUTE_QUERY_STRING, "");
 
-        let routeFileName = path.basename(routeModuleId);
+          let routeFileName = path.basename(routeModuleId);
 
-        let sourceExports = await getRouteModuleExports(
-          viteChildCompiler,
-          ctx,
-          routeModuleId,
-        );
+          let sourceExports = await getRouteModuleExports(
+            viteChildCompiler,
+            ctx,
+            routeModuleId,
+          );
 
-        let { chunkedExports = [] } = options?.ssr
-          ? {}
-          : await detectRouteChunksIfEnabled(cache, ctx, id, code);
+          let { chunkedExports = [] } = options?.ssr
+            ? {}
+            : await detectRouteChunksIfEnabled(cache, ctx, id, code);
 
-        let reexports = sourceExports
-          .filter((exportName) => {
-            let isRouteEntryExport =
-              (options?.ssr &&
-                SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-              CLIENT_ROUTE_EXPORTS.includes(exportName);
+          let reexports = sourceExports
+            .filter((exportName) => {
+              let isRouteEntryExport =
+                (options?.ssr &&
+                  SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
+                CLIENT_ROUTE_EXPORTS.includes(exportName);
 
-            let isChunkedExport = chunkedExports.includes(
-              exportName as string & RouteChunkExportName,
-            );
+              let isChunkedExport = chunkedExports.includes(
+                exportName as string & RouteChunkExportName,
+              );
 
-            return isRouteEntryExport && !isChunkedExport;
-          })
-          .join(", ");
+              return isRouteEntryExport && !isChunkedExport;
+            })
+            .join(", ");
 
-        return `export { ${reexports} } from "./${routeFileName}";`;
+          return `export { ${reexports} } from "./${routeFileName}";`;
+        },
       },
     },
     {
       name: "react-router:split-route-modules",
-      async transform(code, id, options) {
-        // Routes aren't chunked on the server
-        if (options?.ssr) return;
+      applyToEnvironment(environment) {
+        return environment.config.consumer === "client";
+      },
+      transform: {
+        filter: {
+          id: new RegExp(`\\?route-chunk=(${routeChunkNames.join("|")})$`),
+        },
+        async handler(code, id, options) {
+          // Routes aren't chunked on the server
+          if (options?.ssr) return;
 
-        // Ignore anything not marked as a route chunk
-        if (!isRouteChunkModuleId(id)) return;
+          // Ignore anything not marked as a route chunk
+          if (!isRouteChunkModuleId(id)) return;
 
-        invariant(
-          viteCommand === "build",
-          "Route modules are only split in build mode",
-        );
+          invariant(
+            viteCommand === "build",
+            "Route modules are only split in build mode",
+          );
 
-        let chunkName = getRouteChunkNameFromModuleId(id);
+          let chunkName = getRouteChunkNameFromModuleId(id);
 
-        if (!chunkName) {
-          throw new Error(`Invalid route chunk name "${chunkName}" in "${id}"`);
-        }
+          if (!chunkName) {
+            throw new Error(
+              `Invalid route chunk name "${chunkName}" in "${id}"`,
+            );
+          }
 
-        let chunk = await getRouteChunkIfEnabled(
-          cache,
-          ctx,
-          id,
-          chunkName,
-          code,
-        );
-
-        let preventEmptyChunkSnippet = ({ reason }: { reason: string }) =>
-          `Math.random()<0&&console.log(${JSON.stringify(reason)});`;
-
-        if (chunk === null) {
-          return preventEmptyChunkSnippet({
-            reason: "Split round modules disabled",
-          });
-        }
-
-        let enforceSplitRouteModules =
-          ctx.reactRouterConfig.splitRouteModules === "enforce";
-
-        if (enforceSplitRouteModules && chunkName === "main" && chunk) {
-          let exportNames = getExportNames(chunk.code);
-
-          validateRouteChunks({
+          let chunk = await getRouteChunkIfEnabled(
+            cache,
             ctx,
             id,
-            valid: {
-              clientAction: !exportNames.includes("clientAction"),
-              clientLoader: !exportNames.includes("clientLoader"),
-              clientMiddleware: !exportNames.includes("clientMiddleware"),
-              HydrateFallback: !exportNames.includes("HydrateFallback"),
-            },
-          });
-        }
+            chunkName,
+            code,
+          );
 
-        return (
-          chunk ?? preventEmptyChunkSnippet({ reason: `No ${chunkName} chunk` })
-        );
+          let preventEmptyChunkSnippet = ({ reason }: { reason: string }) =>
+            `Math.random()<0&&console.log(${JSON.stringify(reason)});`;
+
+          if (chunk === null) {
+            return preventEmptyChunkSnippet({
+              reason: "Split round modules disabled",
+            });
+          }
+
+          let enforceSplitRouteModules =
+            ctx.reactRouterConfig.splitRouteModules === "enforce";
+
+          if (enforceSplitRouteModules && chunkName === "main" && chunk) {
+            let exportNames = getExportNames(chunk.code);
+
+            validateRouteChunks({
+              ctx,
+              id,
+              valid: {
+                clientAction: !exportNames.includes("clientAction"),
+                clientLoader: !exportNames.includes("clientLoader"),
+                clientMiddleware: !exportNames.includes("clientMiddleware"),
+                HydrateFallback: !exportNames.includes("HydrateFallback"),
+              },
+            });
+          }
+
+          return (
+            chunk ??
+            preventEmptyChunkSnippet({ reason: `No ${chunkName} chunk` })
+          );
+        },
       },
     },
     {
       name: "react-router:virtual-modules",
       enforce: "pre",
-      resolveId(id) {
-        const vmod = Object.values(virtual).find((vmod) => vmod.id === id);
-        if (vmod) return vmod.resolvedId;
+      resolveId: {
+        filter: {
+          id: /^virtual:react-router\/(server-build|server-manifest|browser-manifest)$/,
+        },
+        handler(id) {
+          const vmod = Object.values(virtual).find((vmod) => vmod.id === id);
+          if (vmod) return vmod.resolvedId;
+        },
       },
-      async load(id) {
-        switch (id) {
-          case virtual.serverBuild.resolvedId: {
-            let routeIds = getServerBundleRouteIds(this, ctx);
-            return await getServerEntry({ routeIds });
-          }
-          case virtual.serverManifest.resolvedId: {
-            let routeIds = getServerBundleRouteIds(this, ctx);
-            invariant(viteConfig);
-            let reactRouterServerManifest: ReactRouterManifest;
+      load: {
+        filter: {
+          id: /^\0virtual:react-router\/(server-build|server-manifest|browser-manifest)$/,
+        },
+        async handler(id) {
+          switch (id) {
+            case virtual.serverBuild.resolvedId: {
+              let routeIds = getServerBundleRouteIds(this, ctx);
+              return await getServerEntry({ routeIds });
+            }
+            case virtual.serverManifest.resolvedId: {
+              let routeIds = getServerBundleRouteIds(this, ctx);
+              invariant(viteConfig);
+              let reactRouterServerManifest: ReactRouterManifest;
 
-            if (viteCommand === "build") {
-              let {
-                reactRouterBrowserManifest,
-                reactRouterServerManifest: serverManifest,
-              } = await generateReactRouterManifestsForBuild({
-                viteConfig,
-                routeIds,
+              if (viteCommand === "build") {
+                let {
+                  reactRouterBrowserManifest,
+                  reactRouterServerManifest: serverManifest,
+                } = await generateReactRouterManifestsForBuild({
+                  viteConfig,
+                  routeIds,
+                });
+
+                reactRouterServerManifest = serverManifest;
+                // Cache the full browser manifest on context for prerendering later.
+                // Server bundle manifests only contain the routes for a single bundle.
+                ctx.reactRouterManifest = reactRouterBrowserManifest;
+              } else {
+                reactRouterServerManifest =
+                  await getReactRouterManifestForDev();
+                ctx.reactRouterManifest = reactRouterServerManifest;
+              }
+
+              // Check for invalid APIs when SSR is disabled
+              if (!ctx.reactRouterConfig.ssr) {
+                invariant(viteConfig);
+                validateSsrFalsePrerenderExports(
+                  viteConfig,
+                  ctx,
+                  reactRouterServerManifest,
+                  viteChildCompiler,
+                );
+              }
+
+              return `export default ${jsesc(reactRouterServerManifest, {
+                es6: true,
+              })};`;
+            }
+            case virtual.browserManifest.resolvedId: {
+              if (viteCommand === "build") {
+                throw new Error("This module only exists in development");
+              }
+
+              let reactRouterManifest = await getReactRouterManifestForDev();
+              let reactRouterManifestString = jsesc(reactRouterManifest, {
+                es6: true,
               });
 
-              reactRouterServerManifest = serverManifest;
-              // Cache the full browser manifest on context for prerendering later.
-              // Server bundle manifests only contain the routes for a single bundle.
-              ctx.reactRouterManifest = reactRouterBrowserManifest;
-            } else {
-              reactRouterServerManifest = await getReactRouterManifestForDev();
-              ctx.reactRouterManifest = reactRouterServerManifest;
+              return `window.__reactRouterManifest=${reactRouterManifestString};`;
             }
-
-            // Check for invalid APIs when SSR is disabled
-            if (!ctx.reactRouterConfig.ssr) {
-              invariant(viteConfig);
-              validateSsrFalsePrerenderExports(
-                viteConfig,
-                ctx,
-                reactRouterServerManifest,
-                viteChildCompiler,
-              );
-            }
-
-            return `export default ${jsesc(reactRouterServerManifest, {
-              es6: true,
-            })};`;
           }
-          case virtual.browserManifest.resolvedId: {
-            if (viteCommand === "build") {
-              throw new Error("This module only exists in development");
-            }
-
-            let reactRouterManifest = await getReactRouterManifestForDev();
-            let reactRouterManifestString = jsesc(reactRouterManifest, {
-              es6: true,
-            });
-
-            return `window.__reactRouterManifest=${reactRouterManifestString};`;
-          }
-        }
+        },
       },
     },
     {
       name: "react-router:dot-server",
+      applyToEnvironment(environment) {
+        return environment.config.consumer === "client";
+      },
       enforce: "pre",
       async resolveId(id, importer, options) {
         // https://vitejs.dev/config/dep-optimization-options
@@ -2150,14 +2206,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let serverDirRE = /\/\.server\//;
         let isDotServer =
           serverFileRE.test(resolved!.id) || serverDirRE.test(resolved!.id);
-        if (!isDotServer) return;
+        if (!isDotServer) return resolved;
 
-        if (!importer) return;
+        if (!importer) return resolved;
         if (viteCommand !== "build" && importer.endsWith(".html")) {
           // Vite has a special `index.html` importer for `resolveId` within `transformRequest`
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/transformRequest.ts#L158
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/pluginContainer.ts#L668
-          return;
+          return resolved;
         }
 
         let vite = getVite();
@@ -2199,23 +2255,29 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     {
       name: "react-router:dot-client",
-      async transform(code, id, options) {
-        if (!options?.ssr) return;
-        let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
-        let clientDirRE = /\/\.client\//;
-        if (clientFileRE.test(id) || clientDirRE.test(id)) {
-          let exports = getExportNames(code);
-          return {
-            code: exports
-              .map((name) =>
-                name === "default"
-                  ? "export default undefined;"
-                  : `export const ${name} = undefined;`,
-              )
-              .join("\n"),
-            map: null,
-          };
-        }
+      applyToEnvironment(environment) {
+        return environment.config.consumer === "server";
+      },
+      transform: {
+        filter: { id: [/\.client(\.[cm]?[jt]sx?)?$/, /\/\.client\//] },
+        async handler(code, id, options) {
+          if (!options?.ssr) return;
+          let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
+          let clientDirRE = /\/\.client\//;
+          if (clientFileRE.test(id) || clientDirRE.test(id)) {
+            let exports = getExportNames(code);
+            return {
+              code: exports
+                .map((name) =>
+                  name === "default"
+                    ? "export default undefined;"
+                    : `export const ${name} = undefined;`,
+                )
+                .join("\n"),
+              map: null,
+            };
+          }
+        },
       },
     },
     {
@@ -2280,96 +2342,120 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     {
       name: "react-router:inject-hmr-runtime",
       enforce: "pre",
-      resolveId(id) {
-        if (id === virtualInjectHmrRuntime.id) {
-          return virtualInjectHmrRuntime.resolvedId;
-        }
+      resolveId: {
+        filter: { id: /^virtual:react-router\/inject-hmr-runtime$/ },
+        handler(id) {
+          if (id === virtualInjectHmrRuntime.id) {
+            return virtualInjectHmrRuntime.resolvedId;
+          }
+        },
       },
-      async load(id) {
-        if (id !== virtualInjectHmrRuntime.resolvedId) return;
+      load: {
+        filter: { id: /^\0virtual:react-router\/inject-hmr-runtime$/ },
+        async handler(id) {
+          if (id !== virtualInjectHmrRuntime.resolvedId) return;
 
-        return [
-          `import RefreshRuntime from "${virtualHmrRuntime.id}"`,
-          "RefreshRuntime.injectIntoGlobalHook(window)",
-          "window.$RefreshReg$ = () => {}",
-          "window.$RefreshSig$ = () => (type) => type",
-          "window.__vite_plugin_react_preamble_installed__ = true",
-        ].join("\n");
+          return [
+            `import RefreshRuntime from "${virtualHmrRuntime.id}"`,
+            "RefreshRuntime.injectIntoGlobalHook(window)",
+            "window.$RefreshReg$ = () => {}",
+            "window.$RefreshSig$ = () => (type) => type",
+            "window.__vite_plugin_react_preamble_installed__ = true",
+          ].join("\n");
+        },
       },
     },
     {
       name: "react-router:hmr-runtime",
       enforce: "pre",
-      resolveId(id) {
-        if (id === virtualHmrRuntime.id) return virtualHmrRuntime.resolvedId;
+      resolveId: {
+        filter: { id: /^virtual:react-router\/hmr-runtime$/ },
+        handler(id) {
+          if (id === virtualHmrRuntime.id) return virtualHmrRuntime.resolvedId;
+        },
       },
-      async load(id) {
-        if (id !== virtualHmrRuntime.resolvedId) return;
+      load: {
+        filter: { id: /^\0virtual:react-router\/hmr-runtime$/ },
+        async handler(id) {
+          if (id !== virtualHmrRuntime.resolvedId) return;
 
-        let reactRefreshDir = path.dirname(
-          nodeRequire.resolve("react-refresh/package.json"),
-        );
-        let reactRefreshRuntimePath = path.join(
-          reactRefreshDir,
-          "cjs/react-refresh-runtime.development.js",
-        );
+          let reactRefreshDir = path.dirname(
+            nodeRequire.resolve("react-refresh/package.json"),
+          );
+          let reactRefreshRuntimePath = path.join(
+            reactRefreshDir,
+            "cjs/react-refresh-runtime.development.js",
+          );
 
-        return [
-          "const exports = {}",
-          await readFile(reactRefreshRuntimePath, "utf8"),
-          await readFile(
-            nodeRequire.resolve("./static/refresh-utils.mjs"),
-            "utf8",
-          ),
-          "export default exports",
-        ].join("\n");
+          return [
+            "const exports = {}",
+            await readFile(reactRefreshRuntimePath, "utf8"),
+            await readFile(
+              nodeRequire.resolve("./static/refresh-utils.mjs"),
+              "utf8",
+            ),
+            "export default exports",
+          ].join("\n");
+        },
       },
     },
     {
       name: "react-router:react-refresh-babel",
-      async transform(code, id, options) {
-        if (viteCommand !== "serve") return;
-        if (id.includes("/node_modules/")) return;
-
-        let [filepath] = id.split("?");
-        let extensionsRE = /\.(jsx?|tsx?|mdx?)$/;
-        if (!extensionsRE.test(filepath)) return;
-
-        let devRuntime = "react/jsx-dev-runtime";
-        let ssr = options?.ssr === true;
-        let isJSX = filepath.endsWith("x");
-        let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
-        if (!useFastRefresh) return;
-
-        if (isRouteVirtualModule(id)) {
-          return { code: addRefreshWrapper(ctx.reactRouterConfig, code, id) };
-        }
-
-        let result = await babel.transformAsync(code, {
-          babelrc: false,
-          configFile: false,
-          filename: id,
-          sourceFileName: filepath,
-          parserOpts: {
-            sourceType: "module",
-            allowAwaitOutsideFunction: true,
+      apply: "serve",
+      applyToEnvironment(environment) {
+        return environment.config.consumer === "client";
+      },
+      transform: {
+        filter: {
+          id: {
+            include: /\.(jsx?|tsx?|mdx?)(\?.*)?$/,
+            exclude: /\/node_modules\//,
           },
-          plugins: [
-            [
-              nodeRequire.resolve("react-refresh/babel"),
-              { skipEnvCheck: true },
-            ],
-          ],
-          sourceMaps: true,
-        });
-        if (result === null) return;
+        },
+        async handler(code, id, options) {
+          if (viteCommand !== "serve") return;
+          if (id.includes("/node_modules/")) return;
 
-        code = result.code!;
-        let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
-        if (refreshContentRE.test(code)) {
-          code = addRefreshWrapper(ctx.reactRouterConfig, code, id);
-        }
-        return { code, map: result.map };
+          let [filepath] = id.split("?");
+          let extensionsRE = /\.(jsx?|tsx?|mdx?)$/;
+          if (!extensionsRE.test(filepath)) return;
+
+          let devRuntime = "react/jsx-dev-runtime";
+          let ssr = options?.ssr === true;
+          let isJSX = filepath.endsWith("x");
+          let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
+          if (!useFastRefresh) return;
+
+          if (isRouteVirtualModule(id)) {
+            return { code: addRefreshWrapper(ctx.reactRouterConfig, code, id) };
+          }
+
+          let result = await babel.transformAsync(code, {
+            babelrc: false,
+            configFile: false,
+            filename: id,
+            sourceFileName: filepath,
+            parserOpts: {
+              sourceType: "module",
+              allowAwaitOutsideFunction: true,
+            },
+            plugins: [
+              [
+                nodeRequire.resolve("react-refresh/babel"),
+                { skipEnvCheck: true },
+              ],
+            ],
+            sourceMaps: true,
+          });
+          if (result === null) return;
+
+          code = result.code!;
+          let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
+          if (refreshContentRE.test(code)) {
+            code = addRefreshWrapper(ctx.reactRouterConfig, code, id);
+          }
+          return { code, map: result.map };
+        },
       },
     },
     {
@@ -2827,6 +2913,11 @@ if (import.meta.hot && !inWebWorker) {
   });
 }`;
 
+const routesByFile = new WeakMap<
+  ResolvedReactRouterConfig,
+  Map<string, RouteManifestEntry>
+>();
+
 function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
   file: string,
@@ -2835,10 +2926,16 @@ function getRoute(
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file),
   );
-  let route = Object.values(pluginConfig.routes).find(
-    (r) => vite.normalizePath(r.file) === routePath,
-  );
-  return route;
+  let routes = routesByFile.get(pluginConfig);
+  if (!routes) {
+    routes = new Map();
+    for (let route of Object.values(pluginConfig.routes)) {
+      let file = vite.normalizePath(route.file);
+      if (!routes.has(file)) routes.set(file, route);
+    }
+    routesByFile.set(pluginConfig, routes);
+  }
+  return routes.get(routePath);
 }
 
 function isRoute(
@@ -2867,7 +2964,7 @@ async function getRouteMetadata(
     cache,
     ctx,
     routeFile,
-    { routeFile, readRouteFile, viteChildCompiler },
+    { routeFile, readRouteFile, viteChildCompiler, sourceExports },
   );
 
   let moduleUrl = combineURLs(
@@ -3245,6 +3342,7 @@ type ResolveRouteFileCodeInput =
       routeFile: string;
       readRouteFile?: () => string | Promise<string>;
       viteChildCompiler: Vite.ViteDevServer | null;
+      sourceExports?: string[];
     };
 const resolveRouteFileCode = async (
   ctx: ReactRouterPluginContext,
@@ -3295,6 +3393,16 @@ async function detectRouteChunksIfEnabled(
   // the initial page load. Instead of firing off multiple requests to resolve
   // the root route code, we want it to be downloaded in a single request.
   if (isRootRouteModuleId(ctx, id)) {
+    return noRouteChunks();
+  }
+
+  if (
+    typeof input !== "string" &&
+    input.sourceExports &&
+    !routeChunkExportNames.some((exportName) =>
+      input.sourceExports!.includes(exportName),
+    )
+  ) {
     return noRouteChunks();
   }
 
