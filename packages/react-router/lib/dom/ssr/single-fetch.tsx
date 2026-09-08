@@ -654,14 +654,14 @@ async function fetchAndDecodeViaTurboStream(
       }
     }
     return { status: res.status, data };
-  } catch {
+  } catch (cause) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
     // content type here, or even X-Remix-Response but then folks can't
     // statically deploy their prerendered .data files to a CDN unless they can
     // tell that CDN to add special headers to those certain files - which is a
     // bit restrictive.
-    throw new Error("Unable to decode turbo-stream response");
+    throw new Error("Unable to decode turbo-stream response", { cause });
   }
 }
 

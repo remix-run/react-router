@@ -76,7 +76,10 @@ test.describe("ErrorBoundary", () => {
             let error = useRouteError();
             return isRouteErrorResponse(error) ?
               <p id="parent-error-response">{error.status + ' ' + error.data}</p> :
-              <p id="parent-error">{error.message}</p>;
+              <>
+                <p id="parent-error">{error.message}</p>
+                <p id="parent-error-cause">{error.cause?.name ?? "No cause"}</p>
+              </>;
           }
         `,
 
@@ -180,6 +183,24 @@ test.describe("ErrorBoundary", () => {
         "#parent-error-response",
         "500 CDN Error!",
       );
+    });
+
+    test("Turbo-stream decode errors preserve their cause", async ({
+      page,
+    }) => {
+      await page.route(/\/parent\/child-with-boundary\.data$/, (route) => {
+        route.fulfill({ status: 200, body: "Invalid turbo-stream response" });
+      });
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/parent");
+      await app.clickLink("/parent/child-with-boundary");
+      await waitForAndAssert(
+        page,
+        app,
+        "#parent-error",
+        "Unable to decode turbo-stream response",
+      );
+      await waitForAndAssert(page, app, "#parent-error-cause", "SyntaxError");
     });
   });
 
