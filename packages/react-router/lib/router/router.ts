@@ -862,13 +862,16 @@ interface HandleLoadersResult extends ShortCircuitable {
 interface FetchLoadMatch {
   routeId: string;
   path: string;
+  isDiscovering: boolean;
 }
 
 /**
  * Identified fetcher.load() calls that need to be revalidated
  */
-interface RevalidatingFetcher extends FetchLoadMatch {
+interface RevalidatingFetcher {
   key: string;
+  routeId: string;
+  path: string;
   match: DataRouteMatch | null;
   matches: DataStrategyMatch[] | null;
   request: Request | null;
@@ -2412,7 +2415,6 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
-      init.patchRoutesOnNavigation != null,
       dataRoutes.branches,
       pendingActionResult,
       callSiteDefaultShouldRevalidate,
@@ -2694,14 +2696,17 @@ export function createRouter(init: RouterInit): Router {
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
-    fetchLoadMatches.set(key, { routeId, path });
-    await handleFetcherLoader(
-      key,
+    let loadMatch: FetchLoadMatch = {
       routeId,
       path,
+      isDiscovering: fogOfWar.active,
+    };
+    fetchLoadMatches.set(key, loadMatch);
+    await handleFetcherLoader(
+      key,
+      loadMatch,
       matches,
       scopedContext,
-      fogOfWar.active,
       flushSync,
       preventScrollReset,
       submission,
@@ -2899,7 +2904,6 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
-      init.patchRoutesOnNavigation != null,
       dataRoutes.branches,
       [match.route.id, actionResult],
       callSiteDefaultShouldRevalidate,
@@ -3072,15 +3076,14 @@ export function createRouter(init: RouterInit): Router {
   // Call the matched loader for fetcher.load(), handling redirects, errors, etc.
   async function handleFetcherLoader(
     key: string,
-    routeId: string,
-    path: string,
+    loadMatch: FetchLoadMatch,
     matches: DataRouteMatch[],
     scopedContext: RouterContextProvider,
-    isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
     submission?: Submission,
   ) {
+    let { routeId, path } = loadMatch;
     let existingFetcher = state.fetchers.get(key);
     updateFetcherState(
       key,
@@ -3098,7 +3101,7 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal,
     );
 
-    if (isFogOfWar) {
+    if (loadMatch.isDiscovering) {
       let discoverResult = await discoverRoutes(
         matches,
         new URL(fetchRequest.url).pathname,
@@ -3121,6 +3124,8 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         matches = discoverResult.matches;
+        // Update this load's record, not a newer load that may share its key.
+        loadMatch.isDiscovering = false;
       }
     }
 
@@ -5347,7 +5352,6 @@ function getMatchesToLoad(
   fetchRedirectIds: Set<string>,
   routesToUse: DataRouteObject[],
   basename: string | undefined,
-  hasPatchRoutesOnNavigation: boolean,
   branches: RouteBranch<DataRouteObject>[] | undefined,
   pendingActionResult?: PendingActionResult,
   callSiteDefaultShouldRevalidate?: boolean,
@@ -5495,10 +5499,12 @@ function getMatchesToLoad(
     // Don't revalidate:
     //  - on initial hydration (shouldn't be any fetchers then anyway)
     //  - if fetcher won't be present in the subsequent render (was unmounted but persisted)
+    //  - during route discovery, when re-matching could target a fallback splat
     if (
       initialHydration ||
       !matches.some((m) => m.route.id === f.routeId) ||
-      fetchersQueuedForDeletion.has(key)
+      fetchersQueuedForDeletion.has(key) ||
+      f.isDiscovering
     ) {
       return;
     }
@@ -5519,13 +5525,6 @@ function getMatchesToLoad(
     // currently only a use-case for Remix HMR where the route tree can change
     // at runtime and remove a route previously loaded via a fetcher
     if (!fetcherMatches) {
-      // If this fetcher is still in it's initial loading state, then this is
-      // most likely not a 404 and the fetcher is still in the middle of lazy
-      // route discovery so we can just skip revalidation and let it finish
-      // it's initial load
-      if (hasPatchRoutesOnNavigation && isMidInitialLoad) {
-        return;
-      }
       revalidatingFetchers.push({
         key,
         routeId: f.routeId,
@@ -5535,21 +5534,6 @@ function getMatchesToLoad(
         request: null,
         controller: null,
       });
-      return;
-    }
-
-    // If the fetcher is still mid initial load and the only match we have is
-    // ambiguous (dynamic param or splat), it may only be matching because the
-    // real route hasn't been discovered/patched into the tree yet (see
-    // checkFogOfWar which uses the same heuristic).  Revalidating now would
-    // target the wrong route (e.g. `_routes=routes/$` in framework mode,
-    // producing SingleFetchNoResultError) - skip and let the in-flight
-    // initial load finish; it will re-match after discovery completes.
-    if (
-      hasPatchRoutesOnNavigation &&
-      isMidInitialLoad &&
-      Object.keys(fetcherMatches[0].params).length > 0
-    ) {
       return;
     }
 
