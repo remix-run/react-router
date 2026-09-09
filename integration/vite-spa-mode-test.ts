@@ -10,11 +10,39 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { createProject, build, reactRouterConfig } from "./helpers/vite.js";
+import {
+  createProject,
+  build,
+  reactRouterConfig,
+  viteBuild,
+} from "./helpers/vite.js";
 
 test.describe("SPA Mode", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
+
+  test("direct vite build exits after SPA prerendering", async () => {
+    let cwd = await createProject(
+      {
+        "react-router.config.ts": reactRouterConfig({ ssr: false }),
+      },
+      "vite-8-template",
+    );
+    let result = viteBuild({ cwd });
+    let output =
+      (result.stdout?.toString("utf8") ?? "") +
+      (result.stderr?.toString("utf8") ?? "");
+
+    if (
+      (result.error as NodeJS.ErrnoException | null | undefined)?.code ===
+      "ETIMEDOUT"
+    ) {
+      throw new Error(`VITE_BUILD_DID_NOT_EXIT\n${output}`);
+    }
+
+    expect(result.error, output).toBeFalsy();
+    expect(result.status, output).toBe(0);
+  });
 
   [true, false].forEach((splitRouteModules) => {
     test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
