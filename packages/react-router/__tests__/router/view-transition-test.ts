@@ -1,6 +1,8 @@
-import { IDLE_NAVIGATION } from "../../lib/router/router";
+import { createBrowserHistory } from "../../lib/router/history";
+import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
+import getWindow from "../utils/getWindow";
 import { cleanup, setup } from "./utils/data-router-setup";
-import { createFormData } from "./utils/utils";
+import { createDeferred, createFormData, tick } from "./utils/utils";
 
 describe("view transitions", () => {
   // Detect any failures inside the router navigate code
@@ -171,5 +173,104 @@ describe("view transitions", () => {
 
     unsubscribe();
     t.router.dispose();
+  });
+
+  it("does not enable view transitions for a revalidation after a POP navigation", async () => {
+    let t = setup({
+      routes: [
+        { id: "root", path: "/", loader: true },
+        { id: "a", path: "/a", loader: true },
+      ],
+      hydrationData: { loaderData: { root: "ROOT" } },
+    });
+    let spy = jest.fn();
+    let unsubscribe = t.router.subscribe(spy);
+
+    // PUSH / -> /a - w/ transition
+    let A = await t.navigate("/a", { viewTransition: true });
+    await A.loaders.a.resolve("A");
+    expect(spy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        navigation: IDLE_NAVIGATION,
+        location: expect.objectContaining({ pathname: "/a" }),
+      }),
+      expect.objectContaining({
+        viewTransitionOpts: {
+          currentLocation: expect.objectContaining({ pathname: "/" }),
+          nextLocation: expect.objectContaining({ pathname: "/a" }),
+        },
+      }),
+    );
+
+    // POP /a -> / - w/ transition (cached from above)
+    let B = await t.navigate(-1);
+    await B.loaders.root.resolve("ROOT*");
+    expect(spy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        navigation: IDLE_NAVIGATION,
+        location: expect.objectContaining({ pathname: "/" }),
+      }),
+      expect.objectContaining({
+        viewTransitionOpts: {
+          currentLocation: expect.objectContaining({ pathname: "/" }),
+          nextLocation: expect.objectContaining({ pathname: "/a" }),
+        },
+      }),
+    );
+
+    // Revalidate at / - the router is still in a POP historyAction but a
+    // revalidation does not change location, so no transition
+    let R = await t.revalidate();
+    await R.loaders.root.resolve("ROOT**");
+    expect(spy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        location: expect.objectContaining({ pathname: "/" }),
+        loaderData: { root: "ROOT**" },
+      }),
+      expect.objectContaining({ viewTransitionOpts: undefined }),
+    );
+
+    unsubscribe();
+    t.router.dispose();
+  });
+
+  it("does not enable view transitions for the initial hydration", async () => {
+    // A prior session recorded a transition away from /a, so /a is a known
+    // transition source when the page is reloaded
+    let window = getWindow("/a");
+    window.sessionStorage.setItem(
+      "remix-router-transitions",
+      JSON.stringify({ "/a": ["/b"] }),
+    );
+    let dfd = createDeferred();
+    let router = createRouter({
+      history: createBrowserHistory({ window }),
+      routes: [
+        { id: "a", path: "/a", loader: () => dfd.promise },
+        { path: "/b" },
+      ],
+      window,
+    });
+    let spy = jest.fn();
+    let unsubscribe = router.subscribe(spy);
+    router.initialize();
+    expect(router.state.initialized).toBe(false);
+
+    await dfd.resolve("A");
+    await tick();
+    expect(router.state.initialized).toBe(true);
+    expect(spy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        location: expect.objectContaining({ pathname: "/a" }),
+      }),
+      expect.objectContaining({ viewTransitionOpts: undefined }),
+    );
+
+    unsubscribe();
+    router.dispose();
   });
 });
