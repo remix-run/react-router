@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
-    "typegen": "wrangler types && react-router typegen",
+    "typegen": "react-router typegen",
     "typecheck": "pnpm typegen && tsc"
   },
   "dependencies": {

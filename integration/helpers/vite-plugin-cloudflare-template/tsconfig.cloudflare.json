@@ -5,6 +5,7 @@
     "app/**/*",
     "app/**/.server/**/*",
     "app/**/.client/**/*",
+    "cloudflare.config.ts",
     "workers/**/*",
     "worker-configuration.d.ts"
   ],
