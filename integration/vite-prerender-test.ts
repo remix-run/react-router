@@ -955,6 +955,27 @@ test.describe(`Prerendering`, () => {
     });
   });
 
+  test("keeps the server build directory when ssr is enabled", async () => {
+    let cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        prerender: ["/"],
+      }),
+      "app/routes/_index.tsx": String.raw`
+        export default function Component() {
+          return "index";
+        }
+      `,
+    });
+    let result = build({ cwd });
+    expect(result.status).toBe(0);
+    expect(result.stdout.toString("utf8")).not.toMatch(
+      /Removing the server build/,
+    );
+    expect(
+      fs.existsSync(path.join(cwd, "build", "server", "index.js")),
+    ).toBe(true);
+  });
+
   test.describe("ssr: false", () => {
     function captureRequests(page: Page) {
       let requests: string[] = [];
@@ -975,6 +996,29 @@ test.describe(`Prerendering`, () => {
         requests.pop();
       }
     }
+
+    test("removes the server build directory from the build output", async () => {
+      let cwd = await createProject({
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: ["/"],
+        }),
+        "app/routes/_index.tsx": String.raw`
+          export default function Component() {
+            return "index";
+          }
+        `,
+      });
+      let result = build({ cwd });
+      expect(result.status).toBe(0);
+      expect(result.stdout.toString("utf8")).toMatch(
+        /Removing the server build in .* due to ssr:false/,
+      );
+      expect(fs.existsSync(path.join(cwd, "build", "server"))).toBe(false);
+      expect(
+        fs.existsSync(path.join(cwd, "build", "client", "index.html")),
+      ).toBe(true);
+    });
 
     test("Errors on headers/action functions in any route", async () => {
       let cwd = await createProject({
