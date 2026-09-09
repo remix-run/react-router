@@ -470,12 +470,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
-      buildApp: {
-        order: "post",
-        async handler() {
-          await configLoader.close();
-        },
-      },
     },
     (() => {
       let logged = false;
@@ -870,6 +864,17 @@ export default assetsManifest.clientVersion;
         return files;
       },
     }),
+    {
+      name: "react-router/rsc/build-end",
+      enforce: "post",
+      sharedDuringBuild: true,
+      buildApp: {
+        order: "post",
+        async handler() {
+          await configLoader.close();
+        },
+      },
+    },
   ];
 }
 
