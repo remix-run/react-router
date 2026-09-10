@@ -15,7 +15,7 @@ import {
   decodeRedirectErrorDigest,
   decodeRouteErrorResponseDigest,
 } from "../errors";
-import { escapeHtml } from "../dom/ssr/markup";
+import { escapeAttribute } from "../dom/ssr/markup";
 
 const defaultManifestPath = "/__manifest";
 
@@ -280,7 +280,7 @@ export async function routeRSCServerRequest({
 
           controller.enqueue(
             new TextEncoder().encode(
-              `<meta http-equiv="refresh" content="0;url=${escapeHtml(renderRedirect.location)}"/>`,
+              `<meta http-equiv="refresh" content="0;url=${escapeAttribute(renderRedirect.location)}"/>`,
             ),
           );
         }
@@ -425,7 +425,7 @@ export async function routeRSCServerRequest({
 
             controller.enqueue(
               new TextEncoder().encode(
-                `<meta http-equiv="refresh" content="0;url=${escapeHtml(retryRedirect.location)}"/>`,
+                `<meta http-equiv="refresh" content="0;url=${escapeAttribute(retryRedirect.location)}"/>`,
               ),
             );
           }
