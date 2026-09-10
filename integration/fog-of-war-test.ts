@@ -1461,6 +1461,105 @@ test.describe("Fog of War", () => {
     expect(wrongManifestRequests).toEqual([]);
   });
 
+  for (let operation of ["navigation", "fetcher"] as const) {
+    test(`manifest version mismatch fails ${operation} instead of loading a stale splat after a previous reload`, async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "app/root.tsx": js`
+            import { Link, Outlet, Scripts, useFetcher, useNavigation, useRouteError } from "react-router";
+
+            export function Layout({ children }) {
+              let navigation = useNavigation();
+              return (
+                <html lang="en">
+                  <body>
+                    <p data-navigation-state>{navigation.state}</p>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <Link to="/other" discover="none">Navigate</Link>
+                  <button onClick={() => fetcher.load("/other")}>Fetch</button>
+                  <Outlet />
+                </>
+              );
+            }
+
+            export function ErrorBoundary() {
+              let error = useRouteError();
+              return <p data-error>{error.message}</p>;
+            }
+          `,
+          "app/routes/$.tsx": js`
+            export function loader() { return "SPLAT"; }
+            export default function Splat() { return <h1>Splat</h1>; }
+          `,
+          "app/routes/other.tsx": js`
+            export function loader() { return "OTHER"; }
+            export default function Other() { return <h1>Other</h1>; }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      try {
+        let documents: string[] = [];
+        let dataRequests: string[] = [];
+        page.on("request", (request) => {
+          if (request.resourceType() === "document") {
+            documents.push(request.url());
+          }
+          if (new URL(request.url()).pathname.endsWith(".data")) {
+            dataRequests.push(request.url());
+          }
+        });
+        await page.route(/\/__manifest\?/, (route) =>
+          route.fulfill({
+            status: 204,
+            headers: { "X-Remix-Reload-Document": "true" },
+          }),
+        );
+
+        // Start on the splat so it is present in the partial client manifest.
+        await app.goto("/unknown");
+        await expect(
+          page.getByRole("heading", { name: "Splat" }),
+        ).toBeVisible();
+        await page.evaluate(() => {
+          sessionStorage.setItem(
+            "react-router-manifest-version",
+            (window as any).__reactRouterManifest.version,
+          );
+        });
+        if (operation === "navigation") {
+          await page.getByRole("link", { name: "Navigate" }).click();
+        } else {
+          await page.getByRole("button", { name: "Fetch" }).click();
+        }
+
+        await expect(page.locator("[data-error]")).toHaveText(
+          "Unable to discover routes due to manifest version mismatch.",
+        );
+        await expect(page.locator("[data-navigation-state]")).toHaveText(
+          "idle",
+        );
+        expect(documents).toHaveLength(1);
+        expect(dataRequests).toEqual([]);
+      } finally {
+        await appFixture.close();
+      }
+    });
+  }
+
   test("manifest version mismatch reload should preserve query parameters and hash", async ({
     page,
   }) => {
