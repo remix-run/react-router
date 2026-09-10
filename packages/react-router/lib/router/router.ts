@@ -77,9 +77,9 @@ import {
   normalizeProtocolRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
-import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
+import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,6 +447,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
+  /** Enables route-pattern matching. */
   unstable_routePatternMatching?: boolean;
 }
 

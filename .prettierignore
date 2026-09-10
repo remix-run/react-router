@@ -17,5 +17,6 @@ build.utils.d.ts
 .tmp/
 .react-router/
 packages/**/dist/
+packages/react-router/lib/router/route-pattern/
 tutorial/dist/
 public/
