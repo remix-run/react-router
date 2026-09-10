@@ -284,6 +284,10 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       let initialFetch = router.fetch("fetcher", "root", "/known/123");
       await tick();
       expect(initialSignal?.aborted).toBe(false);
+      expect(router.state.fetchers.get("fetcher")).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
 
       // Cancel the known loader, but keep the action pending so its revalidation
       // can race with discovery for a subsequent fetcher load.
@@ -293,6 +297,10 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       });
       await tick();
       expect(initialSignal?.aborted).toBe(true);
+      expect(router.state.fetchers.get("fetcher")).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
 
       let nextKey = reuseKey ? "fetcher" : "another-fetcher";
       let nextFetch = router.fetch(nextKey, "root", "/undiscovered");
@@ -302,6 +310,10 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
 
       await actionDfd.resolve("ACTION");
       await tick();
+      expect(router.state.fetchers.get(nextKey)).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
       let splatCallsDuringDiscovery = splatLoader.mock.calls.length;
 
       // Settle all requests before asserting the result of the race.
