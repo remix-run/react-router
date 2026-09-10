@@ -13,7 +13,7 @@
  */
 import { createMemoryHistory } from "../../lib/router/history";
 import { type Router, createRouter } from "../../lib/router/router";
-import { type AgnosticDataRouteObject } from "../../lib/router/utils";
+import { type DataRouteObject } from "../../lib/router/utils";
 import { getFetcherData } from "./utils/data-router-setup";
 import { createDeferred, tick } from "./utils/utils";
 
@@ -27,7 +27,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
   });
 
   it("does not revalidate a mid-initial-load fetcher against the splat route during discovery", async () => {
-    const manifestDfd = createDeferred<AgnosticDataRouteObject[]>();
+    const manifestDfd = createDeferred<DataRouteObject[]>();
     const apiLoaderDfd = createDeferred();
     const splatLoaderCalls: string[] = [];
     const apiLoaderCalls: string[] = [];
@@ -96,7 +96,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
           return apiLoaderDfd.promise;
         },
       },
-    ]);
+    ] satisfies DataRouteObject[]);
     await tick();
     apiLoaderDfd.resolve("API");
     await tick();
@@ -107,7 +107,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
   });
 
   it("does not revalidate a fetcher during discovery without a splat route", async () => {
-    const manifestDfd = createDeferred<AgnosticDataRouteObject[]>();
+    const manifestDfd = createDeferred<DataRouteObject[]>();
     const apiLoaderDfd = createDeferred();
     const apiLoaderCalls: string[] = [];
 
@@ -151,7 +151,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
           return apiLoaderDfd.promise;
         },
       },
-    ]);
+    ] satisfies DataRouteObject[]);
     await tick();
     apiLoaderDfd.resolve("API");
     await tick();
@@ -325,6 +325,98 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       expect(fetcherData.get(nextKey)).toBe("NEW");
       expect(router.getFetcher(nextKey).state).toBe("idle");
       expect(router.state.errors).toBeNull();
+    },
+  );
+
+  it.each(["revalidate", "navigation submission", "fetcher submission"])(
+    "retains data when a reused fetcher is discovering routes during %s",
+    async (interruption) => {
+      let discoveryDfd = createDeferred();
+      let loaderDfd = createDeferred();
+      let revalidationDfd = createDeferred();
+      let initialLoader = jest.fn(() => "INITIAL");
+      let apiLoader = jest
+        .fn()
+        .mockImplementationOnce(() => loaderDfd.promise)
+        .mockImplementationOnce(() => revalidationDfd.promise);
+      let splatLoader = jest.fn(() => "SPLAT");
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          { id: "root", path: "/", action: () => null },
+          { id: "known", path: "/known", loader: initialLoader },
+          { id: "splat", path: "*", loader: splatLoader },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          if (path === "/api/foo") {
+            await discoveryDfd.promise;
+            patch(null, [{ id: "api", path: "/api/:id", loader: apiLoader }]);
+          }
+        },
+      }).initialize();
+
+      let fetcherData = getFetcherData(router);
+      let key = "fetcher";
+      await router.fetch(key, "root", "/known");
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(fetcherData.get(key)).toBe("INITIAL");
+
+      // Reuse a settled fetcher while its next target is still undiscovered.
+      let nextFetch = router.fetch(key, "root", "/api/foo");
+      await tick();
+      expect(router.getFetcher(key).state).toBe("loading");
+      expect(fetcherData.get(key)).toBe("INITIAL");
+
+      if (interruption === "revalidate") {
+        await router.revalidate();
+      } else if (interruption === "navigation submission") {
+        await router.navigate("/", {
+          formMethod: "post",
+          formData: new FormData(),
+        });
+      } else {
+        await router.fetch("action-fetcher", "root", "/", {
+          formMethod: "post",
+          formData: new FormData(),
+        });
+      }
+
+      expect(splatLoader).not.toHaveBeenCalled();
+      expect(apiLoader).not.toHaveBeenCalled();
+      expect(router.getFetcher(key).state).toBe("loading");
+      expect(fetcherData.get(key)).toBe("INITIAL");
+      expect(router.state.errors).toBeNull();
+
+      // Keep the previous data until the newly discovered loader completes.
+      await discoveryDfd.resolve();
+      await tick();
+      expect(apiLoader).toHaveBeenCalledTimes(1);
+      expect(router.getFetcher(key).state).toBe("loading");
+      expect(fetcherData.get(key)).toBe("INITIAL");
+
+      await loaderDfd.resolve("NEW");
+      await nextFetch;
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(fetcherData.get(key)).toBe("NEW");
+
+      // Discovery must not prevent later revalidation of this dynamic route.
+      let revalidation = router.revalidate();
+      await tick();
+      expect(apiLoader).toHaveBeenCalledTimes(2);
+      expect(router.state.revalidation).toBe("loading");
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(fetcherData.get(key)).toBe("NEW");
+
+      await revalidationDfd.resolve("REVALIDATED");
+      await revalidation;
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(fetcherData.get(key)).toBe("REVALIDATED");
+      expect(initialLoader).toHaveBeenCalledTimes(1);
+      expect(splatLoader).not.toHaveBeenCalled();
+      expect(router.state.errors).toBeNull();
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.revalidation).toBe("idle");
     },
   );
 
