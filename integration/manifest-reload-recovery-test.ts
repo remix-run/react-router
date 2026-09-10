@@ -165,6 +165,7 @@ for (let rsc of [false, true]) {
       // enabled for a real history restoration, including its frozen JS state.
       test("settles parked discovery after restoring the document", async ({
         browserName,
+        channel,
         reactRouterServe,
         vitePreview,
       }) => {
@@ -175,7 +176,7 @@ for (let rsc of [false, true]) {
           : await reactRouterServe(files);
         let baseUrl = `http://localhost:${port}`;
         let browser = await chromium.launch({
-          channel: "chromium",
+          channel: channel ?? "chromium",
           ignoreDefaultArgs: ["--disable-back-forward-cache"],
         });
         let page = await browser.newPage();
