@@ -31,7 +31,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         uses: actions/setup-node@v6

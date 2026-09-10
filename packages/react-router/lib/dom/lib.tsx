@@ -76,22 +76,23 @@ import {
 import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
-  DataRouterContext,
-  DataRouterStateContext,
-  FetchersContext,
+  DataRouterNavigationContext,
   NavigationContext,
   RouteContext,
   ViewTransitionContext,
 } from "../context";
 import {
   useBlocker,
+  useCurrentRouteId,
+  useDataRouterContext,
+  useDataRouterFetchers,
+  useDataRouterState,
   useHref,
   useLocation,
   useMatches,
   useNavigate,
   useNavigation,
   useResolvedPath,
-  useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
 import type { ClientInstrumentation } from "../router/instrumentation";
@@ -1633,10 +1634,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   ) {
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
-    let routerState = React.useContext(DataRouterStateContext);
+    let routerNavigation = React.useContext(DataRouterNavigationContext);
     let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
-      routerState != null &&
+      routerNavigation != null &&
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
@@ -1646,10 +1647,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       ? navigator.encodeLocation(path).pathname
       : path.pathname;
     let locationPathname = location.pathname;
-    let nextLocationPathname =
-      routerState && routerState.navigation && routerState.navigation.location
-        ? routerState.navigation.location.pathname
-        : null;
+    let nextLocationPathname = routerNavigation?.navigation.location
+      ? routerNavigation.navigation.location.pathname
+      : null;
 
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
@@ -2140,40 +2140,6 @@ ScrollRestoration.displayName = "ScrollRestoration";
 //#region Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
-enum DataRouterHook {
-  UseScrollRestoration = "useScrollRestoration",
-  UseSubmit = "useSubmit",
-  UseSubmitFetcher = "useSubmitFetcher",
-  UseFetcher = "useFetcher",
-  useViewTransitionState = "useViewTransitionState",
-}
-
-enum DataRouterStateHook {
-  UseFetcher = "useFetcher",
-  UseFetchers = "useFetchers",
-  UseScrollRestoration = "useScrollRestoration",
-}
-
-// Internal hooks
-
-function getDataRouterConsoleError(
-  hookName: DataRouterHook | DataRouterStateHook,
-) {
-  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
-}
-
-function useDataRouterContext(hookName: DataRouterHook) {
-  let ctx = React.useContext(DataRouterContext);
-  invariant(ctx, getDataRouterConsoleError(hookName));
-  return ctx;
-}
-
-function useDataRouterState(hookName: DataRouterStateHook) {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, getDataRouterConsoleError(hookName));
-  return state;
-}
-
 // External hooks
 
 /**
@@ -2584,9 +2550,9 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  * @returns A function that can be called to submit a {@link Form} imperatively.
  */
 export function useSubmit(): SubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
+  let { router } = useDataRouterContext("useSubmit");
   let { basename } = React.useContext(NavigationContext);
-  let currentRouteId = useRouteId();
+  let currentRouteId = useCurrentRouteId("useSubmit");
 
   let routerFetch = router.fetch;
   let routerNavigate = router.navigate;
@@ -2603,6 +2569,7 @@ export function useSubmit(): SubmitFunction {
         await routerFetch(key, currentRouteId, options.action || action, {
           defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
+          relative: options.relative,
           formData,
           body,
           formMethod: options.method || (method as HTMLFormMethod),
@@ -2613,6 +2580,7 @@ export function useSubmit(): SubmitFunction {
         await routerNavigate(options.action || action, {
           defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
+          relative: options.relative,
           formData,
           body,
           formMethod: options.method || (method as HTMLFormMethod),
@@ -2910,18 +2878,9 @@ export function useFetcher<T = any>({
 }: {
   key?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let state = useDataRouterState(DataRouterStateHook.UseFetcher);
-  let fetcherData = React.useContext(FetchersContext);
-  let route = React.useContext(RouteContext);
-  let routeId = route.matches[route.matches.length - 1]?.route.id;
-
-  invariant(fetcherData, `useFetcher must be used inside a FetchersContext`);
-  invariant(route, `useFetcher must be used inside a RouteContext`);
-  invariant(
-    routeId != null,
-    `useFetcher can only be used on routes that contain a unique "id"`,
-  );
+  let { router } = useDataRouterContext("useFetcher");
+  let fetchersContext = useDataRouterFetchers("useFetcher");
+  let routeId = useCurrentRouteId("useFetcher");
 
   // Fetcher key handling
   let defaultKey = React.useId();
@@ -2977,8 +2936,8 @@ export function useFetcher<T = any>({
   }, [fetcherKey]);
 
   // Exposed FetcherWithComponents
-  let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
-  let data = fetcherData.get(fetcherKey);
+  let fetcher = fetchersContext.fetchers.get(fetcherKey) || IDLE_FETCHER;
+  let data = fetchersContext.fetcherData.get(fetcherKey);
   let fetcherWithComponents = React.useMemo(
     () => ({
       Form: FetcherForm,
@@ -3017,14 +2976,14 @@ export function useFetcher<T = any>({
  * property.
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
-  let state = useDataRouterState(DataRouterStateHook.UseFetchers);
+  let { fetchers } = useDataRouterFetchers("useFetchers");
   return React.useMemo(
     () =>
-      Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+      Array.from(fetchers.entries()).map(([key, fetcher]) => ({
         ...fetcher,
         key,
       })),
-    [state.fetchers],
+    [fetchers],
   );
 }
 
@@ -3087,9 +3046,9 @@ export function useScrollRestoration({
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
 } = {}): void {
-  let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
+  let { router } = useDataRouterContext("useScrollRestoration");
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
-    DataRouterStateHook.UseScrollRestoration,
+    "useScrollRestoration",
   );
   let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
@@ -3103,6 +3062,15 @@ export function useScrollRestoration({
       window.history.scrollRestoration = "auto";
     };
   }, []);
+
+  // Re-enable manual scroll restoration on a bfcache restore
+  usePageShow(
+    React.useCallback((event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.history.scrollRestoration = "manual";
+      }
+    }, []),
+  );
 
   // Save positions on pagehide
   usePageHide(
@@ -3249,6 +3217,24 @@ function usePageHide(
   }, [callback, capture]);
 }
 
+/*
+ * Setup a callback to be fired on the window's `pageshow` event. The event's
+ * `persisted` flag indicates the document was restored from the bfcache.
+ */
+function usePageShow(
+  callback: (event: PageTransitionEvent) => any,
+  options?: { capture?: boolean },
+): void {
+  let { capture } = options || {};
+  React.useEffect(() => {
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("pageshow", callback, opts);
+    return () => {
+      window.removeEventListener("pageshow", callback, opts);
+    };
+  }, [callback, capture]);
+}
+
 /**
  * Wrapper around {@link useBlocker} to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm)
  * prompt to users instead of building a custom UI with {@link useBlocker}.
@@ -3360,9 +3346,7 @@ export function useViewTransitionState(
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 
-  let { basename } = useDataRouterContext(
-    DataRouterHook.useViewTransitionState,
-  );
+  let { basename } = useDataRouterContext("useViewTransitionState");
   let path = useResolvedPath(to, { relative });
   if (!vtContext.isTransitioning) {
     return false;

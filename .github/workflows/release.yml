@@ -87,7 +87,7 @@ jobs:
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         uses: actions/setup-node@v6
@@ -151,7 +151,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         uses: actions/setup-node@v6
@@ -184,7 +184,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Setup node
         uses: actions/setup-node@v6

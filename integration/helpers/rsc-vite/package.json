@@ -20,7 +20,7 @@
     "vite": "^7.0.0"
   },
   "dependencies": {
-    "@remix-run/node-fetch-server": "^0.13.3",
+    "@remix-run/node-fetch-server": "^0.14.1",
     "compression": "^1.8.1",
     "cross-env": "^10.1.0",
     "express": "^4.22.2",

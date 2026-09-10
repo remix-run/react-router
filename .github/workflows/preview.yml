@@ -56,7 +56,7 @@ jobs:
           ref: ${{ inputs.baseBranch }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -95,9 +95,12 @@ jobs:
       # pushes over remote branches in case of a branch name collision
       - name: Build/push branch (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
+        env:
+          INSTALLABLE_BRANCH: ${{ inputs.installableBranch }}
         run: |
-          node ./scripts/previews/branch.ts ${{ inputs.installableBranch }}
-          git push --set-upstream origin ${{ inputs.installableBranch }}
+          git check-ref-format --branch "$INSTALLABLE_BRANCH"
+          node ./scripts/previews/branch.ts "$INSTALLABLE_BRANCH"
+          git push --set-upstream origin "$INSTALLABLE_BRANCH"
           echo "💿 pushed installable branch: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
 
       # Cleanup PR preview/pr-{number} branches when the PR is closed
