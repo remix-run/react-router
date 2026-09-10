@@ -322,6 +322,13 @@ export type RouteDiscovery =
  * encoding an {@link unstable_RSCPayload} for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
  * enabled client router.
  *
+ * Treat every React Server Function as a public endpoint. Server Functions are
+ * not inherently associated with a route. Any route middleware that runs is
+ * selected from the URL used to call a Server Function, but the client controls
+ * both the Server Function identifier and the URL. Perform all access control
+ * checks within each Server Function, or use a route action for
+ * middleware-driven access control.
+ *
  * @example
  * import {
  *   createTemporaryReferenceSet,
