@@ -1,7 +1,5 @@
 /** @jest-environment node */
 
-import { tick } from "../../router/utils/utils";
-
 type FogOfWar = typeof import("../../../lib/dom/ssr/fog-of-war");
 
 const storageKey = "react-router-manifest-version";
@@ -24,6 +22,7 @@ describe("client version mismatch", () => {
     await jest.isolateModulesAsync(async () => {
       fogOfWar = await import("../../../lib/dom/ssr/fog-of-war");
     });
+    jest.useFakeTimers();
     stored = new Map();
     reload = jest.fn();
     windowEvents = new EventTarget();
@@ -57,6 +56,8 @@ describe("client version mismatch", () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
     jest.restoreAllMocks();
     for (let [key, descriptor] of [
       ["window", originalWindow],
@@ -78,7 +79,7 @@ describe("client version mismatch", () => {
     fogOfWar
       .handleClientVersionMismatch(true, "v1", "/second")
       .then(settled, settled);
-    await tick();
+    await jest.advanceTimersByTimeAsync(0);
 
     expect(reload.mock.calls).toEqual([["/first?query=1#hash"]]);
     expect(stored.get(storageKey)).toBe("v1");
@@ -105,7 +106,7 @@ describe("client version mismatch", () => {
     fogOfWar
       .handleClientVersionMismatch(true, "v1", "/target")
       .then(settled, settled);
-    await tick();
+    await jest.advanceTimersByTimeAsync(0);
     expect(reload.mock.calls).toEqual([["/target"]]);
     expect(settled).not.toHaveBeenCalled();
   });
@@ -130,7 +131,7 @@ describe("client version mismatch", () => {
     fogOfWar
       .handleClientVersionMismatch(true, "v1", null)
       .then(settled, settled);
-    await tick();
+    await jest.advanceTimersByTimeAsync(0);
 
     expect(stored.get(storageKey)).toBe("v1");
     expect(reload.mock.calls).toEqual([["/target"]]);
@@ -143,41 +144,115 @@ describe("client version mismatch", () => {
     fogOfWar
       .handleClientVersionMismatch(true, "v2", "/target")
       .then(settled, settled);
-    await tick();
+    await jest.advanceTimersByTimeAsync(0);
 
     expect(stored.get(storageKey)).toBe("v2");
     expect(reload.mock.calls).toEqual([["/target"]]);
     expect(settled).not.toHaveBeenCalled();
   });
 
-  it("resumes mismatch handling when the document is restored from BFCache", async () => {
-    fogOfWar.handleClientVersionMismatch(true, "v1", "/target");
+  it("rejects all waiting responses when a document reload does not complete", async () => {
+    let settled = jest.fn();
+    for (let [needsReload, path] of [
+      [true, "/target"],
+      [true, "/sibling"],
+      [false, "/successful-sibling"],
+      [true, null],
+    ] as const) {
+      fogOfWar
+        .handleClientVersionMismatch(needsReload, "v1", path)
+        .then(settled, settled);
+    }
+
+    await jest.advanceTimersByTimeAsync(4999);
+    expect(settled).not.toHaveBeenCalled();
+    expect(reload.mock.calls).toEqual([["/target"]]);
+
+    await jest.advanceTimersByTimeAsync(1);
+    expect(settled.mock.calls).toEqual([
+      [new Error(mismatchMessage)],
+      [new Error(mismatchMessage)],
+      [new Error(mismatchMessage)],
+      [new Error(mismatchMessage)],
+    ]);
+    expect(stored.get(storageKey)).toBe("v1");
+
+    // A cancelled reload must not keep subsequent discoveries pending or loop.
+    await expect(
+      fogOfWar.handleClientVersionMismatch(true, "v1", "/retry"),
+    ).rejects.toThrow(mismatchMessage);
+    expect(reload.mock.calls).toEqual([["/target"]]);
+
+    await expect(
+      fogOfWar.handleClientVersionMismatch(false, "v1", "/retry"),
+    ).resolves.toBe(false);
+    expect(stored.has(storageKey)).toBe(false);
+  });
+
+  it("clears the pending reload when assigning the document location throws", async () => {
+    reload.mockImplementation(() => {
+      throw new Error("Navigation failed");
+    });
+    await expect(
+      fogOfWar.handleClientVersionMismatch(true, "v1", "/target"),
+    ).rejects.toThrow(mismatchMessage);
+    expect(stored.get(storageKey)).toBe("v1");
+
+    await expect(
+      fogOfWar.handleClientVersionMismatch(false, "v1", "/other"),
+    ).resolves.toBe(false);
+    expect(stored.has(storageKey)).toBe(false);
+    // Cleanup must also prevent an unhandled rejection from the reload timer.
+    await jest.advanceTimersByTimeAsync(5000);
+  });
+
+  it("rejects waiting responses when the document is restored from BFCache", async () => {
+    let settled = jest.fn();
+    fogOfWar
+      .handleClientVersionMismatch(true, "v1", "/target")
+      .then(settled, settled);
+    fogOfWar
+      .handleClientVersionMismatch(true, "v1", "/other")
+      .then(settled, settled);
 
     // The initial pageshow must not clear an in-flight reload.
     windowEvents.dispatchEvent(
       Object.assign(new Event("pageshow"), { persisted: false }),
     );
-    let beforeRestore = jest.fn();
-    fogOfWar
-      .handleClientVersionMismatch(true, "v1", "/other")
-      .then(beforeRestore, beforeRestore);
-    await tick();
-    expect(beforeRestore).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(settled).not.toHaveBeenCalled();
 
     windowEvents.dispatchEvent(
       Object.assign(new Event("pageshow"), { persisted: true }),
     );
-    let afterRestore = jest.fn();
-    fogOfWar
-      .handleClientVersionMismatch(true, "v1", "/other")
-      .then(afterRestore, afterRestore);
-    await tick();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(settled.mock.calls).toEqual([
+      [new Error(mismatchMessage)],
+      [new Error(mismatchMessage)],
+    ]);
+    expect(stored.get(storageKey)).toBe("v1");
+    await expect(
+      fogOfWar.handleClientVersionMismatch(true, "v1", "/other"),
+    ).rejects.toThrow(mismatchMessage);
 
-    expect(afterRestore).toHaveBeenCalledWith(new Error(mismatchMessage));
-    expect(reload.mock.calls).toEqual([["/target"]]);
     await expect(
       fogOfWar.handleClientVersionMismatch(false, "v1", "/other"),
     ).resolves.toBe(false);
+
+    // The old timeout must not clear a newer reload after restoration.
+    let nextSettled = jest.fn();
+    fogOfWar
+      .handleClientVersionMismatch(true, "v2", "/next")
+      .then(nextSettled, nextSettled);
+    await jest.advanceTimersByTimeAsync(4000);
+    expect(nextSettled).not.toHaveBeenCalled();
+    fogOfWar
+      .handleClientVersionMismatch(false, "v2", "/next-sibling")
+      .then(nextSettled, nextSettled);
+    await jest.advanceTimersByTimeAsync(0);
+    expect(nextSettled).not.toHaveBeenCalled();
+    expect(stored.get(storageKey)).toBe("v2");
+    expect(reload.mock.calls).toEqual([["/target"], ["/next"]]);
   });
 
   it.each(["getItem", "setItem", "removeItem"] as const)(
@@ -197,7 +272,7 @@ describe("client version mismatch", () => {
       fogOfWar
         .handleClientVersionMismatch(true, "v1", "/other")
         .then(settled, settled);
-      await tick();
+      await jest.advanceTimersByTimeAsync(0);
 
       expect(reload.mock.calls).toEqual([["/target"]]);
       expect(settled).not.toHaveBeenCalled();

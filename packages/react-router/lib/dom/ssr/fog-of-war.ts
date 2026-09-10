@@ -233,6 +233,7 @@ export function getManifestPath(
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
+const MANIFEST_RELOAD_TIMEOUT = 5000;
 let pendingManifestReload: Promise<never> | undefined;
 
 export async function handleClientVersionMismatch(
@@ -292,23 +293,41 @@ export async function handleClientVersionMismatch(
 
   // Share the pending promise before starting navigation so concurrent requests
   // wait for the new document rather than triggering an ErrorBoundary flash.
-  pendingManifestReload = new Promise<never>(() => {
-    // check out of this hook cause the DJs never gonna re[s]olve this
+  let rejectReload: (error: Error) => void;
+  let reloadPromise = new Promise<never>((_, reject) => {
+    rejectReload = reject;
   });
-  // BFCache can restore this document and its module state after navigation.
-  // New requests must be able to retry version checks when the user comes back.
+  pendingManifestReload = reloadPromise;
+
+  let failReload = () => {
+    clearTimeout(timeout);
+    window.removeEventListener("pageshow", onPageShow);
+    pendingManifestReload = undefined;
+    // Preserve the stored version to prevent another reload loop. Reject rather
+    // than resume discovery against the stale route tree.
+    rejectReload(
+      new Error("Unable to discover routes due to manifest version mismatch."),
+    );
+  };
+  // A beforeunload prompt can cancel this navigation without notifying us. Give
+  // the reload time to finish, then fail any requests left in this document.
+  let timeout = setTimeout(failReload, MANIFEST_RELOAD_TIMEOUT);
   let onPageShow = (event: PageTransitionEvent) => {
     if (event.persisted) {
-      pendingManifestReload = undefined;
-      window.removeEventListener("pageshow", onPageShow);
+      // BFCache restores pending requests as well as module state.
+      failReload();
     }
   };
   window.addEventListener("pageshow", onPageShow);
 
   // Reload the destination on navigations, or the current page on fetcher calls.
-  window.location.href = errorReloadPath;
-  console.warn("Detected manifest version mismatch, reloading...");
-  return pendingManifestReload;
+  try {
+    window.location.href = errorReloadPath;
+    console.warn("Detected manifest version mismatch, reloading...");
+  } catch {
+    failReload();
+  }
+  return reloadPromise;
 }
 
 export async function fetchAndApplyManifestPatches(
