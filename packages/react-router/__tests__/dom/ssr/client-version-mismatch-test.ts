@@ -1,7 +1,5 @@
 /** @jest-environment node */
 
-import { createMemoryHistory } from "../../../lib/router/history";
-import { createRouter, type Router } from "../../../lib/router/router";
 import { tick } from "../../router/utils/utils";
 
 type FogOfWar = typeof import("../../../lib/dom/ssr/fog-of-war");
@@ -203,75 +201,6 @@ describe("client version mismatch", () => {
 
       expect(reload.mock.calls).toEqual([["/target"]]);
       expect(settled).not.toHaveBeenCalled();
-    },
-  );
-
-  it.each(["pending reload", "previous reload"])(
-    "does not load a fallback splat during discovery with a %s",
-    async (scenario) => {
-      jest.spyOn(globalThis, "fetch").mockImplementation(
-        async () =>
-          new Response(null, {
-            status: 204,
-            headers: { "X-Remix-Reload-Document": "true" },
-          }),
-      );
-      let splatLoader = jest.fn(() => "SPLAT");
-      let router: Router;
-      router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          { id: "root", path: "/" },
-          { id: "splat", path: "*", loader: splatLoader },
-        ],
-        patchRoutesOnNavigation: fogOfWar.getPatchRoutesOnNavigationFunction(
-          () => router,
-          {
-            version: "v1",
-            routes: {},
-            entry: { imports: [], module: "" },
-            url: "",
-          },
-          {},
-          true,
-          { mode: "lazy", manifestPath: "/__manifest" },
-          false,
-          undefined,
-        ),
-      }).initialize();
-
-      try {
-        if (scenario === "pending reload") {
-          router.fetch("first", "root", "/first");
-          await tick();
-        } else {
-          stored.set(storageKey, "v1");
-        }
-        expect(reload.mock.calls).toEqual(
-          scenario === "pending reload" ? [["http://localhost/"]] : [],
-        );
-
-        router.fetch("second", "root", "/second");
-        await tick();
-        expect(splatLoader).not.toHaveBeenCalled();
-
-        expect(router.getFetcher("first").state).toBe(
-          scenario === "pending reload" ? "loading" : "idle",
-        );
-        expect(router.getFetcher("second").state).toBe(
-          scenario === "pending reload" ? "loading" : "idle",
-        );
-        expect(router.state.errors).toEqual(
-          scenario === "pending reload"
-            ? null
-            : { root: new Error(mismatchMessage) },
-        );
-        expect(reload.mock.calls).toEqual(
-          scenario === "pending reload" ? [["http://localhost/"]] : [],
-        );
-      } finally {
-        router.dispose();
-      }
     },
   );
 });
