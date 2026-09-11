@@ -1,5 +1,7 @@
 // https://github.com/devongovett/rsc-html-stream/blob/main/server.js
 
+import { escapeAttribute } from "../../dom/ssr/markup";
+
 const encoder = new TextEncoder();
 const trailer = "</body></html>";
 
@@ -141,14 +143,6 @@ function writeChunk(
       )}</script>`,
     ),
   );
-}
-
-function escapeAttribute(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 // Escape closing script tags and HTML comments in JS content.

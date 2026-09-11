@@ -69,3 +69,7 @@ jobs:
 
       - name: Run tests
         run: pnpm test
+
+      - name: Run vendored route-pattern tests
+        if: matrix.node == 24
+        run: pnpm --filter react-router test:route-pattern

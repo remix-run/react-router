@@ -84,7 +84,7 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
-          token: ${{ secrets.FORMAT_PAT }}
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.0.10
@@ -101,7 +101,7 @@ jobs:
       - name: Update PR
         run: pnpm changes:pr
         env:
-          GITHUB_TOKEN: ${{ secrets.FORMAT_PAT }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
 
   publish:
     name: Publish
