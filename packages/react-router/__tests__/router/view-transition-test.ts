@@ -1,5 +1,9 @@
-import { createBrowserHistory } from "../../lib/router/history";
+import {
+  createBrowserHistory,
+  createMemoryHistory,
+} from "../../lib/router/history";
 import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
+import type { LoaderFunction } from "../../lib/router/utils";
 import getWindow from "../utils/getWindow";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createDeferred, createFormData, tick } from "./utils/utils";
@@ -273,4 +277,78 @@ describe("view transitions", () => {
     unsubscribe();
     router.dispose();
   });
+
+  it.each([
+    { name: "back", from: "/b", to: "/a", delta: -1 },
+    { name: "forward", from: "/a", to: "/b", delta: 1 },
+    { name: "back to the same URL", from: "/b", to: "/b", delta: -1 },
+  ])(
+    "enables view transitions when $name interrupts hydration",
+    async ({ from, to, delta }) => {
+      let initialEntries = delta < 0 ? [to, from] : [from, to];
+      let window = getWindow(from);
+      window.sessionStorage.setItem(
+        "remix-router-transitions",
+        JSON.stringify({ [initialEntries[0]]: [initialEntries[1]] }),
+      );
+      let dfd = createDeferred();
+      let loader: LoaderFunction = jest
+        .fn()
+        .mockReturnValueOnce(dfd.promise)
+        .mockReturnValue("POP DATA");
+      loader.hydrate = true;
+      let router = createRouter({
+        history: createMemoryHistory({
+          initialEntries,
+          initialIndex: delta < 0 ? 1 : 0,
+        }),
+        routes: [{ id: "page", path: "/:page", loader }],
+        hydrationData: { loaderData: { page: "SSR DATA" } },
+        window,
+      });
+      let spy = jest.fn();
+      let unsubscribe = router.subscribe(spy);
+      router.initialize();
+      await tick();
+
+      // SSR content is visible while the hydration loader is still pending.
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(router.state).toMatchObject({
+        initialized: false,
+        renderFallback: false,
+        loaderData: { page: "SSR DATA" },
+      });
+      let initialLocation = router.state.location;
+
+      await router.navigate(delta);
+      expect(router.state.location.key).not.toBe(initialLocation.key);
+      expect(spy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          initialized: true,
+          navigation: IDLE_NAVIGATION,
+          location: expect.objectContaining({ pathname: to }),
+          loaderData: { page: "POP DATA" },
+        }),
+        expect.objectContaining({
+          viewTransitionOpts: {
+            currentLocation: expect.objectContaining({
+              pathname: initialEntries[0],
+            }),
+            nextLocation: expect.objectContaining({
+              pathname: initialEntries[1],
+            }),
+          },
+        }),
+      );
+
+      // The interrupted hydration must not commit or animate when it settles.
+      let calls = spy.mock.calls.length;
+      await dfd.resolve("HYDRATED DATA");
+      await tick();
+      expect(spy).toHaveBeenCalledTimes(calls);
+
+      unsubscribe();
+      router.dispose();
+    },
+  );
 });

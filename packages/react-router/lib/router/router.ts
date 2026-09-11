@@ -1594,12 +1594,12 @@ export function createRouter(init: RouterInit): Router {
     let viewTransitionOpts: ViewTransitionOpts | undefined;
 
     // On POP, enable transitions if they were enabled on the original navigation.
-    // Revalidations and the initial hydration also arrive here with a POP
-    // action, but they don't change location so there is nothing to animate.
+    // Initial hydration reuses the current location. Compare locations instead
+    // of state.initialized because a real POP can interrupt pending hydration.
     if (
       pendingAction === NavigationType.Pop &&
       !isUninterruptedRevalidation &&
-      state.initialized
+      location !== state.location
     ) {
       // Forward takes precedence so they behave like the original navigation
       let priorPaths = appliedViewTransitions.get(state.location.pathname);
