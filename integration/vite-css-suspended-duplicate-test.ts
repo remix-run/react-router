@@ -1,0 +1,420 @@
+import { test, expect, type Page } from "@playwright/test";
+import getPort from "get-port";
+
+import {
+  build,
+  createEditor,
+  createProject,
+  reactRouterServe,
+  viteConfig,
+  viteMajorTemplates,
+} from "./helpers/vite.js";
+
+const js = String.raw;
+
+function collectStylesheetRequests(page: Page): string[] {
+  let stylesheetRequests: string[] = [];
+  page.on("requestfinished", (request) => {
+    if (request.resourceType() === "stylesheet") {
+      stylesheetRequests.push(request.url());
+    }
+  });
+  return stylesheetRequests;
+}
+
+async function assertNoDuplicateStylesheets({
+  page,
+  stylesheetRequests,
+  assetName,
+}: {
+  page: Page;
+  stylesheetRequests: string[];
+  assetName: string;
+}) {
+  let stylesheetHrefs = await page.evaluate(() =>
+    Array.from(
+      document.querySelectorAll<HTMLLinkElement>("link[rel='stylesheet']"),
+    )
+      .map((link) => link.getAttribute("href"))
+      .filter((href): href is string => href != null),
+  );
+
+  let normalizeHref = (href: string) => href.replace(/#$/, "");
+  let normalizedLinkHrefs = stylesheetHrefs
+    .map(normalizeHref)
+    .filter((href) => href.includes(assetName));
+  let normalizedRequestHrefs = stylesheetRequests
+    .map((requestUrl) => {
+      let url = new URL(requestUrl);
+      return normalizeHref(url.pathname + url.search + url.hash);
+    })
+    .filter((href) => href.includes(assetName));
+
+  let duplicateLinkHrefs = normalizedLinkHrefs.filter(
+    (href, index, hrefs) => hrefs.indexOf(href) !== index,
+  );
+  let duplicateRequestHrefs = normalizedRequestHrefs.filter(
+    (href, index, hrefs) => hrefs.indexOf(href) !== index,
+  );
+
+  expect(normalizedLinkHrefs.length).toBeGreaterThan(0);
+  expect(
+    duplicateLinkHrefs,
+    `Duplicate stylesheet links found.\nraw=${JSON.stringify(stylesheetHrefs)}\nnormalized=${JSON.stringify(normalizedLinkHrefs)}`,
+  ).toEqual([]);
+
+  if (normalizedRequestHrefs.length > 0) {
+    expect(
+      duplicateRequestHrefs,
+      `Duplicate stylesheet requests found.\nraw=${JSON.stringify(stylesheetRequests)}\nnormalized=${JSON.stringify(normalizedRequestHrefs)}`,
+    ).toEqual([]);
+  }
+}
+
+test.describe("Vite CSS suspended duplicate styles", () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test.describe(templateDisplayName, () => {
+      let port: number;
+      let cwd: string;
+      let stop: () => void;
+
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject(
+          {
+            "vite.config.ts": await viteConfig.basic({
+              port,
+              templateName,
+              vanillaExtract: true,
+            }),
+            "app/routes.ts": js`
+          import { type RouteConfig, index, route } from "@react-router/dev/routes";
+
+          export default [
+            route("layout-shared", "routes/layout-shared/layout.tsx", [
+              index("routes/layout-shared/route.tsx"),
+            ]),
+            route("persistent-owner", "routes/persistent-owner/layout.tsx", [
+              index("routes/persistent-owner/route.tsx"),
+            ]),
+            route("persistent-without-owner", "routes/persistent-without-owner.tsx"),
+            route(":slug", "routes/$slug/layout.tsx", [
+              index("routes/$slug/route.tsx"),
+            ]),
+          ] satisfies RouteConfig;
+        `,
+            "app/root.tsx": js`
+          import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+          import { LoadPersistentWithStyles } from "./components/LoadPersistentWithStyles";
+          import { WithStyles } from "./components/WithStyles";
+
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Link to="/persistent-owner">persistent owner</Link>
+                  <Link to="/persistent-without-owner">persistent without owner</Link>
+                  <LoadPersistentWithStyles />
+                  <WithStyles />
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+            "app/components/WithStyles.css.ts": js`
+          import { style } from "@vanilla-extract/css";
+
+          export const withStyles = style({
+            color: "rgb(255, 0, 0)",
+          });
+        `,
+            "app/components/WithStyles.tsx": js`
+          import * as styles from "./WithStyles.css";
+
+          export function WithStyles() {
+            return <div data-with-styles className={styles.withStyles}>with styles</div>;
+          }
+        `,
+            "app/components/Suspended.tsx": js`
+          import { WithStyles } from "./WithStyles";
+
+          export function Suspended() {
+            return <WithStyles />;
+          }
+        `,
+            "app/components/LayoutWithStyles.css.ts": js`
+          import { style } from "@vanilla-extract/css";
+
+          export const layoutWithStyles = style({
+            color: "rgb(0, 128, 0)",
+          });
+        `,
+            "app/components/LayoutWithStyles.tsx": js`
+          import * as styles from "./LayoutWithStyles.css";
+
+          export function LayoutWithStyles() {
+            return <div data-layout-with-styles className={styles.layoutWithStyles}>layout with styles</div>;
+          }
+        `,
+            "app/components/LayoutSuspended.tsx": js`
+          import { LayoutWithStyles } from "./LayoutWithStyles";
+
+          export function LayoutSuspended() {
+            return <LayoutWithStyles />;
+          }
+        `,
+            "app/components/PersistentWithStyles.css.ts": js`
+          import { style } from "@vanilla-extract/css";
+
+          export const persistentWithStyles = style({
+            color: "rgb(0, 0, 255)",
+          });
+        `,
+            "app/components/PersistentWithStyles.tsx": js`
+          import * as styles from "./PersistentWithStyles.css";
+
+          export function PersistentWithStyles() {
+            return <div data-persistent-with-styles className={styles.persistentWithStyles}>persistent with styles</div>;
+          }
+        `,
+            "app/components/LoadPersistentWithStyles.tsx": js`
+          import { lazy, Suspense, useState } from "react";
+
+          const PersistentWithStylesLazy = lazy(() =>
+            import("./PersistentWithStyles").then(({ PersistentWithStyles }) => ({
+              default: PersistentWithStyles,
+            })),
+          );
+
+          export function LoadPersistentWithStyles() {
+            const [show, setShow] = useState(false);
+
+            return (
+              <>
+                <button data-load-persistent-with-styles onClick={() => setShow(true)}>
+                  load persistent with styles
+                </button>
+                {show ? (
+                  <Suspense fallback={"loading-persistent-with-styles"}>
+                    <PersistentWithStylesLazy />
+                  </Suspense>
+                ) : null}
+              </>
+            );
+          }
+        `,
+            "app/routes/layout-shared/layout.tsx": js`
+          import { Outlet } from "react-router";
+          import { LayoutWithStyles } from "../../components/LayoutWithStyles";
+
+          export default function LayoutSharedRoute() {
+            return (
+              <>
+                <h1 data-layout-shared>layout shared</h1>
+                <LayoutWithStyles />
+                <Outlet />
+              </>
+            );
+          }
+        `,
+            "app/routes/layout-shared/route.tsx": js`
+          import { lazy, Suspense } from "react";
+
+          const LayoutSuspendedLazy = lazy(() =>
+            import("../../components/LayoutSuspended").then(({ LayoutSuspended }) => ({
+              default: LayoutSuspended,
+            })),
+          );
+
+          export default function LayoutSharedIndexRoute() {
+            return (
+              <>
+                <h2 data-layout-shared-route>layout shared route</h2>
+                <Suspense fallback={"loading-layout-shared-route"}>
+                  <LayoutSuspendedLazy />
+                </Suspense>
+              </>
+            );
+          }
+        `,
+            "app/routes/persistent-owner/layout.tsx": js`
+          import { Outlet } from "react-router";
+          import { PersistentWithStyles } from "../../components/PersistentWithStyles";
+
+          export default function PersistentOwnerLayoutRoute() {
+            return (
+              <>
+                <h1 data-persistent-owner>persistent owner</h1>
+                <PersistentWithStyles />
+                <Outlet />
+              </>
+            );
+          }
+        `,
+            "app/routes/persistent-owner/route.tsx": js`
+          export default function PersistentOwnerIndexRoute() {
+            return <h2 data-persistent-owner-route>persistent owner route</h2>;
+          }
+        `,
+            "app/routes/persistent-without-owner.tsx": js`
+          export default function PersistentWithoutOwnerRoute() {
+            return <h1 data-persistent-without-owner>persistent without owner</h1>;
+          }
+        `,
+            "app/routes/$slug/layout.tsx": js`
+          import { Outlet } from "react-router";
+
+          export default function LayoutRoute() {
+            return (
+              <>
+                <h1 data-layout>layout</h1>
+                <Outlet />
+              </>
+            );
+          }
+        `,
+            "app/routes/$slug/route.tsx": js`
+          import { lazy, Suspense } from "react";
+
+          const SuspendedLazy = lazy(() =>
+            import("../../components/Suspended").then(({ Suspended }) => ({
+              default: Suspended,
+            })),
+          );
+
+          export default function SlugIndexRoute() {
+            return (
+              <>
+                <h2 data-route>route</h2>
+                <Suspense fallback={"loading-route"}>
+                  <SuspendedLazy />
+                </Suspense>
+              </>
+            );
+          }
+        `,
+          },
+          templateName,
+        );
+
+        let edit = createEditor(cwd);
+        await edit("package.json", (contents) =>
+          contents.replace('"sideEffects": false', '"sideEffects": true'),
+        );
+
+        let { status } = build({ cwd });
+        expect(status).toBe(0);
+        stop = await reactRouterServe({ cwd, port });
+      });
+
+      test.afterAll(() => stop());
+
+      test("does not duplicate stylesheet links when root and leaf routes share suspended component CSS", async ({
+        page,
+      }) => {
+        let stylesheetRequests = collectStylesheetRequests(page);
+
+        await page.goto(`http://localhost:${port}/some`, {
+          waitUntil: "networkidle",
+        });
+
+        await expect(page.locator("[data-layout]")).toHaveText("layout");
+        await expect(page.locator("[data-route]")).toHaveText("route");
+        await expect(page.locator("[data-with-styles]")).toHaveCount(2);
+        await expect(page.locator("[data-with-styles]").first()).toHaveCSS(
+          "color",
+          "rgb(255, 0, 0)",
+        );
+        await expect(page.locator("[data-with-styles]").last()).toHaveCSS(
+          "color",
+          "rgb(255, 0, 0)",
+        );
+
+        await assertNoDuplicateStylesheets({
+          page,
+          stylesheetRequests,
+          assetName: "WithStyles-",
+        });
+      });
+
+      test("does not duplicate stylesheet links when layout and leaf routes share suspended component CSS", async ({
+        page,
+      }) => {
+        let stylesheetRequests = collectStylesheetRequests(page);
+
+        await page.goto(`http://localhost:${port}/layout-shared`, {
+          waitUntil: "networkidle",
+        });
+
+        await expect(page.locator("[data-layout-shared]")).toHaveText(
+          "layout shared",
+        );
+        await expect(page.locator("[data-layout-shared-route]")).toHaveText(
+          "layout shared route",
+        );
+        await expect(page.locator("[data-layout-with-styles]")).toHaveCount(2);
+        await expect(
+          page.locator("[data-layout-with-styles]").first(),
+        ).toHaveCSS("color", "rgb(0, 128, 0)");
+        await expect(
+          page.locator("[data-layout-with-styles]").last(),
+        ).toHaveCSS("color", "rgb(0, 128, 0)");
+
+        await assertNoDuplicateStylesheets({
+          page,
+          stylesheetRequests,
+          assetName: "LayoutWithStyles-",
+        });
+      });
+
+      test("retains dynamically imported CSS after leaving a non-leaf route that statically owns the same asset", async ({
+        page,
+      }) => {
+        let persistentStylesheetSelector =
+          "link[rel='stylesheet'][href*='PersistentWithStyles-']";
+
+        await page.goto(`http://localhost:${port}/persistent-owner`, {
+          waitUntil: "networkidle",
+        });
+
+        await page.locator("[data-load-persistent-with-styles]").click();
+        await expect(page.locator("[data-persistent-with-styles]")).toHaveCount(
+          2,
+        );
+        await expect(
+          page.locator("[data-persistent-with-styles]").first(),
+        ).toHaveCSS("color", "rgb(0, 0, 255)");
+        await expect(page.locator(persistentStylesheetSelector)).toHaveCount(2);
+        await expect(
+          page.locator(`${persistentStylesheetSelector}[href$='#']`),
+        ).toHaveCount(1);
+
+        await page
+          .getByRole("link", {
+            name: "persistent without owner",
+          })
+          .click();
+        await expect(
+          page.locator("[data-persistent-without-owner]"),
+        ).toHaveText("persistent without owner");
+        await expect(page.locator("[data-persistent-with-styles]")).toHaveCount(
+          1,
+        );
+        await expect(page.locator("[data-persistent-with-styles]")).toHaveCSS(
+          "color",
+          "rgb(0, 0, 255)",
+        );
+        await expect(page.locator(persistentStylesheetSelector)).toHaveCount(1);
+        await expect(
+          page.locator(`${persistentStylesheetSelector}[href$='#']`),
+        ).toHaveCount(0);
+      });
+    });
+  });
+});
