@@ -1,5 +1,16 @@
 # `@react-router/dev`
 
+## v8.4.0
+
+### Patch Changes
+
+- Pass development conditions as CLI flags when relaunching the dev process ([#15435](https://github.com/remix-run/react-router/pull/15435))
+- Fix stack trace locations for split route modules when source maps are enabled in the `reactRouter` Vite plugin ([#15440](https://github.com/remix-run/react-router/pull/15440))
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+  - [`@react-router/node@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.4.0)
+  - [`@react-router/serve@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.4.0)
+
 ## v8.3.1
 
 ### Patch Changes
