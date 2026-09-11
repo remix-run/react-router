@@ -1359,7 +1359,7 @@ export function createRouter(init: RouterInit): Router {
 
     if (isBrowser) {
       // FIXME: This feels gross.  How can we cleanup the lines between
-      // scrollRestoration/appliedTransitions persistance?
+      // scrollRestoration/appliedTransitions persistence?
       restoreAppliedTransitions(routerWindow, appliedViewTransitions);
       let _saveAppliedTransitions = () =>
         persistAppliedTransitions(routerWindow, appliedViewTransitions);
@@ -3691,7 +3691,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // We ony support a single active blocker at the moment since we don't have
+    // We only support a single active blocker at the moment since we don't have
     // any compelling use cases for multi-blocker yet
     if (blockerFunctions.size > 1) {
       warning(false, "A router only supports one blocker at a time");
