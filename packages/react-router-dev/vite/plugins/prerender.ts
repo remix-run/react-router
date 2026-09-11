@@ -482,7 +482,9 @@ async function nodeHttpFetch(
     const req = http.request(
       {
         protocol: url.protocol,
-        hostname: url.hostname,
+        // `URL#hostname` keeps the brackets around IPv6 literals, but
+        // `http.request` expects them without.
+        hostname: url.hostname.replace(/^\[|\]$/g, ""),
         port: url.port || undefined,
         path: url.pathname + url.search,
         method: request.method,
@@ -564,14 +566,31 @@ async function startPreviewServer(
   }
 }
 
-function getResolvedUrl(previewServer: Vite.PreviewServer): URL {
-  const baseUrl = previewServer.resolvedUrls?.local[0];
+export function getResolvedUrl(previewServer: Vite.PreviewServer): URL {
+  const printableUrl = previewServer.resolvedUrls?.local[0];
 
-  if (!baseUrl) {
+  // Prefer the literal address the server actually bound to. The printable
+  // resolved URL uses a hostname like `localhost`, which gets re-resolved on
+  // every request and can pick a different address family (127.0.0.1 vs ::1)
+  // than the one the server is listening on.
+  const address = previewServer.httpServer?.address();
+  if (
+    address &&
+    typeof address === "object" &&
+    address.address !== "::" &&
+    address.address !== "0.0.0.0"
+  ) {
+    const protocol = printableUrl ? new URL(printableUrl).protocol : "http:";
+    const hostname =
+      address.family === "IPv6" ? `[${address.address}]` : address.address;
+    return new URL(`${protocol}//${hostname}:${address.port}/`);
+  }
+
+  if (!printableUrl) {
     throw new Error(
       "Prerender: No resolved URL is available from the Vite preview server",
     );
   }
 
-  return new URL(baseUrl);
+  return new URL(printableUrl);
 }
