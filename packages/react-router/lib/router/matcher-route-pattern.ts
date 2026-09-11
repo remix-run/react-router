@@ -91,7 +91,10 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
 
     let decoded = decodePath(pathname);
     let url = new URL("http://reactrouter.local");
-    url.pathname = pathname;
+    // Every route pattern accepts a trailing slash. Include one for trie lookup
+    // so a terminal splat can match an empty segment (e.g. /files for files/*).
+    // Reconstruct matches below using the original pathname and params.
+    url.pathname = pathname.endsWith("/") ? pathname : `${pathname}/`;
     invariant(
       this.#state,
       "Route pattern routes must be initialized before matching.",
