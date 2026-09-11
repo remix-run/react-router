@@ -144,6 +144,75 @@ describe("view transitions", () => {
     t.router.dispose();
   });
 
+  it.each([
+    { name: "back", delta: -1, routeId: "root", pathname: "/" },
+    { name: "forward", delta: 1, routeId: "a", pathname: "/a" },
+  ])(
+    "preserves a pending $name view transition through router.revalidate()",
+    async ({ delta, routeId, pathname }) => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", loader: true },
+          { id: "a", path: "/a", loader: true },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      });
+      let spy = jest.fn();
+      let unsubscribe = t.router.subscribe(spy);
+
+      // Record the transition to replay on the pending POP.
+      let A = await t.navigate("/a", { viewTransition: true });
+      await A.loaders.a.resolve("A");
+      if (delta > 0) {
+        let B = await t.navigate(-1);
+        await B.loaders.root.resolve("ROOT");
+      }
+      spy.mockClear();
+
+      let pop = await t.navigate(delta);
+      expect(pop.loaders[routeId].stub).toHaveBeenCalledTimes(1);
+      expect(t.router.state.navigation).toMatchObject({
+        state: "loading",
+        historyAction: "POP",
+        location: { pathname },
+      });
+
+      let revalidation = await t.revalidate();
+      expect(revalidation.loaders[routeId].stub).toHaveBeenCalledTimes(1);
+      await pop.loaders[routeId].resolve("STALE DATA");
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "loading", location: { pathname } },
+        revalidation: "loading",
+      });
+      expect(spy.mock.calls.every(([, opts]) => !opts.viewTransitionOpts)).toBe(
+        true,
+      );
+
+      await revalidation.loaders[routeId].resolve("REVALIDATED DATA");
+      expect(spy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          historyAction: "POP",
+          navigation: IDLE_NAVIGATION,
+          revalidation: "idle",
+          location: expect.objectContaining({ pathname }),
+          loaderData: { [routeId]: "REVALIDATED DATA" },
+        }),
+        expect.objectContaining({
+          viewTransitionOpts: {
+            currentLocation: expect.objectContaining({ pathname: "/" }),
+            nextLocation: expect.objectContaining({ pathname: "/a" }),
+          },
+        }),
+      );
+      expect(
+        spy.mock.calls.filter(([, opts]) => opts.viewTransitionOpts),
+      ).toHaveLength(1);
+
+      unsubscribe();
+      t.router.dispose();
+    },
+  );
+
   it("preserves pending view transitions through redirects", async () => {
     let t = setup({
       routes: [
@@ -278,13 +347,18 @@ describe("view transitions", () => {
     router.dispose();
   });
 
-  it.each([
-    { name: "back", from: "/b", to: "/a", delta: -1 },
-    { name: "forward", from: "/a", to: "/b", delta: 1 },
-    { name: "back to the same URL", from: "/b", to: "/b", delta: -1 },
-  ])(
-    "enables view transitions when $name interrupts hydration",
-    async ({ from, to, delta }) => {
+  it.each(
+    [
+      { name: "back", from: "/b", to: "/a", delta: -1 },
+      { name: "forward", from: "/a", to: "/b", delta: 1 },
+      { name: "back to the same URL", from: "/b", to: "/b", delta: -1 },
+    ].flatMap((scenario) => [
+      { ...scenario, hydration: "pending" },
+      { ...scenario, hydration: "complete" },
+    ]),
+  )(
+    "enables view transitions for $name with hydration $hydration",
+    async ({ from, to, delta, hydration }) => {
       let initialEntries = delta < 0 ? [to, from] : [from, to];
       let window = getWindow(from);
       window.sessionStorage.setItem(
@@ -318,6 +392,21 @@ describe("view transitions", () => {
         renderFallback: false,
         loaderData: { page: "SSR DATA" },
       });
+
+      if (hydration === "complete") {
+        await dfd.resolve("HYDRATED DATA");
+        await tick();
+      }
+      expect(router.state).toMatchObject({
+        initialized: hydration === "complete",
+        loaderData: {
+          page: hydration === "complete" ? "HYDRATED DATA" : "SSR DATA",
+        },
+      });
+      expect(spy.mock.calls.every(([, opts]) => !opts.viewTransitionOpts)).toBe(
+        true,
+      );
+      spy.mockClear();
       let initialLocation = router.state.location;
 
       await router.navigate(delta);
@@ -341,7 +430,7 @@ describe("view transitions", () => {
         }),
       );
 
-      // The interrupted hydration must not commit or animate when it settles.
+      // Settling hydration after the POP must not commit or animate again.
       let calls = spy.mock.calls.length;
       await dfd.resolve("HYDRATED DATA");
       await tick();
