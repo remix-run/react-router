@@ -29,3 +29,5 @@ React Router is a multi-strategy router for React. You can use it maximally as a
 - [v7](https://reactrouter.com/v7)
 - [v6](https://reactrouter.com/v6)
 - [v5](https://v5.reactrouter.com/)
+
+<!-- Release automation is managed by Remix Run Bot. -->
