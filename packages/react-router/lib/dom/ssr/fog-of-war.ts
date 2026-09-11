@@ -11,6 +11,7 @@ import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
 import { createPath } from "../../router/history";
+import type { FetchFunction } from "./single-fetch";
 
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
@@ -102,6 +103,7 @@ export function getPatchRoutesOnNavigationFunction(
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
   basename: string | undefined,
+  fetchImplementation: FetchFunction = fetch,
 ): PatchRoutesOnNavigationFunction | undefined {
   if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
@@ -127,6 +129,7 @@ export function getPatchRoutesOnNavigationFunction(
       routeDiscovery.manifestPath,
       patch,
       signal,
+      fetchImplementation,
     );
   };
 }
@@ -138,6 +141,7 @@ export function useFogOFWarDiscovery(
   ssr: boolean,
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
+  fetchImplementation: FetchFunction = fetch,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
@@ -198,6 +202,8 @@ export function useFogOFWarDiscovery(
           router.basename,
           routeDiscovery.manifestPath,
           router.patchRoutes,
+          undefined,
+          fetchImplementation,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -221,7 +227,15 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
+  }, [
+    ssr,
+    isSpaMode,
+    manifest,
+    routeModules,
+    router,
+    routeDiscovery,
+    fetchImplementation,
+  ]);
 }
 
 export function getManifestPath(
@@ -303,6 +317,7 @@ export async function fetchAndApplyManifestPatches(
   manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
+  fetchImplementation: FetchFunction = fetch,
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -329,7 +344,8 @@ export async function fetchAndApplyManifestPatches(
 
   let serverPatches: AssetsManifest["routes"];
   try {
-    let res = await fetch(url, { signal });
+    let request = new Request(url, { signal });
+    let res = await fetchImplementation(request);
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);

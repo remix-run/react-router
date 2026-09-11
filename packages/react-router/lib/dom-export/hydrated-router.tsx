@@ -199,6 +199,7 @@ function createHydratedRouter({
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename,
+      fetchImplementation,
     ),
   });
 
@@ -411,6 +412,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
+    props.fetch,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error

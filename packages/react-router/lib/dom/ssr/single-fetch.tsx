@@ -596,7 +596,7 @@ function fetchAndDecodeViaTurboStream(
       }
     }
 
-    let req = new Request(url, await createRequestInit(request))
+    let req = new Request(url, await createRequestInit(request));
     let res = await fetchImplementation(req);
 
     // If this error'd without hitting the running server, then bubble a normal

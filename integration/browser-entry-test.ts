@@ -136,6 +136,11 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
 }) => {
   let fixture = await createFixture({
     files: {
+      "react-router.config.ts": js`
+        export default {
+          routeDiscovery: { mode: "lazy" },
+        };
+      `,
       "app/entry.client.tsx": js`
         import { HydratedRouter } from "react-router/dom";
         import { startTransition, StrictMode } from "react";
@@ -147,6 +152,8 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
             <StrictMode>
               <HydratedRouter
                 fetch={(request) => {
+                  window.__customFetches ??= [];
+                  window.__customFetches.push(new URL(request.url).pathname);
                   request.headers.set("X-Custom-Fetch", "true");
                   return window.fetch(request);
                 }}
@@ -159,7 +166,7 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
         import { Link } from "react-router";
 
         export default function Index() {
-          return <Link to="/page">Go to Page</Link>;
+          return <Link to="/page" discover="none">Go to Page</Link>;
         }
       `,
       "app/routes/page.tsx": js`
@@ -182,6 +189,10 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
   await page.waitForSelector("[data-custom-fetch]");
 
   await expect(page.locator("[data-custom-fetch]")).toHaveText("true");
+  expect(await page.evaluate(() => window.__customFetches)).toEqual([
+    "/__manifest",
+    "/page.data",
+  ]);
 
   appFixture.close();
 });
