@@ -76,6 +76,11 @@ export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 // with the cached body content.
 export const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205]);
 
+// How long we wait for `<Scripts>` to render before concluding the document
+// never renders it and there's nothing to stream in.  Only relevant when a
+// component above `<Scripts>` suspends during server rendering -- see below.
+const SCRIPTS_RENDER_TIMEOUT_MS = 500;
+
 // StreamTransfer recursively renders down chunks of the `serverHandoffStream`
 // into the client-side `streamController`
 export function StreamTransfer({
@@ -85,10 +90,40 @@ export function StreamTransfer({
   textDecoder,
   nonce,
 }: StreamTransferProps) {
-  // If the user didn't render the <Scripts> component then we don't have to
-  // bother streaming anything in
-  if (!context.renderMeta || !context.renderMeta.didRenderScripts) {
+  if (!context.renderMeta) {
     return null;
+  }
+
+  let { renderMeta } = context;
+
+  if (!renderMeta.didRenderScripts) {
+    // `<Scripts>` sets `didRenderScripts` during its render, and since we
+    // render as a later sibling of the app, the flag is normally set by the
+    // time we get here.  However, if a component above `<Scripts>` suspends,
+    // React renders us in the initial pass before `<Scripts>` has had a
+    // chance to run.  Returning `null` at that point would permanently drop
+    // the stream -- a successfully completed boundary is never retried -- and
+    // leave hydration hanging on the client.  So instead of bailing right
+    // away we suspend until `<Scripts>` renders, giving up after a timeout so
+    // that documents which never render `<Scripts>` still complete.
+    if (renderMeta.scriptsTimedOut) {
+      // The user didn't render the `<Scripts>` component, so we don't have to
+      // bother streaming anything in
+      return null;
+    }
+    if (!renderMeta.scriptsPromise) {
+      renderMeta.scriptsPromise = new Promise<void>((resolve) => {
+        let timeout = setTimeout(() => {
+          renderMeta.scriptsTimedOut = true;
+          resolve();
+        }, SCRIPTS_RENDER_TIMEOUT_MS);
+        renderMeta.onScriptsRendered = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+      });
+    }
+    throw renderMeta.scriptsPromise;
   }
 
   if (!context.renderMeta.streamCache) {
