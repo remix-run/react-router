@@ -196,6 +196,18 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
+    if (
+      build.unstable_apiOnly &&
+      serverMode !== ServerMode.Development &&
+      !requestUrl.pathname.endsWith(".data") &&
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") !== "yes"
+    ) {
+      return new Response(null, {
+        status: 404,
+        statusText: "Not Found",
+      });
+    }
+
     let matches = matchServerRoutes(
       build.routes,
       staticHandler,
@@ -526,6 +538,7 @@ async function handleDocumentRequest(
       routeDiscovery: build.routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
     };
     let entryContext: EntryContext = {
       manifest: build.assets,

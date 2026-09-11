@@ -177,6 +177,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
+  isApiOnly: boolean = false,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -190,6 +191,8 @@ export function getTurboStreamSingleFetchDataStrategy(
     },
     fetchAndDecodeViaTurboStream,
     ssr,
+    undefined,
+    isApiOnly,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -200,6 +203,7 @@ export function getSingleFetchDataStrategyImpl(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
+  isApiOnly: boolean = false,
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -214,7 +218,7 @@ export function getSingleFetchDataStrategyImpl(
       let { hasLoader, hasClientLoader } = getRouteInfo(m);
       return m.shouldCallHandler() && hasLoader && !hasClientLoader;
     });
-    if (!ssr && !foundRevalidatingServerLoader) {
+    if (!ssr && !isApiOnly && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
       // SPA mode because we may load a SPA fallback page but then navigate into
@@ -263,6 +267,7 @@ export function getSingleFetchDataStrategyImpl(
       fetchAndDecode,
       ssr,
       shouldAllowOptOut,
+      isApiOnly,
     );
   };
 }
@@ -342,6 +347,7 @@ async function singleFetchLoaderNavigationStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
+  isApiOnly: boolean = false,
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -433,7 +439,7 @@ async function singleFetchLoaderNavigationStrategy(
   let isInitialLoad =
     !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    (isInitialLoad || routesParams.size === 0) &&
+    ((isInitialLoad && !isApiOnly) || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });

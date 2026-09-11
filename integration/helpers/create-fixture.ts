@@ -50,6 +50,7 @@ export async function spawnTestServer({
     let started = false;
     let stdout = "";
     let rejectTimeout = setTimeout(() => {
+      serverProcess.kill();
       reject(new Error(`Timed out waiting for server to start (${timeout}ms)`));
     }, timeout);
 
@@ -80,6 +81,17 @@ export async function spawnTestServer({
     serverProcess.on("error", (error: unknown) => {
       clearTimeout(rejectTimeout);
       reject(error);
+    });
+
+    serverProcess.on("exit", (code, signal) => {
+      if (!started) {
+        clearTimeout(rejectTimeout);
+        reject(
+          new Error(
+            `Server exited before starting (code ${code}, signal ${signal})`,
+          ),
+        );
+      }
     });
   });
 }
@@ -394,6 +406,18 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       let port = await getPort();
       let app = express();
       app.use(express.static(path.join(fixture.projectDir, "build/client")));
+
+      if (build.unstable_apiOnly) {
+        app.get("*", (req, res, next) => {
+          if (req.path.endsWith(".data")) {
+            next();
+          } else {
+            res.sendFile(
+              path.join(fixture.projectDir, "build/client/index.html"),
+            );
+          }
+        });
+      }
 
       app.all(
         "*",

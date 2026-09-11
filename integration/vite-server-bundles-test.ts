@@ -457,3 +457,53 @@ test.describe("Server bundles", () => {
     });
   });
 });
+
+test.describe("API-only server bundles", () => {
+  test("preserves server APIs and serves data requests", async () => {
+    let cwd = await createProject(
+      {
+        "react-router.config.ts": dedent(js`
+          export default {
+            ssr: "unstable_api-only",
+            serverBundles({ branch }) {
+              return branch.some((route) => route.id === "routes/api")
+                ? "api"
+                : "root";
+            }
+          }
+        `),
+        "app/routes/api.tsx": js`
+          export function loader() {
+            return { loader: true };
+          }
+
+          export function action() {
+            return { action: true };
+          }
+
+          export default function ApiRoute() {
+            return null;
+          }
+        `,
+      },
+      "vite-7-template",
+    );
+
+    let result = build({ cwd });
+    expect(result.status).toBe(0);
+
+    let apiBuild = await import(
+      path.join(cwd, "build/server/api/index.js")
+    );
+    let apiRoute = apiBuild.routes["routes/api"].module;
+    expect(apiRoute.loader).toEqual(expect.any(Function));
+    expect(apiRoute.action).toEqual(expect.any(Function));
+    expect(apiRoute.default).toBeUndefined();
+
+    await withBundleServer(cwd, "api", async (port) => {
+      let response = await fetch(`http://localhost:${port}/api.data`);
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain('"loader",true');
+    });
+  });
+});
