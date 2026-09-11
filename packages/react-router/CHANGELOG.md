@@ -1,5 +1,11 @@
 # `react-router`
 
+## v7.18.4
+
+### Patch Changes
+
+- Correctly escape streamed RSC redirect locations in meta tag attributes ([#15492](https://github.com/remix-run/react-router/pull/15492))
+
 ## v7.18.3
 
 ### Patch Changes

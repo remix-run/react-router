@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.4](#v7184)
   - [v7.18.3](#v7183)
   - [v7.18.2](#v7182)
   - [v7.18.1](#v7181)
@@ -181,6 +182,16 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.4
+
+Date: 2026-09-11
+
+### Patch Changes
+
+- `react-router` - Correctly escape streamed RSC redirect locations in meta tag attributes ([#15492](https://github.com/remix-run/react-router/pull/15492))
+
+**Full Changelog**: [`v7.18.3...v7.18.4`](https://github.com/remix-run/react-router/compare/react-router@7.18.3...react-router@7.18.4)
 
 ## v7.18.3
 
