@@ -1,6 +1,6 @@
 ---
 name: /iterate
-emoji: '🤖'
+emoji: "🤖"
 description: Apply administrator feedback to the triggering pull request
 on:
   roles: [admin]
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       aw_context:
-        description: Immutable context from the Remix bot comment router
+        description: Immutable context from the React Router bot comment router
         required: false
         type: string
   label_command:
@@ -66,12 +66,12 @@ jobs:
         id: target
         uses: actions/github-script@v9
         env:
-          EXPECTED_REPOSITORY: remix-run/remix
-          EXPECTED_BOT_REPOSITORY: remix-run-bot/remix
+          EXPECTED_REPOSITORY: remix-run/react-router
+          EXPECTED_BOT_REPOSITORY: remix-run-bot/react-router
         with:
           script: |
             if (context.repo.owner + '/' + context.repo.repo !== process.env.EXPECTED_REPOSITORY) {
-              core.setFailed('This workflow is restricted to remix-run/remix')
+              core.setFailed('This workflow is restricted to remix-run/react-router')
               return
             }
 
@@ -107,7 +107,7 @@ jobs:
               !pullRequest.head.ref ||
               !/^[0-9a-f]{40}$/.test(pullRequest.head.sha)
             ) {
-              core.setFailed('The triggering pull request is not a valid open Remix pull request')
+              core.setFailed('The triggering pull request is not a valid open React Router pull request')
               return
             }
 
@@ -135,7 +135,7 @@ jobs:
       - name: Ask the contributor to allow maintainer edits
         uses: actions/github-script@v9
         env:
-          EXPECTED_REPOSITORY: remix-run/remix
+          EXPECTED_REPOSITORY: remix-run/react-router
           EXPECTED_PULL_NUMBER: ${{ needs.resolve_iteration_target.outputs.pull-number }}
           EXPECTED_HEAD_REPOSITORY: ${{ needs.resolve_iteration_target.outputs.head-repository }}
         with:
@@ -173,8 +173,8 @@ jobs:
       - name: Revalidate the pull request immediately before writing
         uses: actions/github-script@v9
         env:
-          EXPECTED_REPOSITORY: remix-run/remix
-          EXPECTED_BOT_REPOSITORY: remix-run-bot/remix
+          EXPECTED_REPOSITORY: remix-run/react-router
+          EXPECTED_BOT_REPOSITORY: remix-run-bot/react-router
           EXPECTED_PULL_NUMBER: ${{ needs.resolve_iteration_target.outputs.pull-number }}
           EXPECTED_HEAD_REPOSITORY: ${{ needs.resolve_iteration_target.outputs.head-repository }}
           EXPECTED_HEAD_REF: ${{ needs.resolve_iteration_target.outputs.head-ref }}
@@ -216,7 +216,7 @@ safe-outputs:
     target: triggering
     head-repo: ${{ needs.resolve_iteration_target.outputs.head-repository }}
     allowed-repos:
-      - remix-run/remix
+      - remix-run/react-router
       - ${{ needs.resolve_iteration_target.outputs.head-repository }}
     head-github-token: ${{ secrets.GH_REMIX_PAT_AW }}
     fallback-as-pull-request: false
@@ -225,10 +225,11 @@ safe-outputs:
     allowed-files:
       - README.md
       - packages/**
-      - demos/**
+      - integration/**
+      - examples/**
       - docs/**
       - decisions/**
-      - template/**
+      - tutorials/**
     protected-files:
       exclude:
         - README.md
@@ -238,7 +239,7 @@ max-daily-ai-credits: 100
 timeout-minutes: 30
 ---
 
-# Remix Pull Request Iteration
+# React Router Pull Request Iteration
 
 Apply authorized feedback directly to only the triggering pull request branch.
 Never merge or approve a pull request.
@@ -284,7 +285,7 @@ Use read-only GitHub APIs and git plumbing to record:
 1. The triggering pull request number and URL.
 2. Its exact base SHA and head SHA.
 3. Its base and head repository full names and head branch.
-4. The exact current SHA of `remix-run/remix` `main` from the GitHub API.
+4. The exact current SHA of `remix-run/react-router` `main` from the GitHub API.
 
 Verify that the workspace head matches the snapshotted pull request head and
 that the snapshotted `main` commit is already available in the full checkout.
@@ -301,7 +302,10 @@ head SHA, open state, and maintainer-edit permission immediately before it uses
 the bot PAT.
 
 1. Stay on the triggering pull request branch and apply the minimum requested
-   edits.
+   edits. Follow the trusted base branch's React Router mode, future-flag,
+   documentation, and package change-file conventions. Preserve compatibility
+   in all affected modes and add focused regression coverage when appropriate.
+   Do not edit generated `docs/api/` or `.react-router/types/` files.
 2. Inspect the complete diff and use only non-executing checks such as
    `git diff --check`. Do not run repository code.
 3. Commit the focused changes without automation attribution.

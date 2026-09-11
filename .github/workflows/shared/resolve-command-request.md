@@ -6,7 +6,7 @@ steps:
     uses: actions/github-script@v9
     env:
       BOT_LOGIN: remix-run-bot
-      EXPECTED_REPOSITORY: remix-run/remix
+      EXPECTED_REPOSITORY: remix-run/react-router
       ROUTER_WORKFLOW: .github/workflows/aw-comment-router.lock.yml
     with:
       script: |

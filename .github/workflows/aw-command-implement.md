@@ -1,6 +1,6 @@
 ---
 name: /implement
-emoji: '🤖'
+emoji: "🤖"
 description: Implement an administrator request or a high-confidence fix from an authorized issue review
 on:
   roles: [admin]
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       aw_context:
-        description: Immutable context from the Remix bot comment router
+        description: Immutable context from the React Router bot comment router
         required: false
         type: string
   label_command:
@@ -38,16 +38,17 @@ checkout:
   fetch-depth: 0
 model: gpt-5.6-sol
 engine:
-  id: codex
+  id: copilot
   env:
-    OPENAI_BASE_URL: https://proxy.shopify.ai/v1
-    OPENAI_API_KEY: ${{ secrets.SHOPIFY_AI_PROXY }}
+    COPILOT_PROVIDER_BASE_URL: https://proxy.shopify.ai/v1
+    COPILOT_PROVIDER_API_KEY: ${{ secrets.SHOPIFY_AI_PROXY }}
+    COPILOT_PROVIDER_WIRE_API: responses
 strict: true
 imports:
   - shared/resolve-command-request.md
 runtimes:
   node:
-    version: '24'
+    version: "24"
 tools:
   bash: true
   edit: true
@@ -61,8 +62,8 @@ steps:
     run: corepack enable pnpm
   - name: Install dependencies
     run: pnpm install --frozen-lockfile
-  - name: Install Chromium for repository tests
-    run: pnpm --filter @remix-run/test exec playwright install --with-deps chromium
+  - name: Install browsers for repository tests
+    run: pnpm exec playwright install --with-deps chromium firefox
 safe-outputs:
   footer: false
   add-comment:
@@ -74,7 +75,7 @@ safe-outputs:
     discussions: true
   create-pull-request:
     github-token: ${{ secrets.GH_REMIX_PAT_AW }}
-    branch-prefix: '${{ github.actor }}/'
+    branch-prefix: "${{ github.actor }}/"
     draft: true
     base-branch: main
     stacked: false
@@ -83,10 +84,11 @@ safe-outputs:
     allowed-files:
       - README.md
       - packages/**
-      - demos/**
+      - integration/**
+      - examples/**
       - docs/**
       - decisions/**
-      - template/**
+      - tutorials/**
     protected-files:
       exclude:
         - README.md
@@ -97,12 +99,13 @@ max-daily-ai-credits: 100
 timeout-minutes: 30
 ---
 
-# Remix Implementation
+# React Router Implementation
 
 Implement the authorized request from the trusted default branch and create at
-most one draft pull request. Do not create a pull request until the requested
-behavior is clear, the implementation is focused, and relevant validation
-passes or is blocked solely by the sandbox Node.js version as described below.
+most one draft pull request. When the requested behavior is clear and the
+implementation is focused, preserve a coherent patch in a draft pull request
+even if later validation fails. Do not create a pull request for ambiguous,
+unsafe, or unusable work.
 
 ## Authoritative request
 
@@ -139,8 +142,10 @@ takes precedence over conflicting issue or discussion details.
 
 ### Proposal Discussion context
 
-- Treat the Proposal Discussion as accepted context, but incorporate community
-  suggestions only when the maintainer's command clearly adopts them.
+- Read `GOVERNANCE.md` and verify that the proposal is eligible for implementation
+  (normally Stage 1 or later). Do not treat a command as acceptance or advancement
+  of a proposal. Incorporate community suggestions only when the maintainer's
+  command clearly adopts them.
 - When `/implement` has no trailing specification, use the proposal's original post
   only if the intended behavior is self-contained and unambiguous. Inspect related
   issues, pull requests, decisions, and current implementation before editing.
@@ -178,8 +183,13 @@ takes precedence over conflicting issue or discussion details.
 - Do not add or update dependencies, package manifests, lockfiles, workspace or
   TypeScript configuration, GitHub workflows, agent instructions, changelogs,
   or other generated files.
-- Do not edit generated `packages/remix` umbrella sources. Change the owning
-  package instead; repository automation updates the umbrella package.
+- Identify all affected modes: Declarative, Data, Framework, RSC Data, and RSC
+  Framework. Follow the relevant package and mode boundaries in `AGENTS.md`.
+- Preserve existing behavior unless an appropriate future or unstable flag
+  gates the change; test both enabled and disabled states.
+- Edit API documentation in its owning JSDoc source. Do not edit generated
+  `docs/api/` or `.react-router/types/` files. Include mode indicators in docs
+  and the documented warnings and prefixes for unstable features.
 - Add focused regression coverage for behavior changes. Update relevant docs,
   examples, and public API documentation when the requested behavior requires it.
 - Add a package change file for published behavior, using the repository's
@@ -193,40 +203,51 @@ takes precedence over conflicting issue or discussion details.
 
 - Dependencies are installed from the committed lockfile before the agent
   starts. Do not run another dependency installation.
-- Use the smallest relevant test file or scoped test name while iterating, and
-  keep rerunning that focused regression until it passes. For example:
-  `pnpm --filter @remix-run/<package> run test --quiet src/**/<filename>.test.ts --only '<suite-or-test-regex>'`.
-- After focused tests pass and the implementation diff is final, test and
-  typecheck the affected packages with `pnpm run test:changed` and
-  `pnpm run typecheck:changed`. Let pull request CI run the full repository
-  test and typecheck suites.
-- Before creating a pull request, run the repository's fast validation loop:
-  `pnpm run validate-package-meta`, `pnpm run lint`,
-  `pnpm run format:check`, `pnpm run test:changed`, and
-  `pnpm run typecheck:changed`.
-- Run `pnpm run changes:validate` when a change file is added.
-- The sandbox may use Node.js 22 even though the repository requires Node.js 24.
-  Do not treat an `Unsupported engine` warning or a command failure explicitly
-  caused by the unavailable Node.js 24 runtime as a blocker to creating the
-  draft pull request. Continue all validation that can run, record the exact
-  affected commands and results in the pull request body, and rely on pull
-  request CI for authoritative Node.js 24 validation. All failures not caused
-  solely by the runtime mismatch remain blockers.
-- Run repository-owned Playwright tests headlessly when browser behavior
-  materially improves the evidence.
+- For routing logic, server runtime behavior, router state, or React components,
+  use focused Jest tests, for example:
+  `pnpm test packages/react-router/__tests__/router/fetchers-test.ts --runInBand`.
+  Jest tests do not require a build. Rerun the focused regression after targeted
+  corrections until it passes.
+- For Vite, SSR/hydration, RSC, type generation, or browser behavior, build with
+  `pnpm build`, then run the relevant integration test with Chromium, for example:
+  `pnpm test:integration:run integration/middleware-test.ts --project chromium`.
+  Rebuild after package source changes. Use the appropriate Framework and RSC
+  templates and cover every affected mode, as documented in `AGENTS.md`.
+- Browser tests are Chromium-only by default. Always pass `--project chromium`
+  to focused integration commands. Firefox is installed, but use `--project firefox`
+  only when the administrator explicitly requests Firefox or cross-browser
+  validation. Leave the full browser matrix to pull request CI.
+- After focused tests pass and the implementation diff is final, run the
+  validation loop once: Jest for the affected packages, `pnpm run lint`, and
+  `pnpm run format:check`. Build the packages before running `pnpm run typecheck`.
+  Include `pnpm run changes:validate` when a change file is added. Let pull
+  request CI run the full test matrix; report exactly which tests ran locally.
+- If a validation-loop command fails, make a targeted correction and rerun only
+  that failing command. Do not restart the full loop.
+- Check `node --version` against the supported version in `package.json`.
+  Record any runtime or sandbox limitation accurately; do not claim a check
+  passed. A checkpoint draft must retain any failed checks as unresolved work.
 - Review the complete diff, scan it for secrets, and confirm every changed file
   is necessary. Do not weaken or remove tests to make validation pass.
-- If relevant validation fails for any reason other than the sandbox Node.js
-  exception above, do not create a pull request. Comment with the exact failing
-  command and a concise explanation instead.
+- If relevant validation fails after producing a coherent, scoped, secret-free
+  patch, create a checkpoint draft pull request so another maintainer or agent
+  can continue the work. If no useful patch exists or the patch is ambiguous,
+  unsafe, or internally inconsistent, comment with the exact failing command
+  and a concise explanation instead.
 
 ## Draft pull request
 
-- Create at most one draft pull request targeting `main` after validation
-  passes or is blocked solely by the sandbox Node.js exception above.
+- Create at most one draft pull request targeting `main` after validation passes
+  or to checkpoint a coherent implementation blocked by later validation.
 - Use a concise imperative title without automation or agent attribution.
-- In the body, link the triggering issue or Proposal Discussion and summarize
-  the request, implementation, tests, change file when applicable, and exact
-  validation performed.
+- For a validated pull request, link the triggering issue or Proposal Discussion
+  and summarize the request, implementation, tests, change file when applicable,
+  and exact validation performed.
+- For a checkpoint pull request, link the triggering issue or Proposal Discussion
+  and clearly state that the implementation is incomplete or unvalidated. Record
+  what was completed, every failing command and its result, the remaining work,
+  and a link to the workflow run. Never claim that validation passed.
+- Use the pull request body as the handoff record. Do not add a memory or handoff
+  file to the implementation diff.
 - Do not apply labels. Never merge, approve, enable auto-merge, or push more
   changes after requesting the safe output.

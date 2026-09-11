@@ -1,6 +1,6 @@
 ---
 name: /review proposal
-emoji: '🤖'
+emoji: "🤖"
 description: Perform an admin-requested read-only review of a Proposal Discussion
 on:
   roles: [admin]
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       aw_context:
-        description: Immutable context from the Remix bot comment router
+        description: Immutable context from the React Router bot comment router
         required: false
         type: string
   slash_command:
@@ -101,7 +101,10 @@ Assess the proposed design:
 1. Read the proposal and existing comments as supporting evidence. Identify
    the problem, intended behavior, proposed API, constraints, and open decisions.
 2. Inspect relevant implementation, public APIs, docs, and decision documents
-   on the default branch to assess how the proposal fits Remix.
+   on the default branch to assess how the proposal fits React Router. Identify
+   the affected modes (Declarative, Data, Framework, RSC Data, RSC Framework),
+   and assess compatibility, future flags, and unstable API requirements. Read
+   `GOVERNANCE.md` for the proposal stages; a review does not advance a stage.
 3. Evaluate concrete tradeoffs, missing requirements, compatibility and migration
    concerns, security, and simpler alternatives. Separate established problems
    from open questions; do not invent defects in code that has not been written.

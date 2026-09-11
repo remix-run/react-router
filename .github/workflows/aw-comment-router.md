@@ -1,6 +1,6 @@
 ---
-name: Remix bot comment router
-emoji: '🤖'
+name: React Router bot comment router
+emoji: "🤖"
 description: Route administrator mentions to an agentic workflow
 on:
   roles: [admin]
@@ -71,14 +71,14 @@ safe-outputs:
           description: A concise question; required only when workflow is clarify
           required: false
           type: string
-          default: ''
+          default: ""
       output: Request queued
       steps:
         - name: Queue the route or request clarification
           uses: actions/github-script@v9
           env:
-            EXPECTED_REPOSITORY: remix-run/remix
-            EXPECTED_BOT_MENTION: '@remix-run-bot'
+            EXPECTED_REPOSITORY: remix-run/react-router
+            EXPECTED_BOT_MENTION: "@remix-run-bot"
           with:
             github-token: ${{ secrets.GH_REMIX_PAT_AW }}
             script: |
@@ -94,7 +94,7 @@ safe-outputs:
               }
 
               if (process.env.GITHUB_REPOSITORY !== process.env.EXPECTED_REPOSITORY) {
-                core.setFailed('This output is restricted to remix-run/remix')
+                core.setFailed('This output is restricted to remix-run/react-router')
                 return
               }
 
@@ -258,7 +258,7 @@ max-daily-ai-credits: 100
 timeout-minutes: 5
 ---
 
-# Remix Bot Router
+# React Router Bot Router
 
 Classify only the following sanitized administrator comment:
 

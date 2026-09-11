@@ -1,6 +1,6 @@
 ---
 name: /review pull request
-emoji: '🤖'
+emoji: "🤖"
 description: Perform an admin-requested read-only review of a pull request
 on:
   roles: [admin]
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       aw_context:
-        description: Immutable context from the Remix bot comment router
+        description: Immutable context from the React Router bot comment router
         required: false
         type: string
   label_command:
@@ -125,16 +125,23 @@ Focus on high-confidence, actionable issues involving:
 - Missing documentation, examples, JSDoc, or package change files for published
   behavior.
 
-Apply Remix repository conventions while reviewing:
+Apply React Router repository conventions while reviewing:
 
-- Public package exports map to dedicated top-level `src/*.ts` files.
-- `src/lib` is implementation-only and should not contain barrel re-exports or
-  thin pass-through wrappers.
-- Packages should not re-export APIs or types owned by another package.
-- Prefer Web APIs and standards-aligned primitives over Node-specific APIs when
-  possible.
-- Use repository-local runtime semantics and nearby patterns instead of generic
-  framework assumptions.
+- Identify the affected modes: Declarative, Data, Framework, RSC Data, and RSC
+  Framework. Check every applicable mode rather than assuming shared behavior.
+- Core runtime code lives in `packages/react-router/lib/`; Framework tooling
+  lives in `packages/react-router-dev/`, with separate Vite and RSC plugins.
+  Respect existing public exports and server adapter boundaries.
+- Preserve existing behavior unless a future or unstable flag gates the change.
+  Verify coverage with the flag both enabled and disabled.
+- Use Jest for routing/runtime/component behavior and Chromium integration tests
+  for Vite, SSR/hydration, RSC, type generation, and browser behavior. Check that
+  the test uses the appropriate Framework or RSC templates.
+- API docs come from JSDoc; `docs/api/` and `.react-router/types/` are generated.
+  Docs need mode indicators, and unstable features need the documented prefixes
+  and warnings.
+- Published behavior needs the owning package's `.changes/<type>.<name>.md` file.
+  Check new features against the proposal stages in `GOVERNANCE.md`.
 
 Do not report style preferences, speculative concerns, or issues unrelated to
 the patch.
