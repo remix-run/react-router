@@ -159,7 +159,7 @@ does not identify a reproducible React Router bug.
 - Explain briefly that issues are reserved for demonstrable, reproducible bugs.
 - Link to the Q&A Discussion page and shared Remix Discord listed in
   `.github/ISSUE_TEMPLATE/config.yml`:
-  https://github.com/remix-run/remix/discussions/new?category=q-a
+  https://github.com/remix-run/rexct-router/discussions/new?category=q-a
   https://remix.run/discord
 - Close with state reason not_planned.
 
