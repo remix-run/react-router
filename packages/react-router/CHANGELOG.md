@@ -1,5 +1,73 @@
 # `react-router`
 
+## v8.4.0
+
+### Minor Changes
+
+- Deprecate the `createStaticRouter({ branches })` option ([#15297](https://github.com/remix-run/react-router/pull/15297))
+
+  `createStaticRouter` now caches route branches internally, so the `branches` option is no longer used and logs a deprecation warning when provided
+
+  The deprecated `EntryContext.branches` property is retained for compatibility but is now always an empty array
+
+### Patch Changes
+
+- Prevent stale route discovery during manifest version-mismatch recovery ([#15489](https://github.com/remix-run/react-router/pull/15489))
+  - Keep concurrent manifest responses pending while a document reload is in progress.
+  - Report a discovery error when a previous reload failed to resolve a version mismatch instead of loading a stale route or reloading repeatedly.
+  - Fail pending requests if a document reload does not complete within five seconds or the document is restored from the back-forward cache, allowing subsequent requests to recover.
+
+- Preserve lazy route module import errors during SPA navigations instead of replacing them with a missing `dataStrategy` result error ([#15464](https://github.com/remix-run/react-router/pull/15464))
+
+- Switch to more granular internal router contexts to avoid unnecessary route component re-renders when unrelated data router state changes ([#15376](https://github.com/remix-run/react-router/pull/15376))
+  - ⚠️ This contains some breaking changes to exported `UNSAFE_` contexts, so please review carefully if you are using those unsafe exports
+
+- Correctly escape streamed RSC redirect locations in meta tag attributes ([#15491](https://github.com/remix-run/react-router/pull/15491))
+
+- Fix `SingleFetchNoResultError` thrown when a fetcher revalidates against a splat route during lazy route discovery ([#15395](https://github.com/remix-run/react-router/pull/15395))
+
+  Track discovery per fetcher load so revalidation waits for the current load's discovery, even when the fetcher key is reused, while still restarting interrupted loaders after discovery completes.
+
+- Preserve the underlying decode failure as the `cause` of the `Unable to decode turbo-stream response` error. ([#15450](https://github.com/remix-run/react-router/pull/15450))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add a new Data Mode-only `future.unstable_routePatternMatching` flag to opt into more efficient route matching based on the pathname matcher from `@remix-run/route-pattern` ([#15298](https://github.com/remix-run/react-router/pull/15298))
+
+  - Vendor the pathname-matching implementation while the flag remains unstable
+  - Synthetic Chromium benchmarks reduced navigation and fetcher completion times by ~19–38% with 100 routes and ~71–88% with 1,000 routes, excluding network latency and React rendering
+  - No route definition changes are required - syntax remains the same for public route definitions and route match fields
+  - Once opting into this flag, you should no longer use legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher
+    - A new `router.match()` API exists for those use cases but it's marked private and considered unstable along with the flag
+  - Path generation APIs such as `generatePath` and `href` continue to accept React Router path syntax
+  - This flag also comes with a new `unstable_validateParams` route field which uses keyed regular expressions so a route can reject matched params and let matching continue (non-matched optional params are not validated)
+
+    ```ts
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/:drink",
+          unstable_validateParams: {
+            drink: /^(wines|whiskeys|sakes|beers)$/,
+          },
+        },
+        {
+          path: "/:food",
+          unstable_validateParams: {
+            food: /^(meats|veggies|cheeses|sweets)$/,
+          },
+        },
+      ],
+      {
+        future: {
+          unstable_routePatternMatching: true,
+        },
+      },
+    );
+    ```
+
 ## v8.3.1
 
 ### Patch Changes
