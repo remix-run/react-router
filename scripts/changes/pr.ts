@@ -120,8 +120,8 @@ async function main() {
 
   // Configure git
   console.log("Configuring git...");
-  logAndExec('git config user.name "Remix Run Bot"');
-  logAndExec('git config user.email "hello@remix.run"');
+  logAndExec('git config --local user.email "hello@remix.run"');
+  logAndExec('git config --local user.name "Remix Run Bot"');
 
   // Create or switch to PR branch
   console.log(`\nSwitching to branch: ${prBranch}`);
