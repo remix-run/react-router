@@ -229,6 +229,168 @@ describe("unstable route-pattern matching", () => {
     expect(router.state.matches[1].route.path).toBe("files/*");
   });
 
+  describe.each([false, true])(
+    "splat matching (unstable_routePatternMatching: %s)",
+    (unstable_routePatternMatching) => {
+      it.each([
+        { path: "*", pathname: "/", params: { "*": "" } },
+        { path: "files/*", pathname: "/files", params: { "*": "" } },
+        {
+          path: "files/:folder/*",
+          pathname: "/files/docs",
+          params: { folder: "docs", "*": "" },
+        },
+        { path: "files/:folder?/*", pathname: "/files", params: { "*": "" } },
+      ])(
+        "matches an empty splat in $path at $pathname",
+        ({ path, pathname, params }) => {
+          let router = createMemoryRouter([{ path, id: "splat" }], {
+            future: { unstable_routePatternMatching },
+            initialEntries: [pathname],
+          });
+          try {
+            expect(router.state.errors).toBeNull();
+            expect(router.match(pathname)?.[0]).toMatchObject({
+              route: { id: "splat" },
+              pathname,
+              pathnameBase: pathname,
+              params,
+            });
+          } finally {
+            router.dispose();
+          }
+        },
+      );
+
+      it.each(["/projects/files", "/projects/files/", "/projects/files/a/b"])(
+        "prefers the static splat over a dynamic index at %s",
+        async (pathname) => {
+          let router = createMemoryRouter(
+            [
+              {
+                path: "/",
+                id: "root",
+                children: [
+                  {
+                    path: "projects",
+                    id: "projects",
+                    children: [
+                      {
+                        path: ":itemId",
+                        id: "item",
+                        children: [
+                          { index: true, id: "detail", loader: () => "detail" },
+                        ],
+                      },
+                      {
+                        path: "files/*",
+                        id: "files",
+                        loader: ({ params }) => params["*"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            { future: { unstable_routePatternMatching } },
+          );
+          let fetcherData: unknown;
+          let unsubscribe = router.subscribe((state) => {
+            let fetcher = state.fetchers.get("files");
+            if (fetcher?.state === "idle") fetcherData = fetcher.data;
+          });
+          router.getFetcher("files");
+
+          try {
+            let splat = pathname.endsWith("a/b") ? "a/b" : "";
+            // Fetch from the root first so a wrong target cannot be hidden by
+            // previously loaded navigation data.
+            await router.fetch("files", "root", pathname);
+            expect(router.state.errors).toBeNull();
+            expect(fetcherData).toBe(splat);
+
+            await router.navigate(pathname);
+            expect(router.state.errors).toBeNull();
+            expect(router.state.matches.map((m) => m.route.id)).toEqual([
+              "root",
+              "projects",
+              "files",
+            ]);
+            expect(router.state.matches.at(-1)).toMatchObject({
+              params: { "*": splat },
+              pathname,
+              pathnameBase: "/projects/files",
+            });
+            expect(router.state.loaderData).toEqual({ files: splat });
+          } finally {
+            unsubscribe();
+            router.dispose();
+          }
+        },
+      );
+
+      it.each([
+        { pathname: "/files", ids: ["files"], params: {} },
+        { pathname: "/files/", ids: ["files"], params: {} },
+        {
+          pathname: "/files/a/b",
+          ids: ["files", "splat"],
+          params: { "*": "a/b" },
+        },
+      ])(
+        "selects the parent or child splat at $pathname",
+        async ({ pathname, ids, params }) => {
+          let router = createMemoryRouter(
+            [
+              {
+                path: "/files",
+                id: "files",
+                children: [{ path: "*", id: "splat" }],
+              },
+            ],
+            {
+              future: { unstable_routePatternMatching },
+              initialEntries: ["/files"],
+            },
+          );
+          try {
+            let matches = router.match(pathname);
+            expect(matches?.map((m) => m.route.id)).toEqual(ids);
+            expect(matches?.at(-1)?.params).toEqual(params);
+
+            await router.navigate(pathname);
+            expect(router.state.errors).toBeNull();
+            expect(router.state.matches.map((m) => m.route.id)).toEqual(ids);
+            expect(router.state.matches.at(-1)?.params).toEqual(params);
+          } finally {
+            router.dispose();
+          }
+        },
+      );
+
+      it("prefers exact static routes over empty splats regardless of route order", () => {
+        for (let reverse of [false, true]) {
+          let routes = [
+            { path: "files/*", id: "splat" },
+            { path: "files", id: "exact" },
+          ];
+          let router = createMemoryRouter(reverse ? routes.reverse() : routes, {
+            future: { unstable_routePatternMatching },
+          });
+          try {
+            for (let pathname of ["/files", "/files/"]) {
+              expect(router.match(pathname)?.map((m) => m.route.id)).toEqual([
+                "exact",
+              ]);
+            }
+          } finally {
+            router.dispose();
+          }
+        }
+      });
+    },
+  );
+
   it("matches nested optional route paths", () => {
     let router = createMemoryRouter(
       [

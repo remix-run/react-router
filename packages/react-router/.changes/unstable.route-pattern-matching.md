@@ -1,6 +1,7 @@
 Add a new Data Mode-only `future.unstable_routePatternMatching` flag to opt into more efficient route matching based on the pathname matcher from `@remix-run/route-pattern`
 
 - Vendor the pathname-matching implementation while the flag remains unstable
+- Synthetic Chromium benchmarks reduced navigation and fetcher completion times by ~19–38% with 100 routes and ~71–88% with 1,000 routes, excluding network latency and React rendering
 - No route definition changes are required - syntax remains the same for public route definitions and route match fields
 - Once opting into this flag, you should no longer use legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher
   - A new `router.match()` API exists for those use cases but it's marked private and considered unstable along with the flag
