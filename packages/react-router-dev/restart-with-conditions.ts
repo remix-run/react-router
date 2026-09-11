@@ -2,8 +2,32 @@ import { spawn, type ChildProcess } from "node:child_process";
 import process from "node:process";
 
 /**
- * Restarts the current Node process, appending new flags to the
- * existing NODE_OPTIONS. SIGINT/SIGTERM are always forwarded to the child.
+ * Build the child process invocation used to relaunch the CLI with extra flags.
+ *
+ * Extra flags are placed on argv immediately after the runtime binary. Putting
+ * them in NODE_OPTIONS is not portable: Bun silently ignores `--conditions`
+ * there, so the child would restart again and hit the already-restarted guard.
+ */
+export function resolveRestartSpawn(
+  argv: readonly string[],
+  extraOptions: string,
+  env: NodeJS.ProcessEnv,
+): { command: string; args: string[]; env: NodeJS.ProcessEnv } {
+  const extraArgs = extraOptions.split(/\s+/).filter(Boolean);
+  const [command, ...args] = argv;
+  return {
+    command: command as string,
+    args: [...extraArgs, ...args],
+    env: {
+      ...env,
+      REACT_ROUTER_DEV_RESTARTED: "true",
+    },
+  };
+}
+
+/**
+ * Restarts the current process with extra CLI flags after argv[0].
+ * SIGINT/SIGTERM are always forwarded to the child.
  */
 export function restartWithMergedOptions(nodeOptions: string): void {
   if (process.env.REACT_ROUTER_DEV_RESTARTED === "true") {
@@ -11,21 +35,17 @@ export function restartWithMergedOptions(nodeOptions: string): void {
       "restartWithMergedOptions() was called, but the process has already been restarted. This is likely a bug in @react-router/dev.",
     );
   }
-  const mergedOptions = [process.env.NODE_OPTIONS, nodeOptions]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
 
-  console.log(`[restart] Relaunching with NODE_OPTIONS: ${mergedOptions}`);
+  const { command, args, env } = resolveRestartSpawn(
+    process.argv,
+    nodeOptions,
+    process.env,
+  );
 
-  const [cmd, ...args] = process.argv;
+  console.log(`[restart] Relaunching with ${nodeOptions}`);
 
-  const child: ChildProcess = spawn(cmd, args, {
-    env: {
-      ...process.env,
-      NODE_OPTIONS: mergedOptions,
-      REACT_ROUTER_DEV_RESTARTED: "true",
-    },
+  const child: ChildProcess = spawn(command, args, {
+    env,
     stdio: "inherit",
   });
 
