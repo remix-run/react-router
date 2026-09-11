@@ -189,7 +189,7 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
   await page.waitForSelector("[data-custom-fetch]");
 
   await expect(page.locator("[data-custom-fetch]")).toHaveText("true");
-  expect(await page.evaluate(() => window.__customFetches)).toEqual([
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual([
     "/__manifest",
     "/page.data",
   ]);
