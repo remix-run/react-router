@@ -1332,7 +1332,9 @@ export function createRouter(init: RouterInit): Router {
           historyAction,
         });
 
-        if (blockerKey && delta != null) {
+        // Synthetic popstate events can have a zero delta. There is no history
+        // traversal to undo in that case, and history.go(0) would reload the page.
+        if (blockerKey && delta != null && delta !== 0) {
           // Restore the URL to match the current UI, but don't update router state
           let nextHistoryUpdatePromise = new Promise<void>((resolve) => {
             unblockBlockerHistoryUpdate = resolve;
