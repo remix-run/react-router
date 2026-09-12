@@ -289,12 +289,12 @@ What's next?
 
 [templates]: ../start/framework/deploying#templates
 [spa]: ../how-to/spa
-[inspect]: https://nodejs.org/en/docs/guides/debugging-getting-started/
+[inspect]: https://nodejs.org/en/learn/getting-started/debugging
 [vite-config]: https://vite.dev/config
 [routing]: ../start/framework/routing
 [http-localhost-3000]: http://localhost:3000
 [vite]: https://vitejs.dev
-[react-router-config]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html
+[react-router-config]: https://api.reactrouter.com/v8/types/_react-router_dev.config.Config.html
 [vite-middleware]: https://vitejs.dev/guide/ssr#setting-up-the-dev-server
 [cross-env]: https://www.npmjs.com/package/cross-env
 [address-book-tutorial]: ./address-book

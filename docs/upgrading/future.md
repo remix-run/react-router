@@ -46,6 +46,39 @@ _No known planned breaking changes yet_
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
+### `future.unstable_enableNodeReadableStream`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+Now that the Web Streams API is [stable](https://nodejs.org/docs/latest-v22.x/api/webstreams.html) in Node 22+, it's viable for React Router to use React's [`renderToReadableStream`](https://react.dev/reference/react-dom/server/renderToReadableStream) in the server entry.
+
+When no `entry.server.tsx` file is present, React Router defaults to [`renderToPipeableStream`](https://react.dev/reference/react-dom/server/renderToPipeableStream) when a Node runtime is detected, and `renderToReadableStream` otherwise.
+
+With this flag enabled, React Router will default to `renderToReadableStream` on all runtimes, including Node. You can continue to use `renderToPipeableStream` via a custom `entry.server.tsx` file if needed.
+
+<docs-info>Enabling this flag might even provide slight performance gains because we are already using Web Streams internally, so this flag removes some unnecessary transforms between Web and Node streams.</docs-info>
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_enableNodeReadableStream: true,
+  },
+} satisfies Config;
+```
+
+**Update your Code**
+
+No code changes are required. If your app has a custom `entry.server.tsx`, this flag will not change your runtime behavior.
+
 ### `future.unstable_optimizeDeps`
 
 [MODES: framework]
@@ -72,6 +105,53 @@ export default {
 **Update your Code**
 
 No code changes are required. If you run into dependency optimization issues after enabling this flag, remove the flag and restart the dev server.
+
+### `future.unstable_routePatternMatching`
+
+[MODES: data]
+
+<br/>
+<br/>
+
+**Background**
+
+This flag opts Data Routers into a new route matcher based on the pathname-matching implementation from [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern). It supports the existing React Router path syntax and matching behavior, but ranks ambiguous matches by positional specificity instead of aggregate segment scores. This means a route with a longer static prefix can rank above a route with more dynamic segments.
+
+👉 **Enable the Flag**
+
+```ts
+import { createBrowserRouter } from "react-router";
+
+const router = createBrowserRouter(routes, {
+  future: {
+    unstable_routePatternMatching: true,
+  },
+});
+```
+
+The flag is also available with `createHashRouter` and `createMemoryRouter`.
+
+**Update your Code**
+
+No route configuration changes are required, but you should review any routes with overlapping patterns to ensure the new ranking behavior selects the intended route. This is mostly expected to be an issue when you have deep dynamic param paths which could result in an aggregate score that outweighs a shallower static segment route.
+
+For example, both of these routes match `/products/one/two/three`:
+
+```ts
+const routes = [
+  { path: "/products/*", id: "products" },
+  {
+    path: "/:first/:second/:third/:fourth",
+    id: "segments",
+  },
+];
+```
+
+The legacy matcher selects `segments` based on its aggregate segment score. The new matcher selects `products` because its static `products` segment is more specific than the dynamic `:first` segment in the same position.
+
+Once you enable this flag, use the `router.match()` when you need to match a location (this is currently marked private and will become stable at the same time this flag stabilizes). Standalone matching APIs such as `matchRoutes`, `matchPath`, and `useMatch` continue to use the legacy matcher and may return different matches than the router.
+
+Case-sensitive routes are not currently supported with this flag.
 
 [api-development-strategy]: ../community/api-development-strategy
 [governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals

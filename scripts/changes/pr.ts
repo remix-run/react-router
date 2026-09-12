@@ -2,11 +2,13 @@
  * Opens or updates the release PR.
  *
  * Usage:
- *   node scripts/pr.ts [--preview]
+ *   node scripts/changes/pr.ts [--preview]
  *
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
  */
+import { parseArgs } from "node:util";
+
 import * as semver from "semver";
 
 import { readJson } from "../utils/fs.ts";
@@ -26,8 +28,14 @@ import {
   parseAllChangeFiles,
 } from "./changes.ts";
 
-let args = process.argv.slice(2);
-let preview = args.includes("--preview");
+let { values } = parseArgs({
+  options: {
+    preview: {
+      type: "boolean",
+    },
+  },
+});
+let preview = values.preview === true;
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
 let releaseBranches = ["main", "hotfix", "v7"];
@@ -120,8 +128,8 @@ async function main() {
 
   // Configure git
   console.log("Configuring git...");
-  logAndExec('git config user.name "Remix Run Bot"');
-  logAndExec('git config user.email "hello@remix.run"');
+  logAndExec('git config --local user.email "hello@remix.run"');
+  logAndExec('git config --local user.name "Remix Run Bot"');
 
   // Create or switch to PR branch
   console.log(`\nSwitching to branch: ${prBranch}`);

@@ -575,7 +575,8 @@ type UnsupportedLazyRouteObjectKey =
   | "path"
   | "id"
   | "index"
-  | "children";
+  | "children"
+  | "unstable_validateParams";
 const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
@@ -583,6 +584,7 @@ const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "id",
   "index",
   "children",
+  "unstable_validateParams",
 ]);
 export function isUnsupportedLazyRouteObjectKey(
   key: string,
@@ -609,6 +611,7 @@ const unsupportedLazyRouteFunctionKeys =
     "index",
     "middleware",
     "children",
+    "unstable_validateParams",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
   key: string,
@@ -681,6 +684,11 @@ export type BaseRouteObject = {
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
    */
   shouldRevalidate?: ShouldRevalidateFunction;
+  /**
+   * A map of route param names to regular expressions used to validate params
+   * after a route-pattern match.
+   */
+  unstable_validateParams?: Record<string, RegExp>;
   /**
    * The route handle.
    */
@@ -1145,7 +1153,7 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
@@ -1295,7 +1303,7 @@ function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
  * - `/one/three/:four/:five`
  * - `/one/:two/three/:four/:five`
  */
-function explodeOptionalSegments(path: string): string[] {
+export function explodeOptionalSegments(path: string): string[] {
   let segments = path.split("/");
   if (segments.length === 0) return [];
 
@@ -1352,6 +1360,8 @@ function rankRouteBranches(branches: RouteBranch[]): void {
 }
 
 const paramRe = /^:[\w-]+$/;
+const partialParamRe = /^:[\w-]+/;
+const partialDynamicSegmentValue = 3.5;
 const dynamicSegmentValue = 3;
 const indexRouteValue = 2;
 const emptySegmentValue = 1;
@@ -1374,12 +1384,13 @@ function computeScore(path: string, index: boolean | undefined): number {
     .filter((s) => !isSplat(s))
     .reduce(
       (score, segment) =>
-        score +
-        (paramRe.test(segment)
-          ? dynamicSegmentValue
-          : segment === ""
-            ? emptySegmentValue
-            : staticSegmentValue),
+        // prettier-ignore
+        score + (
+          paramRe.test(segment) ? dynamicSegmentValue :
+          partialParamRe.test(segment) ? partialDynamicSegmentValue :
+          segment === "" ? emptySegmentValue :
+          staticSegmentValue
+        ),
       initialScore,
     );
 }
@@ -1478,12 +1489,71 @@ function matchRouteBranch<
 }
 
 /**
+ * Characters that `encodeURIComponent` escapes but that are valid literally in
+ * a URL path segment. Per RFC 3986 §3.3, a path segment is made of `pchar`:
+ *
+ * ```
+ * pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
+ * sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+ * ```
+ *
+ * `encodeURIComponent` targets query-string values, where `$ & + , ; = : @`
+ * are delimiters and must be escaped — but in a path segment they carry no
+ * special meaning, and browsers keep them literal in `location.pathname`.
+ * (`! ' ( ) *` and the unreserved set are already left alone by
+ * `encodeURIComponent`, so they need no restoring.)
+ */
+const PATH_PARAM_OVERESCAPED: Record<string, string> = {
+  "%24": "$",
+  "%26": "&",
+  "%2B": "+",
+  "%2C": ",",
+  "%3A": ":",
+  "%3B": ";",
+  "%3D": "=",
+  "%40": "@",
+};
+
+/**
+ * Encodes a param value for interpolation into a single URL path segment.
+ *
+ * Escapes characters that would break the path (`/ ? # %`, whitespace,
+ * non-ASCII, …) while leaving characters that RFC 3986 permits literally in a
+ * path segment untouched. Escaping those would needlessly rewrite URLs — e.g.
+ *  a semver build param `1.0.0+1` would become `1.0.0%2B1` even though browsers
+ * display and match the `+` literally in `location.pathname`.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3))
+ *
+ * @param value The param value to encode.
+ * @returns The encoded value, safe for use as a single path segment.
+ */
+export function encodePathParam(value: string): string {
+  return encodeURIComponent(value).replace(
+    /%(?:24|26|2B|2C|3A|3B|3D|40)/g,
+    (match) => PATH_PARAM_OVERESCAPED[match],
+  );
+}
+
+/**
  * Returns a path with params interpolated.
+ *
+ * Param values are percent-encoded for use in a path segment: characters that
+ * would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
+ * are escaped, while characters that RFC 3986 allows literally in a path
+ * segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
+ * encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
+ * delimiters and must be escaped. Splat (`*`) values are encoded per segment,
+ * preserving `/` separators.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
  *
  * @example
  * import { generatePath } from "react-router";
  *
  * generatePath("/users/:id", { id: "123" }); // "/users/123"
+ * generatePath("/files/:name", { name: "a b" }); // "/files/a%20b"
+ * generatePath("/releases/:v", { v: "1.0.0+1" }); // "/releases/1.0.0+1"
  *
  * @public
  * @category Utils
@@ -1529,7 +1599,7 @@ export function generatePath<Path extends string>(
         const [, key, optional, suffix] = keyMatch;
         let param = params[key as keyof typeof params];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
-        return encodeURIComponent(stringify(param)) + suffix;
+        return encodePathParam(stringify(param)) + suffix;
       }
 
       // Remove any optional markers from optional static segments
@@ -1584,7 +1654,7 @@ export interface PathMatch<ParamKey extends string = string> {
   pattern: PathPattern;
 }
 
-type Mutable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
@@ -1629,7 +1699,7 @@ function matchPathImpl<Path extends string>(
   if (!match) return null;
 
   let matchedPathname = match[0];
-  let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
+  let pathnameBase = removeTrailingSlash(matchedPathname, 1);
   let captureGroups = match.slice(1);
   let params: Params = compiledParams.reduce<Mutable<Params>>(
     (memo, { paramName, isOptional }, index) => {
@@ -1637,9 +1707,10 @@ function matchPathImpl<Path extends string>(
       // instead of using params["*"] later because it will be decoded then
       if (paramName === "*") {
         let splatValue = captureGroups[index] || "";
-        pathnameBase = matchedPathname
-          .slice(0, matchedPathname.length - splatValue.length)
-          .replace(/(.)\/+$/, "$1");
+        pathnameBase = removeTrailingSlash(
+          matchedPathname.slice(0, matchedPathname.length - splatValue.length),
+          1,
+        );
       }
 
       const value = captureGroups[index];
@@ -1706,7 +1777,7 @@ export function compilePath(
           return "/([^\\/]+)";
         },
       ) // Dynamic segment
-      .replace(/\/([\w-]+)\?(\/|$)/g, "(/$1)?$2"); // Optional static segment
+      .replace(/\/([\w-]+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
@@ -1812,7 +1883,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   let pathname: string;
   if (toPathname) {
     toPathname = removeDoubleSlashes(toPathname);
-    if (toPathname.startsWith("/")) {
+    if (toPathname.startsWith("/") || toPathname.startsWith("\\")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
       pathname = resolvePathname(toPathname, fromPathname);
@@ -1989,8 +2060,14 @@ export const removeDoubleSlashes = (path: string): string =>
 export const joinPaths = (paths: string[]): string =>
   removeDoubleSlashes(paths.join("/"));
 
-export const removeTrailingSlash = (path: string): string =>
-  path.replace(/\/+$/, "");
+// Scan from the end to avoid repeated RegExp work on long paths.
+export function removeTrailingSlash(path: string, minLength = 0): string {
+  let end = path.length;
+  while (end > minLength && path.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+  return end === path.length ? path : path.slice(0, end);
+}
 
 export const normalizePathname = (pathname: string): string =>
   removeTrailingSlash(pathname).replace(/^\/*/, "/");
@@ -2276,9 +2353,46 @@ by the star-slash in the `getRoutePattern` regex and messes up the parsed commen
 for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 */
 
-export function getRoutePattern(matches: RouteMatch[]) {
+// Accept the narrow shape we read so this can be used with server-runtime
+// matches, which do not include the full RouteMatch fields like pathnameBase.
+export function getRoutePattern(matches: { route: { path?: string } }[]) {
   let parts = matches.map((m) => m.route.path).filter(Boolean) as string[];
   return joinPaths(parts) || "/";
+}
+
+// Create the normalized URL instance to pass to loaders/actions/middleware.
+// We strip the `?index` param because that is a React Router implementation detail.
+export function createDataFunctionUrl(
+  request: Request | URL | string,
+  path: To,
+): URL {
+  let url = new URL(
+    typeof request === "string" || request instanceof URL
+      ? request
+      : request.url,
+  );
+
+  let parsed = typeof path === "string" ? parsePath(path) : path;
+  url.pathname = parsed.pathname || "/";
+
+  if (parsed.search) {
+    let searchParams = new URLSearchParams(parsed.search);
+
+    // Strip naked index param, preserve any other index params with values
+    let indexValues = searchParams.getAll("index");
+    searchParams.delete("index");
+    for (let value of indexValues.filter(Boolean)) {
+      searchParams.append("index", value);
+    }
+    let search = searchParams.toString();
+    url.search = search ? `?${search}` : "";
+  } else {
+    url.search = "";
+  }
+
+  url.hash = parsed.hash || "";
+
+  return url;
 }
 
 export const isBrowser =
@@ -2326,10 +2440,7 @@ export function parseToInfo<T extends To | string>(
       } else {
         isExternal = true;
       }
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {
+    } catch {
       // We can't do external URL detection without a valid URL
       warning(
         false,

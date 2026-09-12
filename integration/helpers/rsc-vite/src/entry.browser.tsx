@@ -24,8 +24,7 @@ setServerCallback(
 
 createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
   startTransition(async () => {
-    const formState =
-      payload.type === "render" ? await payload.formState : undefined;
+    const formState = payload.type === "render" ? payload.formState : undefined;
 
     hydrateRoot(
       document,
@@ -37,7 +36,6 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
         />
       </StrictMode>,
       {
-        // @ts-expect-error - no types for this yet
         formState,
       },
     );

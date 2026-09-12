@@ -39,7 +39,6 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
         />
       </StrictMode>,
       {
-        // @ts-expect-error - on 18 types, requires 19. --- IGNORE ---
         formState,
       },
     );

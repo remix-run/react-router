@@ -5,7 +5,7 @@ import { RouterProvider } from "../components";
 import { RSCRouterContext } from "../context";
 import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
-import { createBrowserHistory, invariant } from "../router/history";
+import { createBrowserHistory, createPath, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
 import {
   createRouter,
@@ -22,10 +22,10 @@ import type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  RouterContextProvider,
 } from "../router/utils";
 import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
 import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
+import { validateNavigationTarget } from "../router/navigation";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -44,7 +44,11 @@ import {
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  handleClientVersionMismatch,
+} from "../dom/ssr/fog-of-war";
 
 const defaultManifestPath = "/__manifest";
 
@@ -147,6 +151,12 @@ export function createCallServer({
         .then(async (payload) => {
           if (payload.type === "redirect") {
             let location = normalizeRedirectLocation(payload.location);
+            validateNavigationTarget(
+              payload.location,
+              location,
+              new URL(window.location.href),
+              "allow-explicit",
+            );
             if (payload.reload || isExternalLocation(location)) {
               if (hasInvalidProtocol(location)) {
                 throw new Error("Invalid redirect location");
@@ -175,6 +185,12 @@ export function createCallServer({
           ) {
             if (rerender.type === "redirect") {
               let location = normalizeRedirectLocation(rerender.location);
+              validateNavigationTarget(
+                rerender.location,
+                location,
+                new URL(window.location.href),
+                "allow-explicit",
+              );
               if (rerender.reload || isExternalLocation(location)) {
                 if (hasInvalidProtocol(location)) {
                   throw new Error("Invalid redirect location");
@@ -259,6 +275,8 @@ function createRouterFromPayload({
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
+  let { clientVersion } = payload;
+
   globalVar.__reactRouterRouteModules =
     globalVar.__reactRouterRouteModules ?? {};
   populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
@@ -301,9 +319,10 @@ function createRouterFromPayload({
       },
       location: payload.location,
       basename: payload.basename,
+      future: {},
       isSpaMode: false,
     }),
-    async patchRoutesOnNavigation({ path, signal }) {
+    async patchRoutesOnNavigation({ path, signal, fetcherKey }) {
       if (payload.routeDiscovery.mode === "initial") {
         if (!applyPatchesPromise) {
           applyPatchesPromise = (async () => {
@@ -331,10 +350,17 @@ function createRouterFromPayload({
       if (discoveredPaths.has(path)) {
         return;
       }
+      let { state } = globalVar.__reactRouterDataRouter;
       await fetchAndApplyManifestPatches(
         [path],
         createFromReadableStream,
         fetchImplementation,
+        clientVersion,
+        // If we're patching for a fetcher call, reload the current location.
+        // Otherwise prefer any ongoing navigation location.
+        fetcherKey
+          ? window.location.href
+          : createPath(state.navigation.location || state.location),
         signal,
       );
     },
@@ -344,6 +370,7 @@ function createRouterFromPayload({
       true,
       createFromReadableStream,
       fetchImplementation,
+      clientVersion,
     ),
   });
 
@@ -439,23 +466,26 @@ function createRouterFromPayload({
 
 const renderedRoutesContext = createContext<RSCRouteManifest[]>();
 
+type DataRouteObjectWithManifestInfo = DataRouteObject & {
+  children?: DataRouteObjectWithManifestInfo[];
+  hasLoader: boolean;
+  hasClientLoader: boolean;
+  hasComponent: boolean;
+  hasAction: boolean;
+  hasClientAction: boolean;
+};
+
+type RSCDataRouteMatch = DataRouteMatch & {
+  route: DataRouteObjectWithManifestInfo;
+};
+
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  clientVersion?: string,
 ): DataStrategyFunction {
-  // TODO: Clean this up with a shared type
-  type RSCDataRouteMatch = DataRouteMatch & {
-    route: DataRouteObject & {
-      hasLoader: boolean;
-      hasClientLoader: boolean;
-      hasComponent: boolean;
-      hasAction: boolean;
-      hasClientAction: boolean;
-    };
-  };
-
   // create map
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -464,20 +494,22 @@ export function getRSCSingleFetchDataStrategy(
       return {
         hasLoader: M.route.hasLoader,
         hasClientLoader: M.route.hasClientLoader,
-        hasComponent: M.route.hasComponent,
-        hasAction: M.route.hasAction,
-        hasClientAction: M.route.hasClientAction,
       };
     },
     // pass map into fetchAndDecode so it can add payloads
-    getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
+    getFetchAndDecodeViaRSC(
+      getRouter,
+      createFromReadableStream,
+      fetchImplementation,
+      clientVersion,
+    ),
     ssr,
     // If the route has a component but we don't have an element, we need to hit
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
     (match) => {
       let M = match as RSCDataRouteMatch;
-      return M.route.hasComponent && !M.route.element;
+      return !M.route.hasComponent || M.route.element != null;
     },
   );
   return async (args) =>
@@ -524,8 +556,10 @@ export function getRSCSingleFetchDataStrategy(
 }
 
 function getFetchAndDecodeViaRSC(
+  getRouter: () => DataRouter,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  clientVersion?: string,
 ): FetchAndDecodeFunction {
   return async (args: DataStrategyFunctionArgs, targetRoutes?: string[]) => {
     let { request, context } = args;
@@ -574,6 +608,20 @@ function getFetchAndDecodeViaRSC(
 
       if (payload.type !== "render") {
         throw new Error("Unexpected payload type");
+      }
+
+      if (
+        clientVersion !== undefined &&
+        (await handleClientVersionMismatch(
+          payload.clientVersion !== clientVersion,
+          clientVersion,
+          createPath(
+            getRouter().state.navigation.location || getRouter().state.location,
+          ),
+        ))
+      ) {
+        // The page is about to be reloaded so we can keep this promise pending.
+        return new Promise(() => {});
       }
 
       // Track routes rendered per-single-fetch call so we can gather them up
@@ -681,7 +729,7 @@ export function RSCHydratedRouter({
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let { routeDiscovery } = payload;
+  let { routeDiscovery, clientVersion } = payload;
 
   let { router, routeModules } = React.useMemo(
     () =>
@@ -789,6 +837,8 @@ export function RSCHydratedRouter({
           paths,
           createFromReadableStream,
           fetchImplementation,
+          clientVersion,
+          null,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -808,7 +858,12 @@ export function RSCHydratedRouter({
       attributes: true,
       attributeFilter: ["data-discover", "href", "action"],
     });
-  }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
+  }, [
+    routeDiscovery,
+    createFromReadableStream,
+    fetchImplementation,
+    clientVersion,
+  ]);
 
   const frameworkContext: FrameworkContextObject = {
     future: {},
@@ -848,14 +903,6 @@ export function RSCHydratedRouter({
     </RSCRouterContext.Provider>
   );
 }
-
-type DataRouteObjectWithManifestInfo = DataRouteObject & {
-  children?: DataRouteObjectWithManifestInfo[];
-  hasLoader: boolean;
-  hasClientLoader: boolean;
-  hasAction: boolean;
-  hasClientAction: boolean;
-};
 
 function createRouteFromServerManifest(
   match: RSCRouteManifest,
@@ -939,6 +986,7 @@ function createRouteFromServerManifest(
     // have a `loader` we may need to get the `element` implementation
     hasLoader: true,
     hasClientLoader: match.clientLoader != null,
+    hasComponent: match.hasComponent,
     hasAction: match.hasAction,
     hasClientAction: match.clientAction != null,
   };
@@ -983,22 +1031,30 @@ const nextPaths = new Set<string>();
 const discoveredPathsMaxSize = 1000;
 const discoveredPaths = new Set<string>();
 
-function getManifestUrl(paths: string[]): URL | null {
+function getManifestUrl(
+  paths: string[],
+  clientVersion: string | undefined,
+): URL | null {
   if (paths.length === 0) {
     return null;
   }
 
+  let url: URL;
   if (paths.length === 1) {
-    return new URL(`${paths[0]}.manifest`, window.location.origin);
+    url = new URL(`${paths[0]}.manifest`, window.location.origin);
+  } else {
+    const globalVar = window as WindowWithRouterGlobals;
+    let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
+      /^\/|\/$/g,
+      "",
+    );
+    url = new URL(`${basename}/.manifest`, window.location.origin);
+    url.searchParams.set("paths", paths.sort().join(","));
   }
 
-  const globalVar = window as WindowWithRouterGlobals;
-  let basename = (globalVar.__reactRouterDataRouter.basename ?? "").replace(
-    /^\/|\/$/g,
-    "",
-  );
-  let url = new URL(`${basename}/.manifest`, window.location.origin);
-  url.searchParams.set("paths", paths.sort().join(","));
+  if (clientVersion !== undefined) {
+    url.searchParams.set("version", clientVersion);
+  }
 
   return url;
 }
@@ -1007,11 +1063,13 @@ async function fetchAndApplyManifestPatches(
   paths: string[],
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
+  clientVersion: string | undefined,
+  errorReloadPath: string | null,
   signal?: AbortSignal,
 ) {
   paths = getPathsWithAncestors(paths);
 
-  let url = getManifestUrl(paths);
+  let url = getManifestUrl(paths, clientVersion);
   if (url == null) {
     return;
   }
@@ -1025,6 +1083,15 @@ async function fetchAndApplyManifestPatches(
   }
 
   let response = await fetchImplementation(new Request(url, { signal }));
+  if (
+    clientVersion !== undefined &&
+    response.status === 204 &&
+    response.headers.has("X-Remix-Reload-Document")
+  ) {
+    await handleClientVersionMismatch(true, clientVersion, errorReloadPath);
+    return;
+  }
+
   if (!response.body || response.status < 200 || response.status >= 300) {
     throw new Error("Unable to fetch new route matches from the server");
   }

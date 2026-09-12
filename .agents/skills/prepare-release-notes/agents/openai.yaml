@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare Release Notes"
+  short_description: "Polish React Router release notes"
+  default_prompt: "Use $prepare-release-notes to review pending React Router change files and draft any needed What's Changed notes."

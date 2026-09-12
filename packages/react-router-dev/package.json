@@ -1,8 +1,15 @@
 {
   "name": "@react-router/dev",
   "type": "module",
-  "version": "8.0.1",
+  "version": "8.3.1",
   "description": "Dev tools and CLI for React Router",
+  "keywords": [
+    "react",
+    "router",
+    "react-router",
+    "vite",
+    "vite-plugin"
+  ],
   "homepage": "https://reactrouter.com",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -33,6 +40,10 @@
     "./package.json": "./package.json"
   },
   "imports": {
+    "#development-condition-enabled": {
+      "development": "./development-condition-enabled/true.mjs",
+      "default": "./development-condition-enabled/false.mjs"
+    },
     "#module-sync-enabled": {
       "module-sync": "./module-sync-enabled/true.mjs",
       "default": "./module-sync-enabled/false.cjs"
@@ -40,6 +51,17 @@
   },
   "bin": {
     "react-router": "bin.cjs"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "rolldown": {
+      "type": "incompatible",
+      "reason": "Uses Vite-specific APIs"
+    },
+    "rollup": {
+      "type": "incompatible",
+      "reason": "Uses Vite-specific APIs"
+    }
   },
   "scripts": {
     "build": "wireit",
@@ -52,6 +74,7 @@
         "../../pnpm-workspace.yaml",
         "cli/**",
         "config/**",
+        "development-condition-enabled/**",
         "module-sync-enabled/**",
         "typegen/**",
         "vite/**",
@@ -69,13 +92,10 @@
     "@babel/core": "^7.29.7",
     "@babel/generator": "^7.29.7",
     "@babel/parser": "^7.29.7",
-    "@babel/plugin-syntax-jsx": "^7.29.7",
-    "@babel/preset-typescript": "^7.29.7",
     "@babel/traverse": "^7.29.7",
     "@babel/types": "^7.29.7",
     "@react-router/node": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.13.3",
-    "arg": "^5.0.1",
+    "@remix-run/node-fetch-server": "^0.14.1",
     "babel-dead-code-elimination": "^1.0.12",
     "chokidar": "^5.0.0",
     "dedent": "^1.7.2",
@@ -88,7 +108,6 @@
     "pathe": "^2.0.3",
     "picocolors": "^1.1.1",
     "pkg-types": "^2.3.1",
-    "prettier": "^3.8.3",
     "react-refresh": "^0.18.0",
     "semver": "^7.8.1",
     "tinyglobby": "^0.2.16",
@@ -96,6 +115,8 @@
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",
+    "@babel/plugin-syntax-jsx": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
     "@types/babel__traverse": "^7.28.0",
@@ -110,6 +131,7 @@
     "esbuild-register": "^3.6.0",
     "execa": "9.6.1",
     "fast-glob": "3.3.3",
+    "prettier": "^3.8.3",
     "react-router": "workspace:^",
     "tsdown": "catalog:",
     "typescript": "catalog:",
@@ -122,7 +144,7 @@
     "@vitejs/plugin-rsc": "catalog:",
     "react-router": "workspace:^",
     "react-server-dom-webpack": "catalog:",
-    "typescript": "^5.1.0 || ^6.0.0",
+    "typescript": "^5.1.0 || ^6.0.0 || ^7.0.0",
     "vite": "^7.0.0 || ^8.0.0",
     "wrangler": "^4.0.0"
   },
@@ -148,6 +170,7 @@
   },
   "files": [
     "dist/",
+    "development-condition-enabled/",
     "module-sync-enabled/",
     "bin.cjs",
     "rsc-types.d.ts",

@@ -1,7 +1,7 @@
 {
   "name": "react-router",
   "type": "module",
-  "version": "8.0.1",
+  "version": "8.3.1",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -63,6 +63,7 @@
   "scripts": {
     "build": "wireit",
     "prepublishOnly": "node ./scripts/copy-docs.mjs",
+    "test:route-pattern": "remix-test 'lib/router/route-pattern/src/**/*.test.ts' --type server",
     "watch": "tsdown --watch & tsdown --config tsdown.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
@@ -85,10 +86,13 @@
     "cookie-es": "^3.1.1"
   },
   "devDependencies": {
+    "@remix-run/assert": "0.3.0",
+    "@remix-run/test": "0.5.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.19.19",
+    "dedent": "1.7.1",
     "jest-environment-jsdom": "^30.4.1",
     "premove": "^4.0.0",
     "react": "catalog:",
@@ -111,6 +115,7 @@
   "files": [
     "dist/",
     "docs/",
+    "lib/router/route-pattern/LICENSE",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

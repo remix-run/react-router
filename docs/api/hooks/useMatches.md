@@ -26,6 +26,29 @@ Returns the active route matches, useful for accessing `loaderData` for
 parent/child routes or the route [`handle`](../../start/framework/route-module#handle)
 property
 
+Pairing the route `handle` with `useMatches` gets very powerful since you can put
+whatever you want on a route handle and have access to `useMatches` anywhere.
+Please see the [handle](../../how-to/using-handle) documentation for an example
+of breadcrumbs via `useMatches`/`handle`.
+
+```tsx
+import { useMatches } from "react-router";
+
+function SomeComponent() {
+  const matches = useMatches();
+  // matches[i].id          // route id
+  // matches[i].pathname    // the portion of the URL the route matched
+  // matches[i].params      // the parsed params from the URL
+  // matches[i].loaderData  // the data from the loader
+  // matches[i].handle      // the route handle with any app specific data
+}
+```
+
+<docs-info>useMatches only works with a data router like `createBrowserRouter`,
+since they know the full route tree up front and can provide all of the current
+matches. Additionally, `useMatches` will not match down into any descendant route
+trees since the router isn't aware of the descendant routes.</docs-info>
+
 ## Signature
 
 ```tsx

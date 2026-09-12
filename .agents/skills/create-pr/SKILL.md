@@ -13,7 +13,7 @@ Create the pull request handoff for completed React Router work. Default to a dr
 - Do not include unrelated dirty files. If unrelated changes are present, leave them unstaged and mention them.
 - If the worktree is detached, create a branch from the current `HEAD` before committing. Use the branch name requested by the user, an existing repository convention, or `<author>/<semantic-name>` when no stronger convention is available.
 - If already on a suitable named branch, use it.
-- Confirm appropriate automated coverage exists or was added. If tests were skipped, failed, or left to CI, say that in the PR body.
+- Confirm appropriate automated coverage exists or was added. Do not list routine CI-covered checks in the PR body.
 - If user-facing functionality is being updated, check that the appropriate package has a change file under `packages/<package>/.changes/`. This is not necessary for docs-only, GitHub Actions/workflow-only, or dependency-maintenance PRs unless the dependency change itself has user-facing impact.
 
 ## Context
@@ -43,7 +43,7 @@ gh pr create --draft --base main --head <branch> --title "<title>" --body-file <
 - Change `--base` only when the user explicitly requests a different base branch.
 - Keep shell quoting simple. Prefer a body file if the body contains backticks, quotes, or multiple paragraphs.
 - Include issue/discussion links when known. Use `Closes #NNNN` for bug fixes the PR should close; use `Implements #NNNN` or a plain link for RFCs/discussions when closing semantics are not appropriate.
-- Include testing notes. Be explicit about skipped verification, failures, or checks intentionally left to CI.
+- Include testing notes only for manual checks, unusual verification, skipped non-CI checks, or failures that reviewers should know about.
 - If `gh pr create` fails, leave the branch pushed when possible and give the user a ready-to-open compare URL plus the prepared title and body.
 
 Recommended PR body shape:
@@ -64,21 +64,19 @@ This change ...
 
 **Testing**
 
-- ...
+- Optional manual or non-CI verification notes only.
 
 ````
 
 - Do not use a `## Summary` heading. Start with one or two short sentences explaining what the change accomplishes.
 - Add bullets after the opening only when more detail is useful.
 - Include usage examples for new features, and before/after examples for replacements or improvements, when they help reviewers understand the change.
-- Add `**Testing**` with bullets below the description when testing notes are needed. Omit it only for trivial PRs where there is genuinely nothing useful to say.
+- Add `**Testing**` with bullets below the description only when there are manual checks, unusual verification steps, skipped non-CI checks, or failures reviewers should know about. Omit it for routine automated coverage.
 
 ## Testing Notes
 
-Prefer automated testing notes over manual testing instructions:
-
-- If appropriate unit, integration, or E2E tests were added or updated, list those commands or say that CI will run the relevant coverage.
-- If no local verification was run because CI will cover it, say so plainly.
+- Do not list linting, typechecking, unit test, or integration test commands in the PR body, even if they were run locally. CI runs these automatically.
+- Do not say that CI will run routine linting, typechecking, unit tests, or integration tests. That is assumed for every PR.
 - Do not add manual testing instructions by default.
 - Add manual testing instructions only when necessary, such as visual/UI behavior that needs human review, environment-specific behavior not covered by CI, release/publish dry-run steps, external service integration, or a reproduction that cannot be expressed reliably in automated tests.
 - When manual testing is necessary, keep the instructions minimal and directly tied to the uncovered risk.

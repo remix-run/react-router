@@ -1,0 +1,38 @@
+name: Feature Request
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+jobs:
+  close-feature-request:
+    name: Close Feature Request
+    if: >
+      github.repository == 'remix-run/react-router' &&
+      github.event.label.name == 'feature-request'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    # SECURITY WARNING: This job runs in the privileged pull_request_target
+    # context with write access to pull requests and issues. NEVER checkout PR
+    # code, execute repository code, install dependencies, use a third-party
+    # action, or interpolate PR-controlled values into commands. Keep this job
+    # limited to fixed gh CLI commands using trusted event metadata.
+    steps:
+      - name: Comment and close
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENT_BODY: |
+            To align with our new [Open Governance](https://remix.run/blog/rr-governance) model, we are now asking that all new features go through the [Proposal/RFC process](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process) and that we don't open PRs until a proposal has been accepted and advanced to Stage 1.
+
+            If this feature doesn't have a Proposal, please [open one](https://github.com/remix-run/react-router/discussions/new?category=proposals) so we can evaluate/discuss the proposed feature. You can link to this PR as an example of a potential implementation and we can re-open it if the proposal advances.
+
+            If this PR already has a Proposal but it has not yet been accepted, let's continue the discussion in the Proposal until it gets accepted and then we can look to open a PR. Feel free to link to this PR or to a branch in a forked repo to show what a potential implementation might look like.
+
+            If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
+        run: gh pr close "$PR_NUMBER" --repo remix-run/react-router --comment "$COMMENT_BODY"

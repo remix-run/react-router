@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-void (async () => {
-  let { default: arg } = await import("arg");
+let { parseArgs } = require("node:util");
 
+const commands = new Set(["build", "dev", "reveal", "routes", "typegen"]);
+
+void (async () => {
   // Minimal replication of our actual parsing in `run.ts`. If not already set,
   // default `NODE_ENV` so React loads the proper version in its CJS entry script.
   // We have to do this before importing `run.ts` since that is what imports
   // `react` (indirectly via `react-router`)
-  let args = arg({}, { argv: process.argv.slice(2), permissive: true });
-  if (args._.length === 0 || args._[0] === "dev") {
+  let { positionals } = parseArgs({
+    args: process.argv.slice(2),
+    allowPositionals: true,
+    strict: false,
+  });
+  let command = positionals.find((positional) => commands.has(positional));
+  if (!command || command === "dev") {
     process.env.NODE_ENV = process.env.NODE_ENV ?? "development";
   } else {
     process.env.NODE_ENV = process.env.NODE_ENV ?? "production";

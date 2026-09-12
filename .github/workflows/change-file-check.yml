@@ -1,0 +1,47 @@
+name: Change File Check
+
+on:
+  pull_request:
+    branches: [main, v7]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    # Keep the existing required-check context while replacing its behavior.
+    name: PR Checks
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+
+    steps:
+      # Execute only the trusted main branch version of the check, never code
+      # supplied by the pull request.
+      - name: Checkout trusted main branch
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.10
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for package change files
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/change-file-check.ts

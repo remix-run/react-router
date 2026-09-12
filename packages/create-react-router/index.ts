@@ -1,12 +1,11 @@
 import process from "node:process";
+import { spawn, type StdioOptions } from "node:child_process";
 import { existsSync } from "node:fs";
 import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import stripAnsi from "strip-ansi";
-import { execa } from "execa";
-import arg from "arg";
+import { parseArgs, stripVTControlCharacters } from "node:util";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
 
@@ -76,55 +75,43 @@ async function createReactRouter(argv: string[]) {
 }
 
 async function getContext(argv: string[]): Promise<Context> {
-  let flags = arg(
-    {
-      "--debug": Boolean,
-      "--react-router-version": String,
-      "-v": "--react-router-version",
-      "--template": String,
-      "--token": String,
-      "--yes": Boolean,
-      "-y": "--yes",
-      "--install": Boolean,
-      "--no-install": Boolean,
-      "--package-manager": String,
-      "--show-install-output": Boolean,
-      "--agent-skills": Boolean,
-      "--no-agent-skills": Boolean,
-      "--git-init": Boolean,
-      "--no-git-init": Boolean,
-      "--help": Boolean,
-      "-h": "--help",
-      "--version": Boolean,
-      "--V": "--version",
-      "--no-color": Boolean,
-      "--no-motion": Boolean,
-      "--overwrite": Boolean,
+  let { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    // Preserve arg's permissive mode so unknown flags don't fail existing usage.
+    strict: false,
+    options: {
+      "agent-skills": { type: "boolean" },
+      debug: { type: "boolean" },
+      "git-init": { type: "boolean" },
+      help: { type: "boolean", short: "h" },
+      install: { type: "boolean" },
+      "no-agent-skills": { type: "boolean" },
+      "no-color": { type: "boolean" },
+      "no-git-init": { type: "boolean" },
+      "no-install": { type: "boolean" },
+      "no-motion": { type: "boolean" },
+      overwrite: { type: "boolean" },
+      "package-manager": { type: "string" },
+      "react-router-version": { type: "string", short: "v" },
+      "show-install-output": { type: "boolean" },
+      template: { type: "string" },
+      token: { type: "string" },
+      version: { type: "boolean", short: "V" },
+      yes: { type: "boolean", short: "y" },
     },
-    { argv, permissive: true },
-  );
+  });
 
-  let {
-    "--debug": debug = false,
-    "--help": help = false,
-    "--react-router-version": selectedReactRouterVersion,
-    "--template": template,
-    "--token": token,
-    "--install": install,
-    "--no-install": noInstall,
-    "--package-manager": pkgManager,
-    "--show-install-output": showInstallOutput = false,
-    "--agent-skills": agentSkills,
-    "--no-agent-skills": noAgentSkills,
-    "--git-init": git,
-    "--no-git-init": noGit,
-    "--no-motion": noMotion,
-    "--yes": yes,
-    "--version": versionRequested,
-    "--overwrite": overwrite,
-  } = flags;
+  let getBooleanArg = (
+    value: string | boolean | Array<string | boolean> | undefined,
+  ) => (typeof value === "boolean" ? value : undefined);
+  let getStringArg = (
+    value: string | boolean | Array<string | boolean> | undefined,
+  ) => (typeof value === "string" ? value : undefined);
 
-  let cwd = flags["_"][0] as string;
+  let selectedReactRouterVersion = getStringArg(values["react-router-version"]);
+  let yes = getBooleanArg(values.yes);
+  let cwd = positionals[0] as string;
   let interactive = isInteractive();
   let projectName = cwd;
 
@@ -155,27 +142,32 @@ async function getContext(argv: string[]): Promise<Context> {
       `create-react-router--${Math.random().toString(36).substr(2, 8)}`,
     ),
     cwd,
-    overwrite,
+    overwrite: getBooleanArg(values.overwrite),
     interactive,
-    debug,
-    agentSkills: agentSkills ?? (noAgentSkills ? false : yes),
-    git: git ?? (noGit ? false : yes),
-    help,
-    install: install ?? (noInstall ? false : yes),
-    showInstallOutput,
-    noMotion,
+    debug: getBooleanArg(values.debug) ?? false,
+    agentSkills:
+      getBooleanArg(values["agent-skills"]) ??
+      (getBooleanArg(values["no-agent-skills"]) ? false : yes),
+    git:
+      getBooleanArg(values["git-init"]) ??
+      (getBooleanArg(values["no-git-init"]) ? false : yes),
+    help: getBooleanArg(values.help) ?? false,
+    install:
+      getBooleanArg(values.install) ??
+      (getBooleanArg(values["no-install"]) ? false : yes),
+    showInstallOutput: getBooleanArg(values["show-install-output"]) ?? false,
+    noMotion: getBooleanArg(values["no-motion"]),
     pkgManager: validatePackageManager(
-      pkgManager ??
-        // npm, pnpm, Yarn, Bun and Deno (v2.0.5+) set the user agent environment variable that can be used
-        // to determine which package manager ran the command.
-        (process.env.npm_config_user_agent ?? "npm").split("/")[0],
+      getStringArg(values["package-manager"]) ??
+        detectPackageManager() ??
+        "npm",
     ),
     projectName,
     prompt,
     reactRouterVersion: selectedReactRouterVersion || pkgJson.version,
-    template,
-    token,
-    versionRequested,
+    template: getStringArg(values.template),
+    token: getStringArg(values.token),
+    versionRequested: getBooleanArg(values.version),
   };
 
   return context;
@@ -540,9 +532,9 @@ async function gitInitStep(ctx: Context) {
       let options = { cwd: ctx.cwd, stdio: "ignore" } as const;
       let commitMsg = "Initial commit from create-react-router";
       try {
-        await execa("git", ["init"], options);
-        await execa("git", ["add", "."], options);
-        await execa("git", ["commit", "-m", commitMsg], options);
+        await runCommand("git", ["init"], options);
+        await runCommand("git", ["add", "."], options);
+        await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
@@ -566,7 +558,7 @@ async function doneStep(ctx: Context) {
       `\n${prefix}Enter your project directory using`,
       color.cyan(`cd .${path.sep}${projectDir}`),
     ];
-    let len = enter[0].length + stripAnsi(enter[1]).length;
+    let len = enter[0].length + stripVTControlCharacters(enter[1]).length;
     log(enter.join(len > max ? "\n" + prefix : " "));
   }
   log(
@@ -581,11 +573,41 @@ async function doneStep(ctx: Context) {
   await sleep(200);
 }
 
-const validPackageManagers = ["npm", "yarn", "pnpm", "bun", "deno"] as const;
+const validPackageManagers = [
+  "npm",
+  "yarn",
+  "pnpm",
+  "bun",
+  "deno",
+  "nub",
+] as const;
 type PackageManager = (typeof validPackageManagers)[number];
 
 function validatePackageManager(pkgManager: string): PackageManager {
   return validPackageManagers.find((name) => pkgManager === name) ?? "npm";
+}
+
+/**
+ * Determine which package manager the user prefers.
+ *
+ * npm, pnpm, Yarn, Bun, Deno, and nub set the user agent environment variable
+ * that can be used to determine which package manager ran the command.
+ */
+function detectPackageManager(): PackageManager | undefined {
+  let { npm_config_user_agent } = process.env;
+  if (!npm_config_user_agent) return undefined;
+  try {
+    let pkgManager = npm_config_user_agent.split("/")[0];
+    if (pkgManager === "npm") return "npm";
+    if (pkgManager === "pnpm") return "pnpm";
+    if (pkgManager === "yarn") return "yarn";
+    if (pkgManager === "bun") return "bun";
+    if (pkgManager === "deno") return "deno";
+    if (pkgManager === "nub") return "nub";
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function installDependencies({
@@ -598,7 +620,7 @@ async function installDependencies({
   showInstallOutput: boolean;
 }) {
   try {
-    await execa(pkgManager, ["install"], {
+    await runCommand(pkgManager, ["install"], {
       cwd,
       stdio: showInstallOutput ? "inherit" : "ignore",
     });
@@ -606,6 +628,30 @@ async function installDependencies({
     error("Oh no!", "Failed to install dependencies.");
     throw err;
   }
+}
+
+function runCommand(
+  command: string,
+  args: string[],
+  options: { cwd: string; stdio: StdioOptions },
+) {
+  return new Promise<void>((resolve, reject) => {
+    let child = spawn(command, args, options);
+    child.on("error", reject);
+    child.on("exit", (code, signal) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(
+          new Error(
+            signal
+              ? `${command} exited with signal ${signal}`
+              : `${command} exited with code ${code}`,
+          ),
+        );
+      }
+    });
+  });
 }
 
 async function updatePackageJSON(ctx: Context) {

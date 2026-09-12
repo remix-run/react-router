@@ -47,8 +47,8 @@ function useResolvedPath(
     relative,
   }: {
     relative?: RelativeRoutingType;
-  } = ,
-): Path {}
+  } = {},
+): Path
 ```
 
 ## Params

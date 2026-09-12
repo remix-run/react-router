@@ -98,3 +98,7 @@ EdgeOne Pages maintains their own template for React Router. Checkout the [EdgeO
 ### DeployHQ
 
 DeployHQ maintains their own guide for deploying React Router to your own server. Checkout the [DeployHQ Guide](https://www.deployhq.com/guides/deploy-react-router-from-github) for more information.
+
+### Hostinger
+
+Hostinger supports deploying React Router applications with server rendering on its managed Node.js hosting, including automatic deployments from GitHub. Checkout the [Hostinger Guide](https://www.hostinger.com/web-apps-hosting/react-router-hosting) for more information.

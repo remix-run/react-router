@@ -51,8 +51,8 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     viewTransition?: boolean;
     defaultShouldRevalidate?: boolean;
     useTransitions?: boolean;
-  } = ,
-): (event: React.MouseEvent<E, MouseEvent>) => void {}
+  } = {},
+): (event: React.MouseEvent<E, MouseEvent>) => void
 ```
 
 ## Params
@@ -89,7 +89,8 @@ Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/Vie
 
 ### options.defaultShouldRevalidate
 
-Specify the default revalidation behavior for the navigation. Defaults to `true`.
+Specify the default revalidation behavior for the navigation. When not specified, loaders revalidate
+according to the router's standard revalidation behavior.
 
 ### options.mask
 

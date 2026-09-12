@@ -76,6 +76,10 @@ major.require-node-24.md
 unstable.update-unstable-api.md
 ```
 
+## License
+
+By contributing to React Router, you agree that your contributions will be licensed under the [MIT License](https://github.com/remix-run/react-router/blob/main/LICENSE.md).
+
 ### Docs + Examples
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.

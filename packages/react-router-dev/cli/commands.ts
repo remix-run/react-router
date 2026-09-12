@@ -8,16 +8,17 @@ import colors from "picocolors";
 // Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
 import "react-router";
 
+import developmentConditionEnabled from "#development-condition-enabled";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
-import { loadConfig } from "../config/config";
+import { hasNodeDependency, loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
-import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 import { hasReactRouterRscPlugin } from "../vite/has-rsc-plugin";
+import { restartWithMergedOptions } from "../restart-with-conditions";
 
 const nodeRequire = createRequire(import.meta.url);
 
@@ -62,14 +63,18 @@ export async function build(
 }
 
 export async function dev(root?: string, options: ViteDevOptions = {}) {
-  let { dev } = await import("../vite/dev");
-  if (options.profile) {
-    await profiler.start();
-  }
-  exitHook(() => profiler.stop(console.info));
+  if (developmentConditionEnabled) {
+    let { dev } = await import("../vite/dev");
+    if (options.profile) {
+      await profiler.start();
+    }
+    exitHook(() => profiler.stop(console.info));
 
-  root = resolveRootDirectory(root, options);
-  await dev(root, options);
+    root = resolveRootDirectory(root, options);
+    await dev(root, options);
+  } else {
+    restartWithMergedOptions("--conditions=development");
+  }
 
   // keep `react-router dev` alive by waiting indefinitely
   await new Promise(() => {});
@@ -171,21 +176,20 @@ export async function generateEntry(
     await copyFile(defaultEntry, outputFile);
   } else {
     let pkgJson = await readPackageJSON(rootDirectory);
-    let deps = pkgJson.dependencies ?? {};
-
-    if (!deps["@react-router/node"]) {
-      console.error(colors.red(`No default server entry detected.`));
-      return;
-    }
+    let useTypeScript = flags.typescript ?? true;
+    let outputExtension = useTypeScript ? "tsx" : "jsx";
 
     let defaultEntryClient = path.resolve(
       defaultsDirectory,
-      "entry.client.tsx",
+      `entry.client.${outputExtension}`,
     );
 
     let defaultEntryServer = path.resolve(
       defaultsDirectory,
-      `entry.server.node.tsx`,
+      hasNodeDependency(pkgJson.dependencies) &&
+        !configResult.value.future.unstable_enableNodeReadableStream
+        ? `entry.server.node.${outputExtension}`
+        : `entry.server.web.${outputExtension}`,
     );
 
     let isServerEntry = entry === "entry.server";
@@ -198,20 +202,10 @@ export async function generateEntry(
           defaultEntryClient,
         );
 
-    let useTypeScript = flags.typescript ?? true;
-    let outputExtension = useTypeScript ? "tsx" : "jsx";
     let outputEntry = `${entry}.${outputExtension}`;
     outputFile = path.resolve(appDirectory, outputEntry);
 
-    if (!useTypeScript) {
-      let javascript = await convertFileToJS(contents, {
-        cwd: rootDirectory,
-        filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
-      });
-      await writeFile(outputFile, javascript, "utf-8");
-    } else {
-      await writeFile(outputFile, contents, "utf-8");
-    }
+    await writeFile(outputFile, contents, "utf-8");
   }
 
   console.log(

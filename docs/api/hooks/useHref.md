@@ -42,8 +42,8 @@ function useHref(
     relative,
   }: {
     relative?: RelativeRoutingType;
-  } = ,
-): string {}
+  } = {},
+): string
 ```
 
 ## Params

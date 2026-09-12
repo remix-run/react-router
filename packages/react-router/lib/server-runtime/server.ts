@@ -1,9 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type {
-  DataRouteObject,
-  ErrorResponse,
-  RouteBranch,
-} from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import {
   defaultMapRouteProperties,
   isRouteErrorResponse,
@@ -42,7 +38,11 @@ import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
-import { instrumentHandler } from "../router/instrumentation";
+import {
+  instrumentationResultMetaContext,
+  instrumentHandler,
+} from "../router/instrumentation";
+import { createDataFunctionUrl, getRoutePattern } from "../router/utils";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import { getNormalizedPath } from "./urls";
 
@@ -76,6 +76,9 @@ function derive(build: ServerBuild, mode?: string) {
         );
       }
     });
+  let requestHandlerInstrumentations = build.entry.module.instrumentations
+    ?.map((i) => i.handler)
+    .filter(Boolean) as InstrumentRequestHandlerFunction[];
 
   let requestHandler: RequestHandler = async (request, initialContext) => {
     let params: RouteMatch<ServerRoute>["params"] = {};
@@ -105,7 +108,8 @@ function derive(build: ServerBuild, mode?: string) {
     loadContext = initialContext || new RouterContextProvider();
 
     let requestUrl = new URL(request.url);
-    let normalizedPathname = getNormalizedPath(request).pathname;
+    let normalizedPath = getNormalizedPath(request);
+    let normalizedPathname = normalizedPath.pathname;
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -184,12 +188,7 @@ function derive(build: ServerBuild, mode?: string) {
       requestUrl.pathname === manifestUrl
     ) {
       try {
-        let res = await handleManifestRequest(
-          build,
-          staticHandler.dataRoutes,
-          staticHandler._internalRouteBranches,
-          requestUrl,
-        );
+        let res = await handleManifestRequest(build, staticHandler, requestUrl);
         return res;
       } catch (e) {
         handleError(e);
@@ -199,13 +198,18 @@ function derive(build: ServerBuild, mode?: string) {
 
     let matches = matchServerRoutes(
       build.routes,
-      staticHandler.dataRoutes,
-      staticHandler._internalRouteBranches,
+      staticHandler,
       normalizedPathname,
-      build.basename,
     );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
+    }
+    if (requestHandlerInstrumentations?.length) {
+      loadContext.set(instrumentationResultMetaContext, {
+        url: createDataFunctionUrl(request, normalizedPath),
+        pattern: matches ? getRoutePattern(matches) : "",
+        params: matches?.[0]?.params ? { ...matches[0].params } : {},
+      });
     }
 
     let response: Response;
@@ -295,12 +299,10 @@ function derive(build: ServerBuild, mode?: string) {
     return response;
   };
 
-  if (build.entry.module.instrumentations) {
+  if (requestHandlerInstrumentations?.length) {
     requestHandler = instrumentHandler(
       requestHandler,
-      build.entry.module.instrumentations
-        .map((i) => i.handler)
-        .filter(Boolean) as InstrumentRequestHandlerFunction[],
+      requestHandlerInstrumentations,
     );
   }
 
@@ -312,6 +314,18 @@ function derive(build: ServerBuild, mode?: string) {
   };
 }
 
+/**
+ * Creates a request handler for a React Router server build.
+ *
+ * This is a low-level API used by server adapters to translate incoming
+ * requests into React Router responses.
+ *
+ * @category Utils
+ * @param build The server build, or a function that resolves to the server
+ * build, used to handle requests.
+ * @param mode The mode in which the server build is running.
+ * @returns A request handler that returns a response for each incoming request.
+ */
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
   mode,
@@ -350,8 +364,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  dataRoutes: DataRouteObject[],
-  branches: RouteBranch<DataRouteObject>[],
+  staticHandler: StaticHandler,
   url: URL,
 ) {
   if (url.toString().length > URL_LIMIT) {
@@ -379,13 +392,7 @@ async function handleManifestRequest(
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let matches = matchServerRoutes(
-        build.routes,
-        dataRoutes,
-        branches,
-        path,
-        build.basename,
-      );
+      let matches = matchServerRoutes(build.routes, staticHandler, path);
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -522,7 +529,7 @@ async function handleDocumentRequest(
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
-      branches: staticHandler._internalRouteBranches,
+      branches: [],
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
@@ -568,10 +575,7 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          e
-        ) {
+        } catch {
           // If we can't unwrap the response - just leave it as-is
         }
       }
@@ -599,6 +603,7 @@ async function handleDocumentRequest(
       };
       entryContext = {
         ...entryContext,
+        branches: [],
         staticHandlerContext: context,
         serverHandoffString: createServerHandoffString(baseServerHandoff),
         serverHandoffStream: encodeViaTurboStream(

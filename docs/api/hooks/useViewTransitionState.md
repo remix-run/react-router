@@ -38,8 +38,8 @@ function useViewTransitionState(
     relative,
   }: {
     relative?: RelativeRoutingType;
-  } = ,
-) {}
+  } = {},
+)
 ```
 
 ## Params

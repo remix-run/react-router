@@ -79,6 +79,7 @@ async function matchRSCServerRequest({
   loadServerAction,
   decodeAction,
   decodeFormState,
+  clientVersion,
   onError,
   request,
   routes,
@@ -92,6 +93,7 @@ async function matchRSCServerRequest({
   decodeFormState?: DecodeFormStateFunction;
   requestContext?: RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
+  clientVersion?: string;
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
@@ -146,6 +148,10 @@ encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-
 ### opts.loadServerAction
 
 Your `react-server-dom-xyz/server`'s `loadServerAction` function, used to load a server action by ID.
+
+### opts.clientVersion
+
+A version derived from the client build output used to detect stale clients during lazy route discovery.
 
 ### opts.onError
 

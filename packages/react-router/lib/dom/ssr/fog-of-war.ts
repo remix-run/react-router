@@ -1,11 +1,10 @@
 import * as React from "react";
 import type { Router as DataRouter } from "../../router/router";
 import type {
-  DataRouteObject,
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { joinPaths, matchRoutesImpl } from "../../router/utils";
+import { joinPaths } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -78,13 +77,7 @@ export function getPartialManifest(
   }
 
   paths.forEach((path) => {
-    let matches = matchRoutesImpl<DataRouteObject>(
-      router.routes,
-      path,
-      router.basename || "/",
-      false,
-      router.branches,
-    );
+    let matches = router.match(path);
     if (matches) {
       matches.forEach((m) => routeIds.add(m.route.id));
     }
@@ -240,6 +233,102 @@ export function getManifestPath(
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
+const MANIFEST_RELOAD_TIMEOUT = 5000;
+let pendingManifestReload: Promise<never> | undefined;
+
+export async function handleClientVersionMismatch(
+  needsReload: boolean,
+  version: string,
+  errorReloadPath: string | null,
+): Promise<boolean> {
+  // A sibling request already started a document navigation. Keep this request
+  // pending too, without clearing the loop guard or continuing on the stale tree.
+  if (pendingManifestReload) {
+    return pendingManifestReload;
+  }
+
+  if (!needsReload) {
+    // Reset loop-detection on a successful response
+    try {
+      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+    } catch {
+      // Session storage unavailable
+    }
+    return false;
+  }
+
+  if (!errorReloadPath) {
+    // No-op during eager route discovery so we will trigger a hard reload
+    // of the destination during the next navigation instead of reloading
+    // while the user is sitting on the current page. Slightly more
+    // disruptive on fetcher calls because we reload the current page, but
+    // it's better than the `React.useContext` error that occurs without
+    // this detection.
+    console.warn(
+      "Detected a manifest version mismatch during eager route discovery. " +
+        "The next navigation/fetch to an undiscovered route will result in " +
+        "a new document navigation to sync up with the latest manifest.",
+    );
+    return true;
+  }
+
+  let alreadyReloaded = false;
+  try {
+    alreadyReloaded =
+      sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) === version;
+    if (!alreadyReloaded) {
+      sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, version);
+    }
+  } catch {
+    // Session storage unavailable
+  }
+
+  // A previous document already attempted recovery for this version. Fail
+  // discovery instead of matching a fallback route in the unchanged route tree.
+  if (alreadyReloaded) {
+    throw new Error(
+      "Unable to discover routes due to manifest version mismatch.",
+    );
+  }
+
+  // Share the pending promise before starting navigation so concurrent requests
+  // wait for the new document rather than triggering an ErrorBoundary flash.
+  let rejectReload: (error: Error) => void;
+  let reloadPromise = new Promise<never>((_, reject) => {
+    rejectReload = reject;
+  });
+  pendingManifestReload = reloadPromise;
+
+  let failReload = () => {
+    clearTimeout(timeout);
+    window.removeEventListener("pageshow", onPageShow);
+    pendingManifestReload = undefined;
+    // Preserve the stored version to prevent another reload loop. Reject rather
+    // than resume discovery against the stale route tree.
+    rejectReload(
+      new Error("Unable to discover routes due to manifest version mismatch."),
+    );
+  };
+  // A beforeunload prompt can cancel this navigation without notifying us. Give
+  // the reload time to finish, then fail any requests left in this document.
+  let timeout = setTimeout(failReload, MANIFEST_RELOAD_TIMEOUT);
+  let onPageShow = (event: PageTransitionEvent) => {
+    if (event.persisted) {
+      // BFCache restores pending requests as well as module state.
+      failReload();
+    }
+  };
+  window.addEventListener("pageshow", onPageShow);
+
+  // Reload the destination on navigations, or the current page on fetcher calls.
+  try {
+    window.location.href = errorReloadPath;
+    console.warn("Detected manifest version mismatch, reloading...");
+  } catch {
+    failReload();
+  }
+  return reloadPromise;
+}
 
 export async function fetchAndApplyManifestPatches(
   paths: string[],
@@ -282,67 +371,33 @@ export async function fetchAndApplyManifestPatches(
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);
-    } else if (
-      res.status === 204 &&
-      res.headers.has("X-Remix-Reload-Document")
+    }
+
+    if (
+      await handleClientVersionMismatch(
+        res.status === 204 && res.headers.has("X-Remix-Reload-Document"),
+        manifest.version,
+        errorReloadPath,
+      )
     ) {
-      if (!errorReloadPath) {
-        // No-op during eager route discovery so we will trigger a hard reload
-        // of the destination during the next navigation instead of reloading
-        // while the user is sitting on the current page.  Slightly more
-        // disruptive on fetcher calls because we reload the current page, but
-        // it's better than the `React.useContext` error that occurs without
-        // this detection.
-        console.warn(
-          "Detected a manifest version mismatch during eager route discovery. " +
-            "The next navigation/fetch to an undiscovered route will result in " +
-            "a new document navigation to sync up with the latest manifest.",
-        );
-        return;
-      }
-
-      try {
-        // This will hard reload the destination path on navigations, or the
-        // current path on fetcher calls
-        if (
-          sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
-          manifest.version
-        ) {
-          // We've already tried fixing for this version, don' try again to
-          // avoid loops - just let this navigation/fetch 404
-          console.error(
-            "Unable to discover routes due to manifest version mismatch.",
-          );
-          return;
-        }
-
-        sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
-      } catch {
-        // Session storage unavailable
-      }
-
-      window.location.href = errorReloadPath;
-      console.warn("Detected manifest version mismatch, reloading...");
-
-      // Stall here and let the browser reload and avoid triggering a flash of
-      // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
-      await new Promise(() => {
-        // check out of this hook cause the DJs never gonna re[s]olve this
-      });
-    } else if (res.status >= 400) {
-      throw new Error(await res.text());
+      return;
     }
 
-    // Reset loop-detection on a successful response
-    try {
-      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
-    } catch {
-      // Session storage unavailable
-    }
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
     if (signal?.aborted) return;
     throw e;
+  }
+
+  // If the navigation/fetcher that triggered this discovery was aborted
+  // while we were waiting on the response, bail before applying anything.
+  // The router's `patch` callback no-ops on an aborted signal, so mutating
+  // `manifest.routes`/`discoveredPaths` here would cache the path as
+  // discovered while the route tree is never patched - permanently (for the
+  // session) shadowing the real route behind any ambiguous match (e.g., a
+  // catch-all) on every subsequent visit
+  if (signal?.aborted) {
+    return;
   }
 
   // Patch routes we don't know about yet into the manifest

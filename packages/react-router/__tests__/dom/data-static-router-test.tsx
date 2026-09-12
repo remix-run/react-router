@@ -23,6 +23,47 @@ beforeEach(() => {
 });
 
 describe("A <StaticRouterProvider>", () => {
+  it("reuses the static handler route matcher", async () => {
+    let { query } = createStaticHandler([
+      {
+        id: "parent",
+        path: "parent",
+        children: [
+          { id: "child", path: "child" },
+          { id: "other", path: "other" },
+        ],
+      },
+    ]);
+    let context = (await query(
+      new Request("http://localhost/parent/child"),
+    )) as StaticHandlerContext;
+    expect(typeof context._match).toBe("function");
+    let otherElement = <h1>Other</h1>;
+
+    // This route tree is intentionally invalid so compiling a new matcher for
+    // it would throw instead of reusing the static handler matcher.
+    let router = createStaticRouter(
+      [
+        {
+          id: "parent",
+          path: "parent",
+          children: [
+            { id: "child", path: "/absolute" },
+            { id: "other", path: "other", element: otherElement },
+          ],
+        },
+      ],
+      context,
+    );
+
+    let matches = router.match("/parent/other");
+    expect(matches?.map((match) => match.route.id)).toEqual([
+      "parent",
+      "other",
+    ]);
+    expect(matches?.[1].route.element).toBe(otherElement);
+  });
+
   it("renders an initialized router", async () => {
     let hooksData1: {
       location: ReturnType<typeof useLocation>;

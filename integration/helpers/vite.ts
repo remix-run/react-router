@@ -52,6 +52,7 @@ type ViteConfigBuildArgs = {
   assetsInlineLimit?: number;
   assetsDir?: string;
   cssCodeSplit?: boolean;
+  sourcemap?: boolean | "inline" | "hidden";
 };
 
 type ViteConfigBaseArgs = {
@@ -87,6 +88,7 @@ export const viteConfig = {
     assetsInlineLimit,
     assetsDir,
     cssCodeSplit,
+    sourcemap,
   }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
@@ -95,6 +97,7 @@ export const viteConfig = {
         cssCodeSplit: ${
           cssCodeSplit !== undefined ? cssCodeSplit : "undefined"
         },
+        sourcemap: ${JSON.stringify(sourcemap)},
       },
     `;
   },

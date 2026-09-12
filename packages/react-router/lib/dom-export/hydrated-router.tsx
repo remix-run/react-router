@@ -155,6 +155,7 @@ function createHydratedRouter({
       }),
       location: window.location,
       basename: window.__reactRouterContext?.basename,
+      future: ssrInfo.context.future,
       isSpaMode: ssrInfo.context.isSpaMode,
     });
   }

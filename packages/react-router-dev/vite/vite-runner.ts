@@ -46,7 +46,7 @@ export async function createContext({
       postcss: {},
     },
     configFile: false,
-    envFile: false,
+    envDir: false,
     plugins: [],
     environments: {
       __config_loader: {

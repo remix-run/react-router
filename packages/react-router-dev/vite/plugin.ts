@@ -36,6 +36,7 @@ import pick from "lodash/pick.js";
 import jsesc from "jsesc";
 import colors from "picocolors";
 import kebabCase from "lodash/kebabCase.js";
+import { readPackageJSON, type PackageJson } from "pkg-types";
 
 const nodeRequire = createRequire(import.meta.url);
 
@@ -72,12 +73,18 @@ import {
   getRouteChunkModuleId,
   getRouteChunkNameFromModuleId,
 } from "./route-chunks";
-import { preloadVite, getVite, defineCompilerOptions } from "./vite";
+import {
+  preloadVite,
+  getVite,
+  defineCompilerOptions,
+  getUserBuildRollupOptions,
+} from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
   type ConfigLoader,
   createConfigLoader,
+  hasNodeDependency,
   resolveEntryFiles,
   configRouteToBranchRoute,
   type PrerenderPaths,
@@ -1455,7 +1462,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             hmr: false,
           },
           configFile: false,
-          envFile: false,
+          envDir: false,
           plugins: [
             childCompilerPlugins
               // Exclude this plugin from the child compiler to prevent an
@@ -1993,7 +2000,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           })
           .join(", ");
 
-        return `export { ${reexports} } from "./${routeFileName}";`;
+        return {
+          code: `export { ${reexports} } from "./${routeFileName}";`,
+          // This barrel is generated, so there's no original code behind it to
+          // map back to. An empty mappings string says so explicitly, rather
+          // than leaving Rollup to assume the output still lines up with the
+          // route module it replaced.
+          map: { mappings: "" },
+        };
       },
     },
     {
@@ -3320,7 +3334,10 @@ async function getRouteChunkIfEnabled(
     normalizeRelativeFilePath(id, ctx.reactRouterConfig) +
     (typeof input === "string" ? "" : "?read");
 
-  return getRouteChunkCode(code, chunkName, cache, cacheKey);
+  return getRouteChunkCode(code, chunkName, cache, cacheKey, {
+    sourceMaps: true,
+    sourceFileName: path.basename(id.split("?")[0]),
+  });
 }
 
 function validateRouteChunks({
@@ -3500,6 +3517,9 @@ export async function getEnvironmentOptionsResolvers(
   viteCommand: Vite.ResolvedConfig["command"],
 ): Promise<EnvironmentOptionsResolvers> {
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
+  let pkgJson: PackageJson = await readPackageJSON(ctx.rootDirectory).catch(
+    () => ({}),
+  );
 
   let packageRoot = path.dirname(
     nodeRequire.resolve("@react-router/dev/package.json"),
@@ -3564,10 +3584,20 @@ export async function getEnvironmentOptionsResolvers(
     // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
     let maybeDefaultServerConditions = vite.defaultServerConditions || [];
 
-    // There is no helpful export with the default external conditions (see
-    // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
-    // we are hardcording the default here.
-    let defaultExternalConditions = ["node"];
+    // Vite added this in 7.1, so we need to be defensive since our minimum version is 7.0
+    let defaultExternalConditions = vite.defaultExternalConditions ?? ["node"];
+
+    // If we couldn't find the package.json, we assume node for backwards compatibility
+    let isNode = hasNodeDependency(pkgJson.dependencies);
+
+    if (!isNode) {
+      maybeDefaultServerConditions = maybeDefaultServerConditions.filter(
+        (c) => c !== "node",
+      );
+      defaultExternalConditions = defaultExternalConditions.filter(
+        (c) => c !== "node",
+      );
+    }
 
     let baseConditions = [
       ...maybeDevelopmentConditions,
@@ -3591,8 +3621,9 @@ export async function getEnvironmentOptionsResolvers(
         ssrEmitAssets: true,
         copyPublicDir: false, // The client only uses assets in the public directory
         rollupOptions: {
+          // prettier-ignore
           input:
-            viteUserConfig.environments?.ssr?.build?.rollupOptions?.input ??
+            getUserBuildRollupOptions(viteUserConfig.environments?.ssr)?.input ??
             virtual.serverBuild.id,
           output: {
             entryFileNames: serverBuildFile,
@@ -3635,29 +3666,31 @@ export async function getEnvironmentOptionsResolvers(
                 },
               ),
             ],
-            output: viteUserConfig?.environments?.client?.build?.rollupOptions
-              ?.output ?? {
-              entryFileNames: ({ moduleIds }) => {
-                let routeChunkModuleId = moduleIds.find(isRouteChunkModuleId);
-                let routeChunkName = routeChunkModuleId
-                  ? getRouteChunkNameFromModuleId(routeChunkModuleId)?.replace(
-                      "unstable_",
-                      "",
-                    )
-                  : null;
-                let routeChunkSuffix = routeChunkName
-                  ? `-${kebabCase(routeChunkName)}`
-                  : "";
-                let assetsDir =
-                  viteUserConfig?.environments?.client?.build?.assetsDir ??
-                  viteUserConfig?.build?.assetsDir ??
-                  "assets";
-                return path.posix.join(
-                  assetsDir,
-                  `[name]${routeChunkSuffix}-[hash].js`,
-                );
+            // prettier-ignore
+            output:
+              getUserBuildRollupOptions(viteUserConfig?.environments?.client)?.output ??
+              {
+                entryFileNames: ({ moduleIds }) => {
+                  let routeChunkModuleId = moduleIds.find(isRouteChunkModuleId);
+                  let routeChunkName = routeChunkModuleId
+                    ? getRouteChunkNameFromModuleId(routeChunkModuleId)?.replace(
+                        "unstable_",
+                        "",
+                      )
+                    : null;
+                  let routeChunkSuffix = routeChunkName
+                    ? `-${kebabCase(routeChunkName)}`
+                    : "";
+                  let assetsDir =
+                    viteUserConfig?.environments?.client?.build?.assetsDir ??
+                    viteUserConfig?.build?.assetsDir ??
+                    "assets";
+                  return path.posix.join(
+                    assetsDir,
+                    `[name]${routeChunkSuffix}-[hash].js`,
+                  );
+                },
               },
-            },
           },
           outDir: getClientBuildDirectory(ctx.reactRouterConfig),
         },

@@ -99,7 +99,6 @@ const isComponentApi = (c: SimplifiedComment) =>
 // Read a filename from standard input using the node parseArgs utility
 
 const { values: args } = util.parseArgs({
-  args: process.argv.slice(2),
   options: {
     path: {
       type: "string",
@@ -122,7 +121,6 @@ const { values: args } = util.parseArgs({
       short: "h",
     },
   },
-  allowPositionals: true,
 });
 
 if (args.help) {
@@ -572,6 +570,11 @@ function getApiName(comment: ParsedComment): string {
     return matches[1].trim();
   }
 
+  matches = comment.code.match(/^export type ([^<=]+)/);
+  if (matches) {
+    return matches[1].trim();
+  }
+
   throw new Error(`Could not determine API name:\n${comment.code}\n`);
 }
 
@@ -715,7 +718,7 @@ async function getSignature(code: string) {
 
     let formatted = await prettier.format(newCode, { parser: "typescript" });
 
-    return formatted.replace("{}", "").trim();
+    return formatted.replace(/\s*\{\}\s*$/, "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
@@ -731,6 +734,22 @@ async function getSignature(code: string) {
     let api = code.match(/export class (\w+)/);
     warn(`Skipping signature section for \`class\` : ${api?.[1]}`);
     return;
+  }
+
+  if (ts.isTypeAliasDeclaration(ast.statements[0])) {
+    let typeAliasDeclaration = ast.statements[0];
+    let modifiedTypeAlias = {
+      ...typeAliasDeclaration,
+      modifiers: typeAliasDeclaration.modifiers?.filter(
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword,
+      ),
+    } as ts.TypeAliasDeclaration;
+
+    let newCode = ts
+      .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+      .printNode(ts.EmitHint.Unspecified, modifiedTypeAlias, ast);
+
+    return (await prettier.format(newCode, { parser: "typescript" })).trim();
   }
 
   throw new Error("Unable to parse signature from code: " + code);
