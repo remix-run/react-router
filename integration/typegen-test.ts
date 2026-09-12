@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import tsx from "dedent";
 import * as Path from "pathe";
 
+import { expect } from "@playwright/test";
+
 import { test } from "./helpers/fixtures";
 import { reactRouterConfig } from "./helpers/vite";
 
@@ -886,5 +888,79 @@ test.describe("typegen", () => {
       `,
     });
     await $("pnpm typecheck");
+  });
+
+  test.describe("future.unstable_routeModuleTypes", () => {
+    const routeFiles = {
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("products/:id", "routes/product.tsx")
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/product.tsx": tsx`
+        export const handle = { productHandle: "product/handle" }
+        export const loader = () => ({ productLoader: "product/loader" })
+        export const action = () => ({ productAction: "product/action" })
+
+        export default function Component() {
+          return <h1>Hello!</h1>
+        }
+      `,
+    };
+
+    const readRoutesTs = (cwd: string) =>
+      fs.readFile(Path.join(cwd, ".react-router/types/+routes.ts"), "utf8");
+
+    test("disabled by default: '+routes.ts' does not import route modules", async ({
+      cwd,
+      edit,
+      $,
+    }) => {
+      await edit(routeFiles);
+      await $("pnpm typecheck");
+
+      const routesTs = await readRoutesTs(cwd);
+      expect(routesTs).toContain("pages: Pages");
+      expect(routesTs).toContain("routeFiles: RouteFiles");
+      expect(routesTs).not.toContain("routeModules");
+      // route module imports are what put '+routes.ts' in a dependency cycle
+      // with every file that imports 'react-router'
+      expect(routesTs).not.toContain("typeof import(");
+    });
+
+    test("enabled: '+routes.ts' registers route modules for 'unstable_useRoute'", async ({
+      cwd,
+      edit,
+      $,
+    }) => {
+      await edit({
+        "react-router.config.ts": reactRouterConfig({
+          future: { unstable_routeModuleTypes: true },
+        }),
+        ...routeFiles,
+        "app/consumer.ts": tsx`
+          import { unstable_useRoute as useRoute } from "react-router"
+
+          import type { Expect, Equal } from "./expect-type"
+
+          export function useProduct() {
+            const product = useRoute("routes/product")
+            type Test = Expect<Equal<typeof product, {
+              handle: { productHandle: string },
+              loaderData: { productLoader: string } | undefined,
+              actionData: { productAction: string } | undefined,
+            } | undefined>>
+            return product
+          }
+        `,
+      });
+      await $("pnpm typecheck");
+
+      const routesTs = await readRoutesTs(cwd);
+      expect(routesTs).toContain("routeModules: RouteModules");
+      expect(routesTs).toContain('typeof import("./app/routes/product.tsx")');
+    });
   });
 });
