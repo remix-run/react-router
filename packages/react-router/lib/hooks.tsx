@@ -996,6 +996,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   revalidation: RevalidationState;
   error: any;
   component: React.ReactNode;
+  routeContext: RouteContextObject;
   onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
 }>;
 
@@ -1083,13 +1084,25 @@ export class RenderErrorBoundary extends React.Component<
       if (decoded) error = decoded;
     }
 
+    // Hide the outlet while we're erroring so an `ErrorBoundary` that renders
+    // `<Outlet>` doesn't re-render the subtree that just threw.  We always
+    // render the provider so the element tree keeps the same shape in both
+    // states and React can reuse the route's `Layout` across the swap.
     let result = (
-      <RouteErrorContext.Provider
-        value={error}
-        children={
-          error !== undefined ? this.props.component : this.props.children
+      <RouteContext.Provider
+        value={
+          error !== undefined
+            ? { ...this.props.routeContext, outlet: null }
+            : this.props.routeContext
         }
-      />
+      >
+        <RouteErrorContext.Provider
+          value={error}
+          children={
+            error !== undefined ? this.props.component : this.props.children
+          }
+        />
+      </RouteContext.Provider>
     );
 
     if (this.context) {
@@ -1335,14 +1348,15 @@ export function _renderMatches(
       // states so the subtree isn't unmounted when we swap the component for
       // the error boundary.  Only render a route-level error boundary for data
       // routers that expose one (or for the root route's default boundary).
+      let routeContext = {
+        outlet,
+        matches,
+        isDataRoute: dataRouterState != null,
+      };
       return (
         <RenderedRoute
           match={match}
-          routeContext={{
-            outlet,
-            matches,
-            isDataRoute: dataRouterState != null,
-          }}
+          routeContext={routeContext}
           children={
             dataRouterState &&
             (match.route.ErrorBoundary ||
@@ -1353,6 +1367,7 @@ export function _renderMatches(
                 revalidation={dataRouterState.revalidation}
                 component={errorElement}
                 error={error}
+                routeContext={routeContext}
                 onError={onError}
               >
                 {getChildren()}
