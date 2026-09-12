@@ -18,6 +18,71 @@ import * as ___EnsureClientRouteModuleForHMR_REACT___ from "react";
 export function EnsureClientRouteModuleForHMR___() { return ___EnsureClientRouteModuleForHMR_REACT___.createElement(___EnsureClientRouteModuleForHMR_REACT___.Fragment, null) }
 `;
 
+type TransformToJsResult = {
+  code: string;
+  map: object | string | null;
+};
+
+function createEmptySourceMap() {
+  // Route entries are generated, so there's no original code behind them to
+  // map back to. An empty mappings string says so explicitly, rather than
+  // leaving the bundler to assume the output still lines up with the route
+  // module it replaced.
+  return { version: 3, names: [], sources: [], mappings: "" };
+}
+
+function generateRouteModule(
+  code: string,
+  map: object | string | null,
+  filename: string,
+) {
+  const ast = babel.parse(code, {
+    sourceType: "module",
+  });
+  const generatorOptions: Parameters<typeof babel.generate>[1] & {
+    inputSourceMap: object | string | null;
+  } = {
+    sourceMaps: true,
+    sourceFileName: filename,
+    inputSourceMap: map,
+  };
+
+  return {
+    ast,
+    generate: () => babel.generate(ast, generatorOptions),
+  };
+}
+
+function prependUnmappedCode(
+  prefix: string,
+  generated: ReturnType<typeof babel.generate>,
+) {
+  if (generated.map) {
+    generated.map.mappings =
+      ";".repeat(prefix.match(/\n/g)?.length ?? 0) + generated.map.mappings;
+  }
+
+  return {
+    code: prefix + generated.code,
+    map: generated.map,
+  };
+}
+
+function appendUnmappedCode(
+  generated: ReturnType<typeof prependUnmappedCode>,
+  code: string,
+) {
+  if (!generated.code.endsWith("\n") && !code.startsWith("\n")) {
+    code = "\n" + code;
+  }
+
+  if (generated.map) {
+    generated.map.mappings += ";A".repeat(code.match(/\n/g)?.length ?? 0);
+  }
+
+  generated.code += code;
+}
+
 export function virtualRouteModulesPlugin({
   enforceSplitRouteModules,
   environments: { client = ["client", "ssr"], server = ["rsc"] } = {},
@@ -35,7 +100,10 @@ export function virtualRouteModulesPlugin({
   isRootRouteModule(filename: string): boolean;
   order?: "pre" | "post";
   shouldTransform?(filename: string): boolean;
-  transformToJs: (code: string, filename: string) => Promise<string>;
+  transformToJs: (
+    code: string,
+    filename: string,
+  ) => Promise<TransformToJsResult>;
 }) {
   let clientEnvironments = new Set(client);
   let serverEnvironments = new Set(server);
@@ -119,6 +187,7 @@ export function virtualRouteModulesPlugin({
 
     return {
       code: '"use client";\n' + result,
+      map: createEmptySourceMap(),
     };
   }
 
@@ -201,15 +270,18 @@ ${result}`;
 
     return {
       code: result,
+      map: createEmptySourceMap(),
     };
   }
 
-  function createServerRouteModule(code: string) {
-    const ast = babel.parse(code, {
-      sourceType: "module",
-    });
+  function createServerRouteModule(
+    code: string,
+    map: object | string | null,
+    filename: string,
+  ) {
+    const { ast, generate } = generateRouteModule(code, map, filename);
     removeExports(ast, CLIENT_ROUTE_EXPORTS);
-    return babel.generate(ast);
+    return generate();
   }
 
   async function createClientRouteModuleChunk(
@@ -219,12 +291,12 @@ ${result}`;
     routeId: string,
     isRootRouteModule: boolean,
     isDevMode: boolean,
+    map: object | string | null,
+    filename: string,
   ) {
     let routeChunks = detectRouteChunks(cache, id, code, isRootRouteModule);
 
-    const ast = babel.parse(code, {
-      sourceType: "module",
-    });
+    const { ast, generate } = generateRouteModule(code, map, filename);
     const { staticExports } = await parseRouteExports(code);
 
     if (chunk === "shared") {
@@ -238,9 +310,8 @@ ${result}`;
       removeExports(ast, Array.from(toRemove));
     }
 
-    const generated = babel.generate(ast);
-
-    let result = '"use client";\n' + generated.code;
+    const generated = generate();
+    let result = prependUnmappedCode('"use client";\n', generated);
 
     if (chunk === "shared") {
       if (
@@ -251,14 +322,17 @@ ${result}`;
         const hasRootLayout =
           staticExports.includes("Layout") ||
           staticExports.includes("ServerLayout");
-        result += `\nimport { createElement as __rr_createElement } from "react";\n`;
-        result += `import { UNSAFE_RSCDefaultRootErrorBoundary } from "react-router";\n`;
-        result += `export function ErrorBoundary() {\n`;
-        result += `  return __rr_createElement(UNSAFE_RSCDefaultRootErrorBoundary, { hasRootLayout: ${hasRootLayout} });\n`;
-        result += `}\n`;
+        appendUnmappedCode(
+          result,
+          `\nimport { createElement as __rr_createElement } from "react";\n` +
+            `import { UNSAFE_RSCDefaultRootErrorBoundary } from "react-router";\n` +
+            `export function ErrorBoundary() {\n` +
+            `  return __rr_createElement(UNSAFE_RSCDefaultRootErrorBoundary, { hasRootLayout: ${hasRootLayout} });\n` +
+            `}\n`,
+        );
       }
 
-      result += ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR;
+      appendUnmappedCode(result, ENSURE_CLIENT_ROUTE_MODULE_CHUNK_FOR_HMR);
     }
 
     let hasAction = staticExports.includes("action");
@@ -271,16 +345,18 @@ ${result}`;
       staticExports.includes("ServerErrorBoundary");
 
     if (isDevMode) {
-      result += `export function ReactRouterHMRMeta___() {return null;};\n`;
-      result += `Object.assign(ReactRouterHMRMeta___, {
+      appendUnmappedCode(
+        result,
+        `export function ReactRouterHMRMeta___() {return null;};\n` +
+          `Object.assign(ReactRouterHMRMeta___, {
         hasAction: ${JSON.stringify(hasAction)},
         hasComponent: ${JSON.stringify(hasComponent)},
         hasErrorBoundary: ${JSON.stringify(hasErrorBoundary)},
         hasLoader: ${JSON.stringify(hasLoader)},
         hasClientLoader: ${JSON.stringify(staticExports.includes("clientLoader"))},
-      });\n`;
-      result += `\nif (import.meta.hot) {\n`;
-      result += `  import.meta.hot.accept((mod) => {
+      });\n` +
+          `\nif (import.meta.hot) {\n` +
+          `  import.meta.hot.accept((mod) => {
           if (typeof __reactRouterDataRouter === "object") {
             __reactRouterDataRouter._updateRoutesForHMR(new Map([[${JSON.stringify(routeId)}, {
               routeModule: mod,
@@ -294,13 +370,12 @@ ${result}`;
             }
           }
         });
-      `;
-      result += `}\n`;
+      ` +
+          `}\n`,
+      );
     }
 
-    return {
-      code: result,
-    };
+    return result;
   }
 
   return {
@@ -323,7 +398,8 @@ ${result}`;
       }
 
       // this.
-      let code = await transformToJs(_code, filename);
+      let transformed = await transformToJs(_code, filename);
+      let code = transformed.code;
 
       let searchParams =
         rest.length > 0 ? new URLSearchParams(rest.join("?")) : null;
@@ -339,11 +415,13 @@ ${result}`;
           routeId,
           isRootRouteModule(filename),
           this.environment.mode === "dev",
+          transformed.map,
+          filename,
         );
       }
 
       if (isServerRouteModule) {
-        return createServerRouteModule(code);
+        return createServerRouteModule(code, transformed.map, filename);
       }
 
       if (isClientEnvironment) {
