@@ -358,7 +358,9 @@ In theory, we could have leveraged [`AsyncLocalStorage`][asynclocalstorage] dire
 
 That said, this API still works great with React Router middleware and can be used in place of, or alongside of the `context` API:
 
-<docs-info>[`AsyncLocalStorage`][asynclocalstorage] is _especially_ powerful when using [React Server Components](../how-to/react-server-components) because it allows you to provide information from `middleware` to your Server Components and Server Actions because they run in the same server execution context 🤯</docs-info>
+<docs-info>[`AsyncLocalStorage`][asynclocalstorage] is _especially_ powerful when using [React Server Components](../how-to/react-server-components) because it allows you to provide information from `middleware` to your Server Components and route actions because they run in the same server execution context 🤯</docs-info>
+
+<docs-warning>Do not rely on route middleware to provide access control for React Server Functions. Server Functions are not inherently associated with a route, and a client can call the same Server Function through a URL with different middleware. Server Functions must perform all of their own access control checks. Use a route `action` instead when you want middleware-driven access control.</docs-warning>
 
 ```tsx filename=app/user-context.ts
 import { AsyncLocalStorage } from "node:async_hooks";
