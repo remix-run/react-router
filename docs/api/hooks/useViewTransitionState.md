@@ -22,6 +22,11 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.useViewTransitionState.html)
 
+**Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+component to style transitions instead. This hook only tracks React Router's
+legacy view transitions, not transitions started by React. See the
+[migration guide](../../how-to/view-transitions).
+
 This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
 and the specified location matches either side of the navigation (the URL you are
 navigating **to** or the URL you are navigating **from**). This can be used to apply finer-grained styles to
