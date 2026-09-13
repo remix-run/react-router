@@ -48,7 +48,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   );
 }
 
-function runFixtureProcess(fixtureName: string) {
+function runFixtureProcess(fixtureName: string, nodeArgs: string[] = []) {
   let fixture = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     "fixtures",
@@ -56,7 +56,7 @@ function runFixtureProcess(fixtureName: string) {
   );
   let result = spawnSync(
     process.execPath,
-    ["--experimental-strip-types", "--no-warnings", fixture],
+    ["--experimental-strip-types", "--no-warnings", ...nodeArgs, fixture],
     { encoding: "utf8", timeout: 5_000 },
   );
 
@@ -137,6 +137,12 @@ describe("writeReadableStreamToWritable", () => {
 
   it("does not crash while a destroyed writable has an error pending", () => {
     expect(runFixtureProcess("stream-pending-writable-error.ts")).toEqual(
+      survivedProcess,
+    );
+  });
+
+  it("does not retain each chunk while waiting for the next one", () => {
+    expect(runFixtureProcess("stream-race-memory.ts", ["--expose-gc"])).toEqual(
       survivedProcess,
     );
   });
