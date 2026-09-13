@@ -1260,12 +1260,22 @@ async function getRSCRouteMatch({
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
   let shouldLoadRoute = !routeIdsToLoad || routeIdsToLoad.includes(route.id);
+  // On data requests (`skipLoaderErrorBubbling`), a loader error is keyed to
+  // the route that threw rather than bubbled to an ancestor boundary, so that
+  // route sits exactly at `deepestRenderedRouteIdx` and `isBelowErrorBoundary`
+  // stays false.  Without this guard we'd still render its Component element
+  // with `loaderData === undefined`, crashing the server component and masking
+  // the real error - the errored route should render its `errorElement` (or
+  // nothing, letting the client fall back to the nearest boundary) instead.
+  let routeHasError = Boolean(
+    staticContext.errors && route.id in staticContext.errors,
+  );
   // Only bother rendering Server Components for routes that we're surfacing,
   // so nothing at/below an error boundary and prune routes if included in
   // `routeIdsToLoad`.  This is specifically important when a middleware
   // or loader throws and we don't have any `loaderData` to pass through as
   // props leading to render-time errors of the server component
-  if (Component && shouldLoadRoute) {
+  if (Component && shouldLoadRoute && !routeHasError) {
     element = !isBelowErrorBoundary
       ? React.createElement(
           Layout,
