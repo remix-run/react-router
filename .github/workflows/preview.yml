@@ -15,6 +15,17 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "build.utils.ts"
+      - "tsconfig.base.json"
+      - ".nvmrc"
+      - "!packages/**/__tests__/**"
+      - "!packages/**/*-test.*"
+      - "!**/*.md"
   workflow_dispatch:
     inputs:
       baseBranch:
@@ -25,6 +36,17 @@ on:
         required: true
   pull_request:
     types: [opened, synchronize, reopened, closed]
+    paths:
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "build.utils.ts"
+      - "tsconfig.base.json"
+      - ".nvmrc"
+      - "!packages/**/__tests__/**"
+      - "!packages/**/*-test.*"
+      - "!**/*.md"
 
 concurrency:
   # Include `event_name` here because when a pull_request is merged (closed), the
