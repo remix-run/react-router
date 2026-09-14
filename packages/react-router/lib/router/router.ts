@@ -79,7 +79,7 @@ import {
 } from "./url";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
-import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
+import { RoutePatternMatcher } from "./matcher-route-pattern-registry";
 import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,7 +447,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  /** Enables route-pattern matching. */
+  /** Enables route-pattern matching after awaiting `unstable_preloadRoutePattern()`. */
   unstable_routePatternMatching?: boolean;
 }
 
@@ -961,9 +961,15 @@ export function createDataRouteMatcher(
   future: FutureConfig,
   basename: string,
 ): DataRouteMatcher {
-  return future.unstable_routePatternMatching
-    ? new RoutePatternDataRouteMatcher(basename)
-    : new V6RegExMatcher(basename);
+  if (future.unstable_routePatternMatching) {
+    invariant(
+      RoutePatternMatcher,
+      'You must await unstable_preloadRoutePattern() from "react-router/route-pattern" ' +
+        "before enabling future.unstable_routePatternMatching.",
+    );
+    return new RoutePatternMatcher(basename);
+  }
+  return new V6RegExMatcher(basename);
 }
 
 /**

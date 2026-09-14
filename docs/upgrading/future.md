@@ -117,10 +117,13 @@ No code changes are required. If you run into dependency optimization issues aft
 
 This flag opts Data Routers into a new route matcher powered by [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern). It supports the existing React Router path syntax and matching behavior, but ranks ambiguous matches by positional specificity instead of aggregate segment scores. This means a route with a longer static prefix can rank above a route with more dynamic segments.
 
-👉 **Enable the Flag**
+👉 **Preload the Matcher and Enable the Flag**
 
 ```ts
 import { createBrowserRouter } from "react-router";
+import { unstable_preloadRoutePattern } from "react-router/route-pattern";
+
+await unstable_preloadRoutePattern();
 
 const router = createBrowserRouter(routes, {
   future: {
@@ -130,6 +133,21 @@ const router = createBrowserRouter(routes, {
 ```
 
 The flag is also available with `createHashRouter` and `createMemoryRouter`.
+
+The preload function dynamically imports the matcher, keeping it out of the
+initial JavaScript bundle for applications that do not use it. Await it before
+creating a router with the flag enabled; router creation remains synchronous and
+throws if preloading has not completed. Concurrent and repeated calls share the
+same promise. Loading failures reject the promise so you can handle them during
+application startup.
+
+For server rendering, preload separately on the server before calling
+`createStaticHandler` with the flag enabled, and in the browser before creating
+the client router. Preloading and router creation must use the same instance of
+the `react-router` package in each environment.
+
+Preloading only loads the matcher. Initial route loaders and `HydrateFallback`
+continue to work as usual once the router is created.
 
 **Update your Code**
 
