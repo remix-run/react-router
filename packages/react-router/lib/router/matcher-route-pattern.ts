@@ -1,9 +1,6 @@
-import { createPathnameMultiMatcher } from "./route-pattern/src/lib/match";
-import type {
-  PathnameMatch,
-  PathnameMultiMatcher,
-} from "./route-pattern/src/lib/match";
-import { descending } from "./route-pattern/src/lib/specificity";
+import { createMultiMatcher } from "@remix-run/route-pattern/match";
+import type { Match, MultiMatcher } from "@remix-run/route-pattern/match";
+import { descending } from "@remix-run/route-pattern/specificity";
 
 import type { Location } from "./history";
 import type {
@@ -27,7 +24,7 @@ import type { DataRouteMatcher } from "./matcher";
 
 type RoutePatternBranchMatcher<
   RouteObjectType extends RouteObject = RouteObject,
-> = PathnameMultiMatcher<RouteBranch<RouteObjectType>>;
+> = MultiMatcher<RouteBranch<RouteObjectType>>;
 
 type RoutePatternMatcherState<
   RouteObjectType extends RouteObject = RouteObject,
@@ -47,12 +44,10 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
 
   update(routes: DataRouteObject[]): RouteBranch<DataRouteObject>[] {
     let branches = flattenRoutes(routes);
-    let matcher = createPathnameMultiMatcher<RouteBranch<DataRouteObject>>({
+    let matcher = createMultiMatcher<RouteBranch<DataRouteObject>>({
       ignoreCase: true,
     });
-    let partialMatcher = createPathnameMultiMatcher<
-      RouteBranch<DataRouteObject>
-    >({
+    let partialMatcher = createMultiMatcher<RouteBranch<DataRouteObject>>({
       ignoreCase: true,
     });
 
@@ -337,8 +332,8 @@ function validateRouteMatchParams<
 function prioritizeValidatedMatches<
   RouteObjectType extends RouteObject = RouteObject,
 >(
-  matches: PathnameMatch<RouteBranch<RouteObjectType>>[],
-): PathnameMatch<RouteBranch<RouteObjectType>>[] {
+  matches: Match<string, RouteBranch<RouteObjectType>>[],
+): Match<string, RouteBranch<RouteObjectType>>[] {
   return matches.sort((a, b) => {
     let specificity = descending(a, b);
     if (specificity !== 0) {
@@ -350,7 +345,7 @@ function prioritizeValidatedMatches<
 }
 
 function hasParamValidators<RouteObjectType extends RouteObject = RouteObject>(
-  match: PathnameMatch<RouteBranch<RouteObjectType>>,
+  match: Match<string, RouteBranch<RouteObjectType>>,
 ): boolean {
   return match.data.routesMeta.some(
     (meta) =>
@@ -362,7 +357,7 @@ function hasParamValidators<RouteObjectType extends RouteObject = RouteObject>(
 function convertRoutePatternMatchToRouteMatches<
   RouteObjectType extends RouteObject = RouteObject,
 >(
-  match: PathnameMatch<RouteBranch<RouteObjectType>>,
+  match: Match<string, RouteBranch<RouteObjectType>>,
   pathname: string,
   allowPartial: boolean,
 ): RouteMatch<string, RouteObjectType>[] | null {
