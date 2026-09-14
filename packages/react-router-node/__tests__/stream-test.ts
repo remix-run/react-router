@@ -48,7 +48,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   );
 }
 
-function runFixtureProcess(fixtureName: string, nodeArgs: string[] = []) {
+function runFixtureProcess(
+  fixtureName: string,
+  nodeArgs: string[] = [],
+  fixtureArgs: string[] = [],
+) {
   let fixture = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     "fixtures",
@@ -56,7 +60,13 @@ function runFixtureProcess(fixtureName: string, nodeArgs: string[] = []) {
   );
   let result = spawnSync(
     process.execPath,
-    ["--experimental-strip-types", "--no-warnings", ...nodeArgs, fixture],
+    [
+      "--experimental-strip-types",
+      "--no-warnings",
+      ...nodeArgs,
+      fixture,
+      ...fixtureArgs,
+    ],
     { encoding: "utf8", timeout: 5_000 },
   );
 
@@ -146,9 +156,29 @@ describe("writeReadableStreamToWritable", () => {
       survivedProcess,
     );
   });
+
+  it("does not crash when a producer closes the writable and rejects synchronously", () => {
+    expect(
+      runFixtureProcess(
+        "stream-synchronous-producer-error.ts",
+        ["--unhandled-rejections=strict"],
+        ["readable"],
+      ),
+    ).toEqual(survivedProcess);
+  });
 });
 
 describe("writeAsyncIterableToWritable", () => {
+  it("does not crash when a producer closes the writable and rejects synchronously", () => {
+    expect(
+      runFixtureProcess(
+        "stream-synchronous-producer-error.ts",
+        ["--unhandled-rejections=strict"],
+        ["iterable"],
+      ),
+    ).toEqual(survivedProcess);
+  });
+
   it("respects writable backpressure", async () => {
     let highWaterMark = 16;
     let chunkSize = 8;

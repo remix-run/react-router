@@ -128,7 +128,9 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
     cleanup,
     race<T>(promise: Promise<T>) {
       if (writableError) {
-        return Promise.reject(writableError);
+        // A read can synchronously close the writable before race() runs.
+        // Still observe its promise so a rejection cannot escape unhandled.
+        return Promise.race([promise, Promise.reject(writableError)]);
       }
 
       // Racing against a single long-lived promise retains the resolved value
