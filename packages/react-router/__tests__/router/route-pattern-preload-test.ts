@@ -49,8 +49,11 @@ describe("route-pattern preloading", () => {
       expect(loadMatcher).not.toHaveBeenCalled();
 
       let first = unstable_preloadRoutePattern();
-      expect(unstable_preloadRoutePattern()).toBe(first);
-      await expect(first).rejects.toBe(failure);
+      let second = unstable_preloadRoutePattern();
+      await Promise.all([
+        expect(first).rejects.toBe(failure),
+        expect(second).rejects.toBe(failure),
+      ]);
       expect(loadMatcher).toHaveBeenCalledTimes(1);
 
       expect(() =>
@@ -60,7 +63,6 @@ describe("route-pattern preloading", () => {
       ).toThrow("await unstable_preloadRoutePattern()");
 
       let retry = unstable_preloadRoutePattern();
-      expect(retry).not.toBe(first);
       await expect(retry).rejects.toBe(failure);
       expect(loadMatcher).toHaveBeenCalledTimes(2);
     });
@@ -81,12 +83,12 @@ describe("route-pattern preloading", () => {
       };
 
       let first = unstable_preloadRoutePattern();
-      expect(unstable_preloadRoutePattern()).toBe(first);
+      let second = unstable_preloadRoutePattern();
       expect(() => createMemoryRouter(routes, opts)).toThrow(
         "await unstable_preloadRoutePattern()",
       );
-      await first;
-      expect(unstable_preloadRoutePattern()).toBe(first);
+      await Promise.all([first, second]);
+      await unstable_preloadRoutePattern();
 
       let router = createMemoryRouter(routes, opts);
       expect(router.state.matches[0].route.id).toBe("products");

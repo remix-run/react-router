@@ -138,7 +138,7 @@ The preload function dynamically imports the matcher, keeping it out of the
 initial JavaScript bundle for applications that do not use it. Await it before
 creating a router with the flag enabled; router creation remains synchronous and
 throws if preloading has not completed. Concurrent and repeated calls share the
-same promise. Loading failures reject the promise so you can handle them during
+same load. Loading failures reject the promise so you can handle them during
 application startup.
 
 For server rendering, preload separately on the server before calling
