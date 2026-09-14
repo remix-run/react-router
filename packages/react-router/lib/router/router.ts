@@ -79,7 +79,7 @@ import {
 } from "./url";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
-import { RoutePatternMatcher } from "./matcher-route-pattern-registry";
+import { RoutePatternMatcher } from "./route-pattern-preload";
 import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////

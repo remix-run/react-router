@@ -1,4 +1,6 @@
-import { registerRoutePatternMatcher } from "./matcher-route-pattern-registry";
+import type { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
+
+export let RoutePatternMatcher: typeof RoutePatternDataRouteMatcher | undefined;
 
 let preloadPromise: Promise<void> | undefined;
 
@@ -19,7 +21,7 @@ let preloadPromise: Promise<void> | undefined;
 export function unstable_preloadRoutePattern(): Promise<void> {
   return (preloadPromise ??= import("./matcher-route-pattern").then(
     ({ RoutePatternDataRouteMatcher }) => {
-      registerRoutePatternMatcher(RoutePatternDataRouteMatcher);
+      RoutePatternMatcher = RoutePatternDataRouteMatcher;
     },
     (error) => {
       preloadPromise = undefined;
