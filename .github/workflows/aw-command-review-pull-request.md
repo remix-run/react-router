@@ -53,6 +53,14 @@ tools:
     toolsets: [repos, issues, pull_requests, discussions]
 network:
   allowed: [defaults, github]
+jobs:
+  pre_activation:
+    pre-steps:
+      - name: Reject label triggers on fork PRs
+        if: github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error::The aw:review label cannot run on fork PRs because GitHub withholds repository secrets. Use /review in a PR comment or @remix-run-bot review in a new comment instead."
+          exit 1
 safe-outputs:
   add-comment:
     github-token: ${{ secrets.GH_REMIX_PAT_AW }}

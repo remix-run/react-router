@@ -49,6 +49,13 @@ tools:
 network:
   allowed: [defaults, github]
 jobs:
+  pre_activation:
+    pre-steps:
+      - name: Reject label triggers on fork PRs
+        if: github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error::The aw:iterate label cannot run on fork PRs because GitHub withholds repository secrets. Use /iterate in a PR comment or @remix-run-bot iterate in a new comment instead."
+          exit 1
   resolve_iteration_target:
     name: Resolve the exact pull request write target
     runs-on: ubuntu-latest
