@@ -152,9 +152,9 @@ describe("writeReadableStreamToWritable", () => {
   });
 
   it("does not retain each chunk while waiting for the next one", () => {
-    expect(runFixtureProcess("stream-race-memory.ts", ["--expose-gc"])).toEqual(
-      survivedProcess,
-    );
+    expect(
+      runFixtureProcess("stream-race-memory.ts", ["--expose-gc"], ["readable"]),
+    ).toEqual(survivedProcess);
   });
 
   it("does not crash when a producer closes the writable and rejects synchronously", () => {
@@ -169,6 +169,12 @@ describe("writeReadableStreamToWritable", () => {
 });
 
 describe("writeAsyncIterableToWritable", () => {
+  it("does not retain each chunk while waiting for the next one", () => {
+    expect(
+      runFixtureProcess("stream-race-memory.ts", ["--expose-gc"], ["iterable"]),
+    ).toEqual(survivedProcess);
+  });
+
   it("does not crash when a producer closes the writable and rejects synchronously", () => {
     expect(
       runFixtureProcess(
