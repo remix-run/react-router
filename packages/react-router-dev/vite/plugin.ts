@@ -2294,7 +2294,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let ast = parse(code, { sourceType: "module" });
         let exportsToRemove = isServerEnvironment
-          ? isApiOnlyMode(ctx.reactRouterConfig) && viteCommand === "build"
+          ? isApiOnlyMode(ctx.reactRouterConfig) &&
+            viteCommand === "build" &&
+            route.id !== "root"
             ? CLIENT_ROUTE_EXPORTS
             : []
           : SERVER_ONLY_ROUTE_EXPORTS;

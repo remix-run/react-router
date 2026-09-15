@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import getPort from "get-port";
 import {
   createRequestHandler,
@@ -33,6 +35,33 @@ test.describe("API-only Mode", () => {
         "react-router.config.ts": reactRouterConfig({
           ssr: "unstable_api-only",
         }),
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+
+          export function Layout({ children }) {
+            return (
+              <html lang="en">
+                <head>
+                  <meta charSet="utf-8" />
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  {children}
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export function HydrateFallback() {
+            return <p data-hydrate-fallback>Loading...</p>;
+          }
+
+          export default function Root() {
+            return <Outlet />;
+          }
+        `,
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
 
@@ -150,6 +179,18 @@ test.describe("API-only Mode", () => {
     expect(route?.module.default).toBeUndefined();
     expect(route?.module.clientLoader).toBeUndefined();
     expect(route?.module.clientAction).toBeUndefined();
+  });
+
+  test("preserves root exports for the generated SPA document", async () => {
+    let root = fixture.build?.routes.root;
+    expect(root?.module.default).toEqual(expect.any(Function));
+    expect(root?.module.HydrateFallback).toEqual(expect.any(Function));
+
+    let document = await readFile(
+      path.join(fixture.projectDir, "build/client/index.html"),
+      "utf8",
+    );
+    expect(document).toContain("Loading...");
   });
 
   test("handles server data requests and rejects document requests", async () => {
