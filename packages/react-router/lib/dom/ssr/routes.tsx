@@ -405,7 +405,7 @@ export function createClientRoutes(
             "No `routeModule` available for critical-route action",
           );
           if (!routeModule.clientAction) {
-            if (isSpaMode) {
+            if (isSpaMode && !isApiOnly) {
               throw noActionDefinedError("clientAction", route.id);
             }
             return fetchServerAction(singleFetch);
@@ -444,7 +444,7 @@ export function createClientRoutes(
       if (!route.hasClientAction) {
         dataRoute.action = (_: ActionFunctionArgs, singleFetch?: unknown) =>
           prefetchStylesAndCallHandler(() => {
-            if (isSpaMode) {
+            if (isSpaMode && !isApiOnly) {
               throw noActionDefinedError("clientAction", route.id);
             }
             return fetchServerAction(singleFetch);

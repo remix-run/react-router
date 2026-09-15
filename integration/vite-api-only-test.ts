@@ -75,6 +75,7 @@ test.describe("API-only Mode", () => {
                 <p data-root-loader>{loaderData.server}</p>
                 <Link to="/dashboard">Dashboard</Link>
                 <Link to="/loader-only">Loader only</Link>
+                <Link to="/action-only">Action only</Link>
               </>
             );
           }
@@ -86,6 +87,28 @@ test.describe("API-only Mode", () => {
 
           export default function LoaderOnly({ loaderData }) {
             return <p data-loader-only>{loaderData.server}</p>;
+          }
+        `,
+        "app/routes/action-only.tsx": js`
+          import { Form } from "react-router";
+
+          export function loader() {
+            return { ready: true };
+          }
+
+          export async function action() {
+            return { action: "action-only-server" };
+          }
+
+          export default function ActionOnly({ actionData }) {
+            return (
+              <>
+                <p data-action-only>{actionData?.action ?? ""}</p>
+                <Form method="post">
+                  <button type="submit">Submit action</button>
+                </Form>
+              </>
+            );
           }
         `,
         "app/routes/dashboard.tsx": js`
@@ -287,6 +310,20 @@ test.describe("API-only Mode", () => {
 
     await expect(page.locator("[data-action]")).toHaveText(
       "server-action:client-action",
+    );
+  });
+
+  test("submits a Form directly to a server action without a clientAction", async ({
+    page,
+  }) => {
+    await startApp();
+
+    let app = new PlaywrightFixture(appFixture!, page);
+    await app.goto("/action-only");
+    await page.getByRole("button", { name: "Submit action" }).click();
+
+    await expect(page.locator("[data-action-only]")).toHaveText(
+      "action-only-server",
     );
   });
 });
