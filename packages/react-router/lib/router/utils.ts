@@ -514,6 +514,17 @@ export interface DataStrategyMatch extends RouteMatch<string, DataRouteObject> {
   ) => Promise<DataStrategyResult>;
 }
 
+/**
+ * The operation that initiated a data strategy execution. Static handler
+ * executions use `"static"`.
+ */
+export type DataStrategyInitiator =
+  | "initialization"
+  | "navigation"
+  | "fetcher"
+  | "revalidation"
+  | "static";
+
 export interface DataStrategyFunctionArgs<
   Context = DefaultContext,
 > extends DataFunctionArgs<Context> {
@@ -525,8 +536,13 @@ export interface DataStrategyFunctionArgs<
     cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
   /**
-   * The key of the fetcher we are calling `dataStrategy` for, otherwise `null`
-   * for navigational executions
+   * The operation that initiated this data strategy execution
+   */
+  initiator: DataStrategyInitiator;
+  /**
+   * The key of the fetcher targeted by this data strategy execution, otherwise
+   * `null`. Fetchers reloaded during a navigation or revalidation retain that
+   * `initiator` while providing their key here.
    */
   fetcherKey: string | null;
 }

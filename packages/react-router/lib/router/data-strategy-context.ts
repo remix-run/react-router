@@ -1,4 +1,4 @@
-export type DataStrategyInitiator = "navigation" | "fetcher" | "revalidation";
+import type { DataStrategyInitiator } from "./utils";
 
 let requestInitiators = new WeakMap<Request, DataStrategyInitiator>();
 

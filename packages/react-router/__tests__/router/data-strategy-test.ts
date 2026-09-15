@@ -1,9 +1,11 @@
 import type {
   DataStrategyFunction,
+  DataStrategyInitiator,
   DataStrategyMatch,
   DataStrategyResult,
 } from "../../lib/router/utils";
 import { getSingleFetchDataStrategyImpl } from "../../lib/dom/ssr/single-fetch";
+import { createStaticHandler } from "../../lib/router/router";
 import {
   createDeferred,
   createAsyncStub,
@@ -1849,6 +1851,77 @@ describe("router dataStrategy", () => {
           index: "INDEX1",
         },
       });
+    });
+  });
+
+  describe("initiator", () => {
+    it("identifies client-side data strategy initiators", async () => {
+      let calls: Array<{
+        initiator: DataStrategyInitiator;
+        fetcherKey: string | null;
+      }> = [];
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", loader: true },
+          { id: "page", path: "/page", loader: true },
+        ],
+        dataStrategy({ matches, initiator, fetcherKey }) {
+          calls.push({ initiator, fetcherKey });
+          return Promise.resolve(
+            Object.fromEntries(
+              matches
+                .filter((match) => match.shouldCallHandler())
+                .map((match) => [
+                  match.route.id,
+                  { type: "data" as const, result: match.route.id },
+                ]),
+            ),
+          );
+        },
+      });
+
+      await tick();
+      expect(calls).toEqual([
+        { initiator: "initialization", fetcherKey: null },
+      ]);
+
+      calls = [];
+      await t.router.navigate("/page");
+      expect(calls).toEqual([{ initiator: "navigation", fetcherKey: null }]);
+
+      calls = [];
+      await t.router.fetch("key", "page", "/page");
+      expect(calls).toEqual([{ initiator: "fetcher", fetcherKey: "key" }]);
+
+      calls = [];
+      await t.router.revalidate();
+      expect(calls).toEqual(
+        expect.arrayContaining([
+          { initiator: "revalidation", fetcherKey: null },
+          { initiator: "revalidation", fetcherKey: "key" },
+        ]),
+      );
+    });
+
+    it("identifies static handler data strategy calls", async () => {
+      let dataStrategy = mockDataStrategy(async ({ matches, initiator }) => {
+        let results = await Promise.all(
+          matches.map((match) => match.resolve()),
+        );
+        return keyedResults(matches, results);
+      });
+      let { query } = createStaticHandler([
+        { id: "root", path: "/", loader: () => "ROOT" },
+      ]);
+
+      await query(new Request("https://example.com/"), { dataStrategy });
+
+      expect(dataStrategy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initiator: "static",
+          fetcherKey: null,
+        }),
+      );
     });
   });
 });

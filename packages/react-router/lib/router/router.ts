@@ -34,6 +34,7 @@ import type {
   FormMethod,
   HTMLFormMethod,
   DataStrategyResult,
+  DataStrategyInitiator,
   MaybePromise,
   MutationFormMethod,
   RedirectResult,
@@ -81,7 +82,6 @@ import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
 import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 import { validateNavigationTarget } from "./navigation";
-import type { DataStrategyInitiator } from "./data-strategy-context";
 import {
   getDataStrategyInitiator,
   setDataStrategyInitiator,
@@ -2025,7 +2025,9 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission,
     );
-    let dataStrategyInitiator = opts?.dataStrategyInitiator ?? "navigation";
+    let dataStrategyInitiator: DataStrategyInitiator = opts?.initialHydration
+      ? "initialization"
+      : (opts?.dataStrategyInitiator ?? "navigation");
     setDataStrategyInitiator(request, dataStrategyInitiator);
     // Create a new context per navigation
     let scopedContext = init.getContext
@@ -3415,6 +3417,8 @@ export function createRouter(init: RouterInit): Router {
         path,
         matches,
         fetcherKey,
+        getDataStrategyInitiator(request) ??
+          (fetcherKey != null ? "fetcher" : "navigation"),
         scopedContext,
         false,
       );
@@ -5015,6 +5019,7 @@ export function createStaticHandler(
       location,
       matches,
       null,
+      "static",
       requestContext,
       true,
     );
@@ -6548,6 +6553,7 @@ async function callDataStrategyImpl(
   path: To,
   matches: DataStrategyMatch[],
   fetcherKey: string | null,
+  initiator: DataStrategyInitiator,
   scopedContext: unknown,
   isStaticHandler: boolean,
 ): Promise<Record<string, DataStrategyResult>> {
@@ -6569,6 +6575,7 @@ async function callDataStrategyImpl(
     params: matches[0].params,
     context: scopedContext,
     matches,
+    initiator,
   };
   let runClientMiddleware = isStaticHandler
     ? () => {
