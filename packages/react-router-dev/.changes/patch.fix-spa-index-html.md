@@ -1,0 +1,1 @@
+Fix SPA mode (`ssr: false`) generating a broken `index.html` when a `public/index.html` exists — the generated SPA shell is now correctly promoted to `build/client/index.html` instead of being left behind in `__spa-fallback.html`
