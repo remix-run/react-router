@@ -492,9 +492,7 @@ test.describe("API-only server bundles", () => {
     let result = build({ cwd });
     expect(result.status).toBe(0);
 
-    let apiBuild = await import(
-      path.join(cwd, "build/server/api/index.js")
-    );
+    let apiBuild = await import(path.join(cwd, "build/server/api/index.js"));
     let apiRoute = apiBuild.routes["routes/api"].module;
     expect(apiRoute.loader).toEqual(expect.any(Function));
     expect(apiRoute.action).toEqual(expect.any(Function));

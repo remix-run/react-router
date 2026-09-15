@@ -178,7 +178,19 @@ export function getTurboStreamSingleFetchDataStrategy(
   routeModules: RouteModules,
   ssr: boolean,
   isApiOnly: boolean = false,
+  serverOrigin?: string,
 ): DataStrategyFunction {
+  let fetchAndDecode = (
+    args: DataStrategyFunctionArgs,
+    targetRoutes?: string[],
+    shouldAllowOptOut?: ShouldAllowOptOutFunction,
+  ) =>
+    fetchAndDecodeViaTurboStream(
+      args,
+      targetRoutes,
+      shouldAllowOptOut,
+      serverOrigin,
+    );
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
     (match: DataRouteMatch) => {
@@ -189,7 +201,7 @@ export function getTurboStreamSingleFetchDataStrategy(
         hasClientLoader: manifestRoute.hasClientLoader,
       };
     },
-    fetchAndDecodeViaTurboStream,
+    fetchAndDecode,
     ssr,
     undefined,
     isApiOnly,
@@ -554,6 +566,7 @@ export function stripIndexParam(url: URL) {
 export function singleFetchUrl(
   reqUrl: URL | string,
   extension: "data" | "rsc",
+  serverOrigin?: string,
 ) {
   let url =
     typeof reqUrl === "string"
@@ -561,11 +574,16 @@ export function singleFetchUrl(
           reqUrl,
           // This can be called during the SSR flow via PrefetchPageLinksImpl so
           // don't assume window is available
-          typeof window === "undefined"
-            ? "server://singlefetch/"
-            : window.location.origin,
+          serverOrigin ??
+            (typeof window === "undefined"
+              ? "server://singlefetch/"
+              : window.location.origin),
         )
-      : reqUrl;
+      : new URL(reqUrl);
+
+  if (serverOrigin && url.origin !== serverOrigin) {
+    url = new URL(url.pathname + url.search + url.hash, serverOrigin);
+  }
 
   if (url.pathname.endsWith("/")) {
     // Preserve trailing slash by using /_.data pattern
@@ -581,9 +599,11 @@ export function singleFetchUrl(
 async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
   targetRoutes?: string[],
+  _shouldAllowOptOut?: ShouldAllowOptOutFunction,
+  serverOrigin?: string,
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
-  let url = singleFetchUrl(request.url, "data");
+  let url = singleFetchUrl(request.url, "data", serverOrigin);
   if (request.method === "GET") {
     url = stripIndexParam(url);
     if (targetRoutes) {

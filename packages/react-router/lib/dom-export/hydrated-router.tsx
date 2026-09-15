@@ -193,6 +193,7 @@ function createHydratedRouter({
       ssrInfo.routeModules,
       ssr,
       ssrInfo.context.unstable_apiOnly === true,
+      ssrInfo.context.unstable_serverOrigin,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       () => router,
@@ -202,6 +203,8 @@ function createHydratedRouter({
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename,
+      ssrInfo.context.unstable_serverOrigin,
+      ssrInfo.context.unstable_apiOnly === true,
     ),
   });
 
@@ -409,6 +412,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
+    ssrInfo.context.unstable_serverOrigin,
+    ssrInfo.context.unstable_apiOnly === true,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
@@ -427,7 +432,9 @@ export function HydratedRouter(props: HydratedRouterProps) {
           criticalCss,
           ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
+          unstable_apiOnly: ssrInfo.context.unstable_apiOnly,
           routeDiscovery: ssrInfo.context.routeDiscovery,
+          unstable_serverOrigin: ssrInfo.context.unstable_serverOrigin,
         }}
       >
         <RemixErrorBoundary location={location}>

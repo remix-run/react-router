@@ -230,6 +230,16 @@ export type ReactRouterConfig = {
   ssr?: boolean | "unstable_api-only";
 
   /**
+   * The origin to use for server requests when `ssr` is `"unstable_api-only"`.
+   * This is ignored when `ssr` is `true` or `false`. Defaults to the same
+   * origin that the static build is served at.
+   *
+   * **Note:** The server origin will need to be configured appropriately for
+   * Cross-Origin Request Sharing (CORS).
+   */
+  unstable_serverOrigin?: string;
+
+  /**
    * Enable subresource integrity hashes on asset script tags. Defaults to
    * `false`.
    */
@@ -352,6 +362,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    * - Does NOT error when encountering a `loader` or `action`
    */
   ssr: boolean | "unstable_api-only";
+  /**
+   * The origin to use for server requests in API-only mode.
+   */
+  unstable_serverOrigin?: string;
   /**
    * Whether to generate subresource integrity hashes for asset script tags.
    */
@@ -550,10 +564,29 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_serverOrigin,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
     ...userAndPresetConfigs,
   };
+
+  if (ssr === "unstable_api-only" && unstable_serverOrigin != null) {
+    try {
+      let url = new URL(unstable_serverOrigin);
+      if (url.pathname !== "/" || url.search || url.hash) {
+        return err(
+          "The `unstable_serverOrigin` config must be an origin without a path, query, or hash.",
+        );
+      }
+      unstable_serverOrigin = url.origin;
+    } catch {
+      return err(
+        "The `unstable_serverOrigin` config must be a valid absolute URL.",
+      );
+    }
+  } else {
+    unstable_serverOrigin = undefined;
+  }
 
   if (ssr === false && serverBundles) {
     serverBundles = undefined;
@@ -609,7 +642,7 @@ async function resolveConfig({
   } else if (userRouteDiscovery.mode === "initial") {
     routeDiscovery = userRouteDiscovery;
   } else if (userRouteDiscovery.mode === "lazy") {
-    if (ssr !== true) {
+    if (!ssr) {
       return err(
         'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`',
       );
@@ -781,6 +814,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_serverOrigin,
     splitRouteModules,
     subResourceIntegrity,
     allowedActionOrigins,

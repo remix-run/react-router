@@ -34,6 +34,7 @@ test.describe("API-only Mode", () => {
       files: {
         "react-router.config.ts": reactRouterConfig({
           ssr: "unstable_api-only",
+          unstable_serverOrigin: `http://localhost:${devPort}`,
         }),
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -178,7 +179,7 @@ test.describe("API-only Mode", () => {
   }
 
   async function startApp() {
-    appFixture = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture, undefined, devPort);
   }
 
   async function stopServers() {
@@ -195,6 +196,9 @@ test.describe("API-only Mode", () => {
 
   test("builds an API-only server with server APIs but no route UI exports", async () => {
     expect(fixture.build?.unstable_apiOnly).toBe(true);
+    expect(fixture.build?.unstable_serverOrigin).toBe(
+      `http://localhost:${devPort}`,
+    );
 
     let route = fixture.build?.routes["routes/dashboard"];
     expect(route?.module.loader).toEqual(expect.any(Function));

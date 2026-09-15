@@ -539,6 +539,7 @@ async function handleDocumentRequest(
       ssr: build.ssr,
       isSpaMode,
       unstable_apiOnly: build.unstable_apiOnly,
+      unstable_serverOrigin: build.unstable_serverOrigin,
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
@@ -561,6 +562,8 @@ async function handleDocumentRequest(
       ssr: build.ssr,
       routeDiscovery: build.routeDiscovery,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_serverOrigin: build.unstable_serverOrigin,
       serializeError: (err) => serializeError(err, serverMode),
     };
 

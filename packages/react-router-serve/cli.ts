@@ -139,12 +139,20 @@ function getExpressHandler(
   }
   // Data-only routes
   if (isApiOnlyBuild) {
+    let serverBuild = build as ServerBuild;
+    let manifestPath =
+      serverBuild.routeDiscovery.mode === "lazy"
+        ? path.posix.join(
+            serverBuild.basename ?? "/",
+            serverBuild.routeDiscovery.manifestPath,
+          )
+        : undefined;
     let handler = createRequestHandler({
-      build: build as ServerBuild,
+      build: serverBuild,
       mode: process.env.NODE_ENV,
     }) as unknown as ExpressRequestHandler;
     return (req, res, next) => {
-      if (req.path.endsWith(".data")) {
+      if (req.path.endsWith(".data") || req.path === manifestPath) {
         handler(req, res, next);
       } else {
         // In API-only mode, fallback to SPA-behavior for non-data

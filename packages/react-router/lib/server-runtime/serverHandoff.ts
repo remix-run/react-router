@@ -9,6 +9,7 @@ export type ServerHandoff = {
   ssr: boolean;
   isSpaMode: boolean;
   unstable_apiOnly?: boolean;
+  unstable_serverOrigin?: string;
   routeDiscovery: ServerBuild["routeDiscovery"];
 };
 
