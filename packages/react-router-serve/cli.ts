@@ -128,6 +128,39 @@ function getExpressPath(publicPath: string) {
   return pathname.startsWith("/") ? pathname : `/${pathname}`;
 }
 
+function getExpressHandler(
+  build: NormalizedBuild | ServerBuild,
+  isApiOnlyBuild: boolean,
+  assetsBuildDirectory: string,
+): ExpressRequestHandler {
+  // RSC
+  if ("fetch" in build && build.fetch) {
+    return createRequestListener(build.fetch);
+  }
+  // Data-only routes
+  if (isApiOnlyBuild) {
+    let handler = createRequestHandler({
+      build: build as ServerBuild,
+      mode: process.env.NODE_ENV,
+    }) as unknown as ExpressRequestHandler;
+    return (req, res, next) => {
+      if (req.path.endsWith(".data")) {
+        handler(req, res, next);
+      } else {
+        // In API-only mode, fallback to SPA-behavior for non-data
+        // requests.
+        res.sendFile("index.html", { root: assetsBuildDirectory });
+      }
+    };
+  }
+
+  // Standard Framework Mode build
+  return createRequestHandler({
+    build: build as ServerBuild,
+    mode: process.env.NODE_ENV,
+  }) as unknown as ExpressRequestHandler;
+}
+
 async function run() {
   let port =
     parseNumber(process.env.PORT) ??
@@ -215,33 +248,18 @@ async function run() {
       index: isApiOnlyBuild ? false : undefined,
     }),
   );
-  if (isApiOnlyBuild) {
-    app.get("/{*splat}", (req, res, next) => {
-      if (req.path.endsWith(".data")) {
-        next();
-      } else {
-        res.sendFile("index.html", { root: assetsBuildDirectory });
-      }
-    });
-  }
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(
     "/.well-known",
     express.static(path.join(assetsBuildDirectory, ".well-known")),
   );
+
   app.use(morgan("tiny"));
 
-  if (build.fetch) {
-    app.all("/{*splat}", createRequestListener(build.fetch));
-  } else {
-    app.all(
-      "/{*splat}",
-      createRequestHandler({
-        build: buildModule,
-        mode: process.env.NODE_ENV,
-      }) as unknown as ExpressRequestHandler,
-    );
-  }
+  app.all(
+    "/{*splat}",
+    getExpressHandler(build, isApiOnlyBuild, assetsBuildDirectory),
+  );
 
   let server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)
