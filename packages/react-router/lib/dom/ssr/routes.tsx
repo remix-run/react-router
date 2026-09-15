@@ -235,6 +235,7 @@ export function createClientRoutes(
     Omit<EntryRoute, "children">[]
   > = groupRoutesByParentId(manifest),
   needsRevalidation?: Set<string>,
+  isApiOnly: boolean = false,
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModulesCache[route.id];
@@ -391,6 +392,7 @@ export function createClientRoutes(
         routeModule.clientLoader,
         route.hasLoader,
         isSpaMode,
+        isApiOnly,
       );
 
       dataRoute.action = (
@@ -431,6 +433,13 @@ export function createClientRoutes(
           prefetchStylesAndCallHandler(() => {
             return fetchServerLoader(singleFetch);
           });
+        dataRoute.loader.hydrate = shouldHydrateRouteLoader(
+          route.id,
+          undefined,
+          route.hasLoader,
+          isSpaMode,
+          isApiOnly,
+        );
       }
       if (!route.hasClientAction) {
         dataRoute.action = (_: ActionFunctionArgs, singleFetch?: unknown) =>
@@ -481,14 +490,25 @@ export function createClientRoutes(
                   )
                 : await getLazyRoute();
               invariant(clientLoader, "No `clientLoader` export found");
-              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
+              let loader = (dataRoute.loader = (
+                args: LoaderFunctionArgs,
+                singleFetch?: unknown,
+              ) =>
                 clientLoader({
                   ...args,
                   async serverLoader() {
                     preventInvalidServerHandlerCall("loader", route);
                     return fetchServerLoader(singleFetch);
                   },
-                });
+                })) as NonNullable<typeof dataRoute.loader>;
+              loader.hydrate = shouldHydrateRouteLoader(
+                route.id,
+                clientLoader,
+                route.hasLoader,
+                isSpaMode,
+                isApiOnly,
+              );
+              return loader;
             }
           : undefined,
         action: route.hasClientAction
@@ -555,6 +575,7 @@ export function createClientRoutes(
       route.id,
       routesByParentId,
       needsRevalidation,
+      isApiOnly,
     );
     if (children.length > 0) dataRoute.children = children;
     return dataRoute;
@@ -677,9 +698,11 @@ export function shouldHydrateRouteLoader(
   clientLoader: ClientLoaderFunction | undefined,
   hasLoader: boolean,
   isSpaMode: boolean,
+  isApiOnly: boolean = false,
 ) {
   return (
     (isSpaMode && routeId !== "root") ||
+    (isApiOnly && hasLoader) ||
     (clientLoader != null &&
       (clientLoader.hydrate === true || hasLoader !== true))
   );

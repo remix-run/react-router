@@ -28,6 +28,11 @@ export interface ServerBuild {
   assetsBuildDirectory: string;
   future: FutureConfig;
   ssr: boolean;
+  /**
+   * Whether this server build is only intended to handle data requests.
+   * @internal
+   */
+  unstable_apiOnly?: boolean;
   unstable_getCriticalCss?: (args: {
     pathname: string;
   }) => OptionalCriticalCss | Promise<OptionalCriticalCss>;
