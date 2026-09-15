@@ -81,6 +81,11 @@ import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
 import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 import { validateNavigationTarget } from "./navigation";
+import type { DataStrategyInitiator } from "./data-strategy-context";
+import {
+  getDataStrategyInitiator,
+  setDataStrategyInitiator,
+} from "./data-strategy-context";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -1881,6 +1886,7 @@ export function createRouter(init: RouterInit): Router {
     if (state.navigation.state === "idle") {
       startNavigation(state.historyAction, state.location, {
         startUninterruptedRevalidation: true,
+        dataStrategyInitiator: "revalidation",
       });
       return promise;
     }
@@ -1893,6 +1899,7 @@ export function createRouter(init: RouterInit): Router {
       state.navigation.location,
       {
         overrideNavigation: state.navigation,
+        dataStrategyInitiator: "revalidation",
         // Proxy through any rending view transition
         enableViewTransition: pendingViewTransitionEnabled === true,
       },
@@ -1922,6 +1929,7 @@ export function createRouter(init: RouterInit): Router {
       flushSync?: boolean;
       callSiteDefaultShouldRevalidate?: boolean;
       instrumentationNavigateMetaReceiver?: InstrumentationMetaReceiver;
+      dataStrategyInitiator?: DataStrategyInitiator;
     },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -2017,6 +2025,8 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission,
     );
+    let dataStrategyInitiator = opts?.dataStrategyInitiator ?? "navigation";
+    setDataStrategyInitiator(request, dataStrategyInitiator);
     // Create a new context per navigation
     let scopedContext = init.getContext
       ? await init.getContext()
@@ -2094,6 +2104,7 @@ export function createRouter(init: RouterInit): Router {
         request.url,
         request.signal,
       );
+      setDataStrategyInitiator(request, dataStrategyInitiator);
     }
 
     // Call loaders
@@ -2763,6 +2774,7 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal,
       submission,
     );
+    setDataStrategyInitiator(fetchRequest, "fetcher");
 
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
@@ -2888,6 +2900,7 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       abortController.signal,
     );
+    setDataStrategyInitiator(revalidationRequest, "fetcher");
     let matches =
       state.navigation.state !== "idle"
         ? dataRouteMatcher.match(state.navigation.location)
@@ -3111,6 +3124,7 @@ export function createRouter(init: RouterInit): Router {
       path,
       abortController.signal,
     );
+    setDataStrategyInitiator(fetchRequest, "fetcher");
 
     if (loadMatch.isDiscovering) {
       let discoverResult = await discoverRoutes(
@@ -3253,6 +3267,9 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
     } = {},
   ) {
+    let dataStrategyInitiator =
+      getDataStrategyInitiator(request) ??
+      (isNavigation ? "navigation" : "fetcher");
     // If we are interrupting a popstate navigation from a fetcher call that
     // redirected, resolve the pending promise since we won't reach completeNavigation
     // for that popstate navigation
@@ -3353,6 +3370,7 @@ export function createRouter(init: RouterInit): Router {
         enableViewTransition: isNavigation
           ? pendingViewTransitionEnabled
           : undefined,
+        dataStrategyInitiator,
       });
     } else {
       // If we have a navigation submission, we will preserve it through the
@@ -3374,6 +3392,7 @@ export function createRouter(init: RouterInit): Router {
         enableViewTransition: isNavigation
           ? pendingViewTransitionEnabled
           : undefined,
+        dataStrategyInitiator,
       });
     }
   }
@@ -3472,6 +3491,9 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     scopedContext: RouterContextProvider,
   ) {
+    let dataStrategyInitiator =
+      getDataStrategyInitiator(request) ?? "navigation";
+
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       request,
@@ -3484,6 +3506,7 @@ export function createRouter(init: RouterInit): Router {
     let fetcherResultsPromise = Promise.all(
       fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.request && f.controller) {
+          setDataStrategyInitiator(f.request, dataStrategyInitiator);
           let results = await callDataStrategy(
             f.request,
             f.path,

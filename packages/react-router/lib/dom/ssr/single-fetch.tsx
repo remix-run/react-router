@@ -17,6 +17,7 @@ import {
   data,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
+import { getDataStrategyInitiator } from "../../router/data-strategy-context";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
@@ -172,14 +173,31 @@ export type FetchAndDecodeFunction = (
   shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
-export type FetchFunction = (request: Request) => Promise<Response>;
+/**
+ * Describes the operation that initiated an internal router request.
+ *
+ * Requests that reload fetchers as part of a navigation or revalidation keep
+ * that initiating `type`. `fetcherKey` identifies the fetcher being loaded, or
+ * is `null` when the request targets route loaders or actions.
+ */
+export type RouterFetchContext =
+  | { type: "manifest" }
+  | {
+      type: "navigation" | "fetcher" | "revalidation";
+      fetcherKey: string | null;
+    };
+
+export type RouterFetch = (
+  request: Request,
+  context: RouterFetchContext,
+) => Promise<Response>;
 
 export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
-  fetchImplementation: FetchFunction,
+  fetchImplementation: RouterFetch,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -576,7 +594,7 @@ export function singleFetchUrl(
 }
 
 function fetchAndDecodeViaTurboStream(
-  fetchImplementation: FetchFunction,
+  fetchImplementation: RouterFetch,
 ): FetchAndDecodeFunction {
   return async (
     args: DataStrategyFunctionArgs,
@@ -591,7 +609,13 @@ function fetchAndDecodeViaTurboStream(
       }
     }
     let req = new Request(url, await createRequestInit(request));
-    let res = await fetchImplementation(req);
+    let type =
+      getDataStrategyInitiator(request) ??
+      (args.fetcherKey != null ? "fetcher" : "navigation");
+    let res = await fetchImplementation(req, {
+      type,
+      fetcherKey: args.fetcherKey,
+    });
 
     // If this error'd without hitting the running server, then bubble a normal
     // `ErrorResponse` and don't try to decode the body with `turbo-stream`.

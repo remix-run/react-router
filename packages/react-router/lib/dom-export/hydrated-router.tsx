@@ -27,7 +27,7 @@ import {
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
 import type { ClientInstrumentation } from "../router/instrumentation";
-import type { FetchFunction } from "../dom/ssr/single-fetch";
+import type { RouterFetch } from "../dom/ssr/single-fetch";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -80,11 +80,11 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   getContext,
   instrumentations,
-  fetch: fetchImplementation = fetch,
+  fetch: fetchImplementation = (request) => fetch(request),
 }: {
   getContext?: RouterInit["getContext"];
   instrumentations?: ClientInstrumentation[];
-  fetch: FetchFunction;
+  fetch: RouterFetch;
 }): DataRouter {
   initSsrInfo();
 
@@ -326,9 +326,10 @@ export interface HydratedRouterProps {
   useTransitions?: boolean;
   /**
    * Provide a custom implementation for `fetch`, which will be used to perform
-   * data requests for navigations and fetchers. Defaults to `window.fetch`
+   * manifest and data requests. The context identifies the operation that
+   * initiated each request. Defaults to `window.fetch`.
    */
-  fetch?: FetchFunction;
+  fetch?: RouterFetch;
 }
 
 /**
@@ -348,7 +349,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     router = createHydratedRouter({
       getContext: props.getContext,
       instrumentations: props.instrumentations,
-      fetch: props.fetch ?? window.fetch,
+      fetch: props.fetch ?? ((request) => window.fetch(request)),
     });
   }
 

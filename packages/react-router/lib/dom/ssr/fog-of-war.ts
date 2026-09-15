@@ -11,7 +11,7 @@ import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
 import { createPath } from "../../router/history";
-import type { FetchFunction } from "./single-fetch";
+import type { RouterFetch } from "./single-fetch";
 
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
@@ -103,7 +103,7 @@ export function getPatchRoutesOnNavigationFunction(
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
   basename: string | undefined,
-  fetchImplementation: FetchFunction = fetch,
+  fetchImplementation: RouterFetch = (request) => fetch(request),
 ): PatchRoutesOnNavigationFunction | undefined {
   if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
@@ -141,7 +141,7 @@ export function useFogOFWarDiscovery(
   ssr: boolean,
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
-  fetchImplementation: FetchFunction = fetch,
+  fetchImplementation: RouterFetch = (request) => fetch(request),
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
@@ -355,7 +355,7 @@ export async function fetchAndApplyManifestPatches(
   manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
-  fetchImplementation: FetchFunction = fetch,
+  fetchImplementation: RouterFetch = (request) => fetch(request),
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -383,7 +383,7 @@ export async function fetchAndApplyManifestPatches(
   let serverPatches: AssetsManifest["routes"];
   try {
     let request = new Request(url, { signal });
-    let res = await fetchImplementation(request);
+    let res = await fetchImplementation(request, { type: "manifest" });
 
     if (!res.ok) {
       throw new Error(`${res.status} ${res.statusText}`);

@@ -1,1 +1,1 @@
-Adds `fetch` prop to `HydratedRouter`, which provides a custom fetch implementation for data requests.
+Adds a `fetch` prop to `HydratedRouter`, which provides a custom fetch implementation for manifest and data requests. The function receives context identifying the operation that initiated each request and the key of any fetcher being loaded.
