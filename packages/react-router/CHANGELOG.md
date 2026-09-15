@@ -1,5 +1,38 @@
 # `react-router`
 
+## v8.4.0
+
+### Minor Changes
+
+- Deprecate the `createStaticRouter({ branches })` option ([#15297](https://github.com/remix-run/react-router/pull/15297))
+  - `createStaticRouter` now caches route branches internally, ignores `branches`, and logs a deprecation warning when the option is provided
+  - The deprecated `EntryContext.branches` property remains available for compatibility but is always an empty array
+
+### Patch Changes
+
+- Prevent stale route discovery during manifest version-mismatch recovery ([#15489](https://github.com/remix-run/react-router/pull/15489))
+  - Keep concurrent manifest responses pending while a document reload is in progress
+  - Report a discovery error when a previous reload failed to resolve a version mismatch instead of loading a stale route or reloading repeatedly
+  - Fail pending requests if a document reload does not complete within five seconds or the document is restored from the back-forward cache, allowing subsequent requests to recover
+- Preserve lazy route module import errors during SPA navigations instead of replacing them with a missing `dataStrategy` result error ([#15464](https://github.com/remix-run/react-router/pull/15464))
+- Switch to more granular internal router contexts to avoid unnecessary route component re-renders when unrelated data router state changes ([#15376](https://github.com/remix-run/react-router/pull/15376))
+  - ⚠️ This contains some breaking changes to exported `UNSAFE_` contexts, so please review carefully if you are using those unsafe exports
+- Correctly escape streamed RSC redirect locations in meta tag attributes ([#15491](https://github.com/remix-run/react-router/pull/15491))
+- Avoid unintended `document.startViewTransition` calls during initial hydration and `router.revalidate()` calls ([#15484](https://github.com/remix-run/react-router/pull/15484))
+- Fix `SingleFetchNoResultError` thrown when a fetcher revalidates against a splat route during lazy route discovery ([#15395](https://github.com/remix-run/react-router/pull/15395))
+  - Track discovery per fetcher load so revalidation waits for the current load's discovery, even when the fetcher key is reused, while still restarting interrupted loaders after discovery completes
+- Preserve the underlying decode failure as the `cause` of the `Unable to decode turbo-stream response` error ([#15450](https://github.com/remix-run/react-router/pull/15450))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add a Data Mode `future.unstable_routePatternMatching` flag for more efficient route matching powered by `@remix-run/route-pattern` ([#15298](https://github.com/remix-run/react-router/pull/15298))
+  - Add an `unstable_validateParams` route field to reject invalid parameter values and continue matching
+- Document access control requirements for RSC Server Functions ([#15490](https://github.com/remix-run/react-router/pull/15490))
+  - Treat every Server Function as a public endpoint that must perform all of its own access control checks
+  - Recommend route actions when access control should be provided by route middleware
+
 ## v8.3.1
 
 ### Patch Changes
