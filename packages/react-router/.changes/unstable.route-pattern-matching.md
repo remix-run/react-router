@@ -1,13 +1,19 @@
-Add a new Data Mode-only `future.unstable_routePatternMatching` flag to opt into more efficient route matching powered by `@remix-run/route-pattern`
+Add a new Data Mode `future.unstable_routePatternMatching` flag to opt into more efficient route matching powered by `@remix-run/route-pattern`
 
 - Synthetic Chromium benchmarks reduced navigation and fetcher completion times by ~19–38% with 100 routes and ~71–88% with 1,000 routes, excluding network latency and React rendering
 - No route definition changes are required - syntax remains the same for public route definitions and route match fields
-- Once opting into this flag, you should no longer use legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher
-  - A new `router.match()` API exists for those use cases but it's marked private and considered unstable along with the flag
+- When using this flag, you should no longer use legacy matching APIs (`matchRoutes`/`matchPath`/`useMatch`) as they are hardcoded to the previous regex-based matcher and may produce _slightly_ different results
+  - A new `router.match()` API exists for those use cases - it's currently marked private and considered unstable along with the flag, but will stabilize as the first-class matching API once the flag stabilizes
 - Path generation APIs such as `generatePath` and `href` continue to accept React Router path syntax
+- You must call `unstable_preloadRoutePattern()` from `react-router/route-pattern` before enabling the flag - this API ensures that users not opting into the flag don't download the new matching implementation
 - This flag also comes with a new `unstable_validateParams` route field which uses keyed regular expressions so a route can reject matched params and let matching continue (non-matched optional params are not validated)
 
   ```ts
+  import { createBrowserRouter } from "react-router";
+  import { unstable_preloadRoutePattern } from "react-router/route-pattern";
+
+  unstable_preloadRoutePattern();
+
   let router = createBrowserRouter(
     [
       {
