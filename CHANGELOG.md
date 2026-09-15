@@ -201,7 +201,7 @@ The legacy matching APIs (`matchRoutes`, `matchPath`, and `useMatch`) continue t
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - `react-router` - Add a Data Mode `future.unstable_routePatternMatching` flag for more efficient route matching powered by `@remix-run/route-pattern` ([#15298](https://github.com/remix-run/react-router/pull/15298))
   - Add an `unstable_validateParams` route field to reject invalid parameter values and continue matching
