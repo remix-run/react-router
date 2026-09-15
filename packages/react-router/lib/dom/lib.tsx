@@ -1202,6 +1202,9 @@ export interface LinkProps extends Omit<
   to: To;
 
   /**
+   * **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+   * component instead. See the [migration guide](../../how-to/view-transitions).
+   *
    * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
    * for this navigation.
    *
@@ -1212,6 +1215,8 @@ export interface LinkProps extends Omit<
    * ```
    *
    * To apply specific styles for the transition, see {@link useViewTransitionState}
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead.
    */
   viewTransition?: boolean;
 
@@ -1475,6 +1480,10 @@ export type NavLinkRenderProps = {
   /**
    * Indicates if a view transition to the link's URL is in progress.
    * See {@link useViewTransitionState}
+   *
+   * @deprecated Only tracks React Router's deprecated view transitions. Use
+   * React's `<ViewTransition>` component to style transitions instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
    */
   isTransitioning: boolean;
 };
@@ -1520,9 +1529,6 @@ export interface NavLinkProps extends Omit<
    * a.pending {
    *   color: blue;
    * }
-   * a.transitioning {
-   *   view-transition-name: my-transition;
-   * }
    * ```
    *
    * Or you can specify a function that receives {@link NavLinkRenderProps} and
@@ -1535,6 +1541,10 @@ export interface NavLinkProps extends Omit<
    *   ""
    * )} />
    * ```
+   *
+   * The `transitioning` class is deprecated and only tracks React Router's
+   * legacy view transitions. Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+   * component instead. See the [migration guide](../../how-to/view-transitions).
    */
   className?: string | ((props: NavLinkRenderProps) => string | undefined);
 
@@ -1854,9 +1864,14 @@ export interface FormProps extends SharedFormProps {
   state?: any;
 
   /**
+   * **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+   * component instead. See the [migration guide](../../how-to/view-transitions).
+   *
    * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
    * for this navigation. To apply specific styles during the transition, see
    * {@link useViewTransitionState}.
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead.
    */
   viewTransition?: boolean;
 }
@@ -2161,9 +2176,9 @@ ScrollRestoration.displayName = "ScrollRestoration";
  * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
- * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
- * for this navigation. To apply specific styles during the transition, see
- * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.viewTransition **Deprecated.** Use React's
+ * [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component
+ * instead. See the [migration guide](../../how-to/view-transitions).
  * @param options.defaultShouldRevalidate Specify the default revalidation
  * behavior for the navigation. When not specified, loaders revalidate
  * according to the router's standard revalidation behavior.
@@ -2193,10 +2208,9 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    viewTransition?: boolean;
     defaultShouldRevalidate?: boolean;
     useTransitions?: boolean;
-  } = {},
+  } & Pick<NavigateOptions, "viewTransition"> = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
   let location = useLocation();
@@ -2532,6 +2546,10 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 /**
  * The imperative version of {@link Form | `<Form>`} that lets you submit a form
  * from code instead of a user interaction.
+ *
+ * The `viewTransition` submission option is deprecated. Use React's
+ * [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component
+ * instead. See the [migration guide](../../how-to/view-transitions).
  *
  * @example
  * import { useSubmit } from "react-router";
@@ -3314,6 +3332,11 @@ export function usePrompt({
 }
 
 /**
+ * **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+ * component to style transitions instead. This hook only tracks React Router's
+ * legacy view transitions, not transitions started by React. See the
+ * [migration guide](../../how-to/view-transitions).
+ *
  * This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * and the specified location matches either side of the navigation (the URL you are
  * navigating **to** or the URL you are navigating **from**). This can be used to apply finer-grained styles to
@@ -3333,6 +3356,8 @@ export function usePrompt({
  * more details.
  * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * and the resolved path matches the transition's destination or source pathname, otherwise `false`.
+ *
+ * @deprecated Use React's `<ViewTransition>` component instead.
  */
 export function useViewTransitionState(
   to: To,

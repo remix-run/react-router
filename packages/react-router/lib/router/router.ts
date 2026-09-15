@@ -622,6 +622,10 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
+  /**
+   * @deprecated Use React's `<ViewTransition>` component instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
+   */
   viewTransition?: boolean;
   mask?: To;
 };
