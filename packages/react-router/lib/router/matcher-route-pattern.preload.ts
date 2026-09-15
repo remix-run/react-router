@@ -1,10 +1,14 @@
 import type { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
 
-export let RoutePatternMatcher: typeof RoutePatternDataRouteMatcher | undefined;
+let RoutePatternMatcher: typeof RoutePatternDataRouteMatcher | undefined;
 
 let preloadPromise:
   | Promise<typeof import("./matcher-route-pattern")>
   | undefined;
+
+export function getRoutePatternMatcher() {
+  return RoutePatternMatcher;
+}
 
 /**
  * Load the route-pattern matcher before creating a Data Router or static handler

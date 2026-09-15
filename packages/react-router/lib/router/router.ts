@@ -79,7 +79,7 @@ import {
 } from "./url";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
-import { RoutePatternMatcher } from "./matcher-route-pattern.preload";
+import { getRoutePatternMatcher } from "./matcher-route-pattern.preload";
 import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -962,6 +962,7 @@ export function createDataRouteMatcher(
   basename: string,
 ): DataRouteMatcher {
   if (future.unstable_routePatternMatching) {
+    let RoutePatternMatcher = getRoutePatternMatcher();
     invariant(
       RoutePatternMatcher,
       'You must await unstable_preloadRoutePattern() from "react-router/route-pattern" ' +
