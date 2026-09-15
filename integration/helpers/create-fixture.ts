@@ -50,6 +50,7 @@ export async function spawnTestServer({
     let started = false;
     let stdout = "";
     let rejectTimeout = setTimeout(() => {
+      serverProcess.kill();
       reject(new Error(`Timed out waiting for server to start (${timeout}ms)`));
     }, timeout);
 
@@ -80,6 +81,17 @@ export async function spawnTestServer({
     serverProcess.on("error", (error: unknown) => {
       clearTimeout(rejectTimeout);
       reject(error);
+    });
+
+    serverProcess.on("exit", (code, signal) => {
+      if (!started) {
+        clearTimeout(rejectTimeout);
+        reject(
+          new Error(
+            `Server exited before starting (code ${code}, signal ${signal})`,
+          ),
+        );
+      }
     });
   });
 }
@@ -281,13 +293,17 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
  * which has caused many integration tests to leak noisy logs for expected errors.
  * It also means that sometimes the CLI is skipped over in those tests, missing out on code paths that should be tested.
  */
-export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
+export async function createAppFixture(
+  fixture: Fixture,
+  mode?: ServerMode,
+  appPort?: number,
+) {
   let startAppServer = async (): Promise<{
     port: number;
     stop: VoidFunction;
   }> => {
     if (fixture.useReactRouterServe) {
-      let port = await getPort();
+      let port = await getPort({ port: appPort });
       let { stop } = await spawnTestServer({
         cwd: fixture.projectDir,
         command: [
@@ -314,7 +330,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 
     if (fixture.isSpaMode) {
       return new Promise(async (accept) => {
-        let port = await getPort();
+        let port = await getPort({ port: appPort });
         let app = express();
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
         app.get("*", (_, res) =>
@@ -329,7 +345,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 
     if (fixture.prerender) {
       return new Promise(async (accept) => {
-        let port = await getPort();
+        let port = await getPort({ port: appPort });
         let app = express();
         app.use(
           express.static(path.join(fixture.projectDir, "build", "client")),
@@ -362,7 +378,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     }
 
     if (fixture.templateName.includes("rsc")) {
-      let port = await getPort();
+      let port = await getPort({ port: appPort });
       let { stop } = await spawnTestServer({
         cwd: fixture.projectDir,
         command: [process.argv[0], "start.js"],
@@ -391,9 +407,28 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     }
 
     return new Promise(async (accept) => {
-      let port = await getPort();
+      let port = await getPort({ port: appPort });
       let app = express();
       app.use(express.static(path.join(fixture.projectDir, "build/client")));
+
+      if (build.unstable_apiOnly) {
+        let manifestPath =
+          build.routeDiscovery.mode === "lazy"
+            ? path.posix.join(
+                build.basename ?? "/",
+                build.routeDiscovery.manifestPath,
+              )
+            : undefined;
+        app.get("*", (req, res, next) => {
+          if (req.path.endsWith(".data") || req.path === manifestPath) {
+            next();
+          } else {
+            res.sendFile(
+              path.join(fixture.projectDir, "build/client/index.html"),
+            );
+          }
+        });
+      }
 
       app.all(
         "*",

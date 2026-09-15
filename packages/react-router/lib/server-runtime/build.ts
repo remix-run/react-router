@@ -28,6 +28,16 @@ export interface ServerBuild {
   assetsBuildDirectory: string;
   future: FutureConfig;
   ssr: boolean;
+  /**
+   * The origin to use for server requests in API-only mode.
+   * @internal
+   */
+  unstable_serverOrigin?: string;
+  /**
+   * Whether this server build is only intended to handle data requests.
+   * @internal
+   */
+  unstable_apiOnly?: boolean;
   unstable_getCriticalCss?: (args: {
     pathname: string;
   }) => OptionalCriticalCss | Promise<OptionalCriticalCss>;

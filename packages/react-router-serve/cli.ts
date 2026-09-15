@@ -128,6 +128,47 @@ function getExpressPath(publicPath: string) {
   return pathname.startsWith("/") ? pathname : `/${pathname}`;
 }
 
+function getExpressHandler(
+  build: NormalizedBuild | ServerBuild,
+  isApiOnlyBuild: boolean,
+  assetsBuildDirectory: string,
+): ExpressRequestHandler {
+  // RSC
+  if ("fetch" in build && build.fetch) {
+    return createRequestListener(build.fetch);
+  }
+  // Data-only routes
+  if (isApiOnlyBuild) {
+    let serverBuild = build as ServerBuild;
+    let manifestPath =
+      serverBuild.routeDiscovery.mode === "lazy"
+        ? path.posix.join(
+            serverBuild.basename ?? "/",
+            serverBuild.routeDiscovery.manifestPath,
+          )
+        : undefined;
+    let handler = createRequestHandler({
+      build: serverBuild,
+      mode: process.env.NODE_ENV,
+    }) as unknown as ExpressRequestHandler;
+    return (req, res, next) => {
+      if (req.path.endsWith(".data") || req.path === manifestPath) {
+        handler(req, res, next);
+      } else {
+        // In API-only mode, fallback to SPA-behavior for non-data
+        // requests.
+        res.sendFile("index.html", { root: assetsBuildDirectory });
+      }
+    };
+  }
+
+  // Standard Framework Mode build
+  return createRequestHandler({
+    build: build as ServerBuild,
+    mode: process.env.NODE_ENV,
+  }) as unknown as ExpressRequestHandler;
+}
+
 async function run() {
   let port =
     parseNumber(process.env.PORT) ??
@@ -165,6 +206,11 @@ async function run() {
     build = buildModule as ServerBuild;
   }
 
+  let isApiOnlyBuild = !isRSCBuild && buildModule.unstable_apiOnly === true;
+  let assetsBuildDirectory = path.isAbsolute(build.assetsBuildDirectory)
+    ? build.assetsBuildDirectory
+    : path.resolve(process.cwd(), build.assetsBuildDirectory);
+
   let onListen = (error: unknown) => {
     if (error) {
       throw error;
@@ -199,30 +245,29 @@ async function run() {
 
   app.use(
     path.posix.join(expressPublicPath, "assets"),
-    express.static(path.join(build.assetsBuildDirectory, "assets"), {
+    express.static(path.join(assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
+  app.use(
+    expressPublicPath,
+    express.static(assetsBuildDirectory, {
+      index: isApiOnlyBuild ? false : undefined,
+    }),
+  );
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(
     "/.well-known",
-    express.static(path.join(build.assetsBuildDirectory, ".well-known")),
+    express.static(path.join(assetsBuildDirectory, ".well-known")),
   );
+
   app.use(morgan("tiny"));
 
-  if (build.fetch) {
-    app.all("/{*splat}", createRequestListener(build.fetch));
-  } else {
-    app.all(
-      "/{*splat}",
-      createRequestHandler({
-        build: buildModule,
-        mode: process.env.NODE_ENV,
-      }) as unknown as ExpressRequestHandler,
-    );
-  }
+  app.all(
+    "/{*splat}",
+    getExpressHandler(build, isApiOnlyBuild, assetsBuildDirectory),
+  );
 
   let server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)
