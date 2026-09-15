@@ -151,6 +151,19 @@ describe("generatePath", () => {
       );
     });
 
+    it("encodes splat (*) values per segment, preserving `/` separators", () => {
+      expect(
+        generatePath("/files/*", { "*": "my report/final draft.pdf" }),
+      ).toBe("/files/my%20report/final%20draft.pdf");
+      expect(generatePath("/files/*", { "*": "café/menu" })).toBe(
+        "/files/caf%C3%A9/menu",
+      );
+      // already-safe splat values are unchanged
+      expect(generatePath("/courses/*", { "*": "routing/grades" })).toBe(
+        "/courses/routing/grades",
+      );
+    });
+
     it("preserves characters RFC 3986 allows literally in a path segment", () => {
       // pchar sub-delims plus ":" and "@" — see RFC 3986 §3.3
       expect(generatePath("/courses/:id", { id: "$&+,;=:@" })).toBe(
