@@ -37,6 +37,10 @@ engine:
     OPENAI_BASE_URL: https://proxy.shopify.ai/v1
     OPENAI_API_KEY: ${{ secrets.SHOPIFY_AI_PROXY }}
 strict: true
+features:
+  # Use inline detection until gh-aw fixes skipped runs requiring threat-detect.
+  # https://github.com/github/gh-aw/pull/50854
+  gh-aw-detection: false
 imports:
   - shared/resolve-command-request.md
 tools:
@@ -49,6 +53,14 @@ tools:
     toolsets: [repos, issues, pull_requests, discussions]
 network:
   allowed: [defaults, github]
+jobs:
+  pre_activation:
+    pre-steps:
+      - name: Reject label triggers on fork PRs
+        if: github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error::The aw:review label cannot run on fork PRs because GitHub withholds repository secrets. Use /review in a PR comment or @remix-run-bot review in a new comment instead."
+          exit 1
 safe-outputs:
   add-comment:
     github-token: ${{ secrets.GH_REMIX_PAT_AW }}
@@ -59,6 +71,15 @@ safe-outputs:
     discussions: false
   threat-detection:
     continue-on-error: false
+post-steps:
+  - name: Require a review result
+    env:
+      GH_AW_SAFE_OUTPUTS: ${{ runner.temp }}/gh-aw/safeoutputs/outputs.jsonl
+    run: |
+      if ! grep -q '[^[:space:]]' "$GH_AW_SAFE_OUTPUTS"; then
+        echo "::error::The agent exited without a safe output. The pull request review did not complete."
+        exit 1
+      fi
 max-daily-ai-credits: 100
 timeout-minutes: 15
 ---
@@ -68,6 +89,10 @@ timeout-minutes: 15
 Review the triggering pull request and post one concise, read-only review
 summary. Do not check out or execute contributor code, edit repository files,
 approve, reject, label, close, or merge the pull request.
+
+Start by calling the GitHub tools to read the authorized request and pull
+request. Continue through the review and safe-output call in this run; a plan
+or acknowledgment alone does not complete the task.
 
 ## Authoritative request
 

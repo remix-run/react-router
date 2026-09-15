@@ -89,9 +89,6 @@ a.active {
 a.pending {
   color: blue;
 }
-a.transitioning {
-  view-transition-name: my-transition;
-}
 ```
 
 Or you can specify a function that receives [`NavLinkRenderProps`](https://api.reactrouter.com/v8/types/react-router.NavLinkRenderProps.html) and
@@ -104,6 +101,10 @@ returns the `className`:
   ""
 )} />
 ```
+
+The `transitioning` class is deprecated and only tracks React Router's
+legacy view transitions. Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+component instead. See the [migration guide](../../how-to/view-transitions).
 
 ### discover
 
@@ -301,6 +302,9 @@ Can be a string or a partial [`Path`](https://api.reactrouter.com/v8/interfaces/
 ### viewTransition
 
 [modes: framework, data]
+
+**Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+component instead. See the [migration guide](../../how-to/view-transitions).
 
 Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
 for this navigation.

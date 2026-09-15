@@ -11,8 +11,11 @@ applicable command label, or a new comment mentioning `@remix-run-bot`.
 | `/implement` | Issue or accepted Proposal Discussion | Implement from trusted `main` and create at most one validated or checkpoint draft PR.                                                                           |
 | `/iterate`   | Pull request                          | Apply administrator feedback to the exact triggering PR branch.                                                                                                  |
 
-`aw:review` works on issues and PRs; `aw:implement` works on issues; `aw:iterate`
-works on PRs. Labels invoke default behavior and are removed after triggering.
+`aw:review` works on issues and same-repository PRs; `aw:implement` works on
+issues; `aw:iterate` works on same-repository PRs. Labels invoke default
+behavior and are removed after triggering. On fork PRs, command labels fail
+early with a GitHub Actions error explaining that repository secrets are unavailable.
+Use `/review`, `/iterate`, or a new comment mentioning `@remix-run-bot` instead.
 Discussions must be in the `proposals` category and use comments.
 
 The comment router chooses one command from the administrator's comment and

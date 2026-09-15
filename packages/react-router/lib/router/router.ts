@@ -79,7 +79,7 @@ import {
 } from "./url";
 import type { DataRouteMatcher } from "./matcher";
 import { V6RegExMatcher } from "./matcher";
-import { RoutePatternDataRouteMatcher } from "./matcher-route-pattern";
+import { getRoutePatternMatcher } from "./matcher-route-pattern.preload";
 import { validateNavigationTarget } from "./navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,7 +447,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  /** Enables route-pattern matching. */
+  /** Enables route-pattern matching after calling `unstable_preloadRoutePattern()`. */
   unstable_routePatternMatching?: boolean;
 }
 
@@ -622,6 +622,10 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
+  /**
+   * @deprecated Use React's `<ViewTransition>` component instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
+   */
   viewTransition?: boolean;
   mask?: To;
 };
@@ -961,9 +965,16 @@ export function createDataRouteMatcher(
   future: FutureConfig,
   basename: string,
 ): DataRouteMatcher {
-  return future.unstable_routePatternMatching
-    ? new RoutePatternDataRouteMatcher(basename)
-    : new V6RegExMatcher(basename);
+  if (future.unstable_routePatternMatching) {
+    let RoutePatternMatcher = getRoutePatternMatcher();
+    invariant(
+      RoutePatternMatcher,
+      'You must call unstable_preloadRoutePattern() from "react-router/route-pattern" ' +
+        "before enabling future.unstable_routePatternMatching.",
+    );
+    return new RoutePatternMatcher(basename);
+  }
+  return new V6RegExMatcher(basename);
 }
 
 /**
@@ -1375,7 +1386,7 @@ export function createRouter(init: RouterInit): Router {
 
     if (isBrowser) {
       // FIXME: This feels gross.  How can we cleanup the lines between
-      // scrollRestoration/appliedTransitions persistance?
+      // scrollRestoration/appliedTransitions persistence?
       restoreAppliedTransitions(routerWindow, appliedViewTransitions);
       let _saveAppliedTransitions = () =>
         persistAppliedTransitions(routerWindow, appliedViewTransitions);
@@ -1597,8 +1608,14 @@ export function createRouter(init: RouterInit): Router {
 
     let viewTransitionOpts: ViewTransitionOpts | undefined;
 
-    // On POP, enable transitions if they were enabled on the original navigation
-    if (pendingAction === NavigationType.Pop) {
+    // On POP, enable transitions if they were enabled on the original navigation.
+    // Initial hydration reuses the current location. Compare locations instead
+    // of state.initialized because a real POP can interrupt pending hydration.
+    if (
+      pendingAction === NavigationType.Pop &&
+      !isUninterruptedRevalidation &&
+      location !== state.location
+    ) {
       // Forward takes precedence so they behave like the original navigation
       let priorPaths = appliedViewTransitions.get(state.location.pathname);
       if (priorPaths && priorPaths.has(location.pathname)) {
@@ -3714,7 +3731,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // We ony support a single active blocker at the moment since we don't have
+    // We only support a single active blocker at the moment since we don't have
     // any compelling use cases for multi-blocker yet
     if (blockerFunctions.size > 1) {
       warning(false, "A router only supports one blocker at a time");
