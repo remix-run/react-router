@@ -7,6 +7,7 @@ import type {
   DataRouteMatch,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyInitiator,
   DataStrategyResult,
 } from "../../router/utils";
 import {
@@ -17,7 +18,6 @@ import {
   data,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
-import { getDataStrategyInitiator } from "../../router/data-strategy-context";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
@@ -183,7 +183,7 @@ export type FetchAndDecodeFunction = (
 export type RouterFetchContext =
   | { type: "manifest" }
   | {
-      type: "navigation" | "fetcher" | "revalidation";
+      type: Exclude<DataStrategyInitiator, "static">;
       fetcherKey: string | null;
     };
 
@@ -609,11 +609,12 @@ function fetchAndDecodeViaTurboStream(
       }
     }
     let req = new Request(url, await createRequestInit(request));
-    let type =
-      getDataStrategyInitiator(request) ??
-      (args.fetcherKey != null ? "fetcher" : "navigation");
+    invariant(
+      args.initiator !== "static",
+      "Static data strategy initiator used for a client data request",
+    );
     let res = await fetchImplementation(req, {
-      type,
+      type: args.initiator,
       fetcherKey: args.fetcherKey,
     });
 
