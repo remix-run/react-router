@@ -2725,31 +2725,24 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     }),
     {
       name: "react-router-build-end",
+      enforce: "post",
       sharedDuringBuild: true,
-      config: {
+      buildApp: {
         order: "post",
-        handler({ builder: { buildApp } = {} }) {
-          return {
-            builder: {
-              async buildApp(builder) {
-                try {
-                  await buildApp?.(builder);
+        async handler() {
+          try {
+            invariant(viteConfig);
+            let { buildManifest, reactRouterConfig } = ctx;
+            invariant(buildManifest, "Expected build manifest");
 
-                  invariant(viteConfig);
-                  let { buildManifest, reactRouterConfig } = ctx;
-                  invariant(buildManifest, "Expected build manifest");
-
-                  await reactRouterConfig.buildEnd?.({
-                    buildManifest,
-                    reactRouterConfig,
-                    viteConfig,
-                  });
-                } finally {
-                  await closePluginResources();
-                }
-              },
-            },
-          };
+            await reactRouterConfig.buildEnd?.({
+              buildManifest,
+              reactRouterConfig,
+              viteConfig,
+            });
+          } finally {
+            await closePluginResources();
+          }
         },
       },
     },
