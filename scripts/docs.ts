@@ -565,7 +565,7 @@ function getApiName(comment: ParsedComment): string {
     return matches[1].trim();
   }
 
-  matches = comment.code.match(/^export (?:async )?function ([^<(]+)/);
+  matches = comment.code.match(/^export function ([^<(]+)/);
   if (matches) {
     return matches[1].trim();
   }

@@ -115,7 +115,11 @@ No code changes are required. If you run into dependency optimization issues aft
 
 **Background**
 
-This flag opts Data Routers into a new route matcher powered by [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern). It supports the existing React Router path syntax and matching behavior, but ranks ambiguous matches by positional specificity instead of aggregate segment scores. This means a route with a longer static prefix can rank above a route with more dynamic segments.
+This flag opts Data Routers into a new (and vastly more efficient) route matcher
+powered by [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern).
+It supports the existing React Router path syntax and matching behavior, but may
+rank _slightly_ differently in some cases - please read the section below on
+potential ranking differences.
 
 👉 **Preload the Matcher and Enable the Flag**
 
@@ -123,7 +127,7 @@ This flag opts Data Routers into a new route matcher powered by [`@remix-run/rou
 import { createBrowserRouter } from "react-router";
 import { unstable_preloadRoutePattern } from "react-router/route-pattern";
 
-await unstable_preloadRoutePattern();
+unstable_preloadRoutePattern();
 
 const router = createBrowserRouter(routes, {
   future: {
@@ -132,26 +136,19 @@ const router = createBrowserRouter(routes, {
 });
 ```
 
-The flag is also available with `createHashRouter` and `createMemoryRouter`.
-
-The preload function dynamically imports the matcher, keeping it out of the
-initial JavaScript bundle for applications that do not use it. Await it before
-creating a router with the flag enabled; router creation remains synchronous and
-throws if preloading has not completed. Concurrent and repeated calls share the
-same load. Loading failures reject the promise so you can handle them during
-application startup.
-
-For server rendering, preload separately on the server before calling
-`createStaticHandler` with the flag enabled, and in the browser before creating
-the client router. Preloading and router creation must use the same instance of
-the `react-router` package in each environment.
-
-Preloading only loads the matcher. Initial route loaders and `HydrateFallback`
-continue to work as usual once the router is created.
+The `react-router/route-pattern` sub-export statically imports the new matcher
+implementation. Tree-shaking bundlers remove it from applications that do not
+use the preload function. You must call the function before creating a router
+with the flag enabled - router creation will throw if the matcher has not been
+initialized. Initialization is synchronous, and repeated calls are safe.
 
 **Update your Code**
 
-No route configuration changes are required, but you should review any routes with overlapping patterns to ensure the new ranking behavior selects the intended route. This is mostly expected to be an issue when you have deep dynamic param paths which could result in an aggregate score that outweighs a shallower static segment route.
+No route configuration changes are required, but you should review any routes with
+overlapping patterns to ensure the new ranking behavior selects the intended route.
+The new implementation matches by positional specificity instead of aggregate
+segment scores. This means a route with a longer static prefix can rank above a
+route with more dynamic segments.
 
 For example, both of these routes match `/products/one/two/three`:
 
@@ -165,9 +162,15 @@ const routes = [
 ];
 ```
 
-The legacy matcher selects `segments` based on its aggregate segment score. The new matcher selects `products` because its static `products` segment is more specific than the dynamic `:first` segment in the same position.
+The legacy matcher selects `segments` based on its aggregate segment score. The
+new matcher selects `products` because its static `products` segment is more
+specific than the dynamic `:first` segment in the same position.
 
-Once you enable this flag, use the `router.match()` when you need to match a location (this is currently marked private and will become stable at the same time this flag stabilizes). Standalone matching APIs such as `matchRoutes`, `matchPath`, and `useMatch` continue to use the legacy matcher and may return different matches than the router.
+Once you enable this flag, use the `router.match()` when you need to match a
+location (this is currently marked private and will become stable at the same
+time this flag stabilizes). Standalone matching APIs such as `matchRoutes`,
+`matchPath`, and `useMatch` continue to use the legacy matcher and may return
+different matches than the router.
 
 Case-sensitive routes are not currently supported with this flag.
 

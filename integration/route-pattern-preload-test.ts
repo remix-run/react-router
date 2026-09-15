@@ -25,8 +25,8 @@ for (let enabled of [false, true]) {
         let initialData = new Promise(resolve => {
           window.resolveInitialLoader = () => resolve("Ready");
         });
-        document.getElementById("start").onclick = async () => {
-          ${enabled ? "await unstable_preloadRoutePattern();" : ""}
+        document.getElementById("start").onclick = () => {
+          ${enabled ? "unstable_preloadRoutePattern();" : ""}
           let router = createBrowserRouter([{
             path: "/",
             loader: () => initialData,
@@ -98,7 +98,7 @@ for (let enabled of [false, true]) {
         .filter((chunk) => chunk.isEntry)
         .forEach((chunk) => addInitialChunk(chunk.fileName));
       for (let chunk of matcherChunks) {
-        expect(initialChunks.has(chunk.fileName)).toBe(false);
+        expect(initialChunks.has(chunk.fileName)).toBe(true);
       }
     } else {
       expect(matcherChunks).toEqual([]);
@@ -118,15 +118,10 @@ for (let enabled of [false, true]) {
       await page.goto(server.resolvedUrls!.local[0]);
       await expect(page.locator("body")).toHaveAttribute("data-ready", "true");
       for (let chunk of matcherChunks) {
-        expect(requests.some((url) => url.endsWith(chunk.fileName))).toBe(
-          false,
-        );
+        expect(requests.some((url) => url.endsWith(chunk.fileName))).toBe(true);
       }
       await page.getByRole("button", { name: "Start router" }).click();
       await expect(page.getByText("Loading route data")).toBeVisible();
-      for (let chunk of matcherChunks) {
-        expect(requests.some((url) => url.endsWith(chunk.fileName))).toBe(true);
-      }
       await page.evaluate("window.resolveInitialLoader()");
       await expect(page.getByRole("heading", { name: "Ready" })).toBeVisible();
       await page.getByRole("link", { name: "Other", exact: true }).click();

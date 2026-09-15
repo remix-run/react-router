@@ -1,10 +1,6 @@
 import { jest } from "@jest/globals";
 
 describe("route-pattern preloading", () => {
-  afterEach(() => {
-    jest.unstable_unmockModule("../../lib/router/matcher-route-pattern");
-  });
-
   it.each([
     "createBrowserRouter",
     "createHashRouter",
@@ -19,25 +15,14 @@ describe("route-pattern preloading", () => {
         });
         if ("dispose" in router) router.dispose();
       }).toThrow(
-        'await unstable_preloadRoutePattern() from "react-router/route-pattern"',
+        'call unstable_preloadRoutePattern() from "react-router/route-pattern"',
       );
     });
   });
 
-  it("keeps imports and unflagged routers independent of matcher loading", async () => {
-    let failure = new Error("Unable to download the matcher");
-    let loadMatcher = jest.fn(() => {
-      throw failure;
-    });
-    jest.unstable_mockModule(
-      "../../lib/router/matcher-route-pattern",
-      loadMatcher,
-    );
-
+  it("supports unflagged routers without initializing the matcher", async () => {
     await jest.isolateModulesAsync(async () => {
       let { createMemoryRouter } = await import("../../index");
-      let { unstable_preloadRoutePattern } =
-        await import("../../route-pattern");
 
       for (let enabled of [undefined, false]) {
         let router = createMemoryRouter([{ path: "/", id: "home" }], {
@@ -46,29 +31,10 @@ describe("route-pattern preloading", () => {
         expect(router.state.matches[0].route.id).toBe("home");
         router.dispose();
       }
-      expect(loadMatcher).not.toHaveBeenCalled();
-
-      let first = unstable_preloadRoutePattern();
-      let second = unstable_preloadRoutePattern();
-      await Promise.all([
-        expect(first).rejects.toBe(failure),
-        expect(second).rejects.toBe(failure),
-      ]);
-      expect(loadMatcher).toHaveBeenCalledTimes(1);
-
-      expect(() =>
-        createMemoryRouter([{ path: "/" }], {
-          future: { unstable_routePatternMatching: true },
-        }),
-      ).toThrow("await unstable_preloadRoutePattern()");
-
-      let retry = unstable_preloadRoutePattern();
-      await expect(retry).rejects.toBe(failure);
-      expect(loadMatcher).toHaveBeenCalledTimes(2);
     });
   });
 
-  it("shares preloading and only enables synchronous routers after it resolves", async () => {
+  it("initializes synchronously and supports repeated calls", async () => {
     await jest.isolateModulesAsync(async () => {
       let { createMemoryRouter } = await import("../../index");
       let { unstable_preloadRoutePattern } =
@@ -82,16 +48,14 @@ describe("route-pattern preloading", () => {
         initialEntries: ["/products/one/two/three"],
       };
 
-      let first = unstable_preloadRoutePattern();
-      let second = unstable_preloadRoutePattern();
       expect(() => createMemoryRouter(routes, opts)).toThrow(
-        "await unstable_preloadRoutePattern()",
+        "call unstable_preloadRoutePattern()",
       );
-      await Promise.all([first, second]);
-      await unstable_preloadRoutePattern();
+      expect(unstable_preloadRoutePattern()).toBeUndefined();
 
       let router = createMemoryRouter(routes, opts);
       expect(router.state.matches[0].route.id).toBe("products");
+      unstable_preloadRoutePattern();
       await router.navigate("/products/four/five/six");
       expect(router.state.matches[0].params).toEqual({ "*": "four/five/six" });
       router.dispose();
@@ -110,7 +74,7 @@ describe("route-pattern preloading", () => {
       let { createStaticHandler } = await import("../../index");
       let { unstable_preloadRoutePattern } =
         await import("../../route-pattern");
-      await unstable_preloadRoutePattern();
+      unstable_preloadRoutePattern();
 
       let handler = createStaticHandler(
         [{ path: "/users/:id", id: "user", loader: () => "user data" }],

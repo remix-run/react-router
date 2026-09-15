@@ -447,7 +447,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  /** Enables route-pattern matching after awaiting `unstable_preloadRoutePattern()`. */
+  /** Enables route-pattern matching after calling `unstable_preloadRoutePattern()`. */
   unstable_routePatternMatching?: boolean;
 }
 
@@ -965,7 +965,7 @@ export function createDataRouteMatcher(
     let RoutePatternMatcher = getRoutePatternMatcher();
     invariant(
       RoutePatternMatcher,
-      'You must await unstable_preloadRoutePattern() from "react-router/route-pattern" ' +
+      'You must call unstable_preloadRoutePattern() from "react-router/route-pattern" ' +
         "before enabling future.unstable_routePatternMatching.",
     );
     return new RoutePatternMatcher(basename);
