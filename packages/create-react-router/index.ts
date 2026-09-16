@@ -700,12 +700,9 @@ async function updatePackageJSON(ctx: Context) {
       if (
         (dependency.startsWith("@react-router/") ||
           dependency === "react-router") &&
-        version === "*"
+        (version === "*" || version === `^${semver.major(pkgJson.version)}`)
       ) {
-        dependencies[dependency] = semver.prerelease(ctx.reactRouterVersion)
-          ? // Templates created from prereleases should pin to a specific version
-            ctx.reactRouterVersion
-          : "^" + ctx.reactRouterVersion;
+        dependencies[dependency] = ctx.reactRouterVersion;
       }
     }
   }

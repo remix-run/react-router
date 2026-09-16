@@ -29,6 +29,9 @@ const actualChildProcess = nodeRequire(
 const mockedSpawn = jest.fn(actualChildProcess.spawn);
 const REPO_ROOT = path.resolve(__dirname, "../../..");
 const BUILT_CLI = path.resolve(__dirname, "../dist/cli.js");
+const CLI_VERSION = JSON.parse(
+  readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
+).version;
 
 (jest as any).unstable_mockModule("node:child_process", () => ({
   ...actualChildProcess,
@@ -960,7 +963,7 @@ describe("create-react-router CLI", () => {
     }
   });
 
-  it("changes star dependencies for only React Router packages", async () => {
+  it("pins template ranges for only React Router packages", async () => {
     let projectDir = getProjectDir("local-directory");
 
     let { status } = await execCreateReactRouter({
@@ -980,9 +983,38 @@ describe("create-react-router CLI", () => {
     let dependencies = packageJson.dependencies;
 
     expect(dependencies).toMatchObject({
-      "react-router": expect.any(String),
-      "@react-router/node": expect.any(String),
+      "react-router": CLI_VERSION,
+      "@react-router/node": CLI_VERSION,
+      "@react-router/serve": "^7.0.0",
       "not-react-router": "*",
+    });
+  });
+
+  it("pins template ranges to the requested React Router version", async () => {
+    let projectDir = getProjectDir("selected-react-router-version");
+
+    let { status } = await execCreateReactRouter({
+      args: [
+        projectDir,
+        "--template",
+        path.join(__dirname, "fixtures", "basic"),
+        "--react-router-version",
+        "7.9.2",
+        "--no-git-init",
+        "--no-install",
+      ],
+    });
+
+    expect(status).toBe(0);
+
+    let packageJson = JSON.parse(
+      readFileSync(path.join(projectDir, "package.json"), "utf8"),
+    );
+
+    expect(packageJson.dependencies).toMatchObject({
+      "react-router": "7.9.2",
+      "@react-router/node": "7.9.2",
+      "@react-router/serve": "^7.0.0",
     });
   });
 

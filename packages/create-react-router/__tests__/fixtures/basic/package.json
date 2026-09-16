@@ -8,8 +8,9 @@
     "start": "react-router-serve ./build/server/index.js"
   },
   "dependencies": {
-    "react-router": "*",
+    "react-router": "^8",
     "@react-router/node": "*",
+    "@react-router/serve": "^7.0.0",
     "not-react-router": "*"
   },
   "devDependencies": {},
