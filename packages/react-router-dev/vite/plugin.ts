@@ -2408,7 +2408,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       transform: {
         filter: {
           id: {
-            include: /\.(jsx?|tsx?|mdx?)(\?.*)?$/,
+            include: /^[^?]*\.(jsx?|tsx?|mdx?)(?:\?|$)/,
             exclude: /\/node_modules\//,
           },
         },
