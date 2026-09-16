@@ -795,6 +795,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
       export const ssr = ${ctx.reactRouterConfig.ssr};
+      export const unstable_detectVersionSkew = ${
+        ctx.reactRouterConfig.future.unstable_detectVersionSkew
+      };
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
       export const routeDiscovery = ${JSON.stringify(

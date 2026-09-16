@@ -14,6 +14,7 @@ import type {
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
 import {
+  BUILD_VERSION_HEADER,
   NO_BODY_STATUS_CODES,
   SINGLE_FETCH_REDIRECT_STATUS,
   SingleFetchRedirectSymbol,
@@ -238,6 +239,13 @@ function generateSingleFetchResponse(
   // network errors that are missing this header
   let resultHeaders = new Headers(headers);
   resultHeaders.set("X-Remix-Response", "yes");
+
+  // Opt-in: let the client notice it is talking to a newer build. Route
+  // discovery only compares versions on manifest requests, which a navigation
+  // between already-discovered routes never makes.
+  if (build.unstable_detectVersionSkew) {
+    resultHeaders.set(BUILD_VERSION_HEADER, build.assets.version);
+  }
 
   // Skip response body for unsupported status codes
   if (SERVER_NO_BODY_STATUS_CODES.has(status)) {

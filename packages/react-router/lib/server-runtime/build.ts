@@ -28,6 +28,7 @@ export interface ServerBuild {
   assetsBuildDirectory: string;
   future: FutureConfig;
   ssr: boolean;
+  unstable_detectVersionSkew?: boolean;
   unstable_getCriticalCss?: (args: {
     pathname: string;
   }) => OptionalCriticalCss | Promise<OptionalCriticalCss>;
