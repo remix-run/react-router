@@ -1,5 +1,20 @@
 # `@react-router/dev`
 
+## v8.5.0
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Fix source maps for route modules in unstable RSC Framework Mode ([#15479](https://github.com/remix-run/react-router/pull/15479))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+  - [`@react-router/serve@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes

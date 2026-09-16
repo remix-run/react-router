@@ -1,5 +1,13 @@
 # `react-router`
 
+## v8.5.0
+
+### Minor Changes
+
+- Deprecate React Router's view transition APIs in favor of React's `<ViewTransition>` component, available in React 19.3 and later ([#15493](https://github.com/remix-run/react-router/pull/15493))
+
+  This includes the `viewTransition` props/options, `useViewTransitionState`, and `NavLink`'s `isTransitioning` render prop and `transitioning` class. Existing behavior is unchanged. See the [migration guide](https://reactrouter.com/how-to/view-transitions) for a navigation example and compatibility considerations.
+
 ## v8.4.0
 
 ### Minor Changes
