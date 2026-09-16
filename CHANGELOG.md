@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.5.0](#v850)
   - [v8.4.0](#v840)
     - [Reduced Route Component Re-renders](#reduced-route-component-re-renders)
     - [More Efficient Route Matching (unstable)](#more-efficient-route-matching-unstable)
@@ -114,6 +115,24 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.5.0
+
+Date: 2026-09-16
+
+### Minor Changes
+
+- `react-router` - Deprecate React Router's view transition APIs in favor of React's `<ViewTransition>` component, available in React 19.3 and later ([#15493](https://github.com/remix-run/react-router/pull/15493))
+
+  This includes the `viewTransition` props/options, `useViewTransitionState`, and `NavLink`'s `isTransitioning` render prop and `transitioning` class. Existing behavior is unchanged. See the [migration guide](https://reactrouter.com/how-to/view-transitions) for a navigation example and compatibility considerations.
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `@react-router/dev` - Fix source maps for route modules in unstable RSC Framework Mode ([#15479](https://github.com/remix-run/react-router/pull/15479))
+
+**Full Changelog**: [`v8.4.0...v8.5.0`](https://github.com/remix-run/react-router/compare/react-router@8.4.0...react-router@8.5.0)
 
 ## v8.4.0
 
