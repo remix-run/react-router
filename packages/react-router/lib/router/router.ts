@@ -2562,6 +2562,7 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(loaderResults);
     if (redirect) {
       await startRedirectNavigation(request, redirect.result, true, {
+        fetcherSubmission: activeSubmission,
         replace,
       });
       return { shortCircuited: true };
