@@ -11,6 +11,7 @@ import {
   reactRouterServe,
   viteConfig,
   reactRouterConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -272,7 +273,9 @@ test.describe("Split route modules", async () => {
 
     let { status, stderr } = build({ cwd });
     expect(status).toBe(0);
-    expect(stderr.toString()).not.toContain("SOURCEMAP_BROKEN");
+    expect(stderr.toString()).not.toContain(
+      "Sourcemap is likely to be incorrect",
+    );
 
     let chunkPath = globSync(path.join(cwd, "build/client/assets/*.js")).find(
       (file) => readFileSync(file, "utf8").includes(marker),
@@ -307,6 +310,45 @@ test.describe("Split route modules", async () => {
     let originalLine =
       source.slice(0, originalMarkerOffset).split("\n").length - 1;
     expect(entry.originalLine).toBe(originalLine);
+  });
+
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / declares source maps for placeholder chunks of exports that can't be split`, async () => {
+      let cwd = await createProject(
+        {
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules: true,
+          }),
+          "vite.config.js": await viteConfig.basic({ sourcemap: true }),
+          "app/routes/_index.tsx": js`
+            let shared = 0;
+
+            export async function clientLoader() {
+              shared++;
+              return shared;
+            }
+
+            export default function Index() {
+              return <h1>{shared}</h1>;
+            }
+          `,
+        },
+        templateName,
+      );
+
+      let { status, stderr } = build({ cwd });
+      expect(status).toBe(0);
+      expect(stderr.toString()).not.toContain(
+        "Sourcemap is likely to be incorrect",
+      );
+
+      let placeholder = globSync(
+        path.join(cwd, "build/client/assets/*.js"),
+      ).find((file) =>
+        readFileSync(file, "utf8").includes("No clientLoader chunk"),
+      );
+      expect(placeholder).toBeDefined();
+    });
   });
 
   test.describe("enabled", () => {
