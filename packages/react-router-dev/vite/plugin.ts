@@ -2337,9 +2337,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
         }
-        decorateComponentExportsWithProps(ast);
+        decorateComponentExportsWithProps(ast, code);
         return generate(ast, {
-          sourceMaps: true,
+          sourceMaps:
+            this.environment.mode !== "build" ||
+            Boolean(this.environment.config.build.sourcemap),
           filename: id,
           sourceFileName: filepath,
         });
