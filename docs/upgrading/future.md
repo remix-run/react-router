@@ -46,6 +46,39 @@ _No known planned breaking changes yet_
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
+### `future.unstable_detectVersionSkew`
+
+[MODES: framework]
+
+<br/>
+<br/>
+
+**Background**
+
+When you deploy a new build, tabs opened beforehand keep running the previous build's client modules. If such a tab navigates, it fetches `.data` from the new server, and a loader payload whose shape changed between the two builds can break the stale client.
+
+React Router compares build versions when it fetches the manifest, but a navigation to a route the tab has already discovered makes no manifest request, so that comparison never runs.
+
+With this flag enabled, the server stamps its build version onto every single fetch response and a client on a different build performs a document navigation instead of rendering the newer data. This is what RSC Framework Mode already does on every data fetch, so the flag is a no-op there.
+
+The document navigation discards in-flight form state, so leave this off if your app would rather tolerate skew. Deployments that keep previous builds addressable can handle skew at the platform level instead.
+
+<docs-warning>Do not cache `.data` responses across deploys with this flag enabled. A cached response from an older build keeps mismatching after the reload, which surfaces as an error instead of recovering.</docs-warning>
+
+Detection is off where no version can be compared: prerendered `.data` files carry no header, and routes whose `clientLoader` never calls `serverLoader` make no `.data` request. The flag is also inert in dev, where the manifest version changes on route-export edits.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_detectVersionSkew: true,
+  },
+} satisfies Config;
+```
+
 ### `future.unstable_enableNodeReadableStream`
 
 [MODES: framework]

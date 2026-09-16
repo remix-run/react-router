@@ -1,3 +1,4 @@
+import type { FutureConfig as RouterFutureConfig } from "../../router/router";
 import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
@@ -53,7 +54,9 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export type FutureConfig = Record<string, never>;
+export type FutureConfig = RouterFutureConfig & {
+  unstable_detectVersionSkew?: boolean;
+};
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };
 

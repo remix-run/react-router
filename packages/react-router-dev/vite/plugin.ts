@@ -793,11 +793,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ),
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
-      export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
+      export const future = ${JSON.stringify({
+        ...ctx.reactRouterConfig.future,
+        // The dev manifest gets a fresh random version whenever a route's
+        // exports change, so leaving this on would turn every such HMR edit
+        // into a document reload.
+        unstable_detectVersionSkew:
+          viteCommand === "build" &&
+          ctx.reactRouterConfig.future.unstable_detectVersionSkew,
+      })};
       export const ssr = ${ctx.reactRouterConfig.ssr};
-      export const unstable_detectVersionSkew = ${
-        ctx.reactRouterConfig.future.unstable_detectVersionSkew
-      };
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
       export const routeDiscovery = ${JSON.stringify(

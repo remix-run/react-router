@@ -592,25 +592,6 @@ function getFetchAndDecodeViaTurboStream(
 
     let res = await fetch(url, await createRequestInit(request));
 
-    // Route discovery only compares versions on manifest requests, so a
-    // navigation between already-discovered routes never notices a newer
-    // server. Compare here instead, when the server opted into stamping it.
-    let serverVersion = res.headers.get(BUILD_VERSION_HEADER);
-    if (
-      clientVersion !== undefined &&
-      serverVersion !== null &&
-      (await handleClientVersionMismatch(
-        serverVersion !== clientVersion,
-        clientVersion,
-        createPath(
-          getRouter().state.navigation.location || getRouter().state.location,
-        ),
-      ))
-    ) {
-      // A document navigation is underway; never resolve on the stale tree.
-      return new Promise(() => {});
-    }
-
     // If this error'd without hitting the running server, then bubble a normal
     // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
     //
@@ -635,6 +616,29 @@ function getFetchAndDecodeViaTurboStream(
           },
         },
       };
+    }
+
+    // Route discovery only compares versions on manifest requests, so a
+    // navigation between already-discovered routes never notices a newer
+    // server. Compare here instead, when the server opted into stamping it.
+    // Redirects are handled above and excluded below so the client follows
+    // them first and re-checks on the destination, rather than reloading the
+    // URL it is leaving.
+    let serverVersion = res.headers.get(BUILD_VERSION_HEADER);
+    if (
+      res.status !== SINGLE_FETCH_REDIRECT_STATUS &&
+      clientVersion !== undefined &&
+      serverVersion !== null &&
+      (await handleClientVersionMismatch(
+        serverVersion !== clientVersion,
+        clientVersion,
+        createPath(
+          getRouter().state.navigation.location || getRouter().state.location,
+        ),
+      ))
+    ) {
+      // The document is about to be replaced; keep this promise pending.
+      return new Promise(() => {});
     }
 
     if (NO_BODY_STATUS_CODES.has(res.status)) {

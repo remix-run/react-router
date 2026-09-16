@@ -243,7 +243,7 @@ function generateSingleFetchResponse(
   // Opt-in: let the client notice it is talking to a newer build. Route
   // discovery only compares versions on manifest requests, which a navigation
   // between already-discovered routes never makes.
-  if (build.unstable_detectVersionSkew) {
+  if (build.future.unstable_detectVersionSkew) {
     resultHeaders.set(BUILD_VERSION_HEADER, build.assets.version);
   }
 

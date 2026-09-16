@@ -132,5 +132,14 @@ client on a different build performs a document navigation instead of rendering
 the new data. That navigation discards in-flight form state, so leave this off
 if your app would rather tolerate skew.
 
+Do not cache `.data` responses across deploys while this is enabled: a cached
+response from an older build keeps mismatching after the reload, which surfaces
+as an error rather than recovering.
+
 Platforms that keep previous builds addressable (serving each deploy's assets
-from its own URL) can handle skew at the platform level instead.
+from its own URL) can handle skew at the platform level instead. RSC Framework
+Mode already compares versions on every data fetch, so the flag is a no-op
+there.
+
+See [`future.unstable_detectVersionSkew`](../../upgrading/future#futureunstable_detectversionskew)
+for the full caveats.

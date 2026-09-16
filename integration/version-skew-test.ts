@@ -14,7 +14,7 @@ function getFiles(detectVersionSkew: boolean) {
       future: { unstable_detectVersionSkew: detectVersionSkew },
     }),
     "app/root.tsx": js`
-      import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+      import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router";
 
       export default function Root() {
         return (
@@ -26,6 +26,9 @@ function getFiles(detectVersionSkew: boolean) {
             <body>
               <Link to="/">Home</Link><br/>
               <Link to="/a">/a</Link><br/>
+              <Form method="post" action="/submit">
+                <button type="submit">Submit</button>
+              </Form>
               <Outlet />
               <Scripts />
             </body>
@@ -43,6 +46,16 @@ function getFiles(detectVersionSkew: boolean) {
       export function loader() { return { value: "A" }; }
       export default function A({ loaderData }) {
         return <h1 data-a>{loaderData.value}</h1>;
+      }
+    `,
+    "app/routes/submit.tsx": js`
+      import { redirect } from "react-router";
+      export function action() { return redirect("/thanks"); }
+    `,
+    "app/routes/thanks.tsx": js`
+      export function loader() { return { value: "THANKS" }; }
+      export default function Thanks({ loaderData }) {
+        return <h1 data-thanks>{loaderData.value}</h1>;
       }
     `,
   };
@@ -89,12 +102,10 @@ test.describe("version skew on single fetch", () => {
 
       await page.getByRole("link", { name: "/a" }).click();
 
-      await page.waitForFunction(
-        () => performance.getEntriesByType("navigation").length > 0,
-      );
+      await page.waitForURL(/\/a$/);
       await expect(page.locator("[data-a]")).toHaveText("A");
 
-      // The stale client must not render B's data; it reloads instead.
+      // The stale client reloads rather than rendering the newer build's data.
       expect(documents).toHaveLength(2);
       expect(documents[1]).toMatch(/\/a$/);
     } finally {
@@ -125,6 +136,86 @@ test.describe("version skew on single fetch", () => {
       for (let headers of dataResponseHeaders) {
         expect(headers["x-react-router-build"]).toBeUndefined();
       }
+    } finally {
+      await appFixture.close();
+    }
+  });
+
+  test("stamps the client's own build version on .data responses", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({ files: getFiles(true) });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    try {
+      let documents: string[] = [];
+      let buildHeaders: Array<string | undefined> = [];
+      page.on("request", (request) => {
+        if (request.resourceType() === "document") {
+          documents.push(request.url());
+        }
+      });
+      page.on("response", async (response) => {
+        if (new URL(response.url()).pathname.endsWith(".data")) {
+          buildHeaders.push(
+            (await response.allHeaders())["x-react-router-build"],
+          );
+        }
+      });
+
+      await app.goto("/");
+      await page.getByRole("link", { name: "/a" }).click();
+      await expect(page.locator("[data-a]")).toHaveText("A");
+
+      let clientVersion = await page.evaluate(
+        () => (window as any).__reactRouterManifest.version,
+      );
+
+      expect(buildHeaders.length).toBeGreaterThan(0);
+      for (let header of buildHeaders) {
+        expect(header).toBe(clientVersion);
+      }
+
+      // Matching versions must not disturb the client navigation.
+      expect(documents).toHaveLength(1);
+    } finally {
+      await appFixture.close();
+    }
+  });
+
+  test("follows an action redirect before reloading on a mismatch", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({ files: getFiles(true) });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    try {
+      let documents: string[] = [];
+      page.on("request", (request) => {
+        if (request.resourceType() === "document") {
+          documents.push(request.url());
+        }
+      });
+
+      await app.goto("/");
+      await page.route(/\.data(\?|$)/, async (route) => {
+        let response = await route.fetch();
+        await route.fulfill({
+          response,
+          headers: {
+            ...response.headers(),
+            "X-React-Router-Build": "a-different-build",
+          },
+        });
+      });
+
+      await page.getByRole("button", { name: "Submit" }).click();
+
+      // The reload must land on the redirect target, not back on the form.
+      await page.waitForURL(/\/thanks$/);
+      expect(documents.at(-1)).toMatch(/\/thanks$/);
     } finally {
       await appFixture.close();
     }
