@@ -192,7 +192,11 @@ export function getTurboStreamSingleFetchDataStrategy(
         hasClientLoader: manifestRoute.hasClientLoader,
       };
     },
-    getFetchAndDecodeViaTurboStream(getRouter, manifest.version),
+    (args, targetRoutes) =>
+      fetchAndDecodeViaTurboStream(args, targetRoutes, {
+        getRouter,
+        clientVersion: manifest.version,
+      }),
     ssr,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
@@ -576,117 +580,117 @@ export function singleFetchUrl(
   return url;
 }
 
-function getFetchAndDecodeViaTurboStream(
-  getRouter: () => DataRouter,
-  clientVersion?: string,
-): FetchAndDecodeFunction {
-  return async (args: DataStrategyFunctionArgs, targetRoutes?: string[]) => {
-    let { request } = args;
-    let url = singleFetchUrl(request.url, "data");
-    if (request.method === "GET") {
-      url = stripIndexParam(url);
-      if (targetRoutes) {
-        url.searchParams.set("_routes", targetRoutes.join(","));
-      }
+async function fetchAndDecodeViaTurboStream(
+  args: DataStrategyFunctionArgs,
+  targetRoutes?: string[],
+  versionCheck?: { getRouter: () => DataRouter; clientVersion: string },
+): Promise<{ status: number; data: DecodedSingleFetchResults }> {
+  let { request } = args;
+  let url = singleFetchUrl(request.url, "data");
+  if (request.method === "GET") {
+    url = stripIndexParam(url);
+    if (targetRoutes) {
+      url.searchParams.set("_routes", targetRoutes.join(","));
     }
+  }
 
-    let res = await fetch(url, await createRequestInit(request));
+  let res = await fetch(url, await createRequestInit(request));
 
-    // If this error'd without hitting the running server, then bubble a normal
-    // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
-    //
-    // This could be triggered by a few scenarios:
-    // - `.data` request 404 on a pre-rendered app using a CDN
-    // - 429 error returned from a CDN on a SSR app
-    if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
-      throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
-    }
+  // If this error'd without hitting the running server, then bubble a normal
+  // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
+  //
+  // This could be triggered by a few scenarios:
+  // - `.data` request 404 on a pre-rendered app using a CDN
+  // - 429 error returned from a CDN on a SSR app
+  if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
+    throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
+  }
 
-    // Handle non-RR redirects (i.e., from express middleware)
-    if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
-      return {
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-        data: {
-          redirect: {
-            redirect: res.headers.get("X-Remix-Redirect")!,
-            status: Number(res.headers.get("X-Remix-Status") || "302"),
-            revalidate: res.headers.get("X-Remix-Revalidate") === "true",
-            reload: res.headers.get("X-Remix-Reload-Document") === "true",
-            replace: res.headers.get("X-Remix-Replace") === "true",
-          },
+  // Handle non-RR redirects (i.e., from express middleware)
+  if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
+    return {
+      status: SINGLE_FETCH_REDIRECT_STATUS,
+      data: {
+        redirect: {
+          redirect: res.headers.get("X-Remix-Redirect")!,
+          status: Number(res.headers.get("X-Remix-Status") || "302"),
+          revalidate: res.headers.get("X-Remix-Revalidate") === "true",
+          reload: res.headers.get("X-Remix-Reload-Document") === "true",
+          replace: res.headers.get("X-Remix-Replace") === "true",
         },
-      };
+      },
+    };
+  }
+
+  // Route discovery only compares versions on manifest requests, so a
+  // navigation between already-discovered routes never notices a newer
+  // server. Compare here instead, when the server opted into stamping it.
+  // Redirects are handled above and excluded below so the client follows
+  // them first and re-checks on the destination, rather than reloading the
+  // URL it is leaving.
+  let serverVersion = res.headers.get(BUILD_VERSION_HEADER);
+  if (
+    res.status !== SINGLE_FETCH_REDIRECT_STATUS &&
+    versionCheck !== undefined &&
+    serverVersion !== null &&
+    (await handleClientVersionMismatch(
+      serverVersion !== versionCheck.clientVersion,
+      versionCheck.clientVersion,
+      createPath(
+        versionCheck.getRouter().state.navigation.location ||
+          versionCheck.getRouter().state.location,
+      ),
+    ))
+  ) {
+    // The document is about to be replaced; keep this promise pending.
+    return new Promise(() => {});
+  }
+
+  if (NO_BODY_STATUS_CODES.has(res.status)) {
+    let routes: { [key: string]: SingleFetchResult } = {};
+    // We get back just a single result for action requests - normalize that
+    // to a DecodedSingleFetchResults shape here
+    if (targetRoutes && request.method !== "GET") {
+      routes[targetRoutes[0]] = { data: undefined };
     }
+    return {
+      status: res.status,
+      data: { routes },
+    };
+  }
 
-    // Route discovery only compares versions on manifest requests, so a
-    // navigation between already-discovered routes never notices a newer
-    // server. Compare here instead, when the server opted into stamping it.
-    // Redirects are handled above and excluded below so the client follows
-    // them first and re-checks on the destination, rather than reloading the
-    // URL it is leaving.
-    let serverVersion = res.headers.get(BUILD_VERSION_HEADER);
-    if (
-      res.status !== SINGLE_FETCH_REDIRECT_STATUS &&
-      clientVersion !== undefined &&
-      serverVersion !== null &&
-      (await handleClientVersionMismatch(
-        serverVersion !== clientVersion,
-        clientVersion,
-        createPath(
-          getRouter().state.navigation.location || getRouter().state.location,
-        ),
-      ))
-    ) {
-      // The document is about to be replaced; keep this promise pending.
-      return new Promise(() => {});
-    }
+  invariant(res.body, "No response body to decode");
 
-    if (NO_BODY_STATUS_CODES.has(res.status)) {
-      let routes: { [key: string]: SingleFetchResult } = {};
-      // We get back just a single result for action requests - normalize that
-      // to a DecodedSingleFetchResults shape here
-      if (targetRoutes && request.method !== "GET") {
-        routes[targetRoutes[0]] = { data: undefined };
-      }
-      return {
-        status: res.status,
-        data: { routes },
-      };
-    }
-
-    invariant(res.body, "No response body to decode");
-
-    try {
-      let decoded = await decodeViaTurboStream(res.body, window);
-      let data: DecodedSingleFetchResults;
-      if (request.method === "GET") {
-        let typed = decoded.value as SingleFetchResults;
-        if (SingleFetchRedirectSymbol in typed) {
-          data = { redirect: typed[SingleFetchRedirectSymbol] };
-        } else {
-          data = { routes: typed };
-        }
+  try {
+    let decoded = await decodeViaTurboStream(res.body, window);
+    let data: DecodedSingleFetchResults;
+    if (request.method === "GET") {
+      let typed = decoded.value as SingleFetchResults;
+      if (SingleFetchRedirectSymbol in typed) {
+        data = { redirect: typed[SingleFetchRedirectSymbol] };
       } else {
-        let typed = decoded.value as SingleFetchResult;
-        let routeId = targetRoutes?.[0];
-        invariant(routeId, "No routeId found for single fetch call decoding");
-        if ("redirect" in typed) {
-          data = { redirect: typed };
-        } else {
-          data = { routes: { [routeId]: typed } };
-        }
+        data = { routes: typed };
       }
-      return { status: res.status, data };
-    } catch (cause) {
-      // Can't clone after consuming the body via turbo-stream so we can't
-      // include the body here.  In an ideal world we'd look for a turbo-stream
-      // content type here, or even X-Remix-Response but then folks can't
-      // statically deploy their prerendered .data files to a CDN unless they can
-      // tell that CDN to add special headers to those certain files - which is a
-      // bit restrictive.
-      throw new Error("Unable to decode turbo-stream response", { cause });
+    } else {
+      let typed = decoded.value as SingleFetchResult;
+      let routeId = targetRoutes?.[0];
+      invariant(routeId, "No routeId found for single fetch call decoding");
+      if ("redirect" in typed) {
+        data = { redirect: typed };
+      } else {
+        data = { routes: { [routeId]: typed } };
+      }
     }
-  };
+    return { status: res.status, data };
+  } catch (cause) {
+    // Can't clone after consuming the body via turbo-stream so we can't
+    // include the body here.  In an ideal world we'd look for a turbo-stream
+    // content type here, or even X-Remix-Response but then folks can't
+    // statically deploy their prerendered .data files to a CDN unless they can
+    // tell that CDN to add special headers to those certain files - which is a
+    // bit restrictive.
+    throw new Error("Unable to decode turbo-stream response", { cause });
+  }
 }
 
 // Note: If you change this function please change the corresponding
