@@ -1,7 +1,7 @@
 {
   "name": "react-router",
   "type": "module",
-  "version": "8.3.1",
+  "version": "8.4.0",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -45,6 +45,15 @@
       },
       "development": "./dist/development/dom-export.js",
       "default": "./dist/production/dom-export.js"
+    },
+    "./route-pattern": {
+      "types": "./dist/production/route-pattern.d.ts",
+      "module-sync": {
+        "development": "./dist/development/route-pattern.js",
+        "default": "./dist/production/route-pattern.js"
+      },
+      "development": "./dist/development/route-pattern.js",
+      "default": "./dist/production/route-pattern.js"
     },
     "./internal": {
       "types": "./dist/development/lib/types/internal.d.ts"

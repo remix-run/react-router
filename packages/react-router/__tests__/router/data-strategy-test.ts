@@ -3,6 +3,7 @@ import type {
   DataStrategyMatch,
   DataStrategyResult,
 } from "../../lib/router/utils";
+import { getSingleFetchDataStrategyImpl } from "../../lib/dom/ssr/single-fetch";
 import {
   createDeferred,
   createAsyncStub,
@@ -171,6 +172,37 @@ describe("router dataStrategy", () => {
           ],
         }),
       );
+    });
+
+    it("preserves lazy route errors in the non-SSR single-fetch strategy", async () => {
+      let lazyError = new Error("Unable to load lazy route module");
+      let [lazy, lazyDeferred] = createAsyncStub();
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "lazy",
+            path: "/lazy",
+            lazy,
+            ErrorBoundary: () => null,
+          },
+        ],
+        dataStrategy: getSingleFetchDataStrategyImpl(
+          () => t.router,
+          () => ({ hasLoader: false, hasClientLoader: false }),
+          async () => {
+            throw new Error("Unexpected single-fetch request");
+          },
+          false,
+        ),
+      });
+
+      await t.navigate("/lazy");
+      await lazyDeferred.reject(lazyError);
+
+      expect(t.router.state.errors).toEqual({ lazy: lazyError });
     });
 
     it("should allow custom implementations to override default behavior", async () => {

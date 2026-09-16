@@ -314,26 +314,21 @@ async function nonSsrStrategy(
   let matchesToLoad = args.matches.filter((m) => m.shouldCallHandler());
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
-    matchesToLoad.map((m) =>
-      m.resolve(async (handler) => {
-        try {
-          let { hasClientLoader } = getRouteInfo(m);
-          // Need to pass through a `singleFetch` override handler so
-          // clientLoader's can still call server loaders through `.data`
-          // requests
-          let routeId = m.route.id;
-          let result = hasClientLoader
-            ? await handler(async () => {
-                let { data } = await fetchAndDecode(args, [routeId]);
-                return unwrapSingleFetchResult(data, routeId);
-              })
-            : await handler();
-          results[m.route.id] = { type: "data", result };
-        } catch (e) {
-          results[m.route.id] = { type: "error", result: e };
-        }
-      }),
-    ),
+    matchesToLoad.map(async (m) => {
+      let routeId = m.route.id;
+      results[routeId] = await m.resolve(async (handler) => {
+        let { hasClientLoader } = getRouteInfo(m);
+        // Need to pass through a `singleFetch` override handler so
+        // clientLoader's can still call server loaders through `.data`
+        // requests
+        return hasClientLoader
+          ? handler(async () => {
+              let { data } = await fetchAndDecode(args, [routeId]);
+              return unwrapSingleFetchResult(data, routeId);
+            })
+          : handler();
+      });
+    }),
   );
   return results;
 }
@@ -654,14 +649,14 @@ async function fetchAndDecodeViaTurboStream(
       }
     }
     return { status: res.status, data };
-  } catch {
+  } catch (cause) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
     // content type here, or even X-Remix-Response but then folks can't
     // statically deploy their prerendered .data files to a CDN unless they can
     // tell that CDN to add special headers to those certain files - which is a
     // bit restrictive.
-    throw new Error("Unable to decode turbo-stream response");
+    throw new Error("Unable to decode turbo-stream response", { cause });
   }
 }
 

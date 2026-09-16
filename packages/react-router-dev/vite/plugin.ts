@@ -2046,7 +2046,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             })
             .join(", ");
 
-          return `export { ${reexports} } from "./${routeFileName}";`;
+          return {
+            code: `export { ${reexports} } from "./${routeFileName}";`,
+            // This barrel is generated, so there's no original code behind it to
+            // map back to. An empty mappings string says so explicitly, rather
+            // than leaving Rollup to assume the output still lines up with the
+            // route module it replaced.
+            map: { mappings: "" },
+          };
         },
       },
     },
@@ -3422,7 +3429,10 @@ async function getRouteChunkIfEnabled(
     normalizeRelativeFilePath(id, ctx.reactRouterConfig) +
     (typeof input === "string" ? "" : "?read");
 
-  return getRouteChunkCode(code, chunkName, cache, cacheKey);
+  return getRouteChunkCode(code, chunkName, cache, cacheKey, {
+    sourceMaps: true,
+    sourceFileName: path.basename(id.split("?")[0]),
+  });
 }
 
 function validateRouteChunks({

@@ -1,4 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
+import { globSync, readFileSync } from "node:fs";
+import { SourceMap } from "node:module";
+import path from "node:path";
 import getPort from "get-port";
 import dedent from "dedent";
 
@@ -249,6 +252,63 @@ async function unblockClientLoader(page: Page) {
 }
 
 test.describe("Split route modules", async () => {
+  test("emits source maps for split route chunks", async () => {
+    let marker = "SPLIT_ROUTE_SOURCE_MAP_TEST";
+    let cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        splitRouteModules: true,
+      }),
+      "vite.config.js": await viteConfig.basic({ sourcemap: true }),
+      "app/routes/_index.tsx": js`
+        export async function clientLoader() {
+          throw new Error("${marker}");
+        }
+
+        export default function Index() {
+          return <h1>Index</h1>;
+        }
+      `,
+    });
+
+    let { status, stderr } = build({ cwd });
+    expect(status).toBe(0);
+    expect(stderr.toString()).not.toContain("SOURCEMAP_BROKEN");
+
+    let chunkPath = globSync(path.join(cwd, "build/client/assets/*.js")).find(
+      (file) => readFileSync(file, "utf8").includes(marker),
+    );
+    expect(chunkPath).toBeDefined();
+
+    let chunk = readFileSync(chunkPath!, "utf8");
+    let markerOffset = chunk.indexOf(marker);
+    let generatedLines = chunk.slice(0, markerOffset).split("\n");
+    let generatedLine = generatedLines.length - 1;
+    let generatedColumn = generatedLines.at(-1)!.length;
+
+    let map = JSON.parse(readFileSync(`${chunkPath}.map`, "utf8"));
+    let entry = new SourceMap(map).findEntry(generatedLine, generatedColumn);
+    if (!("originalSource" in entry)) {
+      throw new Error("Expected to find a source map entry for the marker");
+    }
+    expect(entry.originalSource?.split("?")[0].replaceAll("\\", "/")).toMatch(
+      /app\/routes\/_index\.tsx$/,
+    );
+
+    let sourceIndex = map.sources.findIndex((source: string) =>
+      source
+        .split("?")[0]
+        .replaceAll("\\", "/")
+        .endsWith("app/routes/_index.tsx"),
+    );
+    expect(sourceIndex).not.toBe(-1);
+    let source = map.sourcesContent[sourceIndex];
+    expect(source).toContain(marker);
+    let originalMarkerOffset = source.indexOf(marker);
+    let originalLine =
+      source.slice(0, originalMarkerOffset).split("\n").length - 1;
+    expect(entry.originalLine).toBe(originalLine);
+  });
+
   test.describe("enabled", () => {
     let port: number;
     let cwd: string;
