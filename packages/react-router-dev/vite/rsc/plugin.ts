@@ -470,6 +470,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
+      async buildEnd(error) {
+        if (error) {
+          await configLoader.close();
+        }
+      },
     },
     (() => {
       let logged = false;
@@ -723,6 +728,7 @@ export default assetsManifest.clientVersion;
         };
       },
       logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      cleanup: () => configLoader.close(),
       async requests() {
         const prerenderPaths = new Set(
           await getPrerenderPaths(

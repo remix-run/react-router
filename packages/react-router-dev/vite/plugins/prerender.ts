@@ -168,6 +168,9 @@ export interface PrerenderPluginOptions<
    * Use for cleanup or post-processing of output files.
    */
   finalize?: (buildDirectory: string) => void | Promise<void>;
+
+  /** Called when prerendering fails. */
+  cleanup?: () => void | Promise<void>;
 }
 
 function normalizePrerenderRequest<Metadata extends Record<string, unknown>>(
@@ -209,6 +212,7 @@ export function prerender<Metadata extends Record<string, unknown>>(
     handleError = defaultHandleError,
     logFile,
     finalize,
+    cleanup,
   } = options;
 
   let viteConfig: Vite.ResolvedConfig;
@@ -220,29 +224,30 @@ export function prerender<Metadata extends Record<string, unknown>>(
     buildApp: {
       order: "post",
       async handler() {
-        const rawRequests =
-          typeof requests === "function" ? await requests() : requests;
-
-        const prerenderRequests = rawRequests.map(normalizePrerenderRequest);
-
-        if (prerenderRequests.length === 0) {
-          return;
-        }
-
-        const prerenderConfig =
-          typeof config === "function" ? await config() : config;
-        const {
-          buildDirectory = viteConfig.environments.client.build.outDir,
-          concurrency = 1,
-          retryCount = 0,
-          retryDelay = 500,
-          maxRedirects = 0,
-          timeout = 10000,
-        } = prerenderConfig ?? {};
-
         let ogIsBuildRequest = process.env.IS_RR_BUILD_REQUEST;
-        process.env.IS_RR_BUILD_REQUEST = "yes";
+
         try {
+          const rawRequests =
+            typeof requests === "function" ? await requests() : requests;
+
+          const prerenderRequests = rawRequests.map(normalizePrerenderRequest);
+
+          if (prerenderRequests.length === 0) {
+            return;
+          }
+
+          const prerenderConfig =
+            typeof config === "function" ? await config() : config;
+          const {
+            buildDirectory = viteConfig.environments.client.build.outDir,
+            concurrency = 1,
+            retryCount = 0,
+            retryDelay = 500,
+            maxRedirects = 0,
+            timeout = 10000,
+          } = prerenderConfig ?? {};
+
+          process.env.IS_RR_BUILD_REQUEST = "yes";
           const previewServer = await startPreviewServer(viteConfig);
 
           try {
@@ -383,6 +388,9 @@ export function prerender<Metadata extends Record<string, unknown>>(
           } finally {
             await previewServer.close();
           }
+        } catch (error) {
+          await cleanup?.();
+          throw error;
         } finally {
           process.env.IS_RR_BUILD_REQUEST = ogIsBuildRequest;
         }
