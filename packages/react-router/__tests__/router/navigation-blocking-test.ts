@@ -1,4 +1,7 @@
-import { createMemoryHistory } from "../../lib/router/history";
+import {
+  createBrowserHistory,
+  createMemoryHistory,
+} from "../../lib/router/history";
 import type { Router } from "../../lib/router/router";
 import { createRouter } from "../../lib/router/router";
 
@@ -499,6 +502,52 @@ describe("navigation blocking", () => {
         expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
     });
+  });
+
+  describe("synthetic popstate events", () => {
+    beforeEach(() => {
+      window.history.replaceState(null, "", "/");
+    });
+
+    afterEach(() => {
+      router.dispose();
+      jest.restoreAllMocks();
+      window.history.replaceState(null, "", "/");
+    });
+
+    it.each(["push", "replace"] as const)(
+      "does not reload for a zero-delta popstate after %s",
+      (method) => {
+        let history = createBrowserHistory({ window });
+        router = createRouter({ history, routes }).initialize();
+        let go = jest.spyOn(window.history, "go").mockImplementation(() => {});
+        let fn = () => true;
+        router.getBlocker("KEY", fn);
+
+        // Integrations such as single-spa emit popstate after pushState and
+        // replaceState even though the history index has not moved again.
+        history[method]("/contact");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+
+        expect(go).not.toHaveBeenCalled();
+        expect(router.state.location.pathname).toBe("/contact");
+        expect(router.getBlocker("KEY", fn).state).toBe("unblocked");
+
+        // A subsequent back navigation must still reach the blocker instead
+        // of being mistaken for the completion of a history restoration.
+        window.history.replaceState(
+          { ...window.history.state, idx: window.history.state.idx - 1 },
+          "",
+          "/",
+        );
+        window.dispatchEvent(new PopStateEvent("popstate"));
+
+        expect(go).toHaveBeenCalledTimes(1);
+        expect(go).toHaveBeenCalledWith(1);
+        expect(router.state.location.pathname).toBe("/contact");
+        expect(router.getBlocker("KEY", fn).state).toBe("blocked");
+      },
+    );
   });
 });
 
