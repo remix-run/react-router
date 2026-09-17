@@ -303,7 +303,7 @@ export async function createAppFixture(
     stop: VoidFunction;
   }> => {
     if (fixture.useReactRouterServe) {
-      let port = await getPort({ port: appPort });
+      let port = appPort ?? (await getPort());
       let { stop } = await spawnTestServer({
         cwd: fixture.projectDir,
         command: [
@@ -330,7 +330,7 @@ export async function createAppFixture(
 
     if (fixture.isSpaMode) {
       return new Promise(async (accept) => {
-        let port = await getPort({ port: appPort });
+        let port = appPort ?? (await getPort());
         let app = express();
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
         app.get("*", (_, res) =>
@@ -345,7 +345,7 @@ export async function createAppFixture(
 
     if (fixture.prerender) {
       return new Promise(async (accept) => {
-        let port = await getPort({ port: appPort });
+        let port = appPort ?? (await getPort());
         let app = express();
         app.use(
           express.static(path.join(fixture.projectDir, "build", "client")),
@@ -378,7 +378,7 @@ export async function createAppFixture(
     }
 
     if (fixture.templateName.includes("rsc")) {
-      let port = await getPort({ port: appPort });
+      let port = appPort ?? (await getPort());
       let { stop } = await spawnTestServer({
         cwd: fixture.projectDir,
         command: [process.argv[0], "start.js"],
@@ -407,7 +407,7 @@ export async function createAppFixture(
     }
 
     return new Promise(async (accept) => {
-      let port = await getPort({ port: appPort });
+      let port = appPort ?? (await getPort());
       let app = express();
       app.use(express.static(path.join(fixture.projectDir, "build/client")));
 
