@@ -140,7 +140,6 @@ describe("architect createRequestHandler", () => {
           createMockEvent({
             headers: {
               host: "localhost:3333",
-              "x-forwarded-host": "ignore.com",
             },
             requestContext: {
               domainName: "example.com",
@@ -289,12 +288,27 @@ describe("architect createReactRouterRequest", () => {
     expect(request.headers.get("cookie")).toBe("__session=value");
   });
 
+  it("uses x-forwarded-host when present", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "abcdefghijklmnopqrstuvwxyz.lambda-url.eu-west-1.on.aws",
+          "x-forwarded-host": "abcdefghijkl.cloudfront.net",
+        },
+        requestContext: {
+          domainName: "abcdefghijklmnopqrstuvwxyz.lambda-url.eu-west-1.on.aws",
+        },
+      }),
+    );
+
+    expect(request.url).toBe("https://abcdefghijkl.cloudfront.net/");
+  });
+
   it("uses request context domain name", () => {
     let request = createReactRouterRequest(
       createMockEvent({
         headers: {
           host: "localhost:3333",
-          "x-forwarded-host": "ignore.com",
         },
         requestContext: {
           domainName: "example.com",
@@ -303,6 +317,20 @@ describe("architect createReactRouterRequest", () => {
     );
 
     expect(request.url).toBe("https://example.com/");
+  });
+
+  it("ignores invalid characters in x-forwarded-host", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: {
+          host: "localhost:3333",
+          "x-forwarded-host": "example.com:4444/invalid@chars",
+        },
+        rawPath: "/foo",
+      }),
+    );
+
+    expect(request.url).toBe("https://example.com:4444/foo");
   });
 
   it("ignores invalid characters in request context domain name", () => {
