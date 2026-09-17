@@ -1,5 +1,14 @@
 # `@react-router/node`
 
+## v8.4.0
+
+### Patch Changes
+
+- Fix a memory leak in `writeReadableStreamToWritable` and `writeAsyncIterableToWritable` that retained memory for the lifetime of a long-running stream ([#15500](https://github.com/remix-run/react-router/pull/15500))
+  - Preserve error handling when a producer closes the destination while reading the next chunk
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+
 ## v8.3.1
 
 ### Patch Changes

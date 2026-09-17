@@ -39,7 +39,7 @@ The returned function signature is `navigate(to, options?)`/`navigate(delta)` wh
   * These options only work in Framework and Data modes:
     * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
     * `preventScrollReset`: Do not scroll back to the top of the page after navigation
-    * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
+    * `viewTransition`: **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component instead. See the [migration guide](../../how-to/view-transitions).
 
 ```tsx
 import { useNavigate } from "react-router";

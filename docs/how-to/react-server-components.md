@@ -498,16 +498,39 @@ Using Server Components in loaders can be helpful for incremental adoption of RS
 
 [Server Functions][react-server-functions-doc] are a React feature that allow you to call async functions executed on the server. They're defined with the [`"use server"`][use-server-docs] directive.
 
+<docs-warning>
+
+Treat every Server Function as a public endpoint. The client controls both the
+Server Function identifier and request URL, so do not rely on route middleware
+for authentication or authorization. Server Functions must perform their own
+access control and input validation; use a route `action` when access control
+should be middleware-driven.
+
+</docs-warning>
+
 ```tsx
 "use server";
 
+import { unstable_getRequest as getRequest } from "react-router";
+import { requireUser } from "./auth.ts";
+
 export async function updateFavorite(formData: FormData) {
-  let movieId = formData.get("id");
+  let user = await requireUser(getRequest());
+  let movieId = Number(formData.get("id"));
   let intent = formData.get("intent");
+
+  if (
+    !Number.isSafeInteger(movieId) ||
+    movieId <= 0 ||
+    (intent !== "add" && intent !== "remove")
+  ) {
+    throw new Error("Invalid form submission");
+  }
+
   if (intent === "add") {
-    await addFavorite(Number(movieId));
+    await addFavorite(user.id, movieId);
   } else {
-    await removeFavorite(Number(movieId));
+    await removeFavorite(user.id, movieId);
   }
 }
 ```
