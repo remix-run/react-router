@@ -2,6 +2,10 @@ import { render } from "@testing-library/react";
 import * as React from "react";
 
 import { Links, Outlet, createRoutesStub } from "../../../index";
+import { getKeyedPrefetchLinks } from "../../../lib/dom/ssr/links";
+import type { AssetsManifest } from "../../../lib/dom/ssr/entry";
+import type { RouteModules } from "../../../lib/dom/ssr/routeModules";
+import type { DataRouteMatch } from "../../../lib/router/utils";
 
 describe("<Links>", () => {
   describe("crossOrigin", () => {
@@ -169,5 +173,74 @@ describe("<Links>", () => {
       expect(stylesheetLink).toBeTruthy();
       expect(stylesheetLink?.getAttribute("crossorigin")).toBe("anonymous");
     });
+  });
+});
+
+describe("getKeyedPrefetchLinks", () => {
+  let matches: DataRouteMatch[];
+  let manifest: AssetsManifest;
+
+  beforeEach(() => {
+    matches = [
+      {
+        params: {},
+        pathname: "/idk",
+        pathnameBase: "/idk",
+        route: { id: "idk", path: "idk" },
+      },
+    ];
+    manifest = {
+      routes: {
+        idk: {
+          id: "idk",
+          module: "idk.js",
+          hasAction: false,
+          hasLoader: false,
+          hasClientAction: false,
+          hasClientLoader: false,
+          hasClientMiddleware: false,
+          hasErrorBoundary: false,
+          clientActionModule: undefined,
+          clientLoaderModule: undefined,
+          clientMiddlewareModule: undefined,
+          hydrateFallbackModule: undefined,
+        },
+      },
+      entry: { imports: [], module: "" },
+      url: "",
+      version: "",
+    };
+  });
+
+  it("does not throw when the route module cache has an empty slot", async () => {
+    // `idk in routeModules` is true, but the value is undefined — the same
+    // shape loadRouteModule returns without falling through to import().
+    let routeModules: RouteModules = { idk: undefined };
+
+    await expect(
+      getKeyedPrefetchLinks(matches, manifest, routeModules),
+    ).resolves.toEqual([]);
+  });
+
+  it("returns stylesheet links as prefetch descriptors when the module is loaded", async () => {
+    let routeModules: RouteModules = {
+      idk: {
+        default: () => null,
+        links: () => [{ rel: "stylesheet", href: "/foo.css" }],
+      },
+    };
+
+    await expect(
+      getKeyedPrefetchLinks(matches, manifest, routeModules),
+    ).resolves.toEqual([
+      {
+        key: JSON.stringify({
+          as: "style",
+          href: "/foo.css",
+          rel: "prefetch",
+        }),
+        link: { rel: "prefetch", as: "style", href: "/foo.css" },
+      },
+    ]);
   });
 });
