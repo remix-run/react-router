@@ -591,8 +591,14 @@ let getDefaultClientBuildDirectory = (
 let getClientBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
   path.resolve(viteConfig.root, viteConfig.environments.client.build.outDir);
 
-let getServerBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
-  path.resolve(viteConfig.root, viteConfig.environments.ssr.build.outDir);
+let getServerBuildDirectory = (
+  viteConfig: Vite.ResolvedConfig,
+  environmentName = "ssr",
+) => {
+  let environment = viteConfig.environments[environmentName];
+  invariant(environment, `Vite environment "${environmentName}" not found`);
+  return path.resolve(viteConfig.root, environment.build.outDir);
+};
 
 let getServerBundleRouteIds = (
   vitePluginContext: Vite.Rollup.PluginContext,
@@ -1265,6 +1271,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         await updatePluginContext();
 
+        // Preview needs the server bundle IDs before configuring environments.
+        if (_viteConfigEnv.isPreview && ctx.reactRouterConfig.serverBundles) {
+          ctx.buildManifest = await getBuildManifest({
+            reactRouterConfig: ctx.reactRouterConfig,
+            rootDirectory: ctx.rootDirectory,
+          });
+        }
+
         let environments = await getEnvironmentsOptions(ctx, viteCommand, {
           viteUserConfig,
         });
@@ -1439,6 +1453,27 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteConfig = resolvedViteConfig;
         invariant(viteConfig);
+
+        // Server bundle paths are initially derived from the React Router build
+        // directory. Update them after Vite config resolution so plugin overrides
+        // to each server bundle environment's outDir are reflected in the manifest.
+        if (ctx.buildManifest?.serverBundles) {
+          let { normalizePath } = getVite();
+          for (let bundle of Object.values(ctx.buildManifest.serverBundles)) {
+            bundle.file = normalizePath(
+              path.join(
+                path.relative(
+                  ctx.rootDirectory,
+                  getServerBuildDirectory(
+                    viteConfig,
+                    `${SSR_BUNDLE_PREFIX}${bundle.id}`,
+                  ),
+                ),
+                ctx.reactRouterConfig.serverBuildFile,
+              ),
+            );
+          }
+        }
 
         // We load the same Vite config file again for the child compiler so
         // that both parent and child compiler's plugins have independent state.
@@ -1658,15 +1693,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             routes: DataRouteObject[] | null;
           }> = [];
 
-          // Get build manifest to find server bundles
-          let buildManifest =
-            ctx.buildManifest ??
-            (ctx.reactRouterConfig.serverBundles
-              ? await getBuildManifest({
-                  reactRouterConfig: ctx.reactRouterConfig,
-                  rootDirectory: ctx.rootDirectory,
-                })
-              : null);
+          let { buildManifest } = ctx;
 
           if (buildManifest?.serverBundles) {
             let routesByServerBundleId =
