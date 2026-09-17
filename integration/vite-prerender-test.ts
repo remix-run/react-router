@@ -340,6 +340,47 @@ test.describe(`Prerendering`, () => {
       );
     });
 
+    test("closes the child compiler when prerendering fails", async () => {
+      let cwd = await createProject({
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/missing"],
+        }),
+        "vite.config.ts": js`
+          import fs from "node:fs";
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          let isChildCompiler = false;
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter(),
+              {
+                name: "child-compiler-cleanup-tracker",
+                configResolved(config) {
+                  // Exclude the prerender preview server so only closing the
+                  // React Router child compiler can satisfy this test.
+                  isChildCompiler =
+                    config.command === "serve" && !config.isPreview;
+                },
+                closeBundle() {
+                  if (isChildCompiler) {
+                    fs.writeFileSync("CHILD_COMPILER_CLOSED", "");
+                  }
+                },
+              },
+            ],
+          });
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.status).not.toBe(0);
+      expect(fs.existsSync(path.join(cwd, "CHILD_COMPILER_CLOSED"))).toBe(true);
+    });
+
     test("Prerenders a static array of routes with server bundles", async () => {
       fixture = await createFixture({
         prerender: true,

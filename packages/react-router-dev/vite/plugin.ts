@@ -1888,8 +1888,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         },
       },
-      async buildEnd() {
-        if (viteConfig?.command !== "build") {
+      async buildEnd(error) {
+        if (viteConfig?.command !== "build" || error) {
           await closePluginResources();
         }
       },
@@ -2687,6 +2687,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         viteConfig.logger.info(
           `Prerender (${metadata.type}): ${metadata.path} -> ${colors.bold(outputPath)}`,
         );
+      },
+      cleanup() {
+        return closePluginResources();
       },
       async finalize(buildDirectory) {
         invariant(viteConfig);
