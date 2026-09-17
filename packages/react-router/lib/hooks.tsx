@@ -1111,29 +1111,26 @@ export class RenderErrorBoundary extends React.Component<
       if (decoded) error = decoded;
     }
 
-    let result =
-      error !== undefined ? (
-        <RouteContext.Provider value={this.props.routeContext}>
-          <IsDataRouteContext.Provider
-            value={this.props.routeContext.isDataRoute}
-          >
-            <RouteIdContext.Provider
-              value={
-                this.props.routeContext.matches[
-                  this.props.routeContext.matches.length - 1
-                ]?.route.id
-              }
-            >
-              <RouteErrorContext.Provider
-                value={error}
-                children={this.props.component}
-              />
-            </RouteIdContext.Provider>
-          </IsDataRouteContext.Provider>
-        </RouteContext.Provider>
-      ) : (
-        this.props.children
-      );
+    // Hide the outlet while we're erroring so an `ErrorBoundary` that renders
+    // `<Outlet>` doesn't re-render the subtree that just threw.  We always
+    // render the provider so the element tree keeps the same shape in both
+    // states and React can reuse the route's `Layout` across the swap.
+    let result = (
+      <RouteContext.Provider
+        value={
+          error !== undefined
+            ? { ...this.props.routeContext, outlet: null }
+            : this.props.routeContext
+        }
+      >
+        <RouteErrorContext.Provider
+          value={error}
+          children={
+            error !== undefined ? this.props.component : this.props.children
+          }
+        />
+      </RouteContext.Provider>
+    );
 
     if (this.context) {
       return <RSCErrorHandler error={error}>{result}</RSCErrorHandler>;
@@ -1365,9 +1362,7 @@ export function _renderMatches(
       let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
       let getChildren = () => {
         let children: React.ReactNode;
-        if (error) {
-          children = errorElement;
-        } else if (shouldRenderHydrateFallback) {
+        if (shouldRenderHydrateFallback) {
           children = hydrateFallbackElement;
         } else if (match.route.Component) {
           // Note: This is a de-optimized path since React won't re-use the
@@ -1383,36 +1378,41 @@ export function _renderMatches(
           children = outlet;
         }
 
-        return (
-          <RenderedRoute
-            match={match}
-            routeContext={{
-              outlet,
-              matches,
-              isDataRoute: dataRouterState != null,
-            }}
-            children={children}
-          />
-        );
+        return children;
       };
-      // Only wrap in an error boundary within data router usages when we have an
-      // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
-      // an ancestor ErrorBoundary/errorElement
-      return dataRouterState &&
-        (match.route.ErrorBoundary ||
-          match.route.errorElement ||
-          index === 0) ? (
-        <RenderErrorBoundary
-          location={dataRouterState.location}
-          revalidation={dataRouterState.revalidation}
-          component={errorElement}
-          error={error}
-          children={getChildren()}
-          routeContext={{ outlet: null, matches, isDataRoute: true }}
-          onError={onError}
+      // Keep the route wrapper (`RenderedRoute`) stable across success/error
+      // states so the subtree isn't unmounted when we swap the component for
+      // the error boundary.  Only render a route-level error boundary for data
+      // routers that expose one (or for the root route's default boundary).
+      let routeContext = {
+        outlet,
+        matches,
+        isDataRoute: dataRouterState != null,
+      };
+      return (
+        <RenderedRoute
+          match={match}
+          routeContext={routeContext}
+          children={
+            dataRouterState &&
+            (match.route.ErrorBoundary ||
+              match.route.errorElement ||
+              index === 0) ? (
+              <RenderErrorBoundary
+                location={dataRouterState.location}
+                revalidation={dataRouterState.revalidation}
+                component={errorElement}
+                error={error}
+                routeContext={routeContext}
+                onError={onError}
+              >
+                {getChildren()}
+              </RenderErrorBoundary>
+            ) : (
+              getChildren()
+            )
+          }
         />
-      ) : (
-        getChildren()
       );
     },
     null as React.ReactElement | null,
