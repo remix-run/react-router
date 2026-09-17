@@ -1888,8 +1888,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         },
       },
-      async buildEnd() {
-        if (viteConfig?.command !== "build") {
+      async buildEnd(error) {
+        if (viteConfig?.command !== "build" || error) {
           await closePluginResources();
         }
       },
@@ -2688,6 +2688,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           `Prerender (${metadata.type}): ${metadata.path} -> ${colors.bold(outputPath)}`,
         );
       },
+      cleanup() {
+        return closePluginResources();
+      },
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
@@ -2725,31 +2728,24 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     }),
     {
       name: "react-router-build-end",
+      enforce: "post",
       sharedDuringBuild: true,
-      config: {
+      buildApp: {
         order: "post",
-        handler({ builder: { buildApp } = {} }) {
-          return {
-            builder: {
-              async buildApp(builder) {
-                try {
-                  await buildApp?.(builder);
+        async handler() {
+          try {
+            invariant(viteConfig);
+            let { buildManifest, reactRouterConfig } = ctx;
+            invariant(buildManifest, "Expected build manifest");
 
-                  invariant(viteConfig);
-                  let { buildManifest, reactRouterConfig } = ctx;
-                  invariant(buildManifest, "Expected build manifest");
-
-                  await reactRouterConfig.buildEnd?.({
-                    buildManifest,
-                    reactRouterConfig,
-                    viteConfig,
-                  });
-                } finally {
-                  await closePluginResources();
-                }
-              },
-            },
-          };
+            await reactRouterConfig.buildEnd?.({
+              buildManifest,
+              reactRouterConfig,
+              viteConfig,
+            });
+          } finally {
+            await closePluginResources();
+          }
         },
       },
     },
