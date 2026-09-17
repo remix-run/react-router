@@ -238,7 +238,10 @@ export function prerender<Metadata extends Record<string, unknown>>(
               const prerenderConfig =
                 typeof config === "function" ? await config() : config;
               const {
-                buildDirectory = viteConfig.environments.client.build.outDir,
+                buildDirectory = path.resolve(
+                  viteConfig.root,
+                  viteConfig.environments.client.build.outDir,
+                ),
                 concurrency = 1,
                 retryCount = 0,
                 retryDelay = 500,
