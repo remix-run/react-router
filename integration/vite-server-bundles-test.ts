@@ -9,6 +9,7 @@ import {
   dev,
   build,
   reactRouterServe,
+  vitePreview,
   viteConfig,
 } from "./helpers/vite.js";
 
@@ -455,5 +456,63 @@ test.describe("Server bundles", () => {
         },
       });
     });
+  });
+});
+
+test.describe("Server bundles with custom outDir", () => {
+  test("Vite preview uses resolved server bundle outDir", async ({ page }) => {
+    let port = await getPort();
+    let cwd = await createProject(
+      {
+        "react-router.config.ts": dedent(js`
+        export default {
+          serverBundles: () => "main"
+        }
+      `),
+        "vite.config.ts": dedent(js`
+        import { reactRouter } from "@react-router/dev/vite";
+
+        export default {
+          ${await viteConfig.server({ port })}
+          plugins: [
+            reactRouter(),
+            {
+              name: "server-bundle-out-dir",
+              configEnvironment(name) {
+                if (name.startsWith("ssrBundle_")) {
+                  return { build: { outDir: "custom/" + name } };
+                }
+              }
+            }
+          ]
+        }
+      `),
+        "app/root.tsx": js`
+        import { Outlet } from "react-router";
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+        "app/routes/_index.tsx": js`
+        export default function Index() {
+          return <h1>Preview</h1>;
+        }
+      `,
+      },
+      "vite-7-template",
+    );
+
+    let result = build({ cwd });
+    expect(result.stderr.toString()).toBeFalsy();
+    expect(result.status).toBe(0);
+
+    let stop = await vitePreview({ cwd, port });
+    try {
+      await page.goto(`http://localhost:${port}/`);
+      await expect(page.getByRole("heading")).toHaveText("Preview");
+    } finally {
+      stop();
+    }
   });
 });
