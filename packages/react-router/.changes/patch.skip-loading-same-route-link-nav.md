@@ -1,0 +1,1 @@
+Skip the loading state for same-URL `<Link>`/navigate calls when no loaders, middleware, or fetchers need to revalidate, including in Framework Mode where a custom `dataStrategy` previously forced `idle → loading → idle`. Same-URL GET navigations that revalidate loaders (the default "page refresh" behavior) are unchanged.
