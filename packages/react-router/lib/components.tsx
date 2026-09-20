@@ -551,6 +551,20 @@ export function RouterProvider({
   // `onError` still fires for initial data load errors.
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  // A subscriber registered before this provider can consume the initial state
+  // update, leaving this provider with the state it read during render. Sync
+  // from the router when initialization completed before our subscription.
+  let initialized = state.initialized;
+  React.useLayoutEffect(() => {
+    if (!initialized && router.state.initialized) {
+      setState(router.state, {
+        deletedFetchers: [],
+        flushSync: false,
+        newErrors: router.state.errors,
+      });
+    }
+  }, [initialized, setState, router.state]);
+
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {

@@ -603,6 +603,41 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Data:LOADER"));
         expect(screen.queryByText("Suspense Fallback")).toBeNull();
       });
+
+      it("handles initialization races when another subscriber is already attached", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        router.subscribe(() => {});
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Data:LOADER"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
+      });
     });
 
     describe("navigations", () => {
