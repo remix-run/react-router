@@ -635,7 +635,7 @@ export async function loader({
 [server-client]: #server-vs-client-middleware
 [framework-action]: ../start/framework/route-module#action
 [framework-loader]: ../start/framework/route-module#loader
-[getloadcontext]: #3-add-a-getloadcontext-function-if-applicable
+[getloadcontext]: ../api/other-api/adapter#react-routerexpress
 [datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext
