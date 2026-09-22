@@ -2730,6 +2730,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       name: "react-router-build-end",
       enforce: "post",
       sharedDuringBuild: true,
+      config: {
+        order: "post",
+        handler({ builder: { buildApp } = {} }) {
+          return {
+            builder: {
+              async buildApp(builder) {
+                try {
+                  await buildApp?.(builder);
+                } catch (error) {
+                  await closePluginResources();
+                  throw error;
+                }
+              },
+            },
+          };
+        },
+      },
       buildApp: {
         order: "post",
         async handler() {
