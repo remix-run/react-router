@@ -40,7 +40,7 @@ and [`useNavigationType`](../hooks/useNavigationType) into a single hook.
 ```tsx
 import { unstable_useRouterState as useRouterState } from "react-router";
 
-let { active, pending } = unstable_useRouterState();
+let { active, pending } = useRouterState();
 
 // Active is always populated with the current location
 active.location; // replaces `useLocation()`
