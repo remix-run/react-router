@@ -340,7 +340,7 @@ test.describe(`Prerendering`, () => {
       );
     });
 
-    test("resolves a relative client outDir from the Vite root", async () => {
+    test("resolves relative environment outDirs from the Vite root", async () => {
       let cwd = await createProject(
         {
           ...Object.fromEntries(
@@ -355,7 +355,7 @@ test.describe(`Prerendering`, () => {
 
             export default flatRoutes() satisfies RouteConfig;
           `,
-          "vite.config.ts": js`
+          "app-root/vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
 
@@ -365,10 +365,13 @@ test.describe(`Prerendering`, () => {
               plugins: [
                 reactRouter(),
                 {
-                  name: "relative-client-outdir",
+                  name: "relative-environment-outdirs",
                   configEnvironment(name) {
                     if (name === "client") {
                       return { build: { outDir: "build/client" } };
+                    }
+                    if (name === "ssr") {
+                      return { build: { outDir: "build/server" } };
                     }
                   },
                 },
