@@ -654,10 +654,10 @@ importers:
         specifier: ^0.22.1
         version: 0.22.1
       '@types/react':
-        specifier: 'catalog:'
+        specifier: ^19.2.0
         version: 19.2.17
       '@types/react-dom':
-        specifier: 'catalog:'
+        specifier: ^19.2.0
         version: 19.2.3(@types/react@19.2.17)
       cookie-es:
         specifier: ^3.1.1
