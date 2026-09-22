@@ -381,6 +381,51 @@ test.describe(`Prerendering`, () => {
       expect(fs.existsSync(path.join(cwd, "CHILD_COMPILER_CLOSED"))).toBe(true);
     });
 
+    test("closes the child compiler when output generation fails", async () => {
+      let cwd = await createProject({
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/about"],
+        }),
+        "vite.config.ts": js`
+          import fs from "node:fs";
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          let isChildCompiler = false;
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter(),
+              {
+                name: "child-compiler-cleanup-tracker",
+                configResolved(config) {
+                  isChildCompiler =
+                    config.command === "serve" && !config.isPreview;
+                },
+                closeBundle() {
+                  if (isChildCompiler) {
+                    fs.writeFileSync("CHILD_COMPILER_CLOSED", "");
+                  }
+                },
+              },
+              {
+                name: "output-generation-error",
+                generateBundle() {
+                  throw new Error("output generation failed");
+                },
+              },
+            ],
+          });
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.status).not.toBe(0);
+      expect(fs.existsSync(path.join(cwd, "CHILD_COMPILER_CLOSED"))).toBe(true);
+    });
+
     test("Prerenders a static array of routes with server bundles", async () => {
       fixture = await createFixture({
         prerender: true,
