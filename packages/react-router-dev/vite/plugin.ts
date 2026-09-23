@@ -1456,8 +1456,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           cacheDir: "node_modules/.vite-child-compiler",
           mode: viteConfig.mode,
           server: {
+            // A watcher is only useful while a dev server is running, where
+            // it invalidates the child compiler's module graph. `vite build`
+            // already opted out, but prerendering runs on a `vite preview`
+            // server, which also resolves the config with `command: "serve"`,
+            // so the child compiler inherited the user's `server.watch` and
+            // watched the project root, including the directory prerendering
+            // writes into. See #15533.
             watch:
-              viteConfig.command === "build" ? null : viteConfig.server.watch,
+              viteConfig.command === "build" || viteConfig.isPreview
+                ? null
+                : viteConfig.server.watch,
             preTransformRequests: false,
             hmr: false,
           },
