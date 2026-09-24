@@ -4,7 +4,10 @@ import * as React from "react";
 import { Links, Outlet, createRoutesStub } from "../../../index";
 import { getKeyedPrefetchLinks } from "../../../lib/dom/ssr/links";
 import type { AssetsManifest } from "../../../lib/dom/ssr/entry";
-import type { RouteModules } from "../../../lib/dom/ssr/routeModules";
+import {
+  loadRouteModule,
+  type RouteModules,
+} from "../../../lib/dom/ssr/routeModules";
 import type { DataRouteMatch } from "../../../lib/router/utils";
 
 describe("<Links>", () => {
@@ -212,14 +215,32 @@ describe("getKeyedPrefetchLinks", () => {
     };
   });
 
-  it("does not throw when the route module cache has an empty slot", async () => {
-    // `idk in routeModules` is true, but the value is undefined — the same
-    // shape loadRouteModule returns without falling through to import().
-    let routeModules: RouteModules = { idk: undefined };
+  it("returns a cached module without importing again", async () => {
+    let cached = {
+      default: () => null,
+      links: () => [{ rel: "stylesheet" as const, href: "/foo.css" }],
+    };
+    let routeModules: RouteModules = { idk: cached };
 
     await expect(
-      getKeyedPrefetchLinks(matches, manifest, routeModules),
-    ).resolves.toEqual([]);
+      loadRouteModule(manifest.routes.idk, routeModules),
+    ).resolves.toBe(cached);
+  });
+
+  it("imports when the cache slot is empty instead of returning undefined", async () => {
+    let fixture = new URL("./fixtures/prefetch-route-module.js", import.meta.url)
+      .href;
+    let routeModules: RouteModules = { idk: undefined };
+
+    let mod = await loadRouteModule(
+      { ...manifest.routes.idk, module: fixture },
+      routeModules,
+    );
+
+    expect(mod.links?.()).toEqual([
+      { rel: "stylesheet", href: "/from-import.css" },
+    ]);
+    expect(routeModules.idk).toBe(mod);
   });
 
   it("returns stylesheet links as prefetch descriptors when the module is loaded", async () => {

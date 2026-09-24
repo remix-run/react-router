@@ -156,10 +156,7 @@ export async function getKeyedPrefetchLinks(
       let route = manifest.routes[match.route.id];
       if (route) {
         let mod = await loadRouteModule(route, routeModules);
-        // loadRouteModule can return undefined when the routeModules cache
-        // already has the route id keyed to an empty slot. Sibling
-        // getKeyedLinksForMatches already uses module?.links?.().
-        return mod?.links ? mod.links() : [];
+        return mod.links ? mod.links() : [];
       }
       return [];
     }),
