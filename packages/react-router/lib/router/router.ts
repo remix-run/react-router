@@ -2113,32 +2113,44 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    // Call loaders
-    let {
-      shortCircuited,
-      matches: updatedMatches,
-      loaderData,
-      errors,
-      workingFetchers,
-    } = await handleLoaders(
-      request,
-      location,
-      matches,
-      historyAction,
-      scopedContext,
-      fogOfWar.active,
-      loadingNavigation,
-      opts && opts.submission,
-      opts && opts.fetcherSubmission,
-      opts && opts.replace,
-      opts && opts.initialHydration === true,
-      flushSync,
-      pendingActionResult,
-      opts && opts.callSiteDefaultShouldRevalidate,
-    );
+    let result: HandleLoadersResult;
+    while (true) {
+      let loaderDataBeforeLoad = state.loaderData;
+      result = await handleLoaders(
+        request,
+        location,
+        matches,
+        historyAction,
+        scopedContext,
+        fogOfWar.active,
+        loadingNavigation,
+        opts && opts.submission,
+        opts && opts.fetcherSubmission,
+        opts && opts.replace,
+        opts && opts.initialHydration === true,
+        flushSync,
+        pendingActionResult,
+        opts && opts.callSiteDefaultShouldRevalidate,
+      );
 
-    if (shortCircuited) {
-      return;
+      if (result.shortCircuited) {
+        return;
+      }
+
+      matches = result.matches || matches;
+      if (
+        !hasInvalidatedLoaderData(
+          matches,
+          result.loaderData,
+          result.errors,
+          loaderDataBeforeLoad,
+        )
+      ) {
+        break;
+      }
+      if (result.workingFetchers) {
+        updateState({ fetchers: result.workingFetchers });
+      }
     }
 
     // Clean up now that the action/loaders have completed.  Don't clean up if
@@ -2147,12 +2159,36 @@ export function createRouter(init: RouterInit): Router {
     pendingNavigationController = null;
 
     completeNavigation(location, {
-      matches: updatedMatches || matches,
+      matches,
       ...getActionDataForCommit(pendingActionResult),
-      loaderData,
-      errors,
-      ...(workingFetchers ? { fetchers: workingFetchers } : {}),
+      loaderData: result.loaderData,
+      errors: result.errors,
+      ...(result.workingFetchers ? { fetchers: result.workingFetchers } : {}),
     });
+  }
+
+  function hasInvalidatedLoaderData(
+    matches: DataRouteMatch[],
+    loaderData: RouteData | undefined,
+    errors: RouteData | null | undefined,
+    loaderDataBeforeLoad: RouteData,
+  ): boolean {
+    for (let match of matches) {
+      let id = match.route.id;
+      if (errors && Object.prototype.hasOwnProperty.call(errors, id)) {
+        break;
+      }
+      // A skipped loader depends on data that concurrent fetcher loads can remove.
+      if (
+        loaderDataBeforeLoad[id] !== undefined &&
+        match.route.loader &&
+        !(loaderData && id in loaderData) &&
+        state.loaderData[id] === undefined
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Call the action matched by the leaf route for this navigation and handle
@@ -2912,6 +2948,7 @@ export function createRouter(init: RouterInit): Router {
 
     invariant(matches, "Didn't find any matches after fetcher action");
 
+    let loaderDataBeforeLoad = state.loaderData;
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
 
@@ -3076,6 +3113,26 @@ export function createRouter(init: RouterInit): Router {
     ) {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController && pendingNavigationController.abort();
+
+      if (
+        hasInvalidatedLoaderData(
+          matches,
+          loaderData,
+          errors,
+          loaderDataBeforeLoad,
+        )
+      ) {
+        updateState({ fetchers: finalFetchers });
+        // Missing loader data must bypass the hash-only navigation shortcut.
+        isRevalidationRequired = true;
+        await startNavigation(pendingAction, state.navigation.location, {
+          overrideNavigation: state.navigation,
+          preventScrollReset: pendingPreventScrollReset,
+          enableViewTransition: pendingViewTransitionEnabled,
+          callSiteDefaultShouldRevalidate,
+        });
+        return;
+      }
 
       completeNavigation(state.navigation.location, {
         matches,
