@@ -1111,28 +1111,39 @@ export class RenderErrorBoundary extends React.Component<
       if (decoded) error = decoded;
     }
 
+    // Keep the same element tree shape in the error and non-error cases so
+    // React can reconcile instead of remounting shared ancestors (such as the
+    // root `Layout`) when switching between the route UI and the error UI
+    let match =
+      this.props.routeContext.matches[
+        this.props.routeContext.matches.length - 1
+      ];
     let result =
       error !== undefined ? (
-        <RouteContext.Provider value={this.props.routeContext}>
-          <IsDataRouteContext.Provider
-            value={this.props.routeContext.isDataRoute}
-          >
-            <RouteIdContext.Provider
-              value={
-                this.props.routeContext.matches[
-                  this.props.routeContext.matches.length - 1
-                ]?.route.id
-              }
-            >
-              <RouteErrorContext.Provider
-                value={error}
-                children={this.props.component}
-              />
-            </RouteIdContext.Provider>
-          </IsDataRouteContext.Provider>
-        </RouteContext.Provider>
+        <RouteErrorContext.Provider value={error}>
+          {match ? (
+            <RenderedRoute
+              match={match}
+              routeContext={this.props.routeContext}
+              children={this.props.component}
+              isErrorElement
+            />
+          ) : (
+            <RouteContext.Provider value={this.props.routeContext}>
+              <IsDataRouteContext.Provider
+                value={this.props.routeContext.isDataRoute}
+              >
+                <RouteIdContext.Provider value={undefined}>
+                  {this.props.component}
+                </RouteIdContext.Provider>
+              </IsDataRouteContext.Provider>
+            </RouteContext.Provider>
+          )}
+        </RouteErrorContext.Provider>
       ) : (
-        this.props.children
+        <RouteErrorContext.Provider value={null}>
+          {this.props.children}
+        </RouteErrorContext.Provider>
       );
 
     if (this.context) {
@@ -1201,14 +1212,21 @@ interface RenderedRouteProps {
   routeContext: RouteContextObject;
   match: RouteMatch<string, RouteObject>;
   children: React.ReactNode | null;
+  isErrorElement?: boolean;
 }
 
-function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
+function RenderedRoute({
+  routeContext,
+  match,
+  children,
+  isErrorElement,
+}: RenderedRouteProps) {
   let dataRouterContext = React.useContext(DataRouterContext);
 
   // Track how deep we got in our render pass to emulate SSR componentDidCatch
   // in a DataStaticRouter
   if (
+    !isErrorElement &&
     dataRouterContext &&
     dataRouterContext.static &&
     dataRouterContext.staticContext &&
