@@ -29,6 +29,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               Product
             </Link>
           </li>
+          <li>
+            <Link prefetch="intent" to="/layout-suspense">
+              Route with Layout
+            </Link>
+          </li>
         </ul>
         {children}
         <ScrollRestoration />
