@@ -329,4 +329,41 @@ describe("useRevalidator", () => {
     expect(unstableCount).toBe(5);
     expect(stableCount).toBe(1);
   });
+
+  it("clears the error boundary when revalidating from an async handler with a sync loader (#11597)", async () => {
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader: () => {
+          if (++count === 1) {
+            throw new Error("Loader error");
+          }
+          return "Loader data";
+        },
+        Component() {
+          return <p>{useLoaderData() as string}</p>;
+        },
+        ErrorBoundary() {
+          let { revalidate } = useRevalidator();
+          return (
+            <button
+              onClick={async () => {
+                await new Promise((r) => setTimeout(r, 10));
+                await revalidate();
+              }}
+            >
+              Revalidate
+            </button>
+          );
+        },
+      },
+    ]);
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Revalidate"));
+    fireEvent.click(screen.getByText("Revalidate"));
+    await waitFor(() => screen.getByText("Loader data"));
+    expect(count).toBe(2);
+  });
 });
