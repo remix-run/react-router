@@ -1172,6 +1172,105 @@ test.describe("SPA Mode", () => {
     });
   });
 
+  test("uses the SPA fallback as index.html when a public/index.html exists", async ({
+    page,
+  }) => {
+    // A `public/index.html` gets copied into the client build directory by
+    // Vite, but the generated SPA shell must still be the main entry point
+    // served at `/` by static hosts
+    // https://github.com/remix-run/react-router/issues/15444
+    fixture = await createFixture({
+      spaMode: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+        }),
+        "public/index.html": String.raw`
+          <link rel="icon" href="/favicon.png" type="image/png" />
+          <link rel="manifest" href="/manifest.webmanifest" />
+        `,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+
+          export function links() {
+            return [
+              { rel: "icon", href: "/favicon.png", type: "image/png" },
+              { rel: "manifest", href: "/manifest.webmanifest" },
+            ];
+          }
+
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <h1 data-root>Root</h1>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export function HydrateFallback() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <h1 data-loading>Loading SPA...</h1>
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Component() {
+            return <h2 data-route>Index</h2>;
+          }
+        `,
+      },
+    });
+
+    let clientDir = path.join(fixture.projectDir, "build", "client");
+
+    // The SPA fallback must not be left behind in \`__spa-fallback.html\`
+    expect(fs.existsSync(path.join(clientDir, "__spa-fallback.html"))).toBe(
+      false,
+    );
+
+    // \`index.html\` must be the full generated SPA shell, not the copied
+    // \`public/index.html\`
+    let html = await fs.promises.readFile(
+      path.join(clientDir, "index.html"),
+      "utf-8",
+    );
+    expect(html).toMatch(/^<!DOCTYPE html>/);
+    expect(html).toMatch("<html");
+    expect(html).toMatch("<body");
+    expect(html).toMatch('<h1 data-loading="true">Loading SPA...</h1>');
+    expect(html).toMatch('<link rel="icon" href="/favicon.png"');
+    expect(html).toMatch("window.__reactRouterContext =");
+    expect(html).toMatch("import(");
+
+    // The document served at \`/\` must hydrate into the running app
+    appFixture = await createAppFixture(fixture);
+    try {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await page.waitForSelector("[data-root]");
+      expect(await page.locator("[data-route]").textContent()).toBe("Index");
+    } finally {
+      appFixture.close();
+    }
+  });
+
   test("only imports the root route in the server build when SSRing index.html", async ({
     page,
   }) => {
