@@ -59,28 +59,130 @@ The input/output to a session storage object are HTTP cookies. `getSession()` re
 
 You'll use methods to get access to sessions in your `loader` and `action` functions.
 
-After retrieving a session with `getSession`, the returned session object has a handful of methods and properties:
+### Session API
+
+After retrieving a session with `getSession()`, the returned session object has a handful of methods and properties:
 
 ```tsx
 export async function action({
   request,
-}: ActionFunctionArgs) {
+}: Route.ActionArgs) {
   const session = await getSession(
     request.headers.get("Cookie"),
   );
+
   session.get("foo");
   session.has("bar");
   // etc.
+
+  return redirect("/", {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
 ```
 
-See the [Session API][session-api] for all methods available on the session object.
+<docs-warning>Every time you modify session data, you must `commitSession()` or your changes will be lost. When using cookie session storage, you must also send the `Set-Cookie` header it returns in your response.</docs-warning>
+
+See the [Session API][session-api] for all methods and properties available on the session object.
+
+#### `session.has(key)`
+
+Returns `true` if the session has a value (or an unread flash value) for the given `key`. This does not consume flash values.
+
+```ts
+session.has("userId");
+```
+
+#### `session.set(key, value)`
+
+Sets a session value for use in subsequent requests:
+
+```ts
+session.set("userId", "1234");
+```
+
+#### `session.flash(key, value)`
+
+Sets a session value that is only valid until the next `session.get()` for that key. After that, it's gone. Most useful for "flash messages" and server-side form validation messages:
+
+```ts
+session.flash(
+  "globalMessage",
+  "Project successfully archived",
+);
+```
+
+A flash value is typically set in an `action` before a redirect, then read in the `loader` of the page being redirected to:
+
+```tsx filename=app/routes/projects.tsx
+export async function action({
+  request,
+}: Route.ActionArgs) {
+  const session = await getSession(
+    request.headers.get("Cookie"),
+  );
+  // ...archive the project
+  session.flash(
+    "globalMessage",
+    "Project successfully archived",
+  );
+  return redirect("/projects", {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
+}
+
+export async function loader({
+  request,
+}: Route.LoaderArgs) {
+  const session = await getSession(
+    request.headers.get("Cookie"),
+  );
+  // Reading a flash value removes it from the session
+  const message = session.get("globalMessage");
+
+  return data(
+    { message },
+    {
+      headers: {
+        // Commit the session so the flash value is removed
+        "Set-Cookie": await commitSession(session),
+      },
+    },
+  );
+}
+```
+
+Flash values are read with `session.get()` using the same key they were set with. Reading a flash value removes it from the session, so you must still `commitSession()` after reading it; otherwise the flash value will be read again on the next request.
+
+Avoid using the same key for both `session.set()` and `session.flash()`. `session.get()` returns the regular value first, so the flash value would never be read or removed.
+
+You can type flash values separately from regular session values with the second generic on your session storage, like the `SessionFlashData` type in [Using Sessions](#using-sessions).
+
+#### `session.get(key)`
+
+Accesses a session value from a previous request:
+
+```ts
+session.get("name");
+```
+
+#### `session.unset(key)`
+
+Removes a value from the session. This does not remove pending flash values; those are only removed when read with `session.get()`.
+
+```ts
+session.unset("name");
+```
 
 ### Login form example
 
 A login form might look something like this:
 
-```tsx filename=app/routes/login.tsx lines=[4-7,12-14,16,22,25,33-35,46,51,56,61]
+```tsx filename=app/routes/login.tsx lines=[4-7,12-14,16,22-23,26,35-37,48-49,54,59,64]
 import { data, redirect } from "react-router";
 import type { Route } from "./+types/login";
 
@@ -102,6 +204,7 @@ export async function loader({
   }
 
   return data(
+    // Read and unset the flash message set by the route action.
     { error: session.get("error") },
     {
       headers: {
@@ -127,6 +230,7 @@ export async function action({
   );
 
   if (userId == null) {
+    // Set a single-use flash message to be read by the route loader.
     session.flash("error", "Invalid username/password");
 
     // Redirect back to the login page with errors.
