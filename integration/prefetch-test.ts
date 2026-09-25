@@ -494,6 +494,68 @@ test.describe("prefetch", () => {
         });
       });
 
+      test.describe("unstable_onPrefetch", () => {
+        let fixture: Fixture;
+        let appFixture: AppFixture;
+
+        test.beforeAll(async () => {
+          fixture = await createFixture({
+            templateName,
+            files: {
+              "app/routes/_index.tsx": js`
+                import { useState } from "react";
+                import { Link } from "react-router";
+
+                export default function Component() {
+                  let [count, setCount] = useState(0);
+                  return (
+                    <>
+                      <Link
+                        to="/test"
+                        prefetch="intent"
+                        unstable_onPrefetch={() => setCount((c) => c + 1)}
+                      >
+                        Test page
+                      </Link>
+                      <p id="prefetch-count">{count}</p>
+                    </>
+                  );
+                }
+              `,
+
+              "app/routes/test.tsx": js`
+                export function loader() {
+                  return null;
+                }
+                export default function Component() {
+                  return <h1>Test Page</h1>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+        });
+
+        test.afterAll(() => {
+          appFixture.close();
+        });
+
+        test("calls unstable_onPrefetch alongside the built-in prefetch tags on hover", async ({
+          page,
+        }) => {
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/", true);
+          await expect(page.locator("#prefetch-count")).toHaveText("0");
+
+          await page.hover("a[href='/test']");
+
+          await expect(page.locator("#prefetch-count")).toHaveText("1");
+          await expect(
+            page.locator("link[rel='prefetch'][as='fetch'][href='/test.data']"),
+          ).toHaveCount(1);
+        });
+      });
+
       test.describe("other scenarios", () => {
         let fixture: Fixture;
         let appFixture: AppFixture;

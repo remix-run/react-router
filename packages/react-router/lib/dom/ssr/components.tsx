@@ -87,6 +87,7 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
+  onPrefetch?: () => void,
 ): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
@@ -95,6 +96,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     theirElementProps;
 
   let ref = React.useRef<T>(null);
+  let onPrefetchEvent = React.useEffectEvent(() => onPrefetch?.());
 
   React.useEffect(() => {
     if (prefetch === "render") {
@@ -127,6 +129,12 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     }
   }, [maybePrefetch]);
 
+  React.useEffect(() => {
+    if (shouldPrefetch) {
+      onPrefetchEvent();
+    }
+  }, [shouldPrefetch]);
+
   let setIntent = () => {
     setMaybePrefetch(true);
   };
@@ -136,18 +144,21 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     setShouldPrefetch(false);
   };
 
-  // No prefetching if not using SSR
-  if (!frameworkContext) {
+  // Page links can only be prefetched in Framework Mode, but `onPrefetch` can
+  // run in any mode
+  if (!frameworkContext && !onPrefetch) {
     return [false, ref, {}];
   }
 
+  let shouldPrefetchPageLinks = frameworkContext != null && shouldPrefetch;
+
   if (prefetch !== "intent") {
-    return [shouldPrefetch, ref, {}];
+    return [shouldPrefetchPageLinks, ref, {}];
   }
 
   // When using prefetch="intent" we need to attach focus/hover listeners
   return [
-    shouldPrefetch,
+    shouldPrefetchPageLinks,
     ref,
     {
       onFocus: composeEventHandlers(onFocus, setIntent),
