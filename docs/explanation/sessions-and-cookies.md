@@ -83,9 +83,7 @@ export async function action({
 }
 ```
 
-<docs-warning>Every time you modify session data, you must `commitSession()` or your changes will be lost.</docs-warning>
-
-<docs-warning>When using cookie session storage, you must send the `Set-Cookie` header from `commitSession()` in your response every time you modify the session, or your changes will be lost.</docs-warning>
+<docs-warning>Every time you modify session data, you must `commitSession()` or your changes will be lost. When using cookie session storage, you must also send the `Set-Cookie` header it returns in your response.</docs-warning>
 
 See the [Session API][session-api] for all methods and properties available on the session object.
 
@@ -107,7 +105,7 @@ session.set("userId", "1234");
 
 #### `session.flash(key, value)`
 
-Sets a session value that will be unset the first time it is read in a subsequent request. After that, it's gone. Most useful for "flash messages" and server-side form validation messages:
+Sets a session value that is only valid until the next `session.get()` for that key. After that, it's gone. Most useful for "flash messages" and server-side form validation messages:
 
 ```ts
 session.flash(
@@ -160,7 +158,9 @@ export async function loader({
 
 Flash values are read with `session.get()` using the same key they were set with. Reading a flash value removes it from the session, so you must still `commitSession()` after reading it; otherwise the flash value will be read again on the next request.
 
-You can type flash values separately from regular session values with the second generic on your session storage (i.e., `createCookieSessionStorage<SessionData, SessionFlashData>()`).
+Avoid using the same key for both `session.set()` and `session.flash()`. `session.get()` returns the regular value first, so the flash value would never be read or removed.
+
+You can type flash values separately from regular session values with the second generic on your session storage, like the `SessionFlashData` type in [Using Sessions](#using-sessions).
 
 #### `session.get(key)`
 
@@ -172,7 +172,7 @@ session.get("name");
 
 #### `session.unset(key)`
 
-Removes a value from the session.
+Removes a value from the session. This does not remove pending flash values; those are only removed when read with `session.get()`.
 
 ```ts
 session.unset("name");
