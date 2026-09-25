@@ -602,6 +602,20 @@ describe("fetchers", () => {
       });
     });
 
+    it("action fetch does not abort the completed request", async () => {
+      let t = initializeTest();
+      let A = await t.fetch("/foo", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await A.actions.foo.reject(new Response(null, { status: 400 }));
+      expect(t.router.state.errors).toEqual({
+        root: new ErrorResponseImpl(400, undefined, ""),
+      });
+      expect(A.actions.foo.signal.aborted).toBe(false);
+      expect(t.router._internalFetchControllers.size).toBe(0);
+    });
+
     it("action fetch without action handler", async () => {
       let t = setup({
         routes: [
@@ -805,6 +819,20 @@ describe("fetchers", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("Kaboom!"),
       });
+    });
+
+    it("action fetch does not abort the completed request", async () => {
+      let t = initializeTest();
+      let A = await t.fetch("/foo", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await A.actions.foo.reject(new Error("Kaboom!"));
+      expect(t.router.state.errors).toEqual({
+        root: new Error("Kaboom!"),
+      });
+      expect(A.actions.foo.signal.aborted).toBe(false);
+      expect(t.router._internalFetchControllers.size).toBe(0);
     });
   });
 
