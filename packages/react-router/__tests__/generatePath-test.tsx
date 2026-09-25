@@ -234,4 +234,52 @@ describe("generatePath", () => {
       );
     });
   });
+
+  describe("numeric parameters", () => {
+    it("supports required numeric parameters", () => {
+      expect(generatePath("/courses/:id", { id: 123 })).toBe("/courses/123");
+      expect(generatePath("/courses/*", { "*": 123 })).toBe("/courses/123");
+    });
+
+    it("supports multiple required numeric parameters", () => {
+      expect(
+        generatePath("/courses/:id/student/:studentId", {
+          id: 123,
+          studentId: 456,
+        }),
+      ).toBe("/courses/123/student/456");
+    });
+
+    it("supports optional numeric parameters", () => {
+      let path = "/:one?/:two?/:three?";
+      expect(generatePath(path, { one: 1 })).toBe("/1");
+      expect(generatePath(path, { one: 1, two: 2 })).toBe("/1/2");
+      expect(generatePath(path, { one: 1, three: 3 })).toBe("/1/3");
+    });
+
+    it("supports mixed string/number parameters", () => {
+      expect(
+        generatePath("/courses/:id/student/:studentId", {
+          id: 123,
+          studentId: "matt",
+        }),
+      ).toBe("/courses/123/student/matt");
+
+      expect(
+        generatePath("/courses/:id/student/:studentId", {
+          id: "routing",
+          studentId: 456,
+        }),
+      ).toBe("/courses/routing/student/456");
+    });
+
+    it("maintains existing string behavior", () => {
+      expect(generatePath("/courses/:id", { id: "routing" })).toBe(
+        "/courses/routing",
+      );
+      expect(generatePath("/courses/*", { "*": "routing/grades" })).toBe(
+        "/courses/routing/grades",
+      );
+    });
+  });
 });
