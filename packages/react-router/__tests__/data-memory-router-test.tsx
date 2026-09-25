@@ -16,6 +16,7 @@ import {
   Routes,
   createMemoryRouter,
   createRoutesFromElements,
+  Link,
   redirect,
   useActionData,
   useAsyncError,
@@ -3487,6 +3488,73 @@ describe("createMemoryRouter", () => {
           </div>
         </div>"
       `);
+    });
+  });
+
+  describe("same-location Link navigations", () => {
+    it("does not flash a loading state when clicking a Link to the active route", async () => {
+      let navigationStates: string[] = [];
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              let navigation = useNavigation();
+              navigationStates.push(navigation.state);
+              return (
+                <div>
+                  <Link to="/">Home</Link>
+                  <p>{navigation.state}</p>
+                </div>
+              );
+            },
+          },
+        ],
+        { initialEntries: ["/"] },
+      );
+      render(<RouterProvider router={router} />);
+
+      expect(screen.getByText("idle")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Home"));
+      await waitFor(() => expect(screen.getByText("idle")).toBeInTheDocument());
+
+      expect(navigationStates).not.toContain("loading");
+      expect(router.state.navigation.state).toBe("idle");
+    });
+
+    it("still flashes loading when clicking a same-route Link that revalidates loaders", async () => {
+      let loaderDefer = createDeferred();
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            loader: () => loaderDefer.promise,
+            Component() {
+              let navigation = useNavigation();
+              return (
+                <div>
+                  <Link to="/">Home</Link>
+                  <p>{navigation.state}</p>
+                </div>
+              );
+            },
+          },
+        ],
+        {
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { "0": "HOME" } },
+        },
+      );
+      render(<RouterProvider router={router} />);
+
+      expect(screen.getByText("idle")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Home"));
+      await waitFor(() =>
+        expect(screen.getByText("loading")).toBeInTheDocument(),
+      );
+
+      loaderDefer.resolve("HOME 2");
+      await waitFor(() => expect(screen.getByText("idle")).toBeInTheDocument());
     });
   });
 });
