@@ -200,6 +200,73 @@ describe("Partial Hydration Behavior", () => {
       `);
     });
 
+    it("supports partial hydration w/patchRoutesOnNavigation (patched route fallback)", async () => {
+      let childDfd = createDeferred();
+      let router = createMemoryRouter(
+        [
+          {
+            id: "root",
+            path: "/",
+            Component() {
+              return (
+                <>
+                  <h1>Root</h1>
+                  <Outlet />
+                </>
+              );
+            },
+          },
+        ],
+        {
+          patchRoutesOnNavigation({ path, patch }) {
+            if (path === "/child") {
+              patch("root", [
+                {
+                  path: "child",
+                  HydrateFallback: () => <p>Child Loading...</p>,
+                  loader: () => childDfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Child - ${data}`}</h2>;
+                  },
+                },
+              ]);
+            }
+          },
+          initialEntries: ["/child"],
+        },
+      );
+      let { container } = render(
+        // eslint-disable-next-line react/jsx-pascal-case
+        <ReactRouter_RouterProvider router={router} />,
+      );
+
+      await waitFor(() => screen.getByText("Child Loading..."));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <p>
+            Child Loading...
+          </p>
+        </div>"
+      `);
+
+      childDfd.resolve("CHILD DATA");
+      await waitFor(() => screen.getByText(/CHILD DATA/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Child - CHILD DATA
+          </h2>
+        </div>"
+      `);
+    });
+
     it("supports partial hydration w/patchRoutesOnNavigation and matching splat", async () => {
       let patchDfd = createDeferred();
       let parentDfd = createDeferred();
