@@ -1,0 +1,4 @@
+Stop generating the route module map in `.react-router/types/+routes.ts` unless the new `future.unstable_routeModuleTypes` flag is enabled
+
+- The `routeModules` registration referenced every route module with `typeof import(...)` from the same file that augments the `react-router` module. That closed a cycle in TypeScript's file graph (`+routes.ts` → every route module → anything importing `react-router` → `+routes.ts`), and `tsc` invalidates a cycle as a unit, so a public shape change to one file re-checked every route in the app under `--watch`, `--incremental`, project references or `emitDeclarationOnly`.
+- `unstable_useRoute` still works at runtime without the flag, but a route ID argument is typed as `string` and `handle` / `loaderData` / `actionData` come back as `unknown`, so existing code that reads fields off them will no longer type-check. Enable `future.unstable_routeModuleTypes` to get the precise types back.
