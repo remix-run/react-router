@@ -783,6 +783,57 @@ describe("shouldRevalidate", () => {
     router.dispose();
   });
 
+  it("applies shouldRevalidate after consecutive redirects from a fetcher submission", async () => {
+    let shouldRevalidate = jest.fn((args) => true);
+
+    let history = createMemoryHistory({ initialEntries: ["/landing"] });
+    let router = createRouter({
+      history,
+      routes: [
+        {
+          path: "",
+          id: "root",
+          loader: () => "ROOT",
+          shouldRevalidate,
+          children: [
+            {
+              path: "/landing",
+              id: "landing",
+              loader: () => "LANDING",
+            },
+            {
+              path: "/",
+              id: "index",
+              loader: () => redirect("/landing"),
+            },
+            {
+              path: "/form",
+              id: "form",
+              action: () => redirect("/"),
+            },
+          ],
+        },
+      ],
+    });
+
+    router.initialize();
+    await tick();
+
+    let key = "key";
+    router.fetch(key, "root", "/form", {
+      formMethod: "post",
+      formData: createFormData({}),
+    });
+
+    await tick();
+
+    expect(shouldRevalidate).toHaveBeenCalledTimes(2);
+    expect(shouldRevalidate.mock.calls[0][0].formMethod).toBe("POST");
+    expect(shouldRevalidate.mock.calls[1][0].formMethod).toBe("POST");
+
+    router.dispose();
+  });
+
   it("preserves non-revalidated loaderData on navigations", async () => {
     let count = 0;
     let history = createMemoryHistory();
