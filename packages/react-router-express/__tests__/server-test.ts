@@ -345,6 +345,23 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
   });
 
+  it("reads the port after an IPv6 host", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "[::1]",
+      headers: {
+        Host: "[::1]:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://[::1]:3000/foo/bar");
+  });
+
   it("ignores invalid characters in host values", async () => {
     let expressRequest = createRequest({
       url: "/foo/bar",
