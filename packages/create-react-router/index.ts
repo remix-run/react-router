@@ -685,7 +685,7 @@ function runCommand(
         resolve();
       } else {
         reject(
-          /* @__PURE__ */ new Error(
+          new Error(
             signal
               ? `${command} exited with signal ${signal}`
               : `${command} exited with code ${code}`,
