@@ -2145,7 +2145,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           viteCommand === "serve" &&
           (options as { scan?: boolean })?.scan === true;
 
-        if (isOptimizeDeps || options?.ssr) return;
+        // Vitest runs a Vite dev server to execute test files, which may
+        // legitimately import server-only modules (e.g. testing a loader or
+        // action). Keyed on VITEST (set by Vitest itself) rather than
+        // `mode === "test"` so browser dev servers used for e2e runs keep this
+        // guard. Never relax this for builds.
+        let isTestRunner =
+          viteCommand === "serve" && Boolean(process.env.VITEST);
+
+        if (isOptimizeDeps || options?.ssr || isTestRunner) return;
 
         let isResolving = options?.custom?.["react-router:dot-server"] ?? false;
         if (isResolving) return;
