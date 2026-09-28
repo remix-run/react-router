@@ -641,7 +641,7 @@ const WINDOWS_CMD_SHIMS = new Set([
 
 const WINDOWS_EXE_SHIMS = new Set(["bun", "bunx"]);
 
-function resolveCommand(command: string, args: string[]) {
+function resolveCommand(command: string, args: string[]): [string, string[]] {
   if (process.platform !== "win32") {
     return [command, args];
   }
@@ -673,7 +673,7 @@ function runCommand(
   args: string[],
   options: { cwd: string; stdio: StdioOptions },
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const [resolvedCommand, resolvedArgs] = resolveCommand(command, args);
 
     const child = spawn(resolvedCommand, resolvedArgs, options);
