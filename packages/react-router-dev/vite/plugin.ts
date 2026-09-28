@@ -2149,9 +2149,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // legitimately import server-only modules (e.g. testing a loader or
         // action). Keyed on VITEST (set by Vitest itself) rather than
         // `mode === "test"` so browser dev servers used for e2e runs keep this
-        // guard. Never relax this for builds.
+        // guard. Vitest browser mode runs test files as client code, so the
+        // guard stays on there too. Never relax this for builds.
+        let isVitestBrowserMode = Boolean(
+          (viteConfig as { test?: { browser?: { enabled?: boolean } } })?.test
+            ?.browser?.enabled,
+        );
         let isTestRunner =
-          viteCommand === "serve" && Boolean(process.env.VITEST);
+          viteCommand === "serve" &&
+          Boolean(process.env.VITEST) &&
+          !isVitestBrowserMode;
 
         if (isOptimizeDeps || options?.ssr || isTestRunner) return;
 

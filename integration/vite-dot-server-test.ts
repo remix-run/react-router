@@ -4,7 +4,6 @@ import { expect } from "@playwright/test";
 import stripAnsi from "strip-ansi";
 import dedent from "dedent";
 
-import type { Files } from "./helpers/vite.js";
 import {
   test,
   createProject,
@@ -214,7 +213,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 });
 
 test.describe("Vite / server-only escape hatch", async () => {
-  let files: Files = async ({ port }) => ({
+  let files = async ({ port }) => ({
     "vite.config.ts": dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -271,7 +270,7 @@ test.describe("Vite / server-only escape hatch", async () => {
 });
 
 test.describe("Vite / server-only module imported by a Vitest test file", () => {
-  let files: Files = {
+  let files = {
     "app/utils.server.ts": serverOnlyModule,
     "app/routes/_index.tsx": String.raw`
       import { serverOnly } from "../utils.server";
@@ -340,7 +339,9 @@ test.describe("Vite / server-only module imported by a Vitest test file", () => 
       `,
       "vite.config.ts": viteConfigWith(`mode: "test",`),
     });
-    let stderr = stripAnsi(build({ cwd }).stderr.toString());
+    let stderr = stripAnsi(
+      build({ cwd, env: { VITEST: "true" } }).stderr.toString(),
+    );
     expect(stderr).toMatch("Server-only module referenced by client");
   });
 });
