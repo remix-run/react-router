@@ -345,21 +345,45 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
   });
 
-  it("reads the port after an IPv6 host", async () => {
+  it.each(["[::1]", "[fd00:1234::1]"])(
+    "reads the port after the IPv6 host %s",
+    async (hostname) => {
+      let expressRequest = createRequest({
+        url: "/foo/bar",
+        method: "GET",
+        protocol: "http",
+        hostname,
+        headers: {
+          Host: `${hostname}:3000`,
+        },
+      });
+      let expressResponse = createResponse();
+
+      let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+      expect(remixRequest.url).toBe(`http://${hostname}:3000/foo/bar`);
+    },
+  );
+
+  it("reads the x-forwarded-host port after an IPv6 host when trust proxy is enabled", async () => {
+    let app = express();
+    app.set("trust proxy", true);
     let expressRequest = createRequest({
+      app,
       url: "/foo/bar",
       method: "GET",
       protocol: "http",
-      hostname: "[::1]",
+      hostname: "[fd00:1234::1]",
       headers: {
-        Host: "[::1]:3000",
+        Host: "localhost:3000",
+        "x-forwarded-host": "[fd00:1234::1]:8443",
       },
     });
     let expressResponse = createResponse();
 
     let remixRequest = createRemixRequest(expressRequest, expressResponse);
 
-    expect(remixRequest.url).toBe("http://[::1]:3000/foo/bar");
+    expect(remixRequest.url).toBe("http://[fd00:1234::1]:8443/foo/bar");
   });
 
   it("ignores invalid characters in host values", async () => {
