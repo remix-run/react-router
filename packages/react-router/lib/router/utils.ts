@@ -2356,7 +2356,12 @@ for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 // Accept the narrow shape we read so this can be used with server-runtime
 // matches, which do not include the full RouteMatch fields like pathnameBase.
 export function getRoutePattern(matches: { route: { path?: string } }[]) {
-  let parts = matches.map((m) => m.route.path).filter(Boolean) as string[];
+  let parts: string[] = [];
+  for (let { route } of matches) {
+    if (!route.path) continue;
+    if (route.path.startsWith("/")) parts = [];
+    parts.push(route.path);
+  }
   return joinPaths(parts) || "/";
 }
 
