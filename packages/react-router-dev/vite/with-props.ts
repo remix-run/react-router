@@ -24,6 +24,9 @@ export const decorateComponentExportsWithProps = (
   }
 
   const generated = new WeakSet<Babel.Node>();
+  // Wrapped local bindings (i.e., `export { Page as default }`) are appended
+  // to the end of the module so the binding is initialized before we read it
+  const trailingStatements: Babel.Statement[] = [];
 
   traverse(ast, {
     ExportDeclaration(path) {
@@ -94,7 +97,7 @@ export const decorateComponentExportsWithProps = (
               t.exportSpecifier(wrapped, t.identifier(exportedName)),
             ]);
             generated.add(exportDecl);
-            statements.push(
+            (source ? statements : trailingStatements).push(
               t.variableDeclaration("const", [
                 t.variableDeclarator(
                   wrapped,
@@ -106,12 +109,14 @@ export const decorateComponentExportsWithProps = (
             specifier.remove();
           }
 
-          if (statements.length > 0) {
-            if (path.node.specifiers.length === 0) {
+          if (path.node.specifiers.length === 0) {
+            if (statements.length > 0) {
               path.replaceWithMultiple(statements);
             } else {
-              path.insertAfter(statements);
+              path.remove();
             }
+          } else if (statements.length > 0) {
+            path.insertAfter(statements);
           }
           return;
         }
@@ -152,6 +157,8 @@ export const decorateComponentExportsWithProps = (
       }
     },
   });
+
+  ast.program.body.push(...trailingStatements);
 
   if (hocs.length > 0) {
     ast.program.body.unshift(

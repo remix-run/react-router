@@ -99,4 +99,26 @@ describe("decorateComponentExportsWithProps", () => {
      export { HydrateFallback } from "./route.tsx?route-chunk=HydrateFallback";"
     `);
   });
+
+  it("wraps local bindings exported before they are initialized", async () => {
+    let code = transform(`
+      export { Page as default };
+      const Page = () => "page";
+    `);
+    expect(code).toMatchInlineSnapshot(`
+     "import { UNSAFE_withComponentProps as _UNSAFE_withComponentProps } from "react-router";
+     const Page = () => "page";
+     const _default = _UNSAFE_withComponentProps(Page);
+     export { _default as default };"
+    `);
+
+    // Evaluate the module to ensure we don't read \`Page\` before it's initialized
+    let source = code
+      .replace(/^import .*\n/, "")
+      .replace(/_UNSAFE_withComponentProps/g, "((c) => c)");
+    let mod = await import(
+      "data:text/javascript," + encodeURIComponent(source)
+    );
+    expect(mod.default()).toBe("page");
+  });
 });
