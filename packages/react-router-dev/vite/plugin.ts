@@ -643,6 +643,7 @@ type ReactRouterVitePlugin = () => Vite.Plugin[];
 export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let rootDirectory: string;
   let viteCommand: Vite.ResolvedConfig["command"];
+  let viteIsPreview = false;
   let viteUserConfig: Vite.UserConfig;
   let viteConfig: Vite.ResolvedConfig | undefined;
   let cssModulesManifest: Record<string, string> = {};
@@ -1207,6 +1208,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteUserConfig = _viteUserConfig;
         viteCommand = _viteConfigEnv.command;
+        viteIsPreview = _viteConfigEnv.isPreview === true;
 
         // Default conditions are overridden by any custom conditions. If we
         // wish to retain the default conditions, we need to manually merge them
@@ -1464,7 +1466,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             // watched the project root, including the directory prerendering
             // writes into. See #15533.
             watch:
-              viteConfig.command === "build" || viteConfig.isPreview
+              viteConfig.command === "build" || viteIsPreview
                 ? null
                 : viteConfig.server.watch,
             preTransformRequests: false,
