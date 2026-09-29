@@ -5,6 +5,7 @@
  * Run: node --experimental-strip-types scripts/utils/mask-block-comment-markers.test.ts
  */
 import assert from "node:assert/strict";
+// @ts-expect-error
 import dox from "dox";
 
 import { maskBlockCommentMarkersInStrings } from "./mask-block-comment-markers.ts";
