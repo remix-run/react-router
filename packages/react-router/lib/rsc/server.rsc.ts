@@ -1125,13 +1125,13 @@ async function generateStaticContextResponse(
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
     basename: staticContext.basename,
-    clientVersion,
     routeDiscovery: routeDiscovery ?? { mode: "lazy" },
     actionData: staticContext.actionData,
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
     location: staticContext.location,
     formState,
+    clientVersion,
   };
 
   const renderPayloadPromise = () =>

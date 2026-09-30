@@ -39,6 +39,31 @@ describe("RSC server", () => {
     expect(match?.payload.type).toBe("render");
   });
 
+  test("serializes clientVersion after the render state", async () => {
+    let payload: RSCMatch["payload"] | undefined;
+
+    let response = await matchRSCServerRequest({
+      clientVersion: "client-version",
+      createTemporaryReferenceSet: () => ({}),
+      request: new Request("https://remix.run/"),
+      routes: [{ id: "root", path: "/", Component: () => null }],
+      generateResponse(nextMatch) {
+        payload = nextMatch.payload;
+        return new Response(null, { status: nextMatch.statusCode });
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(payload?.type).toBe("render");
+    if (payload?.type !== "render") throw new Error("Expected render payload");
+
+    let keys = Object.keys(payload);
+    expect(keys.indexOf("clientVersion")).toBeGreaterThan(
+      keys.indexOf("formState"),
+    );
+    expect(keys.indexOf("clientVersion")).toBeLessThan(keys.indexOf("matches"));
+  });
+
   describe("manifest requests", () => {
     test("rejects manifest requests over the URL limit", async () => {
       let path = `/${"a".repeat(URL_LIMIT)}.manifest`;
