@@ -643,6 +643,7 @@ type ReactRouterVitePlugin = () => Vite.Plugin[];
 export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let rootDirectory: string;
   let viteCommand: Vite.ResolvedConfig["command"];
+  let viteIsPreview = false;
   let viteUserConfig: Vite.UserConfig;
   let viteConfig: Vite.ResolvedConfig | undefined;
   let cssModulesManifest: Record<string, string> = {};
@@ -1207,6 +1208,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteUserConfig = _viteUserConfig;
         viteCommand = _viteConfigEnv.command;
+        viteIsPreview = _viteConfigEnv.isPreview === true;
 
         // Default conditions are overridden by any custom conditions. If we
         // wish to retain the default conditions, we need to manually merge them
@@ -1456,8 +1458,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           cacheDir: "node_modules/.vite-child-compiler",
           mode: viteConfig.mode,
           server: {
+            // A watcher is only useful while a dev server is running, where
+            // it invalidates the child compiler's module graph. `vite build`
+            // already opted out, but prerendering runs on a `vite preview`
+            // server, which also resolves the config with `command: "serve"`,
+            // so the child compiler inherited the user's `server.watch` and
+            // watched the project root, including the directory prerendering
+            // writes into. See #15533.
             watch:
-              viteConfig.command === "build" ? null : viteConfig.server.watch,
+              viteConfig.command === "build" || viteIsPreview
+                ? null
+                : viteConfig.server.watch,
             preTransformRequests: false,
             hmr: false,
           },
