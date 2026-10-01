@@ -648,6 +648,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let cssModulesManifest: Record<string, string> = {};
   let viteChildCompiler: Vite.ViteDevServer | null = null;
   let cache: Cache = new Map();
+  let buildChunkDetection = new Map<
+    string,
+    Record<RouteChunkExportName, boolean>
+  >();
 
   let reactRouterConfigLoader: ConfigLoader;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
@@ -943,12 +947,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
-      let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
-        cache,
-        ctx,
-        routeFile,
-        { routeFile, viteChildCompiler },
-      );
+      let hasRouteChunkByExportName =
+        buildChunkDetection.get(route.file) ??
+        (
+          await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
+            routeFile,
+            viteChildCompiler,
+          })
+        ).hasRouteChunkByExportName;
 
       if (enforceSplitRouteModules) {
         validateRouteChunks({
@@ -1488,6 +1494,28 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 configureServer: undefined,
                 configurePreviewServer: undefined,
               })),
+            // Currently the child compiler is only used for static analysis.
+            // If the main client build configures `optimizeDeps`, in some cases
+            // that leads to side-effects due to CJS interop being injected
+            // unintentionally (notably `react/jsx-runtime` is currently CJS
+            // only). This causes a bit of a split-brain scenario where the
+            // parent compiler reaches a different analysis than the child
+            // compiler when determining if a route module is able to be split
+            // leading to a bug where the client-bundle omits HydrateFallback
+            // from the route component, even though the server SSR-ed it,
+            // ultimately leading to both the HydrateFallback content _and_
+            // the route content being rendered after hydration.
+            //
+            // So, to avoid that, just disable dependency optimization entirely
+            // in child compilers that don't actually build anything (such as
+            // the manifest generation step).
+            {
+              name: "react-router:child-compiler-disable-dep-optimization",
+              enforce: "post",
+              configEnvironment: () => ({
+                optimizeDeps: { noDiscovery: true, include: [] },
+              }),
+            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
@@ -1981,9 +2009,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           routeModuleId,
         );
 
-        let { chunkedExports = [] } = options?.ssr
+        let { chunkedExports = [], hasRouteChunkByExportName } = options?.ssr
           ? {}
           : await detectRouteChunksIfEnabled(cache, ctx, id, code);
+
+        if (hasRouteChunkByExportName) {
+          buildChunkDetection.set(
+            normalizeRelativeFilePath(id, ctx.reactRouterConfig),
+            hasRouteChunkByExportName,
+          );
+        }
 
         let reexports = sourceExports
           .filter((exportName) => {
