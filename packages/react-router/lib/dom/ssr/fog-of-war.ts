@@ -112,13 +112,19 @@ export function getPatchRoutesOnNavigationFunction(
       return;
     }
     let { state } = getRouter();
+    let { navigation } = state;
     await fetchAndApplyManifestPatches(
       [path],
       // If we're patching for a fetcher call, reload the current location
+      // unless there's a pending GET navigation we can replay after the reload.
       // Otherwise prefer any ongoing navigation location
       fetcherKey
-        ? window.location.href
-        : createPath(state.navigation.location || state.location),
+        ? navigation.location &&
+          (!navigation.formMethod ||
+            navigation.formMethod.toUpperCase() === "GET")
+          ? createPath(navigation.location)
+          : window.location.href
+        : createPath(navigation.location || state.location),
       manifest,
       routeModules,
       ssr,

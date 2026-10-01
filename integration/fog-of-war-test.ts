@@ -1636,6 +1636,146 @@ test.describe("Fog of War", () => {
     expect(currentUrl).toContain("#section1");
   });
 
+  test("manifest version mismatch during fetcher discovery reloads the pending GET navigation location", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/routes/_index.tsx": js`
+          import { Link, useFetcher, useNavigate } from "react-router";
+
+          export default function Index() {
+            let fetcher = useFetcher();
+            let navigate = useNavigate();
+            return (
+              <div>
+                <h1>Home</h1>
+                <Link to="/b">B</Link>
+                <button
+                  id="go"
+                  onClick={() => {
+                    navigate("/b");
+                    setTimeout(() => fetcher.load("/undiscovered"), 50);
+                  }}
+                >
+                  Go
+                </button>
+              </div>
+            );
+          }
+        `,
+        "app/routes/b.tsx": js`
+          export async function loader() {
+            await new Promise((r) => setTimeout(r, 1000));
+            return null;
+          }
+          export default function B() {
+            return <h1 id="b">B</h1>;
+          }
+        `,
+        "app/routes/undiscovered.tsx": js`
+          export function loader() {
+            return "data";
+          }
+        `,
+      },
+    });
+
+    // Trigger a mismatch + hard reload when the fetcher discovers its route
+    await page.route(/\/__manifest/, async (route) => {
+      if (route.request().url().includes(encodeURIComponent("/undiscovered"))) {
+        await route.fulfill({
+          status: 204,
+          headers: { "X-Remix-Reload-Document": "true" },
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    await page.click("#go");
+
+    // The document reload should land on the pending navigation's location
+    await page.waitForSelector("#b", { timeout: 5000 });
+    expect(new URL(page.url()).pathname).toBe("/b");
+  });
+
+  test("manifest version mismatch during fetcher discovery reloads the current location during a POST navigation", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/routes/_index.tsx": js`
+          import { Form, useFetcher } from "react-router";
+
+          export default function Index() {
+            let fetcher = useFetcher();
+            return (
+              <div>
+                <h1 id="home">Home</h1>
+                <Form method="post" action="/b">
+                  <button
+                    id="go"
+                    type="submit"
+                    onClick={() =>
+                      setTimeout(() => fetcher.load("/undiscovered"), 50)
+                    }
+                  >
+                    Go
+                  </button>
+                </Form>
+              </div>
+            );
+          }
+        `,
+        "app/routes/b.tsx": js`
+          export async function action() {
+            await new Promise((r) => setTimeout(r, 1000));
+            return null;
+          }
+          export default function B() {
+            return <h1 id="b">B</h1>;
+          }
+        `,
+        "app/routes/undiscovered.tsx": js`
+          export function loader() {
+            return "data";
+          }
+        `,
+      },
+    });
+
+    let documentRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.resourceType() === "document") {
+        documentRequests.push(new URL(request.url()).pathname);
+      }
+    });
+
+    await page.route(/\/__manifest/, async (route) => {
+      if (route.request().url().includes(encodeURIComponent("/undiscovered"))) {
+        await route.fulfill({
+          status: 204,
+          headers: { "X-Remix-Reload-Document": "true" },
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    documentRequests = [];
+    await page.click("#go");
+
+    // A POST can't be replayed, so we fall back to reloading the current URL
+    await expect.poll(() => documentRequests).toEqual(["/"]);
+  });
+
   test("Preserves meta tags on hash links in splat routes", async ({
     page,
   }) => {
