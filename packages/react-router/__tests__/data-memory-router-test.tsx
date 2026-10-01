@@ -1383,6 +1383,65 @@ describe("createMemoryRouter", () => {
   });
 
   describe("errors", () => {
+    it("does not remount shared layout elements when switching to/from the error boundary (#13287)", async () => {
+      let mounts = 0;
+      function Global() {
+        React.useEffect(() => {
+          mounts++;
+        }, []);
+        return null;
+      }
+      function Layout({ children }: { children: React.ReactNode }) {
+        return (
+          <>
+            <Global />
+            {children}
+          </>
+        );
+      }
+      function Boundary() {
+        let error = useRouteError() as Error;
+        return <p>Error: {error.message}</p>;
+      }
+
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          element: (
+            <Layout>
+              <Outlet />
+            </Layout>
+          ),
+          errorElement: (
+            <Layout>
+              <Boundary />
+            </Layout>
+          ),
+          children: [
+            { index: true, element: <p>Home</p> },
+            {
+              path: "bad",
+              loader() {
+                throw new Error("Loader error");
+              },
+              element: <p>Bad</p>,
+            },
+          ],
+        },
+      ]);
+      render(<RouterProvider router={router} />);
+      await waitFor(() => screen.getByText("Home"));
+      expect(mounts).toBe(1);
+
+      await router.navigate("/bad");
+      await waitFor(() => screen.getByText("Error: Loader error"));
+      expect(mounts).toBe(1);
+
+      await router.navigate("/");
+      await waitFor(() => screen.getByText("Home"));
+      expect(mounts).toBe(1);
+    });
+
     it("renders hydration errors on leaf elements using errorElement", async () => {
       let router = createMemoryRouter(
         createRoutesFromElements(
