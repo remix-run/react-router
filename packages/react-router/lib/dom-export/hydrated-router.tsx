@@ -25,6 +25,10 @@ import {
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
+import {
+  getSpaHydrationLocation,
+  setSpaHydrationLocation,
+} from "../dom/spa-hydration";
 import { RouterProvider } from "./dom-router-provider";
 import type { ClientInstrumentation } from "../router/instrumentation";
 
@@ -338,6 +342,17 @@ export function HydratedRouter(props: HydratedRouterProps) {
       getContext: props.getContext,
       instrumentations: props.instrumentations,
     });
+    invariant(ssrInfo, "ssrInfo unavailable for HydratedRouter");
+    // The SPA shell is one HTML document. Deep links reuse it, and React will
+    // not correct attribute mismatches (such as NavLink's active class) during
+    // hydration, so match the prerendered URL first and update afterwards.
+    let spaHydrationLocation = getSpaHydrationLocation(
+      router.state.location,
+      ssrInfo.context.spaLocation,
+    );
+    if (spaHydrationLocation) {
+      setSpaHydrationLocation(router, spaHydrationLocation);
+    }
   }
 
   // We only want to show critical CSS in dev for the initial server render to

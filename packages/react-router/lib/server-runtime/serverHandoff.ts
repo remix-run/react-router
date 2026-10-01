@@ -9,6 +9,14 @@ export type ServerHandoff = {
   ssr: boolean;
   isSpaMode: boolean;
   routeDiscovery: ServerBuild["routeDiscovery"];
+  // SPA documents are prerendered for one URL and then reused for every path.
+  // The client hydrates against this location so the first render matches that
+  // HTML, then updates to `window.location`.
+  spaLocation?: {
+    pathname: string;
+    search: string;
+    hash: string;
+  };
 };
 
 export function createServerHandoffString(

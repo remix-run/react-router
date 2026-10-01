@@ -544,6 +544,15 @@ async function handleDocumentRequest(
       routeDiscovery: build.routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
+      ...(isSpaMode
+        ? {
+            spaLocation: {
+              pathname: context.location.pathname,
+              search: context.location.search,
+              hash: context.location.hash,
+            },
+          }
+        : null),
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
