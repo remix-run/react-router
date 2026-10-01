@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import * as Path from "pathe";
 import pc from "picocolors";
 import type { Logger } from "vite";
+import type { ChokidarOptions } from "chokidar";
 
 import { type Context, createContext } from "./context";
 import {
@@ -45,9 +46,25 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { mode, logger, rsc }: { mode: string; logger?: Logger; rsc: boolean },
+  {
+    mode,
+    logger,
+    rsc,
+    watchOptions,
+  }: {
+    mode: string;
+    logger?: Logger;
+    rsc: boolean;
+    watchOptions?: ChokidarOptions;
+  },
 ): Promise<Watcher> {
-  const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
+  const ctx = await createContext({
+    rootDirectory,
+    mode,
+    rsc,
+    watch: true,
+    watchOptions,
+  });
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   logger?.info(green("generated types"), { timestamp: true, clear: true });
