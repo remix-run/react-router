@@ -1951,7 +1951,7 @@ function getInvalidPathError(
 //   </Route>
 // </Route>
 export function getPathContributingMatches<T extends RouteMatch = RouteMatch>(
-  matches: T[],
+  matches: readonly T[],
 ) {
   return matches.filter(
     (match, index) =>
@@ -1962,7 +1962,7 @@ export function getPathContributingMatches<T extends RouteMatch = RouteMatch>(
 // Return the array of pathnames for the current route matches - used to
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<T extends RouteMatch = RouteMatch>(
-  matches: T[],
+  matches: readonly T[],
 ) {
   let pathMatches = getPathContributingMatches(matches);
 
@@ -2057,7 +2057,7 @@ export function resolveTo(
 export const removeDoubleSlashes = (path: string): string =>
   path.replace(/[\\/]{2,}/g, "/");
 
-export const joinPaths = (paths: string[]): string =>
+export const joinPaths = (paths: readonly string[]): string =>
   removeDoubleSlashes(paths.join("/"));
 
 // Scan from the end to avoid repeated RegExp work on long paths.
@@ -2355,7 +2355,9 @@ for `isRouteErrorResponse` above.  This comment seems to reset the parser.
 
 // Accept the narrow shape we read so this can be used with server-runtime
 // matches, which do not include the full RouteMatch fields like pathnameBase.
-export function getRoutePattern(matches: { route: { path?: string } }[]) {
+export function getRoutePattern(
+  matches: readonly { route: { path?: string } }[],
+) {
   let parts = matches.map((m) => m.route.path).filter(Boolean) as string[];
   return joinPaths(parts) || "/";
 }
