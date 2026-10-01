@@ -47,11 +47,8 @@ export async function handleRequest(request: Request) {
 function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
-  opts: {
-    branches?: RouteBranch<DataRouteObject>[];
-    future?: Partial<FutureConfig>;
-  } = {},
-): DataRouter
+  opts: {},
+)
 ```
 
 ## Params
@@ -70,7 +67,7 @@ Future flags for the static [`DataRouter`](https://api.reactrouter.com/v8/interf
 
 ### opts.branches
 
-Optional pre-computed route branches
+Deprecated optional pre-computed route branches. This option is no longer used because branch caching is done automatically inside the static router.
 
 ## Returns
 

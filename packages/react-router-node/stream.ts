@@ -33,11 +33,13 @@ export async function writeReadableStreamToWritable(
     }
   } catch (error: unknown) {
     try {
-      reader.cancel(error).catch(() => {});
+      reader
+        .cancel(error instanceof WritableClosedError ? undefined : error)
+        .catch(() => {});
     } catch {
       // Ignore cancellation errors so we preserve the original write failure.
     }
-    writable.destroy(error as Error);
+    destroyWritable(writable, error as Error);
     throw error;
   } finally {
     writableError.cleanup();
@@ -55,16 +57,39 @@ interface WritableErrorMonitor {
   throwIfClosed(): void;
 }
 
+class WritableClosedError extends Error {}
+
+function destroyWritable(writable: Writable, error: Error) {
+  if (error instanceof WritableClosedError || writable.destroyed) {
+    return;
+  }
+
+  // The write promise carries this error to the caller. Also consume the
+  // asynchronous error event from destroy so it cannot crash the process
+  // after the writable error monitor has been cleaned up.
+  writable.once("error", () => {});
+  writable.destroy(error);
+}
+
 function monitorWritableError(writable: Writable): WritableErrorMonitor {
+  let writableStartedDestroyed = writable.destroyed;
   let settled = false;
+  let writableErrorEmitted = false;
   let writableError: Error | undefined;
-  let rejectWritableError!: (error: Error) => void;
-  let writableErrorPromise = new Promise<never>((_, reject) => {
-    rejectWritableError = reject;
-  });
-  writableErrorPromise.catch(() => {});
+  let pendingRejections = new Set<(error: Error) => void>();
 
   function cleanup() {
+    // `destroy(error)` sets these properties before a potentially async
+    // destroy callback emits the error, so keep listening during that gap.
+    if (
+      !writableStartedDestroyed &&
+      writable.destroyed &&
+      writable.errored &&
+      !writableErrorEmitted
+    ) {
+      return;
+    }
+
     writable.off("error", onError);
     writable.off("close", onClose);
   }
@@ -77,15 +102,23 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
     settled = true;
     writableError = error;
     cleanup();
-    rejectWritableError(error);
+
+    // Reject every waiter created so far, then drop the references so a
+    // long-lived monitor cannot retain them.
+    let rejections = [...pendingRejections];
+    pendingRejections.clear();
+    for (let rejectPending of rejections) {
+      rejectPending(error);
+    }
   }
 
   function onError(error: Error) {
+    writableErrorEmitted = true;
     reject(error);
   }
 
   function onClose() {
-    reject(new Error("Writable closed before stream finished"));
+    reject(new WritableClosedError("Writable closed before stream finished"));
   }
 
   writable.once("error", onError);
@@ -94,7 +127,27 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   return {
     cleanup,
     race<T>(promise: Promise<T>) {
-      return Promise.race([promise, writableErrorPromise]);
+      if (writableError) {
+        // A read can synchronously close the writable before race() runs.
+        // Still observe its promise so a rejection cannot escape unhandled.
+        return Promise.race([promise, Promise.reject(writableError)]);
+      }
+
+      // Racing against a single long-lived promise retains the resolved value
+      // of every race for as long as that promise stays pending, which leaks
+      // memory on long streams (https://github.com/nodejs/node/issues/17469).
+      // Give each race its own short-lived promise instead, and forget it as
+      // soon as the race settles.
+      let rejectPending!: (error: Error) => void;
+      let pendingPromise = new Promise<never>((_, reject) => {
+        rejectPending = reject;
+      });
+      pendingPromise.catch(() => {});
+      pendingRejections.add(rejectPending);
+
+      return Promise.race([promise, pendingPromise]).finally(() => {
+        pendingRejections.delete(rejectPending);
+      });
     },
     throwIfClosed() {
       if (writableError) {
@@ -102,7 +155,9 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
       }
 
       if (writable.destroyed || writable.writableEnded) {
-        throw new Error("Cannot write to a destroyed or ended writable stream");
+        throw new WritableClosedError(
+          "Cannot write to a destroyed or ended writable stream",
+        );
       }
     },
   };
@@ -166,7 +221,7 @@ export async function writeAsyncIterableToWritable(
         // Ignore return errors so we preserve the original write failure.
       }
     }
-    writable.destroy(error);
+    destroyWritable(writable, error);
     throw error;
   } finally {
     writableError.cleanup();

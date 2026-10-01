@@ -8,6 +8,7 @@ import type {
 } from "./router/history";
 import {
   Action as NavigationType,
+  createPath,
   createMemoryHistory,
   invariant,
   parsePath,
@@ -49,6 +50,8 @@ import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
+  DataRouterDataContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
   LocationContext,
@@ -75,6 +78,10 @@ import {
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
+import {
+  getNavigatorCurrentUrl,
+  validateNavigationTarget,
+} from "./router/navigation";
 import { useOptimistic } from "react";
 
 export const hydrationRouteProperties: (keyof RouteObject)[] = [
@@ -632,6 +639,7 @@ export function RouterProvider({
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
+      createURL: router.createURL,
       encodeLocation: router.encodeLocation,
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
@@ -661,6 +669,54 @@ export function RouterProvider({
     [router, navigator, basename, onError],
   );
 
+  let dataRouterState = React.useMemo(
+    () => ({
+      historyAction: state.historyAction,
+      location: state.location,
+      matches: state.matches,
+      initialized: state.initialized,
+      renderFallback: state.renderFallback,
+      restoreScrollPosition: state.restoreScrollPosition,
+      preventScrollReset: state.preventScrollReset,
+      blockers: state.blockers,
+    }),
+    [
+      state.historyAction,
+      state.location,
+      state.matches,
+      state.initialized,
+      state.renderFallback,
+      state.restoreScrollPosition,
+      state.preventScrollReset,
+      state.blockers,
+    ],
+  );
+
+  let dataRouterNavigation = React.useMemo(
+    () => ({
+      navigation: state.navigation,
+      revalidation: state.revalidation,
+    }),
+    [state.navigation, state.revalidation],
+  );
+
+  let dataRouterData = React.useMemo(
+    () => ({
+      loaderData: state.loaderData,
+      actionData: state.actionData,
+      errors: state.errors,
+    }),
+    [state.loaderData, state.actionData, state.errors],
+  );
+
+  let fetchersContext = React.useMemo(
+    () => ({
+      fetchers: state.fetchers,
+      fetcherData: fetcherData.current,
+    }),
+    [state.fetchers],
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -670,27 +726,30 @@ export function RouterProvider({
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetcherData.current}>
-            <ViewTransitionContext.Provider value={vtContext}>
-              <Router
-                basename={basename}
-                location={spaHydrationLocation ?? state.location}
-                navigationType={state.historyAction}
-                navigator={navigator}
-                useTransitions={useTransitions}
-              >
-                <MemoizedDataRoutes
-                  routes={router.routes}
-                  manifest={router.manifest}
-                  future={router.future}
-                  state={state}
-                  isStatic={false}
-                  onError={onError}
-                />
-              </Router>
-            </ViewTransitionContext.Provider>
-          </FetchersContext.Provider>
+        <DataRouterStateContext.Provider value={dataRouterState}>
+          <DataRouterNavigationContext.Provider value={dataRouterNavigation}>
+            <DataRouterDataContext.Provider value={dataRouterData}>
+              <FetchersContext.Provider value={fetchersContext}>
+                <ViewTransitionContext.Provider value={vtContext}>
+                  <Router
+                    basename={basename}
+                    location={spaHydrationLocation ?? state.location}
+                    navigationType={state.historyAction}
+                    navigator={navigator}
+                    useTransitions={useTransitions}
+                  >
+                    <MemoizedDataRoutes
+                      routes={router.routes}
+                      manifest={router.manifest}
+                      state={state}
+                      isStatic={false}
+                      onError={onError}
+                    />
+                  </Router>
+                </ViewTransitionContext.Provider>
+              </FetchersContext.Provider>
+            </DataRouterDataContext.Provider>
+          </DataRouterNavigationContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
@@ -731,24 +790,29 @@ const MemoizedDataRoutes = React.memo(DataRoutes);
 export function DataRoutes({
   routes,
   manifest,
-  future,
   state,
   isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
   manifest: RouteManifest;
-  future: DataRouter["future"];
   state: RouterState;
   isStatic: boolean;
   onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
+  let dataRouterContext = React.useContext(DataRouterContext);
+
+  invariant(
+    dataRouterContext,
+    "You must render this element inside a <DataRouterContext.Provider> element",
+  );
+
   return useRoutesImpl(routes, undefined, {
+    router: dataRouterContext.router,
     manifest,
     state,
     isStatic,
     onError,
-    future,
   });
 }
 
@@ -907,7 +971,7 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`,
   );
 
-  let { static: isStatic } = React.useContext(NavigationContext);
+  let { static: isStatic, navigator } = React.useContext(NavigationContext);
 
   warning(
     !isStatic,
@@ -927,6 +991,12 @@ export function Navigate({
     getResolveToMatches(matches),
     locationPathname,
     relative === "path",
+  );
+  validateNavigationTarget(
+    typeof to === "string" ? to : createPath(to),
+    navigator.createHref(path),
+    getNavigatorCurrentUrl(navigator),
+    "reject",
   );
   let jsonPath = JSON.stringify(path);
 

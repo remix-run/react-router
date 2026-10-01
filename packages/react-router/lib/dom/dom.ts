@@ -240,6 +240,9 @@ export interface SubmitOptions extends FetcherSubmitOptions {
 
   /**
    * Enable view transitions on this submission navigation
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
    */
   viewTransition?: boolean;
 }

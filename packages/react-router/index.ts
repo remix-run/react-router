@@ -369,6 +369,8 @@ export {
 /** @internal */
 export {
   DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterDataContext as UNSAFE_DataRouterDataContext,
+  DataRouterNavigationContext as UNSAFE_DataRouterNavigationContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   FetchersContext as UNSAFE_FetchersContext,
   LocationContext as UNSAFE_LocationContext,

@@ -22,13 +22,10 @@ import type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  RouterContextProvider,
 } from "../router/utils";
 import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
-import {
-  normalizeRelativeUrl,
-  PROTOCOL_RELATIVE_URL_REGEX,
-} from "../router/url";
+import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
+import { validateNavigationTarget } from "../router/navigation";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -154,6 +151,12 @@ export function createCallServer({
         .then(async (payload) => {
           if (payload.type === "redirect") {
             let location = normalizeRedirectLocation(payload.location);
+            validateNavigationTarget(
+              payload.location,
+              location,
+              new URL(window.location.href),
+              "allow-explicit",
+            );
             if (payload.reload || isExternalLocation(location)) {
               if (hasInvalidProtocol(location)) {
                 throw new Error("Invalid redirect location");
@@ -182,6 +185,12 @@ export function createCallServer({
           ) {
             if (rerender.type === "redirect") {
               let location = normalizeRedirectLocation(rerender.location);
+              validateNavigationTarget(
+                rerender.location,
+                location,
+                new URL(window.location.href),
+                "allow-explicit",
+              );
               if (rerender.reload || isExternalLocation(location)) {
                 if (hasInvalidProtocol(location)) {
                   throw new Error("Invalid redirect location");
@@ -310,6 +319,7 @@ function createRouterFromPayload({
       },
       location: payload.location,
       basename: payload.basename,
+      future: {},
       isSpaMode: false,
     }),
     async patchRoutesOnNavigation({ path, signal, fetcherKey }) {
@@ -1134,8 +1144,6 @@ function isExternalLocation(location: string) {
 }
 
 function normalizeRedirectLocation(location: string): string {
-  location = normalizeRelativeUrl(location);
-
   if (PROTOCOL_RELATIVE_URL_REGEX.test(location)) {
     let path = resolvePath(location);
     return path.pathname + path.search + path.hash;

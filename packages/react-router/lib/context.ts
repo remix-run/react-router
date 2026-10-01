@@ -27,10 +27,34 @@ export const DataRouterContext =
   React.createContext<DataRouterContextObject | null>(null);
 DataRouterContext.displayName = "DataRouter";
 
-export const DataRouterStateContext = React.createContext<
-  Router["state"] | null
->(null);
+export type DataRouterDataContextObject = Pick<
+  Router["state"],
+  "loaderData" | "actionData" | "errors"
+>;
+
+export type DataRouterNavigationContextObject = Pick<
+  Router["state"],
+  "navigation" | "revalidation"
+>;
+
+export type DataRouterStateContextObject = Omit<
+  Router["state"],
+  | keyof DataRouterDataContextObject
+  | keyof DataRouterNavigationContextObject
+  | "fetchers"
+>;
+
+export const DataRouterStateContext =
+  React.createContext<DataRouterStateContextObject | null>(null);
 DataRouterStateContext.displayName = "DataRouterState";
+
+export const DataRouterDataContext =
+  React.createContext<DataRouterDataContextObject | null>(null);
+DataRouterDataContext.displayName = "DataRouterData";
+
+export const DataRouterNavigationContext =
+  React.createContext<DataRouterNavigationContextObject | null>(null);
+DataRouterNavigationContext.displayName = "DataRouterNavigation";
 
 export const RSCRouterContext = React.createContext<boolean>(false);
 
@@ -55,12 +79,14 @@ export const ViewTransitionContext =
   });
 ViewTransitionContext.displayName = "ViewTransition";
 
-// TODO: (v9) Change the useFetcher data from `any` to `unknown`
-export type FetchersContextObject = Map<string, any>;
+export type FetchersContextObject = {
+  fetchers: Router["state"]["fetchers"];
+  // TODO: (v9) Change the useFetcher data from `any` to `unknown`
+  fetcherData: Map<string, any>;
+};
 
-export const FetchersContext = React.createContext<FetchersContextObject>(
-  new Map(),
-);
+export const FetchersContext =
+  React.createContext<FetchersContextObject | null>(null);
 FetchersContext.displayName = "Fetchers";
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
@@ -83,7 +109,12 @@ export interface NavigateOptions {
   relative?: RelativeRoutingType;
   /** Wraps the initial state update for this navigation in a {@link https://react.dev/reference/react-dom/flushSync ReactDOM.flushSync} call instead of the default {@link https://react.dev/reference/react/startTransition React.startTransition} */
   flushSync?: boolean;
-  /** Enables a {@link https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API View Transition} for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the {@link useViewTransitionState `useViewTransitionState()`} hook.  */
+  /**
+   * Enables a view transition for this navigation.
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
+   */
   viewTransition?: boolean;
   /** Specifies the default revalidation behavior after this submission */
   defaultShouldRevalidate?: boolean;
@@ -100,6 +131,8 @@ export interface NavigateOptions {
  */
 export interface Navigator {
   createHref: History["createHref"];
+  // Optional for backwards-compat with Router/HistoryRouter usage (edge case)
+  createURL?: History["createURL"];
   // Optional for backwards-compat with Router/HistoryRouter usage (edge case)
   encodeLocation?: History["encodeLocation"];
   go: History["go"];
@@ -144,6 +177,14 @@ export const RouteContext = React.createContext<RouteContextObject>({
   isDataRoute: false,
 });
 RouteContext.displayName = "Route";
+
+export const IsDataRouteContext = React.createContext(false);
+IsDataRouteContext.displayName = "IsDataRoute";
+
+export const RouteIdContext = React.createContext<string | undefined>(
+  undefined,
+);
+RouteIdContext.displayName = "RouteId";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";

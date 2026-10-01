@@ -1,6 +1,6 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
-import { redirect, replace } from "../../lib/router/utils";
+import { replace } from "../../lib/router/utils";
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
@@ -480,25 +480,6 @@ describe("redirects", () => {
       });
       expect(t.window.location.assign).not.toHaveBeenCalled();
     }
-  });
-
-  it("normalizes special characters in redirects", async () => {
-    let router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-        { path: "/" },
-        { path: "/start", loader: () => redirect("/\t/parent") },
-        { path: "/parent" },
-      ],
-    });
-    router.initialize();
-    await tick();
-
-    await router.navigate("/start");
-    expect(router.state.location).toMatchObject({
-      pathname: "/parent",
-    });
-    router.dispose();
   });
 
   it("properly handles same-origin absolute URLs when using a basename", async () => {

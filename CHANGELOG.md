@@ -16,6 +16,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.4.0](#v840)
+    - [Reduced Route Component Re-renders](#reduced-route-component-re-renders)
+    - [More Efficient Route Matching (unstable)](#more-efficient-route-matching-unstable)
+  - [v8.3.1](#v831)
   - [v8.3.0](#v830)
     - [RSC Entry Updates](#rsc-entry-updates)
   - [v8.2.0](#v820)
@@ -110,6 +114,125 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.4.0
+
+Date: 2026-09-15
+
+### What's Changed
+
+#### Reduced Route Component Re-renders
+
+In 8.4.0, we reworked our internal data router contexts to be more granular which will reduce re-renders for components using hooks to access only some router state. For example, your component won't automatically re-render when `navigation.state` transitions to `loading` if it only calls `useLocation`. 4 internal contexts are now used:
+
+- Current location info (`useLocation`, `useSearchParams`, `useMatches`)
+- Pending navigation/revalidation info (`useNavigation`, `useRevalidation`)
+- Router loader/action data (`useLoaderData`, `useActionData`)
+- Fetcher info (`useFetcher`, `useFetchers`)
+
+#### More Efficient Route Matching (unstable)
+
+Data Mode can now opt into a more efficient route matcher powered by `@remix-run/route-pattern`. Synthetic Chromium benchmarks reduced navigation and fetcher completion times by ~19–38% with 100 routes and ~71–88% with 1,000 routes, excluding network latency and React rendering.
+
+Route definitions and path generation APIs such as `generatePath` and `href` continue to use React Router path syntax. Before enabling the flag, call `unstable_preloadRoutePattern()` so applications that do not opt in avoid downloading the new matcher.
+
+This also comes with a new `unstable_validateParams` route field that accepts keyed regular expressions. When a parameter fails validation, matching continues to later routes. Optional parameters that are not present are not validated.
+
+```ts
+import { createBrowserRouter } from "react-router";
+import { unstable_preloadRoutePattern } from "react-router/route-pattern";
+
+unstable_preloadRoutePattern();
+
+let router = createBrowserRouter(
+  [
+    {
+      path: "/:drink",
+      unstable_validateParams: {
+        drink: /^(wines|whiskeys|sakes|beers)$/,
+      },
+    },
+    {
+      path: "/:food",
+      unstable_validateParams: {
+        food: /^(meats|veggies|cheeses|sweets)$/,
+      },
+    },
+  ],
+  {
+    future: {
+      unstable_routePatternMatching: true,
+    },
+  },
+);
+```
+
+The legacy matching APIs (`matchRoutes`, `matchPath`, and `useMatch`) continue to use the previous regex-based matcher and may produce slightly different results. Use the new `router.match()` API when you need to match with the opted-in router. This API is private and unstable along with the flag, and will stabilize as the first-class matching API when the flag stabilizes.
+
+### Minor Changes
+
+- `react-router` - Deprecate the `createStaticRouter({ branches })` option ([#15297](https://github.com/remix-run/react-router/pull/15297))
+  - `createStaticRouter` now caches route branches internally, ignores `branches`, and logs a deprecation warning when the option is provided
+  - The deprecated `EntryContext.branches` property remains available for compatibility but is always an empty array
+
+### Patch Changes
+
+- `react-router` - Prevent stale route discovery during manifest version-mismatch recovery ([#15489](https://github.com/remix-run/react-router/pull/15489))
+  - Keep concurrent manifest responses pending while a document reload is in progress
+  - Report a discovery error when a previous reload failed to resolve a version mismatch instead of loading a stale route or reloading repeatedly
+  - Fail pending requests if a document reload does not complete within five seconds or the document is restored from the back-forward cache, allowing subsequent requests to recover
+- `react-router` - Preserve lazy route module import errors during SPA navigations instead of replacing them with a missing `dataStrategy` result error ([#15464](https://github.com/remix-run/react-router/pull/15464))
+- `react-router` - Switch to more granular internal router contexts to avoid unnecessary route component re-renders when unrelated data router state changes ([#15376](https://github.com/remix-run/react-router/pull/15376))
+  - ⚠️ This contains some breaking changes to exported `UNSAFE_` contexts, so please review carefully if you are using those unsafe exports
+- `react-router` - Correctly escape streamed RSC redirect locations in meta tag attributes ([#15491](https://github.com/remix-run/react-router/pull/15491))
+- `react-router` - Avoid unintended `document.startViewTransition` calls during initial hydration and `router.revalidate()` calls ([#15484](https://github.com/remix-run/react-router/pull/15484))
+- `react-router` - Fix `SingleFetchNoResultError` thrown when a fetcher revalidates against a splat route during lazy route discovery ([#15395](https://github.com/remix-run/react-router/pull/15395))
+  - Track discovery per fetcher load so revalidation waits for the current load's discovery, even when the fetcher key is reused, while still restarting interrupted loaders after discovery completes
+- `react-router` - Preserve the underlying decode failure as the `cause` of the `Unable to decode turbo-stream response` error ([#15450](https://github.com/remix-run/react-router/pull/15450))
+- `@react-router/dev` - Fix action submissions behind an HTTPS reverse proxy in `react-router dev` and `vite preview` by using `X-Forwarded-Proto` when constructing `request.url` ([#15466](https://github.com/remix-run/react-router/pull/15466))
+  - No React Router configuration is required
+  - The URL host continues to come from `Host`, not `X-Forwarded-Host`
+  - Configure reverse proxies to overwrite client-supplied `X-Forwarded-Proto` headers
+  - Do not expose dev or preview servers publicly
+- `@react-router/dev` - Pass development conditions as CLI flags when relaunching the dev process ([#15435](https://github.com/remix-run/react-router/pull/15435))
+- `@react-router/dev` - Fix stack trace locations for split route modules when source maps are enabled in the `reactRouter` Vite plugin ([#15440](https://github.com/remix-run/react-router/pull/15440))
+- `@react-router/node` - Fix a memory leak in `writeReadableStreamToWritable` and `writeAsyncIterableToWritable` that retained memory for the lifetime of a long-running stream ([#15500](https://github.com/remix-run/react-router/pull/15500))
+  - Preserve error handling when a producer closes the destination while reading the next chunk
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - Add a Data Mode `future.unstable_routePatternMatching` flag for more efficient route matching powered by `@remix-run/route-pattern` ([#15298](https://github.com/remix-run/react-router/pull/15298))
+  - Add an `unstable_validateParams` route field to reject invalid parameter values and continue matching
+- `react-router` - Document access control requirements for RSC Server Functions ([#15490](https://github.com/remix-run/react-router/pull/15490))
+  - Treat every Server Function as a public endpoint that must perform all of its own access control checks
+  - Recommend route actions when access control should be provided by route middleware
+
+**Full Changelog**: [`v8.3.1...v8.4.0`](https://github.com/remix-run/react-router/compare/react-router@8.3.1...react-router@8.4.0)
+
+## v8.3.1
+
+Date: 2026-08-27
+
+### Patch Changes
+
+- `react-router` - Fix `Expected fetcher: <key>` error thrown on navigation when a fetcher is aborted during its post-action revalidation ([#15365](https://github.com/remix-run/react-router/pull/15365))
+- `react-router` - Fix lazy route discovery caching a path as discovered when the triggering navigation was aborted after the manifest response settled but before the route tree was patched, which permanently (for the session) shadowed the real route behind a catch-all or produced 404s on every subsequent visit ([#15399](https://github.com/remix-run/react-router/pull/15399))
+- `react-router` - Improve route matching performance for long paths ([#15417](https://github.com/remix-run/react-router/pull/15417))
+- `react-router` - Improve validation of action request origins ([#15419](https://github.com/remix-run/react-router/pull/15419))
+- `react-router` - Fix `<ScrollRestoration>` leaving `history.scrollRestoration` set to `"auto"` after a bfcache restore, which let the browser restore scroll on subsequent history traversals before the destination route had rendered ([#15397](https://github.com/remix-run/react-router/pull/15397))
+- `react-router` - Properly respect the `relative` option in `useSubmit`/`fetcher.submit` when resolivng the `action` path ([#15400](https://github.com/remix-run/react-router/pull/15400))
+- `react-router` - Add additional URL validation on client side navigations/redirects ([#15445](https://github.com/remix-run/react-router/pull/15445))
+- `@react-router/dev` - Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- `@react-router/dev` - Generate JavaScript entry files at package build time so `react-router reveal --no-typescript` does not require Prettier at runtime ([#15373](https://github.com/remix-run/react-router/pull/15373))
+  - Deprecate the `--no-typescript` flag ahead of its removal in React Router v9
+- `@react-router/node` - Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- `@react-router/node` - fix: Prevent client disconnects during streaming from crashing the Node process ([#15324](https://github.com/remix-run/react-router/pull/15324))
+- `@react-router/serve` - Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- `@react-router/serve` - Serve `/.well-known/*` files from the client build directory. Express 5's static middleware ignores every dot-segment path by default, so RFC 8615 well-known URIs — ACME challenges, Android's `assetlinks.json`, Apple's `apple-app-site-association` — fell through to the request handler and came back as app-rendered HTML instead of the static file. Other dotfiles remain hidden. ([#15340](https://github.com/remix-run/react-router/pull/15340))
+
+**Full Changelog**: [`v8.3.0...v8.3.1`](https://github.com/remix-run/react-router/compare/react-router@8.3.0...react-router@8.3.1)
 
 ## v8.3.0
 

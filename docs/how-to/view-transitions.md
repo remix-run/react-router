@@ -4,16 +4,78 @@ title: View Transitions
 
 # View Transitions
 
-[MODES: framework, data]
+[MODES: framework, data, declarative]
 
 <br/>
 <br/>
 
-Enable smooth animations between page transitions in your React Router applications using the [View Transitions API][view-transitions-api]. This feature allows you to create seamless visual transitions during client-side navigation.
+Use React's [`<ViewTransition>`][react-view-transition] component to animate client-side navigations. This requires React and React DOM 19.3 or later.
 
-## Basic View Transition
+<docs-warning>
 
-### 1. Enable view transitions on navigation
+React Router's `viewTransition` props/options, `useViewTransitionState` hook, and `NavLink`'s `isTransitioning` render prop and `transitioning` class are deprecated in favor of React's `<ViewTransition>` component. The existing APIs continue to work, including with older React versions.
+
+</docs-warning>
+
+## Navigation View Transitions with React
+
+Wrap the outlet in a persistent `<ViewTransition>` boundary in a shared layout route. In Framework Mode, this can be your root route's default export; in Data and Declarative modes, use it as the component for a parent route with children:
+
+```tsx
+import { ViewTransition } from "react";
+import { Link, Outlet } from "react-router";
+
+export default function PageLayout() {
+  return (
+    <>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+      </nav>
+      <ViewTransition>
+        <main>
+          <Outlet />
+        </main>
+      </ViewTransition>
+    </>
+  );
+}
+```
+
+Navigations that update the outlet cross-fade its contents. Keep the boundary mounted across navigations; you don't need to key it by location or remount the route tree. The navigation stays outside the animated region. Other updates inside the boundary can also animate when they run in a React Transition.
+
+React Router wraps router state updates in [`React.startTransition`][start-transition] by default, which lets React activate `<ViewTransition>` without additional configuration. React Transitions must remain enabled for navigation view transitions to work: do not set `useTransitions={false}` on your router.
+
+This applies to navigations from `<Link>`, `<NavLink>`, and `<Form>`, as well as programmatic navigation with `useNavigate` and `useSubmit`. No additional `startTransition` wrapper is needed.
+
+### Migrating from React Router's view transitions
+
+- Remove `viewTransition` from `<Link>`, `<NavLink>`, and `<Form>`, and remove `viewTransition: true` from navigation/submission options. React coordinates `document.startViewTransition()` itself; enabling both implementations can interrupt animations.
+- Replace `useViewTransitionState`, `isTransitioning`, and `.transitioning` styles with React's [View Transition classes][react-view-transition-classes]. Those router APIs only track the legacy transitions.
+- For shared elements such as an image moving from a list to a detail route, wrap each side in `<ViewTransition name="...">` with the same unique name. See React's [shared element example][react-shared-elements].
+- Keep React Transitions enabled. `useTransitions={false}` and synchronous updates such as `flushSync` can prevent React's animations.
+
+React's component is not a drop-in replacement for every legacy animation. In particular, React [skips view transitions for synchronous updates from `popstate`][react-router-transitions], so browser Back/Forward navigations may not animate. Browsers without View Transitions support still navigate normally.
+
+Respect reduced-motion preferences when adding animations:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+```
+
+## Legacy View Transitions (Deprecated)
+
+The following examples document the deprecated APIs for existing applications. These APIs are available in Framework and Data modes.
+
+### Basic View Transition
+
+#### 1. Enable view transitions on navigation
 
 The simplest way to enable view transitions is by adding the `viewTransition` prop to your `Link`, `NavLink`, or `Form` components. This automatically wraps the navigation update in `document.startViewTransition()`.
 
@@ -25,7 +87,7 @@ The simplest way to enable view transitions is by adding the `viewTransition` pr
 
 Without any additional CSS, this provides a basic cross-fade animation between pages.
 
-### 2. Enable view transitions with programmatic navigation
+#### 2. Enable view transitions with programmatic navigation
 
 When using programmatic navigation with the `useNavigate` hook, you can enable view transitions by passing the `viewTransition: true` option:
 
@@ -51,11 +113,11 @@ This provides the same cross-fade animation as using the `viewTransition` prop o
 
 For more information on using the View Transitions API, please refer to the ["Smooth transitions with the View Transition API" guide][view-transitions-guide] from the Google Chrome team.
 
-## Image Gallery Example
+### Image Gallery Example
 
 Let's build an image gallery that demonstrates how to trigger and use view transitions. We'll create a list of images that expand into a detail view with smooth animations.
 
-### 1. Create the image gallery route
+#### 1. Create the image gallery route
 
 ```tsx filename=routes/image-gallery.tsx
 import { NavLink } from "react-router";
@@ -91,7 +153,7 @@ export default function ImageGalleryRoute() {
 }
 ```
 
-### 2. Add transition styles
+#### 2. Add transition styles
 
 Define view transition names and animations for elements that should transition smoothly between routes.
 
@@ -127,7 +189,7 @@ Define view transition names and animations for elements that should transition 
 }
 ```
 
-### 3. Create the image detail route
+#### 3. Create the image detail route
 
 The detail view needs to use the same view transition names to create a seamless animation.
 
@@ -151,7 +213,7 @@ export default function ImageDetailsRoute({
 }
 ```
 
-### 4. Add matching transition styles for the detail view
+#### 4. Add matching transition styles for the detail view
 
 ```css filename=app.css
 /* Match transition names from the list view */
@@ -169,11 +231,11 @@ export default function ImageDetailsRoute({
 }
 ```
 
-## Advanced Usage
+### Advanced Usage
 
 You can control view transitions more precisely using either render props or the `useViewTransitionState` hook.
 
-### 1. Using render props
+#### 1. Using render props
 
 ```tsx filename=routes/image-gallery.tsx
 <NavLink to={`/image/${idx}`} viewTransition>
@@ -201,7 +263,7 @@ You can control view transitions more precisely using either render props or the
 </NavLink>
 ```
 
-### 2. Using the `useViewTransitionState` hook
+#### 2. Using the `useViewTransitionState` hook
 
 ```tsx filename=routes/image-gallery.tsx
 function NavImage(props: { src: string; idx: number }) {
@@ -234,4 +296,9 @@ function NavImage(props: { src: string; idx: number }) {
 ```
 
 [view-transitions-api]: https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition
+[react-view-transition]: https://react.dev/reference/react/ViewTransition
+[start-transition]: https://react.dev/reference/react/startTransition
+[react-view-transition-classes]: https://react.dev/reference/react/ViewTransition#view-transition-class
+[react-shared-elements]: https://react.dev/reference/react/ViewTransition#animating-a-shared-element
+[react-router-transitions]: https://react.dev/reference/react/ViewTransition#building-view-transition-enabled-routers
 [view-transitions-guide]: https://developer.chrome.com/docs/web-platform/view-transitions

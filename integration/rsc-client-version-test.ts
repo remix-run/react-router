@@ -15,18 +15,38 @@ const templateName = "rsc-vite-framework" as const satisfies TemplateName;
 function getFiles() {
   return {
     "app/root.tsx": js`
-      import { Link, Outlet } from "react-router";
+      import { Link, Outlet, useNavigation, useRouteError } from "react-router";
 
-      export default function Root() {
+      export function Layout({ children }) {
+        let navigation = useNavigation();
         return (
           <html lang="en">
             <body>
-              <Link to="/other?token=abc123&ref=campaign#section1">
-                Go to Other
-              </Link>
-              <Outlet />
+              <p data-navigation-state>{navigation.state}</p>
+              {children}
             </body>
           </html>
+        );
+      }
+
+      export default function Root() {
+        return (
+          <>
+            <Link to="/other?token=abc123&ref=campaign#section1">
+              Go to Other
+            </Link>
+            <Outlet />
+          </>
+        );
+      }
+
+      export function ErrorBoundary() {
+        let error = useRouteError();
+        return (
+          <>
+            <p data-error>{error.message}</p>
+            <p data-error-cause>{error.cause?.message}</p>
+          </>
         );
       }
     `,
@@ -225,7 +245,7 @@ test.describe("RSC client versions", () => {
     expect(documentRequests[1]).toBe(`${baseUrl}/other`);
   });
 
-  test("does not reload repeatedly for the same stale client version", async ({
+  test("renders an error when manifest discovery already reloaded for the same client version", async ({
     page,
     vitePreview,
   }) => {
@@ -234,10 +254,6 @@ test.describe("RSC client versions", () => {
     let baseUrl = `http://localhost:${port}`;
     let documentRequests = trackDocumentRequests(page);
     let manifestRequests = await interceptWithStaleClientVersion(page);
-    let consoleErrors: string[] = [];
-    page.on("console", (message) => {
-      if (message.type() === "error") consoleErrors.push(message.text());
-    });
     let eagerMismatch = page.waitForResponse(
       (response) =>
         response.url().includes(".manifest") && response.status() === 204,
@@ -256,10 +272,61 @@ test.describe("RSC client versions", () => {
 
     await page.getByRole("link", { name: "Go to Other" }).click();
     await expect.poll(() => manifestRequests.length).toBeGreaterThan(1);
-    await expect
-      .poll(() => consoleErrors)
-      .toContain("Unable to discover routes due to manifest version mismatch.");
+    await expect(page.locator("[data-error]")).toHaveText(
+      "Unable to discover routes due to manifest version mismatch.",
+    );
+    await expect(page.locator("[data-navigation-state]")).toHaveText("idle");
+    await expect(page.locator("[data-location]")).toHaveCount(0);
+    expect(documentRequests).toHaveLength(1);
+  });
 
+  test("renders an error when an RSC payload mismatch already reloaded for the same client version", async ({
+    page,
+    vitePreview,
+  }) => {
+    let files: Files = async () => ({
+      ...getFiles(),
+      "react-router.config.ts": reactRouterConfig({
+        ssr: false,
+        prerender: ["/", "/other"],
+      }),
+    });
+    let { cwd, port } = await vitePreview(files, templateName);
+    let baseUrl = `http://localhost:${port}`;
+    let documentRequests = trackDocumentRequests(page);
+    let { default: assetsManifest } = await import(
+      pathToFileURL(
+        path.join(cwd, "build/server/__vite_rsc_assets_manifest.js"),
+      ).href
+    );
+    let clientVersion = assetsManifest.clientVersion as string;
+    let newVersion = clientVersion === "deadbeef" ? "feedface" : "deadbeef";
+
+    await page.route(/\/other\.rsc(?:\?|$)/, async (route) => {
+      let response = await route.fetch();
+      let source = await response.text();
+      expect(source).toContain(clientVersion);
+      await route.fulfill({
+        response,
+        body: source.replaceAll(clientVersion, newVersion),
+      });
+    });
+
+    await page.goto(`${baseUrl}/`);
+    await page.evaluate((version) => {
+      sessionStorage.setItem("react-router-manifest-version", version);
+    }, clientVersion);
+
+    await page.getByRole("link", { name: "Go to Other" }).click();
+
+    await expect(page.locator("[data-error]")).toHaveText(
+      "Unable to decode RSC response",
+    );
+    await expect(page.locator("[data-error-cause]")).toHaveText(
+      "Unable to discover routes due to manifest version mismatch.",
+    );
+    await expect(page.locator("[data-navigation-state]")).toHaveText("idle");
+    await expect(page.locator("[data-location]")).toHaveCount(0);
     expect(documentRequests).toHaveLength(1);
   });
 });

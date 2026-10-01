@@ -43,9 +43,7 @@ function delay(ms: number) {
 }
 
 function restartCount(output: string) {
-  return (
-    output.match(/\[restart\] Relaunching with NODE_OPTIONS:/g)?.length ?? 0
-  );
+  return output.match(/\[restart\] Relaunching with /g)?.length ?? 0;
 }
 
 function getLogs(stdout: string, stderr: string) {

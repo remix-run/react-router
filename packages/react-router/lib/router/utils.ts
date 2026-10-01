@@ -5,7 +5,6 @@ import { invariant, parsePath, warning } from "./history";
 import {
   ABSOLUTE_URL_REGEX,
   normalizeProtocolRelativeUrl,
-  normalizeRelativeUrl,
   PROTOCOL_RELATIVE_URL_REGEX,
 } from "./url";
 
@@ -576,7 +575,8 @@ type UnsupportedLazyRouteObjectKey =
   | "path"
   | "id"
   | "index"
-  | "children";
+  | "children"
+  | "unstable_validateParams";
 const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
@@ -584,6 +584,7 @@ const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "id",
   "index",
   "children",
+  "unstable_validateParams",
 ]);
 export function isUnsupportedLazyRouteObjectKey(
   key: string,
@@ -610,6 +611,7 @@ const unsupportedLazyRouteFunctionKeys =
     "index",
     "middleware",
     "children",
+    "unstable_validateParams",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
   key: string,
@@ -682,6 +684,11 @@ export type BaseRouteObject = {
    * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
    */
   shouldRevalidate?: ShouldRevalidateFunction;
+  /**
+   * A map of route param names to regular expressions used to validate params
+   * after a route-pattern match.
+   */
+  unstable_validateParams?: Record<string, RegExp>;
   /**
    * The route handle.
    */
@@ -1146,7 +1153,7 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
@@ -1296,7 +1303,7 @@ function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
  * - `/one/three/:four/:five`
  * - `/one/:two/three/:four/:five`
  */
-function explodeOptionalSegments(path: string): string[] {
+export function explodeOptionalSegments(path: string): string[] {
   let segments = path.split("/");
   if (segments.length === 0) return [];
 
@@ -1647,7 +1654,7 @@ export interface PathMatch<ParamKey extends string = string> {
   pattern: PathPattern;
 }
 
-type Mutable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
@@ -1770,7 +1777,7 @@ export function compilePath(
           return "/([^\\/]+)";
         },
       ) // Dynamic segment
-      .replace(/\/([\w-]+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
+      .replace(/\/((?:[^/?()[\]*^\\]|\\.)+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
@@ -1854,8 +1861,7 @@ export function prependBasename({
   return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
-export const isAbsoluteUrl = (url: string) =>
-  ABSOLUTE_URL_REGEX.test(normalizeRelativeUrl(url));
+export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 /**
  * Returns a resolved {@link Path} object relative to the given pathname.
@@ -1876,9 +1882,8 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
-    toPathname = normalizeRelativeUrl(toPathname);
     toPathname = removeDoubleSlashes(toPathname);
-    if (toPathname.startsWith("/")) {
+    if (toPathname.startsWith("/") || toPathname.startsWith("\\")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
       pathname = resolvePathname(toPathname, fromPathname);
@@ -2410,9 +2415,7 @@ export function parseToInfo<T extends To | string>(
   _to: T,
   basename: string,
 ): ParsedLocationInfo<T | string> {
-  let to = (
-    typeof _to === "string" ? normalizeRelativeUrl(_to) : _to
-  ) as string;
+  let to = _to as string;
   if (typeof to !== "string" || !ABSOLUTE_URL_REGEX.test(to)) {
     return {
       absoluteURL: undefined,
