@@ -603,6 +603,80 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Data:LOADER"));
         expect(screen.queryByText("Suspense Fallback")).toBeNull();
       });
+
+      it("only reports initial loader errors once when initialization completes before subscription", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let onError = jest.fn();
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () =>
+              sleep(200).then(() => {
+                throw new Error("Loader failed");
+              }),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            ErrorBoundary: () => <p>Route Error Boundary</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} onError={onError} />;
+        }
+
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Route Error Boundary"));
+        expect(onError).toHaveBeenCalledTimes(1);
+      });
+
+      it("handles initialization races when another subscriber is already attached", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        router.subscribe(() => {});
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Data:LOADER"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
+      });
     });
 
     describe("navigations", () => {
