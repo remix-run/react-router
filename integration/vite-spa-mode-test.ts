@@ -1282,4 +1282,79 @@ test.describe("SPA Mode", () => {
       "app/routes/about.tsx",
     ]);
   });
+
+  test("hydrates NavLink active state for a deep link", async ({ page }) => {
+    let fixture = await createFixture({
+      spaMode: true,
+      files: {
+        "app/root.tsx": js`
+          import { NavLink, Outlet, Scripts } from "react-router";
+
+          export function Layout({ children }: { children: React.ReactNode }) {
+            return (
+              <html lang="en">
+                <head>
+                  <meta charSet="utf-8" />
+                  <meta name="viewport" content="width=device-width, initial-scale=1" />
+                </head>
+                <body>
+                  <nav>
+                    <NavLink to="/" end>
+                      Home
+                    </NavLink>
+                    <NavLink to="/other">Other</NavLink>
+                  </nav>
+                  {children}
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export default function App() {
+            return <Outlet />;
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1>Home page</h1>;
+          }
+        `,
+        "app/routes/other.tsx": js`
+          export default function Other() {
+            return <h1>Other page</h1>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+
+    try {
+      let html = await (await fixture.requestDocument("/")).text();
+      let anchors = html.match(/<a\b[^>]*>/g) ?? [];
+      let home = anchors.find((tag) => tag.includes('href="/"'));
+      let other = anchors.find((tag) => tag.includes('href="/other"'));
+      expect(home).toEqual(expect.stringMatching(/\bactive\b/));
+      expect(other).toEqual(expect.not.stringMatching(/\bactive\b/));
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/other", true);
+      await expect(page.locator("h1")).toHaveText("Other page");
+      await expect(page.locator('a[href="/"]')).not.toHaveClass(/\bactive\b/);
+      await expect(page.locator('a[href="/other"]')).toHaveClass(/\bactive\b/);
+      await expect(page.locator('a[href="/other"]')).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+
+      await app.goto("/");
+      await expect(page.locator("h1")).toHaveText("Home page");
+      await expect(page.locator('a[href="/"]')).toHaveClass(/\bactive\b/);
+      await expect(page.locator('a[href="/other"]')).not.toHaveClass(
+        /\bactive\b/,
+      );
+    } finally {
+      appFixture.close();
+    }
+  });
 });
