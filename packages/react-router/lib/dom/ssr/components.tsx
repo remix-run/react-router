@@ -397,6 +397,7 @@ function RSCPrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
+  let { unstable_serverOrigin } = useFrameworkContext();
 
   let dataHrefs = React.useMemo(() => {
     if (page === location.pathname + location.search + location.hash) {
@@ -404,7 +405,7 @@ function RSCPrefetchPageLinksImpl({
       // since it would always trigger a prefetch of the existing loaders
       return [];
     }
-    let url = singleFetchUrl(page, "rsc");
+    let url = singleFetchUrl(page, "rsc", unstable_serverOrigin);
 
     let hasSomeRoutesWithShouldRevalidate = false;
     let targetRoutes: string[] = [];
@@ -420,8 +421,8 @@ function RSCPrefetchPageLinksImpl({
       url.searchParams.set("_routes", targetRoutes.join(","));
     }
 
-    return [url.pathname + url.search];
-  }, [page, location, nextMatches]);
+    return [unstable_serverOrigin ? url.toString() : url.pathname + url.search];
+  }, [page, location, nextMatches, unstable_serverOrigin]);
 
   return (
     <>
@@ -440,7 +441,7 @@ function PrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useFrameworkContext();
+  let { manifest, routeModules, unstable_serverOrigin } = useFrameworkContext();
   let { matches } = useDataRouterState("PrefetchPageLinks");
   let { loaderData } = useDataRouterData("PrefetchPageLinks");
 
@@ -504,7 +505,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, "data");
+    let url = singleFetchUrl(page, "data", unstable_serverOrigin);
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -518,7 +519,7 @@ function PrefetchPageLinksImpl({
       );
     }
 
-    return [url.pathname + url.search];
+    return [unstable_serverOrigin ? url.toString() : url.pathname + url.search];
   }, [
     loaderData,
     location,
@@ -527,6 +528,7 @@ function PrefetchPageLinksImpl({
     nextMatches,
     page,
     routeModules,
+    unstable_serverOrigin,
   ]);
 
   let moduleHrefs = React.useMemo(
@@ -804,6 +806,7 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
+    unstable_apiOnly,
     nonce: contextNonce,
   } = useFrameworkContext();
   let {
@@ -813,7 +816,11 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   } = useDataRouterContext("Scripts");
   let { matches: routerMatches } = useDataRouterState("Scripts");
   let isRSCRouterContext = useIsRSCRouterContext();
-  let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
+  let enableFogOfWar = isFogOfWarEnabled(
+    routeDiscovery,
+    ssr,
+    unstable_apiOnly === true,
+  );
 
   // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
   // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the

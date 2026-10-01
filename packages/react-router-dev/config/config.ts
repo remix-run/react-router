@@ -217,8 +217,27 @@ export type ReactRouterConfig = {
    * Mode", which will request the `/` path at build-time and save it as an
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
+   *
+   * The special value 'unstable_api-only' will disable SSR, but with the
+   * following changes:
+   * - Does NOT error when encountering a `loader` or `action`
+   * - Does NOT delete the server build, instead the server build will *only*
+   *   handle data requests.
+   *
+   * This creates a fully-static "SPA Mode" client build that can utilize
+   * server-side loaders and actions.
    */
-  ssr?: boolean;
+  ssr?: boolean | "unstable_api-only";
+
+  /**
+   * The origin to use for server requests when `ssr` is `"unstable_api-only"`.
+   * This is ignored when `ssr` is `true` or `false`. Defaults to the same
+   * origin that the static build is served at.
+   *
+   * **Note:** The server origin will need to be configured appropriately for
+   * Cross-Origin Request Sharing (CORS).
+   */
+  unstable_serverOrigin?: string;
 
   /**
    * Enable subresource integrity hashes on asset script tags. Defaults to
@@ -336,8 +355,17 @@ export type ResolvedReactRouterConfig = Readonly<{
    * Mode", which will request the `/` path at build-time and save it as an
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
+   *
+   * The special value 'unstable_api-only' will disable SSR, but with the
+   * following changes:
+   * - Does NOT delete the server build
+   * - Does NOT error when encountering a `loader` or `action`
    */
-  ssr: boolean;
+  ssr: boolean | "unstable_api-only";
+  /**
+   * The origin to use for server requests in API-only mode.
+   */
+  unstable_serverOrigin?: string;
   /**
    * Whether to generate subresource integrity hashes for asset script tags.
    */
@@ -536,12 +564,31 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_serverOrigin,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
     ...userAndPresetConfigs,
   };
 
-  if (!ssr && serverBundles) {
+  if (ssr === "unstable_api-only" && unstable_serverOrigin != null) {
+    try {
+      let url = new URL(unstable_serverOrigin);
+      if (url.pathname !== "/" || url.search || url.hash) {
+        return err(
+          "The `unstable_serverOrigin` config must be an origin without a path, query, or hash.",
+        );
+      }
+      unstable_serverOrigin = url.origin;
+    } catch {
+      return err(
+        "The `unstable_serverOrigin` config must be a valid absolute URL.",
+      );
+    }
+  } else {
+    unstable_serverOrigin = undefined;
+  }
+
+  if (ssr === false && serverBundles) {
     serverBundles = undefined;
   }
 
@@ -584,7 +631,7 @@ async function resolveConfig({
 
   let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
   if (userRouteDiscovery == null) {
-    if (ssr) {
+    if (ssr === true) {
       routeDiscovery = {
         mode: "lazy",
         manifestPath: "/__manifest",
@@ -767,6 +814,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_serverOrigin,
     splitRouteModules,
     subResourceIntegrity,
     allowedActionOrigins,

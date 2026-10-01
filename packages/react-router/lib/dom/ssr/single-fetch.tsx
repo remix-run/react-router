@@ -177,7 +177,20 @@ export function getTurboStreamSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
+  isApiOnly: boolean = false,
+  serverOrigin?: string,
 ): DataStrategyFunction {
+  let fetchAndDecode = (
+    args: DataStrategyFunctionArgs,
+    targetRoutes?: string[],
+    shouldAllowOptOut?: ShouldAllowOptOutFunction,
+  ) =>
+    fetchAndDecodeViaTurboStream(
+      args,
+      targetRoutes,
+      shouldAllowOptOut,
+      serverOrigin,
+    );
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
     (match: DataRouteMatch) => {
@@ -188,8 +201,10 @@ export function getTurboStreamSingleFetchDataStrategy(
         hasClientLoader: manifestRoute.hasClientLoader,
       };
     },
-    fetchAndDecodeViaTurboStream,
+    fetchAndDecode,
     ssr,
+    undefined,
+    isApiOnly,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -200,6 +215,7 @@ export function getSingleFetchDataStrategyImpl(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
+  isApiOnly: boolean = false,
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -214,7 +230,7 @@ export function getSingleFetchDataStrategyImpl(
       let { hasLoader, hasClientLoader } = getRouteInfo(m);
       return m.shouldCallHandler() && hasLoader && !hasClientLoader;
     });
-    if (!ssr && !foundRevalidatingServerLoader) {
+    if (!ssr && !isApiOnly && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
       // SPA mode because we may load a SPA fallback page but then navigate into
@@ -263,6 +279,7 @@ export function getSingleFetchDataStrategyImpl(
       fetchAndDecode,
       ssr,
       shouldAllowOptOut,
+      isApiOnly,
     );
   };
 }
@@ -342,6 +359,7 @@ async function singleFetchLoaderNavigationStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
+  isApiOnly: boolean = false,
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -433,7 +451,7 @@ async function singleFetchLoaderNavigationStrategy(
   let isInitialLoad =
     !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    (isInitialLoad || routesParams.size === 0) &&
+    ((isInitialLoad && !isApiOnly) || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
@@ -548,6 +566,7 @@ export function stripIndexParam(url: URL) {
 export function singleFetchUrl(
   reqUrl: URL | string,
   extension: "data" | "rsc",
+  serverOrigin?: string,
 ) {
   let url =
     typeof reqUrl === "string"
@@ -555,11 +574,16 @@ export function singleFetchUrl(
           reqUrl,
           // This can be called during the SSR flow via PrefetchPageLinksImpl so
           // don't assume window is available
-          typeof window === "undefined"
-            ? "server://singlefetch/"
-            : window.location.origin,
+          serverOrigin ??
+            (typeof window === "undefined"
+              ? "server://singlefetch/"
+              : window.location.origin),
         )
-      : reqUrl;
+      : new URL(reqUrl);
+
+  if (serverOrigin && url.origin !== serverOrigin) {
+    url = new URL(url.pathname + url.search + url.hash, serverOrigin);
+  }
 
   if (url.pathname.endsWith("/")) {
     // Preserve trailing slash by using /_.data pattern
@@ -575,9 +599,11 @@ export function singleFetchUrl(
 async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
   targetRoutes?: string[],
+  _shouldAllowOptOut?: ShouldAllowOptOutFunction,
+  serverOrigin?: string,
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
-  let url = singleFetchUrl(request.url, "data");
+  let url = singleFetchUrl(request.url, "data", serverOrigin);
   if (request.method === "GET") {
     url = stripIndexParam(url);
     if (targetRoutes) {

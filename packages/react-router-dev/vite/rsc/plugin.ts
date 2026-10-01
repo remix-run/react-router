@@ -411,7 +411,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       configurePreviewServer(previewServer) {
         const clientBuildDirectory = getClientBuildDirectory(config);
         if (
-          (config.prerender || config.ssr === false) &&
+          (config.prerender || config.ssr !== true) &&
           process.env.IS_RR_BUILD_REQUEST !== "yes"
         ) {
           previewServer.middlewares.use(async (req, res, next) => {
@@ -438,7 +438,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           });
 
           return () => {
-            if (config.ssr === false) {
+            if (config.ssr !== true) {
               previewServer.middlewares.use(async (req, res, next) => {
                 try {
                   res.statusCode = 404;
@@ -608,7 +608,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       load(id) {
         if (id === virtual.routeDiscovery.resolvedId) {
           return `export default ${JSON.stringify(
-            config.ssr === false
+            config.ssr !== true
               ? {
                   mode: "initial",
                 }
@@ -743,7 +743,7 @@ export default assetsManifest.clientVersion;
               ? config.basename
               : config.basename + "/";
 
-        if (config.ssr === false) {
+        if (config.ssr !== true) {
           prerenderPaths.add("/__spa-fallback.html");
         }
 

@@ -52,8 +52,9 @@ export function getPathsWithAncestors(paths: string[]): string[] {
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
   ssr: boolean,
+  isApiOnly: boolean = false,
 ) {
-  return routeDiscovery.mode === "lazy" && ssr === true;
+  return routeDiscovery.mode === "lazy" && (ssr === true || isApiOnly);
 }
 
 export function getPartialManifest(
@@ -102,8 +103,10 @@ export function getPatchRoutesOnNavigationFunction(
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
   basename: string | undefined,
+  serverOrigin?: string,
+  isApiOnly: boolean = false,
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
+  if (!isFogOfWarEnabled(routeDiscovery, ssr, isApiOnly)) {
     return undefined;
   }
 
@@ -127,6 +130,7 @@ export function getPatchRoutesOnNavigationFunction(
       routeDiscovery.manifestPath,
       patch,
       signal,
+      serverOrigin,
     );
   };
 }
@@ -138,11 +142,13 @@ export function useFogOFWarDiscovery(
   ssr: boolean,
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
+  serverOrigin?: string,
+  isApiOnly: boolean = false,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
     if (
-      !isFogOfWarEnabled(routeDiscovery, ssr) ||
+      !isFogOfWarEnabled(routeDiscovery, ssr, isApiOnly) ||
       // @ts-expect-error - TS doesn't know about this yet
       window.navigator?.connection?.saveData === true
     ) {
@@ -198,6 +204,8 @@ export function useFogOFWarDiscovery(
           router.basename,
           routeDiscovery.manifestPath,
           router.patchRoutes,
+          undefined,
+          serverOrigin,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -221,7 +229,16 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
+  }, [
+    ssr,
+    isSpaMode,
+    manifest,
+    routeModules,
+    router,
+    routeDiscovery,
+    serverOrigin,
+    isApiOnly,
+  ]);
 }
 
 export function getManifestPath(
@@ -341,6 +358,7 @@ export async function fetchAndApplyManifestPatches(
   manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
+  serverOrigin?: string,
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -353,7 +371,7 @@ export async function fetchAndApplyManifestPatches(
   searchParams.set("version", manifest.version);
   let url = new URL(
     getManifestPath(manifestPath, basename),
-    window.location.origin,
+    serverOrigin ?? window.location.origin,
   );
   url.search = searchParams.toString();
 

@@ -23,6 +23,8 @@ export interface FrameworkContextObject {
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  unstable_apiOnly?: boolean;
+  unstable_serverOrigin?: string;
   routeDiscovery: ServerBuild["routeDiscovery"];
   nonce?: string;
   serializeError?(error: Error): SerializedError;
