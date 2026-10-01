@@ -90,11 +90,13 @@ export function createRemixRequest(
   res: express.Response,
 ): Request {
   // req.hostname doesn't include port information so grab that from
-  // `X-Forwarded-Host` or `Host`
+  // `X-Forwarded-Host` or `Host`, skipping any bracketed IPv6 address
+  // (e.g., `[::1]:3000`) so its colons aren't mistaken for the port
+  let ipv6 = /^\[.*?\]/;
   let [, hostnamePortStr] = req.app?.enabled("trust proxy")
-    ? (req.get("X-Forwarded-Host")?.split(":") ?? [])
+    ? (req.get("X-Forwarded-Host")?.replace(ipv6, "").split(":") ?? [])
     : [];
-  let [, hostPortStr] = req.get("host")?.split(":") ?? [];
+  let [, hostPortStr] = req.get("host")?.replace(ipv6, "").split(":") ?? [];
   let hostnamePort = Number.parseInt(hostnamePortStr, 10);
   let hostPort = Number.parseInt(hostPortStr, 10);
   let port = Number.isSafeInteger(hostnamePort)
