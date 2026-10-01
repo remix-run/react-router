@@ -2466,17 +2466,22 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders/middlewares to run, unless there's a
-    // custom dataStrategy since they may have different revalidation rules
-    // (i.e., single fetch)
-    if (
-      !init.dataStrategy &&
+    // Short circuit if we have no loaders/middlewares/fetchers to run.
+    // Custom dataStrategy implementations (i.e., single fetch) may opt into
+    // revalidation independently of `shouldLoad`, so we normally still run them.
+    // Same-location GET navigations are the exception: Data Mode and Framework
+    // Mode agree nothing should load, so skip the loading state even when a
+    // custom dataStrategy is present.
+    let hasNoWorkToLoad =
       !dsMatches.some((m) => m.shouldLoad) &&
       !dsMatches.some(
         (m) => m.route.middleware && m.route.middleware.length > 0,
       ) &&
-      revalidatingFetchers.length === 0
-    ) {
+      revalidatingFetchers.length === 0;
+    let isSameLocationGet =
+      createPath(state.location) === createPath(location) &&
+      !(submission && isMutationMethod(submission.formMethod));
+    if (hasNoWorkToLoad && (!init.dataStrategy || isSameLocationGet)) {
       let workingFetchers = new Map(state.fetchers);
       let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);
       completeNavigation(
