@@ -37,7 +37,9 @@ import {
   useRouteError,
   useSearchParams,
   useSubmit,
+  useViewTransitionState,
 } from "../../index";
+import { RouterProvider as DOMRouterProvider } from "../../lib/dom-export/dom-router-provider";
 import { createDeferred, tick } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
 import getWindow from "../utils/getWindow";
@@ -9044,6 +9046,110 @@ function testDomRouter(
           // Render of new location with navigation.state = "idle"
           [{ pathname: "/page" }, { state: "idle" }],
         ]);
+      });
+
+      describe("skipped by the browser", () => {
+        // When the browser skips a view transition, it still runs the update
+        // callback, rejects `ready` with the skip reason, and fulfills
+        // `updateCallbackDone` and `finished` once the callback is done.
+        // The messages are Chromium's.
+        function skippedViewTransition(reason: DOMException) {
+          return (update: () => unknown) => {
+            let updateCallbackDone = Promise.resolve()
+              .then(() => update())
+              .then(() => undefined);
+            return {
+              ready: Promise.reject(reason),
+              updateCallbackDone,
+              finished: updateCallbackDone.then(() => undefined),
+              skipTransition: () => {},
+            };
+          };
+        }
+
+        let documentHidden = new DOMException(
+          "Transition was aborted because of invalid state. Document hidden",
+          "InvalidStateError",
+        );
+        let skippedByNewerTransition = new DOMException(
+          "Transition was skipped. New ViewTransition started",
+          "AbortError",
+        );
+
+        // Jest fails the test if `ready`'s rejection goes unhandled
+        async function navigateWithSkippedViewTransition({
+          reason,
+          visibilityState,
+          flushSync,
+        }: {
+          reason: DOMException;
+          visibilityState: DocumentVisibilityState;
+          flushSync: boolean;
+        }) {
+          let testWindow = getWindow("/");
+          Object.defineProperty(testWindow.document, "visibilityState", {
+            configurable: true,
+            get: () => visibilityState,
+          });
+          testWindow.document.startViewTransition = skippedViewTransition(
+            reason,
+          ) as unknown as Document["startViewTransition"];
+          let transitioningToPage: boolean[] = [];
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component() {
+                  transitioningToPage.push(useViewTransitionState("/page"));
+                  return <Outlet />;
+                },
+                children: [
+                  { index: true, Component: () => <h1>Home</h1> },
+                  { path: "page", Component: () => <h1>Page</h1> },
+                ],
+              },
+            ],
+            { window: testWindow },
+          );
+          render(<DOMRouterProvider router={router} />);
+          await act(() =>
+            router.navigate("/page", { viewTransition: true, flushSync }),
+          );
+          await waitFor(() => screen.getByText("Page"));
+          await waitFor(() => expect(transitioningToPage.at(-1)).toBe(false));
+          // Unhandled rejections are reported after the microtask queue drains
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          return transitioningToPage;
+        }
+
+        it("handles a transition skipped in a hidden document", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: documentHidden,
+            visibilityState: "hidden",
+            flushSync: false,
+          });
+          expect(transitioningToPage).toContain(true);
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it("handles a flushSync transition skipped in a hidden document", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: documentHidden,
+            visibilityState: "hidden",
+            flushSync: true,
+          });
+          expect(transitioningToPage).toContain(true);
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it("handles a transition skipped by a newer transition", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: skippedByNewerTransition,
+            visibilityState: "visible",
+            flushSync: false,
+          });
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
       });
     });
 
