@@ -37,6 +37,10 @@ export async function decode(
   const decoded = await decodeInitial.call(decoder, reader);
 
   let donePromise = done.promise;
+  // `done.promise` is replaced below, so mark it as handled to avoid an
+  // unhandled rejection when the stream errors (i.e., an aborted request).
+  // Rejections still surface through the returned `done` promise.
+  done.promise.catch(() => {});
   if (decoded.done) {
     done.resolve();
   } else {
@@ -45,6 +49,10 @@ export async function decode(
       .then(done.resolve)
       .catch((reason) => {
         for (const deferred of Object.values(decoder.deferred)) {
+          // A deferred value may never be consumed (i.e., the navigation that
+          // requested it was interrupted), so avoid unhandled rejections while
+          // still rejecting for any consumer that is awaiting it
+          deferred.promise.catch(() => {});
           deferred.reject(reason);
         }
 
@@ -52,8 +60,12 @@ export async function decode(
       });
   }
 
+  let finished = donePromise.then(() => reader.closed);
+  // Callers aren't required to observe `done`, so don't let a stream error
+  // (i.e., an aborted request) surface as an unhandled rejection
+  finished.catch(() => {});
   return {
-    done: donePromise.then(() => reader.closed),
+    done: finished,
     value: decoded.value,
   };
 }
