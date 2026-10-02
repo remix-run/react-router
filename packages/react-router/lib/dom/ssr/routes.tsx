@@ -609,7 +609,8 @@ function getShouldRevalidateFunction(
 }
 
 // When an HMR / HDR update happens we opt out of all user-defined
-// revalidation logic and force a revalidation on the first call
+// revalidation logic and force our own decision for the duration of the
+// revalidation the dev runtime kicks off for that update
 function wrapShouldRevalidateForHdr(
   routeId: string,
   routeShouldRevalidate: ShouldRevalidateFunction | undefined,
@@ -617,7 +618,14 @@ function wrapShouldRevalidateForHdr(
 ): ShouldRevalidateFunction {
   let handledRevalidation = false;
   return (arg) => {
-    if (!handledRevalidation) {
+    // A single HDR revalidation asks this more than once per route: the router
+    // asks while picking the matches to load, and the data strategy asks again
+    // while it preflights and resolves them. We have to give the same answer
+    // every time it's asked, otherwise the user-defined logic takes over
+    // mid-flight and the updated loader is never called. `__reactRouterHdrActive`
+    // is set by the dev runtime around its `router.revalidate()` call, so once
+    // that's done we hand control back to the user-defined logic.
+    if (!handledRevalidation || window.__reactRouterHdrActive) {
       handledRevalidation = true;
       return needsRevalidation.has(routeId);
     }

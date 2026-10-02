@@ -360,3 +360,65 @@ async function workflow({
 
   expect(page.errors).toEqual([]);
 }
+
+templates.forEach((template) => {
+  test.describe(`${template.displayName} - HDR opt-out`, () => {
+    test.use({
+      template: template.name,
+      files: {
+        "app/routes/_index.tsx": tsx`
+          import { useLoaderData } from "react-router";
+
+          export function loader() {
+            return { revision: "before" };
+          }
+
+          export function shouldRevalidate() {
+            return false;
+          }
+
+          export default function IndexRoute() {
+            const { revision } = useLoaderData<typeof loader>();
+            return (
+              <div id="index">
+                <p data-revision>{revision}</p>
+                <input />
+              </div>
+            );
+          }
+        `,
+      },
+    });
+
+    test("HDR revalidates a route that opts out of revalidation", async ({
+      page,
+      edit,
+      $,
+    }) => {
+      const port = await getPort();
+      const url = `http://localhost:${port}`;
+
+      const dev = $(`pnpm dev --port ${port}`);
+      await Stream.match(dev.stdout, url);
+
+      await page.goto(url, { waitUntil: "networkidle" });
+
+      const revision = page.locator("#index [data-revision]");
+      await expect(revision).toHaveText("before");
+
+      const input = page.locator("#index input");
+      await input.fill("stateful");
+
+      await edit({
+        "app/routes/_index.tsx": (contents) =>
+          contents.replace(`revision: "before"`, `revision: "after"`),
+      });
+      await page.waitForLoadState("networkidle");
+
+      // `shouldRevalidate` returning `false` must not hold back HDR
+      await expect(revision).toHaveText("after");
+      await expect(input).toHaveValue("stateful");
+      expect(page.errors).toEqual([]);
+    });
+  });
+});
