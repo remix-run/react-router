@@ -1,4 +1,4 @@
-import type { Babel, NodePath, ParseResult } from "./babel";
+import type { Babel, ParseResult } from "./babel";
 import { traverse, t } from "./babel";
 
 const namedComponentExports = ["HydrateFallback", "ErrorBoundary"] as const;
@@ -14,15 +14,26 @@ type HocName =
 
 export const decorateComponentExportsWithProps = (
   ast: ParseResult<Babel.File>,
+  code: string,
 ) => {
   const hocs: Array<[string, Babel.Identifier]> = [];
-  function getHocUid(path: NodePath, hocName: HocName) {
-    const uid = path.scope.generateUidIdentifier(hocName);
+  const uids = new Set<string>();
+  // Scope tracking is the expensive part of a Babel traversal, and the only
+  // thing it was needed for here was an unused name, which the source text
+  // can answer without it.
+  function getHocUid(hocName: HocName) {
+    let name = `_${hocName}`;
+    for (let i = 2; uids.has(name) || code.includes(name); i++) {
+      name = `_${hocName}${i}`;
+    }
+    uids.add(name);
+    const uid = t.identifier(name);
     hocs.push([hocName, uid]);
     return uid;
   }
 
   traverse(ast, {
+    noScope: true,
     ExportDeclaration(path) {
       if (path.isExportDefaultDeclaration()) {
         const declaration = path.get("declaration");
@@ -32,7 +43,7 @@ export const decorateComponentExportsWithProps = (
           declaration.isFunctionDeclaration() ? toFunctionExpression(declaration.node) :
           undefined
         if (expr) {
-          const uid = getHocUid(path, "UNSAFE_withComponentProps");
+          const uid = getHocUid("UNSAFE_withComponentProps");
           declaration.replaceWith(t.callExpression(uid, [expr]));
         }
         return;
@@ -50,7 +61,7 @@ export const decorateComponentExportsWithProps = (
             if (!id.isIdentifier()) return;
             const { name } = id.node;
             if (!isNamedComponentExport(name)) return;
-            const uid = getHocUid(path, `UNSAFE_with${name}Props`);
+            const uid = getHocUid(`UNSAFE_with${name}Props`);
             init.replaceWith(t.callExpression(uid, [expr]));
           });
           return;
@@ -62,7 +73,7 @@ export const decorateComponentExportsWithProps = (
           const { name } = id;
           if (!isNamedComponentExport(name)) return;
 
-          const uid = getHocUid(path, `UNSAFE_with${name}Props`);
+          const uid = getHocUid(`UNSAFE_with${name}Props`);
           decl.replaceWith(
             t.variableDeclaration("const", [
               t.variableDeclarator(
