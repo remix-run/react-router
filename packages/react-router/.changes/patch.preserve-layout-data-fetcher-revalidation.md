@@ -1,0 +1,1 @@
+Preserve loader data for current routes when a fetcher revalidation completes during a navigation, preventing missing layout content when a redirected navigation reuses that data (i.e., via `shouldRevalidate`)

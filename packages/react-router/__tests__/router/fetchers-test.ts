@@ -3158,6 +3158,77 @@ describe("fetchers", () => {
       });
       expect(spy).not.toHaveBeenCalled();
     });
+
+    it("preserves skipped layout data when a fetcher revalidation completes during a redirected navigation", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+            children: [
+              {
+                id: "layout",
+                path: "layout",
+                loader: true,
+                shouldRevalidate: () => false,
+                children: [
+                  {
+                    id: "child",
+                    path: ":id",
+                    loader: true,
+                  },
+                ],
+              },
+              {
+                id: "save",
+                path: "save",
+                action: true,
+              },
+              {
+                id: "mutate",
+                path: "mutate",
+                action: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/layout/start"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT",
+            layout: "LAYOUT",
+            child: "CHILD start",
+          },
+        },
+      });
+
+      let key = "key";
+      let A = await t.fetch("/mutate", key, "layout", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      let B = await t.navigate("/save", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      // Fetcher reload starts while the navigation is still submitting to /save
+      await A.actions.mutate.resolve("MUTATE");
+      // Navigation redirects back into the layout, which skips revalidation
+      let C = await B.actions.save.redirectReturn("/layout/next");
+      // Fetcher reload finishes first
+      await A.loaders.root.resolve("ROOT*");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.child.resolve("CHILD next");
+
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT**",
+        layout: "LAYOUT",
+        child: "CHILD next",
+      });
+    });
   });
 
   describe("fetcher ?index params", () => {
