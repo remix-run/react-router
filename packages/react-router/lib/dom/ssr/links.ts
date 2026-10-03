@@ -272,7 +272,7 @@ export function getModuleLinkHrefs(
   );
 }
 
-function dedupeHrefs(hrefs: string[]): string[] {
+function dedupeHrefs(hrefs: readonly string[]): string[] {
   return [...new Set(hrefs)];
 }
 
@@ -293,8 +293,8 @@ type KeyedLinkDescriptor<Descriptor extends LinkDescriptor = LinkDescriptor> = {
 };
 
 function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
-  descriptors: Descriptor[],
-  preloads?: string[],
+  descriptors: readonly Descriptor[],
+  preloads?: readonly string[],
 ): KeyedLinkDescriptor<Descriptor>[] {
   let set = new Set();
   let preloadsSet = new Set(preloads);
