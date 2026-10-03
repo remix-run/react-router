@@ -485,7 +485,7 @@ function getAllDynamicCssFiles(
   return allDynamicCssFiles;
 }
 
-function dedupe<T>(array: T[]): T[] {
+function dedupe<T>(array: readonly T[]): T[] {
   return [...new Set(array)];
 }
 
