@@ -94,18 +94,22 @@ import { Form, useNavigation } from "react-router";
 
 export function ProjectForm() {
   let navigation = useNavigation();
-  let isSubmitting = navigation.state === "submitting";
+  let isPending = navigation.state !== "idle";
 
   return (
     <Form method="post">
       <input name="name" />
-      <button disabled={isSubmitting}>
-        {isSubmitting ? "Creating..." : "Create project"}
+      <button disabled={isPending}>
+        {isPending ? "Creating..." : "Create project"}
       </button>
     </Form>
   );
 }
 ```
+
+A successful navigation submission typically moves through `submitting`, then `loading` while loaders revalidate, and finally `idle`. Checking for a non-idle state keeps the button disabled until the refreshed data is ready, rather than enabling it as soon as the action finishes.
+
+`useNavigation` tracks the global navigation, so this example also disables the button during unrelated navigations. For a form with independent pending state, use a fetcher as shown below.
 
 Disabling a submit button can be useful when sending the same mutation twice would be undesirable. However, client-side UI should not be your only protection against duplicate writes. Requests can be retried, users can submit from multiple tabs, and interrupted requests may still reach the server. Mutations that require uniqueness or idempotency should enforce those rules on the server.
 
