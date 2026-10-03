@@ -607,7 +607,10 @@ export function Meta(): React.JSX.Element {
     let data = loaderData[routeId];
     let params = _match.params;
     let routeModule = routeModules[routeId];
-    let routeMeta: MetaDescriptor[] | undefined = [];
+    let routeMeta:
+      | MetaDescriptor[]
+      | readonly MetaDescriptor[]
+      | undefined = [];
 
     let match: MetaMatch = {
       id: routeId,
@@ -651,7 +654,7 @@ export function Meta(): React.JSX.Element {
       );
     }
 
-    match.meta = routeMeta;
+    match.meta = [...routeMeta];
     matches[i] = match;
     meta = [...routeMeta];
     leafMeta = meta;

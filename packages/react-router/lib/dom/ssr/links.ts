@@ -28,7 +28,7 @@ export function getKeyedLinksForMatches(
         route && route.css
           ? route.css.map((href) => ({ rel: "stylesheet", href }))
           : [],
-        module?.links?.() || [],
+        module?.links ? [...module.links()] : [],
       ];
     })
     .flat(2);
@@ -156,7 +156,7 @@ export async function getKeyedPrefetchLinks(
       let route = manifest.routes[match.route.id];
       if (route) {
         let mod = await loadRouteModule(route, routeModules);
-        return mod.links ? mod.links() : [];
+        return mod.links ? [...mod.links()] : [];
       }
       return [];
     }),

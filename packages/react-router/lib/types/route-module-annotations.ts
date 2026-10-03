@@ -69,7 +69,7 @@ type CreateMetaArgs<T extends RouteInfo> = {
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react-router.UIMatch.html route matches}, including parent route matches. */
   matches: MetaMatches<T["matches"]>;
 };
-type MetaDescriptors = MetaDescriptor[];
+type MetaDescriptors = MetaDescriptor[] | readonly MetaDescriptor[];
 
 type HeadersArgs = {
   loaderHeaders: Headers;
@@ -212,7 +212,7 @@ type CreateErrorBoundaryProps<
 export type GetAnnotations<Info extends RouteInfo> = {
   // links
   LinkDescriptors: LinkDescriptor[];
-  LinksFunction: () => LinkDescriptor[];
+  LinksFunction: () => LinkDescriptor[] | readonly LinkDescriptor[];
 
   // meta
   MetaArgs: CreateMetaArgs<Info>;
@@ -316,5 +316,29 @@ type __tests = [
       }>["loaderData"],
       undefined
     >
+  >,
+  // Test that LinksFunction accepts returning readonly LinkDescriptor array
+  Expect<
+    (() => readonly LinkDescriptor[]) extends GetAnnotations<{
+      module: {};
+      params: unknown;
+      loaderData: unknown;
+      actionData: unknown;
+      matches: [];
+    }>["LinksFunction"]
+      ? true
+      : false
+  >,
+  // Test that MetaFunction accepts returning readonly MetaDescriptor array
+  Expect<
+    (() => readonly MetaDescriptor[]) extends GetAnnotations<{
+      module: {};
+      params: unknown;
+      loaderData: unknown;
+      actionData: unknown;
+      matches: [];
+    }>["MetaFunction"]
+      ? true
+      : false
   >,
 ];
