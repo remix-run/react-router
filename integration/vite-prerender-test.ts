@@ -3,6 +3,7 @@ import path from "node:path";
 import { PassThrough } from "node:stream";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
+import getPort from "get-port";
 
 import {
   createAppFixture,
@@ -11,7 +12,13 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
+import {
+  build,
+  createProject,
+  dev,
+  reactRouterConfig,
+  viteConfig,
+} from "./helpers/vite.js";
 
 let createFixture = (...args: Parameters<typeof _createFixture>) =>
   _createFixture(
@@ -3061,6 +3068,98 @@ test.describe(`Prerendering`, () => {
         "PAGE2 ACTION 2",
       );
       expect(requests).toEqual([]);
+    });
+
+    test.describe("dev server route imports", () => {
+      let stop: (() => unknown) | undefined;
+
+      test.afterEach(() => stop?.());
+
+      async function getSsrRouteImports(prerender: string[] | undefined) {
+        let port = await getPort();
+        let cwd = await createProject({
+          "vite.config.js": await viteConfig.basic({ port }),
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+            prerender,
+          }),
+          "app/routeImportTracker.ts": js`
+            // Records route module evaluation on the server only, synchronously
+            // so it can't race the document response
+            export function logImport(url: string) {
+              if (typeof document !== "undefined") return;
+              const fs = process.getBuiltinModule("node:fs");
+              fs.appendFileSync(process.cwd() + "/ssr-route-imports.txt", url + "\n");
+            }
+          `,
+          "app/root.tsx": js`
+            import { Links, Meta, Outlet, Scripts } from "react-router";
+            import { logImport } from "./routeImportTracker";
+            logImport("app/root.tsx");
+
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export function HydrateFallback() {
+              return <p>Loading...</p>;
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            import { logImport } from "../routeImportTracker";
+            logImport("app/routes/_index.tsx");
+
+            export default function Component() {
+              return <h2 data-route>Index</h2>;
+            }
+          `,
+          "app/routes/about.tsx": js`
+            import { logImport } from "../routeImportTracker";
+            logImport("app/routes/about.tsx");
+
+            export default function Component() {
+              return <h2 data-route>About</h2>;
+            }
+          `,
+        });
+
+        stop = await dev({ cwd, port });
+        let res = await fetch(`http://localhost:${port}/`);
+        expect(res.status).toBe(200);
+        await res.text();
+
+        let imports = await fs.promises.readFile(
+          path.join(cwd, "ssr-route-imports.txt"),
+          "utf-8",
+        );
+        return imports.trim().split("\n").sort();
+      }
+
+      test("only imports the root route without a prerender config (SPA Mode)", async () => {
+        expect(await getSsrRouteImports(undefined)).toStrictEqual([
+          "app/root.tsx",
+        ]);
+      });
+
+      test("only imports the routes matched by prerender paths", async () => {
+        expect(await getSsrRouteImports(["/"])).toStrictEqual([
+          "app/root.tsx",
+          "app/routes/_index.tsx",
+          // app/routes/about.tsx is never pre-rendered, so it should not be
+          // imported into the server build
+        ]);
+      });
     });
   });
 });
