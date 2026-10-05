@@ -131,6 +131,7 @@ export function getPatchRoutesOnNavigationFunction(
       patch,
       signal,
       serverOrigin,
+      isApiOnly,
     );
   };
 }
@@ -206,6 +207,7 @@ export function useFogOFWarDiscovery(
           router.patchRoutes,
           undefined,
           serverOrigin,
+          isApiOnly,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -359,6 +361,7 @@ export async function fetchAndApplyManifestPatches(
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
   serverOrigin?: string,
+  isApiOnly: boolean = false,
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -442,7 +445,17 @@ export async function fetchAndApplyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+      createClientRoutes(
+        patches,
+        routeModules,
+        null,
+        ssr,
+        isSpaMode,
+        parentId,
+        undefined,
+        undefined,
+        isApiOnly,
+      ),
     ),
   );
 }

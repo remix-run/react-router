@@ -321,6 +321,7 @@ export function createClientRoutes(
           route,
           ssr,
           needsRevalidation,
+          isApiOnly,
         ),
       });
 
@@ -554,6 +555,7 @@ export function createClientRoutes(
             route,
             ssr,
             needsRevalidation,
+            isApiOnly,
           );
         },
         handle: async () => (await getLazyRoute()).handle,
@@ -588,6 +590,7 @@ function getShouldRevalidateFunction(
   manifestRoute: Omit<EntryRoute, "children">,
   ssr: boolean,
   needsRevalidation: Set<string> | undefined,
+  isApiOnly: boolean,
 ) {
   // During HDR we force revalidation for updated routes
   if (needsRevalidation) {
@@ -609,7 +612,12 @@ function getShouldRevalidateFunction(
   //
   // If users are somehow re-generating updated versions of these on the backend
   // they can still opt-into revalidation which will make the `.data` request
-  if (!ssr && manifestRoute.hasLoader && !manifestRoute.hasClientLoader) {
+  if (
+    !ssr &&
+    !isApiOnly &&
+    manifestRoute.hasLoader &&
+    !manifestRoute.hasClientLoader
+  ) {
     let myParams = path ? compilePath(path)[1].map((p) => p.paramName) : [];
     const didParamsChange = (opts: ShouldRevalidateFunctionArgs) =>
       myParams.some((p) => opts.currentParams[p] !== opts.nextParams[p]);

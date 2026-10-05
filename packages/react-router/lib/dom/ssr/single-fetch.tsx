@@ -457,9 +457,9 @@ async function singleFetchLoaderNavigationStrategy(
     singleFetchDfd.resolve({ routes: {} });
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
-    // Skipped in `ssr:false` because we expect to be loading static `.data` files
+    // Skip filtering for static `.data` files, which contain all route results.
     let targetRoutes =
-      ssr && foundOptOutRoute && routesParams.size > 0
+      (ssr || isApiOnly) && foundOptOutRoute && routesParams.size > 0
         ? [...routesParams.keys()]
         : undefined;
     try {

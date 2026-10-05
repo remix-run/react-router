@@ -5,6 +5,7 @@ import getPort from "get-port";
 import {
   createRequestHandler,
   UNSAFE_ServerMode as ServerMode,
+  type UNSAFE_AssetsManifest as AssetsManifest,
 } from "react-router";
 
 import {
@@ -331,3 +332,202 @@ test.describe("API-only Mode", () => {
     );
   });
 });
+
+for (let discoveryMode of ["initial", "lazy"] as const) {
+  test.describe(`API-only revalidation and discovery: ${discoveryMode}`, () => {
+    test.describe.configure({ mode: "default" });
+
+    let fixture: Fixture;
+    let appFixture: AppFixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: "unstable_api-only",
+            routeDiscovery:
+              discoveryMode === "lazy"
+                ? { mode: "lazy", manifestPath: "/__manifest" }
+                : { mode: "initial" },
+          }),
+          "app/state.server.ts": js`
+            export let state = { value: 0, parentCalls: 0, clientCalls: 0 };
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export default function Index() {
+              return <>
+                <Link to="/counter" discover="none">Counter</Link>
+                <Link to="/delegated" discover="none">Delegated</Link>
+              </>;
+            }
+          `,
+          "app/routes/counter.tsx": js`
+            import { Form, Link } from "react-router";
+            import { state } from "../state.server";
+
+            export function loader({ request }) {
+              return {
+                value: state.value,
+                query: new URL(request.url).searchParams.get("query") ?? "initial",
+              };
+            }
+
+            export function action() {
+              state.value++;
+              return { updated: true };
+            }
+
+            export default function Counter({ loaderData, actionData }) {
+              return <>
+                <p data-value>{loaderData.value}</p>
+                <p data-query>{loaderData.query}</p>
+                <p data-action>{actionData?.updated ? "updated" : "idle"}</p>
+                <Form method="post"><button type="submit">Increment</button></Form>
+                <Link to="?query=changed">Change query</Link>
+              </>;
+            }
+          `,
+          "app/routes/delegated.tsx": js`
+            export { loader, action, default } from "./counter";
+            export function shouldRevalidate({ defaultShouldRevalidate }) {
+              return defaultShouldRevalidate;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet } from "react-router";
+            import { state } from "../state.server";
+
+            export function loader({ request }) {
+              if (new URL(request.url).pathname.startsWith("/client")) {
+                state.clientCalls++;
+              } else {
+                state.parentCalls++;
+              }
+              return { ready: true };
+            }
+
+            export function shouldRevalidate() { return false; }
+
+            export default function Parent() {
+              return <>
+                <Link to="two" discover="none">Next child</Link>
+                <Outlet />
+              </>;
+            }
+          `,
+          "app/routes/client.tsx": js`
+            export { loader, default } from "./parent";
+            export function clientLoader({ serverLoader }) { return serverLoader(); }
+            export function shouldRevalidate() { return true; }
+          `,
+          "app/routes/parent.one.tsx": js`
+            export function loader() { return "one"; }
+            export default function Child({ loaderData }) {
+              return <p data-child>{loaderData}</p>;
+            }
+          `,
+          "app/routes/parent.two.tsx": js`
+            export function loader() { return "two"; }
+            export default function Child({ loaderData }) {
+              return <p data-child>{loaderData}</p>;
+            }
+          `,
+          "app/routes/client.one.tsx": js`
+            export { loader, default } from "./parent.one";
+          `,
+          "app/routes/client.two.tsx": js`
+            export { loader, default } from "./parent.two";
+          `,
+          "app/routes/stats.ts": js`
+            import { state } from "../state.server";
+            export function headers({ loaderHeaders }) { return loaderHeaders; }
+            export function loader() {
+              return Response.json(state, { headers: {
+                "X-Parent-Calls": String(state.parentCalls),
+                "X-Client-Calls": String(state.clientCalls),
+              } });
+            }
+          `,
+        },
+      });
+    });
+
+    test.beforeEach(async () => {
+      appFixture = await createAppFixture(fixture);
+    });
+
+    test.afterEach(async () => {
+      await appFixture?.close();
+    });
+
+    ["counter", "delegated"].forEach((route) => {
+      test(`revalidates ${route} loader data after actions and search changes`, async ({
+        page,
+      }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/");
+        await expect(
+          page.getByRole("link", { name: "Counter", exact: true }),
+        ).toBeVisible();
+        if (discoveryMode === "lazy") {
+          expect(
+            await page.evaluate(
+              (id) =>
+                (
+                  window as unknown as {
+                    __reactRouterManifest: AssetsManifest;
+                  }
+                ).__reactRouterManifest.routes[id],
+              `routes/${route}`,
+            ),
+          ).toBeUndefined();
+        }
+        await app.clickLink(`/${route}`);
+        await expect(page.locator("[data-query]")).toHaveText("initial");
+        let value = Number(await page.locator("[data-value]").textContent());
+
+        await page.getByRole("button", { name: "Increment" }).click();
+        await expect(page.locator("[data-action]")).toHaveText("updated");
+        await expect(page.locator("[data-value]")).toHaveText(
+          String(value + 1),
+        );
+
+        await page.getByRole("link", { name: "Change query" }).click();
+        await expect(page.locator("[data-query]")).toHaveText("changed");
+      });
+    });
+
+    test("does not run server loaders that opt out of revalidation", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/parent/one");
+      await expect(page.locator("[data-child]")).toHaveText("one");
+      let before = await fixture.requestSingleFetchData("/stats.data");
+      let calls = before.headers.get("X-Parent-Calls");
+      expect(Number(calls)).toBeGreaterThan(0);
+
+      await app.clickLink("/parent/two");
+      await expect(page.locator("[data-child]")).toHaveText("two");
+      let after = await fixture.requestSingleFetchData("/stats.data");
+      expect(after.headers.get("X-Parent-Calls")).toBe(calls);
+    });
+
+    test("does not duplicate serverLoader calls in the combined request", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/client/one");
+      await expect(page.locator("[data-child]")).toHaveText("one");
+      let before = await fixture.requestSingleFetchData("/stats.data");
+      let calls = Number(before.headers.get("X-Client-Calls"));
+      expect(calls).toBeGreaterThan(0);
+
+      await app.clickLink("/client/two");
+      await expect(page.locator("[data-child]")).toHaveText("two");
+      let after = await fixture.requestSingleFetchData("/stats.data");
+      expect(Number(after.headers.get("X-Client-Calls"))).toBe(calls + 1);
+    });
+  });
+}
