@@ -57,6 +57,9 @@ export async function decode(
         }
 
         done.reject(reason);
+        // Keep the returned `done` rejecting for decode errors on streams that
+        // never close (i.e., a malformed line), not just for aborted streams
+        throw reason;
       });
   }
 

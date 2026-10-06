@@ -690,4 +690,20 @@ describe("aborted streams", () => {
       "BodyStreamBuffer was aborted",
     );
   });
+
+  test("rejects `done` for decode errors on a stream that stays open", async () => {
+    // A malformed deferred line on a healthy stream that never closes
+    let encoder = new TextEncoder();
+    let stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('[{"_1":2},"b",["P",2]]\n'));
+        controller.enqueue(encoder.encode("P999:[1]\n"));
+      },
+    });
+
+    let decoded = await decode(stream);
+    await expect(decoded.done).rejects.toThrow(
+      "Deferred ID 999 not found in stream",
+    );
+  });
 });
