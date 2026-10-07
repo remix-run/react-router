@@ -2038,8 +2038,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           code,
         );
 
-        let preventEmptyChunkSnippet = ({ reason }: { reason: string }) =>
-          `Math.random()<0&&console.log(${JSON.stringify(reason)});`;
+        let preventEmptyChunkSnippet = ({
+          reason,
+        }: {
+          reason: string;
+        }): Vite.Rollup.SourceDescription => ({
+          code: `Math.random()<0&&console.log(${JSON.stringify(reason)});`,
+          // The placeholder is generated, so there's no original code to map
+          // back to. An empty map says so rather than leaving Rollup to warn
+          // that the transform dropped the source map.
+          map: { mappings: "" },
+        });
 
         if (chunk === null) {
           return preventEmptyChunkSnippet({
