@@ -2109,7 +2109,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
               invariant(viteConfig);
-              validateSsrFalsePrerenderExports(
+              await validateSsrFalsePrerenderExports(
                 viteConfig,
                 ctx,
                 reactRouterServerManifest,

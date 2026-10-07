@@ -11,7 +11,15 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
+import getPort from "get-port";
+import {
+  build,
+  createEditor,
+  createProject,
+  dev,
+  reactRouterConfig,
+  viteConfig,
+} from "./helpers/vite.js";
 
 let createFixture = (...args: Parameters<typeof _createFixture>) =>
   _createFixture(
@@ -1055,6 +1063,43 @@ test.describe(`Prerendering`, () => {
           "with `ssr:false`: `loader`. " +
           "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
       );
+    });
+
+    test("Reports invalid exports in dev without crashing the dev server", async () => {
+      let port = await getPort();
+      let cwd = await createProject({
+        "vite.config.js": await viteConfig.basic({ port }),
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: ["/"],
+        }),
+        "app/routes/a.tsx": String.raw`
+          export default function Component() {}
+        `,
+      });
+      let stop = await dev({ cwd, port });
+      try {
+        let edit = createEditor(cwd);
+        let revert = await edit(
+          "app/routes/a.tsx",
+          (contents) => "export function action() {}\n" + contents,
+        );
+        // fetch rejects if the dev server process has exited
+        await expect(async () => {
+          let res = await fetch(`http://localhost:${port}/`);
+          expect(res.status).toBe(500);
+        }).toPass();
+        let res = await fetch(`http://localhost:${port}/`);
+        expect(res.status).toBe(500);
+
+        await revert();
+        await expect(async () => {
+          let res = await fetch(`http://localhost:${port}/`);
+          expect(res.status).toBe(200);
+        }).toPass();
+      } finally {
+        stop();
+      }
     });
 
     test("Warns on parameterized routes with prerender:true + ssr:false", async () => {
