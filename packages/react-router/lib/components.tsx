@@ -411,6 +411,7 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let routerWithInitialErrorUpdate = React.useRef<typeof router | null>(null);
 
   let setState = React.useCallback<RouterSubscriber>(
     (
@@ -549,7 +550,35 @@ export function RouterProvider({
   // If the router finished initializing (and emitted errors) before this
   // subscriber was attached, `subscribe()` replays that notification so
   // `onError` still fires for initial data load errors.
-  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+  React.useLayoutEffect(
+    () =>
+      router.subscribe((newState, opts) => {
+        if (opts.newErrors) {
+          routerWithInitialErrorUpdate.current = router;
+        }
+        setState(newState, opts);
+      }),
+    [router, setState],
+  );
+
+  // A subscriber registered before this provider can consume the initial state
+  // update, leaving this provider with the state it read during render. Sync
+  // from the router when initialization completed before our subscription.
+  let initialized = state.initialized;
+  React.useLayoutEffect(() => {
+    if (!initialized && router.state.initialized) {
+      setState(router.state, {
+        deletedFetchers: [],
+        flushSync: false,
+        // `subscribe()` may have replayed this exact initialization update
+        // above, in which case `onError` has already received these errors.
+        newErrors:
+          routerWithInitialErrorUpdate.current === router
+            ? null
+            : router.state.errors,
+      });
+    }
+  }, [initialized, setState, router, router.state]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
