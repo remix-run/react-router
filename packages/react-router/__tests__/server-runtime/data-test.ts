@@ -115,3 +115,46 @@ describe("turbo-stream error decoding", () => {
     expect(error.internal).toBe(false);
   });
 });
+
+describe("encodeViaTurboStream / decodeViaTurboStream roundtrip", () => {
+  it("preserves a non-Error object thrown from a deferred loader promise", async () => {
+    const rejection = { code: "NOT_FOUND", id: 42 };
+    const controller = new AbortController();
+
+    // Attach a no-op catch so Node does not raise an unhandled rejection before
+    // the encoder consumes the promise.
+    const deferred = Promise.reject(rejection);
+    deferred.catch(() => {});
+
+    const stream = encodeViaTurboStream(
+      { deferred },
+      controller.signal,
+      undefined,
+      ServerMode.Development,
+    );
+
+    const decoded = await decodeViaTurboStream(stream, global);
+    const value = decoded.value as { deferred: Promise<unknown> };
+    await expect(value.deferred).rejects.toEqual(rejection);
+    await decoded.done;
+  });
+
+  it("preserves a string thrown from a deferred loader promise", async () => {
+    const controller = new AbortController();
+
+    const deferred = Promise.reject("custom string error");
+    deferred.catch(() => {});
+
+    const stream = encodeViaTurboStream(
+      { deferred },
+      controller.signal,
+      undefined,
+      ServerMode.Development,
+    );
+
+    const decoded = await decodeViaTurboStream(stream, global);
+    const value = decoded.value as { deferred: Promise<unknown> };
+    await expect(value.deferred).rejects.toBe("custom string error");
+    await decoded.done;
+  });
+});
