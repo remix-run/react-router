@@ -2892,6 +2892,9 @@ export function createRouter(init: RouterInit): Router {
 
       // Process any non-redirect errors thrown
       if (isErrorResult(actionResult)) {
+        // The request has completed, so drop its controller rather than let
+        // `setFetcherError` abort it and error the unread response body
+        fetchControllers.delete(key);
         setFetcherError(key, routeId, actionResult.error);
         return;
       }
