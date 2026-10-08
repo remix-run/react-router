@@ -756,6 +756,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     }
 
     let isSpaMode = isSpaModeEnabled(ctx.reactRouterConfig);
+    let ssrFalsePrerenderedRouteIds =
+      ctx.reactRouterConfig.ssr === false && !isSpaMode
+        ? getSsrFalsePrerenderedRouteIds(routes, prerenderPaths)
+        : null;
 
     return `
     import * as entryServer from ${JSON.stringify(
@@ -766,11 +770,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     ${Object.keys(routes)
       .map((key, index) => {
         let route = routes[key]!;
-        if (isSpaMode && key !== "root") {
+        if (
+          (isSpaMode && key !== "root") ||
+          (ssrFalsePrerenderedRouteIds && !ssrFalsePrerenderedRouteIds.has(key))
+        ) {
           // In SPA mode, we only pre-render the root route and its `HydrateFallback`.
-          // Therefore, we can stub all other routes with an empty module as they
-          // (and their deps) may not be compatible with server-side rendering.
-          // This also helps keep the build fast.
+          // With `ssr:false` and a `prerender` config, we only pre-render the
+          // routes matched by a prerender path, plus the root route for the SPA
+          // fallback. Therefore, we can stub all other routes with an empty
+          // module as they (and their deps) may not be compatible with
+          // server-side rendering. This also helps keep the build fast and
+          // avoids evaluating the entire app on the first dev server request.
           return `const route${index} = { default: () => null };`;
         } else {
           return `import * as route${index} from ${JSON.stringify(
@@ -3059,6 +3069,25 @@ function groupRoutesByParentId(manifest: GenericRouteManifest) {
   });
 
   return routes;
+}
+
+// With `ssr:false`, the server build only ever renders the root route (for the
+// SPA fallback) and the routes matched by a prerender path
+function getSsrFalsePrerenderedRouteIds(
+  routes: GenericRouteManifest,
+  prerenderPaths: string[],
+): Set<string> {
+  let prerenderRoutes = createPrerenderRoutes(routes);
+  let routeIds = new Set<string>(["root"]);
+  for (let path of prerenderPaths) {
+    // Ensure we have a leading slash for matching
+    let matches = matchRoutes(
+      prerenderRoutes,
+      `/${path}/`.replace(/^\/\/+/, "/"),
+    );
+    matches?.forEach((m) => routeIds.add(m.route.id));
+  }
+  return routeIds;
 }
 
 // Create a skeleton route tree of paths
