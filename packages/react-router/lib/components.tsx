@@ -1747,7 +1747,9 @@ class AwaitErrorBoundary extends React.Component<
       // Raw (untracked) promise - track it
       status = AwaitRenderStatus.pending;
       Object.defineProperty(resolve, "_tracked", { get: () => true });
-      promise = resolve.then(
+      // Wrap in `Promise.resolve()` because some thenables (i.e., React
+      // Flight's `ReactPromise` chunks) don't return a promise from `.then()`
+      promise = Promise.resolve(resolve).then(
         (data: any) =>
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) => {
