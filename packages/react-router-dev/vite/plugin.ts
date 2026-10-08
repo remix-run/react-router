@@ -2298,15 +2298,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let [filepath] = id.split("?");
 
         let ast = parse(code, { sourceType: "module" });
-        let exportsToRemove = isServerEnvironment
-          ? isApiOnlyMode(ctx.reactRouterConfig) &&
-            !isPrerenderingEnabled(ctx.reactRouterConfig) &&
-            viteCommand === "build" &&
-            route.id !== "root"
-            ? CLIENT_ROUTE_EXPORTS
-            : []
-          : SERVER_ONLY_ROUTE_EXPORTS;
-        removeExports(ast, exportsToRemove);
+        if (!options?.ssr) {
+          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        } else if (
+          isApiOnlyMode(ctx.reactRouterConfig) &&
+          isServerEnvironment &&
+          !isPrerenderingEnabled(ctx.reactRouterConfig) &&
+          viteCommand === "build" &&
+          route.id !== "root"
+        ) {
+          removeExports(ast, CLIENT_ROUTE_EXPORTS);
+        }
         decorateComponentExportsWithProps(ast);
         return generate(ast, {
           sourceMaps: true,
