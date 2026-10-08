@@ -45,6 +45,11 @@ type SSRInfo = {
 
 let ssrInfo: SSRInfo | null = null;
 let router: DataRouter | null = null;
+let currentFetch: RouterFetch | undefined;
+
+// The singleton router keeps this delegate so prop updates apply to every request.
+const routerFetch: RouterFetch = (request, context) =>
+  currentFetch ? currentFetch(request, context) : window.fetch(request);
 
 function initSsrInfo(): void {
   if (
@@ -346,12 +351,18 @@ export interface HydratedRouterProps {
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
+    currentFetch = props.fetch;
     router = createHydratedRouter({
       getContext: props.getContext,
       instrumentations: props.instrumentations,
-      fetch: props.fetch ?? ((request) => window.fetch(request)),
+      fetch: routerFetch,
     });
   }
+
+  // Update before initializing client loaders and only publish committed props.
+  React.useLayoutEffect(() => {
+    currentFetch = props.fetch;
+  }, [props.fetch]);
 
   // We only want to show critical CSS in dev for the initial server render to
   // avoid a flash of unstyled content. Once the client-side JS kicks in, we can
@@ -413,7 +424,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
-    props.fetch,
+    routerFetch,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error

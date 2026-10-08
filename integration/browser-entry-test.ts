@@ -206,6 +206,116 @@ test("allows users to pass a custom fetch implementation to HydratedRouter", asy
   appFixture.close();
 });
 
+for (let [initialVersion, nextVersion] of [
+  ["initial", "updated"],
+  ["default", "updated"],
+  ["initial", "default"],
+] as const) {
+  test(`uses the latest custom fetch implementation after HydratedRouter rerenders (${initialVersion} to ${nextVersion})`, async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "react-router.config.ts": js`
+        export default {
+          routeDiscovery: { mode: "lazy" },
+        };
+      `,
+        "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode, useCallback, useEffect, useState } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        function App() {
+          let [version, setVersion] = useState("${initialVersion}");
+          let customFetch = useCallback((request) => {
+            request.headers.set("X-Custom-Fetch", version);
+            return window.fetch(request);
+          }, [version]);
+
+          useEffect(() => {
+            window.__updateFetch = () => setVersion("${nextVersion}");
+            window.__fetchVersion = version;
+          }, [version]);
+
+          return <HydratedRouter fetch={version === "default" ? undefined : customFetch} />;
+        }
+
+        startTransition(() => {
+          hydrateRoot(document, <StrictMode><App /></StrictMode>);
+        });
+      `,
+        "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+        import { useState } from "react";
+
+        export default function Index() {
+          let [discover, setDiscover] = useState(false);
+          return (
+            <>
+              <button onClick={() => setDiscover(true)}>Discover route</button>
+              {discover ? <Link to="/discovered">Discovered route</Link> : null}
+              <Link to="/page" discover="none">Go to Page</Link>
+            </>
+          );
+        }
+      `,
+        "app/routes/discovered.tsx": js`
+        export default function Discovered() {
+          return <h1>Discovered route</h1>;
+        }
+      `,
+        "app/routes/page.tsx": js`
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch") ?? "default";
+        }
+
+        export default function Page({ loaderData }) {
+          return <h1 data-custom-fetch>{loaderData}</h1>;
+        }
+      `,
+      },
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    try {
+      await app.goto("/", true);
+      await page.waitForFunction(
+        (version) => (window as any).__fetchVersion === version,
+        initialVersion,
+      );
+
+      await page.evaluate(() => (window as any).__updateFetch());
+      await page.waitForFunction(
+        (version) => (window as any).__fetchVersion === version,
+        nextVersion,
+      );
+
+      let discovery = page.waitForResponse((response) => {
+        let url = new URL(response.url());
+        return (
+          url.pathname === "/__manifest" &&
+          url.searchParams.get("paths")?.split(",").includes("/discovered") ===
+            true
+        );
+      });
+      await page.getByRole("button", { name: "Discover route" }).click();
+      let manifestResponse = await discovery;
+      expect(manifestResponse.status()).toBe(200);
+      expect(
+        await manifestResponse.request().headerValue("X-Custom-Fetch"),
+      ).toBe(nextVersion === "default" ? null : nextVersion);
+
+      await app.clickLink("/page");
+      await expect(page.locator("[data-custom-fetch]")).toHaveText(nextVersion);
+    } finally {
+      appFixture.close();
+    }
+  });
+}
+
 test("identifies initiating operations and fetcher targets", async ({
   page,
 }) => {
