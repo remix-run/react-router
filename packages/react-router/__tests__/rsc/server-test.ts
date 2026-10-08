@@ -78,16 +78,18 @@ describe("RSC server", () => {
 
   describe("error reporting", () => {
     let consoleError: jest.SpyInstance;
+    let abortController: AbortController;
 
     beforeEach(() => {
       consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      abortController = new AbortController();
     });
 
     afterEach(() => {
       consoleError.mockRestore();
     });
 
-    let errorRoutes: RSCRouteConfigEntry[] = [
+    let routes: RSCRouteConfigEntry[] = [
       {
         id: "root",
         path: "/",
@@ -111,14 +113,6 @@ describe("RSC server", () => {
             },
           },
           {
-            id: "thrown-response",
-            path: "thrown-response",
-            Component: () => null,
-            loader() {
-              throw new Response("Nope", { status: 401 });
-            },
-          },
-          {
             id: "middleware-error",
             path: "middleware-error",
             Component: () => null,
@@ -128,18 +122,31 @@ describe("RSC server", () => {
               },
             ],
           },
+          {
+            id: "thrown-response",
+            path: "thrown-response",
+            Component: () => null,
+            loader() {
+              throw new Response("Nope", { status: 401 });
+            },
+          },
+          {
+            id: "aborted-resource",
+            path: "aborted-resource",
+            loader() {
+              abortController.abort();
+              throw new Error("ABORTED_ERROR");
+            },
+          },
         ],
       },
     ];
 
-    function matchErrorRequest(
-      request: Request,
-      onError?: (error: unknown) => void,
-    ) {
+    function match(request: Request, onError?: (error: unknown) => void) {
       return matchRSCServerRequest({
         createTemporaryReferenceSet: () => ({}),
         request,
-        routes: errorRoutes,
+        routes,
         onError,
         generateResponse(match) {
           return new Response(null, { status: match.statusCode });
@@ -147,54 +154,32 @@ describe("RSC server", () => {
       });
     }
 
-    test("calls onError with loader errors", async () => {
-      let onError = jest.fn();
-      let response = await matchErrorRequest(
-        new Request("https://remix.run/loader-error"),
-        onError,
-      );
-      expect(response.status).toBe(500);
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0][0]).toEqual(new Error("LOADER_ERROR"));
-    });
-
-    test("calls onError with loader errors on data requests", async () => {
-      let onError = jest.fn();
-      await matchErrorRequest(
-        new Request("https://remix.run/loader-error.rsc"),
-        onError,
-      );
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0][0]).toEqual(new Error("LOADER_ERROR"));
-    });
-
-    test("calls onError with action errors", async () => {
-      let onError = jest.fn();
-      let response = await matchErrorRequest(
+    test.each([
+      ["loader", new Request("https://remix.run/loader-error"), "LOADER_ERROR"],
+      [
+        "action",
         new Request("https://remix.run/action-error", {
           method: "POST",
           body: new URLSearchParams({ a: "b" }),
         }),
-        onError,
-      );
+        "ACTION_ERROR",
+      ],
+      [
+        "middleware",
+        new Request("https://remix.run/middleware-error"),
+        "MIDDLEWARE_ERROR",
+      ],
+    ])("calls onError with %s errors", async (_, request, message) => {
+      let onError = jest.fn();
+      let response = await match(request, onError);
       expect(response.status).toBe(500);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0][0]).toEqual(new Error("ACTION_ERROR"));
-    });
-
-    test("calls onError with middleware errors", async () => {
-      let onError = jest.fn();
-      await matchErrorRequest(
-        new Request("https://remix.run/middleware-error"),
-        onError,
-      );
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0][0]).toEqual(new Error("MIDDLEWARE_ERROR"));
+      expect(onError).toHaveBeenCalledWith(new Error(message));
     });
 
     test("does not call onError with thrown responses", async () => {
       let onError = jest.fn();
-      let response = await matchErrorRequest(
+      let response = await match(
         new Request("https://remix.run/thrown-response"),
         onError,
       );
@@ -203,29 +188,25 @@ describe("RSC server", () => {
     });
 
     test("logs errors with console.error when no onError is provided", async () => {
-      await matchErrorRequest(new Request("https://remix.run/loader-error"));
+      await match(new Request("https://remix.run/loader-error"));
       expect(consoleError).toHaveBeenCalledTimes(1);
-      expect(consoleError.mock.calls[0][0]).toEqual(new Error("LOADER_ERROR"));
+      expect(consoleError).toHaveBeenCalledWith(new Error("LOADER_ERROR"));
     });
 
     test("logs the underlying error for internal error responses", async () => {
-      await matchErrorRequest(new Request("https://remix.run/does-not-exist"));
+      await match(new Request("https://remix.run/does-not-exist"));
       expect(consoleError).toHaveBeenCalledTimes(1);
-      expect(consoleError.mock.calls[0][0]).toBeInstanceOf(Error);
-      expect(consoleError.mock.calls[0][0].message).toMatch(
-        'No route matches URL "/does-not-exist"',
+      expect(consoleError).toHaveBeenCalledWith(
+        new Error('No route matches URL "/does-not-exist"'),
       );
     });
 
     test("does not log errors for aborted requests", async () => {
-      let controller = new AbortController();
-      let response = matchErrorRequest(
-        new Request("https://remix.run/loader-error", {
-          signal: controller.signal,
+      await match(
+        new Request("https://remix.run/aborted-resource", {
+          signal: abortController.signal,
         }),
       );
-      controller.abort();
-      await response.catch(() => {});
       expect(consoleError).not.toHaveBeenCalled();
     });
   });
