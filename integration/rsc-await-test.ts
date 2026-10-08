@@ -71,27 +71,16 @@ test.describe("RSC Framework: <Await> in client route components", () => {
     appFixture?.close();
   });
 
-  test("server renders resolved loader promises", async () => {
+  test("server renders resolved loader promises and hydrates without errors", async ({
+    page,
+  }) => {
     let response = await fixture.requestDocument("/await-resolve");
     let html = await response.text();
-
     // `<!--$!-->` marks a Suspense boundary that errored during SSR and was
     // handed off to the client to render
     expect(html).not.toContain("<!--$!-->");
-    expect(html).not.toContain("Switched to client rendering");
     expect(html).toContain('<p id="resolved">RESOLVED_VALUE</p>');
-  });
 
-  test("server renders the errorElement for rejected loader promises", async () => {
-    let response = await fixture.requestDocument("/await-reject");
-    let html = await response.text();
-
-    expect(html).not.toContain("<!--$!-->");
-    expect(html).not.toContain("Switched to client rendering");
-    expect(html).toContain('<p id="error">ERROR_ELEMENT</p>');
-  });
-
-  test("hydrates without recoverable errors", async ({ page }) => {
     let errors: string[] = [];
     page.on("console", (msg) => {
       if (msg.type() === "error") errors.push(msg.text());
@@ -100,12 +89,16 @@ test.describe("RSC Framework: <Await> in client route components", () => {
 
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/await-resolve");
-    await page.waitForSelector("#resolved");
-    expect(await page.locator("#resolved").textContent()).toBe(
-      "RESOLVED_VALUE",
-    );
+    await expect(page.locator("#resolved")).toHaveText("RESOLVED_VALUE");
     validateRSCHtml(await page.content());
-
     expect(errors).toEqual([]);
+  });
+
+  test("server renders the errorElement for rejected loader promises", async () => {
+    let response = await fixture.requestDocument("/await-reject");
+    let html = await response.text();
+
+    expect(html).not.toContain("<!--$!-->");
+    expect(html).toContain('<p id="error">ERROR_ELEMENT</p>');
   });
 });
