@@ -94,6 +94,7 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_customRouteDiscovery: boolean;
   unstable_enableNodeReadableStream: boolean;
   unstable_optimizeDeps: boolean;
 }
@@ -744,6 +745,8 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
+    unstable_customRouteDiscovery:
+      userAndPresetConfigs.future?.unstable_customRouteDiscovery ?? false,
     unstable_enableNodeReadableStream:
       userAndPresetConfigs.future?.unstable_enableNodeReadableStream ?? false,
     unstable_optimizeDeps:

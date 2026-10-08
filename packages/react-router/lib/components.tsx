@@ -74,6 +74,7 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { FrameworkContext } from "./dom/ssr/components";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
@@ -793,6 +794,14 @@ export function DataRoutes({
     "You must render this element inside a <DataRouterContext.Provider> element",
   );
 
+  let discoveryRuntime =
+    React.useContext(FrameworkContext)?.routeDiscoveryRuntime;
+  React.useEffect(() => {
+    // This effect runs after the initialized route tree commits and its hooks
+    // register. Descendants still suspended behind their own boundaries do not
+    // delay eager discovery.
+    if (state.initialized) discoveryRuntime?.markReady();
+  }, [state.initialized, discoveryRuntime]);
   return useRoutesImpl(routes, undefined, {
     router: dataRouterContext.router,
     manifest,

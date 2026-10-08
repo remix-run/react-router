@@ -545,6 +545,9 @@ export interface DataStrategyFunction<Context = DefaultContext> {
   ): Promise<Record<string, DataStrategyResult>>;
 }
 
+// Internal control flow for application-owned Framework discovery recovery.
+export class DiscoveryCancelledError extends Error {}
+
 export type PatchRoutesOnNavigationFunctionArgs = {
   signal: AbortSignal;
   path: string;
