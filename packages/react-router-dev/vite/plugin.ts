@@ -1274,7 +1274,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             viteCommand === "serve" &&
             _viteConfigEnv.mode === "production" &&
             ctx.reactRouterConfig.ssr !== true
-              ? "spa"
+              ? isApiOnlyMode(ctx.reactRouterConfig)
+                ? "mpa"
+                : "spa"
               : "custom",
 
           ssr: {
@@ -1750,6 +1752,51 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
 
             try {
+              if (
+                isApiOnlyMode(ctx.reactRouterConfig) &&
+                process.env.IS_RR_BUILD_REQUEST !== "yes"
+              ) {
+                let { basename, routeDiscovery } = ctx.reactRouterConfig;
+                let manifestPath =
+                  routeDiscovery?.mode === "lazy"
+                    ? path.posix.join(
+                        basename,
+                        routeDiscovery.manifestPath ?? "/__manifest",
+                      )
+                    : undefined;
+                let pathname = new URL(
+                  req.originalUrl ?? req.url ?? "/",
+                  "http://localhost",
+                ).pathname;
+                if (!pathname.endsWith(".data") && pathname !== manifestPath) {
+                  let clientBuildDirectory = getClientBuildDirectory(
+                    ctx.reactRouterConfig,
+                  );
+                  let previewPathname = decodeURIComponent(
+                    new URL(req.url ?? "/", "http://localhost").pathname,
+                  );
+                  if (
+                    previewPathname.endsWith(".html") &&
+                    existsSync(path.join(clientBuildDirectory, previewPathname))
+                  ) {
+                    // Let Vite serve existing HTML files, including rewritten directory indexes.
+                    return next();
+                  }
+                  let fallbackFile = path.join(
+                    clientBuildDirectory,
+                    "__spa-fallback.html",
+                  );
+                  if (!existsSync(fallbackFile)) {
+                    fallbackFile = path.join(
+                      clientBuildDirectory,
+                      "index.html",
+                    );
+                  }
+                  res.setHeader("Content-Type", "text/html; charset=utf-8");
+                  res.end(await readFile(fallbackFile));
+                  return;
+                }
+              }
               let handler = await getHandler();
               let request = await fromNodeRequest(req, res);
               let response = await handler(
