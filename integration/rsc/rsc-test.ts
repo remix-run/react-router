@@ -1920,7 +1920,7 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
           await page.waitForURL(`https://example.com/`);
-          await expect(page.getByText("Example Domain")).toBeAttached();
+          await expect(page).toHaveTitle("Example Domain");
         });
 
         test("Handles unsupported protocol redirect Responses from render", async ({
@@ -1959,7 +1959,7 @@ implementations.forEach((implementation) => {
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
           await page.waitForURL(`https://example.com/`);
-          await expect(page.getByText("Example Domain")).toBeAttached();
+          await expect(page).toHaveTitle("Example Domain");
         });
 
         test("Handles unsupported protocol redirect Responses from suspended render", async ({
