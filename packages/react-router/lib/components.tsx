@@ -354,6 +354,27 @@ export interface RouterProviderProps {
   useTransitions?: boolean;
 }
 
+// We never wait for a view transition's animation to start, so nothing else
+// observes `ready`. A skipped transition rejects it: with an `AbortError` when
+// `skipTransition()` or a newer transition skipped it, and with an
+// `InvalidStateError` when the browser skips it in a hidden document. Handle
+// those rejections and rethrow any other one, such as a duplicate
+// `view-transition-name`.
+function handleSkippedViewTransition(
+  transition: ViewTransition,
+  document: Document,
+) {
+  transition.ready.catch((reason: unknown) => {
+    let skipped =
+      document.visibilityState === "hidden" ||
+      (typeof reason === "object" &&
+        reason !== null &&
+        "name" in reason &&
+        reason.name === "AbortError");
+    if (!skipped) throw reason;
+  });
+}
+
 /**
  * Render the UI for the given {@link DataRouter}. This component should
  * typically be at the top of an app's element tree. The router prop should
@@ -496,6 +517,7 @@ export function RouterProvider({
         let t = router.window!.document.startViewTransition(() => {
           reactDomFlushSyncImpl(() => setStateImpl(newState));
         });
+        handleSkippedViewTransition(t, router.window!.document);
 
         // Clean up after the animation completes
         t.finished.finally(() => {
@@ -579,6 +601,7 @@ export function RouterProvider({
         }
         await renderPromise;
       });
+      handleSkippedViewTransition(transition, router.window.document);
       transition.finished.finally(() => {
         setRenderDfd(undefined);
         setTransition(undefined);
