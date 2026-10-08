@@ -95,6 +95,8 @@ unstable_useRouteDiscovery({
 
 After mismatch handlers settle, surviving operations continue only if the tree is complete. Otherwise navigations and fetchers are canceled and their pending state settles. Router-managed Back/Forward cancellations restore the prior history position. Later completion does not replay a canceled navigation or submission. Full-manifest load failures do not render error boundaries; unrelated handler exceptions use normal discovery error handling.
 
+Canceling a navigation also cancels its pending revalidation. Both return to idle, the revalidation promise resolves, and the current page and data remain in place without another loader pass. Interrupted fetcher loads settle with their existing data; independent requests continue. If an action already changed server data, the displayed data may remain stale until a later navigation or explicit revalidation.
+
 Back/Forward restoration supports a single pending traversal, using the same approach as navigation blockers. If additional browser Back/Forward presses overlap the restoration, the URL and displayed route may get out of sync, or a queued traversal may navigate to another route. Preserving the current screen and its unsaved state is not guaranteed in that case.
 
 Concurrent mismatches share one pending custom handler chain. Its `source` and `reloadUrl` describe the initiating request, while each participant retains its own destination and cancellation signal. Handlers may await a user decision. A later mismatch can start another chain after the previous one settles.

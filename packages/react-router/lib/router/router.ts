@@ -2200,10 +2200,23 @@ export function createRouter(init: RouterInit): Router {
     blockers.forEach((blocker, key) => {
       if (blocker.state === "proceeding") blockers.set(key, IDLE_BLOCKER);
     });
+    let fetchers = new Map(state.fetchers);
+    let didUpdateFetchers = markFetchRedirectsDone(fetchers);
+    // Cancel pending revalidation along with the navigation. Settle fetcher
+    // loads it interrupted or left waiting for a redirect, while preserving
+    // independently running requests and the currently displayed data.
+    fetchers.forEach((fetcher, key) => {
+      if (fetcher.state === "loading" && !fetchControllers.has(key)) {
+        fetchers.set(key, getDoneFetcher(fetcher.data));
+        didUpdateFetchers = true;
+      }
+    });
+    cancelledFetcherLoads.clear();
     updateState({
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
       blockers,
+      ...(didUpdateFetchers ? { fetchers } : {}),
     });
     pendingDiscoveryCancellation = undefined;
     cancellation.resolve();
