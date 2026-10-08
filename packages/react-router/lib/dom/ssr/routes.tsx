@@ -710,7 +710,7 @@ export function shouldHydrateRouteLoader(
 ) {
   return (
     (isSpaMode && routeId !== "root") ||
-    (isApiOnly && hasLoader) ||
+    (isApiOnly && isSpaMode && hasLoader) ||
     (clientLoader != null &&
       (clientLoader.hydrate === true || hasLoader !== true))
   );

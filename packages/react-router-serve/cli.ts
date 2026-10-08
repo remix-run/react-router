@@ -128,47 +128,6 @@ function getExpressPath(publicPath: string) {
   return pathname.startsWith("/") ? pathname : `/${pathname}`;
 }
 
-function getExpressHandler(
-  build: NormalizedBuild | ServerBuild,
-  isApiOnlyBuild: boolean,
-  assetsBuildDirectory: string,
-): ExpressRequestHandler {
-  // RSC
-  if ("fetch" in build && build.fetch) {
-    return createRequestListener(build.fetch);
-  }
-  // Data-only routes
-  if (isApiOnlyBuild) {
-    let serverBuild = build as ServerBuild;
-    let manifestPath =
-      serverBuild.routeDiscovery.mode === "lazy"
-        ? path.posix.join(
-            serverBuild.basename ?? "/",
-            serverBuild.routeDiscovery.manifestPath,
-          )
-        : undefined;
-    let handler = createRequestHandler({
-      build: serverBuild,
-      mode: process.env.NODE_ENV,
-    }) as unknown as ExpressRequestHandler;
-    return (req, res, next) => {
-      if (req.path.endsWith(".data") || req.path === manifestPath) {
-        handler(req, res, next);
-      } else {
-        // In API-only mode, fallback to SPA-behavior for non-data
-        // requests.
-        res.sendFile("index.html", { root: assetsBuildDirectory });
-      }
-    };
-  }
-
-  // Standard Framework Mode build
-  return createRequestHandler({
-    build: build as ServerBuild,
-    mode: process.env.NODE_ENV,
-  }) as unknown as ExpressRequestHandler;
-}
-
 async function run() {
   let port =
     parseNumber(process.env.PORT) ??
@@ -186,9 +145,9 @@ async function run() {
 
   let buildModule = await import(url.pathToFileURL(buildPath).href);
   let build: NormalizedBuild;
-  let isRSCBuild = false;
+  let isRSCBuild = isRSCServerBuild(buildModule);
 
-  if ((isRSCBuild = isRSCServerBuild(buildModule))) {
+  if (isRSCBuild) {
     const config = {
       publicPath: "/",
       assetsBuildDirectory: path.join("..", "client"),
@@ -206,7 +165,6 @@ async function run() {
     build = buildModule as ServerBuild;
   }
 
-  let isApiOnlyBuild = !isRSCBuild && buildModule.unstable_apiOnly === true;
   let assetsBuildDirectory = path.isAbsolute(build.assetsBuildDirectory)
     ? build.assetsBuildDirectory
     : path.resolve(process.cwd(), build.assetsBuildDirectory);
@@ -250,12 +208,7 @@ async function run() {
       maxAge: "1y",
     }),
   );
-  app.use(
-    expressPublicPath,
-    express.static(assetsBuildDirectory, {
-      index: isApiOnlyBuild ? false : undefined,
-    }),
-  );
+  app.use(expressPublicPath, express.static(assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(
     "/.well-known",
@@ -264,10 +217,49 @@ async function run() {
 
   app.use(morgan("tiny"));
 
-  app.all(
-    "/{*splat}",
-    getExpressHandler(build, isApiOnlyBuild, assetsBuildDirectory),
-  );
+  if (build.fetch) {
+    // RSC
+    app.all("/{*splat}", createRequestListener(build.fetch));
+  } else if (buildModule.unstable_apiOnly === true) {
+    // API Only
+    let serverBuild = build as ServerBuild;
+    let manifestPath =
+      serverBuild.routeDiscovery.mode === "lazy"
+        ? path.posix.join(
+            serverBuild.basename ?? "/",
+            serverBuild.routeDiscovery.manifestPath,
+          )
+        : undefined;
+
+    let handler = createRequestHandler({
+      build: serverBuild,
+      mode: process.env.NODE_ENV,
+    }) as unknown as ExpressRequestHandler;
+
+    let fallbackFile = fs.existsSync(
+      path.join(assetsBuildDirectory, "__spa-fallback.html"),
+    )
+      ? "__spa-fallback.html"
+      : "index.html";
+
+    app.all("/{*splat}", (req, res, next) => {
+      if (req.path.endsWith(".data") || req.path === manifestPath) {
+        handler(req, res, next);
+      } else {
+        // Static middleware serves prerendered documents before this fallback.
+        res.sendFile(fallbackFile, { root: assetsBuildDirectory });
+      }
+    });
+  } else {
+    // Normal SSR
+    app.all(
+      "/{*splat}",
+      createRequestHandler({
+        build: build as ServerBuild,
+        mode: process.env.NODE_ENV,
+      }) as unknown as ExpressRequestHandler,
+    );
+  }
 
   let server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)

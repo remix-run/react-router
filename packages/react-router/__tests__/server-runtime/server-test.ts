@@ -28,6 +28,48 @@ function spyConsole() {
   return spy;
 }
 
+describe("API-only build-time document requests", () => {
+  it.each([
+    [false, {}, 404],
+    [false, { "X-React-Router-Prerender": "yes" }, 404],
+    [false, { "X-React-Router-SPA-Mode": "yes" }, 404],
+    [true, {}, 404],
+    [true, { "X-React-Router-Prerender": "no" }, 404],
+    [true, { "X-React-Router-Prerender-Data": "data" }, 404],
+    [true, { "X-React-Router-Prerender": "yes" }, 200],
+    [true, { "X-React-Router-SPA-Mode": "yes" }, 200],
+  ] as const)(
+    "with build-time environment=%s and headers=%j returns %s",
+    async (isBuildTime, headers, status) => {
+      let previous = process.env.IS_RR_BUILD_REQUEST;
+      try {
+        if (isBuildTime) {
+          process.env.IS_RR_BUILD_REQUEST = "yes";
+        } else {
+          delete process.env.IS_RR_BUILD_REQUEST;
+        }
+        let build = {
+          ...mockServerBuild({ root: { path: "", default: {} } }),
+          ssr: false,
+          unstable_apiOnly: true,
+          prerender: ["/"],
+        };
+        let response = await createRequestHandler(
+          build,
+          ServerMode.Production,
+        )(new Request("http://localhost/", { headers }));
+        expect(response.status).toBe(status);
+      } finally {
+        if (previous === undefined) {
+          delete process.env.IS_RR_BUILD_REQUEST;
+        } else {
+          process.env.IS_RR_BUILD_REQUEST = previous;
+        }
+      }
+    },
+  );
+});
+
 describe("server", () => {
   let routeId = "root";
   let build = mockServerBuild(

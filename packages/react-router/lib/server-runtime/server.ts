@@ -143,8 +143,8 @@ function derive(build: ServerBuild, mode?: string) {
         decodedPath = strippedPath;
       }
 
-      // When SSR is disabled this, file can only ever run during dev because we
-      // delete the server build at the end of the build
+      // Without API-only mode, this file only runs during dev or prerendering
+      // because we delete the server build at the end of the build.
       if (build.prerender.length === 0) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
@@ -153,8 +153,9 @@ function derive(build: ServerBuild, mode?: string) {
           (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
         )
       ) {
-        if (requestUrl.pathname.endsWith(".data")) {
-          // 404 on non-pre-rendered `.data` requests
+        if (requestUrl.pathname.endsWith(".data") && !build.unstable_apiOnly) {
+          // API-only builds can serve runtime data for non-prerendered routes.
+          // Otherwise, 404 on non-pre-rendered `.data` requests.
           errorHandler(
             new ErrorResponseImpl(
               404,
@@ -200,7 +201,8 @@ function derive(build: ServerBuild, mode?: string) {
       build.unstable_apiOnly &&
       serverMode !== ServerMode.Development &&
       !requestUrl.pathname.endsWith(".data") &&
-      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") !== "yes"
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") !== "yes" &&
+      getBuildTimeHeader(request, "X-React-Router-Prerender") !== "yes"
     ) {
       return new Response(null, {
         status: 404,

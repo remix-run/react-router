@@ -423,8 +423,12 @@ export async function createAppFixture(
           if (req.path.endsWith(".data") || req.path === manifestPath) {
             next();
           } else {
+            let clientDir = path.join(fixture.projectDir, "build/client");
+            let fallback = path.join(clientDir, "__spa-fallback.html");
             res.sendFile(
-              path.join(fixture.projectDir, "build/client/index.html"),
+              existsSync(fallback)
+                ? fallback
+                : path.join(clientDir, "index.html"),
             );
           }
         });

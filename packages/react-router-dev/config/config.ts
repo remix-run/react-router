@@ -224,8 +224,10 @@ export type ReactRouterConfig = {
    * - Does NOT delete the server build, instead the server build will *only*
    *   handle data requests.
    *
-   * This creates a fully-static "SPA Mode" client build that can utilize
-   * server-side loaders and actions.
+   * This creates a static client build that can utilize server-side loaders
+   * and actions. With `prerender` enabled, route UI is retained in the server
+   * build to generate HTML at build time. Otherwise, only the root route UI
+   * is retained to generate the SPA shell.
    */
   ssr?: boolean | "unstable_api-only";
 

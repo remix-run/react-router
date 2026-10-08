@@ -15,7 +15,12 @@ import {
 } from "./helpers/create-fixture.js";
 import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { dev, reactRouterConfig } from "./helpers/vite.js";
+import {
+  build,
+  createProject,
+  dev,
+  reactRouterConfig,
+} from "./helpers/vite.js";
 import { spawnTestServer } from "./helpers/create-fixture.js";
 
 test.describe("API-only Mode", () => {
@@ -332,6 +337,262 @@ test.describe("API-only Mode", () => {
     );
   });
 });
+
+test.describe("API-only prerender config", () => {
+  test("prerenders routes with an explicit path config", async () => {
+    let cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        ssr: "unstable_api-only",
+        prerender: ["/"],
+      }),
+      "app/root.tsx": js`
+        import { Outlet, Scripts } from "react-router";
+        export function Layout({ children }) {
+          return <html><head /><body>{children}<Scripts /></body></html>;
+        }
+        export function HydrateFallback() { return <p>API_ONLY_SHELL</p>; }
+        export default function Root() { return <Outlet />; }
+      `,
+      "app/routes/_index.tsx": js`
+        export function loader() { return { message: "PRERENDER_DATA" }; }
+        export default function Index({ loaderData }) {
+          return <p>PRERENDER_UI: {loaderData.message}</p>;
+        }
+      `,
+    });
+
+    let result = build({ cwd });
+    expect(result.status, result.stderr.toString()).toBe(0);
+    let document = await readFile(
+      path.join(cwd, "build/client/index.html"),
+      "utf8",
+    );
+    expect(document).toContain("PRERENDER_UI");
+    expect(document).toContain("PRERENDER_DATA");
+    let data = await readFile(path.join(cwd, "build/client/_.data"), "utf8");
+    expect(data).toContain("PRERENDER_DATA");
+    let shell = await readFile(
+      path.join(cwd, "build/client/__spa-fallback.html"),
+      "utf8",
+    );
+    expect(shell).toContain("API_ONLY_SHELL");
+    expect(shell).not.toContain("PRERENDER_UI");
+  });
+
+  ["undefined", "false"].forEach((prerender) => {
+    test(`generates the SPA shell with prerender: ${prerender}`, async () => {
+      let cwd = await createProject({
+        "react-router.config.ts": js`
+          export default { ssr: "unstable_api-only", prerender: ${prerender} };
+        `,
+        "app/root.tsx": js`
+          import { Outlet, Scripts } from "react-router";
+
+          export function Layout({ children }) {
+            return <html><head /><body>{children}<Scripts /></body></html>;
+          }
+
+          export function HydrateFallback() { return <p>API_ONLY_SHELL</p>; }
+          export default function Root() { return <Outlet />; }
+        `,
+        "app/routes/_index.tsx": js`
+          export function loader() { return { message: "API_ONLY_LOADER" }; }
+          export default function Index() { throw new Error("Route UI rendered at build time"); }
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.status, result.stderr.toString()).toBe(0);
+      let document = await readFile(
+        path.join(cwd, "build/client/index.html"),
+        "utf8",
+      );
+      expect(document).toContain("API_ONLY_SHELL");
+      let serverBuild = await readFile(
+        path.join(cwd, "build/server/index.js"),
+        "utf8",
+      );
+      expect(serverBuild).toContain("API_ONLY_LOADER");
+      expect(serverBuild).not.toContain("Route UI rendered at build time");
+    });
+  });
+});
+
+for (let splitRouteModules of [false, true]) {
+  test.describe(`API-only prerender runtime: splitRouteModules=${splitRouteModules}`, () => {
+    let fixture: Fixture;
+    let appFixture: AppFixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
+        useReactRouterServe: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: "unstable_api-only",
+            splitRouteModules,
+            prerender: ["/", "/about", "/no-loader", "/resource.json"],
+          }),
+          "app/root.tsx": js`
+            import { useEffect, useState } from "react";
+            import { Outlet, Scripts } from "react-router";
+            export function Layout({ children }) {
+              let [mounted, setMounted] = useState(false);
+              useEffect(() => setMounted(true), []);
+              return <html><head /><body>
+                {mounted ? <p data-mounted>Mounted</p> : null}
+                {children}<Scripts />
+              </body></html>;
+            }
+            export function HydrateFallback() { return <p>API_ONLY_SHELL</p>; }
+            export default function Root() { return <Outlet />; }
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export function loader() {
+              return { message: process.env.IS_RR_BUILD_REQUEST === "yes" ? "BUILD_DATA" : "RUNTIME_DATA" };
+            }
+            export default function Index({ loaderData }) {
+              return <><p data-index>INDEX_UI: {loaderData.message}</p>
+                <Link to="/runtime">Runtime</Link>
+                <Link to="/about">About</Link>
+              </>;
+            }
+          `,
+          "app/routes/about.tsx": js`
+            import { Link } from "react-router";
+            export function loader() { return { message: "ABOUT_DATA" }; }
+            export default function About({ loaderData }) {
+              return <><p data-about>ABOUT_UI: {loaderData.message}</p>
+                <Link to="/runtime">Runtime</Link>
+              </>;
+            }
+          `,
+          "app/routes/no-loader.tsx": js`
+            export default function NoLoader() { return <p>NO_LOADER_UI</p>; }
+          `,
+          "app/routes/resource[.json].tsx": js`
+            export function loader() { return Response.json({ message: "RESOURCE_DATA" }); }
+          `,
+          "app/routes/runtime.tsx": js`
+            import { Form } from "react-router";
+            let count = 0;
+            export function loader() { return { count }; }
+            export function action() { count++; return null; }
+            export default function Runtime({ loaderData }) {
+              return <><p data-count>RUNTIME_UI: {loaderData.count}</p>
+                <Form method="post"><button type="submit">Increment</button></Form>
+              </>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+    });
+
+    test.afterAll(async () => {
+      await appFixture?.close();
+    });
+
+    test("serves prerendered documents through react-router-serve", async () => {
+      let response = await fetch(`${appFixture.serverUrl}/about/`);
+      expect(response.status).toBe(200);
+      let document = await response.text();
+      expect(document).toContain("ABOUT_UI");
+      expect(document).not.toContain("INDEX_UI");
+    });
+
+    test("serves the SPA fallback through react-router-serve", async () => {
+      let response = await fetch(`${appFixture.serverUrl}/runtime`);
+      expect(response.status).toBe(200);
+      let document = await response.text();
+      expect(document).toContain("API_ONLY_SHELL");
+      expect(document).not.toContain("INDEX_UI");
+    });
+
+    test("renders routes with and without loaders and resource routes at build time", async () => {
+      let clientDir = path.join(fixture.projectDir, "build/client");
+      expect(
+        await readFile(path.join(clientDir, "index.html"), "utf8"),
+      ).toContain("INDEX_UI");
+      expect(
+        await readFile(path.join(clientDir, "about/index.html"), "utf8"),
+      ).toContain("ABOUT_UI");
+      expect(
+        await readFile(path.join(clientDir, "no-loader/index.html"), "utf8"),
+      ).toContain("NO_LOADER_UI");
+      expect(
+        JSON.parse(
+          await readFile(path.join(clientDir, "resource.json"), "utf8"),
+        ),
+      ).toEqual({ message: "RESOURCE_DATA" });
+    });
+
+    test("hydrates prerendered data and navigates to runtime loaders and actions", async ({
+      page,
+    }) => {
+      let dataRequests: string[] = [];
+      page.on("request", (request) => {
+        if (new URL(request.url()).pathname.endsWith(".data")) {
+          dataRequests.push(request.url());
+        }
+      });
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      await expect(page.locator("[data-mounted]")).toBeVisible();
+      await expect(page.locator("[data-index]")).toHaveText(
+        "INDEX_UI: BUILD_DATA",
+      );
+      expect(dataRequests).toEqual([]);
+      await page.getByRole("link", { name: "About", exact: true }).click();
+      await expect(page.locator("[data-about]")).toHaveText(
+        "ABOUT_UI: ABOUT_DATA",
+      );
+      await page.getByRole("link", { name: "Runtime", exact: true }).click();
+      await expect(page.locator("[data-count]")).toHaveText("RUNTIME_UI: 0");
+      await page.getByRole("button", { name: "Increment" }).click();
+      await expect(page.locator("[data-count]")).toHaveText("RUNTIME_UI: 1");
+    });
+
+    test("hydrates the SPA fallback on a non-prerendered route", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/runtime");
+      await expect(page.locator("[data-mounted]")).toBeVisible();
+      await expect(page.locator("[data-count]")).toContainText("RUNTIME_UI:");
+      await expect(page.locator("[data-index]")).toHaveCount(0);
+    });
+
+    test("serves runtime data for prerendered and non-prerendered routes", async () => {
+      let index = await fixture.requestSingleFetchData("/_.data");
+      expect(index.status).toBe(200);
+      expect(index.data).toMatchObject({
+        "routes/_index": { data: { message: "RUNTIME_DATA" } },
+      });
+      let runtime = await fixture.requestSingleFetchData("/runtime.data");
+      expect(runtime.status).toBe(200);
+      expect(runtime.data).toMatchObject({
+        "routes/runtime": { data: { count: expect.any(Number) } },
+      });
+    });
+
+    test("rejects production document requests even with build-time headers", async () => {
+      for (let route of ["/", "/about", "/runtime", "/resource.json"]) {
+        for (let headers of [
+          undefined,
+          new Headers({ "X-React-Router-Prerender": "yes" }),
+          new Headers({
+            "X-React-Router-SPA-Mode": "yes",
+            "X-React-Router-Prerender-Data": "spoofed",
+          }),
+        ]) {
+          let response = await fixture.requestDocument(route, { headers });
+          expect(response.status).toBe(404);
+        }
+      }
+    });
+  });
+}
 
 for (let discoveryMode of ["initial", "lazy"] as const) {
   test.describe(`API-only revalidation and discovery: ${discoveryMode}`, () => {

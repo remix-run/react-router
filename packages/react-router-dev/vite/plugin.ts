@@ -2300,6 +2300,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let ast = parse(code, { sourceType: "module" });
         let exportsToRemove = isServerEnvironment
           ? isApiOnlyMode(ctx.reactRouterConfig) &&
+            !isPrerenderingEnabled(ctx.reactRouterConfig) &&
             viteCommand === "build" &&
             route.id !== "root"
             ? CLIENT_ROUTE_EXPORTS
@@ -3858,7 +3859,9 @@ function createDataRequest(
   }
 
   return {
-    request: new Request(url),
+    request: new Request(url, {
+      headers: { "X-React-Router-Prerender": "yes" },
+    }),
     metadata: { type: "data", path: prerenderPath, isResourceRoute },
   };
 }
@@ -3873,7 +3876,7 @@ function createRouteRequest(
     "/",
   );
 
-  let headers = new Headers();
+  let headers = new Headers({ "X-React-Router-Prerender": "yes" });
 
   if (data) {
     let encodedData = encodeURI(data);
@@ -3900,8 +3903,14 @@ function createResourceRouteRequest(
     .replace(/\/\/+/g, "/")
     .replace(/\/$/g, "");
 
+  let headers = new Headers(requestInit?.headers);
+  headers.set("X-React-Router-Prerender", "yes");
+
   return {
-    request: new Request(`http://localhost${normalizedPath}`, requestInit),
+    request: new Request(`http://localhost${normalizedPath}`, {
+      ...requestInit,
+      headers,
+    }),
     metadata: { type: "resource", path: prerenderPath },
   };
 }
