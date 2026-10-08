@@ -45,11 +45,7 @@ type SSRInfo = {
 
 let ssrInfo: SSRInfo | null = null;
 let router: DataRouter | null = null;
-let currentFetch: RouterFetch | undefined;
-
-// The singleton router keeps this delegate so prop updates apply to every request.
-const routerFetch: RouterFetch = (request, context) =>
-  currentFetch ? currentFetch(request, context) : window.fetch(request);
+let fetchImplementation: RouterFetch = (request) => window.fetch(request);
 
 function initSsrInfo(): void {
   if (
@@ -85,7 +81,7 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   getContext,
   instrumentations,
-  fetch: fetchImplementation = (request) => fetch(request),
+  fetch: fetchImplementation,
 }: {
   getContext?: RouterInit["getContext"];
   instrumentations?: ClientInstrumentation[];
@@ -331,8 +327,19 @@ export interface HydratedRouterProps {
   useTransitions?: boolean;
   /**
    * Provide a custom implementation for `fetch`, which will be used to perform
-   * manifest and data requests. The context identifies the operation that
-   * initiated each request. Defaults to `window.fetch`.
+   * JavaScript-issued manifest and data requests. The context identifies the
+   * operation that initiated each request. Defaults to `window.fetch`.
+   *
+   * Browser-managed data prefetches from {@link Link}, {@link NavLink}, or
+   * {@link PrefetchPageLinks} use native `<link rel="prefetch">` elements
+   * and do not call this function. If your data requests require custom headers
+   * or other request transformations, use `prefetch="none"` on links and avoid
+   * rendering {@link PrefetchPageLinks}.
+   *
+   * This prop is read when the singleton router is created. Changing it after
+   * router initialization has no effect. To use changing values such as auth
+   * tokens, read current application state inside the function rather than
+   * capturing values from a component render.
    */
   fetch?: RouterFetch;
 }
@@ -347,22 +354,20 @@ export interface HydratedRouterProps {
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
  * @param {dom.HydratedRouterProps.onError} props.onError n/a
+ * @param {dom.HydratedRouterProps.fetch} props.fetch n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
-    currentFetch = props.fetch;
     router = createHydratedRouter({
       getContext: props.getContext,
       instrumentations: props.instrumentations,
-      fetch: routerFetch,
+      fetch: props.fetch ?? fetchImplementation,
     });
+    if (props.fetch) {
+      fetchImplementation = props.fetch;
+    }
   }
-
-  // Update before initializing client loaders and only publish committed props.
-  React.useLayoutEffect(() => {
-    currentFetch = props.fetch;
-  }, [props.fetch]);
 
   // We only want to show critical CSS in dev for the initial server render to
   // avoid a flash of unstyled content. Once the client-side JS kicks in, we can
@@ -424,7 +429,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
-    routerFetch,
+    fetchImplementation,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
