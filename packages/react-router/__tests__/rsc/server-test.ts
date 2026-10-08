@@ -75,6 +75,160 @@ describe("RSC server", () => {
       expect(match?.payload.type).toBe("manifest");
     });
   });
+
+  describe("error reporting", () => {
+    let consoleError: jest.SpyInstance;
+
+    beforeEach(() => {
+      consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleError.mockRestore();
+    });
+
+    let errorRoutes: RSCRouteConfigEntry[] = [
+      {
+        id: "root",
+        path: "/",
+        Component: () => null,
+        ErrorBoundary: () => null,
+        children: [
+          {
+            id: "loader-error",
+            path: "loader-error",
+            Component: () => null,
+            loader() {
+              throw new Error("LOADER_ERROR");
+            },
+          },
+          {
+            id: "action-error",
+            path: "action-error",
+            Component: () => null,
+            action() {
+              throw new Error("ACTION_ERROR");
+            },
+          },
+          {
+            id: "thrown-response",
+            path: "thrown-response",
+            Component: () => null,
+            loader() {
+              throw new Response("Nope", { status: 401 });
+            },
+          },
+          {
+            id: "middleware-error",
+            path: "middleware-error",
+            Component: () => null,
+            middleware: [
+              () => {
+                throw new Error("MIDDLEWARE_ERROR");
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    function matchErrorRequest(
+      request: Request,
+      onError?: (error: unknown) => void,
+    ) {
+      return matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request,
+        routes: errorRoutes,
+        onError,
+        generateResponse(match) {
+          return new Response(null, { status: match.statusCode });
+        },
+      });
+    }
+
+    test("calls onError with loader errors", async () => {
+      let onError = jest.fn();
+      let response = await matchErrorRequest(
+        new Request("https://remix.run/loader-error"),
+        onError,
+      );
+      expect(response.status).toBe(500);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toEqual(new Error("LOADER_ERROR"));
+    });
+
+    test("calls onError with loader errors on data requests", async () => {
+      let onError = jest.fn();
+      await matchErrorRequest(
+        new Request("https://remix.run/loader-error.rsc"),
+        onError,
+      );
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toEqual(new Error("LOADER_ERROR"));
+    });
+
+    test("calls onError with action errors", async () => {
+      let onError = jest.fn();
+      let response = await matchErrorRequest(
+        new Request("https://remix.run/action-error", {
+          method: "POST",
+          body: new URLSearchParams({ a: "b" }),
+        }),
+        onError,
+      );
+      expect(response.status).toBe(500);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toEqual(new Error("ACTION_ERROR"));
+    });
+
+    test("calls onError with middleware errors", async () => {
+      let onError = jest.fn();
+      await matchErrorRequest(
+        new Request("https://remix.run/middleware-error"),
+        onError,
+      );
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toEqual(new Error("MIDDLEWARE_ERROR"));
+    });
+
+    test("does not call onError with thrown responses", async () => {
+      let onError = jest.fn();
+      let response = await matchErrorRequest(
+        new Request("https://remix.run/thrown-response"),
+        onError,
+      );
+      expect(response.status).toBe(401);
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    test("logs errors with console.error when no onError is provided", async () => {
+      await matchErrorRequest(new Request("https://remix.run/loader-error"));
+      expect(consoleError).toHaveBeenCalledTimes(1);
+      expect(consoleError.mock.calls[0][0]).toEqual(new Error("LOADER_ERROR"));
+    });
+
+    test("logs the underlying error for internal error responses", async () => {
+      await matchErrorRequest(new Request("https://remix.run/does-not-exist"));
+      expect(consoleError).toHaveBeenCalledTimes(1);
+      expect(consoleError.mock.calls[0][0]).toBeInstanceOf(Error);
+      expect(consoleError.mock.calls[0][0].message).toMatch(
+        'No route matches URL "/does-not-exist"',
+      );
+    });
+
+    test("does not log errors for aborted requests", async () => {
+      let controller = new AbortController();
+      let response = matchErrorRequest(
+        new Request("https://remix.run/loader-error", {
+          signal: controller.signal,
+        }),
+      );
+      controller.abort();
+      await response.catch(() => {});
+      expect(consoleError).not.toHaveBeenCalled();
+    });
+  });
 });
 
 async function matchManifestRequest(
