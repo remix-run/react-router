@@ -147,6 +147,11 @@ const CLIENT_NON_COMPONENT_EXPORTS = [
   "links",
   "shouldRevalidate",
 ];
+// MDX conventionally emits frontmatter as a named export, not a component.
+const CLIENT_HMR_ACCEPT_EXPORTS = [
+  ...CLIENT_NON_COMPONENT_EXPORTS,
+  "frontmatter",
+];
 const CLIENT_ROUTE_EXPORTS = [
   ...CLIENT_NON_COMPONENT_EXPORTS,
   "default",
@@ -2787,7 +2792,7 @@ function addRefreshWrapper(
   id: string,
 ): string {
   let route = getRoute(reactRouterConfig, id);
-  let acceptExports = route ? CLIENT_NON_COMPONENT_EXPORTS : [];
+  let acceptExports = route ? CLIENT_HMR_ACCEPT_EXPORTS : [];
   return (
     REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
     code +
