@@ -76,11 +76,7 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   let settled = false;
   let writableErrorEmitted = false;
   let writableError: Error | undefined;
-  let rejectWritableError!: (error: Error) => void;
-  let writableErrorPromise = new Promise<never>((_, reject) => {
-    rejectWritableError = reject;
-  });
-  writableErrorPromise.catch(() => {});
+  let pendingRejections = new Set<(error: Error) => void>();
 
   function cleanup() {
     // `destroy(error)` sets these properties before a potentially async
@@ -106,7 +102,14 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
     settled = true;
     writableError = error;
     cleanup();
-    rejectWritableError(error);
+
+    // Reject every waiter created so far, then drop the references so a
+    // long-lived monitor cannot retain them.
+    let rejections = [...pendingRejections];
+    pendingRejections.clear();
+    for (let rejectPending of rejections) {
+      rejectPending(error);
+    }
   }
 
   function onError(error: Error) {
@@ -124,7 +127,27 @@ function monitorWritableError(writable: Writable): WritableErrorMonitor {
   return {
     cleanup,
     race<T>(promise: Promise<T>) {
-      return Promise.race([promise, writableErrorPromise]);
+      if (writableError) {
+        // A read can synchronously close the writable before race() runs.
+        // Still observe its promise so a rejection cannot escape unhandled.
+        return Promise.race([promise, Promise.reject(writableError)]);
+      }
+
+      // Racing against a single long-lived promise retains the resolved value
+      // of every race for as long as that promise stays pending, which leaks
+      // memory on long streams (https://github.com/nodejs/node/issues/17469).
+      // Give each race its own short-lived promise instead, and forget it as
+      // soon as the race settles.
+      let rejectPending!: (error: Error) => void;
+      let pendingPromise = new Promise<never>((_, reject) => {
+        rejectPending = reject;
+      });
+      pendingPromise.catch(() => {});
+      pendingRejections.add(rejectPending);
+
+      return Promise.race([promise, pendingPromise]).finally(() => {
+        pendingRejections.delete(rejectPending);
+      });
     },
     throwIfClosed() {
       if (writableError) {

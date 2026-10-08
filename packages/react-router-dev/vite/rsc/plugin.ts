@@ -107,32 +107,28 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     }
   }
 
-  async function transformToJs(
-    code: string,
-    filename: string,
-  ): Promise<string> {
+  async function transformToJs(code: string, filename: string) {
     await preloadVite();
     let vite = getVite();
     let lang = getTransformLanguage(filename);
 
-    return (
-      "transformWithOxc" in vite && typeof vite.transformWithOxc === "function"
-        ? await vite.transformWithOxc(code, filename, {
-            lang,
-            jsx: {
-              runtime: "automatic",
-              development: viteCommand !== "build",
-              target: "esnext",
-            },
-          })
-        : await vite.transformWithEsbuild(code, filename, {
-            loader: lang,
+    return "transformWithOxc" in vite &&
+      typeof vite.transformWithOxc === "function"
+      ? await vite.transformWithOxc(code, filename, {
+          lang,
+          jsx: {
+            runtime: "automatic",
+            development: viteCommand !== "build",
             target: "esnext",
-            format: "esm",
-            jsx: "automatic",
-            jsxDev: viteCommand !== "build",
-          })
-    ).code;
+          },
+        })
+      : await vite.transformWithEsbuild(code, filename, {
+          loader: lang,
+          target: "esnext",
+          format: "esm",
+          jsx: "automatic",
+          jsxDev: viteCommand !== "build",
+        });
   }
 
   async function getClientVersion(source: string) {
@@ -917,7 +913,10 @@ function createRSCOptimizeDepsRouteModulesPlugin({
   transformToJs,
 }: {
   routeFiles: Set<string>;
-  transformToJs: (code: string, filename: string) => Promise<string>;
+  transformToJs: (
+    code: string,
+    filename: string,
+  ) => Promise<{ code: string; map: object | string | null }>;
 }): RSCOptimizeDepsRouteModulesPlugin {
   return {
     name: "react-router:rsc-optimize-deps-route-modules",
@@ -931,8 +930,10 @@ function createRSCOptimizeDepsRouteModulesPlugin({
           return;
         }
 
-        let js = await transformToJs(code, filename);
-        let generated = createClientRouteModuleForOptimizeDepsScan(js);
+        let transformed = await transformToJs(code, filename);
+        let generated = createClientRouteModuleForOptimizeDepsScan(
+          transformed.code,
+        );
 
         return {
           code: generated.code,

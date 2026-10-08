@@ -48,10 +48,9 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    viewTransition?: boolean;
     defaultShouldRevalidate?: boolean;
     useTransitions?: boolean;
-  } = {},
+  } & Pick<NavigateOptions, "viewTransition"> = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void
 ```
 
@@ -84,8 +83,8 @@ The target attribute for the link. Defaults to `undefined`.
 
 ### options.viewTransition
 
-Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation. To apply specific styles during the transition, see
-[`useViewTransitionState`](../hooks/useViewTransitionState). Defaults to `false`.
+**Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component
+instead. See the [migration guide](../../how-to/view-transitions).
 
 ### options.defaultShouldRevalidate
 

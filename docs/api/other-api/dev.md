@@ -4,6 +4,8 @@ title: "@react-router/dev (CLI)"
 
 # React Router CLI
 
+[MODES: framework]
+
 The React Router CLI comes from the `@react-router/dev` package. Make sure it is in your `package.json` `devDependencies` so it doesn't get deployed to your server.
 
 To get a full list of available commands and flags, run:
@@ -68,6 +70,16 @@ That way your app is _always_ up to date with the latest code changes, client-si
 | `--port`           | Specify port                                          | `number`                                            |         |
 | `--profile`        | Start built-in Node.js inspector                      |                                                     |         |
 | `--strictPort`     | Exit if specified port is already in use              | `boolean`                                           |         |
+
+### Reverse proxies
+
+The built-in `react-router dev` and `vite preview` servers provided by the `reactRouter()` Vite plugin automatically use `X-Forwarded-Proto` when constructing `request.url`. This preserves the browser-facing protocol when a reverse proxy terminates HTTPS and forwards requests over HTTP, allowing same-origin action submissions to pass origin validation. No React Router configuration is required.
+
+The first header value is used if it is `http` or `https` (case-insensitive, with surrounding whitespace and an optional trailing `:` ignored). Missing or invalid values fall back to the connection's protocol. The URL host and port still come from `Host`, not `X-Forwarded-Host` or the standard `Forwarded` header. Preserve the browser-facing host and port in `Host` and configure Vite's [`server.allowedHosts`](https://vite.dev/config/server-options#server-allowedhosts) or [`preview.allowedHosts`](https://vite.dev/config/preview-options#preview-allowedhosts) as needed.
+
+<docs-warning>
+Dev and preview servers are not production servers and should not be publicly accessible. Configure your reverse proxy to overwrite client-supplied `X-Forwarded-Proto` headers.
+</docs-warning>
 
 ## `react-router reveal`
 

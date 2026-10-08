@@ -19,5 +19,26 @@ export async function fromNodeRequest(
   );
   nodeReq.url = nodeReq.originalUrl;
 
-  return createRequest(nodeReq, nodeRes);
+  return createRequest(nodeReq, nodeRes, {
+    // Honor the browser-facing protocol behind an HTTPS-terminating proxy so
+    // action origin validation sees the correct origin. Keep using Host:
+    // Vite's allowedHosts checks do not validate X-Forwarded-Host.
+    protocol: getForwardedProtocol(nodeReq),
+  });
+}
+
+function getForwardedProtocol(
+  nodeReq: Vite.Connect.IncomingMessage,
+): string | undefined {
+  let forwardedProto = nodeReq.headers["x-forwarded-proto"];
+  let proto = (
+    Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto
+  )
+    ?.split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (proto?.endsWith(":")) {
+    proto = proto.slice(0, -1);
+  }
+  return proto === "http" || proto === "https" ? `${proto}:` : undefined;
 }

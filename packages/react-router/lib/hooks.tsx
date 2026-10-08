@@ -242,7 +242,7 @@ const navigateEffectWarning =
  *   * These options only work in Framework and Data modes:
  *     * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
  *     * `preventScrollReset`: Do not scroll back to the top of the page after navigation
- *     * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
+ *     * `viewTransition`: **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component instead. See the [migration guide](../../how-to/view-transitions).
  *
  * @example
  * import { useNavigate } from "react-router";
@@ -822,7 +822,7 @@ export function useRoutesImpl(
         `deeper, the parent won't match anymore and therefore the child ` +
         `routes will never render.\n\n` +
         `Please change the parent <Route path="${parentPath}"> to <Route ` +
-        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`,
+        `path="${parentPath === "/" ? "*" : `${parentPath}/` + "*"}\">.`,
     );
   }
 
@@ -2122,7 +2122,7 @@ function toRouterStateMatch(match: DataRouteMatch): unstable_RouterStateMatch {
  * @example
  * import { unstable_useRouterState as useRouterState } from "react-router";
  *
- * let { active, pending } = unstable_useRouterState();
+ * let { active, pending } = useRouterState();
  *
  * // Active is always populated with the current location
  * active.location; // replaces `useLocation()`

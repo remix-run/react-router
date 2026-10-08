@@ -281,8 +281,8 @@ async function main() {
 
   // Configure git
   console.log("\nConfiguring git...");
-  logAndExec('git config user.name "Remix Run Bot"');
-  logAndExec('git config user.email "hello@remix.run"');
+  logAndExec('git config --local user.email "hello@remix.run"');
+  logAndExec('git config --local user.name "Remix Run Bot"');
 
   // Create tags (skip if already exist)
   console.log(`\nCreating tag${published.length === 1 ? "" : "s"}...`);

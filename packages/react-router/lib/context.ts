@@ -109,7 +109,12 @@ export interface NavigateOptions {
   relative?: RelativeRoutingType;
   /** Wraps the initial state update for this navigation in a {@link https://react.dev/reference/react-dom/flushSync ReactDOM.flushSync} call instead of the default {@link https://react.dev/reference/react/startTransition React.startTransition} */
   flushSync?: boolean;
-  /** Enables a {@link https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API View Transition} for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the {@link useViewTransitionState `useViewTransitionState()`} hook.  */
+  /**
+   * Enables a view transition for this navigation.
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
+   */
   viewTransition?: boolean;
   /** Specifies the default revalidation behavior after this submission */
   defaultShouldRevalidate?: boolean;
