@@ -585,7 +585,7 @@ async function resolveConfig({
     unstable_apiServerOrigin = undefined;
   }
 
-  if (ssr === false && serverBundles) {
+  if (!ssr && serverBundles) {
     serverBundles = undefined;
   }
 
@@ -628,7 +628,7 @@ async function resolveConfig({
 
   let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
   if (userRouteDiscovery == null) {
-    if (ssr === true) {
+    if (ssr) {
       routeDiscovery = {
         mode: "lazy",
         manifestPath: "/__manifest",

@@ -1743,7 +1743,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // Handle SSR requests in preview mode using the built server bundle
           previewServer.middlewares.use(async (req, res, next) => {
             if (
-              ctx.reactRouterConfig.ssr === false &&
+              !ctx.reactRouterConfig.ssr &&
               (!process.env.hasOwnProperty("IS_RR_BUILD_REQUEST")
                 ? true
                 : process.env.IS_RR_BUILD_REQUEST !== "yes")
@@ -2170,7 +2170,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
 
             // Check for invalid APIs when SSR is disabled
-            if (ctx.reactRouterConfig.ssr === false) {
+            if (!ctx.reactRouterConfig.ssr) {
               invariant(viteConfig);
               validateSsrFalsePrerenderExports(
                 viteConfig,

@@ -202,6 +202,10 @@ test.describe("API-only Mode", () => {
 
   test("builds an API-only server with server APIs but no route UI exports", async () => {
     expect(fixture.build?.unstable_apiOnly).toBe(true);
+    expect(fixture.build?.routeDiscovery).toEqual({
+      mode: "lazy",
+      manifestPath: "/__manifest",
+    });
     expect(fixture.build?.unstable_apiServerOrigin).toBe(
       `http://localhost:${devPort}`,
     );
@@ -607,9 +611,7 @@ for (let discoveryMode of ["initial", "lazy"] as const) {
           "react-router.config.ts": reactRouterConfig({
             ssr: "unstable_api-only",
             routeDiscovery:
-              discoveryMode === "lazy"
-                ? { mode: "lazy", manifestPath: "/__manifest" }
-                : { mode: "initial" },
+              discoveryMode === "initial" ? { mode: "initial" } : undefined,
           }),
           "app/state.server.ts": js`
             export let state = { value: 0, parentCalls: 0, clientCalls: 0 };
