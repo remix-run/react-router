@@ -1273,7 +1273,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           appType:
             viteCommand === "serve" &&
             _viteConfigEnv.mode === "production" &&
-            ctx.reactRouterConfig.ssr !== true
+            (!ctx.reactRouterConfig.ssr ||
+              ctx.reactRouterConfig.ssr === "unstable_api-only")
               ? isApiOnlyMode(ctx.reactRouterConfig)
                 ? "mpa"
                 : "spa"
@@ -2037,10 +2038,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ctx,
           routeModuleId,
         );
-        let isServerEnvironment = isReactRouterServerEnvironment(
-          ctx,
-          this.environment.name,
-        );
 
         let { chunkedExports = [] } = options?.ssr
           ? {}
@@ -2049,10 +2046,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let reexports = sourceExports
           .filter((exportName) => {
             let isRouteEntryExport =
-              (isServerEnvironment &&
-                (isApiOnlyMode(ctx.reactRouterConfig)
-                  ? SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)
-                  : true)) ||
+              (options?.ssr &&
+                SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
               CLIENT_ROUTE_EXPORTS.includes(exportName);
 
             let isChunkedExport = chunkedExports.includes(
@@ -2305,7 +2300,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         );
 
         if (
-          !isServerEnvironment &&
+          !options?.ssr &&
           isSpaModeEnabled(ctx.reactRouterConfig) &&
           !isApiOnlyMode(ctx.reactRouterConfig)
         ) {
@@ -2621,10 +2616,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         }
 
-        // When `ssr:false` is set, we always want a SPA HTML they can use
-        // to serve non-prerendered routes.  This file will only SSR the root
-        // route and can hydrate for any path.
-        if (ctx.reactRouterConfig.ssr !== true) {
+        // With `ssr:false` or API-only mode, generate a SPA fallback for
+        // non-prerendered routes. Render only the root so it can hydrate any path.
+        if (
+          !ctx.reactRouterConfig.ssr ||
+          ctx.reactRouterConfig.ssr === "unstable_api-only"
+        ) {
           requests.push(createSpaModeRequest(ctx.reactRouterConfig));
         }
 
@@ -2773,8 +2770,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { ssr } = ctx.reactRouterConfig;
 
-        // if ssr:false is set
-        if (ssr !== true) {
+        // Finalize the SPA fallback for `ssr:false` and API-only builds.
+        if (!ssr || ssr === "unstable_api-only") {
           let spaFallback = path.join(buildDirectory, "__spa-fallback.html");
           let index = path.join(buildDirectory, "index.html");
 
@@ -3031,7 +3028,8 @@ function isSpaModeEnabled(
   // ability to use loaders on any routes and prerender the UI with build-time
   // loaderData
   return (
-    reactRouterConfig.ssr !== true && !isPrerenderingEnabled(reactRouterConfig)
+    (!reactRouterConfig.ssr || reactRouterConfig.ssr === "unstable_api-only") &&
+    !isPrerenderingEnabled(reactRouterConfig)
   );
 }
 
