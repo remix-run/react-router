@@ -358,6 +358,148 @@ test("composes custom fetch with API-only mode and a configured server origin", 
   }
 });
 
+test("preserves custom fetch context for fetcher reloads after an initialization redirect", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "react-router.config.ts": js`
+        export default {
+          ssr: "unstable_api-only",
+          routeDiscovery: { mode: "initial" },
+        };
+      `,
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        window.__initialization = new Promise((resolve) => {
+          window.__finishInitialization = resolve;
+        });
+        window.__customFetches = [];
+
+        startTransition(() => {
+          hydrateRoot(document, <HydratedRouter unstable_fetch={(request, context) => {
+            window.__customFetches.push({
+              pathname: new URL(request.url).pathname,
+              context,
+            });
+            return window.fetch(request);
+          }} />);
+        });
+      `,
+      "app/root.tsx": js`
+        import { Outlet, Scripts, useFetcher } from "react-router";
+
+        export function Layout({ children }) {
+          let fetcher = useFetcher({ key: "tracked" });
+          return <html><head /><body>
+            <p data-fetcher>{fetcher.data ?? "empty"}</p>
+            {children}
+            <Scripts />
+          </body></html>;
+        }
+
+        export function HydrateFallback() {
+          let fetcher = useFetcher({ key: "tracked" });
+          return <>
+            <button onClick={() => fetcher.load("/resource")}>Load fetcher</button>
+            <button onClick={() => window.__finishInitialization()}>Finish initialization</button>
+          </>;
+        }
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        import { redirect } from "react-router";
+
+        export async function clientLoader() {
+          await window.__initialization;
+          throw redirect("/target");
+        }
+
+        clientLoader.hydrate = true;
+
+        export default function Index() {
+          return null;
+        }
+      `,
+      "app/routes/target.tsx": js`
+        export function loader() {
+          return "TARGET";
+        }
+
+        export default function Target({ loaderData }) {
+          return <h1>{loaderData}</h1>;
+        }
+      `,
+      "app/routes/resource.tsx": js`
+        let count = 0;
+
+        export function loader() {
+          return ++count;
+        }
+
+        export function shouldRevalidate() {
+          return true;
+        }
+
+        export default function Resource() {
+          return null;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    await app.goto("/", true);
+    await page.getByRole("button", { name: "Load fetcher" }).click();
+    await expect(page.locator("[data-fetcher]")).toHaveText("1");
+
+    await page.getByRole("button", { name: "Finish initialization" }).click();
+    await expect(page.getByRole("heading", { name: "TARGET" })).toBeVisible();
+    await expect(page.locator("[data-fetcher]")).toHaveText("2");
+
+    let requests = await page.evaluate(() => (window as any).__customFetches);
+    expect(requests).toHaveLength(3);
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        {
+          pathname: "/resource.data",
+          context: {
+            type: "fetcher",
+            fetcherKey: "tracked",
+            navigationType: null,
+          },
+        },
+        {
+          pathname: "/target.data",
+          context: {
+            type: "initialization",
+            fetcherKey: null,
+            navigationType: null,
+          },
+        },
+        {
+          pathname: "/resource.data",
+          context: {
+            type: "initialization",
+            fetcherKey: "tracked",
+            navigationType: null,
+          },
+        },
+      ]),
+    );
+  } finally {
+    await appFixture.close();
+  }
+});
+
 test("identifies initiating operations and fetcher targets", async ({
   page,
 }) => {

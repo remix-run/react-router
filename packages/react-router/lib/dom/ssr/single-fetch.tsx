@@ -176,10 +176,10 @@ export type FetchAndDecodeFunction = (
 /**
  * Describes the operation that initiated an internal router request.
  *
- * Requests that reload fetchers as part of a navigation or revalidation keep
- * that initiating `type`. `fetcherKey` identifies the fetcher being loaded, or
- * is `null` when the request targets route loaders or actions. Initialization
- * requests always have a `null` fetcher key.
+ * Requests that reload fetchers as part of a navigation, revalidation, or
+ * initialization redirect keep that initiating `type`. `fetcherKey` identifies
+ * the fetcher being loaded, or is `null` when the request targets route loaders
+ * or actions.
  *
  * `navigationType` is the history action (`"PUSH"`, `"REPLACE"`, or `"POP"`)
  * for navigation-initiated data requests, including reloaded fetchers. It is
@@ -194,12 +194,7 @@ export type RouterFetchContext =
       navigationType: NavigationType;
     }
   | {
-      type: "initialization";
-      fetcherKey: null;
-      navigationType: null;
-    }
-  | {
-      type: "fetcher" | "revalidation";
+      type: "initialization" | "fetcher" | "revalidation";
       fetcherKey: string | null;
       navigationType: null;
     };
@@ -654,16 +649,6 @@ function fetchAndDecodeViaTurboStream(
         type: "navigation",
         fetcherKey: args.fetcherKey,
         navigationType: args.unstable_navigationType,
-      };
-    } else if (args.unstable_initiator === "initialization") {
-      invariant(
-        args.fetcherKey === null,
-        "Unexpected fetcher key for an initialization data request",
-      );
-      fetchContext = {
-        type: "initialization",
-        fetcherKey: args.fetcherKey,
-        navigationType: null,
       };
     } else {
       fetchContext = {

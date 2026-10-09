@@ -68,12 +68,7 @@ type unstable_RouterFetchContext =
       navigationType: NavigationType;
     }
   | {
-      type: "initialization";
-      fetcherKey: null;
-      navigationType: null;
-    }
-  | {
-      type: "fetcher" | "revalidation";
+      type: "initialization" | "fetcher" | "revalidation";
       fetcherKey: string | null;
       navigationType: null;
     };
@@ -87,7 +82,7 @@ type unstable_RouterFetchContext =
 - `"fetcher"`: Requests initiated by a fetcher, including the loader revalidation after a fetcher action.
 - `"revalidation"`: Requests initiated by an explicit revalidation, such as `useRevalidator().revalidate()`.
 
-`fetcherKey` identifies the fetcher targeted by a data request, or is `null` for route loader/action requests. A fetcher reloaded as part of a navigation or explicit revalidation retains that initiating `type` and also includes its fetcher key. Initialization requests have a `null` fetcher key.
+`fetcherKey` identifies the fetcher targeted by a data request, or is `null` for route loader/action requests. A fetcher reloaded as part of a navigation or explicit revalidation retains that initiating `type` and also includes its fetcher key. Fetchers reloaded after an initialization redirect likewise retain the `"initialization"` type and include their fetcher key.
 
 `navigationType` is `"PUSH"`, `"REPLACE"`, or `"POP"` for navigation-initiated data requests, including fetchers reloaded by that navigation. It is `null` for initialization, standalone fetcher operations, and explicit revalidation. This is the history action for the in-flight navigation, not the previously committed location.
 

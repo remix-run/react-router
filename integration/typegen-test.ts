@@ -43,7 +43,7 @@ test("custom fetch context narrowing", async ({ edit, $ }) => {
         if (context.type === "navigation") {
           type Test = Expect<Equal<typeof context.navigationType, NavigationType>>;
         } else if (context.type === "initialization") {
-          type FetcherKey = Expect<Equal<typeof context.fetcherKey, null>>;
+          type FetcherKey = Expect<Equal<typeof context.fetcherKey, string | null>>;
           type HistoryAction = Expect<Equal<typeof context.navigationType, null>>;
         } else if (context.type !== "manifest") {
           type Test = Expect<Equal<typeof context.navigationType, null>>;
